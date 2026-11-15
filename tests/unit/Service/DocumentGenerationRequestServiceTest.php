@@ -41,6 +41,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use UnexpectedValueException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for DocumentGenerationRequestService.
@@ -312,7 +313,12 @@ class DocumentGenerationRequestServiceTest extends TestCase {
 
 		$this->objects->expects($this->once())
 			->method('patchObject')
-			->with('obj-1', ['besluitTekst' => 'Besluit: toegekend'], 'cases', 'case')
+			->with(...LegacyObjectArgs::with(method: 'patchObject', expected: [
+					'objectId' => 'obj-1',
+					'data' => ['besluitTekst' => 'Besluit: toegekend'],
+					'register' => 'cases',
+					'schema' => 'case',
+				]))
 			->willReturn(null);
 
 		$result = $this->service->generate(

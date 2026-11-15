@@ -30,6 +30,9 @@ namespace OCA\Filinq\Service;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Container\ContainerInterface;
@@ -310,8 +313,7 @@ class MetadataService implements MetadataServiceInterface {
 	): mixed {
 		$object = $objectService->find(
 			id: $objectId,
-			register: $register,
-			schema: $schema
+			options: new ObjectFindOptions(register: $register, schema: $schema)
 		);
 
 		if ($object === null) {
@@ -322,8 +324,7 @@ class MetadataService implements MetadataServiceInterface {
 
 		return $objectService->saveObject(
 			object: $objectData,
-			register: $register,
-			schema: $schema
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 		);
 
 	}//end persistEnrichedMetadata()

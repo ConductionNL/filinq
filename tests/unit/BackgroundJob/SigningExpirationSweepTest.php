@@ -33,6 +33,7 @@ use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use ReflectionMethod;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * One sweep over both open statuses, recorded call by call.
@@ -71,6 +72,7 @@ class SigningExpirationSweepTest extends TestCase {
 			return $answer;
 		});
 		$objects->method('saveObject')->willReturnCallback(function (...$arguments): array {
+			$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 			$this->calls[] = ['save', array_slice($arguments, 0, 5)];
 			return [];
 		});

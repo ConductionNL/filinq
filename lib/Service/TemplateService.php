@@ -33,6 +33,10 @@ use DateTime;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use RuntimeException;
@@ -172,8 +176,7 @@ class TemplateService implements TemplateServiceInterface {
 		try {
 			$result = $objectService->find(
 				id: $id,
-				register: $config['register'],
-				schema: $config['schema']
+				options: new ObjectFindOptions(register: $config['register'], schema: $config['schema'])
 			);
 		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 			throw new Exception(message: 'Template not found', code: 404);
@@ -300,8 +303,7 @@ class TemplateService implements TemplateServiceInterface {
 
 		$result = $objectService->saveObject(
 			object: $data,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']))
 		);
 
 		if (is_object($result) === true
@@ -359,8 +361,7 @@ class TemplateService implements TemplateServiceInterface {
 
 		$result = $objectService->saveObject(
 			object: $merged,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']))
 		);
 
 		// Snapshot the previous state only once the save has gone through, so
@@ -409,8 +410,7 @@ class TemplateService implements TemplateServiceInterface {
 
 		$result = $objectService->saveObject(
 			object: $merged,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']))
 		);
 
 		if (is_object($result) === true
@@ -442,9 +442,10 @@ class TemplateService implements TemplateServiceInterface {
 
 		try {
 			$objectService->deleteObject(
-				uuid: $id,
-				register: $config['register'],
-				schema: $config['schema']
+				new ObjectDeletion(
+					uuid: $id,
+					target: new ObjectFindTarget(register: $config['register'], schema: $config['schema'])
+				)
 			);
 		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 			throw new Exception(message: 'Template not found', code: 404);
@@ -532,8 +533,7 @@ class TemplateService implements TemplateServiceInterface {
 
 		$result = $objectService->saveObject(
 			object: $duplicateData,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']))
 		);
 
 		if (is_object($result) === true

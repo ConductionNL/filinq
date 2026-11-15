@@ -45,13 +45,14 @@ class ObjectService {
 	 */
 	public function find(
 		string $id = '',
-		string $register = '',
-		string $schema = '',
+		?\OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions $options = null,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $_render = true,
-		bool $_audit = true,
+		bool $_multitenancy = true
 	) {
+		$register = $options?->register ?? '';
+		$schema = $options?->schema ?? '';
+		$_render = $options?->render ?? true;
+		$_audit = $options?->audit ?? true;
 		return null;
 	}//end find()
 
@@ -71,14 +72,15 @@ class ObjectService {
 	 */
 	public function saveObject(
 		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		\OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions $options = new \OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $_unowned = false,
-		?string $_owner = null,
+		bool $_multitenancy = true
 	) {
+		$register = $options->target->register ?? '';
+		$schema = $options->target->schema ?? '';
+		$uuid = $options->uuid;
+		$_unowned = $options->actor->unowned ?? false;
+		$_owner = $options->actor->owner;
 		return null;
 	}//end saveObject()
 
@@ -100,14 +102,15 @@ class ObjectService {
 	 * @return mixed
 	 */
 	public function patchObject(
-		string $objectId,
-		array $data,
-		$register = null,
-		$schema = null,
+		\OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch $patch,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		$currentUser = null,
+		bool $_multitenancy = true
 	) {
+		$objectId = $patch->objectId;
+		$data = $patch->data;
+		$register = $patch->target->register;
+		$schema = $patch->target->schema;
+		$currentUser = $patch->currentUser;
 		return null;
 	}//end patchObject()
 
@@ -143,12 +146,14 @@ class ObjectService {
 	 * @return bool
 	 */
 	public function deleteObject(
-		string $uuid = '',
-		string $register = '',
-		string $schema = '',
+		\OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_retentionSweep = false
 	) {
+		$uuid = $deletion->uuid ?? '';
+		$register = $deletion->target->register ?? '';
+		$schema = $deletion->target->schema ?? '';
 		return true;
 	}//end deleteObject()
 
@@ -2931,11 +2936,11 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 	 * @SuppressWarnings(PHPMD.TooManyPublicMethods)
 	 */
 	interface ObjectServiceInterface {
-		public function saveObject(array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true, bool $silent = false, bool $_validation = true, ?array $uploadedFiles = null, ?\OCP\IUser $currentUser = null, bool $failIfExists = false): ObjectEntityInterface;
+		public function saveObject(array $object, \OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions $options = new \OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface;
 
 		public function setRegister(string|int $register): static;
 
-		public function find(int|string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true, bool $_render = true, bool $_audit = true): ?ObjectEntityInterface;
+		public function find(int|string $id, ?\OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface;
 
 		public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array;
 
@@ -2943,7 +2948,7 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 
 		public function searchObjects(array $query = [], bool $_rbac = true, bool $_multitenancy = true, ?array $ids = null, ?string $uses = null, ?array $views = null): array|int;
 
-		public function deleteObject(string $uuid, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false, ?\OCP\IUser $currentUser = null, bool $permanent = false): bool;
+		public function deleteObject(\OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool;
 
 		public function searchObjectsPaginated(array $query = [], bool $_rbac = true, bool $_multitenancy = true, bool $deleted = false, ?array $ids = null, ?string $uses = null, ?array $views = null): array;
 
@@ -2953,15 +2958,15 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 
 		public function buildSearchQuery(array $requestParams, int|string|array|null $register = null, int|string|array|null $schema = null, ?array $ids = null): array;
 
-		public function saveObjects(array $objects, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true, bool $validation = false, bool $events = false, bool $deduplicateIds = true, bool $enrich = true, bool $_audit = true): array;
+		public function saveObjects(array $objects, \OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions $options = new \OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array;
 
 		public function runAsSystem(callable $operation);
 
 		public function count(array $config = []): int;
 
-		public function unlockObject(string|int $identifier, bool $advisory = false): bool;
+		public function unlockObject(\OCA\OpenRegister\Kernel\Contracts\Value\UnlockRequest $request): bool;
 
-		public function lockObject(string $identifier, ?string $process = null, ?int $duration = null, bool $advisory = false): array;
+		public function lockObject(\OCA\OpenRegister\Kernel\Contracts\Value\LockRequest $request, bool $advisory = false): array;
 
 		public function deleteObjects(array $uuids = [], bool $_rbac = true, bool $_multitenancy = true): array;
 
@@ -2975,7 +2980,7 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 
 		public function findByRelations(string $search, bool $partialMatch = true): array;
 
-		public function findSilent(string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface;
+		public function findSilent(string $id, ?\OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface;
 
 		public function countSearchObjects(array $query = [], bool $_rbac = true, bool $_multitenancy = true, ?array $ids = null, ?string $uses = null): int;
 
