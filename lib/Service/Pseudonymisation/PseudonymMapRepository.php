@@ -29,8 +29,8 @@ namespace OCA\Filinq\Service\Pseudonymisation;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use RuntimeException;
 use Throwable;
 

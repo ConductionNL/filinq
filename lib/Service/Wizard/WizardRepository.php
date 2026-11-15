@@ -28,7 +28,7 @@ namespace OCA\Filinq\Service\Wizard;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use RuntimeException;
 use Throwable;
 

@@ -39,8 +39,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;

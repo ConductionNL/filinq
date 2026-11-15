@@ -134,7 +134,7 @@ class ObjectService {
 	/**
 	 * Delete an object (openregister #9099 shape).
 	 *
-	 * @param \OCA\OpenRegister\Service\Object\ObjectDeletion $deletion The uuid, scope, acting user and permanence.
+	 * @param \OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion $deletion The uuid, scope, acting user and permanence.
 	 * @param bool $_rbac RBAC bypass flag.
 	 * @param bool $_multitenancy Multitenancy bypass flag.
 	 * @param bool $_retentionSweep Retention sweep flag.
@@ -142,7 +142,7 @@ class ObjectService {
 	 * @return bool
 	 */
 	public function deleteObject(
-		\OCA\OpenRegister\Service\Object\ObjectDeletion $deletion,
+		\OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_retentionSweep = false,

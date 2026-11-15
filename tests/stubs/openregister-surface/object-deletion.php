@@ -17,14 +17,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Object;
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
 
 
 /**
- * Stub for ObjectDeletion (mirrors lib/Service/Object/ObjectDeletion.php, openregister #9099).
+ * Stub for ObjectDeletion (mirrors lib/Kernel/Contracts/Value/ObjectDeletion.php on openregister main).
  *
  * @category Tests
- * @package  OCA\OpenRegister\Service\Object
+ * @package  OCA\OpenRegister\Kernel\Contracts\Value
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app

@@ -230,12 +230,12 @@
                 <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions"/>
                 <referencedClass name="OCA\OpenRegister\Service\Archival\LegalHoldServiceInterface"/>
                 <referencedClass name="OCA\OpenRegister\Service\HoldOrder"/>
-                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectDeletion"/>
-                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectFindTarget"/>
-                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectPatch"/>
-                <referencedClass name="OCA\OpenRegister\Service\Object\ObjectSaveOptions"/>
-                <referencedClass name="OCA\OpenRegister\Service\Object\SaveActor"/>
-                <referencedClass name="OCA\OpenRegister\Service\Object\SavePolicy"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\SaveActor"/>
+                <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy"/>
             </errorLevel>
         </UndefinedClass>
         <!--

@@ -24,7 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\PolicyCrudService;
 use OCA\Filinq\Service\SettingsService;
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IGroupManager;
 use OCP\IUser;
