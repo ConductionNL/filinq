@@ -89,6 +89,13 @@ class PolicyMatchService {
 	private ?array $rulesCache = null;
 
 	/**
+	 * Runs the rule load as the system, so every user's anonymisation applies every rule.
+	 *
+	 * @var SystemContextSeam
+	 */
+	private readonly SystemContextSeam $seam;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger Structured log sink.
@@ -97,6 +104,7 @@ class PolicyMatchService {
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
 	 * @param TextNormaliser $textNormaliser Accent-stripping text normaliser.
 	 * @param PolicyRuleNormaliser $ruleNormaliser Admission + normalisation of stored policy rows.
+	 * @param SystemContextSeam|null $seam The one place Filinq relaxes OpenRegister enforcement; built from the logger when absent.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
@@ -105,7 +113,9 @@ class PolicyMatchService {
 		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),
 		private readonly TextNormaliser $textNormaliser = new TextNormaliser(),
 		private readonly PolicyRuleNormaliser $ruleNormaliser = new PolicyRuleNormaliser(),
+		?SystemContextSeam $seam = null,
 	) {
+		$this->seam = ($seam ?? new SystemContextSeam(logger: $logger));
 
 	}//end __construct()
 
@@ -339,10 +349,22 @@ class PolicyMatchService {
 		$rules = [];
 
 		try {
-			$rules = array_merge(
-				$this->loadProhibitions(),
-				$this->loadStandingConsents()
+			// The rules are a safety policy, not data the user reads: the
+			// schemas grant read to policy admins only, and an ordinary
+			// user's anonymisation must still apply every prohibition and
+			// standing consent. So the load runs as the system, through the
+			// one logged seam, instead of passing bypass flags.
+			$loaded = $this->seam->run(
+				objectService: $this->objectService,
+				reason: 'anonymisation applies every prohibition and standing consent, whatever the user may read',
+				operation: fn (): array => array_merge(
+					$this->loadProhibitions(),
+					$this->loadStandingConsents()
+				)
 			);
+			if (is_array($loaded) === true) {
+				$rules = $loaded;
+			}
 		} catch (Exception $e) {
 			$this->logger->warning(
 				'PolicyMatchService: failed to load rules — falling through to no-match',
@@ -363,13 +385,10 @@ class PolicyMatchService {
 		// OR's findAll/searchObjects require NUMERIC register/schema ids and
 		// silently return nothing for slugs; searchObjectsBySlug resolves the
 		// slugs first (same call PolicyCrudService uses for the admin list).
-		// _multitenancy is off so this safety policy is not scoped away by the
-		// active organisation.
+		// It runs inside the seam (loadRules()), so it passes no bypass flag.
 		$result = $this->objectService->searchObjectsBySlug(
 			registerSlug: 'filinq',
-			schemaSlug: 'publicationProhibition',
-			_rbac: false,
-			_multitenancy: false
+			schemaSlug: 'publicationProhibition'
 		);
 		if (is_int($result) === true) {
 			$result = [];
@@ -405,9 +424,7 @@ class PolicyMatchService {
 		$result = $this->objectService->searchObjectsBySlug(
 			registerSlug: 'filinq',
 			schemaSlug: 'publicationConsent',
-			filters: ['scope' => 'entity', 'active' => true],
-			_rbac: false,
-			_multitenancy: false
+			filters: ['scope' => 'entity', 'active' => true]
 		);
 		if (is_int($result) === true) {
 			$result = [];
