@@ -2934,7 +2934,14 @@ OC.L10N.register(
         "The test arrived": "The test arrived",
         "The test did not arrive": "The test did not arrive",
         "Type a name and a URL and pick at least one event": "Type a name and a URL and pick at least one event",
-        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery"
+        "Type a secret so the receiver can check each delivery": "Type a secret so the receiver can check each delivery",
+        "Acknowledged": "Acknowledged",
+        "Open stamped copy": "Open stamped copy",
+        "Queued as letter": "Queued as letter",
+        "Acknowledgement of receipt: %s": "Acknowledgement of receipt: %s",
+        "Intake rules": "Intake rules",
+        "New intake rule": "New intake rule",
+        "No intake rules yet": "No intake rules yet"
     },
     "nplurals=2; plural=(n != 1);"
 )

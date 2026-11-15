@@ -3065,7 +3065,14 @@ OC.L10N.register(
         "The test arrived": "De test is aangekomen",
         "The test did not arrive": "De test is niet aangekomen",
         "Type a name and a URL and pick at least one event": "Typ een naam en een URL en kies minstens één gebeurtenis",
-        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren"
+        "Type a secret so the receiver can check each delivery": "Typ een geheim zodat de ontvanger elke bezorging kan controleren",
+        "Acknowledged": "Bevestigd",
+        "Open stamped copy": "Gestempelde kopie openen",
+        "Queued as letter": "Als brief klaargezet",
+        "Acknowledgement of receipt: %s": "Ontvangstbevestiging: %s",
+        "Intake rules": "Intakeregels",
+        "New intake rule": "Nieuwe intakeregel",
+        "No intake rules yet": "Nog geen intakeregels"
     },
     "nplurals=2; plural=(n != 1);"
 )

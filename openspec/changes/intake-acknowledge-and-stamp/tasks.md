@@ -15,8 +15,8 @@
 
 ## 3. Screens
 
-- [ ] 3.1 Add an acknowledged column and an "Open stamped copy" row action to `src/views/intake/IntakeIndex.vue` (REQ-IAS-004). Verify: Playwright on `/intake` sees the seeded document as acknowledged and opens its stamped copy.
-- [ ] 3.2 Add the two fields to the intake default rule form (REQ-IAS-001). Verify: Playwright creates a rule with a template and the stamp switched on.
+- [x] 3.1 Add an acknowledged column and an "Open stamped copy" row action to `src/views/intake/IntakeIndex.vue` (REQ-IAS-004). Verify: Playwright on `/intake` sees the seeded document as acknowledged and opens its stamped copy.
+- [x] 3.2 Add the two fields to the intake default rule form (REQ-IAS-001). Verify: Playwright creates a rule with a template and the stamp switched on.
 
 ## 4. Quality
 
@@ -30,5 +30,8 @@
 - 2.3: `ReceivedStampService` imports every page with FPDI, draws "Ontvangen", the date (day-month-year from `receivedAt`) and the number on page 1 top right, and writes `<name> (ontvangen).pdf` beside the arrived file, which is only read. PHPUnit `ReceivedStampServiceTest` (pages and sizes kept, date and number on the stamp, the copy's name, the arrived checksum unchanged, no copy for a missing or non-PDF file), `IntakeArrivalFollowUpListenerTest::testAStampingRuleStoresTheStampedCopy`.
 - 2.1: a sender reached neither through a party nor by mail gets the acknowledgement rendered as a PDF and stored in Files (`output.mode: files`); its file id is kept in `acknowledgement.letter` (register 8.58.0, `intakeDocument` 1.5.0). A letter that could not be stored is `failed` with the reason, never `queued-as-letter`. PHPUnit `IntakeAcknowledgementServiceTest::testAPaperLetterIsQueuedAsALetter`, `testALetterThatWasNotStoredIsFailed`.
 - 2.2: `Intake\AnsweringRegistration` finds the inbound `documentRegistration` naming the document and writes the outbound one (`direction: outbound`, the inbound unit, `answers` the inbound uuid, `document` the acknowledgement's generated document entry; the number comes from the platform sequence on save). The listener reads the inbound entry once: its number goes into the letter (`registrationNumber` in the template data) and on the stamp. Only a sent or queued acknowledgement is registered; its uuid is kept in `acknowledgement.registration`. The write runs under the caller's access rules (`documentRegistration` create is `filinq-policy-admins`): when refused, the acknowledgement stands and the warning is logged. PHPUnit `AnsweringRegistrationTest`, `IntakeAcknowledgementServiceTest::testAnInboundRegistrationIsNumberedOnTheLetterAndAnswered`, `IntakeArrivalFollowUpListenerTest::testTheInboundRegistrationReachesTheAcknowledgementAndTheStamp`.
-- Left: 3.1 and 3.2 (screens), 4.1 (docs with screenshots), 4.2 (live).
+- 3.1: `IntakeIndex.vue` has an **Acknowledged** column (a badge for sent, queued as letter, refused or failed, with the reason or address as its tooltip; empty without an acknowledgement) and an **Open stamped copy** row action when `stampedRendition` is set, opening Nextcloud's `/f/{fileId}`. The labels live in `src/services/intakeAcknowledgement.js`, vitest `tests/vitest/intakeAcknowledgement.spec.js`. The Playwright check is left for the live pass.
+- 3.2: there was no intake rule form yet. `src/manifest.d/20-intake.json` adds the `IntakeRules` index page (`/intake/rules`, settings section) over `intakeDefaultRule`; create and edit are the object API's dialog over the schema, so `acknowledgeWith` and `stampReceived` are on the form. `manifestFragments.spec.js` lists the new page and menu entry. The Playwright check is left for the live pass.
+- 4.1: strings in en, nl, de, es, fr and it (`l10n/*.json`, `.js` rebuilt), `@spec` tags on the new code, and `docs/features/intake-acknowledge-and-stamp.md`. Open: the screenshots, which need a running instance.
+- Left: 4.1 (screenshots), 4.2 (live), and the Playwright checks of 3.1 and 3.2.
 
