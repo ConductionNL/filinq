@@ -165,7 +165,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertSame([], $manifest['notifications']);
 
 		$collections = $this->indexById($manifest['collections']);
-		$this->assertSame(['subjectConsents'], $this->sortedKeys($collections));
+		$this->assertSame(['subjectConsents', 'subjectDocuments'], $this->sortedKeys($collections));
 
 		$consent = $collections['subjectConsents'];
 		$this->assertSame('filinq', $consent['register'], 'the five registers collapsed into one');

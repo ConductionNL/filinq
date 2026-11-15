@@ -96,6 +96,9 @@ $extra = [
         ['name' => 'caseDocuments#linkDomain', 'url' => 'api/case-documents/{uuid}/domains', 'verb' => 'POST'],
         ['name' => 'caseDocuments#unlinkDomain', 'url' => 'api/case-documents/{uuid}/domains', 'verb' => 'DELETE'],
         ['name' => 'caseDocuments#mine', 'url' => 'api/case-documents/mine', 'verb' => 'GET'],
+        // Release a document to the person who requested its record; the portal serves it (specify-capability-rows task 5.1).
+        ['name' => 'documentRelease#release', 'url' => 'api/case-documents/{uuid}/releases', 'verb' => 'POST'],
+        ['name' => 'documentRelease#withdraw', 'url' => 'api/document-releases/{releaseId}', 'verb' => 'DELETE'],
         ['name' => 'waitingWork#index', 'url' => 'api/documents/waiting', 'verb' => 'GET'],
         ['name' => 'caseDocuments#uploadPolicy', 'url' => 'api/case-documents/upload-policy', 'verb' => 'GET'],
 

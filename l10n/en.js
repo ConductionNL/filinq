@@ -2989,7 +2989,25 @@ OC.L10N.register(
         "{name} is now also on the other record.": "{name} is now also on the other record.",
         "{name} is no longer linked to this record.": "{name} is no longer linked to this record.",
         "You may not change the documents of that record.": "You may not change the documents of that record.",
-        "The link could not be changed.": "The link could not be changed."
+        "The link could not be changed.": "The link could not be changed.",
+        "My documents": "My documents",
+        "Document release": "Document release",
+        "One document released to the person who requested it, on the record their request is. The portal lists a person's releases and lets them download each document; a withdrawn release is no longer listed. Holds a reference to the document and the contact, never the document itself.": "One document released to the person who requested it, on the record their request is. The portal lists a person's releases and lets them download each document; a withdrawn release is no longer listed. Holds a reference to the document and the contact, never the document itself.",
+        "Record schema": "Record schema",
+        "Withdrawn by": "Withdrawn by",
+        "Withdrawn at": "Withdrawn at",
+        "The uuid of the document record (documentVersion) that was released.": "The uuid of the document record (documentVersion) that was released.",
+        "The document's name as the requester sees it.": "The document's name as the requester sees it.",
+        "Whether the document is the decision or another document; the decision is listed first in the portal.": "Whether the document is the decision or another document; the decision is listed first in the portal.",
+        "The document's Nextcloud file.": "The document's Nextcloud file.",
+        "The register of the record the document is released on.": "The register of the record the document is released on.",
+        "The schema of the record the document is released on.": "The schema of the record the document is released on.",
+        "The record the document is released on.": "The record the document is released on.",
+        "The requester: the reference to their contact, the key the portal finds a person's releases by.": "The requester: the reference to their contact, the key the portal finds a person's releases by.",
+        "Who released the document.": "Who released the document.",
+        "When the document was released.": "When the document was released.",
+        "Who withdrew the release.": "Who withdrew the release.",
+        "When the release was withdrawn. A withdrawn release is no longer listed in the portal.": "When the release was withdrawn. A withdrawn release is no longer listed in the portal."
     },
     "nplurals=2; plural=(n != 1);"
 )

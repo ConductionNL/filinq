@@ -3120,7 +3120,25 @@ OC.L10N.register(
         "{name} is now also on the other record.": "{name} staat nu ook bij het andere dossier.",
         "{name} is no longer linked to this record.": "{name} is niet meer gekoppeld aan dit dossier.",
         "You may not change the documents of that record.": "U mag de documenten van dat dossier niet wijzigen.",
-        "The link could not be changed.": "De koppeling kon niet worden gewijzigd."
+        "The link could not be changed.": "De koppeling kon niet worden gewijzigd.",
+        "My documents": "Mijn documenten",
+        "Document release": "Vrijgave van een document",
+        "One document released to the person who requested it, on the record their request is. The portal lists a person's releases and lets them download each document; a withdrawn release is no longer listed. Holds a reference to the document and the contact, never the document itself.": "Eén document dat is vrijgegeven aan degene die erom vroeg, op het dossier van het verzoek. Het portaal toont iemands vrijgaven en laat elk document downloaden; een ingetrokken vrijgave staat er niet meer in. Bevat een verwijzing naar het document en het contact, nooit het document zelf.",
+        "Record schema": "Schema van het dossier",
+        "Withdrawn by": "Ingetrokken door",
+        "Withdrawn at": "Ingetrokken op",
+        "The uuid of the document record (documentVersion) that was released.": "De uuid van het documentrecord (documentVersion) dat is vrijgegeven.",
+        "The document's name as the requester sees it.": "De naam van het document zoals de aanvrager die ziet.",
+        "Whether the document is the decision or another document; the decision is listed first in the portal.": "Of het document het besluit is of een ander stuk; het besluit staat in het portaal bovenaan.",
+        "The document's Nextcloud file.": "Het Nextcloud-bestand van het document.",
+        "The register of the record the document is released on.": "Het register van het dossier waarop het document is vrijgegeven.",
+        "The schema of the record the document is released on.": "Het schema van het dossier waarop het document is vrijgegeven.",
+        "The record the document is released on.": "Het dossier waarop het document is vrijgegeven.",
+        "The requester: the reference to their contact, the key the portal finds a person's releases by.": "De aanvrager: de verwijzing naar diens contact, waarmee het portaal iemands vrijgaven vindt.",
+        "Who released the document.": "Wie het document vrijgaf.",
+        "When the document was released.": "Wanneer het document werd vrijgegeven.",
+        "Who withdrew the release.": "Wie de vrijgave introk.",
+        "When the release was withdrawn. A withdrawn release is no longer listed in the portal.": "Wanneer de vrijgave werd ingetrokken. Een ingetrokken vrijgave staat niet meer in het portaal."
     },
     "nplurals=2; plural=(n != 1);"
 )

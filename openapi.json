@@ -1401,6 +1401,9 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
                     }
                 },
                 "parameters": [
@@ -1462,6 +1465,9 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
                     }
                 },
                 "parameters": [
@@ -10943,6 +10949,133 @@
                         "$ref": "#/components/responses/Problem403"
                     }
                 }
+            }
+        },
+        "/case-documents/{uuid}/releases": {
+            "post": {
+                "operationId": "case-documents-release",
+                "summary": "Release one document on a record to the person who requested it",
+                "description": "Release one document on a record to the person who requested it. The caller must be allowed to write the record, and the document must be linked to it.",
+                "tags": [
+                    "case-documents"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The release.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The uuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "register": {
+                                        "type": "string"
+                                    },
+                                    "schema": {
+                                        "type": "string"
+                                    },
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "contactRef": {
+                                        "type": "string"
+                                    },
+                                    "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                            "decision",
+                                            "document"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/document-releases/{releaseId}": {
+            "delete": {
+                "operationId": "document-releases-withdraw",
+                "summary": "Withdraw a release",
+                "description": "Withdraw a release, so the portal no longer lists or serves its document. The caller must be allowed to write the release's record.",
+                "tags": [
+                    "case-documents"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The withdrawn release.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "releaseId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The release id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
             }
         }
     },
