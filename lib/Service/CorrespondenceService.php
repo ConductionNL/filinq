@@ -205,16 +205,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	 * @throws RuntimeException If OpenRegister is not available
 	 */
 	private function getObjectService(): \OCA\OpenRegister\Service\ObjectService {
-		if (in_array(
-			needle: 'openregister',
-			haystack: $this->appManager->getInstalledApps(),
-			strict: true
-		) === true
-		) {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		}
-
-		throw new RuntimeException(message: 'OpenRegister service is not available.');
+		return (new DocumentObjectServiceResolver(container: $this->container, appManager: $this->appManager))->resolve();
 	}//end getObjectService()
 
 	/**
@@ -260,8 +251,11 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		$template = $this->templateService->getTemplate(id: $templateId);
 
 		// Resolve data from OpenRegister.
+		// listRefs fill a template's tables from related records, as on the
+		// document generation path (REQ-DDLR-001).
 		$resolution = $this->dataResolver->resolve(
 			dataRefs: $dataRefs,
+			listRefs: ($options['listRefs'] ?? []),
 			adHocData: ($options['adHocData'] ?? [])
 		);
 		$data = $resolution['data'];

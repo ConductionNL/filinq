@@ -16,6 +16,9 @@
  *
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/specs/consent-management/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -40,6 +43,16 @@ use RuntimeException;
  * @link     https://www.filinq.app
  */
 class ConsentUpdateHandler {
+	/**
+	 * Fields the server alone owns; a caller may echo them but never change them.
+	 *
+	 * @var string[]
+	 */
+	private const SERVER_OWNED_FIELDS = [
+		'policyMatch',
+		'matchKind',
+	];
+
 	/**
 	 * Constructor for ConsentUpdateHandler
 	 *
@@ -234,43 +247,67 @@ class ConsentUpdateHandler {
 		// yet carry them. This guard is always-on and runs ahead of the
 		// policy-pre-emption lock so it cannot be bypassed by either the
 		// matched or the unmatched branch (PR #147 sixth-pass).
-		$serverOwnedFields = [
-			'policyMatch',
-			'matchKind',
-		];
+		$field = $this->changedServerField(existing: $existing, data: $data);
+		if ($field === null) {
+			return;
+		}
 
-		foreach ($serverOwnedFields as $field) {
+		throw new InvalidArgumentException(
+			message: sprintf(
+				'%s is server-controlled and cannot be modified by the caller.',
+				$field
+			)
+		);
+
+	}//end guardServerControlledFields()
+
+	/**
+	 * The first server-owned field the update would change.
+	 *
+	 * @param array<string, mixed> $existing The record's current data.
+	 * @param array<string, mixed> $data     The proposed update.
+	 *
+	 * @return string|null The field, or null when the update leaves them all as they are.
+	 */
+	private function changedServerField(array $existing, array $data): ?string {
+		foreach (self::SERVER_OWNED_FIELDS as $field) {
 			if (array_key_exists($field, $data) === false) {
 				continue;
 			}
 
-			$proposed = $data[$field];
-			$current = ($existing[$field] ?? null);
-
-			// Equal values are a no-op for an immutable field — allow them so
-			// idempotent clients that echo the full record state still work.
-			if ($proposed === $current) {
+			if ($this->isUnchangedServerValue(proposed: $data[$field], current: ($existing[$field] ?? null)) === true) {
 				continue;
 			}
 
-			// Tolerate loose scalar equality (e.g. "" vs null) so a client
-			// re-sending an empty marker against an unset field is not
-			// rejected, while a genuine value change still trips.
-			if (($proposed === null || $proposed === '')
-				&& ($current === null || $current === '')
-			) {
-				continue;
-			}
+			return $field;
+		}
 
-			throw new InvalidArgumentException(
-				message: sprintf(
-					'%s is server-controlled and cannot be modified by the caller.',
-					$field
-				)
-			);
-		}//end foreach
+		return null;
 
-	}//end guardServerControlledFields()
+	}//end changedServerField()
+
+	/**
+	 * Whether a proposed value for a server-owned field leaves it as it is.
+	 *
+	 * @param mixed $proposed The value the caller sent.
+	 * @param mixed $current  The value the record carries.
+	 *
+	 * @return bool True when the update does not change the field.
+	 */
+	private function isUnchangedServerValue(mixed $proposed, mixed $current): bool {
+		// Equal values are a no-op for an immutable field — allow them so
+		// idempotent clients that echo the full record state still work.
+		if ($proposed === $current) {
+			return true;
+		}
+
+		// Tolerate loose scalar equality (e.g. "" vs null) so a client
+		// re-sending an empty marker against an unset field is not
+		// rejected, while a genuine value change still trips.
+		return ($proposed === null || $proposed === '')
+			&& ($current === null || $current === '');
+
+	}//end isUnchangedServerValue()
 
 	/**
 	 * Reject `consentStatus` changes on records pre-empted by a policy.
@@ -295,17 +332,80 @@ class ConsentUpdateHandler {
 	 * @throws InvalidArgumentException When the update would change consentStatus on a policy-pre-empted record.
 	 */
 	private function guardPolicyPreemptedTransition(array $existing, array $data): void {
-		$existingMatch = ($existing['policyMatch'] ?? null);
-		if ($existingMatch === null || $existingMatch === '') {
+		$rejectedField = $this->rejectedPreemptedField(existing: $existing, data: $data);
+		if ($rejectedField === null) {
 			return;
 		}
 
-		// Guard the two operator-controlled transition fields. The
-		// prohibition lock applies to BOTH `consentStatus` AND
-		// `publicationDecision` — a record that's been pre-empted by a
-		// policy match must not be coaxed into "publish" via either
-		// field. Without this both-fields check, a PATCH carrying only
-		// `publicationDecision: "publish"` would bypass the lock.
+		throw new InvalidArgumentException(
+			message: sprintf(
+				'%s "%s" rejected on policy-pre-empted record (policyMatch=%s, current=%s).',
+				$rejectedField,
+				(string)$data[$rejectedField],
+				(string)$existing['policyMatch'],
+				(string)($existing[$rejectedField] ?? '')
+			)
+		);
+
+	}//end guardPolicyPreemptedTransition()
+
+	/**
+	 * The transition field an update may not change on a policy-pre-empted record.
+	 *
+	 * @param array<string, mixed> $existing The record's current data.
+	 * @param array<string, mixed> $data     The proposed update.
+	 *
+	 * @return string|null The refused field, or null when the record is not pre-empted or the update is allowed.
+	 */
+	private function rejectedPreemptedField(array $existing, array $data): ?string {
+		if ($this->isPolicyPreempted(existing: $existing) === false) {
+			return null;
+		}
+
+		[$statusChanged, $decisionChanged] = $this->transitionChanges(existing: $existing, data: $data);
+
+		if ($this->isStandingConsentOverride(
+			existing: $existing,
+			statusChanged: $statusChanged,
+			decisionChanged: $decisionChanged
+		) === true
+		) {
+			return null;
+		}
+
+		return $this->changedTransitionField(statusChanged: $statusChanged, decisionChanged: $decisionChanged);
+
+	}//end rejectedPreemptedField()
+
+	/**
+	 * Whether a policy pre-empted the record.
+	 *
+	 * @param array<string, mixed> $existing The record's current data.
+	 *
+	 * @return bool True when the record carries a policy match.
+	 */
+	private function isPolicyPreempted(array $existing): bool {
+		$existingMatch = ($existing['policyMatch'] ?? null);
+
+		return $existingMatch !== null && $existingMatch !== '';
+
+	}//end isPolicyPreempted()
+
+	/**
+	 * Whether the update changes `consentStatus` and `publicationDecision`.
+	 *
+	 * The prohibition lock applies to BOTH `consentStatus` AND
+	 * `publicationDecision` — a record that's been pre-empted by a policy
+	 * match must not be coaxed into "publish" via either field. Without this
+	 * both-fields check, a PATCH carrying only `publicationDecision: "publish"`
+	 * would bypass the lock.
+	 *
+	 * @param array<string, mixed> $existing The record's current data.
+	 * @param array<string, mixed> $data     The proposed update.
+	 *
+	 * @return array{0: bool, 1: bool} Whether the status and the decision change.
+	 */
+	private function transitionChanges(array $existing, array $data): array {
 		$statusChanged = $this->isTransitionFieldChanged(
 			existing: $existing,
 			data: $data,
@@ -317,38 +417,30 @@ class ConsentUpdateHandler {
 			field: 'publicationDecision'
 		);
 
-		if ($this->isStandingConsentOverride(
-			existing: $existing,
-			statusChanged: $statusChanged,
-			decisionChanged: $decisionChanged
-		) === true
-		) {
-			return;
-		}
+		return [$statusChanged, $decisionChanged];
 
-		if ($statusChanged === false && $decisionChanged === false) {
-			return;
-		}
+	}//end transitionChanges()
 
-		$rejectedField = 'publicationDecision';
+	/**
+	 * The field to refuse: the status when it changes, otherwise the decision when it changes.
+	 *
+	 * @param bool $statusChanged   Whether `consentStatus` changes.
+	 * @param bool $decisionChanged Whether `publicationDecision` changes.
+	 *
+	 * @return string|null The field, or null when neither changes.
+	 */
+	private function changedTransitionField(bool $statusChanged, bool $decisionChanged): ?string {
 		if ($statusChanged === true) {
-			$rejectedField = 'consentStatus';
+			return 'consentStatus';
 		}
 
-		$rejectedValue = (string)$data[$rejectedField];
-		$currentValue = (string)($existing[$rejectedField] ?? '');
+		if ($decisionChanged === true) {
+			return 'publicationDecision';
+		}
 
-		throw new InvalidArgumentException(
-			message: sprintf(
-				'%s "%s" rejected on policy-pre-empted record (policyMatch=%s, current=%s).',
-				$rejectedField,
-				$rejectedValue,
-				(string)$existingMatch,
-				$currentValue
-			)
-		);
+		return null;
 
-	}//end guardPolicyPreemptedTransition()
+	}//end changedTransitionField()
 
 	/**
 	 * Determine whether an update actually changes a transition field.

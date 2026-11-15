@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
 import { consentStore } from '../../store/store.js'
@@ -11,7 +15,14 @@ import { consentStore } from '../../store/store.js'
 		:loading="consentStore.loading"
 		:loadingLabel="t('filinq', 'Loading consent record...')"
 		:error="!consentStore.consentItem"
-		:errorMessage="t('filinq', 'No consent record selected.')">
+		:errorMessage="t('filinq', 'No consent record selected.')"
+		objectType="filinq-publicationConsent"
+		:objectId="consentStore.consentItem?.id || ''"
+		:sidebar="{
+			enabled: true,
+			register: 'filinq',
+			schema: 'publicationConsent',
+		}">
 		<!--
 			ENTITY INFORMATION IS A DEFAULT-SLOT SECTION, NOT A STATS TABLE, AND
 			THAT IS LOAD-BEARING.
@@ -317,6 +328,60 @@ import {
 import ArrowLeft from 'vue-material-design-icons/ArrowLeft.vue'
 import ContentSave from 'vue-material-design-icons/ContentSave.vue'
 
+/**
+ * The consent statuses a record can be set to.
+ *
+ * @return {Array<{label: string, value: string}>} The options, labels translated.
+ */
+function consentStatusOptions() {
+	return [
+		{ label: t('filinq', 'Pending'), value: 'pending' },
+		{ label: t('filinq', 'Consent Given'), value: 'consent_given' },
+		{
+			label: t('filinq', 'Objection Received'),
+			value: 'objection_received',
+		},
+		{ label: t('filinq', 'No Response'), value: 'no_response' },
+		{ label: t('filinq', 'Anonymized'), value: 'anonymized' },
+	]
+}
+
+/**
+ * The notification statuses a record can be set to.
+ *
+ * @return {Array<{label: string, value: string}>} The options, labels translated.
+ */
+function notificationStatusOptions() {
+	return [
+		{ label: t('filinq', 'Pending'), value: 'pending' },
+		{ label: t('filinq', 'Sent'), value: 'sent' },
+		{ label: t('filinq', 'Delivered'), value: 'delivered' },
+		{ label: t('filinq', 'Failed'), value: 'failed' },
+		{ label: t('filinq', 'Skipped'), value: 'skipped' },
+	]
+}
+
+/**
+ * The publication decisions a record can be set to.
+ *
+ * @return {Array<{label: string, value: string}>} The options, labels translated.
+ */
+function publicationDecisionOptions() {
+	return [
+		{ label: t('filinq', 'Pending'), value: 'pending' },
+		{ label: t('filinq', 'Anonymize'), value: 'anonymize' },
+		{
+			label: t('filinq', 'Publish with Consent'),
+			value: 'publish_with_consent',
+		},
+		{
+			label: t('filinq', 'Publish Anonymized'),
+			value: 'publish_anonymized',
+		},
+		{ label: t('filinq', 'Reject'), value: 'reject' },
+	]
+}
+
 export default {
 	name: 'ConsentDetail',
 	components: {
@@ -372,38 +437,11 @@ export default {
 				organization: 'primary',
 			},
 
-			consentStatusOptions: [
-				{ label: t('filinq', 'Pending'), value: 'pending' },
-				{ label: t('filinq', 'Consent Given'), value: 'consent_given' },
-				{
-					label: t('filinq', 'Objection Received'),
-					value: 'objection_received',
-				},
-				{ label: t('filinq', 'No Response'), value: 'no_response' },
-				{ label: t('filinq', 'Anonymized'), value: 'anonymized' },
-			],
+			consentStatusOptions: consentStatusOptions(),
 
-			notificationStatusOptions: [
-				{ label: t('filinq', 'Pending'), value: 'pending' },
-				{ label: t('filinq', 'Sent'), value: 'sent' },
-				{ label: t('filinq', 'Delivered'), value: 'delivered' },
-				{ label: t('filinq', 'Failed'), value: 'failed' },
-				{ label: t('filinq', 'Skipped'), value: 'skipped' },
-			],
+			notificationStatusOptions: notificationStatusOptions(),
 
-			publicationDecisionOptions: [
-				{ label: t('filinq', 'Pending'), value: 'pending' },
-				{ label: t('filinq', 'Anonymize'), value: 'anonymize' },
-				{
-					label: t('filinq', 'Publish with Consent'),
-					value: 'publish_with_consent',
-				},
-				{
-					label: t('filinq', 'Publish Anonymized'),
-					value: 'publish_anonymized',
-				},
-				{ label: t('filinq', 'Reject'), value: 'reject' },
-			],
+			publicationDecisionOptions: publicationDecisionOptions(),
 		}
 	},
 

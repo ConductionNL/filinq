@@ -112,4 +112,39 @@ class CategoryKeywordMapperTest extends TestCase {
 		$this->assertNull($result);
 
 	}//end testNoHistoryAndNoRuleMatchReturnsNull()
+
+	/**
+	 * An empty keyword never matches, and a rule whose keywords all miss
+	 * yields no suggestion.
+	 *
+	 * @return void
+	 */
+	public function testEmptyOrMissingKeywordsYieldNoMatch(): void {
+		$rules = [
+			['keywords' => ['', 'catering'], 'accountCode' => '4400', 'enabled' => true],
+		];
+
+		$this->assertNull($this->mapper->match(text: 'Managed hosting maart 2024', rules: $rules));
+
+	}//end testEmptyOrMissingKeywordsYieldNoMatch()
+
+	/**
+	 * A later keyword in the same rule still matches after an empty one is skipped,
+	 * and the rationale names the keyword that matched.
+	 *
+	 * @return void
+	 */
+	public function testEmptyKeywordIsSkippedAndNextKeywordMatches(): void {
+		$rules = [
+			['keywords' => ['', 'Hosting'], 'accountCode' => '4300', 'accountLabel' => 'ICT', 'enabled' => true],
+		];
+
+		$result = $this->mapper->match(text: 'Managed hosting maart 2024', rules: $rules);
+
+		$this->assertSame('4300', $result['code']);
+		$this->assertSame('ICT', $result['label']);
+		$this->assertSame("Keyword 'Hosting' matched mapping rule \u{2192} 4300", $result['rationale']);
+
+	}//end testEmptyKeywordIsSkippedAndNextKeywordMatches()
+
 }//end class

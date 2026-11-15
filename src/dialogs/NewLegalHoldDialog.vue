@@ -65,6 +65,7 @@ import {
 	NcTextArea,
 	NcTextField,
 } from '@nextcloud/vue'
+import { createDialogSubmit } from '../mixins/createDialogSubmit.js'
 import { createCase, holdTypeOptions, parseRefs } from '../services/legalHolds.js'
 
 /**
@@ -84,7 +85,10 @@ export default {
 		NcTextField,
 	},
 
+	mixins: [createDialogSubmit],
+
 	emits: ['close', 'created'],
+
 	data() {
 		const types = holdTypeOptions()
 		return {
@@ -126,10 +130,8 @@ export default {
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/archive/2026-09-29-e-discovery-legal-hold/tasks.md#task-3.1
 		 */
-		async onCreate() {
-			this.busy = true
-			this.error = ''
-			const answer = await createCase({
+		onCreate() {
+			return this.submitCreate(() => createCase({
 				name: this.name.trim(),
 				holdType: this.holdType?.id,
 				reason: this.reason.trim(),
@@ -137,13 +139,7 @@ export default {
 				custodian: this.custodian.trim(),
 				scopeDocuments: parseRefs(this.documents),
 				scopeDossiers: parseRefs(this.dossiers),
-			})
-			this.busy = false
-			if (!answer.ok) {
-				this.error = answer.error
-				return
-			}
-			this.$emit('created', answer.data)
+			}))
 		},
 	},
 }

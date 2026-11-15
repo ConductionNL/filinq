@@ -3,6 +3,9 @@
 /**
  * Test doubles for the anonymization batch-state store
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Two fakes that carry real behaviour rather than recorded expectations:
  *
  * - {@see NullCacheFake} reproduces `OC\Memcache\NullCache` — the cache class
@@ -37,9 +40,6 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

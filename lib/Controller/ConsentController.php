@@ -190,6 +190,59 @@ class ConsentController extends Controller {
 	}//end notConfiguredResponse()
 
 	/**
+	 * The signed-in caller with the consent register configuration, or the
+	 * refusal: 401 when nobody is signed in (before the configuration is
+	 * read), 400 when the configuration is missing.
+	 *
+	 * @return array{user: \OCP\IUser, config: array}|JSONResponse
+	 */
+	private function signedInConsentRequest(): array|JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+		}
+
+		$config = $this->crudService->getConsentConfig();
+		if ($config === null) {
+			return $this->notConfiguredResponse();
+		}
+
+		return ['user' => $user, 'config' => $config];
+
+	}//end signedInConsentRequest()
+
+	/**
+	 * The owner a consent list is scoped to: the caller, or nobody (every
+	 * record) for a consent officer.
+	 *
+	 * @param string $uid The signed-in caller.
+	 *
+	 * @return string|null The owner uid, or null for an officer.
+	 */
+	private function ownerFilter(string $uid): ?string {
+		if ($this->isConsentOfficer(uid: $uid) === true) {
+			return null;
+		}
+
+		return $uid;
+
+	}//end ownerFilter()
+
+	/**
+	 * The 404 for a consent record that does not exist or that the caller may
+	 * not see; both answer the same so existence cannot be probed.
+	 *
+	 * @return JSONResponse
+	 */
+	private function consentNotFound(): JSONResponse {
+		return new JSONResponse(
+			['error' => $this->l10n->t('Consent record not found')],
+			404
+		);
+
+	}//end consentNotFound()
+
+	/**
 	 * List consent records
 	 *
 	 * @return JSONResponse JSON response with list of consent records
@@ -201,33 +254,20 @@ class ConsentController extends Controller {
 	 */
 	public function index(): JSONResponse {
 		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+			$request = $this->signedInConsentRequest();
+			if ($request instanceof JSONResponse) {
+				return $request;
 			}
 
-			$config = $this->crudService->getConsentConfig();
-			if ($config === null) {
-				return $this->notConfiguredResponse();
-			}
-
-			// $user is the SAME object the guard above rejected when null — it is
-			// bound once at the top of this method now, rather than fetched a
-			// second time and re-checked. The old `$user !== null` here carried a
-			// comment saying it existed only to "appease Psalm"; binding once
-			// makes the non-null provable to every analyser and drops a redundant
-			// session lookup.
-			$uid = $user->getUID();
-			$filterUid = $uid;
-			if ($this->isConsentOfficer(uid: $uid) === true) {
-				$filterUid = null;
-			}
-
+			// The caller is bound once by the guard, rather than fetched a
+			// second time and re-checked, so the non-null is provable to every
+			// analyser and no second session lookup is made.
+			$config = $request['config'];
 			return new JSONResponse(
 				$this->crudService->listConsents(
 					$config['register'],
 					$config['schema'],
-					$filterUid
+					$this->ownerFilter(uid: $request['user']->getUID())
 				)
 			);
 		} catch (Exception $e) {
@@ -363,30 +403,22 @@ class ConsentController extends Controller {
 	 */
 	public function show(string $id): JSONResponse {
 		try {
-			if ($this->userSession->getUser() === null) {
-				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+			$request = $this->signedInConsentRequest();
+			if ($request instanceof JSONResponse) {
+				return $request;
 			}
 
-			$config = $this->crudService->getConsentConfig();
-			if ($config === null) {
-				return $this->notConfiguredResponse();
-			}
+			$config = $request['config'];
 
 			$consent = $this->crudService->getConsent($id, $config['register'], $config['schema']);
 			if ($consent === null) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('Consent record not found')],
-					404
-				);
+				return $this->consentNotFound();
 			}
 
 			// Per-object ownership guard (security finding #283): return 404
 			// (not 403) so non-owners cannot probe for record existence.
 			if ($this->canAccessConsent(consent: $consent) === false) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('Consent record not found')],
-					404
-				);
+				return $this->consentNotFound();
 			}
 
 			return new JSONResponse($consent);
@@ -409,23 +441,18 @@ class ConsentController extends Controller {
 	 */
 	public function update(string $id): JSONResponse {
 		try {
-			if ($this->userSession->getUser() === null) {
-				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+			$request = $this->signedInConsentRequest();
+			if ($request instanceof JSONResponse) {
+				return $request;
 			}
 
-			$config = $this->crudService->getConsentConfig();
-			if ($config === null) {
-				return $this->notConfiguredResponse();
-			}
+			$config = $request['config'];
 
 			// Per-object ownership guard (security finding #283): a non-owner
 			// must not be able to overwrite another user's consent record.
 			$existing = $this->crudService->getConsent($id, $config['register'], $config['schema']);
 			if ($existing === null || $this->canAccessConsent(consent: $existing) === false) {
-				return new JSONResponse(
-					['error' => $this->l10n->t('Consent record not found')],
-					404
-				);
+				return $this->consentNotFound();
 			}
 
 			if ($this->isConsentOfficer(uid: $this->userSession->getUser()->getUID()) === false) {
@@ -492,29 +519,19 @@ class ConsentController extends Controller {
 	 */
 	public function byDocument(string $documentId): JSONResponse {
 		try {
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+			$request = $this->signedInConsentRequest();
+			if ($request instanceof JSONResponse) {
+				return $request;
 			}
 
-			$config = $this->crudService->getConsentConfig();
-			if ($config === null) {
-				return $this->notConfiguredResponse();
-			}
-
-			// Same as index(): bound once by the guard above, so no second
+			// Same as index(): bound once by the guard, so no second
 			// getUser() and no re-check.
-			$uid = $user->getUID();
-			$filterUid = $uid;
-			if ($this->isConsentOfficer(uid: $uid) === true) {
-				$filterUid = null;
-			}
-
+			$config = $request['config'];
 			$consents = $this->crudService->getConsentsByDocument(
 				$documentId,
 				$config['register'],
 				$config['schema'],
-				$filterUid
+				$this->ownerFilter(uid: $request['user']->getUID())
 			);
 
 			return new JSONResponse($consents);

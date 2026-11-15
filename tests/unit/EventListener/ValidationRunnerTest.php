@@ -69,7 +69,7 @@ class ValidationRunnerTest extends TestCase {
 	 * Run the fallback for one event.
 	 *
 	 * @param Event                $event   The event.
-	 * @param array<string, mixed> $options nodes (what getById answers), saveFails, containerFails.
+	 * @param array<string, mixed> $options nodes (what getById answers), lookupFails, saveFails, containerFails.
 	 *
 	 * @return void
 	 */
@@ -81,7 +81,13 @@ class ValidationRunnerTest extends TestCase {
 		});
 
 		$folder = $this->createMock(Folder::class);
-		$folder->method('getById')->willReturnCallback(fn (int $id): array => ($options['nodes'] ?? [$this->file]));
+		$folder->method('getById')->willReturnCallback(function (int $id) use ($options): array {
+			if (($options['lookupFails'] ?? false) === true) {
+				throw new RuntimeException('storage offline');
+			}
+
+			return ($options['nodes'] ?? [$this->file]);
+		});
 		$root = $this->createMock(IRootFolder::class);
 		$root->method('getUserFolder')->willReturnCallback(function (string $uid) use ($folder): Folder {
 			$this->lines[] = ['folder', $uid, []];
@@ -202,6 +208,20 @@ class ValidationRunnerTest extends TestCase {
 		$this->assertSame([['folder', 'alice', []], ['folder', 'alice', []]], $this->lines);
 
 	}//end testNothingToValidateIsSilent()
+
+	/**
+	 * A file lookup that throws is treated as no file: nothing is validated, written or logged.
+	 *
+	 * @return void
+	 */
+	public function testAFailingFileLookupValidatesNothing(): void {
+		$this->fallback(event: new ObjectCreatedEvent($this->object()), options: ['lookupFails' => true]);
+
+		$this->assertSame([], $this->validations);
+		$this->assertSame([], $this->saves);
+		$this->assertSame([['folder', 'alice', []]], $this->lines);
+
+	}//end testAFailingFileLookupValidatesNothing()
 
 	/**
 	 * A failed write is an error naming the context; a missing service a debug line.

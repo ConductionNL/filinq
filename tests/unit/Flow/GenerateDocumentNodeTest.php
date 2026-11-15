@@ -34,10 +34,11 @@ use OCA\Filinq\Service\Support\TemplateLookup;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateSlugResolver;
+use OCA\OpenRegister\Service\Flow\FlowNodeCall;
 use OCA\OpenRegister\Service\Flow\IFlowDirectlyInvokable;
 use OCA\OpenRegister\Service\Flow\IFlowNodeTaxonomy;
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
-use OCA\OpenRegister\Service\Object\ObjectPatch;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IL10N;
@@ -176,11 +177,11 @@ class GenerateDocumentNodeTest extends TestCase {
 			['json' => ['title' => 'B', '@self' => ['id' => 'obj-b', 'register' => '5', 'schema' => '7']]],
 		];
 
-		$out = $this->node->execute(
+		$out = $this->node->execute(new FlowNodeCall(
 			items: $items,
 			config: ['template' => '{{ title }}', 'metadata' => ['classification' => 'openbaar']],
 			context: []
-		);
+		));
 
 		$this->assertCount(2, $out);
 		$this->assertSame([['register' => '5', 'schema' => '7', 'id' => 'obj-a']], $seen[0]['refs']);
@@ -209,7 +210,7 @@ class GenerateDocumentNodeTest extends TestCase {
 			)
 			->willReturn($this->stored(fileId: 7));
 
-		$out = $this->node->execute(
+		$out = $this->node->execute(new FlowNodeCall(
 			items: [['json' => ['id' => 'item-id']]],
 			config: [
 				'template' => 'x',
@@ -220,7 +221,7 @@ class GenerateDocumentNodeTest extends TestCase {
 				'requestingApp' => 'dossiq',
 			],
 			context: []
-		);
+		));
 
 		$this->assertSame(7, $out[0]['json']['besluitDocument']['fileId']);
 		$this->assertSame('dossiq', $out[0]['json']['besluitDocument']['requestingApp']);
@@ -245,11 +246,11 @@ class GenerateDocumentNodeTest extends TestCase {
 			)
 			->willReturn($this->stored(fileId: 9));
 
-		$out = $this->node->execute(
+		$out = $this->node->execute(new FlowNodeCall(
 			items: [['json' => ['@self' => ['id' => 'subject-1', 'register' => '5', 'schema' => '7']]]],
 			config: ['template' => 'x', 'register' => 'cases', 'schema' => 'case', 'objectId' => 'someone-elses'],
 			context: ['triggeredBy' => GenerateDocumentNode::DIRECT_TRIGGER, 'nodeId' => 'generate']
-		);
+		));
 
 		$this->assertSame(9, $out[0]['json']['document']['fileId']);
 	}//end testADirectRunFilesOnTheSubjectWhateverTheConfigNames()
@@ -291,11 +292,11 @@ class GenerateDocumentNodeTest extends TestCase {
 			->method('patchObject')
 			->with(new ObjectPatch(objectId: 'obj-1', data: ['besluit' => 'Toegekend'], target: new ObjectFindTarget(register: '5', schema: '7')));
 
-		$out = $this->node->execute(
+		$out = $this->node->execute(new FlowNodeCall(
 			items: [['json' => ['@self' => ['id' => 'obj-1', 'register' => '5', 'schema' => '7']]]],
 			config: ['template' => 'x', 'storeFile' => false, 'targetField' => 'besluit'],
 			context: []
-		);
+		));
 
 		$this->assertSame('Toegekend', $out[0]['json']['besluit']);
 		$this->assertSame('besluit', $out[0]['json']['document']['targetField']);
@@ -313,7 +314,7 @@ class GenerateDocumentNodeTest extends TestCase {
 		$this->expectException(\Exception::class);
 		$this->expectExceptionCode(404);
 
-		$this->node->execute(items: [['json' => ['id' => 'x']]], config: ['templateId' => 'missing'], context: []);
+		$this->node->execute(new FlowNodeCall(items: [['json' => ['id' => 'x']]], config: ['templateId' => 'missing'], context: []));
 	}//end testAFailureThrowsToTheEngine()
 
 	/**
@@ -405,7 +406,7 @@ class GenerateDocumentNodeTest extends TestCase {
 		$this->documents->expects($this->never())->method('generateFromTemplate');
 		$this->expectException(\UnexpectedValueException::class);
 
-		$this->node->execute(items: [['json' => ['id' => 'x']]], config: ['template' => 'x', 'output' => '  '], context: []);
+		$this->node->execute(new FlowNodeCall(items: [['json' => ['id' => 'x']]], config: ['template' => 'x', 'output' => '  '], context: []));
 	}//end testABlankOutputKeyIsRefused()
 
 	/**

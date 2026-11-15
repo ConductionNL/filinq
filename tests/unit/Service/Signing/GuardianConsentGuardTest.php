@@ -590,6 +590,118 @@ class GuardianConsentGuardTest extends TestCase {
 	}//end testAGuardianForASignerOutsideTheRequestIsRefused()
 
 	/**
+	 * A guardian whose minor is not a signer on this request is refused with
+	 * the reason, and the minor's record is never read.
+	 *
+	 * @return void
+	 */
+	public function testAGuardianForASignerNotOnTheRequestIsRefused(): void {
+		$this->learner(birthDate: self::AGED_14);
+
+		try {
+			$this->guard->guardSigningAct(
+				requestId: 'req-1',
+				request: $this->request(signerIds: ['guardian-1']),
+				signer: $this->guardian(),
+				verifiedActor: null,
+				now: $this->now()
+			);
+			$this->fail('The guardian act should have been refused.');
+		} catch (RuntimeException $e) {
+			$this->assertSame('This guardian record points at no signer on this request', $e->getMessage());
+			$this->assertSame(403, $e->getCode());
+		}
+
+	}//end testAGuardianForASignerNotOnTheRequestIsRefused()
+
+	/**
+	 * A guard whose object service and binding are given.
+	 *
+	 * @param array<string, string>|null $binding The signer record binding.
+	 * @param mixed                      $found   What the object service finds for any id.
+	 *
+	 * @return GuardianConsentGuard
+	 */
+	private function guardOver(?array $binding, mixed $found): GuardianConsentGuard {
+		$objectService = $this->getMockBuilder(ObjectService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['find'])
+			->getMock();
+		$objectService->method('find')->willReturn($found);
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getObjectService')->willReturn($objectService);
+		$settings->method('resolveSignerRecordBinding')->willReturn($binding);
+		$settings->method('getFeatureToggles')->willReturn([]);
+
+		return new GuardianConsentGuard(settingsService: $settings);
+
+	}//end guardOver()
+
+	/**
+	 * Without a configured signer-record binding the guard refuses to guess.
+	 *
+	 * @return void
+	 */
+	public function testAnUnconfiguredSignerBindingIsAnError(): void {
+		$guard = $this->guardOver(binding: null, found: null);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Signer record register/schema not configured');
+
+		$guard->guardSigningAct(
+			requestId: 'req-1',
+			request: $this->request(signerIds: ['learner-1', 'guardian-1']),
+			signer: $this->guardian(),
+			verifiedActor: null,
+			now: $this->now()
+		);
+
+	}//end testAnUnconfiguredSignerBindingIsAnError()
+
+	/**
+	 * A signer record served as an entity is read through jsonSerialize().
+	 *
+	 * @return void
+	 */
+	public function testASignerEntityIsReadThroughJsonSerialize(): void {
+		$learner = [
+			'id' => 'learner-1',
+			'signingRequestId' => 'req-1',
+			'userId' => 'sanne',
+			'email' => 'sanne@school.example',
+			'role' => 'signer',
+			'birthDate' => self::AGED_14,
+		];
+		$entity = new class($learner) {
+			/**
+			 * @param array<string, mixed> $row The row.
+			 */
+			public function __construct(private array $row) {
+			}
+
+			/**
+			 * @return array<string, mixed>
+			 */
+			public function jsonSerialize(): array {
+				return $this->row;
+			}
+		};
+		$guard = $this->guardOver(binding: ['register' => 'filinq', 'schema' => 'signerRecord'], found: $entity);
+
+		$result = $guard->guardSigningAct(
+			requestId: 'req-1',
+			request: $this->request(signerIds: ['learner-1', 'guardian-1']),
+			signer: $this->guardian(),
+			verifiedActor: null,
+			now: $this->now()
+		);
+
+		$this->assertSame('learner-1', $result['audit']['guardianConsent']['guardianForSignerId']);
+
+	}//end testASignerEntityIsReadThroughJsonSerialize()
+
+	/**
 	 * A guardian who acts is recorded with the identity the rails resolved.
 	 *
 	 * @return void

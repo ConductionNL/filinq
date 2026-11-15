@@ -3,6 +3,9 @@
 /**
  * Document Merge Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Turns a selection of documents into one ordered PDF: convert each input,
  * concatenate them in the order the person chose, prepend a cover page when one
  * is asked for, add one bookmark per input, and write the result where they
@@ -26,9 +29,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-merge/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

@@ -9,7 +9,7 @@ the law. Every test named here fails on `development` today: no resolver,
 snapshot, `GET /api/grounds`, mapping file or repair step exists, and the
 pickers read `base` objects.
 
-- [ ] 1 The resolver and the vendored snapshot (REQ-GRD-001). Files: `lib/Service/Grounds/RefusalGroundsResolver.php`, `lib/Settings/woo-refusal-grounds.snapshot.json` (copied verbatim from the dossiq release that ships it; record the dossiq version in the PR body).
+- [x] 1 The resolver and the vendored snapshot (REQ-GRD-001). Files: `lib/Service/Grounds/RefusalGroundsResolver.php`, `lib/Settings/woo-refusal-grounds.snapshot.json` (copied verbatim from the dossiq release that ships it; record the dossiq version in the PR body).
   - GIVEN dossiq enabled and the class present WHEN `list()` runs THEN `source: dossiq`.
   - GIVEN dossiq absent, disabled, or throwing `WooRefusalGroundsUnavailable` WHEN `list()` runs THEN `source: snapshot` with its version.
   - GIVEN the snapshot unreadable WHEN `list()` runs THEN it throws; it never returns an empty list.

@@ -1,0 +1,52 @@
+{
+	"menu": [
+		{
+			"id": "Intake",
+			"label": "Intake",
+			"icon": "InboxArrowDown",
+			"route": "Intake",
+			"order": 26
+		},
+		{
+			"id": "ClassificationPending",
+			"label": "Classification",
+			"icon": "TagCheckOutline",
+			"route": "ClassificationPending",
+			"order": 27
+		},
+		{
+			"id": "EmailIngestion",
+			"label": "Email ingestion",
+			"icon": "EmailArrowRightOutline",
+			"route": "EmailIngestion",
+			"section": "settings",
+			"order": 94
+		}
+	],
+	"pages": [
+		{
+			"id": "EmailIngestion",
+			"route": "/email-ingestion",
+			"type": "custom",
+			"title": "Email ingestion",
+			"component": "EmailIngestion",
+			"_note": "The emails filed from watched inbox folders into their dossiers, and the files that could not be filed, with the reason (email-ingestion). type:custom because it reads GET api/email-ingestion, which serves admins only, and its re-scan and convert-again actions are filinq endpoints, not object operations."
+		},
+		{
+			"id": "Intake",
+			"route": "/intake",
+			"type": "custom",
+			"title": "Intake",
+			"component": "IntakeIndex",
+			"_note": "The inbox between a channel and a record. type:custom rather than type:index because the two verbs on a waiting document, assign and reject, both write through filinq's own endpoints: assigning checks write rights on BOTH the intake schema and the record the clerk aims at, which a declarative object-op cannot express."
+		},
+		{
+			"id": "ClassificationPending",
+			"route": "/classification",
+			"type": "custom",
+			"title": "Classification suggestions",
+			"component": "ClassificationPending",
+			"_note": "The document type, sender and dossier suggestions waiting for a person (inbound-auto-classification). type:custom because the list is filtered on the caller's own access to each file and confirm/reject are filinq endpoints that write the document and move the file, not object operations."
+		}
+	]
+}

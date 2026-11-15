@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="dd-data-table">
 		<div v-if="loading" class="dd-data-table__loading">

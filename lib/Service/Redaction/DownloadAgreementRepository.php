@@ -73,21 +73,11 @@ class DownloadAgreementRepository {
 
 		$inForce = null;
 		foreach ($rows as $row) {
-			// The terms themselves carry no acceptance. A row that names an
-			// acceptor is somebody's acceptance of them, not the terms.
-			if (trim((string)($row['acceptedBy'] ?? '')) !== '' || trim((string)($row['text'] ?? '')) === '') {
+			if ($this->isTerms(row: $row) === false) {
 				continue;
 			}
 
-			// 🔴 THE TERMS IN FORCE ARE THE NEWEST ONES, NEVER THE FIRST ROW
-			// BACK. Republishing the agreement adds a row beside the old one,
-			// and taking whichever the store happened to list first would hand
-			// a reader who accepted version 1 the file after version 2 was
-			// published, which is the exact case "a new version asks again"
-			// exists to stop.
-			if ($inForce === null
-				|| version_compare((string)($row['version'] ?? ''), (string)($inForce['version'] ?? '')) >= 0
-			) {
+			if ($this->supersedes(row: $row, inForce: $inForce) === true) {
 				$inForce = $row;
 			}
 		}
@@ -95,6 +85,42 @@ class DownloadAgreementRepository {
 		return $inForce;
 
 	}//end forDocument()
+
+	/**
+	 * Whether a row is the terms themselves rather than somebody's acceptance of them.
+	 *
+	 * The terms carry no acceptance: a row that names an acceptor is
+	 * somebody's acceptance of them, not the terms. Terms without a text are
+	 * no terms either.
+	 *
+	 * @param array<string, mixed> $row The row.
+	 *
+	 * @return bool True for the terms.
+	 */
+	private function isTerms(array $row): bool {
+		return trim((string)($row['acceptedBy'] ?? '')) === '' && trim((string)($row['text'] ?? '')) !== '';
+
+	}//end isTerms()
+
+	/**
+	 * Whether these terms replace the ones found so far.
+	 *
+	 * 🔴 THE TERMS IN FORCE ARE THE NEWEST ONES, NEVER THE FIRST ROW BACK.
+	 * Republishing the agreement adds a row beside the old one, and taking
+	 * whichever the store happened to list first would hand a reader who
+	 * accepted version 1 the file after version 2 was published, which is the
+	 * exact case "a new version asks again" exists to stop.
+	 *
+	 * @param array<string, mixed>      $row     The terms.
+	 * @param array<string, mixed>|null $inForce The terms found so far, if any.
+	 *
+	 * @return bool True when the row is at least as new.
+	 */
+	private function supersedes(array $row, ?array $inForce): bool {
+		return $inForce === null
+			|| version_compare((string)($row['version'] ?? ''), (string)($inForce['version'] ?? '')) >= 0;
+
+	}//end supersedes()
 
 	/**
 	 * What this person has accepted for this document, if anything.
@@ -113,13 +139,43 @@ class DownloadAgreementRepository {
 			return null;
 		}
 
+		$mine = $this->acceptancesBy(rows: $this->rowsFor(document: $document), person: trim($person));
+
+		return $this->latestAcceptance(acceptances: $mine);
+
+	}//end acceptanceOf()
+
+	/**
+	 * The acceptance rows of one person, in store order.
+	 *
+	 * @param array<int, array<string, mixed>> $rows   The rows about the document.
+	 * @param string                           $person The trimmed person.
+	 *
+	 * @return array<int, array<string, mixed>> Their acceptances.
+	 */
+	private function acceptancesBy(array $rows, string $person): array {
+		$mine = [];
+		foreach ($rows as $row) {
+			if (trim((string)($row['acceptedBy'] ?? '')) === $person) {
+				$mine[] = $row;
+			}
+		}
+
+		return $mine;
+
+	}//end acceptancesBy()
+
+	/**
+	 * The acceptance with the latest moment; the first one wins a tie.
+	 *
+	 * @param array<int, array<string, mixed>> $acceptances One person's acceptances.
+	 *
+	 * @return array<string, mixed>|null The latest, or null when there is none.
+	 */
+	private function latestAcceptance(array $acceptances): ?array {
 		$latest = null;
 		$latestAt = '';
-		foreach ($this->rowsFor(document: $document) as $row) {
-			if (trim((string)($row['acceptedBy'] ?? '')) !== trim($person)) {
-				continue;
-			}
-
+		foreach ($acceptances as $row) {
 			$moment = (string)($row['acceptedAt'] ?? '');
 			if ($latest === null || $moment > $latestAt) {
 				$latest = $row;
@@ -129,7 +185,7 @@ class DownloadAgreementRepository {
 
 		return $latest;
 
-	}//end acceptanceOf()
+	}//end latestAcceptance()
 
 	/**
 	 * Write one acceptance.

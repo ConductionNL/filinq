@@ -3,6 +3,9 @@
 /**
  * Consolidates Filinq's five OpenRegister registers into one, MOVING THE ROWS.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * THIS STEP IS NOT LIKE ITS SIBLINGS. MigrateAppConfigKeys copies key/value
  * pairs; MigrateUserPreferences copies preference rows; a register-slug rename
  * is a one-column UPDATE on one row and re-points nothing. This one physically
@@ -78,9 +81,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 
 declare(strict_types=1);

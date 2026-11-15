@@ -3,6 +3,9 @@
 /**
  * Document Validation Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pure computation backend for document quality control. Runs a fixed catalogue
  * of file-level checks (format, extension/mime mismatch, readability, PDF
  * encryption, text-layer presence) and a record-level check (metadata
@@ -26,9 +29,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/document-validation-checks/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

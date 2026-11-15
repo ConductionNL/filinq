@@ -3,6 +3,9 @@
 /**
  * Party Suggestion Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Reads the name and address block out of an arriving document and OFFERS a
  * party. It never writes one. A party record written from a guess is a record
  * nobody chose, and no screen afterwards says which parties were guessed and
@@ -26,9 +29,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

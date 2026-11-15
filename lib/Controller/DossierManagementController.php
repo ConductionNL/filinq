@@ -3,6 +3,9 @@
 /**
  * Dossier Management Controller
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * HTTP surface for the dossier index and detail, and for the membership and
  * lifecycle operations behind them. Every method delegates to
  * {@see \OCA\Filinq\Service\DossierManagementService}; none of them reach into
@@ -31,9 +34,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
