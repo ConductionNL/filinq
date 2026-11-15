@@ -3,7 +3,7 @@
 		{
 			"id": "DigitisationProjects",
 			"label": "Digitisation",
-			"icon": "ArchiveArrowUpOutline",
+			"icon": "Scanner",
 			"route": "DigitisationProjects",
 			"order": 28
 		},
@@ -47,7 +47,7 @@
 					{
 						"id": "import-box-list",
 						"label": "Import box list",
-						"icon": "FileDelimitedOutline",
+						"icon": "FileDocumentMultipleOutline",
 						"type": "open-form",
 						"formTitle": "Import a box list",
 						"formSubtitle": "Paste the CSV with the columns box, shelfMark, description, dateFrom and dateTo. Rows that cannot be imported are listed with their reason.",
@@ -59,12 +59,12 @@
 					}
 				],
 				"widgets": [
-					{"id": "project-data", "type": "data", "title": "Project", "icon": "ArchiveArrowUpOutline", "content": {"title": "Project", "columns": 2}},
+					{"id": "project-data", "type": "data", "title": "Project", "icon": "Scanner", "content": {"title": "Project", "columns": 2}},
 					{
 						"id": "project-boxes",
 						"type": "object-table",
 						"title": "Boxes",
-						"icon": "PackageVariantClosed",
+						"icon": "FormatListBulleted",
 						"content": {
 							"endpointSource": {"url": "/apps/filinq/api/digitisation/projects/@objectId/boxes"},
 							"columns": [
@@ -92,7 +92,7 @@
 						"id": "project-originals",
 						"type": "object-list",
 						"title": "Paper originals",
-						"icon": "FileDocumentOutline",
+						"icon": "FileDocument",
 						"content": {
 							"register": "filinq",
 							"schema": "paperOriginal",
@@ -152,7 +152,7 @@
 					{
 						"id": "open-scan",
 						"label": "Open scan",
-						"icon": "FileEyeOutline",
+						"icon": "FilePdfBox",
 						"type": "navigate",
 						"target": "/index.php/f/@object.document",
 						"visibleWhen": {"field": "status", "in": ["scanned", "checked"]}
@@ -160,7 +160,7 @@
 					{
 						"id": "pass-scan",
 						"label": "Pass",
-						"icon": "CheckCircleOutline",
+						"icon": "FileCheckOutline",
 						"type": "api-call",
 						"url": "/apps/filinq/api/digitisation/originals/@objectId/check",
 						"method": "POST",
@@ -174,7 +174,7 @@
 					{
 						"id": "reject-scan",
 						"label": "Reject",
-						"icon": "CloseCircleOutline",
+						"icon": "AlertCircleOutline",
 						"type": "open-form",
 						"variant": "error",
 						"formTitle": "Reject the scan",
@@ -187,7 +187,7 @@
 					}
 				],
 				"widgets": [
-					{"id": "original-data", "type": "data", "title": "Paper original", "icon": "FileDocumentOutline", "content": {"title": "Paper original", "columns": 2}}
+					{"id": "original-data", "type": "data", "title": "Paper original", "icon": "FileDocument", "content": {"title": "Paper original", "columns": 2}}
 				],
 				"layout": [
 					{"id": "1", "widgetId": "original-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 6, "showTitle": false}
