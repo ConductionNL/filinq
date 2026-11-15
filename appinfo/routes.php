@@ -128,6 +128,14 @@ $extra = [
         ['name' => 'scanIntake#declareProfiles', 'url' => 'api/scan/profiles', 'verb' => 'POST'],
         ['name' => 'scanIntake#split', 'url' => 'api/scan/batches/{fileId}/split', 'verb' => 'POST'],
 
+        // A digitisation project: per-box progress, the separator sheets of
+        // one box, a CSV box list and the check of a scan
+        // (intake-paper-archive-digitisation).
+        ['name' => 'digitisation#boxes', 'url' => 'api/digitisation/projects/{id}/boxes', 'verb' => 'GET'],
+        ['name' => 'digitisation#separators', 'url' => 'api/digitisation/projects/{id}/separators', 'verb' => 'GET'],
+        ['name' => 'digitisation#importOriginals', 'url' => 'api/digitisation/projects/{id}/originals/import', 'verb' => 'POST'],
+        ['name' => 'digitisation#check', 'url' => 'api/digitisation/originals/{id}/check', 'verb' => 'POST'],
+
         // What leaves the building: the review mark, the composed publication
         // list and the conditions a gated download waits on
         // (redaction-and-what-leaves-the-building).
