@@ -316,6 +316,35 @@ class Pdfa3ConversionServiceTest extends TestCase {
 	}//end testConvertExistingPdfRejectsOversizedSource()
 
 	/**
+	 * Empty content and content that is no PDF are both refused as unreadable (422).
+	 *
+	 * @return void
+	 */
+	public function testConvertExistingPdfRefusesUnreadableSources(): void {
+		$cases = [
+			'empty' => ['', 'Source file could not be read as PDF content.', false],
+			'not a pdf' => ['plain text, not a PDF', 'Source could not be parsed as PDF: ', true],
+		];
+		foreach ($cases as $name => [$content, $message, $hasCause]) {
+			$mockFile = $this->createMock(File::class);
+			$mockFile->method('getSize')->willReturn(strlen($content));
+			$mockFile->method('getName')->willReturn('broken.pdf');
+			$mockFile->method('getContent')->willReturn($content);
+
+			try {
+				$this->service->convertExistingPdf(source: $mockFile);
+				$this->fail($name . ': expected a refusal');
+			} catch (Pdfa3ConversionException $e) {
+				$this->assertSame(Pdfa3ConversionException::REASON_SOURCE_UNREADABLE, $e->getReason(), $name);
+				$this->assertSame(422, $e->getCode(), $name);
+				$this->assertStringStartsWith($message, $e->getMessage(), $name);
+				$this->assertSame($hasCause, $e->getPrevious() !== null, $name);
+			}
+		}
+
+	}//end testConvertExistingPdfRefusesUnreadableSources()
+
+	/**
 	 * Test the per-attachment size guardrail.
 	 *
 	 * @return void

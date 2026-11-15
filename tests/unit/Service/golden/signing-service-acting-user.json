@@ -50,6 +50,9 @@
             }
         },
         {
+            "SettingsService::getTransitionEngine": []
+        },
+        {
             "ObjectService::saveObject": {
                 "object": {
                     "id": "req-1",

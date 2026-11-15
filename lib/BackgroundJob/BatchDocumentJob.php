@@ -3,6 +3,9 @@
 /**
  * Batch Document Job
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Background job for processing large document generation batches asynchronously.
  * Dispatched by DocumentService when the batch size exceeds the synchronous
  * limit (>10 objects). Progress is stored in the distributed cache and queryable

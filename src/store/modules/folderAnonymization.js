@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
@@ -92,18 +96,17 @@ async function patchFolderEntityDecision(entity) {
  * falls back to the parent folder. The summary is only produced when
  * `appendBasisSummary` and `outputFormat` travel together.
  *
- * @param {Array<object>} entities The checked entity payload.
- * @param {number|string|null} folderId The analysed folder's id.
- * @param {boolean} appendBasisSummary Whether to append the grondslagen summary.
+ * @param {object} store The folder anonymisation store (entities, folderId, appendBasisSummary).
  * @return {object}
  * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
  */
-function folderAnonymizeBody(entities, folderId, appendBasisSummary) {
+function folderAnonymizeBody(store) {
+	const entities = folderPayload(store.entities)
 	return {
 		entities,
 		scope: 'dossier',
-		...(folderId ? { dossierKey: String(folderId) } : {}),
-		...(appendBasisSummary
+		...(store.folderId ? { dossierKey: String(store.folderId) } : {}),
+		...(store.appendBasisSummary
 			? { appendBasisSummary: true, outputFormat: 'pdf-only' }
 			: {}),
 	}
@@ -164,12 +167,12 @@ function folderRunOutcome(succeeded, lastError) {
  * progress current. A failing file does not stop the others.
  *
  * @param {object} store The folder anonymisation store.
- * @param {Array<object>} targets The checked files.
- * @param {object} body The folder's anonymise body.
+ * @param {{targets: Array<object>, body: object}} run The checked files and the folder's anonymise body.
  * @return {Promise<{batchStatus: string, error: string|null}>}
  * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
  */
-async function anonymizeFolderFiles(store, targets, body) {
+async function anonymizeFolderFiles(store, run) {
+	const { targets, body } = run
 	let succeeded = 0
 	let lastError = null
 	for (const file of targets) {
@@ -182,6 +185,51 @@ async function anonymizeFolderFiles(store, targets, body) {
 		store.progress = Math.round((succeeded / targets.length) * 100)
 	}
 	return folderRunOutcome(succeeded, lastError)
+}
+
+/**
+ * Write every entity decision, then anonymise the checked files, and keep
+ * the run's status and message on the store.
+ *
+ * @param {object} store The folder anonymisation store.
+ * @param {Array<object>} targets The checked files, taken before the decisions were written.
+ * @return {Promise<void>}
+ * @spec openspec/specs/folder-batch-analysis/spec.md#requirement-anonymized-output-in-source-folder
+ */
+async function runFolderAnonymisation(store, targets) {
+	for (const entity of store.entities) {
+		await patchFolderEntityDecision(entity)
+	}
+
+	const body = folderAnonymizeBody(store)
+	const outcome = await anonymizeFolderFiles(store, { targets, body })
+	store.batchStatus = outcome.batchStatus
+	store.error = outcome.error
+}
+
+/**
+ * Put the store in its anonymising state for a run with checked files.
+ *
+ * @param {object} store The folder anonymisation store.
+ */
+function markAnonymising(store) {
+	store.reviewRequired = false
+	store.processing = true
+	store.error = null
+	store.batchStatus = 'anonymizing'
+}
+
+/**
+ * The name and id of each file an anonymise run leaves alone.
+ *
+ * @param {Array<object>} files The unreviewed files.
+ * @return {Array<{fileId: number, fileName: string}>}
+ */
+function skippedFileSummaries(files) {
+	return files.map((f) => ({
+		fileId: f.fileId,
+		fileName: f.fileName,
+	}))
 }
 
 /**
@@ -210,43 +258,52 @@ function createdObjectUuid(data) {
 	return data?.['@self']?.id || data?.id || data?.uuid || null
 }
 
+/**
+ * The store's fields as a fresh store and reset() have them; the poll timer
+ * is left out because reset() clears it through stopPolling(). Copied on
+ * every use, so a change to the store never reaches these defaults.
+ */
+const FOLDER_DEFAULTS = Object.freeze({
+	folderPath: '',
+	folderId: null,
+	batchId: null,
+	batchStatus: null,
+	files: [],
+	entities: [],
+	progress: 0,
+	totalFiles: 0,
+	totalEntities: 0,
+	error: null,
+	processing: false,
+	minConfidence: 0.0,
+	// Set when anonymise was asked for while no file was checked.
+	reviewRequired: false,
+	// Files the last anonymise run left alone because nobody checked them.
+	skippedUnreviewed: [],
+
+	// Wave 4a (anonymisation-grondslagen-summary) state.
+	// Operator can optionally create a dossier for the chosen folder so
+	// the per-dossier grondslagen report has something to operate on.
+	dossier: {
+		uuid: null,
+		name: '',
+		description: '',
+		bases: ['art-5-1-2-e'],
+		creating: false,
+		error: null,
+	},
+	appendBasisSummary: true,
+	report: {
+		generating: false,
+		result: null,
+		error: null,
+	},
+})
+
 export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 	state: () => ({
-		folderPath: '',
-		folderId: null,
-		batchId: null,
-		batchStatus: null,
-		files: [],
-		entities: [],
-		progress: 0,
-		totalFiles: 0,
-		totalEntities: 0,
-		error: null,
-		processing: false,
+		...structuredClone(FOLDER_DEFAULTS),
 		pollTimer: null,
-		minConfidence: 0.0,
-		// Set when anonymise was asked for while no file was checked.
-		reviewRequired: false,
-		// Files the last anonymise run left alone because nobody checked them.
-		skippedUnreviewed: [],
-
-		// Wave 4a (anonymisation-grondslagen-summary) state.
-		// Operator can optionally create a dossier for the chosen folder so
-		// the per-dossier grondslagen report has something to operate on.
-		dossier: {
-			uuid: null,
-			name: '',
-			description: '',
-			bases: ['art-5-1-2-e'],
-			creating: false,
-			error: null,
-		},
-		appendBasisSummary: true,
-		report: {
-			generating: false,
-			result: null,
-			error: null,
-		},
 	}),
 	getters: {
 		isActive: (state) => state.batchId !== null,
@@ -519,31 +576,14 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 			// Only files a person checked are written; the rest stay listed
 			// as unreviewed. With none checked there is nothing to send.
 			const targets = this.reviewedFiles
-			this.skippedUnreviewed = this.unreviewedFiles.map((f) => ({
-				fileId: f.fileId,
-				fileName: f.fileName,
-			}))
+			this.skippedUnreviewed = skippedFileSummaries(this.unreviewedFiles)
 			if (targets.length === 0) {
 				this.reviewRequired = true
 				return
 			}
-			this.reviewRequired = false
-			this.processing = true
-			this.error = null
-			this.batchStatus = 'anonymizing'
+			markAnonymising(this)
 			try {
-				for (const entity of this.entities) {
-					await patchFolderEntityDecision(entity)
-				}
-
-				const body = folderAnonymizeBody(
-					folderPayload(this.entities),
-					this.folderId,
-					this.appendBasisSummary,
-				)
-				const outcome = await anonymizeFolderFiles(this, targets, body)
-				this.batchStatus = outcome.batchStatus
-				this.error = outcome.error
+				await runFolderAnonymisation(this, targets)
 			} catch (e) {
 				this.error = e.response?.data?.error || e.message
 				this.batchStatus = 'error'
@@ -605,36 +645,7 @@ export const useFolderAnonymizationStore = defineStore('folderAnonymization', {
 		 */
 		reset() {
 			this.stopPolling()
-			Object.assign(this, {
-				folderPath: '',
-				folderId: null,
-				batchId: null,
-				batchStatus: null,
-				files: [],
-				entities: [],
-				progress: 0,
-				totalFiles: 0,
-				totalEntities: 0,
-				error: null,
-				processing: false,
-				minConfidence: 0.0,
-				reviewRequired: false,
-				skippedUnreviewed: [],
-				dossier: {
-					uuid: null,
-					name: '',
-					description: '',
-					bases: ['art-5-1-2-e'],
-					creating: false,
-					error: null,
-				},
-				appendBasisSummary: true,
-				report: {
-					generating: false,
-					result: null,
-					error: null,
-				},
-			})
+			Object.assign(this, structuredClone(FOLDER_DEFAULTS))
 		},
 	},
 })

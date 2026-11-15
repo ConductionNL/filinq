@@ -3,6 +3,9 @@
 /**
  * EML Conversion Backend
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Cascade slot for EML (`message/rfc822`) inputs. EML is anonymised by
  * OpenRegister (which redacts headers, body, attachment bytes and inline
  * images) and assembled into a PDF/A-3b by Filinq's
@@ -32,9 +35,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

@@ -41,6 +41,14 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // NOT work: spl_autoload_register appends relative to registration order, and
 // that order across independently loaded apps is what nobody controls.
 foreach (['ObjectEntityInterface', 'ObjectServiceInterface'] as $contract) {
+	// A contract openregister main has moved on from keeps a test copy here until
+	// hydra-gates catches up. It is checked without autoloading, because asking
+	// the autoloader would load the hydra-gates copy first.
+	$own = __DIR__ . '/stubs/contracts/' . $contract . '.php';
+	if (interface_exists('\\OCA\\OpenRegister\\Contract\\' . $contract, false) === false && file_exists($own) === true) {
+		require_once $own;
+	}
+
 	if (interface_exists('\\OCA\\OpenRegister\\Contract\\' . $contract) === false) {
 		$shipped = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/' . $contract . '.php';
 		if (file_exists($shipped) === true) {

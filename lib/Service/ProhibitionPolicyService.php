@@ -49,6 +49,14 @@ use Throwable;
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-5
  */
 class ProhibitionPolicyService {
+
+	/**
+	 * The warning logged for each un-redacted absolute match the backstop catches.
+	 *
+	 * @var string
+	 */
+	private const BACKSTOP_CAUGHT = 'Prohibition backstop caught an un-redacted absolute match';
+
 	/**
 	 * Constructor for ProhibitionPolicyService
 	 *
@@ -186,57 +194,133 @@ class ProhibitionPolicyService {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-7
 	 */
 	public function absoluteProhibitionViolations(int $fileId): array {
+		$matcher = $this->backstopMatcher();
+		if ($matcher === null) {
+			return [];
+		}
+
+		return $this->backstopScan(matcher: $matcher, fileId: $fileId);
+	}//end absoluteProhibitionViolations()
+
+	/**
+	 * The policy matcher for the backstop, or null (with a warning) when it cannot be resolved.
+	 *
+	 * @return mixed The PolicyMatchService, or null.
+	 */
+	private function backstopMatcher(): mixed {
 		try {
-			$matcher = $this->container->get('OCA\Filinq\Service\PolicyMatchService');
+			return $this->container->get('OCA\Filinq\Service\PolicyMatchService');
 		} catch (Exception $e) {
 			$this->logger->warning(
 				'Policy matcher unavailable; prohibition backstop is a no-op',
 				['exception' => $e->getMessage()]
 			);
-			return [];
+			return null;
 		}
 
+	}//end backstopMatcher()
+
+	/**
+	 * Every confident prohibition match among the file's un-redacted occurrences, each logged.
+	 *
+	 * @param mixed $matcher The PolicyMatchService.
+	 * @param int   $fileId  The Nextcloud file id.
+	 *
+	 * @return array<int, array<string, mixed>> Absolute-tier violations (may be empty).
+	 */
+	private function backstopScan(mixed $matcher, int $fileId): array {
 		$mapper = $this->locator->get(className: 'OCA\OpenRegister\Db\EntityRelationMapper');
 		$threshold = (float)$matcher->highConfidenceThreshold();
-		$redactIds = $this->collectRedactionRelationIds(mapper: $mapper, fileId: $fileId);
-
 		$violations = [];
-		foreach ($mapper->findEntitiesForFile($fileId) as $row) {
-			// Being redacted — fine.
-			if (isset($redactIds[(int)($row['relation_id'] ?? 0)]) === true) {
-				continue;
-			}
-
-			$value = (string)($row['entity_value'] ?? '');
-			if ($value === '') {
-				continue;
-			}
-
-			$match = $matcher->matchProhibition(
-				entityText: $value,
-				entityType: (string)($row['entity_type'] ?? 'OTHER')
-			);
+		foreach ($this->unredactedOccurrences(mapper: $mapper, fileId: $fileId) as $row) {
+			$match = $this->prohibitionMatchOf(matcher: $matcher, row: $row);
 			if ($match === null || ((float)($row['confidence'] ?? 0.0)) < $threshold) {
 				continue;
 			}
 
-			$this->logger->warning(
-				'Prohibition backstop caught an un-redacted absolute match',
-				['ruleId' => $match['uuid'], 'entityId' => (int)($row['entity_id'] ?? 0), 'fileId' => $fileId]
-			);
-
-			$violations[] = [
-				'entityId' => (int)($row['entity_id'] ?? 0),
-				'entityName' => $value,
-				'ruleId' => $match['uuid'],
-				'ruleName' => $match['primaryName'],
-				'confidence' => (float)($row['confidence'] ?? 0.0),
-				'absolute' => true,
-			];
-		}//end foreach
+			$this->logger->warning(self::BACKSTOP_CAUGHT, $this->caughtContext(rule: $match, row: $row) + ['fileId' => $fileId]);
+			$violations[] = $this->backstopViolation(rule: $match, row: $row);
+		}
 
 		return $violations;
-	}//end absoluteProhibitionViolations()
+
+	}//end backstopScan()
+
+	/**
+	 * The file's detected occurrences that are left un-redacted and carry a value.
+	 *
+	 * "Skipped" = detected for the file but absent from the anonymise set
+	 * (`findEntitiesForAnonymization`, which already excludes skipAnonymization).
+	 *
+	 * @param mixed $mapper OpenRegister EntityRelationMapper.
+	 * @param int   $fileId The Nextcloud file id.
+	 *
+	 * @return array<int, array<string, mixed>> The rows, in detection order.
+	 */
+	private function unredactedOccurrences(mixed $mapper, int $fileId): array {
+		$redactIds = $this->collectRedactionRelationIds(mapper: $mapper, fileId: $fileId);
+		$rows = [];
+		foreach ($mapper->findEntitiesForFile($fileId) as $row) {
+			// Being redacted — fine; and an occurrence without a value proves nothing.
+			if (isset($redactIds[(int)($row['relation_id'] ?? 0)]) === true || (string)($row['entity_value'] ?? '') === '') {
+				continue;
+			}
+
+			$rows[] = $row;
+		}
+
+		return $rows;
+
+	}//end unredactedOccurrences()
+
+	/**
+	 * The prohibition matching one occurrence, at any confidence.
+	 *
+	 * @param mixed                $matcher The PolicyMatchService.
+	 * @param array<string, mixed> $row     The detected occurrence.
+	 *
+	 * @return array<string, mixed>|null The matching rule, or null.
+	 */
+	private function prohibitionMatchOf(mixed $matcher, array $row): ?array {
+		return $matcher->matchProhibition(
+			entityText: (string)($row['entity_value'] ?? ''),
+			entityType: (string)($row['entity_type'] ?? 'OTHER')
+		);
+
+	}//end prohibitionMatchOf()
+
+	/**
+	 * The log context of a caught occurrence, without the file.
+	 *
+	 * @param array<string, mixed> $rule  The matching rule.
+	 * @param array<string, mixed> $row   The detected occurrence.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function caughtContext(array $rule, array $row): array {
+		return ['ruleId' => $rule['uuid'], 'entityId' => (int)($row['entity_id'] ?? 0)];
+
+	}//end caughtContext()
+
+	/**
+	 * The violation record of a caught occurrence.
+	 *
+	 * @param array<string, mixed> $rule  The matching rule.
+	 * @param array<string, mixed> $row   The detected occurrence.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function backstopViolation(array $rule, array $row): array {
+		return [
+			'entityId' => (int)($row['entity_id'] ?? 0),
+			'entityName' => (string)($row['entity_value'] ?? ''),
+			'ruleId' => $rule['uuid'],
+			'ruleName' => $rule['primaryName'],
+			'confidence' => (float)($row['confidence'] ?? 0.0),
+			'absolute' => true,
+		];
+
+	}//end backstopViolation()
 
 	/**
 	 * Check unredacted entities against publication-prohibition rules.

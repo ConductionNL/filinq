@@ -37,6 +37,7 @@ use Stringable;
  *
  * @covers \OCA\Filinq\Service\DataResolverService
  * @uses   \OCA\Filinq\Service\ListReferenceResolver
+ * @uses \OCA\Filinq\Service\DocumentObjectServiceResolver
  */
 class DataResolverReferenceGoldenTest extends TestCase {
 

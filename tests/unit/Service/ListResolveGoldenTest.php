@@ -33,6 +33,7 @@ use ReflectionMethod;
  * from the implementation before it was split.
  *
  * @covers \OCA\Filinq\Service\ListReferenceResolver
+ * @uses \OCA\Filinq\Service\DocumentObjectServiceResolver
  */
 class ListResolveGoldenTest extends TestCase {
 

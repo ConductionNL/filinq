@@ -28,7 +28,6 @@ namespace OCA\Filinq\Service\SigningEnvelope;
 use OCA\Filinq\Kernel\Contracts\SigningEnvelopeServiceInterface;
 use OCA\Filinq\Service\SigningService;
 use RuntimeException;
-use Symfony\Component\Uid\UuidV4;
 use Throwable;
 
 /**
@@ -86,40 +85,9 @@ class SigningEnvelopeService implements SigningEnvelopeServiceInterface {
 	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
 	 */
 	public function create(array $input, string $userId): array {
-		$documents = $this->documents(value: ($input['documents'] ?? null));
-		$uuid = (new UuidV4())->toRfc4122();
-
-		$signers = [];
-		foreach ((array) ($input['signers'] ?? []) as $signer) {
-			$signers[] = ['envelopeRef' => $uuid] + (array) $signer;
-		}
-
-		$common = ['signers' => $signers, 'envelopeRef' => $uuid];
-		foreach (['signatureLevel', 'signingMode', 'provider', 'requiredAssurance', 'deadline'] as $key) {
-			if (isset($input[$key]) === true && $input[$key] !== '') {
-				$common[$key] = $input[$key];
-			}
-		}
-
-		$requestRefs = $this->createMembers(documents: $documents, common: $common);
-
-		$title = trim((string) ($input['title'] ?? ''));
-		if ($title === '') {
-			$title = $documents[0]['documentName'];
-		}
-
-		$envelope = $this->repository->save(
-			envelope: [
-				'title' => mb_substr($title, 0, 255),
-				'requestRefs' => $requestRefs,
-				'initiatorUserId' => $userId,
-				'signerUserIds' => $this->signerUserIds(signers: $signers),
-				'documentCount' => count($requestRefs),
-				'status' => 'pending',
-				'createdAt' => gmdate(DATE_ATOM),
-			],
-			uuid: $uuid
-		);
+		$draft = new SigningEnvelopeDraft(input: $input);
+		$requestRefs = $this->createMembers(documents: $draft->documents, common: $draft->shared());
+		$envelope = $this->repository->save(envelope: $draft->record(requestRefs: $requestRefs, userId: $userId), uuid: $draft->uuid);
 
 		return $this->withMembers(envelope: $envelope);
 
@@ -140,8 +108,9 @@ class SigningEnvelopeService implements SigningEnvelopeServiceInterface {
 	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
 	 */
 	public function get(string $id, string $userId, bool $isAdmin): ?array {
-		$envelope = $this->reachable(id: $id, userId: $userId, isAdmin: $isAdmin, manage: false);
-		if ($envelope === null) {
+		$caller = new EnvelopeCaller(userId: $userId, isAdmin: $isAdmin);
+		$envelope = $this->found(id: $id, caller: $caller);
+		if ($envelope === null || $caller->mayRead(envelope: $envelope) === false) {
 			return null;
 		}
 
@@ -187,19 +156,13 @@ class SigningEnvelopeService implements SigningEnvelopeServiceInterface {
 	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
 	 */
 	public function signAll(string $id, string $userId): ?array {
-		$envelope = $this->reachable(id: $id, userId: $userId, isAdmin: false, manage: false);
-		if ($envelope === null || in_array($userId, (array) ($envelope['signerUserIds'] ?? []), true) === false) {
+		$caller = new EnvelopeCaller(userId: $userId, isAdmin: false);
+		$envelope = $this->found(id: $id, caller: $caller);
+		if ($envelope === null || $caller->isSignerOf(envelope: $envelope) === false) {
 			return null;
 		}
 
-		$open = [];
-		foreach ($this->members(envelope: $envelope) as $member) {
-			if (in_array($member['status'], SigningEnvelopeRollUp::OPEN, true) === true) {
-				$open[] = $member['id'];
-			}
-		}
-
-		$results = $this->signing->bulkSign(requestIds: $open);
+		$results = $this->signing->bulkSign(requestIds: $this->openMemberIds(envelope: $envelope));
 
 		return ['envelope' => $this->withMembers(envelope: $envelope), 'results' => $results];
 
@@ -220,22 +183,13 @@ class SigningEnvelopeService implements SigningEnvelopeServiceInterface {
 	 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
 	 */
 	public function cancel(string $id, string $userId, bool $isAdmin): ?array {
-		$envelope = $this->reachable(id: $id, userId: $userId, isAdmin: $isAdmin, manage: true);
-		if ($envelope === null) {
+		$caller = new EnvelopeCaller(userId: $userId, isAdmin: $isAdmin);
+		$envelope = $this->found(id: $id, caller: $caller);
+		if ($envelope === null || $caller->mayManage(envelope: $envelope) === false) {
 			return null;
 		}
 
-		$cancelled = 0;
-		foreach ($this->members(envelope: $envelope) as $member) {
-			if (in_array($member['status'], SigningEnvelopeRollUp::OPEN, true) === true) {
-				try {
-					$this->signing->cancelRequest(requestId: $member['id']);
-					$cancelled++;
-				} catch (Throwable) {
-					// Signed or declined in the meantime: left as it is.
-				}
-			}
-		}
+		$cancelled = $this->cancelOpen(requestIds: $this->openMemberIds(envelope: $envelope));
 
 		$envelope['status'] = 'cancelled';
 		$envelope['updatedAt'] = gmdate(DATE_ATOM);
@@ -246,30 +200,66 @@ class SigningEnvelopeService implements SigningEnvelopeServiceInterface {
 	}//end cancel()
 
 	/**
-	 * The envelope, when the caller may reach it.
+	 * The stored envelope, when there is one and a caller to ask for it.
 	 *
-	 * @param string $id      The envelope uuid
-	 * @param string $userId  The caller
-	 * @param bool   $isAdmin Whether the caller is an admin
-	 * @param bool   $manage  True for cancelling: only the initiator or an admin
+	 * Whether the caller may reach it is the caller's question
+	 * ({@see EnvelopeCaller::mayRead()} and the like).
 	 *
-	 * @return array|null The envelope, or null when absent or out of reach
+	 * @param string         $id     The envelope uuid
+	 * @param EnvelopeCaller $caller Who is asking
+	 *
+	 * @return array|null The envelope, or null when absent or asked for by nobody
 	 */
-	private function reachable(string $id, string $userId, bool $isAdmin, bool $manage): ?array {
+	private function found(string $id, EnvelopeCaller $caller): ?array {
 		$envelope = $this->repository->find(uuid: $id);
-		if ($envelope === null || $userId === '') {
+		if ($envelope === null || $caller->userId === '') {
 			return null;
 		}
 
-		$initiator = ($envelope['initiatorUserId'] ?? '') === $userId;
-		$signer = in_array($userId, (array) ($envelope['signerUserIds'] ?? []), true);
-		if ($isAdmin === true || $initiator === true || ($signer === true && $manage === false)) {
-			return $envelope;
+		return $envelope;
+
+	}//end found()
+
+	/**
+	 * The ids of the members that can still be signed or cancelled, in envelope order.
+	 *
+	 * @param array $envelope The envelope
+	 *
+	 * @return list<string>
+	 */
+	private function openMemberIds(array $envelope): array {
+		$open = [];
+		foreach ($this->members(envelope: $envelope) as $member) {
+			if (in_array($member['status'], SigningEnvelopeRollUp::OPEN, true) === true) {
+				$open[] = $member['id'];
+			}
 		}
 
-		return null;
+		return $open;
 
-	}//end reachable()
+	}//end openMemberIds()
+
+	/**
+	 * Cancel each open member, counting the ones that were cancelled.
+	 *
+	 * @param list<string> $requestIds The open member request ids
+	 *
+	 * @return int How many were cancelled.
+	 */
+	private function cancelOpen(array $requestIds): int {
+		$cancelled = 0;
+		foreach ($requestIds as $requestId) {
+			try {
+				$this->signing->cancelRequest(requestId: $requestId);
+				$cancelled++;
+			} catch (Throwable) {
+				// Signed or declined in the meantime: left as it is.
+			}
+		}
+
+		return $cancelled;
+
+	}//end cancelOpen()
 
 	/**
 	 * The envelope with its members, its status rolled up and stored when it moved.
@@ -365,58 +355,4 @@ class SigningEnvelopeService implements SigningEnvelopeServiceInterface {
 
 	}//end createMembers()
 
-	/**
-	 * Validate the documents list.
-	 *
-	 * @param mixed $value The `documents` the caller sent
-	 *
-	 * @return list<array{documentFileId: string, documentName: string}>
-	 *
-	 * @throws RuntimeException 400 when it is not two to MAX_DOCUMENTS documents with a file id each
-	 */
-	private function documents(mixed $value): array {
-		if (is_array($value) === false || count($value) < 2 || count($value) > self::MAX_DOCUMENTS) {
-			throw new RuntimeException(message: 'An envelope holds 2 to ' . self::MAX_DOCUMENTS . ' documents', code: 400);
-		}
-
-		$documents = [];
-		$seen = [];
-		foreach (array_values($value) as $position => $document) {
-			$fileId = trim((string) (((array) $document)['documentFileId'] ?? ''));
-			if ($fileId === '' || isset($seen[$fileId]) === true) {
-				throw new RuntimeException(message: 'Document ' . ($position + 1) . ' needs a file id of its own', code: 400);
-			}
-
-			$seen[$fileId] = true;
-			$name = trim((string) (((array) $document)['documentName'] ?? ''));
-			if ($name === '') {
-				$name = $fileId;
-			}
-
-			$documents[] = ['documentFileId' => $fileId, 'documentName' => $name];
-		}
-
-		return $documents;
-
-	}//end documents()
-
-	/**
-	 * The Nextcloud users among the signers, each once.
-	 *
-	 * @param list<array> $signers The signer entries
-	 *
-	 * @return list<string>
-	 */
-	private function signerUserIds(array $signers): array {
-		$uids = [];
-		foreach ($signers as $signer) {
-			$uid = trim((string) ($signer['userId'] ?? ''));
-			if ($uid !== '') {
-				$uids[$uid] = true;
-			}
-		}
-
-		return array_keys($uids);
-
-	}//end signerUserIds()
 }//end class

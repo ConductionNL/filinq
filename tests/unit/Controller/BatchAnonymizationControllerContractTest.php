@@ -3,6 +3,9 @@
 /**
  * Wire-contract tests for the batch-anonymization HTTP surface
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Covers `batchAnonymization#batchUpload` (POST api/anonymization/batch/upload),
  * `batchAnonymization#batchExtract` (POST .../batch/{batchId}/extract),
  * `batchAnonymization#batchStatus` (GET .../batch/{batchId}/status),
@@ -26,9 +29,6 @@
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-completion-report
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

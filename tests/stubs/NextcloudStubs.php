@@ -73,6 +73,20 @@ interface IRequest {
 	public function getHeader(string $name): string;
 
 	/**
+	 * Get the path of the request below the front controller.
+	 *
+	 * @return string|false
+	 */
+	public function getPathInfo(): string|false;
+
+	/**
+	 * Get the request URI, front controller and query string included.
+	 *
+	 * @return string
+	 */
+	public function getRequestUri(): string;
+
+	/**
 	 * Get the HTTP method of the request.
 	 *
 	 * @return string
@@ -325,6 +339,7 @@ class JSONResponse extends Response {
 	public function __construct(mixed $data = [], int $statusCode = 200) {
 		$this->data = $data;
 		$this->status = $statusCode;
+		$this->addHeader(name: 'Content-Type', value: 'application/json; charset=utf-8');
 
 	}//end __construct()
 
@@ -336,6 +351,18 @@ class JSONResponse extends Response {
 	public function getData(): mixed {
 		return $this->data;
 	}//end getData()
+
+	/**
+	 * Replace the response data, as the real class does.
+	 *
+	 * @param mixed $data The new data.
+	 *
+	 * @return self
+	 */
+	public function setData(mixed $data): self {
+		$this->data = $data;
+		return $this;
+	}//end setData()
 
 	/**
 	 * Get HTTP status code

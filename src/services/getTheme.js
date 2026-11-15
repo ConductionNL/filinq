@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Determines the current theme of the document.
  *
  * This function checks the `data-theme-light` and `data-theme-default` attributes

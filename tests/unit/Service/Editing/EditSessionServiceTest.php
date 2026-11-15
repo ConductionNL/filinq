@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service\Editing;
@@ -725,6 +728,60 @@ class EditSessionServiceTest extends TestCase {
 		);
 
 	}//end testAReadOnlyFileIsRefusedForInPlaceOutput()
+
+	/**
+	 * The gate an edit through an open editor passes: a guarded document is
+	 * refused, a read-only one is refused, and an editable one passes.
+	 *
+	 * @return void
+	 */
+	public function testAnEditThroughTheEditorPassesTheSameGateAsADirectWrite(): void {
+		$this->service()->assertAgentMayEdit(uid: self::UID, fileId: self::FILE_ID);
+
+		$this->guard->method('finalRefusal')->willReturn('This document is final.');
+		try {
+			$this->service()->assertAgentMayEdit(uid: self::UID, fileId: self::FILE_ID);
+			$this->fail('A final document must be refused.');
+		} catch (RuntimeException $e) {
+			$this->assertSame('This document is final.', $e->getMessage());
+		}
+
+	}//end testAnEditThroughTheEditorPassesTheSameGateAsADirectWrite()
+
+	/**
+	 * A file the user may not change is refused for an edit through the editor.
+	 *
+	 * @return void
+	 */
+	public function testAReadOnlyFileIsRefusedForAnEditThroughTheEditor(): void {
+		$file = $this->createMock(File::class);
+		$file->method('getId')->willReturn(self::FILE_ID);
+		$file->method('getName')->willReturn('shared.docx');
+		$file->method('getExtension')->willReturn('docx');
+		$file->method('isUpdateable')->willReturn(false);
+		$this->attach(node: $file);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('You do not have permission to change this file.');
+
+		$this->service()->assertAgentMayEdit(uid: self::UID, fileId: self::FILE_ID);
+
+	}//end testAReadOnlyFileIsRefusedForAnEditThroughTheEditor()
+
+	/**
+	 * A file the user cannot reach is not found for an edit through the editor either.
+	 *
+	 * @return void
+	 */
+	public function testAFileOutsideTheUsersFolderIsNotFoundForAnEditThroughTheEditor(): void {
+		$this->attach(node: null);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessageMatches('/not found/');
+
+		$this->service()->assertAgentMayEdit(uid: self::UID, fileId: self::FILE_ID);
+
+	}//end testAFileOutsideTheUsersFolderIsNotFoundForAnEditThroughTheEditor()
 
 	/**
 	 * A file id the acting user cannot reach does not resolve at all — the IDOR

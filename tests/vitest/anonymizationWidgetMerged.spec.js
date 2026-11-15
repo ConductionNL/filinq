@@ -241,3 +241,77 @@ describe('the one anonymisation widget', () => {
 		expect(vm.inApp).toBe(false)
 	})
 })
+
+describe('the upload dialog confirm, edge paths', () => {
+	it('keeps going when the dossier cannot be bound or opened', async () => {
+		const logged = []
+		const original = console.error
+		console.error = (...args) => logged.push(args[0])
+		stores.anonymizationStore.bindDossier = async (name) => {
+			calls.push(['bindDossier', name])
+			throw new Error('no OpenRegister')
+		}
+		stores.myDocumentsStore.fetchDocuments = async (path) => {
+			calls.push(['fetchDocuments', path])
+			throw new Error('no folder')
+		}
+		const vm = await widget(true)
+		vm.dispatchFiles([file('a.pdf'), file('b.pdf')])
+		vm.dossierName = 'Zaak'
+		await vm.confirmDossier()
+		console.error = original
+		expect(calls.map((c) => c[0])).toEqual(['addFilesAsDossier', 'bindDossier', 'fetchDocuments', 'open'])
+		expect(logged).toEqual(['Failed to bind dossier to OpenRegister:', 'Failed to open dossier folder:'])
+		expect(vm.showDossierDialog).toBe(false)
+		expect(vm.dossierError).toBe('')
+	})
+
+	it('shows a generic error for a failed entry without a message', async () => {
+		stores.anonymizationStore.addFiles = async () => {
+			stores.anonymizationStore.files.push({ name: 'x.pdf', status: 'error' })
+		}
+		const vm = await widget(false)
+		vm.dispatchFiles([file('x.pdf')])
+		await vm.confirmDossier()
+		expect(vm.dossierError).toBe('Failed to upload')
+		expect(vm.showDossierDialog).toBe(true)
+	})
+
+	it('only looks at the entries this upload added', async () => {
+		stores.anonymizationStore.files.push({ name: 'old.pdf', status: 'error', error: 'old' })
+		const vm = await widget(false)
+		vm.dispatchFiles([file('new.pdf')])
+		await vm.confirmDossier()
+		expect(vm.dossierError).toBe('')
+		expect(calls.map((c) => c[0])).toEqual(['addFiles', 'open', 'assign'])
+	})
+
+	it('closes without opening a viewer when the first entry has no file id', async () => {
+		stores.anonymizationStore.addFiles = async (files) => {
+			calls.push(['addFiles', files.map((f) => f.name)])
+			stores.anonymizationStore.files.push({ name: files[0].name })
+		}
+		const vm = await widget(true)
+		vm.dispatchFiles([file('n.pdf')])
+		await vm.confirmDossier()
+		expect(calls).toEqual([['addFiles', ['n.pdf']]])
+		expect(vm.$pushed).toEqual([])
+		expect(vm.showDossierDialog).toBe(false)
+	})
+
+	it.each([
+		['the server message', Object.assign(new Error('x'), { response: { data: { error: 'Quota' } } }), 'Quota'],
+		['the error message', new Error('offline'), 'offline'],
+		['a generic message', {}, 'Failed to upload'],
+	])('a throwing upload shows %s and keeps the dialog', async (_, thrown, shown) => {
+		stores.anonymizationStore.addFiles = async () => {
+			throw thrown
+		}
+		const vm = await widget(false)
+		vm.dispatchFiles([file('t.pdf')])
+		await vm.confirmDossier()
+		expect(vm.dossierError).toBe(shown)
+		expect(vm.dossierSubmitting).toBe(false)
+		expect(vm.showDossierDialog).toBe(true)
+	})
+})

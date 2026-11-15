@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 import axios from '@nextcloud/axios'
 import { createPinia, setActivePinia } from 'pinia'
 import { reviewSignature } from '../../services/reviewMark.js'
@@ -978,6 +982,49 @@ describe('reanalyseEntry — a scan detection could not read', () => {
 
 		expect(entry.status).toBe('completed')
 		expect(entry.ocrWarning).toBeNull()
+	})
+})
+
+describe('reanalyseEntry: which detection engine ran', () => {
+	// @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+	beforeEach(() => {
+		setActivePinia(createPinia())
+		jest.clearAllMocks()
+	})
+
+	it('puts a fallback warning on the entry so the review names the engine', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		store.files = [entry]
+		axios.post.mockResolvedValue({
+			data: {
+				entities: [],
+				detectionProvider: 'default',
+				detectionFellBack: true,
+				detectionWarning: 'LLM detection unavailable.',
+			},
+		})
+
+		await store.reanalyseEntry(42)
+
+		expect(entry.detectionProvider).toBe('default')
+		expect(entry.detectionFellBack).toBe(true)
+		expect(entry.detectionWarning).toBe('LLM detection unavailable.')
+	})
+
+	it('records a language-model run without a warning', async () => {
+		const store = useAnonymizationStore()
+		const entry = makeEntry()
+		store.files = [entry]
+		axios.post.mockResolvedValue({
+			data: { entities: [], detectionProvider: 'llm', detectionFellBack: false, detectionWarning: null },
+		})
+
+		await store.reanalyseEntry(42)
+
+		expect(entry.detectionProvider).toBe('llm')
+		expect(entry.detectionFellBack).toBe(false)
+		expect(entry.detectionWarning).toBeNull()
 	})
 })
 

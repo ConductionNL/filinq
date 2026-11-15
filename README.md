@@ -20,6 +20,12 @@ Filinq adds GDPR-safe document processing to Nextcloud. It anonymizes sensitive 
 
 > **Requires:** [OpenRegister](https://github.com/ConductionNL/openregister) — consent records and processing results are stored as OpenRegister objects.
 
+## Test coverage
+
+<!-- coverage:start -->
+Measured test coverage: 87.5% of statements (PHP 87.5% of 34,025 statements), at commit `1684dc33b` on 2026-11-13. The JavaScript frontend is not in this figure, because it has no coverage measurement yet. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
+<!-- coverage:end -->
+
 ## Features
 
 ### Document Anonymization
@@ -120,6 +126,29 @@ npm run build
 composer install
 php occ app:enable filinq
 ```
+
+### Try it with Docker
+
+The repository builds an evaluation image: the official Nextcloud image with filinq and OpenRegister installed and enabled. It is meant for trying the app out and for test environments. For production, install the app from the Nextcloud App Store.
+
+```bash
+docker compose -f docker/docker-compose.yml up -d --build
+```
+
+Open http://localhost:8080/apps/filinq/ and sign in as `admin` with password `admin`. The first start takes a minute or two. Set `NEXTCLOUD_ADMIN_PASSWORD` and `APP_PORT` to change the password and the port; `docker/docker-compose.yml` lists every setting. `docker compose -f docker/docker-compose.yml down -v` removes the stack and its data.
+
+Released versions are published as `ghcr.io/conductionnl/filinq`, so leaving out `--build` uses the published image.
+
+### Run it on Kubernetes
+
+`charts/filinq` wraps the official [Nextcloud Helm chart](https://github.com/nextcloud/helm) and runs the same image with PostgreSQL:
+
+```bash
+helm dependency build charts/filinq
+helm install filinq charts/filinq --set nextcloud.nextcloud.host=filinq.example.org
+```
+
+Change the passwords in `charts/filinq/values.yaml` before you install it anywhere that matters.
 
 ## Development
 
