@@ -111,8 +111,7 @@ class ConsentUpdateHandler {
 			$object = $objectService->find(
 				id: $consent->id,
 				register: $consent->register,
-				schema: $consent->schema,
-				_rbac: false
+				schema: $consent->schema
 			);
 
 			if ($object === null) {
@@ -125,8 +124,7 @@ class ConsentUpdateHandler {
 			$savedObject = $objectService->saveObject(
 				object: array_merge($existing, $allowedData),
 				register: $consent->register,
-				schema: $consent->schema,
-				_rbac: false
+				schema: $consent->schema
 			);
 
 			$this->logger->info(

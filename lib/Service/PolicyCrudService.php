@@ -236,9 +236,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		$objectService->deleteObject(
 			uuid: $uuid,
 			register: self::REGISTER,
-			schema: self::SCHEMA_PROHIBITION,
-			_rbac: false,
-			_multitenancy: false
+			schema: self::SCHEMA_PROHIBITION
 		);
 		$this->matcher?->invalidateCache();
 
@@ -331,9 +329,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		$objectService->deleteObject(
 			uuid: $uuid,
 			register: self::REGISTER,
-			schema: self::SCHEMA_CONSENT,
-			_rbac: false,
-			_multitenancy: false
+			schema: self::SCHEMA_CONSENT
 		);
 		$this->matcher?->invalidateCache();
 
@@ -549,9 +545,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		// numeric register/schema IDs and silently returns nothing otherwise.
 		$results = $objectService->searchObjectsBySlug(
 			registerSlug: $register,
-			schemaSlug: $schema,
-			_rbac: false,
-			_multitenancy: false
+			schemaSlug: $schema
 		);
 
 		if (is_int($results) === true) {
@@ -589,9 +583,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		$object = $objectService->find(
 			id: $uuid,
 			register: $register,
-			schema: $schema,
-			_rbac: false,
-			_multitenancy: false
+			schema: $schema
 		);
 
 		if ($object === null) {
@@ -629,9 +621,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 				object: $data,
 				register: $register,
 				schema: $schema,
-				uuid: $uuid,
-				_rbac: false,
-				_multitenancy: false
+				uuid: $uuid
 			);
 			return $saved->getObject();
 		} catch (Exception $e) {

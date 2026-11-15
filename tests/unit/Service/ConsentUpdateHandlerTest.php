@@ -432,7 +432,8 @@ class ConsentUpdateHandlerTest extends TestCase {
 
 		$this->assertSame(expected: 'consent_given', actual: $result['consentStatus']);
 		$this->assertSame(expected: 'ingrid', actual: $result['statusEvents'][0]['by']);
-		$this->assertFalse(condition: $saved[0]['rbac']);
+		// OpenRegister's cascade applies: the handler passes no bypass flag (multi-tenant-hardening D2).
+		$this->assertTrue(condition: $saved[0]['rbac']);
 
 	}//end testAConsentChangeIsSavedWithItsEvent()
 

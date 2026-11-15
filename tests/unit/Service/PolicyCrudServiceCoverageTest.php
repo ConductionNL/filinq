@@ -201,7 +201,7 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 	public function testListProhibitionsSerialisesEntitiesAndKeepsArrays(): void {
 		$this->objectService->expects($this->once())
 			->method('searchObjectsBySlug')
-			->with('filinq', 'publicationProhibition', $this->anything(), false, false)
+			->with('filinq', 'publicationProhibition', $this->anything(), true, true)
 			->willReturn([$this->entity(['id' => 'a']), ['id' => 'b'], 'garbage', 42]);
 
 		$this->assertSame([['id' => 'a'], ['id' => 'b']], $this->service()->listProhibitions());
@@ -229,7 +229,7 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 	public function testListStandingConsentsKeepsOnlyEntityScope(): void {
 		$this->objectService->expects($this->once())
 			->method('searchObjectsBySlug')
-			->with('filinq', 'publicationConsent', $this->anything(), false, false)
+			->with('filinq', 'publicationConsent', $this->anything(), true, true)
 			->willReturn(
 				[
 					['id' => '1', 'scope' => 'document'],
@@ -254,7 +254,7 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 	public function testGetProhibitionSerialisesTheFoundEntity(): void {
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('u-1', 'filinq', 'publicationProhibition', false, false)
+			->with('u-1', 'filinq', 'publicationProhibition', true, true)
 			->willReturn($this->entity(['id' => 'u-1', 'active' => true]));
 
 		$this->assertSame(['id' => 'u-1', 'active' => true], $this->service()->getProhibition('u-1'));
@@ -293,10 +293,10 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 	public function testGetStandingConsentAssertsEntityScope(): void {
 		$this->objectService->method('find')->willReturnMap(
 			[
-				['e', 'filinq', 'publicationConsent', false, false, true, true, ['id' => 'e', 'scope' => 'entity']],
-				['d', 'filinq', 'publicationConsent', false, false, true, true, ['id' => 'd', 'scope' => 'document']],
-				['n', 'filinq', 'publicationConsent', false, false, true, true, ['id' => 'n']],
-				['x', 'filinq', 'publicationConsent', false, false, true, true, null],
+				['e', 'filinq', 'publicationConsent', true, true, true, true, ['id' => 'e', 'scope' => 'entity']],
+				['d', 'filinq', 'publicationConsent', true, true, true, true, ['id' => 'd', 'scope' => 'document']],
+				['n', 'filinq', 'publicationConsent', true, true, true, true, ['id' => 'n']],
+				['x', 'filinq', 'publicationConsent', true, true, true, true, null],
 			]
 		);
 
@@ -324,8 +324,8 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 				'filinq',
 				'publicationProhibition',
 				null,
-				false,
-				false
+				true,
+				true
 			)
 			->willReturn($this->saved(['id' => 'new', 'entityText' => 'Jan']));
 
@@ -401,7 +401,7 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['entityText' => 'Piet'], 'filinq', 'publicationProhibition', 'u-9', false, false)
+			->with(['entityText' => 'Piet'], 'filinq', 'publicationProhibition', 'u-9', true, true)
 			->willReturn($this->saved(['id' => 'u-9', 'entityText' => 'Piet']));
 
 		$this->assertSame(
@@ -447,7 +447,7 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('deleteObject')
-			->with('u-3', 'filinq', 'publicationProhibition', false, false);
+			->with('u-3', 'filinq', 'publicationProhibition', true, true);
 
 		$this->service()->deleteProhibition('u-3');
 
@@ -484,7 +484,7 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 			->with($expected);
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with($expected, 'filinq', 'publicationConsent', null, false, false)
+			->with($expected, 'filinq', 'publicationConsent', null, true, true)
 			->willReturn($this->saved(['id' => 'sc-1']));
 
 		$this->assertSame(
@@ -557,14 +557,14 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('sc-1', 'filinq', 'publicationConsent', false, false)
+			->with('sc-1', 'filinq', 'publicationConsent', true, true)
 			->willReturn(['id' => 'sc-1', 'scope' => 'entity', 'consentMethod' => 'mail', 'active' => true]);
 
 		$expected = ['id' => 'sc-1', 'scope' => 'entity', 'consentMethod' => 'phone', 'active' => true];
 		$this->consentService->expects($this->once())->method('validatePublicationConsentData')->with($expected);
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with($expected, 'filinq', 'publicationConsent', 'sc-1', false, false)
+			->with($expected, 'filinq', 'publicationConsent', 'sc-1', true, true)
 			->willReturn($this->saved($expected));
 
 		$this->assertSame(
@@ -602,7 +602,7 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('deleteObject')
-			->with('sc-2', 'filinq', 'publicationConsent', false, false);
+			->with('sc-2', 'filinq', 'publicationConsent', true, true);
 
 		$this->service()->deleteStandingConsent('sc-2');
 
