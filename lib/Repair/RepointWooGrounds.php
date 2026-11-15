@@ -35,6 +35,8 @@ use OCA\Filinq\Service\DossierObjectReader;
 use OCA\Filinq\Service\DossierObjectRepository;
 use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
 use OCA\Filinq\Service\LegalBasisProposalService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -219,9 +221,10 @@ class RepointWooGrounds implements IRepairStep {
 		try {
 			$objectService->saveObject(
 				object: $payload,
-				register: self::REGISTER,
-				schema: $schema,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: $schema),
+					uuid: $uuid
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

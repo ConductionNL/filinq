@@ -24,6 +24,7 @@ use OCA\Filinq\Repair\RepointWooGrounds;
 use OCA\Filinq\Service\DossierObjectReader;
 use OCA\Filinq\Service\DossierObjectRepository;
 use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
@@ -93,16 +94,16 @@ class RepointWooGroundsTest extends TestCase {
 			/**
 			 * Store an object back under its uuid.
 			 *
-			 * @param array<string, mixed> $object         The object.
-			 * @param string               $register       The register.
-			 * @param string               $schema         The schema.
-			 * @param string               $uuid           The uuid.
-			 * @param bool                 $_rbac          RBAC.
-			 * @param bool                 $_multitenancy  Multitenancy.
+			 * @param array<string, mixed> $object        The object.
+			 * @param ObjectSaveOptions    $options       Its register, schema and uuid.
+			 * @param bool                 $_rbac         RBAC.
+			 * @param bool                 $_multitenancy Multitenancy.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object, string $register, string $schema, string $uuid, bool $_rbac, bool $_multitenancy): array {
+			public function saveObject(array $object, ObjectSaveOptions $options, bool $_rbac, bool $_multitenancy): array {
+				$schema        = (string)$options->target->schema;
+				$uuid          = (string)$options->uuid;
 				$this->saved[] = [$schema, $uuid, $object];
 				foreach ($this->objects[$schema] as $i => $stored) {
 					if (($stored['@self']['uuid'] ?? '') === $uuid) {
