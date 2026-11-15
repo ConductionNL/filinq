@@ -29,6 +29,7 @@ use RuntimeException;
  * implementation before annotate() was split.
  *
  * @covers \OCA\Filinq\Service\Comparison\RedactionAnnotator
+ * @uses \OCA\Filinq\Service\Comparison\RedactionMatchSet
  */
 class RedactionAnnotatorTest extends TestCase {
 

@@ -39,6 +39,7 @@ use OCA\Filinq\Service\SigningService;
 use OCA\Filinq\Service\Support\SigningGuards;
 use OCA\Filinq\Service\Support\SigningOutputs;
 use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
@@ -274,8 +275,9 @@ class SigningServiceTest extends TestCase {
 		$trail = $this->createMock(AuditTrail::class);
 		$trail->method('jsonSerialize')->willReturn([]);
 		$mapper = $this->createMock(AuditTrailMapper::class);
-		$mapper->method('createAuditTrailEntry')->willReturnCallback(
-			function (ObjectEntity $object, string $action, array $context) use ($trail): AuditTrail {
+		$mapper->method('recordObjectEvent')->willReturnCallback(
+			function (ObjectAuditEvent $event) use ($trail): AuditTrail {
+				[$action, $context] = [$event->action, $event->context];
 				$this->persistedAudits[] = [$action, $context];
 				return $trail;
 			}
@@ -1234,6 +1236,100 @@ class SigningServiceTest extends TestCase {
 	}//end testAPartialSignatureMovesTheRequestInProgressAndStopsAtTheFirstUnsigned()
 
 	/**
+	 * Run alice's signature as the second signer of a two-signer request.
+	 *
+	 * @param array<string, mixed> $request The request fields over the defaults.
+	 * @param array<string, mixed> $first   The first signer's fields over the defaults.
+	 * @param array<string, mixed> $second  Alice's signer fields over the defaults.
+	 *
+	 * @return array<int, array{0: string, 1: string}> The saved [id, status] pairs.
+	 */
+	private function signAsSecond(array $request, array $first = [], array $second = []): array {
+		$rows = [
+			'req-001' => array_merge(
+				['id' => 'req-001', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'provider' => 'native', 'initiatorUserId' => 'carol', 'documentFileId' => '42', 'signerIds' => ['signer-001', 'signer-002']],
+				$request
+			),
+			'signer-001' => array_merge(['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'displayName' => 'Bob', 'status' => 'PENDING'], $first),
+			'signer-002' => array_merge(['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'], $second),
+		];
+		$this->objectService->method('find')->willReturnCallback(static fn (string $id): ?array => ($rows[$id] ?? null));
+		$saved = [];
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$saved): array {
+				$saved[] = [($object['id'] ?? ''), ($object['status'] ?? '')];
+				return $object;
+			}
+		);
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-002');
+
+		return $saved;
+	}//end signAsSecond()
+
+	/**
+	 * In sequential mode B cannot sign before A, and nothing is written.
+	 *
+	 * @return void
+	 */
+	public function testASequentialSignerCannotSignBeforeTheSignerBefore(): void {
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		try {
+			$this->signAsSecond(request: ['signingMode' => 'sequential']);
+			$this->fail('The second signer signed first.');
+		} catch (\RuntimeException $refusal) {
+			$this->assertSame(
+				"It is not this signer's turn yet: this request is signed in order, and Bob must sign first.",
+				$refusal->getMessage()
+			);
+		}
+	}//end testASequentialSignerCannotSignBeforeTheSignerBefore()
+
+	/**
+	 * A request that names no mode is sequential, the schema's default.
+	 *
+	 * @return void
+	 */
+	public function testARequestWithoutAModeIsSignedInOrder(): void {
+		$this->expectException(\RuntimeException::class);
+		$this->expectExceptionMessage('Bob must sign first');
+
+		$this->signAsSecond(request: []);
+	}//end testARequestWithoutAModeIsSignedInOrder()
+
+	/**
+	 * In parallel mode B may sign before A.
+	 *
+	 * @return void
+	 */
+	public function testAParallelSignerMaySignBeforeTheOthers(): void {
+		$saved = $this->signAsSecond(request: ['signingMode' => 'parallel']);
+
+		$this->assertSame(['signer-002', 'SIGNED'], $saved[0]);
+	}//end testAParallelSignerMaySignBeforeTheOthers()
+
+	/**
+	 * Once A has signed, B may sign; and a signer ordered first may sign though listed second.
+	 *
+	 * @return void
+	 */
+	public function testASequentialSignerSignsOnceTheEarlierSignersHave(): void {
+		$this->assertSame(['signer-002', 'SIGNED'], $this->signAsSecond(request: ['signingMode' => 'sequential'], first: ['status' => 'SIGNED'])[0]);
+	}//end testASequentialSignerSignsOnceTheEarlierSignersHave()
+
+	/**
+	 * The order field, not the position in the list, places a signer.
+	 *
+	 * @return void
+	 */
+	public function testTheOrderFieldPlacesTheSigner(): void {
+		$saved = $this->signAsSecond(request: ['signingMode' => 'sequential'], first: ['order' => 2], second: ['order' => 1]);
+
+		$this->assertSame(['signer-002', 'SIGNED'], $saved[0]);
+	}//end testTheOrderFieldPlacesTheSigner()
+
+	/**
 	 * A single-signer request still PENDING is saved IN_PROGRESS before it is saved COMPLETED.
 	 *
 	 * @return void
@@ -1484,6 +1580,79 @@ class SigningServiceTest extends TestCase {
 		$this->assertSame([['docudesk.signing.CANCELLED', ['signRequestId' => 'req-001', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => '', 'provider' => '', 'extra' => []]]], $this->persistedAudits);
 
 	}//end testCancelRequestTransitionsToCancel()
+
+	/**
+	 * With OpenRegister's lifecycle engine, cancelRequest() applies the declared
+	 * `cancel` transition on filinq's behalf instead of hand-setting the status.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function testCancelRequestUsesTheDeclaredLifecycleTransition(): void {
+		$engine = new class {
+			/**
+			 * @var array<int, array<int, string>>
+			 */
+			public array $calls = [];
+
+			/**
+			 * @param string $objectId The object.
+			 * @param string $action   The transition.
+			 * @param string $app      The app.
+			 *
+			 * @return null
+			 */
+			public function transitionAsSystem(string $objectId, string $action, string $app) {
+				$this->calls[] = [$objectId, $action, $app];
+				return null;
+			}
+		};
+		$this->settingsService->method('getTransitionEngine')->willReturn($engine);
+		$this->objectService->method('find')->willReturn(['id' => 'req-001', 'status' => 'PENDING']);
+		$this->objectService->expects($this->never())->method('saveObject');
+		$this->persistAuditsThroughTheRealService();
+
+		$result = $this->service->cancelRequest(requestId: 'req-001');
+
+		$this->assertSame([['req-001', 'cancel', 'filinq']], $engine->calls);
+		$this->assertSame('CANCELLED', $result['status']);
+		$this->assertCount(1, $this->persistedAudits);
+
+	}//end testCancelRequestUsesTheDeclaredLifecycleTransition()
+
+	/**
+	 * A transition the lifecycle refuses leaves no CANCELLED audit entry behind.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function testARefusedTransitionRecordsNoCancellation(): void {
+		$engine = new class {
+			/**
+			 * @param string $objectId The object.
+			 * @param string $action   The transition.
+			 * @param string $app      The app.
+			 *
+			 * @return never
+			 */
+			public function transitionAsSystem(string $objectId, string $action, string $app) {
+				throw new RuntimeException('Transition "cancel" is not allowed from COMPLETED');
+			}
+		};
+		$this->settingsService->method('getTransitionEngine')->willReturn($engine);
+		$this->objectService->method('find')->willReturn(['id' => 'req-001', 'status' => 'PENDING']);
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		try {
+			$this->service->cancelRequest(requestId: 'req-001');
+			$this->fail('the refusal must surface');
+		} catch (RuntimeException $e) {
+			$this->assertStringContainsString('not allowed', $e->getMessage());
+		}
+
+	}//end testARefusedTransitionRecordsNoCancellation()
 
 	/**
 	 * cancelRequest() answers null for a request that does not exist, and writes nothing.

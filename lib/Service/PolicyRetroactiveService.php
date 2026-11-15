@@ -432,15 +432,7 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 	 * @return DateTimeImmutable|null
 	 */
 	private function parseDateTime(string $value): ?DateTimeImmutable {
-		if ($value === '') {
-			return null;
-		}
-
-		try {
-			return new DateTimeImmutable($value);
-		} catch (Exception) {
-			return null;
-		}
+		return (new PolicyRuleNormaliser())->parseDateTime(value: $value);
 
 	}//end parseDateTime()
 }//end class

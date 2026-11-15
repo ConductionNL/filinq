@@ -172,6 +172,35 @@ class EditSessionService {
 	}//end openForAgent()
 
 	/**
+	 * Refuse an agent edit the user could not write directly.
+	 *
+	 * An edit handed to an open editor is saved by that editor under the
+	 * user's account, so it must pass the same gate as a direct write: the
+	 * file resolves in the user's own folder, it is not a guarded document
+	 * (macro-bearing format, final, signed, anonymised), and the user may
+	 * change it.
+	 *
+	 * @param string $uid    The acting user id.
+	 * @param int    $fileId The Nextcloud file id.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the file cannot be resolved, is guarded or may not be changed.
+	 *
+	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-an-agent-edit-must-reach-a-document-that-is-open-for-editing
+	 */
+	public function assertAgentMayEdit(string $uid, int $fileId): void {
+		$file = $this->resolveFile(request: new AgentFileRequest(uid: $uid, fileId: $fileId));
+
+		$this->refuseIfGuarded(file: $file);
+
+		if ($file->isUpdateable() === false) {
+			throw new RuntimeException('You do not have permission to change this file.');
+		}
+
+	}//end assertAgentMayEdit()
+
+	/**
 	 * The common shape of every "open for an agent" read.
 	 *
 	 * All three reads do the same four things — resolve, read, bound, describe

@@ -108,8 +108,10 @@ trait OcrDoubles {
 				[
 					new NullLogger(),
 					$appConfig,
-					$this->createMock(\OCP\Files\IRootFolder::class),
-					$this->createMock(\OCP\IUserSession::class),
+					new \OCA\Filinq\Service\SessionUserFile(
+						$this->createMock(\OCP\Files\IRootFolder::class),
+						$this->createMock(\OCP\IUserSession::class)
+					),
 				]
 			)
 			->onlyMethods(['isTesseractAvailable', 'getTesseractVersion', 'extractTextFromImage', 'extractTextFromPdf'])

@@ -1,10 +1,10 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "filinq",
     {
+        "Withdraw request": "Ritira richiesta",
+        "Withdraw this signing request?": "Ritirare questa richiesta di firma?",
+        "Every signatory loses access, and nobody can sign it any more. This cannot be undone.": "Tutti i firmatari perdono l'accesso e nessuno potrà più firmarla. L'operazione non può essere annullata.",
+        "The signing request was withdrawn.": "La richiesta di firma è stata ritirata.",
         "Original": "Originale",
         "All documents in the folder have been anonymized. The anonymized copies are in a separate subfolder next to the originals.": "Tutti i documenti della cartella sono stati anonimizzati. Le copie anonimizzate si trovano in una sottocartella separata, accanto agli originali.",
         "Subfolder for anonymised copies": "Sottocartella per le copie anonimizzate",
@@ -1327,7 +1327,6 @@ OC.L10N.register(
         "Provide only one of folderId or folderPath": "Fornisca solo uno tra folderId e folderPath",
         "Dossier Register": "Registro dei fascicoli",
         "Grondslag": "Base giuridica (grondslag)",
-        "Grondslagen": "Basi giuridiche (grondslagen)",
         "Naam": "Nome",
         "Omschrijving": "Descrizione",
         "Beoordeeld op": "Esaminato il",
@@ -1500,7 +1499,6 @@ OC.L10N.register(
         "Good afternoon {name},": "Buon pomeriggio {name},",
         "Good evening {name},": "Buona sera {name},",
         "Good morning {name},": "Buongiorno {name},",
-        "Grondslag (bases)": "Grondslag (basi)",
         "Grondslagen catalogue could not be loaded — falling back to the seeded list.": "Impossibile caricare il catalogo dei grondslagen — ripiego sull'elenco precaricato.",
         "Hide original values": "Nascondi i valori originali",
         "inactive": "inattivo",
@@ -1754,7 +1752,33 @@ OC.L10N.register(
         "Document checks": "Controlli del documento",
         "Archival checks (PDF/A)": "Controlli di archiviazione (PDF/A)",
         "Not PDF/A": "Non PDF/A",
-        "Not checked against PDF/A": "Non controllato rispetto a PDF/A"
+        "Not checked against PDF/A": "Non controllato rispetto a PDF/A",
+        "Legal bases": "Basi giuridiche",
+        "Add a receiver": "Aggiungi un destinatario",
+        "Add receiver": "Aggiungi destinatario",
+        "Could not add the receiver": "Impossibile aggiungere il destinatario",
+        "Could not delete the receiver": "Impossibile eliminare il destinatario",
+        "Could not load the document webhooks": "Impossibile caricare i webhook dei documenti",
+        "Delivery is not available on this server": "La consegna non è disponibile su questo server",
+        "Document anonymised": "Documento anonimizzato",
+        "Document generated": "Documento generato",
+        "Document registered": "Documento registrato",
+        "Document signed": "Documento firmato",
+        "Document webhooks": "Webhook dei documenti",
+        "Last delivery arrived": "L'ultima consegna è arrivata",
+        "Last delivery failed": "L'ultima consegna non è riuscita",
+        "No receivers yet.": "Ancora nessun destinatario.",
+        "Nothing delivered yet": "Ancora nulla consegnato",
+        "Receiver added": "Destinatario aggiunto",
+        "Receiver deleted": "Destinatario eliminato",
+        "Receiving URL": "URL di ricezione",
+        "Secret": "Segreto",
+        "Send a test": "Invia un test",
+        "Tell an outside system when a document is signed, anonymised, generated or registered. OpenRegister delivers each event and signs it with the secret.": "Avvisa un sistema esterno quando un documento viene firmato, anonimizzato, generato o registrato. OpenRegister consegna ogni evento e lo firma con il segreto.",
+        "The test arrived": "Il test è arrivato",
+        "The test did not arrive": "Il test non è arrivato",
+        "Type a name and a URL and pick at least one event": "Inserisci un nome e un URL e scegli almeno un evento",
+        "Type a secret so the receiver can check each delivery": "Inserisci un segreto affinché il destinatario possa verificare ogni consegna"
     },
     "nplurals=2; plural=(n != 1);"
 )

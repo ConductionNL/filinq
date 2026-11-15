@@ -31,6 +31,7 @@ use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningConclusionEmitter;
 use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
@@ -139,8 +140,9 @@ class LibreSignCompletionTest extends TestCase {
 		$trail = $this->createMock(AuditTrail::class);
 		$trail->method('jsonSerialize')->willReturn([]);
 		$mapper = $this->createMock(AuditTrailMapper::class);
-		$mapper->method('createAuditTrailEntry')->willReturnCallback(
-			function (ObjectEntity $object, string $action, array $context) use ($trail): AuditTrail {
+		$mapper->method('recordObjectEvent')->willReturnCallback(
+			function (ObjectAuditEvent $event) use ($trail): AuditTrail {
+				[$action, $context] = [$event->action, $event->context];
 				$this->audited[] = ['action' => $action, 'context' => $context];
 				return $trail;
 			}

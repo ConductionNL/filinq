@@ -311,6 +311,28 @@ class PdfService implements PdfServiceInterface {
 	}//end ensureTempDirectory()
 
 	/**
+	 * Prepare the temp directory and build the mPDF configuration in it.
+	 *
+	 * Public so Pdfa3ConversionService, which needs the same PDF/A-3b page
+	 * setup and embedded DejaVu Sans set, builds its mPDF the same way
+	 * instead of re-deriving the configuration.
+	 *
+	 * @param string $tempDir The temp directory path
+	 * @param array  $options PDF configuration options (`format`, `orientation`,
+	 *                        `margin`, `pdfa`)
+	 *
+	 * @return array<string, mixed> mPDF configuration
+	 *
+	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 */
+	public function mpdfConfig(string $tempDir, array $options): array {
+		$this->ensureTempDirectory(tempDir: $tempDir);
+
+		return $this->buildMpdfConfig(tempDir: $tempDir, options: $options);
+
+	}//end mpdfConfig()
+
+	/**
 	 * Build mPDF configuration array from options
 	 *
 	 * When PDF/A mode is enabled, configures mPDF for PDF/A-3b compliance
@@ -387,9 +409,8 @@ class PdfService implements PdfServiceInterface {
 	 * Get the path to the bundled font directory
 	 *
 	 * Public so other services that build their own mPDF configuration
-	 * (e.g. `Pdfa3ConversionService`, which needs the same embedded
-	 * DejaVu Sans set for PDF/A-3 font-embedding compliance) can reuse
-	 * this instead of re-deriving the path.
+	 * can reuse this instead of re-deriving the path; the PDF/A-3
+	 * conversion takes the whole configuration from mpdfConfig().
 	 *
 	 * @return string|null The font directory path, or null if not found
 	 *
@@ -464,9 +485,7 @@ class PdfService implements PdfServiceInterface {
 	 */
 	public function createMpdfInstance(array $options = []): Mpdf {
 		$tempDir = '/tmp/mpdf';
-		$this->ensureTempDirectory(tempDir: $tempDir);
-
-		$config = $this->buildMpdfConfig(tempDir: $tempDir, options: $options);
+		$config = $this->mpdfConfig(tempDir: $tempDir, options: $options);
 		$title = $options['title'] ?? '';
 		$isPdfA = ($options['pdfa'] ?? false) === true;
 
@@ -570,9 +589,7 @@ class PdfService implements PdfServiceInterface {
 		}
 
 		$tempDir = '/tmp/mpdf';
-		$this->ensureTempDirectory(tempDir: $tempDir);
-
-		$config = $this->buildMpdfConfig(tempDir: $tempDir, options: $options);
+		$config = $this->mpdfConfig(tempDir: $tempDir, options: $options);
 		$html = $this->applyPrintCss(html: $html, options: $options);
 		if (($options['cropMarks'] ?? false) === true) {
 			$html = $this->buildCropMarksHtml(html: $html);

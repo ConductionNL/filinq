@@ -134,9 +134,9 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 	/**
 	 * Constructor.
 	 *
-	 * @param PdfService $pdfService Shared font-directory resolution (keeps
-	 *                               the embedded DejaVu Sans set in lockstep
-	 *                               with print-preview / renderPdfA).
+	 * @param PdfService $pdfService Shared mPDF configuration (keeps the page
+	 *                               setup and the embedded DejaVu Sans set in
+	 *                               lockstep with print-preview / renderPdfA).
 	 * @param IAppConfig $appConfig Tenant configuration provider.
 	 * @param LoggerInterface $logger Logger for diagnostics.
 	 * @param Pdfa3MetadataAssembler|null $metadataAssembler MDTO metadata assembler; autowired in
@@ -374,9 +374,10 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 	 */
 	private function instantiateMpdf(array $options): Mpdf {
 		$tempDir = sys_get_temp_dir() . '/filinq-pdfa3';
-		$this->ensureTempDirectory(tempDir: $tempDir);
-
-		$config = $this->withEmbeddedFont(config: $this->pageConfig(tempDir: $tempDir, options: $options));
+		$config = $this->pdfService->mpdfConfig(
+			tempDir: $tempDir,
+			options: array_merge($options, ['pdfa' => true])
+		);
 
 		try {
 			return new Mpdf(config: $config);
@@ -395,57 +396,6 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 		}
 
 	}//end instantiateMpdf()
-
-	/**
-	 * The mPDF page setup for PDF/A-3: temp directory, format, orientation and margins.
-	 *
-	 * @param string $tempDir The writable temp directory.
-	 * @param array  $options format, orientation and margin overrides.
-	 *
-	 * @return array<string, mixed> The mPDF configuration so far.
-	 */
-	private function pageConfig(string $tempDir, array $options): array {
-		$margins = $options['margin'] ?? [];
-		return [
-			'tempDir' => $tempDir,
-			'format' => $options['format'] ?? 'A4',
-			'orientation' => $options['orientation'] ?? 'P',
-			'margin_top' => $margins['top'] ?? 15,
-			'margin_right' => $margins['right'] ?? 15,
-			'margin_bottom' => $margins['bottom'] ?? 15,
-			'margin_left' => $margins['left'] ?? 15,
-			'PDFA' => true,
-			'PDFAauto' => true,
-			'PDFAversion' => self::PDFA_VERSION,
-		];
-
-	}//end pageConfig()
-
-	/**
-	 * Add the bundled DejaVu font as the default when the font directory is there.
-	 *
-	 * @param array<string, mixed> $config The mPDF configuration so far.
-	 *
-	 * @return array<string, mixed> The configuration, with the font when available.
-	 */
-	private function withEmbeddedFont(array $config): array {
-		$fontDir = $this->pdfService->getFontDirectory();
-		if ($fontDir !== null) {
-			$config['fontDir'] = [$fontDir];
-			$config['fontdata'] = [
-				'dejavusans' => [
-					'R' => 'DejaVuSans.ttf',
-					'B' => 'DejaVuSans-Bold.ttf',
-					'I' => 'DejaVuSans-Oblique.ttf',
-					'BI' => 'DejaVuSans-BoldOblique.ttf',
-				],
-			];
-			$config['default_font'] = 'dejavusans';
-		}
-
-		return $config;
-
-	}//end withEmbeddedFont()
 
 	/**
 	 * Run the page builder against the deadline and capture the
@@ -718,22 +668,6 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 		}
 
 	}//end assertAvailable()
-
-	/**
-	 * Ensure the mPDF temp directory exists and is writable.
-	 *
-	 * @param string $tempDir The temp directory path.
-	 *
-	 * @return void
-	 */
-	private function ensureTempDirectory(string $tempDir): void {
-		if (file_exists(filename: $tempDir) === false) {
-			mkdir(directory: $tempDir, permissions: 0777, recursive: true);
-		}
-
-		chmod(filename: $tempDir, permissions: 0777);
-
-	}//end ensureTempDirectory()
 
 	/**
 	 * Absolute deadline for the current conversion.

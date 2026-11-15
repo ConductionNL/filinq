@@ -489,30 +489,7 @@ class FinalDocumentRepository {
 	 * @spec exclude Shape adapter over an OpenRegister response; no behaviour of its own.
 	 */
 	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		$self = [];
-		if (isset($data['@self']) === true && is_array($data['@self']) === true) {
-			$self = $data['@self'];
-		}
-
-		$fields = $data;
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			$fields = $data['object'];
-		}
-
-		$uuid = (string)($fields['uuid'] ?? ($data['uuid'] ?? ($self['uuid'] ?? ($data['id'] ?? ''))));
-
-		$fields['uuid'] = $uuid;
-
-		return $fields;
+		return (new StoredRecordFields())->read(row: $row);
 
 	}//end normalise()
 }//end class

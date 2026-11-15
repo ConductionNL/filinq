@@ -5,7 +5,7 @@
  *
  * Verifies:
  *  1. Constructor accepts AuditTrailMapper + LoggerInterface.
- *  2. logEvent() calls createAuditTrailEntry() with the correct namespaced
+ *  2. logEvent() calls recordObjectEvent() with the correct namespaced
  *     action type (docudesk.signing.{ACTION}) for all seven VALID_ACTIONS.
  *  3. logEvent() builds the context array with all required fields.
  *  4. getAuditTrail() queries the OR audit trail and returns entries
@@ -38,6 +38,7 @@ use OCA\Filinq\Kernel\SigningAuditSubject;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
@@ -164,16 +165,16 @@ class SigningAuditServiceTest extends TestCase {
 	}//end makeAuditTrail()
 
 	// -------------------------------------------------------------------------
-	// D-2.1: logEvent() calls createAuditTrailEntry() with the correct action
+	// D-2.1: logEvent() calls recordObjectEvent() with the correct action
 	// -------------------------------------------------------------------------
 
 	/**
-	 * logEvent() calls createAuditTrailEntry() exactly once per call with the
+	 * logEvent() calls recordObjectEvent() exactly once per call with the
 	 * namespaced action type docudesk.signing.{ACTION}.
 	 *
 	 * @return void
 	 */
-	public function testLogEventCallsCreateAuditTrailEntryOnce(): void {
+	public function testLogEventCallsRecordObjectEventOnce(): void {
 		$returnedTrail = $this->createMock(AuditTrail::class);
 		$returnedTrail->method('jsonSerialize')->willReturn(['action' => 'docudesk.signing.SIGNED']);
 
@@ -182,9 +183,10 @@ class SigningAuditServiceTest extends TestCase {
 
 		$this->mapperMock
 			->expects($this->once())
-			->method('createAuditTrailEntry')
+			->method('recordObjectEvent')
 			->willReturnCallback(
-				function (ObjectEntity $obj, string $action, array $context) use (&$capturedAction, &$capturedContext, $returnedTrail): AuditTrail {
+				function (ObjectAuditEvent $event) use (&$capturedAction, &$capturedContext, $returnedTrail): AuditTrail {
+					[$obj, $action, $context] = [$event->object, $event->action, $event->context];
 					$capturedAction = $action;
 					$capturedContext = $context;
 					return $returnedTrail;
@@ -207,7 +209,7 @@ class SigningAuditServiceTest extends TestCase {
 		$this->assertSame('advanced', $capturedContext['signatureLevel']);
 		$this->assertSame('NativeSigningProvider', $capturedContext['provider']);
 
-	}//end testLogEventCallsCreateAuditTrailEntryOnce()
+	}//end testLogEventCallsRecordObjectEventOnce()
 
 	/**
 	 * logEvent() passes the signingRequestId as the ObjectEntity UUID so that
@@ -222,9 +224,10 @@ class SigningAuditServiceTest extends TestCase {
 		$capturedObject = null;
 
 		$this->mapperMock
-			->method('createAuditTrailEntry')
+			->method('recordObjectEvent')
 			->willReturnCallback(
-				function (ObjectEntity $obj) use (&$capturedObject, $returnedTrail): AuditTrail {
+				function (ObjectAuditEvent $event) use (&$capturedObject, $returnedTrail): AuditTrail {
+					$obj = $event->object;
 					$capturedObject = $obj;
 					return $returnedTrail;
 				}
@@ -260,9 +263,10 @@ class SigningAuditServiceTest extends TestCase {
 
 			$this->mapperMock
 				->expects($this->once())
-				->method('createAuditTrailEntry')
+				->method('recordObjectEvent')
 				->willReturnCallback(
-					function (ObjectEntity $obj, string $act) use (&$capturedAction, $trail): AuditTrail {
+					function (ObjectAuditEvent $event) use (&$capturedAction, $trail): AuditTrail {
+						$act = $event->action;
 						$capturedAction = $act;
 						return $trail;
 					}
@@ -298,7 +302,7 @@ class SigningAuditServiceTest extends TestCase {
 	public function testLogEventThrowsForInvalidAction(): void {
 		$this->mapperMock
 			->expects($this->never())
-			->method('createAuditTrailEntry');
+			->method('recordObjectEvent');
 
 		$this->expectException(RuntimeException::class);
 		$this->expectExceptionMessage('Invalid audit action: UNKNOWN');
@@ -320,7 +324,7 @@ class SigningAuditServiceTest extends TestCase {
 	/**
 	 * logEvent() resolves the REAL signing-request ObjectEntity via
 	 * ObjectService and passes IT (not a uuid-only stub) to
-	 * createAuditTrailEntry() — the entry carries real register/schema/id
+	 * recordObjectEvent() — the entry carries real register/schema/id
 	 * linkage (signing-trust-rebuild REQ-DDSTR-006, closing the #289 residual
 	 * where every entry anchored to a uuid-only stub).
 	 *
@@ -356,8 +360,9 @@ class SigningAuditServiceTest extends TestCase {
 		$returnedTrail->method('jsonSerialize')->willReturn([]);
 
 		$capturedObject = null;
-		$this->mapperMock->method('createAuditTrailEntry')->willReturnCallback(
-			function (ObjectEntity $obj) use (&$capturedObject, $returnedTrail): AuditTrail {
+		$this->mapperMock->method('recordObjectEvent')->willReturnCallback(
+			function (ObjectAuditEvent $event) use (&$capturedObject, $returnedTrail): AuditTrail {
+				$obj = $event->object;
 				$capturedObject = $obj;
 				return $returnedTrail;
 			}
@@ -400,8 +405,9 @@ class SigningAuditServiceTest extends TestCase {
 		$returnedTrail->method('jsonSerialize')->willReturn([]);
 
 		$capturedObject = null;
-		$this->mapperMock->method('createAuditTrailEntry')->willReturnCallback(
-			function (ObjectEntity $obj) use (&$capturedObject, $returnedTrail): AuditTrail {
+		$this->mapperMock->method('recordObjectEvent')->willReturnCallback(
+			function (ObjectAuditEvent $event) use (&$capturedObject, $returnedTrail): AuditTrail {
+				$obj = $event->object;
 				$capturedObject = $obj;
 				return $returnedTrail;
 			}
@@ -603,8 +609,9 @@ class SigningAuditServiceTest extends TestCase {
 		$returnedTrail = $this->createMock(AuditTrail::class);
 		$returnedTrail->method('jsonSerialize')->willReturn(['id' => 7]);
 		$contexts = [];
-		$this->mapperMock->method('createAuditTrailEntry')->willReturnCallback(
-			function (ObjectEntity $obj, string $action, array $context) use (&$contexts, $returnedTrail): AuditTrail {
+		$this->mapperMock->method('recordObjectEvent')->willReturnCallback(
+			function (ObjectAuditEvent $event) use (&$contexts, $returnedTrail): AuditTrail {
+				[$obj, $action, $context] = [$event->object, $event->action, $event->context];
 				$contexts[] = [$action, $context];
 				return $returnedTrail;
 			}

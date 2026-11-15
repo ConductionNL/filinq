@@ -155,7 +155,7 @@ export default {
 			wrapper.style.width = `${viewport.width}px`
 			wrapper.style.height = `${viewport.height}px`
 
-			wrapper.innerHTML = ''
+			wrapper.replaceChildren()
 			wrapper.appendChild(canvas)
 
 			await page.render({ canvasContext: ctx, viewport }).promise
