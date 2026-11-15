@@ -60,3 +60,7 @@ Where a record type carries no declaration, the folder shows everything you have
 A folder entry references the record it belongs to (`sourceApp`, `subjectRegister`, `subjectSchema`, `subjectId`, `subjectLabel`). It copies none of the consuming app's fields: the reference is what filinq stores, and the app that owns the case owns the rest.
 
 Spec: `openspec/specs/document-signing/spec.md`, requirements REQ-SFC-01 to REQ-SFC-04.
+
+## On another app's dashboard
+
+The folder is also a leaf, `filinq-signing-folder`, that dossiq, decidiq or any other app can place on a dashboard. It shows the first five documents waiting for your signature, how many there are in total, and a link to the full folder, where you read and sign them.

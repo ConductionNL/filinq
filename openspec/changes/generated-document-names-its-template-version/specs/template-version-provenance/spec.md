@@ -16,25 +16,28 @@ read off a property the `template` schema does not declare.
 
 ### Requirement: A template carries the version it is on (REQ-DDTVP-001)
 
-`TemplateService::getTemplate()` MUST return the template's OpenRegister
-object version at the top level of the returned array. OpenRegister carries
-that version under `@self.version`; the `template` schema declares no
-`version` property of its own, so a top-level read returns null and any
-caller that coalesces it to a default reports that default forever.
-`getTemplate()` MUST NOT invent a version when OpenRegister supplies none: it
-MUST omit the key so a caller can tell "unversioned" from "version 1".
+`TemplateService::getTemplate()` MUST return the version the template is on
+at the top level of the returned array, as an integer from filinq's own
+version chain: the head of a template with N stored snapshots is version
+N + 1. The `template` schema declares no `version` property of its own, so a
+top-level read used to return null and any caller that coalesced it to a
+default reported that default forever. OpenRegister's `@self.version` is not
+used: it is a semver string that also moves on saves that make no template
+version. `getTemplate()` MUST NOT invent a version when the chain cannot be
+read: it MUST omit the key so a caller can tell "unversioned" from
+"version 1". The number MUST NOT be written back onto the template object.
 
 #### Scenario: The version a caller reads is the version OpenRegister holds
 
-- **GIVEN** a template whose OpenRegister object is at version 4
+- **GIVEN** a template with three stored snapshots, so its head is version 4
 - **WHEN** a caller reads it through `TemplateService::getTemplate()`
 - **THEN** the returned array reports version 4 at the top level
-- **AND** the `@self` block still carries the same value
+- **AND** the `@self` block is left as OpenRegister returned it
 - @e2e exclude Service-level read with no UI surface; covered by PHPUnit.
 
 #### Scenario: An unversioned template says so
 
-- **GIVEN** a template whose OpenRegister object carries no version
+- **GIVEN** a template whose version chain cannot be read
 - **WHEN** a caller reads it through `TemplateService::getTemplate()`
 - **THEN** the version key is absent rather than set to 1
 - @e2e exclude Service-level read with no UI surface; covered by PHPUnit.
@@ -89,24 +92,33 @@ render the head exactly as it does today.
 - **AND** no document is produced or stored
 - @e2e exclude Backend generation path; covered by PHPUnit.
 
+#### Scenario: A pin is not silently ignored by a multi-format request
+
+- **GIVEN** a request with `options.formats` and `options.templateVersion`
+- **WHEN** a caller sends it
+- **THEN** generation fails with a 400 and nothing is produced
+- @e2e exclude Backend generation path; covered by PHPUnit.
+
 ### Requirement: Filinq answers which version was in force on a date (REQ-DDTVP-004)
 
 `TemplateVersionService` MUST answer, for a template and a moment, which
 version was current at that moment, resolved from the creation timestamps of
-the version chain it already stores. When the moment predates the first
-stored version, it MUST say so rather than returning the oldest version.
+the version chain it already stores. A snapshot is written when its version
+is replaced, so version 1 starts when the template is created and version
+N + 1 starts when snapshot N was created. When the moment predates the
+template, it MUST say so rather than returning the oldest version.
 Filinq MUST NOT echo the requested date back as though it had selected on it.
 
 #### Scenario: A date inside the chain selects the version in force
 
-- **GIVEN** version 2 created on 1 March and version 3 created on 1 June
+- **GIVEN** version 2 became the head on 1 March and version 3 on 1 June
 - **WHEN** a caller asks which version was in force on 1 April
 - **THEN** filinq answers version 2
 - @e2e exclude Service-level query with no UI surface; covered by PHPUnit.
 
 #### Scenario: A date before the chain begins is refused
 
-- **GIVEN** the earliest stored version was created on 1 March
+- **GIVEN** the template was created on 1 March
 - **WHEN** a caller asks which version was in force on 1 January
 - **THEN** filinq answers that no version was in force
 - **AND** does not return the earliest version

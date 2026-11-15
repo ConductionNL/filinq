@@ -15,6 +15,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Settings;
@@ -102,7 +105,7 @@ class IntakeDocumentSchemaTest extends TestCase {
 	 * @return void
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testARejectionIsTerminalAndADetachmentIsNot(): void {
 		$lifecycle = $this->intakeDocument()['x-openregister-lifecycle'];
@@ -133,7 +136,7 @@ class IntakeDocumentSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testTheWorklistFieldsAreDeclared(): void {
 		$properties = $this->intakeDocument()['properties'];
@@ -169,7 +172,7 @@ class IntakeDocumentSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testPartyExtractionIsItsOwnProcessingActivity(): void {
 		$activity = $this->intakeDocument()['x-openregister-processing'];
@@ -187,7 +190,7 @@ class IntakeDocumentSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testTheRuleSchemasAndTheCorpusAreRegistered(): void {
 		$descriptor = $this->descriptor();

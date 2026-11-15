@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -24,9 +24,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\DocumentDomainService;
-use OCA\Filinq\Service\FlatFileListService;
-use OCA\Filinq\Service\UploadPolicyService;
+use OCA\Filinq\Controller\Support\HandlerAnswer;
+use OCA\Filinq\Kernel\Contracts\DocumentDomainServiceInterface;
+use OCA\Filinq\Kernel\Contracts\FlatFileListServiceInterface;
+use OCA\Filinq\Kernel\Contracts\UploadPolicyServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -44,7 +45,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 class CaseDocumentsController extends Controller {
 
@@ -53,9 +54,9 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param FlatFileListService $flatList Every file on every record of an object.
-	 * @param DocumentDomainService $domains The domains a record serves.
-	 * @param UploadPolicyService $policy What may be uploaded.
+	 * @param FlatFileListServiceInterface $flatList Every file on every record of an object.
+	 * @param DocumentDomainServiceInterface $domains The domains a record serves.
+	 * @param UploadPolicyServiceInterface $policy What may be uploaded.
 	 * @param IUserSession $userSession The current session.
 	 *
 	 * @return void
@@ -63,9 +64,9 @@ class CaseDocumentsController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly FlatFileListService $flatList,
-		private readonly DocumentDomainService $domains,
-		private readonly UploadPolicyService $policy,
+		private readonly FlatFileListServiceInterface $flatList,
+		private readonly DocumentDomainServiceInterface $domains,
+		private readonly UploadPolicyServiceInterface $policy,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -84,7 +85,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse The page of files.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	#[NoAdminRequired]
 	public function files(
@@ -129,7 +130,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse The record, with its domains.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	#[NoAdminRequired]
 	public function linkDomain(string $uuid, string $register = '', string $schema = '', string $id = ''): JSONResponse {
@@ -152,7 +153,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse The record, which still exists.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	#[NoAdminRequired]
 	public function unlinkDomain(string $uuid, string $register = '', string $schema = '', string $id = ''): JSONResponse {
@@ -170,7 +171,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse Their records.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	#[NoAdminRequired]
 	public function mine(): JSONResponse {
@@ -193,7 +194,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse The policy, or an empty answer when none is declared.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	#[NoAdminRequired]
 	public function uploadPolicy(): JSONResponse {
@@ -216,7 +217,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse The record, or the refusal.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function domainCall(callable $handler): JSONResponse {
 		$unauthenticated = $this->requireUser();
@@ -224,14 +225,7 @@ class CaseDocumentsController extends Controller {
 			return $unauthenticated;
 		}
 
-		try {
-			return new JSONResponse(data: $handler(), statusCode: Http::STATUS_OK);
-		} catch (Throwable $e) {
-			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
-		}
+		return (new HandlerAnswer())->answer(handler: $handler);
 
 	}//end domainCall()
 
@@ -240,7 +234,7 @@ class CaseDocumentsController extends Controller {
 	 *
 	 * @return JSONResponse|null The refusal, or null when somebody is logged in.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	private function requireUser(): ?JSONResponse {
 		if ($this->userSession->getUser() !== null) {

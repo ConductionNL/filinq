@@ -34,9 +34,9 @@ namespace OCA\Filinq\Repair;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Filinq\Service\PrintJobFileStore;
-use OCA\Filinq\Service\PrintJobRepository;
-use OCA\Filinq\Service\PrintJobService;
+use OCA\Filinq\Kernel\Contracts\PrintJobFileStoreInterface;
+use OCA\Filinq\Kernel\Contracts\PrintJobRepositoryInterface;
+use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -70,16 +70,16 @@ class MigratePrintJobsOutOfAppConfig implements IRepairStep {
 	 * Constructor.
 	 *
 	 * @param IAppConfig         $appConfig The app configuration holding the legacy entries
-	 * @param PrintJobRepository $jobs      The printJob rows
-	 * @param PrintJobFileStore  $files     The PDFs in app data
+	 * @param PrintJobRepositoryInterface $jobs      The printJob rows
+	 * @param PrintJobFileStoreInterface  $files     The PDFs in app data
 	 * @param LoggerInterface    $logger    Logger
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
-		private readonly PrintJobRepository $jobs,
-		private readonly PrintJobFileStore $files,
+		private readonly PrintJobRepositoryInterface $jobs,
+		private readonly PrintJobFileStoreInterface $files,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -245,8 +245,8 @@ class MigratePrintJobsOutOfAppConfig implements IRepairStep {
 	 */
 	private function status(array $legacy, bool $hasFiles): string {
 		$external = (string) ($legacy['externalStatus'] ?? '');
-		if (isset(PrintJobService::EXTERNAL_STATUSES[$external]) === true) {
-			return PrintJobService::EXTERNAL_STATUSES[$external];
+		if (isset(PrintJobServiceInterface::EXTERNAL_STATUSES[$external]) === true) {
+			return PrintJobServiceInterface::EXTERNAL_STATUSES[$external];
 		}
 
 		$legacyStatus = (string) ($legacy['status'] ?? '');

@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="signing-request-form">
 		<h2>{{ t('filinq', 'New Signing Request') }}</h2>
@@ -120,23 +124,78 @@
 				{{ t('filinq', 'Add signer') }}
 			</NcButton>
 		</fieldset>
-		<NcButton variant="primary" :disabled="!canSubmit" @click="submit">
-			{{ t('filinq', 'Create Signing Request') }}
-		</NcButton>
+		<div class="form-group">
+			<NcCheckboxRadioSwitch
+				v-model="placingFields"
+				type="switch"
+				:disabled="!form.documentFileId">
+				{{ t('filinq', 'Place fields on the document') }}
+			</NcCheckboxRadioSwitch>
+		</div>
+		<FieldPlacementEditor
+			v-if="placingFields && form.documentFileId"
+			v-model="fieldPlacements"
+			:fileId="form.documentFileId"
+			:signers="signerLabels" />
+		<div class="signing-request-form__actions">
+			<NcButton variant="primary" :disabled="!canSubmit" @click="submit">
+				{{ t('filinq', 'Create Signing Request') }}
+			</NcButton>
+			<NcButton
+				variant="secondary"
+				:disabled="!form.documentFileId || !form.documentName"
+				@click="bulkOpen = true">
+				{{ t('filinq', 'Send to many from a list') }}
+			</NcButton>
+			<NcButton
+				variant="secondary"
+				:disabled="!signersAreComplete(signerRows)"
+				@click="envelopeOpen = true">
+				{{ t('filinq', 'Send several documents together') }}
+			</NcButton>
+		</div>
+		<BulkSendModal
+			v-if="bulkOpen"
+			:show="bulkOpen"
+			:settings="bulkSettings"
+			@close="bulkOpen = false" />
+		<SigningEnvelopeModal
+			v-if="envelopeOpen"
+			:show="envelopeOpen"
+			:settings="envelopeSettings"
+			@close="envelopeOpen = false" />
 	</div>
 </template>
 
 <script>
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcNoteCard,
+	NcSelect,
+} from '@nextcloud/vue'
+import BulkSendModal from '../../modals/BulkSendModal.vue'
+import SigningEnvelopeModal from '../../modals/SigningEnvelopeModal.vue'
+import FieldPlacementEditor from './FieldPlacementEditor.vue'
 import { assuranceFloor, assuranceLevelsFrom } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
+import { dropSignerPlacements, toRequestPlacements } from './fieldPlacement.js'
 import { emptySignerRow, signersAreComplete, toSigners } from './signerRows.js'
 
 export default {
 	name: 'SigningRequestForm',
-	components: { NcButton, NcNoteCard, NcSelect },
+	components: {
+		BulkSendModal,
+		FieldPlacementEditor,
+		NcButton,
+		NcCheckboxRadioSwitch,
+		NcNoteCard,
+		NcSelect,
+		SigningEnvelopeModal,
+	},
+
 	data() {
 		return {
 			form: {
@@ -148,10 +207,61 @@ export default {
 			},
 
 			signerRows: [emptySignerRow()],
+			bulkOpen: false,
+			envelopeOpen: false,
+			placingFields: false,
+			fieldPlacements: [],
 		}
 	},
 
 	computed: {
+		/**
+		 * The name each signer row goes by, for the placement editor.
+		 *
+		 * @return {Array<string>}
+		 *
+		 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.3
+		 */
+		signerLabels() {
+			return this.signerRows.map(
+				(row) => row.displayName || row.email || row.userId,
+			)
+		},
+
+		/**
+		 * The document settings a bulk send applies to every row.
+		 *
+		 * @return {object}
+		 *
+		 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-bulk-send-validates-first-then-creates-isolated-ordinary-requests-req-ddbsf-002
+		 */
+		bulkSettings() {
+			return {
+				documentFileId: this.form.documentFileId,
+				documentName: this.form.documentName,
+				signatureLevel: this.form.signatureLevel,
+				signingMode: this.form.signingMode,
+			}
+		},
+
+		/**
+		 * What every document of an envelope shares, and the form's document as its first.
+		 *
+		 * @return {object}
+		 *
+		 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-envelopes-group-documents-into-one-ceremony-with-per-document-records-req-ddbsf-004
+		 */
+		envelopeSettings() {
+			return {
+				documentFileId: this.form.documentFileId,
+				documentName: this.form.documentName,
+				signatureLevel: this.form.signatureLevel,
+				signingMode: this.form.signingMode,
+				requiredAssurance: this.form.requiredAssurance,
+				signers: toSigners(this.signerRows),
+			}
+		},
+
 		/**
 		 * The identity levels this signature level allows: its floor and up.
 		 *
@@ -226,6 +336,7 @@ export default {
 
 	methods: {
 		t,
+		signersAreComplete,
 		/**
 		 * Add an empty signer row at the end.
 		 *
@@ -244,6 +355,10 @@ export default {
 		removeSigner(index) {
 			if (this.signerRows.length > 1) {
 				this.signerRows.splice(index, 1)
+				this.fieldPlacements = dropSignerPlacements(
+					this.fieldPlacements,
+					index,
+				)
 			}
 		},
 
@@ -261,6 +376,9 @@ export default {
 			const result = await signingStore.createSigningRequest({
 				...this.form,
 				signers: toSigners(this.signerRows),
+				...(this.placingFields && this.fieldPlacements.length
+					? { fieldPlacements: toRequestPlacements(this.fieldPlacements) }
+					: {}),
 			})
 			if (result) {
 				showSuccess(t('filinq', 'Signing request created'))
@@ -274,6 +392,12 @@ export default {
 </script>
 
 <style scoped>
+.signing-request-form__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: calc(var(--default-grid-baseline) * 2);
+}
+
 .signing-request-form {
 	padding: 20px;
 	max-width: 600px;

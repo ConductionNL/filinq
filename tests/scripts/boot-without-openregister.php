@@ -3,6 +3,9 @@
 /**
  * Boot proof: the signing wiring loads with the retired approval surface absent.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Run standalone (`php tests/scripts/boot-without-openregister.php`), and by
  * `RetiredApprovalSurfaceTest` as a subprocess. The process autoloads
  * filinq's `lib/` (composer) plus the Nextcloud stubs, and deliberately does
@@ -27,9 +30,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/changes/migrate-signing-to-or-tasks/tasks.md#4-2
  */
@@ -87,9 +87,11 @@ foreach ($retired as $retiredClass) {
 //    class_exists(..., true) forces autoload + link, so a signature, parent
 //    or interface that needs a missing class fatals here.
 $signingSurface = [
-	'OCA\\Filinq\\AppInfo\\SigningEventRegistrar',
+	'OCA\\Filinq\\EventListener\\SigningEventRegistrar',
 	'OCA\\Filinq\\EventListener\\SigningTaskListener',
 	'OCA\\Filinq\\EventListener\\SignerEventTranslator',
+	'OCA\\Filinq\\EventListener\\SignerSequenceTasks',
+	'OCA\\Filinq\\EventListener\\SignerApprovals',
 	'OCA\\Filinq\\Event\\SignerStepPendingEvent',
 	'OCA\\Filinq\\Event\\SignerStepApprovedEvent',
 	'OCA\\Filinq\\Event\\SignerStepRejectedEvent',
@@ -128,7 +130,7 @@ $context = new class implements \OCP\AppFramework\Bootstrap\IRegistrationContext
 	}
 };
 
-(new \OCA\Filinq\AppInfo\SigningEventRegistrar())->register(context: $context);
+(new \OCA\Filinq\EventListener\SigningEventRegistrar())->register(context: $context);
 
 $expected = [
 	'OCA\\OpenRegister\\Event\\TaskTransitionedEvent',
@@ -155,11 +157,13 @@ if (interface_exists('OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === true) {
 }
 
 $generationSurface = [
-	'OCA\\Filinq\\AppInfo\\DocumentGenerationRegistrar',
+	'OCA\\Filinq\\EventListener\\DocumentGenerationRegistrar',
 	'OCA\\Filinq\\Flow\\FilinqFlowNodeListener',
 	'OCA\\Filinq\\EventListener\\DocumentGenerationRequestedListener',
 	'OCA\\Filinq\\Event\\DocumentGenerationRequestedEvent',
 	'OCA\\Filinq\\Event\\DocumentGeneratedEvent',
+	'OCA\\Filinq\\EventListener\\DocumentStampRequestedListener',
+	'OCA\\Filinq\\Event\\DocumentStampRequestedEvent',
 ];
 foreach ($generationSurface as $surfaceClass) {
 	if (class_exists($surfaceClass) === false) {
@@ -168,10 +172,11 @@ foreach ($generationSurface as $surfaceClass) {
 }
 
 $context->events = [];
-(new \OCA\Filinq\AppInfo\DocumentGenerationRegistrar())->register(context: $context);
+(new \OCA\Filinq\EventListener\DocumentGenerationRegistrar())->register(context: $context);
 $expectedGeneration = [
 	'OCA\\OpenRegister\\Service\\Flow\\RegisterFlowNodesEvent',
 	'OCA\\Filinq\\Event\\DocumentGenerationRequestedEvent',
+	'OCA\\Filinq\\Event\\DocumentStampRequestedEvent',
 ];
 if ($context->events !== $expectedGeneration) {
 	bootProofFail('unexpected document-generation registrations: ' . implode(', ', $context->events));

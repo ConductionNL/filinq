@@ -20,7 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\LegalHold;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -95,7 +95,7 @@ class LegalHoldFileFreeze {
 		$locked = [];
 		foreach ($files as $file) {
 			try {
-				$this->lockManager->lock(new LockContext($file, ILock::TYPE_APP, Application::APP_ID));
+				$this->lockManager->lock(new LockContext($file, ILock::TYPE_APP, AppIdentity::APP_ID));
 			} catch (Throwable $e) {
 				// Locked already by us (another case) counts; anything else fails.
 				if ($this->lockedByUs(fileId: $file->getId()) === false) {
@@ -136,7 +136,7 @@ class LegalHoldFileFreeze {
 			}
 
 			try {
-				$this->lockManager->unlock(new LockContext($file, ILock::TYPE_APP, Application::APP_ID));
+				$this->lockManager->unlock(new LockContext($file, ILock::TYPE_APP, AppIdentity::APP_ID));
 			} catch (Throwable $e) {
 				return ['file' => 'failed', 'fileIds' => $unlocked, 'fileError' => mb_substr($e->getMessage(), 0, 500)];
 			}
@@ -158,7 +158,7 @@ class LegalHoldFileFreeze {
 	private function lockedByUs(int $fileId): bool {
 		try {
 			foreach ($this->lockManager->getLocks($fileId) as $lock) {
-				if ($lock->getType() === ILock::TYPE_APP && $lock->getOwner() === Application::APP_ID) {
+				if ($lock->getType() === ILock::TYPE_APP && $lock->getOwner() === AppIdentity::APP_ID) {
 					return true;
 				}
 			}

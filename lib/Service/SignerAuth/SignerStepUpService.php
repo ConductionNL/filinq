@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\SignerAuth;
 
+use OCA\Filinq\Kernel\Contracts\SignerStepUpServiceInterface;
 use OCA\Filinq\Service\SigningActorResolver;
 use OCA\Filinq\Service\SigningService;
 use RuntimeException;
@@ -44,7 +45,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
  */
-class SignerStepUpService {
+class SignerStepUpService implements SignerStepUpServiceInterface {
 
 	/**
 	 * Constructor.

@@ -23,7 +23,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\EntitySearchRefusedException;
-use OCA\Filinq\Service\EntitySearch\EntitySearchService;
+use OCA\Filinq\Kernel\Contracts\EntitySearchServiceInterface;
+use OCA\Filinq\Kernel\EntitySearchQuery;
+use OCA\Filinq\Service\ReadsCurrentUserId;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -44,6 +46,8 @@ use Throwable;
  */
 class EntitySearchController extends Controller {
 
+	use ReadsCurrentUserId;
+
 	/**
 	 * HTTP status per refusal.
 	 *
@@ -63,7 +67,7 @@ class EntitySearchController extends Controller {
 	 *
 	 * @param string              $appName     The app name.
 	 * @param IRequest            $request     The request.
-	 * @param EntitySearchService $search      The entity search.
+	 * @param EntitySearchServiceInterface $search      The entity search.
 	 * @param IUserSession        $userSession The signed-in user.
 	 * @param IL10N               $l10n        Translations.
 	 * @param LoggerInterface     $logger      For failures that are not refusals.
@@ -73,7 +77,7 @@ class EntitySearchController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly EntitySearchService $search,
+		private readonly EntitySearchServiceInterface $search,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
@@ -91,7 +95,7 @@ class EntitySearchController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function access(): JSONResponse {
-		return $this->answer(action: fn (): array => $this->search->access(userId: $this->userId()));
+		return $this->answer(action: fn (): array => $this->search->access(userId: $this->currentUserId()));
 
 	}//end access()
 
@@ -106,12 +110,14 @@ class EntitySearchController extends Controller {
 	public function index(): JSONResponse {
 		return $this->answer(
 			action: fn (): array => $this->search->search(
-				userId: $this->userId(),
-				query: (string) $this->request->getParam('query', ''),
-				type: (string) $this->request->getParam('type', ''),
-				category: (string) $this->request->getParam('category', ''),
-				limit: (int) $this->request->getParam('limit', EntitySearchService::DEFAULT_LIMIT),
-				offset: (int) $this->request->getParam('offset', 0)
+				userId: $this->currentUserId(),
+				query: new EntitySearchQuery(
+					text: (string) $this->request->getParam('query', ''),
+					type: (string) $this->request->getParam('type', ''),
+					category: (string) $this->request->getParam('category', ''),
+					limit: (int) $this->request->getParam('limit', EntitySearchServiceInterface::DEFAULT_LIMIT),
+					offset: (int) $this->request->getParam('offset', 0)
+				)
 			)
 		);
 
@@ -125,10 +131,14 @@ class EntitySearchController extends Controller {
 	 * @return JSONResponse The entity, or a refusal.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-entity-search/tasks.md#task-2.2
+	 *
+	 * @no-admin-idor-exempt role-guarded one layer down. EntitySearchService::detail() calls
+	 * assertMaySearch(), which admits only admins and the configured entity-search groups, scopes the
+	 * catalogue to the caller, and counts only occurrences in files the caller can read.
 	 */
 	#[NoAdminRequired]
 	public function show(string $entityUuid): JSONResponse {
-		return $this->answer(action: fn (): array => $this->search->detail(userId: $this->userId(), uuid: $entityUuid));
+		return $this->answer(action: fn (): array => $this->search->detail(userId: $this->currentUserId(), uuid: $entityUuid));
 
 	}//end show()
 
@@ -177,19 +187,4 @@ class EntitySearchController extends Controller {
 		);
 
 	}//end refused()
-
-	/**
-	 * The signed-in user's id, '' when nobody is.
-	 *
-	 * @return string The user id.
-	 */
-	private function userId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end userId()
 }//end class

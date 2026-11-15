@@ -20,9 +20,12 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Settings;
 
+use OCA\Filinq\Tests\Unit\Service\Wizard\WizardObjectStore;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
+
+require_once __DIR__ . '/../Service/Wizard/WizardDoubles.php';
 
 /**
  * The mock register covers the real register, object by object.
@@ -170,7 +173,8 @@ class DemoDataCoverageTest extends TestCase {
 
 	/**
 	 * The JSON schema a demo row is validated with: the register schema's
-	 * properties without OpenRegister's presentation keys, closed.
+	 * properties without OpenRegister's presentation keys, closed, with the
+	 * null widening OpenRegister applies to every property that is not required.
 	 *
 	 * @param array<string, mixed> $schema The register schema.
 	 *
@@ -182,14 +186,18 @@ class DemoDataCoverageTest extends TestCase {
 			$properties[$name] = $this->stripPresentation(property: $property);
 		}
 
-		return (string) json_encode(
-			[
-				'type'                 => 'object',
-				'required'             => ($schema['required'] ?? []),
-				'properties'           => (object) $properties,
-				'additionalProperties' => false,
-			]
+		$closed = json_decode(
+			(string) json_encode(
+				[
+					'type'                 => 'object',
+					'required'             => ($schema['required'] ?? []),
+					'properties'           => (object) $properties,
+					'additionalProperties' => false,
+				]
+			)
 		);
+
+		return (string) json_encode(WizardObjectStore::widenOptionalToNull(schema: $closed));
 
 	}//end validatorSchema()
 

@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 
 declare(strict_types=1);
@@ -33,18 +33,13 @@ namespace OCA\Filinq\Service;
  * scenario the requirement names and which no amount of real-mount testing on a
  * build host would reach.
  *
- * 🔴 THE NEXTCLOUD-BACKED IMPLEMENTATION IS NOT IN THIS CHANGE, AND THAT IS
- * MEASURED RATHER THAN CHOSEN. `OCP\Share\IManager` does not exist in this
- * repository's test environment: `interface_exists()` returns false under
- * `tests/bootstrap-unit.php`, while `OCP\Files\IRootFolder` returns true. So an
- * adapter written here could be neither run nor tested, only typed, and a
- * caller-less adapter that nobody can execute is exactly the shape this lane
- * keeps finding. It is named as what waits instead.
+ * NextcloudDomainFolderGateway is the implementation bound in
+ * RegistrationBootstrap.
  *
  * Every method MAY throw. The service treats a throw as a refusal with a reason
  * and reports it; it never treats one as success.
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 interface DomainFolderGateway {
 
@@ -56,7 +51,7 @@ interface DomainFolderGateway {
 	 *
 	 * @return array<int, string> The group ids.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function groupsWithAccess(string $path, string $owner): array;
 
@@ -69,7 +64,7 @@ interface DomainFolderGateway {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function grant(string $path, string $owner, string $group): void;
 
@@ -82,7 +77,7 @@ interface DomainFolderGateway {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function revoke(string $path, string $owner, string $group): void;
 }//end interface

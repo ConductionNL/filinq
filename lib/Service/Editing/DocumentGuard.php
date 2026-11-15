@@ -211,7 +211,8 @@ class DocumentGuard {
 			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
 				registerSlug: self::REGISTER,
 				schemaSlug: $schema,
-				filters: $filter
+				filters: $filter,
+				_rbac: false
 			);
 
 			if (is_array($results) === false) {

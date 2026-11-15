@@ -183,14 +183,16 @@ class AnchorRoundTripTest extends TestCase {
 		$hosted = $this->publish(bytes: $bytes, extension: $from);
 
 		$payload = json_encode(
-			[
-				'async' => false,
-				'filetype' => $from,
-				'key' => substr(sha1($bytes . $to), 0, 16),
-				'outputtype' => $to,
-				'title' => 'roundtrip.' . $from,
-				'url' => $hosted,
-			]
+			$this->signed(
+				payload: [
+					'async' => false,
+					'filetype' => $from,
+					'key' => substr(sha1($bytes . $to), 0, 16),
+					'outputtype' => $to,
+					'title' => 'roundtrip.' . $from,
+					'url' => $hosted,
+				]
+			)
 		);
 
 		$context = stream_context_create(
@@ -221,6 +223,25 @@ class AnchorRoundTripTest extends TestCase {
 
 		return $converted;
 	}//end convert()
+
+	/**
+	 * Add the HS256 token a suite with JWT enabled requires, when FILINQ_OFFICE_JWT_SECRET is set.
+	 *
+	 * @param array<string, mixed> $payload The conversion request.
+	 *
+	 * @return array<string, mixed> The request, with a `token` when a secret is configured.
+	 */
+	private function signed(array $payload): array {
+		$secret = (string)getenv('FILINQ_OFFICE_JWT_SECRET');
+		if ($secret === '') {
+			return $payload;
+		}
+
+		$encode = static fn (string $part): string => rtrim(strtr(base64_encode($part), '+/', '-_'), '=');
+		$unsigned = $encode((string)json_encode(['alg' => 'HS256', 'typ' => 'JWT'])) . '.' . $encode((string)json_encode($payload));
+
+		return $payload + ['token' => $unsigned . '.' . $encode(hash_hmac('sha256', $unsigned, $secret, true))];
+	}//end signed()
 
 	/**
 	 * Publish bytes at a URL the suite can fetch.

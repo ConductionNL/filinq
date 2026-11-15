@@ -4,7 +4,7 @@
  * Whether anybody is actually going to be told, said on the screen an operator opens.
  *
  * 🔴 THE ANNOTATION ALONE WOULD HAVE BEEN A FIX THAT REACHES NOBODY. The rule
- * addresses `docudesk-woo-officers`, and every declared group in this fleet
+ * addresses `filinq-woo-officers`, and every declared group in this fleet
  * ships EMPTY on purpose — an empty group denies everyone except admins and
  * object owners, which is the right default. OpenRegister now records a rule
  * that resolved to nobody, once per run, at warning level.
@@ -35,31 +35,19 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-failure-reaches-someone/specs/filinq-notifications/spec.md
+ * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/specs/filinq-notifications/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Intake;
 
+use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
+
 /**
  * Says, on the inbox, whether the failure notification can reach anybody.
  */
-class IntakeNotificationReach {
-
-	/**
-	 * The rule declared on `intakeDocument`.
-	 *
-	 * @var string
-	 */
-	public const RULE = 'readingFailed';
-
-	/**
-	 * The group the rule addresses.
-	 *
-	 * @var string
-	 */
-	public const GROUP = 'docudesk-woo-officers';
+class IntakeNotificationReach implements IntakeNotificationReachInterface {
 
 	/**
 	 * What the inbox shows about who will be told.
@@ -69,7 +57,7 @@ class IntakeNotificationReach {
 	 *
 	 * @return array<string, mixed> What to show.
 	 *
-	 * @spec openspec/changes/intake-failure-reaches-someone/specs/filinq-notifications/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/specs/filinq-notifications/spec.md
 	 */
 	public function describe(int $failureCount, int $groupMembers): array {
 		$staffed = ($groupMembers > 0);

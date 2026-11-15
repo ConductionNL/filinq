@@ -14,7 +14,10 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -108,7 +111,7 @@ class UploadPolicyServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testAPdfThatIsAPdfIsAllowed(): void {
 		$service = $this->service(policy: $this->standardPolicy());
@@ -128,7 +131,7 @@ class UploadPolicyServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testAnExecutableRenamedToPdfIsRefusedByItsBytes(): void {
 		$service = $this->service(policy: $this->standardPolicy());
@@ -154,7 +157,7 @@ class UploadPolicyServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testAnExtensionThePolicyDoesNotAllowIsRefused(): void {
 		$service = $this->service(policy: $this->standardPolicy());
@@ -182,7 +185,7 @@ class UploadPolicyServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testAFileOverTheMaximumIsRefused(): void {
 		$policy = ($this->standardPolicy() + []);
@@ -203,7 +206,7 @@ class UploadPolicyServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testAnUnreadableTypeIsRefusedWhenThePolicySaysSo(): void {
 		$service = $this->service(policy: $this->standardPolicy());
@@ -218,7 +221,7 @@ class UploadPolicyServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testAPolicyThatAcceptsUnknownTypesAcceptsOne(): void {
 		$policy = ($this->standardPolicy() + []);
@@ -240,7 +243,7 @@ class UploadPolicyServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function testNoPolicyIsNotARefusal(): void {
 		$service = $this->service(policy: null);

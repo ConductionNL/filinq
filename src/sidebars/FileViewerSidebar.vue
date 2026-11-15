@@ -1,6 +1,11 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { computed } from 'vue'
+import ClassificationCard from '../components/ClassificationCard.vue'
 import DocumentLeafTabs from '../components/DocumentLeafTabs.vue'
 import { documentRecordIdFor } from '../services/documentLeafTabs.js'
 import {
@@ -132,6 +137,20 @@ const documentRecordId = computed(() =>
 					</ul>
 				</NcNoteCard>
 
+				<NcNoteCard
+					v-if="sanitizationRows.length"
+					type="info"
+					data-testid="anonymisation-sanitization-report">
+					<div>
+						{{ t('filinq', 'Hidden content removed from the copy') }}
+					</div>
+					<ul>
+						<li v-for="row in sanitizationRows" :key="row.key">
+							{{ row.label }}: {{ row.count }}
+						</li>
+					</ul>
+				</NcNoteCard>
+
 				<!-- Best-effort warning: the file was produced, but some entities
 				     could not be fully removed (e.g. text recognised across table
 				     cells that is not contiguous in the document). Refining
@@ -224,7 +243,7 @@ const documentRecordId = computed(() =>
 					label="label"
 					:reduce="(o) => o.value"
 					:multiple="true"
-					:inputLabel="t('filinq', 'Grondslagen')"
+					:inputLabel="t('filinq', 'Legal bases')"
 					:placeholder="t('filinq', 'Pick grondslagen…')" />
 				<NcNoteCard v-if="saveError" type="error">
 					{{ saveError }}
@@ -263,6 +282,22 @@ const documentRecordId = computed(() =>
 			     whichever review state is currently showing. -->
 			<!-- A scan detection could not read (ocr-trigger-surface): an empty
 			     entity list here does not mean the document is clean. -->
+			<!-- The organisation's language model could not run, so the default
+			     detection produced these entities (llm-entity-detection-provider). -->
+			<NcNoteCard
+				v-if="entry && entry.detectionFellBack"
+				type="warning"
+				class="detection-fallback-warning"
+				data-testid="detection-fallback-warning">
+				{{ entry.detectionWarning }}
+			</NcNoteCard>
+			<p
+				v-else-if="entry && entry.detectionProvider === 'llm'"
+				class="detection-provider-note"
+				data-testid="detection-provider-note">
+				{{ t('filinq', 'These entities were found by the local language model.') }}
+			</p>
+
 			<NcNoteCard
 				v-if="entry && entry.ocrWarning"
 				type="warning"
@@ -324,7 +359,7 @@ const documentRecordId = computed(() =>
 		<div
 			v-else-if="
 				inDossier
-				&& (batchCount > 0
+				&& (pendingCount > 0
 					|| batchState.running
 					|| completedCount > 0
 					|| isReanonymizable
@@ -332,7 +367,7 @@ const documentRecordId = computed(() =>
 			"
 			class="sidebar-action-bar sidebar-action-bar--stacked">
 			<NcButton
-				v-if="batchCount > 0 || batchState.running"
+				v-if="pendingCount > 0 || batchState.running"
 				wide
 				variant="primary"
 				:disabled="batchState.running || batchCount === 0"
@@ -346,6 +381,25 @@ const documentRecordId = computed(() =>
 			<p v-if="batchSummary" class="dossier-batch-summary">
 				{{ batchSummary }}
 			</p>
+			<div
+				v-if="unreviewedPendingFiles.length > 0 && !batchState.running"
+				class="dossier-review-pending">
+				<p class="dossier-batch-summary">
+					{{
+						n(
+							'filinq',
+							'%n file still needs a check before it can be anonymised:',
+							'%n files still need a check before they can be anonymised:',
+							unreviewedPendingFiles.length,
+						)
+					}}
+				</p>
+				<ul class="dossier-review-pending__list">
+					<li v-for="file in unreviewedPendingFiles" :key="file.fileId">
+						{{ file.fileName }}
+					</li>
+				</ul>
+			</div>
 			<!-- Re-anonymise the currently open file (its original is on screen),
 			     alongside the dossier batch action. Recognised via the durable link
 			     register, so it works for dossiers anonymised in an earlier session. -->
@@ -363,11 +417,19 @@ const documentRecordId = computed(() =>
 			</NcButton>
 			<!-- Second step of a re-anonymise: the source is re-extracted, run the
 			     new anonymisation for just this file (overwrites its output). -->
+			<ReviewMarkCard
+				v-if="reanonReviewActive"
+				:mark="entry.reviewMark || null"
+				:checked="entryChecked"
+				:busy="!!entry.reviewing"
+				:disabled="includedCount === 0 || isAnonymising"
+				:error="reviewMessage"
+				@confirm="onMarkChecked" />
 			<NcButton
 				v-if="reanonReviewActive"
 				wide
 				variant="primary"
-				:disabled="includedCount === 0 || isAnonymising"
+				:disabled="includedCount === 0 || isAnonymising || !entryChecked"
 				@click="onAnonymise">
 				<template v-if="isAnonymising" #icon>
 					<NcLoadingIcon :size="20" />
@@ -437,9 +499,16 @@ const documentRecordId = computed(() =>
 					}}
 				</NcCheckboxRadioSwitch>
 			</fieldset>
+			<ReviewMarkCard
+				:mark="entry.reviewMark || null"
+				:checked="entryChecked"
+				:busy="!!entry.reviewing"
+				:disabled="includedCount === 0 || isAnonymising"
+				:error="reviewMessage"
+				@confirm="onMarkChecked" />
 			<NcButton
 				variant="primary"
-				:disabled="includedCount === 0 || isAnonymising"
+				:disabled="includedCount === 0 || isAnonymising || !entryChecked"
 				@click="onAnonymise">
 				<template v-if="isAnonymising" #icon>
 					<NcLoadingIcon :size="20" />
@@ -518,6 +587,9 @@ const documentRecordId = computed(() =>
 		     nothing to it: anonymisation, redaction and signing stay Filinq's
 		     own, because no leaf provides them and Filinq is the service that
 		     does (ADR-022 documented exception). -->
+		<!-- The document's classification suggestion, when it has one
+		     (inbound-auto-classification): confirm, correct or reject. -->
+		<ClassificationCard :fileId="currentFileId" />
 		<DocumentLeafTabs
 			register="filinq"
 			schema="anonymizationLink"
@@ -527,7 +599,6 @@ const documentRecordId = computed(() =>
 
 <script>
 import axios from '@nextcloud/axios'
-import { generateRemoteUrl } from '@nextcloud/router'
 import {
 	NcAppSidebar,
 	NcButton,
@@ -546,12 +617,16 @@ import DdEntityCard from '../components/DdEntityCard.vue'
 import DdRemovedEntitiesList from '../components/DdRemovedEntitiesList.vue'
 import DdSearchBar from '../components/DdSearchBar.vue'
 import DdToggle from '../components/DdToggle.vue'
+import ReviewMarkCard from '../components/ReviewMarkCard.vue'
 import ProhibitionBlockedDialog from '../dialogs/ProhibitionBlockedDialog.vue'
 import RestoreOriginalDialog from '../dialogs/RestoreOriginalDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 import { accessibilityNote } from '../services/redactionAccessibility.js'
+import { reportRows } from '../services/sanitization.js'
+import { encodedWebdavDownloadUrl } from '../services/storagePathUrls.js'
+import { entryIsChecked } from '../store/modules/anonymization.js'
 
 export default {
 	name: 'FileViewerSidebar',
@@ -568,6 +643,7 @@ export default {
 		DdSearchBar,
 		ProhibitionBlockedDialog,
 		RestoreOriginalDialog,
+		ReviewMarkCard,
 		KeyVariant,
 		Plus,
 		ShieldLockOutline,
@@ -638,6 +714,16 @@ export default {
 		 */
 		accessibility() {
 			return accessibilityNote(this.entry?.structurePreservation)
+		},
+
+		/**
+		 * What OpenRegister's office sanitiser removed from the anonymised copy.
+		 *
+		 * @return {Array<object>} Label and count per category.
+		 * @spec openspec/changes/document-sanitization/tasks.md#3-3
+		 */
+		sanitizationRows() {
+			return reportRows(this.entry?.sanitizationReport)
 		},
 
 		entry() {
@@ -795,15 +881,77 @@ export default {
 		},
 
 		/**
-		 * Number of dossier files still awaiting anonymisation. Counts the
-		 * listing's pending source files (see `pendingSourceFiles`) rather than
-		 * the store's `extracted` queue, so it covers files not yet opened —
-		 * the batch is one unit, so the count must reflect the whole dossier.
+		 * Number of dossier files the batch will anonymise: the pending source
+		 * files (see `pendingSourceFiles`) whose findings a person checked.
 		 *
 		 * @return {number}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		batchCount() {
+			return this.reviewedPendingFiles.length
+		},
+
+		/**
+		 * Number of dossier source files without an anonymised copy yet,
+		 * checked or not. Keeps the dossier footer on screen.
+		 *
+		 * @return {number}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		pendingCount() {
 			return this.pendingSourceFiles.length
+		},
+
+		/**
+		 * Pending dossier files whose findings a person checked as they are now.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		reviewedPendingFiles() {
+			return this.pendingSourceFiles.filter((d) =>
+				entryIsChecked(anonymizationStore.findByFileId(d.fileId)),
+			)
+		},
+
+		/**
+		 * Pending dossier files nobody checked yet. The batch leaves them alone.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		unreviewedPendingFiles() {
+			return this.pendingSourceFiles.filter(
+				(d) => !entryIsChecked(anonymizationStore.findByFileId(d.fileId)),
+			)
+		},
+
+		/**
+		 * Whether a person checked the open file's findings as they are now.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		entryChecked() {
+			return entryIsChecked(this.entry)
+		},
+
+		/**
+		 * Why the open file cannot be anonymised yet, or empty.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		reviewMessage() {
+			if (this.entry?.reviewError) {
+				return this.entry.reviewError
+			}
+			if (this.entry?.reviewRequired && !this.entryChecked) {
+				return (
+					this.entry.error || t('filinq', 'Check the detected data first')
+				)
+			}
+			return ''
 		},
 
 		/**
@@ -842,7 +990,7 @@ export default {
 
 		/**
 		 * Label for the dossier batch button: a live progress count while
-		 * running, otherwise "Anonymize all files (N)". Mirrors
+		 * running, otherwise "Anonymize checked files (N)". Mirrors
 		 * FolderFilesNavigation so both entry points read identically.
 		 *
 		 * @return {string}
@@ -856,7 +1004,7 @@ export default {
 					total: this.batchState.total,
 				})
 			}
-			return t('filinq', 'Anonymize all files ({count})', {
+			return t('filinq', 'Anonymize checked files ({count})', {
 				count: this.batchCount,
 			})
 		},
@@ -1251,24 +1399,10 @@ export default {
 		 * WebDAV download URL for the anonymised result, when available.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 		 */
 		downloadUrl() {
-			const path = this.entry?.anonymizedFilePath
-			if (!path) {
-				return ''
-			}
-			const parts = path.split('/')
-			const filesIndex = parts.indexOf('files')
-			if (filesIndex >= 0) {
-				// Encode each segment so a dossier/file name containing `?`,
-				// `#` or `&` doesn't corrupt the download URL.
-				const relativePath = parts
-					.slice(filesIndex + 1)
-					.map(encodeURIComponent)
-					.join('/')
-				return generateRemoteUrl('webdav') + '/' + relativePath
-			}
-			return generateRemoteUrl('webdav')
+			return encodedWebdavDownloadUrl(this.entry?.anonymizedFilePath)
 		},
 	},
 
@@ -1418,6 +1552,19 @@ export default {
 		},
 
 		/**
+		 * Record the reviewer's check of the open file's findings.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		async onMarkChecked() {
+			if (!this.entry) {
+				return
+			}
+			await anonymizationStore.markEntryChecked(this.entry)
+		},
+
+		/**
 		 * Anonymise the current entry. Wraps the store action so the
 		 * footer button has a single click handler. On success, attach
 		 * the anonymised counterpart to the viewer store and switch over
@@ -1486,13 +1633,14 @@ export default {
 		 * identically.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async anonymizeAll() {
 			// Scope the run to the dossier's pending source files and pass full
 			// descriptors: the store extracts any file the user never opened
 			// before anonymising, so the batch covers the whole dossier — not
 			// just the files that happened to be opened in the viewer.
-			const files = this.pendingSourceFiles.map((d) => ({
+			const files = this.reviewedPendingFiles.map((d) => ({
 				fileId: d.fileId,
 				fileName: d.fileName,
 				path: `${myDocumentsStore.currentPath}/${d.fileName}`,
@@ -1522,23 +1670,10 @@ export default {
 		 *
 		 * @param {string} anonymizedFilePath Absolute storage path of the result.
 		 * @return {string} The WebDAV URL, or '' when no path is given.
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 		 */
 		downloadUrlFor(anonymizedFilePath) {
-			if (!anonymizedFilePath) {
-				return ''
-			}
-			const parts = anonymizedFilePath.split('/')
-			const filesIndex = parts.indexOf('files')
-			if (filesIndex >= 0) {
-				// Encode each segment so a dossier/file name containing `?`,
-				// `#` or `&` doesn't corrupt the download URL.
-				const relativePath = parts
-					.slice(filesIndex + 1)
-					.map(encodeURIComponent)
-					.join('/')
-				return generateRemoteUrl('webdav') + '/' + relativePath
-			}
-			return generateRemoteUrl('webdav')
+			return encodedWebdavDownloadUrl(anonymizedFilePath)
 		},
 
 		/**
@@ -1852,6 +1987,13 @@ export default {
 	padding: 4px 12px 0;
 }
 
+/* Which engine found the entities, when it is the language model. */
+.detection-provider-note {
+	margin: 4px 12px 0;
+	color: var(--color-text-maxcontrast);
+	font-size: var(--font-size-small, 13px);
+}
+
 .confidentiality-chip {
 	display: inline-block;
 	padding: 2px 8px;
@@ -2027,5 +2169,12 @@ export default {
 
 .dossier-batch-summary--error {
 	color: var(--color-error);
+}
+
+.dossier-review-pending__list {
+	margin: 4px 0 0;
+	padding-inline-start: 20px;
+	font-size: 0.85rem;
+	list-style: disc;
 }
 </style>

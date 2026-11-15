@@ -24,6 +24,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -31,10 +34,11 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\Filinq\BackgroundJob\BatchDocumentJob;
-use OCP\BackgroundJob\IJobList;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
+use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
+use OCA\Filinq\Service\Support\DocumentOutput;
+use OCA\Filinq\Service\Support\DocumentProduction;
+use OCA\Filinq\Service\Support\TemplateSources;
+use OCA\Filinq\Service\Wizard\WizardGenerationGate;
 
 /**
  * Service for generating formal documents from templates and OpenRegister data
@@ -47,7 +51,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
  */
-class DocumentService {
+class DocumentService implements DocumentServiceInterface {
 
 	/**
 	 * Maximum number of objects for synchronous bulk processing.
@@ -61,7 +65,7 @@ class DocumentService {
 	 *
 	 * @var string
 	 */
-	private const DEFAULT_FORMAT = 'pdf';
+	public const DEFAULT_FORMAT = 'pdf';
 
 	/**
 	 * Valid output formats.
@@ -104,28 +108,24 @@ class DocumentService {
 	/**
 	 * Constructor for DocumentService.
 	 *
-	 * @param TemplateService $templateService Service for template CRUD
-	 * @param DataResolverService $dataResolver Service for OpenRegister data resolution
-	 * @param DocumentRenderPipeline $renderPipeline Huisstijl + Twig rendering and output production
-	 * @param DocumentStorageService $storageService Service for storing output in Files
-	 * @param GeneratedDocumentLogger $documentLogger Audit-trail writer for generated documents
-	 * @param ContainerInterface $container Container for dependency injection
-	 * @param IJobList $jobList Nextcloud job list for async processing
-	 * @param LoggerInterface $logger Logger for error reporting
+	 * @param TemplateSources $sources The template and data sources
+	 * @param DocumentProduction $production The render pipeline and the job store
+	 * @param DocumentOutput $output Where generated documents are stored and logged
 	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
+	 * @param WizardGenerationGate|null $wizardGate Checks a wizard run before it renders (options.wizardContext)
+	 * @param TemplateMergeFieldService|null $mergeFields Names the fields a template fills, for the merge preview
+	 * @param CaseSystemDeliveryService|null $caseSystem Records a stored document's delivery to the case system
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly TemplateService $templateService,
-		private readonly DataResolverService $dataResolver,
-		private readonly DocumentRenderPipeline $renderPipeline,
-		private readonly DocumentStorageService $storageService,
-		private readonly GeneratedDocumentLogger $documentLogger,
-		private readonly ContainerInterface $container,
-		private readonly IJobList $jobList,
-		private readonly LoggerInterface $logger,
+		private readonly TemplateSources $sources,
+		private readonly DocumentProduction $production,
+		private readonly DocumentOutput $output,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
+		private readonly ?WizardGenerationGate $wizardGate = null,
+		private readonly ?TemplateMergeFieldService $mergeFields = null,
+		private readonly ?CaseSystemDeliveryService $caseSystem = null,
 	) {
 
 	}//end __construct()
@@ -142,12 +142,14 @@ class DocumentService {
 	 * @param array $dataRefs Data references: [{register, schema, id}, ...]
 	 * @param array $options Options: format (pdf|odf|html|docx), huisstijlId,
 	 *                       zaakId, adHocData, listRefs, pdfOptions, userId,
-	 *                       filename, output.
+	 *                       filename, output, templateVersion (render that stored version, not the head).
 	 *                       listRefs: [{register, schema, filter?, limit?,
 	 *                       order?, as?}, ...] — each resolves to an array
 	 *                       of objects under the Twig context key 'as'
 	 *                       (default: schema + '_list')
-	 *                       output: {mode?: return|files|both, targetPath?}
+	 *                       output: {mode?: return|files|both, targetPath?, caseSystem?}
+	 *                       — caseSystem names a case-system destination for the
+	 *                       stored document and needs mode files or both
 	 *                       — defaults to mode 'return' (byte-identical to
 	 *                       this method's behaviour before output support
 	 *                       existed)
@@ -156,7 +158,8 @@ class DocumentService {
 	 *                            no HTTP route passes it, so a request cannot write into
 	 *                            its own audit entry. Canonical fields always win.
 	 *
-	 * @return array{content: string, format: string, metadata: array, warnings: string[], output: array}
+	 * @return array{content: string, format: string, metadata: array, warnings: string[], output: array,
+	 *     templateVersion: int|null, sha256: string, pageCount?: int}
 	 *
 	 * @throws Exception If generation fails
 	 *
@@ -179,7 +182,19 @@ class DocumentService {
 		$this->validateFormat(format: $format);
 		$this->resolveOutputMode(options: $options);
 
-		$template = $this->templateService->getTemplate(id: $templateId);
+		$template = null;
+		if (isset($options['templateVersion']) === true) {
+			$template = $this->sources->templates->getTemplateAtVersion(id: $templateId, version: (int) $options['templateVersion']);
+		}
+
+		$template ??= $this->sources->templates->getTemplate(id: $templateId);
+
+		if (isset($options['wizardContext']) === true && $this->wizardGate !== null) {
+			// A wizard run: the answers are checked against the stored wizard before
+			// anything renders, and the entry records the interview (REQ-DDGDW-005/008).
+			$wizardFields = $this->wizardGate->check(templateId: $templateId, dataRefs: $dataRefs, context: $options['wizardContext']);
+			$recordFields = array_merge($recordFields, $wizardFields);
+		}
 
 		return $this->generateFromTemplate(
 			templateId: $templateId,
@@ -208,17 +223,13 @@ class DocumentService {
 	 * @param array $options The same options {@see generateDocument()} takes.
 	 * @param array $recordFields The same extra entry fields {@see generateDocument()} takes.
 	 *
-	 * @return array{content: string, html: string, format: string, metadata: array, warnings: string[], output: array}
+	 * @return array{content: string, html: string, format: string, metadata: array, warnings: string[],
+	 *     output: array, templateVersion: int|null, sha256: string, pageCount?: int}
 	 *               `html` is the rendered template before format conversion.
 	 *
 	 * @throws Exception If generation fails
 	 *
 	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
-	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) The plain-language rendition
-	 * step pushed this past the threshold. It belongs in the same method because
-	 * the formal document and its plain counterpart are filed together or not at
-	 * all; splitting the step out would make a half-filed pair reachable.
 	 */
 	public function generateFromTemplate(
 		string $templateId,
@@ -227,22 +238,19 @@ class DocumentService {
 		array $options = [],
 		array $recordFields = [],
 	): array {
-		$format = $options['format'] ?? self::DEFAULT_FORMAT;
-		$this->validateFormat(format: $format);
-		$outputMode = $this->resolveOutputMode(options: $options);
+		$run = [
+			'templateId' => $templateId,
+			'template' => $template,
+			'dataRefs' => $dataRefs,
+			'options' => $options,
+			'recordFields' => $recordFields,
+			'format' => ($options['format'] ?? self::DEFAULT_FORMAT),
+		];
+		$this->validateFormat(format: $run['format']);
+		$run['outputMode'] = $this->resolveOutputMode(options: $options);
+		CaseSystemDeliveryService::assertStoredMode(options: $options, mode: $run['outputMode']);
 
-		$resolution = $this->dataResolver->resolve(
-			dataRefs: $dataRefs,
-			listRefs: ($options['listRefs'] ?? []),
-			adHocData: ($options['adHocData'] ?? [])
-		);
-		$data = $resolution['data'];
-		$warnings = $resolution['warnings'];
-
-		foreach ($resolution['errors'] as $error) {
-			$ref = $error['register'] . '/' . $error['schema'] . '/' . $error['id'];
-			$warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
-		}
+		$resolved = $this->resolveTemplateData(run: $run);
 
 		// 🔴 THE PLAIN RENDITION IS PLANNED BEFORE ANYTHING IS FILED. REQ-DIO-04's
 		// fourth scenario asks a refused generation to leave NEITHER rendition
@@ -252,91 +260,183 @@ class DocumentService {
 		// no counterpart plans nothing, and this line costs it one null.
 		$plainPlan = $this->plainRendition?->plan(
 			template: $template,
-			data: $data,
+			data: $resolved['data'],
 			acceptance: (array)($options['plainRenditionAcceptance'] ?? [])
 		);
 
-		$huisstijl = $this->renderPipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
-		$pdfOptions = $this->renderPipeline->buildPdfOptions(
-			template: $template,
-			huisstijl: $huisstijl,
-			options: $options
+		$rendered = $this->renderDocument(run: $run, resolved: $resolved);
+		$stored   = $this->storeOutputIfRequested(run: $run, output: $rendered);
+		$plain    = $this->producePlainRendition(run: $run, formal: $rendered + ['plan' => $plainPlan, 'stored' => $stored]);
+
+		$outcome = [
+			'rendered' => $rendered,
+			'stored' => $stored,
+			'plain' => $plain,
+			'warnings' => array_merge($stored['warnings'], $plain['warnings']),
+		];
+		$outcome['metadata'] = $this->logGenerated(run: $run, outcome: $outcome);
+		$outcome = $this->deliverToCaseSystem(run: $run, outcome: $outcome);
+
+		return $this->generationResult(run: $run, outcome: $outcome);
+
+	}//end generateFromTemplate()
+
+	/**
+	 * Resolve the data a generation renders, turning failed references into warnings.
+	 *
+	 * @param array<string, mixed> $run The generation run: dataRefs and options.
+	 *
+	 * @return array{data: array<string, mixed>, warnings: array<int, string>} The data and the warnings so far.
+	 *
+	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+	 */
+	private function resolveTemplateData(array $run): array {
+		$resolution = $this->sources->data->resolve(
+			dataRefs: $run['dataRefs'],
+			listRefs: ($run['options']['listRefs'] ?? []),
+			adHocData: ($run['options']['adHocData'] ?? [])
 		);
-		$renderResult = $this->renderPipeline->renderWithHuisstijl(
-			templateContent: $template['content'],
-			data: $data,
+		$warnings   = $resolution['warnings'];
+
+		foreach ($resolution['errors'] as $error) {
+			$ref = $error['register'] . '/' . $error['schema'] . '/' . $error['id'];
+			$warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
+		}
+
+		return ['data' => $resolution['data'], 'warnings' => $warnings];
+	}//end resolveTemplateData()
+
+	/**
+	 * Render the template with the huisstijl and produce the output bytes.
+	 *
+	 * @param array<string, mixed> $run      The generation run: template, format and options.
+	 * @param array<string, mixed> $resolved The resolved data and the warnings so far.
+	 *
+	 * @return array{data: array<string, mixed>, huisstijl: array<string, mixed>|null, pdfOptions: array<string, mixed>,
+	 *     html: string, content: string, warnings: array<int, string>} The rendering and the warnings so far.
+	 *
+	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+	 */
+	private function renderDocument(array $run, array $resolved): array {
+		$huisstijl    = $this->production->pipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
+		$pdfOptions   = $this->production->pipeline->buildPdfOptions(template: $run['template'], huisstijl: $huisstijl, options: $run['options']);
+		$renderResult = $this->production->pipeline->renderWithHuisstijl(
+			templateContent: $run['template']['content'],
+			data: $resolved['data'],
 			huisstijl: $huisstijl
 		);
-		$htmlContent = $renderResult['html'];
-		$warnings = array_merge($warnings, $renderResult['warnings']);
-
-		$content = $this->renderPipeline->produceOutput(
-			htmlContent: $htmlContent,
-			format: $format,
+		$content      = $this->production->pipeline->produceOutput(
+			htmlContent: $renderResult['html'],
+			format: $run['format'],
 			pdfOptions: $pdfOptions
-		);
-		$warnings = array_merge($warnings, $this->renderPipeline->getLastOutputWarnings());
-
-		$stored = $this->storeOutputIfRequested(
-			mode: $outputMode,
-			templateId: $templateId,
-			template: $template,
-			format: $format,
-			content: $content,
-			options: $options,
-			warnings: $warnings
-		);
-		$warnings = $stored['warnings'];
-
-		$plain = $this->producePlainRendition(
-			plan: $plainPlan,
-			data: $data,
-			format: $format,
-			huisstijl: $huisstijl,
-			pdfOptions: $pdfOptions,
-			options: $options,
-			outputMode: $outputMode,
-			formal: $stored
-		);
-		$warnings = array_merge($warnings, $plain['warnings']);
-
-		$metadata = $this->documentLogger->log(
-			template: [
-				'id' => $templateId,
-				'version' => (int)($template['version'] ?? 1),
-				'name' => ($template['name'] ?? ''),
-			],
-			dataRefs: $dataRefs,
-			format: $format,
-			outcome: [
-				'status' => 'generated',
-				'warnings' => $warnings,
-				'caseId' => ($options['caseId'] ?? null),
-				'errorMessage' => null,
-				'fileId' => $stored['fileId'],
-				'filePath' => $stored['path'],
-			],
-			userId: (string)($options['userId'] ?? ''),
-			extra: array_merge($recordFields, $plain['record'])
 		);
 
 		return [
+			'data' => $resolved['data'],
+			'huisstijl' => $huisstijl,
+			'pdfOptions' => $pdfOptions,
+			'html' => $renderResult['html'],
 			'content' => $content,
-			'html' => $htmlContent,
-			'format' => $format,
-			'metadata' => $metadata,
-			'plainRendition' => $plain['rendition'],
-			'warnings' => $warnings,
+			'warnings' => array_merge($resolved['warnings'], $renderResult['warnings'], $this->production->pipeline->getLastOutputWarnings()),
+		];
+	}//end renderDocument()
+
+	/**
+	 * Write the generatedDocument audit entry for a generation.
+	 *
+	 * @param array<string, mixed> $run     The generation run.
+	 * @param array<string, mixed> $outcome The filed formal and plain documents and the warnings.
+	 *
+	 * @return array<string, mixed> The audit entry.
+	 *
+	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+	 */
+	private function logGenerated(array $run, array $outcome): array {
+		return $this->output->log->log(
+			generation: new DocumentGenerationRecord(
+				template: [
+					'id' => $run['templateId'],
+					'version' => ($run['template']['version'] ?? null),
+					'name' => ($run['template']['name'] ?? ''),
+				],
+				dataRefs: $run['dataRefs'],
+				format: $run['format'],
+				userId: (string)($run['options']['userId'] ?? ''),
+				extra: array_merge($run['recordFields'], $outcome['plain']['record'])
+			),
+			outcome: [
+				'status' => 'generated',
+				'warnings' => $outcome['warnings'],
+				'caseId' => ($run['options']['caseId'] ?? null),
+				'errorMessage' => null,
+				'fileId' => $outcome['stored']['fileId'],
+				'filePath' => $outcome['stored']['path'],
+			]
+		);
+	}//end logGenerated()
+
+	/**
+	 * Hand a stored document to the case system when a destination applies (REQ-GSC-002).
+	 *
+	 * Only a filed document is delivered; recording the delivery never fails
+	 * the generation, it adds a warning instead (design D3, D4).
+	 *
+	 * @param array<string, mixed> $run     The generation run.
+	 * @param array<string, mixed> $outcome The filed documents, the audit entry and the warnings.
+	 *
+	 * @return array<string, mixed> The outcome with the linked audit entry and any delivery warning.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+	 */
+	private function deliverToCaseSystem(array $run, array $outcome): array {
+		if ($this->caseSystem === null || $run['outputMode'] === 'return') {
+			return $outcome;
+		}
+
+		$sent = $this->caseSystem->recordGeneration(
+			template: ['id' => $run['templateId'], 'namespace' => ($run['template']['namespace'] ?? '')],
+			document: $outcome['metadata'],
+			generation: ['stored' => $outcome['stored'], 'options' => $run['options'], 'format' => $run['format']]
+		);
+
+		$outcome['metadata'] = $sent['document'];
+		$outcome['warnings'] = array_merge($outcome['warnings'], $sent['warnings']);
+
+		return $outcome;
+	}//end deliverToCaseSystem()
+
+	/**
+	 * The answer of a generation: the bytes, the audit entry and where the output went.
+	 *
+	 * @param array<string, mixed> $run     The generation run.
+	 * @param array<string, mixed> $outcome The rendering, the filed documents, the audit entry and the warnings.
+	 *
+	 * @return array<string, mixed> The generation result.
+	 *
+	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+	 */
+	private function generationResult(array $run, array $outcome): array {
+		$stored  = $outcome['stored'];
+		$content = $outcome['rendered']['content'];
+
+		return [
+			'content' => $content,
+			'html' => $outcome['rendered']['html'],
+			'format' => $run['format'],
+			'metadata' => $outcome['metadata'],
+			'plainRendition' => $outcome['plain']['rendition'],
+			'templateVersion' => ($run['template']['version'] ?? null),
+			'warnings' => $outcome['warnings'],
 			'output' => [
-				'mode' => $outputMode,
+				'mode' => $run['outputMode'],
 				'fileId' => $stored['fileId'],
 				'path' => $stored['path'],
 				'name' => $stored['name'],
 				'size' => $stored['size'],
 			],
-		];
+		] + $this->production->pipeline->describeOutput(content: $content, format: $run['format']);
+	}//end generationResult()
 
-	}//end generateFromTemplate()
 
 	/**
 	 * Generate an HTML preview of a template without producing final output.
@@ -364,35 +464,81 @@ class DocumentService {
 		array $dataRefs,
 		array $options = [],
 	): array {
-		$template = $this->templateService->getTemplate(id: $templateId);
-
-		$resolution = $this->dataResolver->resolve(
-			dataRefs: $dataRefs,
-			listRefs: ($options['listRefs'] ?? []),
-			adHocData: ($options['adHocData'] ?? [])
-		);
-		$data = $resolution['data'];
-		$warnings = $resolution['warnings'];
-
-		foreach ($resolution['errors'] as $error) {
-			$ref = $error['register'] . '/' . $error['schema'] . '/' . $error['id'];
-			$warnings[] = "Data resolution failed for {$ref}: {$error['message']}";
-		}
-
-		$huisstijl = $this->renderPipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
-		$renderResult = $this->renderPipeline->renderWithHuisstijl(
-			templateContent: $template['content'],
-			data: $data,
-			huisstijl: $huisstijl
-		);
-		$warnings = array_merge($warnings, $renderResult['warnings']);
+		$template = $this->sources->templates->getTemplate(id: $templateId);
+		$preview = $this->renderPreview(run: ['template' => $template, 'dataRefs' => $dataRefs, 'options' => $options]);
 
 		return [
-			'html' => $renderResult['html'],
-			'warnings' => $warnings,
+			'html' => $preview['html'],
+			'warnings' => $preview['warnings'],
 		];
 
 	}//end generatePreview()
+
+	/**
+	 * Preview a template and name the fields it fills.
+	 *
+	 * The preview of generatePreview(), plus the template's merge fields in
+	 * the resolved data: each with its path, label, source, value and whether
+	 * it is filled, and whether all are. Like the preview it stores nothing
+	 * and logs nothing.
+	 *
+	 * @param string $templateId The UUID of the template to preview
+	 * @param array  $dataRefs   Data references: [{register, schema, id}, ...]
+	 * @param array  $options    Options: huisstijlId, adHocData, listRefs.
+	 *
+	 * @return array{html: string, warnings: string[], fields: array<int, array<string, string|bool>>, complete: bool}
+	 *
+	 * @throws Exception If rendering fails
+	 *
+	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function generateMergePreview(
+		string $templateId,
+		array $dataRefs,
+		array $options = [],
+	): array {
+		$template = $this->sources->templates->getTemplate(id: $templateId);
+		$preview = $this->renderPreview(run: ['template' => $template, 'dataRefs' => $dataRefs, 'options' => $options]);
+		$mergeFields = ($this->mergeFields ?? new TemplateMergeFieldService());
+		$merge = $mergeFields->resolve(template: $template, data: $preview['data']);
+
+		return [
+			'html' => $preview['html'],
+			'warnings' => $preview['warnings'],
+			'fields' => $merge['fields'],
+			'complete' => $merge['complete'],
+		];
+
+	}//end generateMergePreview()
+
+	/**
+	 * Resolve a template's data and render it with the house style, without output.
+	 *
+	 * @param array<string, mixed> $run The preview run: template, dataRefs
+	 *                                  ([{register, schema, id}, ...]) and options
+	 *                                  (huisstijlId, adHocData, listRefs).
+	 *
+	 * @return array{html: string, warnings: string[], data: array}
+	 *
+	 * @throws Exception If rendering fails
+	 */
+	private function renderPreview(array $run): array {
+		$resolved = $this->resolveTemplateData(run: $run);
+
+		$huisstijl = $this->production->pipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
+		$renderResult = $this->production->pipeline->renderWithHuisstijl(
+			templateContent: $run['template']['content'],
+			data: $resolved['data'],
+			huisstijl: $huisstijl
+		);
+
+		return [
+			'html' => $renderResult['html'],
+			'warnings' => array_merge($resolved['warnings'], $renderResult['warnings']),
+			'data' => $resolved['data'],
+		];
+
+	}//end renderPreview()
 
 	/**
 	 * Generate documents for multiple objects in a single request.
@@ -440,20 +586,13 @@ class DocumentService {
 		$count = count($objectIds);
 
 		if ($count <= self::SYNC_BATCH_LIMIT) {
-			return $this->generateBulkSync(
-				templateId: $templateId,
-				objectIds: $objectIds,
-				options: $options
-			);
+			$bulk = new SyncBulkGeneration(documents: $this, documentLogger: $this->output->log);
+			return $bulk->run(templateId: $templateId, objectIds: $objectIds, options: $options);
 		}
 
 		$this->validateAsyncOutputMode(options: $options);
 
-		return $this->dispatchBulkJob(
-			templateId: $templateId,
-			objectIds: $objectIds,
-			options: $options
-		);
+		return $this->dispatchBulkJob(run: ['templateId' => $templateId, 'objectIds' => $objectIds, 'options' => $options]);
 
 	}//end generateBulk()
 
@@ -494,26 +633,7 @@ class DocumentService {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	public function getJobStatus(string $jobId): ?array {
-		try {
-			$config = $this->container->get(\OCP\IAppConfig::class);
-			$value = $config->getValueString(
-				'filinq',
-				'document_job_' . $jobId,
-				''
-			);
-
-			if (empty($value) === true) {
-				return null;
-			}
-
-			return json_decode($value, true);
-		} catch (Exception $e) {
-			$this->logger->error(
-				message: 'Failed to load document job status: ' . $e->getMessage(),
-				context: ['jobId' => $jobId]
-			);
-			return null;
-		}//end try
+		return $this->production->jobs->get(jobId: $jobId);
 
 	}//end getJobStatus()
 
@@ -528,19 +648,7 @@ class DocumentService {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	public function updateJobStatus(string $jobId, array $status): void {
-		try {
-			$config = $this->container->get(\OCP\IAppConfig::class);
-			$config->setValueString(
-				'filinq',
-				'document_job_' . $jobId,
-				json_encode($status)
-			);
-		} catch (Exception $e) {
-			$this->logger->error(
-				message: 'Failed to store document job status: ' . $e->getMessage(),
-				context: ['jobId' => $jobId]
-			);
-		}//end try
+		$this->production->jobs->put(jobId: $jobId, status: $status);
 
 	}//end updateJobStatus()
 
@@ -617,7 +725,7 @@ class DocumentService {
 
 		if ($template === null) {
 			try {
-				$template = $this->templateService->getTemplate(id: $templateId);
+				$template = $this->sources->templates->getTemplate(id: $templateId);
 			} catch (Exception $e) {
 				$template = [];
 			}
@@ -697,62 +805,46 @@ class DocumentService {
 	 * refuse the pair has refused before this point; failing here would mean
 	 * losing a formal letter that is already on disk over its companion.
 	 *
-	 * @param array<string, mixed>|null $plan       The plan, or null when no counterpart is declared.
-	 * @param array<string, mixed>      $data       The resolved generation data.
-	 * @param string                    $format     The output format.
-	 * @param array<string, mixed>|null $huisstijl  The huisstijl the formal letter used.
-	 * @param array<string, mixed>      $pdfOptions The PDF options the formal letter used.
-	 * @param array<string, mixed>      $options    The generation options.
-	 * @param string                    $outputMode Where the output goes.
-	 * @param array<string, mixed>      $formal     The formal document as it was filed.
+	 * @param array<string, mixed> $run    The generation run: format, options and output mode.
+	 * @param array<string, mixed> $formal The formal rendering (data, huisstijl, pdfOptions), the plan
+	 *                                     (null when no counterpart is declared) and the filed formal document.
 	 *
 	 * @return array{rendition: array<string, mixed>|null, record: array<string, mixed>,
 	 *               warnings: array<int, string>} The rendition, its record fields and any warnings.
 	 *
 	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
-	private function producePlainRendition(
-		?array $plan,
-		array $data,
-		string $format,
-		?array $huisstijl,
-		array $pdfOptions,
-		array $options,
-		string $outputMode,
-		array $formal,
-	): array {
+	private function producePlainRendition(array $run, array $formal): array {
+		$plan = $formal['plan'];
 		if ($plan === null || $this->plainRendition === null) {
 			return ['rendition' => null, 'record' => [], 'warnings' => []];
 		}
 
-		$rendered = $this->renderPipeline->renderWithHuisstijl(
+		$rendered = $this->production->pipeline->renderWithHuisstijl(
 			templateContent: $plan['content'],
-			data: $data,
-			huisstijl: $huisstijl
+			data: $formal['data'],
+			huisstijl: $formal['huisstijl']
 		);
 
-		$content = $this->renderPipeline->produceOutput(
+		$content = $this->production->pipeline->produceOutput(
 			htmlContent: $rendered['html'],
-			format: $format,
-			pdfOptions: $pdfOptions
+			format: $run['format'],
+			pdfOptions: $formal['pdfOptions']
 		);
 
-		$plainOptions = $options;
-		$plainOptions['filename'] = ((string)($options['filename'] ?? 'document')) . '-in-gewone-taal';
-
-		$stored = $this->storeOutputIfRequested(
-			mode: $outputMode,
-			templateId: $plan['templateId'],
-			template: ['namespace' => ($options['namespace'] ?? '')],
-			format: $format,
-			content: $content,
-			options: $plainOptions,
-			warnings: $this->renderPipeline->getLastOutputWarnings()
+		$plainRun = [
+			'templateId' => $plan['templateId'],
+			'template' => ['namespace' => ($run['options']['namespace'] ?? '')],
+			'options' => ['filename' => ((string)($run['options']['filename'] ?? 'document')) . '-in-gewone-taal'] + $run['options'],
+		] + $run;
+		$stored   = $this->storeOutputIfRequested(
+			run: $plainRun,
+			output: ['content' => $content, 'warnings' => $this->production->pipeline->getLastOutputWarnings()]
 		);
 
 		$record = $this->plainRendition->recordFields(
 			plan: $plan,
-			formal: $formal,
+			formal: $formal['stored'],
 			plainFile: $stored,
 			moment: date('c')
 		);
@@ -760,7 +852,7 @@ class DocumentService {
 		return [
 			'rendition' => [
 				'content' => $content,
-				'format' => $format,
+				'format' => $run['format'],
 				'templateId' => $plan['templateId'],
 				'explains' => $record['plainRenditionExplains'],
 				'source' => $plan['source'],
@@ -777,187 +869,110 @@ class DocumentService {
 	/**
 	 * File the rendered bytes when the caller asked for them to be stored.
 	 *
-	 * @param string               $mode       `return` to hand the bytes back unfiled, anything else to file them.
-	 * @param string               $templateId The template's identifier, for the record.
-	 * @param array<string, mixed> $template   The template the bytes came from.
-	 * @param string               $format     The output format the bytes are in.
-	 * @param string               $content    The rendered bytes.
-	 * @param array<string, mixed> $options    The generation options, carrying `userId` and the target.
-	 * @param array<int, string>   $warnings   The warnings collected so far, carried through.
+	 * @param array<string, mixed> $run    The generation run: outputMode (`return` hands the bytes back unfiled,
+	 *                                     anything else files them), templateId, template, format and options
+	 *                                     (carrying `userId` and the target).
+	 * @param array<string, mixed> $output The rendered bytes (`content`) and the warnings collected so far.
 	 *
 	 * @return array{fileId: ?int, path: ?string, name: ?string, size: ?int, warnings: array<int, string>}
 	 *         What was filed, or nulls when the mode was `return`.
 	 *
 	 * @spec exclude Private helper of generateDocument(); the storing rule is specified there.
 	 */
-	private function storeOutputIfRequested(
-		string $mode,
-		string $templateId,
-		array $template,
-		string $format,
-		string $content,
-		array $options,
-		array $warnings,
-	): array {
-		$result = [
-			'fileId' => null,
-			'path' => null,
-			'name' => null,
-			'size' => null,
-			'warnings' => $warnings,
-		];
-
-		if ($mode === 'return') {
-			return $result;
+	private function storeOutputIfRequested(array $run, array $output): array {
+		if ($run['outputMode'] === 'return') {
+			return $this->storedOutput(stored: [], warnings: $output['warnings']);
 		}
 
-		$userId = (string)($options['userId'] ?? '');
-		if ($userId === '') {
-			throw new Exception(
-				message: 'options.userId is required to store generated documents in Files',
-				code: 400
-			);
-		}
-
-		$targetPath = $this->buildOutputTargetPath(
-			templateId: $templateId,
-			explicitTargetPath: ($options['output']['targetPath'] ?? null),
-			template: $template
-		);
-		$filename = $this->buildOutputFilename(
-			filename: ($options['filename'] ?? 'document'),
-			format: $format
-		);
-
-		try {
-			$stored = $this->storageService->store(
-				userId: $userId,
-				targetPath: $targetPath,
-				filename: $filename,
-				content: $content
-			);
-			$result['fileId'] = $stored['fileId'];
-			$result['path'] = $stored['path'];
-			$result['name'] = $stored['name'];
-			$result['size'] = $stored['size'];
-		} catch (Exception $e) {
-			$isStorageFailure = ($e->getCode() === DocumentStorageService::ERROR_CODE_STORAGE_FAILURE);
-			if ($mode === 'both' && $isStorageFailure === true) {
-				$result['warnings'][] = 'Document generated but could not be stored in Files: ' . $e->getMessage();
-				return $result;
-			}
-
-			throw $e;
-		}//end try
-
-		return $result;
+		return $this->fileOutput(run: $run, output: $output);
 	}//end storeOutputIfRequested()
 
 	/**
-	 * Process a bulk generation request synchronously.
+	 * File the rendered bytes for the run's user; mode `both` turns a storage failure into a warning.
 	 *
-	 * Honours `options.output.mode` per object exactly as single-generate
-	 * does (REQ-DDOB-007): 'return' (default) keeps today's inline
-	 * `content`; 'files' stores each object's output and returns
-	 * `{fileId, path, name, size}` inline instead of `content`; 'both'
-	 * returns both.
+	 * @param array<string, mixed> $run The generation run.
+	 * @param array<string, mixed> $output The rendered bytes (`content`) and the warnings collected so far.
 	 *
-	 * @param string $templateId The template UUID
-	 * @param array $objectIds Array of object UUIDs
-	 * @param array $options Generation options (register, schema, format, output, ...)
+	 * @return array{fileId: ?int, path: ?string, name: ?string, size: ?int, warnings: array<int, string>}
+	 *         What was filed, or nulls when a tolerated storage failure left it unfiled.
 	 *
-	 * @return array{results: array, total: int, completed: int, errors: int}
-	 *
-	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-007
+	 * @throws Exception 400 without a user, or the storage failure when the mode does not tolerate it.
 	 */
-	private function generateBulkSync(
-		string $templateId,
-		array $objectIds,
-		array $options,
-	): array {
-		$register = $options['register'] ?? '';
-		$schema = $options['schema'] ?? '';
-		$results = [];
+	private function fileOutput(array $run, array $output): array {
+		$target = $this->storeTarget(run: $run);
+		try {
+			$stored = $this->output->storage->store(...$target, content: $output['content']);
+		} catch (Exception $e) {
+			$this->rethrowUnlessTolerated(run: $run, failure: $e);
+			$stored = [];
+			$output['warnings'][] = 'Document generated but could not be stored in Files: ' . $e->getMessage();
+		}
 
-		foreach ($objectIds as $objectId) {
-			$dataRefs = [
-				[
-					'register' => $register,
-					'schema' => $schema,
-					'id' => $objectId,
-				],
-			];
+		return $this->storedOutput(stored: $stored, warnings: $output['warnings']);
+	}//end fileOutput()
 
-			try {
-				$result = $this->generateDocument(
-					templateId: $templateId,
-					dataRefs: $dataRefs,
-					options: $options
-				);
-				$item = [
-					'objectId' => $objectId,
-					'status' => 'success',
-					'warnings' => $result['warnings'],
-				];
-
-				$mode = $result['output']['mode'] ?? 'return';
-				if ($mode === 'return' || $mode === 'both') {
-					$item['content'] = $result['content'];
-				}
-
-				if ($mode === 'files' || $mode === 'both') {
-					$item['fileId'] = $result['output']['fileId'];
-					$item['path'] = $result['output']['path'];
-					$item['name'] = $result['output']['name'];
-					$item['size'] = $result['output']['size'];
-				}
-
-				$results[] = $item;
-			} catch (Exception $e) {
-				$results[] = [
-					'objectId' => $objectId,
-					'status' => 'error',
-					'error' => $e->getMessage(),
-				];
-
-				$this->documentLogger->log(
-					template: [
-						'id' => $templateId,
-						'version' => 0,
-						'name' => '',
-					],
-					dataRefs: $dataRefs,
-					format: ($options['format'] ?? self::DEFAULT_FORMAT),
-					outcome: [
-						'status' => 'failed',
-						'warnings' => [],
-						'caseId' => null,
-						'errorMessage' => $e->getMessage(),
-						'fileId' => null,
-						'filePath' => null,
-					],
-					userId: (string)($options['userId'] ?? '')
-				);
-			}//end try
-		}//end foreach
-
-		$errorCount = count(
-			array_filter(
-				$results,
-				static function (array $r): bool {
-					return $r['status'] === 'error';
-				}
-			)
-		);
+	/**
+	 * Who the bytes are filed for, and where: refused before anything is stored when there is no user.
+	 *
+	 * @param array<string, mixed> $run The generation run: templateId, template, format and options
+	 *                                  (carrying `userId`, `filename` and `output.targetPath`).
+	 *
+	 * @return array{userId: string, targetPath: string, filename: string} The store arguments.
+	 *
+	 * @throws Exception 400 when options.userId is missing or empty.
+	 */
+	private function storeTarget(array $run): array {
+		$userId = (string)($run['options']['userId'] ?? '');
+		if ($userId === '') {
+			throw new Exception(message: 'options.userId is required to store generated documents in Files', code: 400);
+		}
 
 		return [
-			'results' => $results,
-			'total' => count($objectIds),
-			'completed' => (count($objectIds) - $errorCount),
-			'errors' => $errorCount,
+			'userId' => $userId,
+			'targetPath' => $this->buildOutputTargetPath(
+				templateId: $run['templateId'],
+				explicitTargetPath: ($run['options']['output']['targetPath'] ?? null),
+				template: $run['template']
+			),
+			'filename' => $this->buildOutputFilename(filename: ($run['options']['filename'] ?? 'document'), format: $run['format']),
 		];
+	}//end storeTarget()
 
-	}//end generateBulkSync()
+	/**
+	 * Rethrow a storage failure unless mode `both` tolerates it: only a storage failure, never a refused path.
+	 *
+	 * @param array<string, mixed> $run The generation run.
+	 * @param Exception $failure What storing threw.
+	 *
+	 * @return void
+	 *
+	 * @throws Exception The failure, when it is not tolerated.
+	 */
+	private function rethrowUnlessTolerated(array $run, Exception $failure): void {
+		if ($run['outputMode'] === 'both' && $failure->getCode() === DocumentStorageService::ERROR_CODE_STORAGE_FAILURE) {
+			return;
+		}
+
+		throw $failure;
+	}//end rethrowUnlessTolerated()
+
+	/**
+	 * The stored-output shape: the filed refs, or nulls when nothing was filed.
+	 *
+	 * @param array<string, mixed> $stored What the storage service returned, or [].
+	 * @param array<int, string> $warnings The warnings collected so far.
+	 *
+	 * @return array{fileId: ?int, path: ?string, name: ?string, size: ?int, warnings: array<int, string>}
+	 */
+	private function storedOutput(array $stored, array $warnings): array {
+		return [
+			'fileId' => ($stored['fileId'] ?? null),
+			'path' => ($stored['path'] ?? null),
+			'name' => ($stored['name'] ?? null),
+			'size' => ($stored['size'] ?? null),
+			'warnings' => $warnings,
+		];
+	}//end storedOutput()
 
 	/**
 	 * Dispatch an async bulk generation background job.
@@ -970,66 +985,51 @@ class DocumentService {
 	 * fixed path, so a large batch's outputs land in one folder instead of
 	 * spraying across the destination.
 	 *
-	 * @param string $templateId The template UUID
-	 * @param array $objectIds Array of object UUIDs
-	 * @param array $options Generation options (options.output.mode is
-	 *                       already validated to be 'files' by the caller)
+	 * @param array<string, mixed> $run The bulk run: templateId, objectIds and options
+	 *                                  (options.output.mode is already validated
+	 *                                  to be 'files' by the caller).
 	 *
 	 * @return array{jobId: string, status: string, total: int}
 	 *
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-006
 	 */
-	private function dispatchBulkJob(
-		string $templateId,
-		array $objectIds,
-		array $options,
-	): array {
-		$jobId = $this->generateJobId();
-
-		$baseTargetPath = $this->buildOutputTargetPath(
-			templateId: $templateId,
-			explicitTargetPath: ($options['output']['targetPath'] ?? null)
-		);
-		$options['output']['targetPath'] = $baseTargetPath . '/' . $jobId;
-
-		$initialStatus = [
+	private function dispatchBulkJob(array $run): array {
+		$jobId = $this->production->jobs->newId();
+		$argument = [
 			'jobId' => $jobId,
-			'status' => 'queued',
-			'total' => count($objectIds),
-			'completed' => 0,
-			'errors' => 0,
-			'results' => [],
-			'options' => $options,
+			'templateId' => $run['templateId'],
+			'objectIds' => $run['objectIds'],
+			'options' => $this->perJobOptions(run: $run, jobId: $jobId),
 		];
-		$this->updateJobStatus(jobId: $jobId, status: $initialStatus);
 
-		$this->jobList->add(
-			job: BatchDocumentJob::class,
-			argument: [
-				'jobId' => $jobId,
-				'templateId' => $templateId,
-				'objectIds' => $objectIds,
-				'options' => $options,
-			]
-		);
+		$this->production->jobs->enqueue(jobId: $jobId, status: (new BulkJobStatus())->queued(argument: $argument), argument: $argument);
 
 		return [
 			'jobId' => $jobId,
 			'status' => 'queued',
-			'total' => count($objectIds),
+			'total' => count($run['objectIds']),
 		];
 
 	}//end dispatchBulkJob()
 
 	/**
-	 * Generate a cryptographically secure job UUID.
+	 * The bulk run's options with the output target path fixed to the job's own folder.
 	 *
-	 * @return string A RFC-4122 v4 UUID job identifier
+	 * @param array<string, mixed> $run   The bulk run: templateId, objectIds and options.
+	 * @param string               $jobId The job id.
+	 *
+	 * @return array<string, mixed> The options every per-object generation of the job uses.
 	 */
-	private function generateJobId(): string {
-		$data = random_bytes(16);
-		$data[6] = chr(ord($data[6]) & 0x0f | 0x40);
-		$data[8] = chr(ord($data[8]) & 0x3f | 0x80);
-		return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
-	}//end generateJobId()
+	private function perJobOptions(array $run, string $jobId): array {
+		$options = $run['options'];
+		$baseTargetPath = $this->buildOutputTargetPath(
+			templateId: $run['templateId'],
+			explicitTargetPath: ($options['output']['targetPath'] ?? null)
+		);
+		$options['output']['targetPath'] = $baseTargetPath . '/' . $jobId;
+
+		return $options;
+
+	}//end perJobOptions()
+
 }//end class

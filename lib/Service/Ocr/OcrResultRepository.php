@@ -24,17 +24,18 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Ocr;
 
+use OCA\Filinq\Kernel\Contracts\OcrResultRepositoryInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 use RuntimeException;
 use Throwable;
 
 /**
  * The `ocrResult` rows, keyed by file id.
  */
-class OcrResultRepository {
-
-	public const SCHEMA = 'ocrResult';
+class OcrResultRepository implements OcrResultRepositoryInterface {
+	use ReadsStoredObjectRows;
 
 	/**
 	 * Constructor.
@@ -76,7 +77,7 @@ class OcrResultRepository {
 		}
 
 		foreach ((array) $results as $result) {
-			$row = $this->normalise(row: $result);
+			$row = $this->storedFields(row: $result);
 			// The filter is the search's; the match is ours, so a search that
 			// ignored the filter still answers for this file only.
 			if ((int) ($row['fileId'] ?? 0) === $fileId) {
@@ -123,36 +124,7 @@ class OcrResultRepository {
 			);
 		}
 
-		return $this->normalise(row: $stored);
+		return $this->storedFields(row: $stored);
 
 	}//end saveForFile()
-
-	/**
-	 * Flatten an OpenRegister row to its fields plus uuid.
-	 *
-	 * @param mixed $row An ObjectEntity or array.
-	 *
-	 * @return array<string, mixed> The fields.
-	 */
-	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		$fields = $data;
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			$fields = $data['object'];
-		}
-
-		unset($fields['@self']);
-		$fields['uuid'] = (string) ($fields['uuid'] ?? ($data['uuid'] ?? ($data['@self']['id'] ?? ($data['id'] ?? ''))));
-
-		return $fields;
-
-	}//end normalise()
 }//end class

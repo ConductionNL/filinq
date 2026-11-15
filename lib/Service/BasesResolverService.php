@@ -3,6 +3,9 @@
 /**
  * Bases Resolver Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Resolves the union of Woo Art. 5 grondslagen (`bases[]`) for a batch of
  * files by locating the dossier(s) the files belong to via OpenRegister.
  *

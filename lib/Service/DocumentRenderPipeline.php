@@ -30,7 +30,9 @@ use Exception;
 use OCA\Filinq\Service\Charts\SvgRasterizer;
 use OCA\Filinq\Service\Conversion\HtmlToOfficeConverter;
 use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
+use OCA\Filinq\Service\Support\PdfRendering;
 use Psr\Log\LoggerInterface;
+use setasign\Fpdi\Fpdi;
 
 /**
  * Renders template content and produces the requested output format.
@@ -51,10 +53,23 @@ class DocumentRenderPipeline {
 	private array $lastOutputWarnings = [];
 
 	/**
+	 * Service for Twig rendering.
+	 *
+	 * @var TemplateRenderer
+	 */
+	private readonly TemplateRenderer $templateRenderer;
+
+	/**
+	 * Service for PDF generation.
+	 *
+	 * @var PdfService
+	 */
+	private readonly PdfService $pdfService;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param TemplateRenderer $templateRenderer Service for Twig rendering
-	 * @param PdfService $pdfService Service for PDF generation
+	 * @param PdfRendering $rendering The template renderer and the PDF generator.
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param SvgRasterizer $svgRasterizer Turns chart SVG into PNG before an ODF conversion
@@ -64,14 +79,15 @@ class DocumentRenderPipeline {
 	 * @return void
 	 */
 	public function __construct(
-		private readonly TemplateRenderer $templateRenderer,
-		private readonly PdfService $pdfService,
+		PdfRendering $rendering,
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly LoggerInterface $logger,
 		private readonly SvgRasterizer $svgRasterizer,
 		private readonly ?ObjectionTermCalculator $objectionTerm = null,
 		private readonly ?HtmlToOfficeConverter $officeConverter = null,
 	) {
+		$this->templateRenderer = $rendering->renderer;
+		$this->pdfService = $rendering->pdf;
 
 	}//end __construct()
 
@@ -253,6 +269,43 @@ class DocumentRenderPipeline {
 		}//end switch
 
 	}//end produceOutput()
+
+	/**
+	 * What a caller needs to know about produced bytes without reading them again.
+	 *
+	 * A SHA-256 over the bytes always, and the page count for a PDF. DOCX, ODT
+	 * and HTML have no page structure filinq can count, so they carry no
+	 * `pageCount` at all rather than a zero that reads as an empty document. A
+	 * PDF the parser cannot read (a compressed cross-reference table) carries
+	 * none either, for the same reason.
+	 *
+	 * @param string $content The produced bytes
+	 * @param string $format  The format they were produced in
+	 *
+	 * @return array{sha256: string, pageCount?: int}
+	 *
+	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-the-generation-result-reports-the-bytes-filinq-produced-req-ddtvp-005
+	 */
+	public function describeOutput(string $content, string $format): array {
+		$described = ['sha256' => hash('sha256', $content)];
+		if ($format !== 'pdf') {
+			return $described;
+		}
+
+		$stream = fopen('php://memory', 'r+');
+		try {
+			fwrite($stream, $content);
+			rewind($stream);
+			$described['pageCount'] = (new Fpdi())->setSourceFile($stream);
+		} catch (\Throwable $e) {
+			$this->logger->warning(message: 'Could not count the pages of a generated PDF: ' . $e->getMessage());
+		} finally {
+			fclose($stream);
+		}
+
+		return $described;
+
+	}//end describeOutput()
 
 	/**
 	 * Warnings raised by the most recent {@see produceOutput()} call.

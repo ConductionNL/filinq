@@ -25,17 +25,18 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\CaseArchiveService;
-use OCA\Filinq\Service\DocumentReviewService;
-use OCA\Filinq\Service\PageLayoutService;
-use OCA\Filinq\Service\PeriodicDocumentService;
+use OCA\Filinq\Controller\Support\HandlerAnswer;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
+use OCA\Filinq\Kernel\Contracts\DocumentReviewServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PageLayoutServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PeriodicDocumentServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
 use OCP\IUserSession;
-use Throwable;
 
 /**
  * Controller for layouts, bundles, periodic documents and reviews.
@@ -49,30 +50,29 @@ use Throwable;
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class DocumentProductionController extends Controller {
+	use AnswersNotAuthenticated;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param PageLayoutService $layouts The paper.
-	 * @param CaseArchiveService $archives The bundle.
-	 * @param PeriodicDocumentService $periodic The documents that make themselves.
-	 * @param DocumentReviewService $reviews The ones that come back.
+	 * @param PageLayoutServiceInterface $layouts The paper.
+	 * @param CaseArchiveServiceInterface $archives The bundle.
+	 * @param PeriodicDocumentServiceInterface $periodic The documents that make themselves.
+	 * @param DocumentReviewServiceInterface $reviews The ones that come back.
 	 * @param IUserSession $userSession The current session.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		string $appName,
 		IRequest $request,
-		private readonly PageLayoutService $layouts,
-		private readonly CaseArchiveService $archives,
-		private readonly PeriodicDocumentService $periodic,
-		private readonly DocumentReviewService $reviews,
+		private readonly PageLayoutServiceInterface $layouts,
+		private readonly CaseArchiveServiceInterface $archives,
+		private readonly PeriodicDocumentServiceInterface $periodic,
+		private readonly DocumentReviewServiceInterface $reviews,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: $appName, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 
@@ -84,6 +84,9 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The versions.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt read-only through OpenRegister with RBAC on (PageLayoutService), and the
+	 * pageLayout schema grants read to authenticated users.
 	 */
 	#[NoAdminRequired]
 	public function layoutVersions(string $name = ''): JSONResponse {
@@ -108,6 +111,9 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The new version 1, or the refusal.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt the write goes through OpenRegister saveObject() with RBAC on
+	 * (PageLayoutService::save()), and the pageLayout schema grants create to admin only.
 	 */
 	#[NoAdminRequired]
 	public function createLayout(string $name = '', array $fields = []): JSONResponse {
@@ -124,6 +130,9 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The new version.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt the write goes through OpenRegister saveObject() with RBAC on
+	 * (PageLayoutService::save()), and the pageLayout schema grants update to admin only.
 	 */
 	#[NoAdminRequired]
 	public function editLayout(string $name = '', array $changes = []): JSONResponse {
@@ -145,6 +154,10 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The preflight, including whether it exceeds the ceiling.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt files are resolved for the caller (ReadableFileResolver: their own Files,
+	 * or an object's folder when OpenRegister's object read rule admits them), and the document records
+	 * are read with OpenRegister RBAC on.
 	 */
 	#[NoAdminRequired]
 	public function archivePreflight(
@@ -175,6 +188,10 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The manifest, with `archive` naming the written file.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt files are listed and copied as the caller may read them (ReadableFileResolver:
+	 * their own Files, or an object's folder when OpenRegister's object read rule admits them), records are
+	 * read with OpenRegister RBAC on, and the bundle lands in the caller's own Files.
 	 */
 	#[NoAdminRequired]
 	public function archiveManifest(
@@ -201,6 +218,10 @@ class DocumentProductionController extends Controller {
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt the view is resolved for the session user (SavedViewReader, own or public
+	 * views), the PDF lands in the caller's own Files, and the schedule write goes through OpenRegister
+	 * RBAC (periodicDocument update: admin).
 	 */
 	#[NoAdminRequired]
 	public function runPeriodic(array $schedule = []): JSONResponse {
@@ -220,6 +241,10 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The due documents.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt read-only through OpenRegister with RBAC on
+	 * (DocumentReviewService::listDue()), and the generatedDocument schema grants read to authenticated
+	 * users.
 	 */
 	#[NoAdminRequired]
 	public function dueForReview(string $day = ''): JSONResponse {
@@ -241,6 +266,10 @@ class DocumentProductionController extends Controller {
 	 * @return JSONResponse The document, no longer due.
 	 *
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 *
+	 * @no-admin-idor-exempt the read and the save go through OpenRegister with RBAC on
+	 * (DocumentReviewService::markReviewed()), and the generatedDocument schema grants update to filinq-
+	 * template-editors only.
 	 */
 	#[NoAdminRequired]
 	public function markReviewed(string $uuid): JSONResponse {
@@ -259,20 +288,10 @@ class DocumentProductionController extends Controller {
 	 */
 	private function answer(callable $handler): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['error' => 'You must be logged in.'],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: 'You must be logged in.');
 		}
 
-		try {
-			return new JSONResponse(data: $handler(), statusCode: Http::STATUS_OK);
-		} catch (Throwable $e) {
-			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
-		}
+		return (new HandlerAnswer())->answer(handler: $handler);
 
 	}//end answer()
 }//end class

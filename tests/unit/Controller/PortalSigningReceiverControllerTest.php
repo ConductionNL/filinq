@@ -155,7 +155,7 @@ class PortalSigningReceiverControllerTest extends TestCase {
 		return new PortalSigningReceiverController(
 			appName: 'filinq',
 			request: $this->mockRequest,
-			verifier: new PortalAssertionVerifier(config: null, secretOverride: self::SECRET),
+			verifier: new PortalAssertionVerifier(secretOverride: self::SECRET),
 			signingService: $this->mockSigningService,
 			settingsService: $this->mockSettingsService,
 			// A REAL resolver over the stubbed SettingsService, not a mock: it

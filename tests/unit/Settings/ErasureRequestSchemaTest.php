@@ -18,6 +18,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Settings;
@@ -95,7 +98,9 @@ class ErasureRequestSchemaTest extends TestCase {
 
 			$this->assertNotContains('authenticated', $authorization['read'], $slug);
 			$this->assertNotContains('authenticated', $authorization['create'], $slug);
-			$this->assertContains('docudesk-privacy-officer', $authorization['read'], $slug);
+			// The erasure groups live in one place, the subject_erasure_groups
+			// setting the endpoints check; the API grants nobody but admins.
+			$this->assertSame(expected: [], actual: $authorization['read'], message: $slug);
 		}
 	}//end testNeitherSchemaIsReadableByAnyAuthenticatedUser()
 

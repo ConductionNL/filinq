@@ -30,7 +30,8 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use InvalidArgumentException;
-use OCA\Filinq\Service\CustomDictionaryService;
+use OCA\Filinq\Controller\Support\ServerErrorAnswer;
+use OCA\Filinq\Kernel\Contracts\CustomDictionaryServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -53,13 +54,14 @@ use RuntimeException;
  * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
  */
 class CustomDictionaryController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor.
 	 *
 	 * @param string $appName App name.
 	 * @param IRequest $request Request abstraction.
 	 * @param LoggerInterface $logger Logger.
-	 * @param CustomDictionaryService $service Organisation-gated CRUD + import service.
+	 * @param CustomDictionaryServiceInterface $service Organisation-gated CRUD + import service.
 	 * @param IL10N $l10n Localisation.
 	 * @param IUserSession $userSession User session for authentication.
 	 */
@@ -67,7 +69,7 @@ class CustomDictionaryController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly CustomDictionaryService $service,
+		private readonly CustomDictionaryServiceInterface $service,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
@@ -121,7 +123,6 @@ class CustomDictionaryController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
@@ -143,7 +144,6 @@ class CustomDictionaryController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
@@ -167,7 +167,6 @@ class CustomDictionaryController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
@@ -212,7 +211,6 @@ class CustomDictionaryController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
@@ -238,7 +236,6 @@ class CustomDictionaryController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
@@ -264,7 +261,6 @@ class CustomDictionaryController extends Controller {
 	 * @return JSONResponse
 	 *
 	 * @NoAdminRequired
-	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
@@ -401,7 +397,7 @@ class CustomDictionaryController extends Controller {
 	 */
 	private function requireAuthenticated(): ?JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['error' => $this->l10n->t('Not authenticated')], Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		return null;
@@ -442,14 +438,7 @@ class CustomDictionaryController extends Controller {
 	 * @return JSONResponse
 	 */
 	private function error(string $message, Exception $exception): JSONResponse {
-		$this->logger->error(
-			$message . $exception->getMessage(),
-			['exception' => $exception]
-		);
-		return new JSONResponse(
-			['error' => $this->l10n->t($message . '%s', [$exception->getMessage()])],
-			500
-		);
+		return (new ServerErrorAnswer(logger: $this->logger, l10n: $this->l10n))->answer(message: $message, exception: $exception);
 
 	}//end error()
 }//end class

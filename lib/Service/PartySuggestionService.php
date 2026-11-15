@@ -3,6 +3,9 @@
 /**
  * Party Suggestion Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Reads the name and address block out of an arriving document and OFFERS a
  * party. It never writes one. A party record written from a guess is a record
  * nobody chose, and no screen afterwards says which parties were guessed and
@@ -25,10 +28,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 
 declare(strict_types=1);
@@ -37,6 +37,7 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -50,16 +51,10 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
-class PartySuggestionService {
-
-	/**
-	 * The schema holding the corrections corpus.
-	 *
-	 * @var string
-	 */
-	public const CORRECTION_SCHEMA = 'intakePartyCorrection';
+class PartySuggestionService implements PartySuggestionServiceInterface {
+	use ReadsCurrentUserId;
 
 	/**
 	 * The entity types a party is read out of, in the order they are asked for.
@@ -99,39 +94,14 @@ class PartySuggestionService {
 	 *
 	 * @return array<int, array<string, mixed>> Zero or one suggestion, each with its confidence and source span.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function suggestFor(int $fileId): array {
 		if ($fileId <= 0) {
 			return [];
 		}
 
-		$mapper = $this->entities->tryGetEntityRelationMapper();
-		if ($mapper === null) {
-			return [];
-		}
-
-		try {
-			$relations = $mapper->findEntitiesForFile($fileId);
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				message: '[PartySuggestionService] could not read the entities of this file',
-				context: ['file' => __FILE__, 'line' => __LINE__, 'fileId' => $fileId, 'error' => $e->getMessage()]
-			);
-
-			return [];
-		}
-
-		$party = [];
-		foreach ($relations as $relation) {
-			$field = $this->fieldOf(relation: $relation);
-			if ($field === null || isset($party[$field['name']]) === true) {
-				continue;
-			}
-
-			$party[$field['name']] = $field['value'];
-		}
-
+		$party = $this->partyFields(relations: $this->relationsOf(fileId: $fileId));
 		$spans = $party;
 
 		if ($party === []) {
@@ -152,6 +122,54 @@ class PartySuggestionService {
 	}//end suggestFor()
 
 	/**
+	 * The entities detected on a file, or none when they cannot be read.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return iterable<mixed> The entity relations.
+	 */
+	private function relationsOf(int $fileId): iterable {
+		$mapper = $this->entities->tryGetEntityRelationMapper();
+		if ($mapper === null) {
+			return [];
+		}
+
+		try {
+			return $mapper->findEntitiesForFile($fileId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				message: '[PartySuggestionService] could not read the entities of this file',
+				context: ['file' => __FILE__, 'line' => __LINE__, 'fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+
+			return [];
+		}
+
+	}//end relationsOf()
+
+	/**
+	 * The party fields the relations fill, the first usable value of each.
+	 *
+	 * @param iterable<mixed> $relations The entity relations.
+	 *
+	 * @return array<string, string> Field name to value.
+	 */
+	private function partyFields(iterable $relations): array {
+		$party = [];
+		foreach ($relations as $relation) {
+			$field = $this->fieldOf(relation: $relation);
+			if ($field === null || isset($party[$field['name']]) === true) {
+				continue;
+			}
+
+			$party[$field['name']] = $field['value'];
+		}
+
+		return $party;
+
+	}//end partyFields()
+
+	/**
 	 * The party field one detected entity fills, and with what.
 	 *
 	 * A relation whose type is not one this app maps, or that carries no text,
@@ -162,7 +180,7 @@ class PartySuggestionService {
 	 *
 	 * @return array{name: string, value: string}|null The field and its value, or null.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	private function fieldOf(mixed $relation): ?array {
 		$type = '';
@@ -194,7 +212,7 @@ class PartySuggestionService {
 	 *
 	 * @return array<string, mixed> The stored correction.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function recordDecision(
 		string $sender,
@@ -234,21 +252,4 @@ class PartySuggestionService {
 		return $correction;
 
 	}//end recordDecision()
-
-	/**
-	 * The user id of the person at the keyboard.
-	 *
-	 * @return string The user id, or an empty string when there is no session.
-	 *
-	 * @spec exclude Session accessor with no behaviour of its own.
-	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end currentUserId()
 }//end class

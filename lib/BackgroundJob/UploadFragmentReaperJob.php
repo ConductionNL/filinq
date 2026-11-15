@@ -15,14 +15,14 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\BackgroundJob;
 
-use OCA\Filinq\Service\UploadFragmentReaper;
+use OCA\Filinq\Kernel\Contracts\UploadFragmentReaperInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use OCP\Files\Folder;
@@ -52,7 +52,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 class UploadFragmentReaperJob extends TimedJob {
 
@@ -92,7 +92,7 @@ class UploadFragmentReaperJob extends TimedJob {
 	 * Collaborators.
 	 *
 	 * @param ITimeFactory         $time        The clock the scheduler reads.
-	 * @param UploadFragmentReaper $reaper      Sweeps one tree.
+	 * @param UploadFragmentReaperInterface $reaper      Sweeps one tree.
 	 * @param IRootFolder          $rootFolder  The file tree.
 	 * @param IUserManager         $userManager Every user with a folder.
 	 * @param IAppConfig           $config      Where the age is declared.
@@ -102,7 +102,7 @@ class UploadFragmentReaperJob extends TimedJob {
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly UploadFragmentReaper $reaper,
+		private readonly UploadFragmentReaperInterface $reaper,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserManager $userManager,
 		private readonly IAppConfig $config,
@@ -119,7 +119,7 @@ class UploadFragmentReaperJob extends TimedJob {
 	 *
 	 * @return int The age in seconds.
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function maxAgeSeconds(): int {
 		$hours = $this->config->getValueInt('filinq', self::AGE_KEY, self::DEFAULT_AGE_HOURS);
@@ -143,7 +143,7 @@ class UploadFragmentReaperJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	protected function run(mixed $argument): void {
 		$maxAge = $this->maxAgeSeconds();

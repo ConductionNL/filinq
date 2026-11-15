@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 /* eslint-disable no-console */
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
@@ -147,20 +151,25 @@ export const useSigningStore = defineStore('signing', {
 			}
 		},
 		/**
-		 * Cancel a signing request.
+		 * Withdraw a signing request. Only its creator may; a refusal carries
+		 * the server's own message, which names the creator.
 		 *
-		 * @param requestId
-		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-1
+		 * @param {string} requestId The request id.
+		 * @return {Promise<boolean>} True when the request was withdrawn.
+		 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
 		 */
 		async cancelRequest(requestId) {
 			this.loading = true
+			this.error = null
 			try {
 				await axios.delete(
 					generateUrl(`/apps/filinq/api/signing/requests/${requestId}`),
 				)
+				return true
 			} catch (err) {
 				console.error('Failed to cancel signing request:', err)
-				this.error = err.message
+				this.error = err?.response?.data?.error || err.message
+				return false
 			} finally {
 				this.loading = false
 			}
@@ -196,7 +205,7 @@ export const useSigningStore = defineStore('signing', {
 		 *
 		 * @param {number} limit Page size.
 		 * @param {number} offset Page offset.
-		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		async fetchSigningFolder(limit = 50, offset = 0) {
 			this.loading = true
@@ -221,7 +230,7 @@ export const useSigningStore = defineStore('signing', {
 		 * Sign a selection from the folder in one pass.
 		 *
 		 * @param {Array} requestIds The selected signing requests.
-		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		async signFolderSelection(requestIds) {
 			this.loading = true

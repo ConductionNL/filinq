@@ -136,16 +136,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -339,10 +339,10 @@
             "authenticated"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -358,7 +358,7 @@
           },
           "category": "TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         }
       },
       "base": {
@@ -434,13 +434,13 @@
             "authenticated"
           ],
           "create": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -612,7 +612,7 @@
             "authenticated"
           ],
           "delete": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ]
         },
         "deleted": null,
@@ -648,7 +648,7 @@
           },
           "category": "Archiefwet 1995 selectielijst — cat. 1.2: operationele verwerkingslogboeken, korte bewaarplicht",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         },
         "x-openregister-lifecycle": {
           "field": "status",
@@ -790,7 +790,7 @@
               {
                 "kind": "groups",
                 "groups": [
-                  "docudesk-woo-officers"
+                  "filinq-woo-officers"
                 ]
               }
             ],
@@ -944,10 +944,10 @@
             "authenticated"
           ],
           "update": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ],
           "delete": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ]
         },
         "deleted": null,
@@ -987,7 +987,7 @@
           },
           "category": "Archiefwet 1995 selectielijst — cat. 3.2: zakelijke correspondentie voor organisatorische continuïteit",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         }
       },
       "customDictionary": {
@@ -1092,13 +1092,13 @@
             "authenticated"
           ],
           "create": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -1168,13 +1168,13 @@
             "authenticated"
           ],
           "create": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -1262,10 +1262,10 @@
             "authenticated"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -1406,16 +1406,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ],
           "delete": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ]
         },
         "deleted": null,
@@ -1431,7 +1431,7 @@
           },
           "category": "TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         }
       },
       "generatedDocument": {
@@ -1642,10 +1642,10 @@
             "authenticated"
           ],
           "update": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ],
           "delete": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ]
         },
         "deleted": null,
@@ -1794,16 +1794,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ],
           "delete": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ]
         },
         "deleted": null,
@@ -1893,13 +1893,13 @@
             "authenticated"
           ],
           "create": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ],
           "update": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ],
           "delete": [
-            "docudesk-financial-admins"
+            "filinq-financial-admins"
           ]
         },
         "deleted": null,
@@ -1990,13 +1990,13 @@
             "authenticated"
           ],
           "create": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ],
           "update": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ],
           "delete": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ]
         },
         "deleted": null,
@@ -2126,20 +2126,20 @@
           "reason": "An override audit entry is the only record of a deliberate decision NOT to redact a legally protected entity; it must outlive the prohibition it released, which is itself retained P10Y.",
           "category": "TODO: confirm Archiefwet 1995 selectielijst category with selectielijst manager",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         },
         "authorization": {
           "read": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         }
       },
@@ -2161,7 +2161,7 @@
               {
                 "kind": "groups",
                 "groups": [
-                  "docudesk-woo-officers"
+                  "filinq-woo-officers"
                 ]
               },
               {
@@ -2506,16 +2506,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         },
         "deleted": null,
@@ -2716,13 +2716,13 @@
             "consent"
           ],
           "create": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "update": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ],
           "delete": [
-            "docudesk-policy-admins"
+            "filinq-policy-admins"
           ]
         }
       },
@@ -2900,16 +2900,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "delete": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ]
         },
         "deleted": null,
@@ -2925,7 +2925,7 @@
           },
           "category": "Archiefwet 1995 selectielijst — cat. 5.1.3: ondertekeningsbewijsmiddelen",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         }
       },
       "signingAuditEntry": {
@@ -3078,16 +3078,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "delete": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ]
         },
         "deleted": null,
@@ -3103,7 +3103,7 @@
           },
           "category": "Archiefwet 1995 selectielijst — cat. 5.1.3: ondertekeningsauditverslagen als juridisch bewijsmiddel",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         }
       },
       "signingRequest": {
@@ -3277,16 +3277,16 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "create": [
             "authenticated"
           ],
           "update": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "delete": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ]
         },
         "deleted": null,
@@ -3397,7 +3397,7 @@
           },
           "category": "Archiefwet 1995 selectielijst — cat. 5.1.3: ondertekeningsverzoeken als juridisch bewijsmiddel",
           "action": "destroy",
-          "responsibleParty": "docudesk-privacy-officer"
+          "responsibleParty": "filinq-privacy-officer"
         }
       },
       "signingSession": {
@@ -3541,7 +3541,7 @@
         "groups": null,
         "authorization": {
           "read": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ],
           "create": [
             "authenticated"
@@ -3550,7 +3550,7 @@
             "authenticated"
           ],
           "delete": [
-            "docudesk-signing-admins"
+            "filinq-signing-admins"
           ]
         },
         "deleted": null,
@@ -3763,10 +3763,10 @@
             "authenticated"
           ],
           "update": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ],
           "delete": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ]
         },
         "deleted": null,
@@ -3920,10 +3920,10 @@
             "authenticated"
           ],
           "update": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ],
           "delete": [
-            "docudesk-template-editors"
+            "filinq-template-editors"
           ]
         },
         "deleted": null,
@@ -4126,7 +4126,7 @@
             "authenticated"
           ],
           "delete": [
-            "docudesk-final-document-admins"
+            "filinq-final-document-admins"
           ]
         },
         "deleted": null,
@@ -4260,13 +4260,13 @@
             "authenticated"
           ],
           "create": [
-            "docudesk-final-document-admins"
+            "filinq-final-document-admins"
           ],
           "update": [
-            "docudesk-final-document-admins"
+            "filinq-final-document-admins"
           ],
           "delete": [
-            "docudesk-final-document-admins"
+            "filinq-final-document-admins"
           ]
         },
         "deleted": null,
@@ -5207,6 +5207,26 @@
         "deadline": "2026-03-01T09:00:00+00:00",
         "signerIds": [
           "Voorbeeld Signerids 1"
+        ],
+        "fieldPlacements": [
+          {
+            "signerIndex": 0,
+            "page": 1,
+            "x": 0.6,
+            "y": 0.85,
+            "width": 0.3,
+            "height": 0.05,
+            "type": "signature"
+          },
+          {
+            "signerIndex": 0,
+            "page": 1,
+            "x": 0.6,
+            "y": 0.91,
+            "width": 0.15,
+            "height": 0.03,
+            "type": "date"
+          }
         ]
       },
       {
@@ -5835,6 +5855,25 @@
         "readingState": "queued",
         "readingError": "",
         "readingUpdatedAt": "2026-09-19T10:00:05+00:00"
+      },
+      {
+          "@self": {
+              "register": "filinq",
+              "schema": "intakeDocument",
+              "slug": "intakedocument-4"
+          },
+          "channel": "mail",
+          "subject": "Offerte onderhoud speeltoestellen",
+          "sender": "offertes@leverancier.example.nl",
+          "receivedAt": "2026-09-20T08:30:00+00:00",
+          "file": 9205,
+          "fileName": "offerte (unlocked).pdf",
+          "lockedOriginal": 9204,
+          "sourceRef": "voorbeeld-mail-0004",
+          "status": "received",
+          "readingState": "queued",
+          "readingError": "",
+          "readingUpdatedAt": "2026-09-19T10:00:05+00:00"
       },
       {
         "@self": {
@@ -6883,6 +6922,894 @@
         "collectedInto": "",
         "performedBy": "seed-user-woo",
         "performedAt": "2026-09-02T14:30:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "bulkSigningBatch",
+          "slug": "demostad-bulk-send-verklaring-2026"
+        },
+        "title": "Demostad verklaring 2026",
+        "status": "completed_with_errors",
+        "documentFileId": "0",
+        "documentName": "verklaring-2026.pdf",
+        "signatureLevel": "SES",
+        "signingMode": "parallel",
+        "provider": "native",
+        "recipientSource": "csv",
+        "totalRows": 5,
+        "acceptedRows": 4,
+        "processedRows": 4,
+        "rejectedRows": [
+          {
+            "row": 3,
+            "reason": "invalid-email",
+            "detail": ""
+          }
+        ],
+        "recipients": [
+          {
+            "row": 2,
+            "userId": "",
+            "email": "inwoner2@example.invalid",
+            "displayName": "Inwoner 2"
+          },
+          {
+            "row": 4,
+            "userId": "",
+            "email": "inwoner4@example.invalid",
+            "displayName": "Inwoner 4"
+          },
+          {
+            "row": 5,
+            "userId": "",
+            "email": "inwoner5@example.invalid",
+            "displayName": "Inwoner 5"
+          },
+          {
+            "row": 6,
+            "userId": "",
+            "email": "inwoner6@example.invalid",
+            "displayName": "Inwoner 6"
+          }
+        ],
+        "requestRefs": [],
+        "createdBy": "admin",
+        "createdAt": "2026-09-30T09:00:00+00:00",
+        "completedAt": "2026-09-30T09:01:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "bulkSigningBatch",
+          "slug": "demostad-bulk-send-toestemming-ready"
+        },
+        "title": "Demostad toestemming foto 2026",
+        "status": "ready",
+        "documentFileId": "0",
+        "documentName": "verklaring-2026.pdf",
+        "signatureLevel": "SES",
+        "signingMode": "parallel",
+        "provider": "native",
+        "recipientSource": "csv",
+        "totalRows": 3,
+        "acceptedRows": 2,
+        "processedRows": 0,
+        "rejectedRows": [
+          {
+            "row": 4,
+            "reason": "duplicate",
+            "detail": "row 2"
+          }
+        ],
+        "recipients": [
+          {
+            "row": 2,
+            "userId": "",
+            "email": "ouder2@example.invalid",
+            "displayName": "Ouder 2"
+          },
+          {
+            "row": 3,
+            "userId": "",
+            "email": "ouder3@example.invalid",
+            "displayName": "Ouder 3"
+          }
+        ],
+        "requestRefs": [],
+        "createdBy": "admin",
+        "createdAt": "2026-09-30T10:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "bulkSigningBatch",
+          "slug": "demostad-bulk-send-cancelled"
+        },
+        "title": "Demostad verklaring vervallen",
+        "status": "cancelled",
+        "documentFileId": "0",
+        "documentName": "verklaring-2026.pdf",
+        "signatureLevel": "SES",
+        "signingMode": "parallel",
+        "provider": "native",
+        "recipientSource": "csv",
+        "totalRows": 2,
+        "acceptedRows": 2,
+        "processedRows": 1,
+        "rejectedRows": [],
+        "recipients": [
+          {
+            "row": 2,
+            "userId": "",
+            "email": "lid2@example.invalid",
+            "displayName": "Lid 2"
+          },
+          {
+            "row": 3,
+            "userId": "",
+            "email": "lid3@example.invalid",
+            "displayName": "Lid 3"
+          }
+        ],
+        "requestRefs": [],
+        "createdBy": "admin",
+        "createdAt": "2026-09-29T08:00:00+00:00",
+        "completedAt": "2026-09-29T08:05:00+00:00",
+        "cancelledRequests": 0
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "signingEnvelope",
+          "slug": "demostad-envelope-arbeidsovereenkomst"
+        },
+        "title": "Demostad arbeidsovereenkomst",
+        "status": "pending",
+        "documentCount": 3,
+        "requestRefs": [],
+        "signerUserIds": [
+          "admin"
+        ],
+        "initiatorUserId": "admin",
+        "createdAt": "2026-09-30T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "signingEnvelope",
+          "slug": "demostad-envelope-huurcontract"
+        },
+        "title": "Demostad huurcontract en bijlagen",
+        "status": "partially_declined",
+        "documentCount": 2,
+        "requestRefs": [],
+        "signerUserIds": [
+          "admin"
+        ],
+        "initiatorUserId": "admin",
+        "createdAt": "2026-09-29T14:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "signingEnvelope",
+          "slug": "demostad-envelope-vergunning"
+        },
+        "title": "Demostad vergunning met voorwaarden",
+        "status": "cancelled",
+        "documentCount": 2,
+        "requestRefs": [],
+        "signerUserIds": [
+          "admin"
+        ],
+        "initiatorUserId": "admin",
+        "createdAt": "2026-09-28T11:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentContract",
+          "slug": "demostad-groenonderhoud-2026"
+        },
+        "title": "Raamovereenkomst groenonderhoud 2026-2028",
+        "contractType": "inkoop",
+        "parties": [
+          {
+            "contactRef": "urn:nc:contact:00000000-0000-0000-0000-000000000010",
+            "role": "opdrachtnemer",
+            "displayName": "Groenbedrijf Demostad B.V."
+          },
+          {
+            "role": "opdrachtgever",
+            "displayName": "Gemeente Demostad"
+          }
+        ],
+        "internalOwner": "seed-user-inkoop",
+        "startDate": "2026-01-01",
+        "endDate": "2028-12-31",
+        "noticePeriodDays": 90,
+        "noticeDeadline": "2028-10-02",
+        "renewalType": "manual",
+        "value": 240000,
+        "currency": "EUR",
+        "status": "active",
+        "documents": [],
+        "keyTermSuggestions": [
+          {
+            "field": "endDate",
+            "value": "2028-12-31",
+            "confidence": 0.91,
+            "source": "seed",
+            "status": "accepted"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentContract",
+          "slug": "demostad-schoonmaak-2024"
+        },
+        "title": "Schoonmaakdienstverlening stadskantoor",
+        "contractType": "dienstverlening",
+        "parties": [
+          {
+            "role": "opdrachtnemer",
+            "displayName": "Schoon Demostad B.V."
+          },
+          {
+            "role": "opdrachtgever",
+            "displayName": "Gemeente Demostad"
+          }
+        ],
+        "internalOwner": "seed-user-facilitair",
+        "startDate": "2024-01-01",
+        "endDate": "2026-12-31",
+        "noticePeriodDays": 72,
+        "noticeDeadline": "2026-10-20",
+        "renewalType": "manual",
+        "value": 86000,
+        "currency": "EUR",
+        "status": "active",
+        "documents": [],
+        "keyTermSuggestions": []
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentContract",
+          "slug": "demostad-subsidie-cultuur-concept"
+        },
+        "title": "Subsidieovereenkomst cultuurfonds (concept)",
+        "contractType": "subsidie",
+        "parties": [
+          {
+            "role": "ontvanger",
+            "displayName": "Stichting Cultuur Demostad"
+          }
+        ],
+        "internalOwner": "seed-user-subsidies",
+        "renewalType": "none",
+        "currency": "EUR",
+        "status": "draft",
+        "documents": [],
+        "keyTermSuggestions": [],
+        "notes": "Nog geen datums: wacht op het besluit van het college."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "sanitizationRecord",
+          "slug": "demostad-concept-besluit-sanitized"
+        },
+        "fileId": 813001,
+        "sanitizedFileId": 813442,
+        "trigger": "manual",
+        "engine": "OfficeDocumentSanitizer",
+        "report": {
+          "commentsRemoved": 4,
+          "trackedChangesAccepted": 11,
+          "trackedChangesDropped": 2,
+          "revisionAttributesStripped": 57,
+          "hyperlinksFlattened": 3,
+          "metadataFieldsScrubbed": 6,
+          "customXmlPartsDropped": 1,
+          "fieldCodesStripped": 2,
+          "sentinelApplied": ""
+        },
+        "sanitizedAt": "2026-09-30T09:30:00Z",
+        "sanitizedBy": "seed-user-woo"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "sanitizationRecord",
+          "slug": "demostad-bezwaar-advies-anonymised"
+        },
+        "fileId": 813101,
+        "sanitizedFileId": 813102,
+        "trigger": "anonymisation",
+        "engine": "OfficeDocumentSanitizer",
+        "report": {
+          "commentsRemoved": 1,
+          "trackedChangesAccepted": 0,
+          "trackedChangesDropped": 0,
+          "revisionAttributesStripped": 12,
+          "hyperlinksFlattened": 0,
+          "metadataFieldsScrubbed": 4,
+          "customXmlPartsDropped": 0,
+          "fieldCodesStripped": 0,
+          "sentinelApplied": ""
+        },
+        "sanitizedAt": "2026-09-30T10:15:00Z",
+        "sanitizedBy": "seed-user-juridisch"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "sanitizationRecord",
+          "slug": "demostad-woo-bijlage-publication"
+        },
+        "fileId": 813201,
+        "sanitizedFileId": 813202,
+        "trigger": "publication",
+        "engine": "OfficeDocumentSanitizer",
+        "report": {
+          "commentsRemoved": 0,
+          "trackedChangesAccepted": 3,
+          "trackedChangesDropped": 1,
+          "revisionAttributesStripped": 8,
+          "hyperlinksFlattened": 2,
+          "metadataFieldsScrubbed": 5,
+          "customXmlPartsDropped": 0,
+          "fieldCodesStripped": 1,
+          "sentinelApplied": ""
+        },
+        "sanitizedAt": "2026-09-30T11:00:00Z",
+        "sanitizedBy": "seed-user-woo"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "emailDocument",
+          "slug": "seed-email-woo-verzoek-ontvangst"
+        },
+        "sourceFileRef": "814001",
+        "pdfFileRef": "814002",
+        "subject": "Woo-verzoek handhavingsbesluiten horeca",
+        "fromAddress": "verzoeker@example.org",
+        "toAddresses": [
+          "woo@demostad.example"
+        ],
+        "ccAddresses": [],
+        "sentAt": "2026-06-20T08:41:00+00:00",
+        "messageId": "seed-0001@example.org",
+        "references": [],
+        "threadKey": "seed-0001@example.org",
+        "attachmentCount": 1,
+        "attachmentNames": [
+          "machtiging.pdf"
+        ],
+        "contentHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "status": "filed",
+        "ingestedAt": "2026-06-20T09:00:00+00:00",
+        "dossierRef": "demostad-woo-2025-017",
+        "ingestSource": "watched-folder"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "emailDocument",
+          "slug": "seed-email-woo-verzoek-ontvangstbevestiging"
+        },
+        "sourceFileRef": "814003",
+        "subject": "Re: Woo-verzoek handhavingsbesluiten horeca",
+        "fromAddress": "woo@demostad.example",
+        "toAddresses": [
+          "verzoeker@example.org"
+        ],
+        "ccAddresses": [
+          "juridisch@demostad.example"
+        ],
+        "sentAt": "2026-06-21T10:05:00+00:00",
+        "messageId": "seed-0002@demostad.example",
+        "inReplyTo": "seed-0001@example.org",
+        "references": [
+          "seed-0001@example.org"
+        ],
+        "threadKey": "seed-0001@example.org",
+        "attachmentCount": 0,
+        "attachmentNames": [],
+        "contentHash": "1111111111111111111111111111111111111111111111111111111111111111",
+        "status": "filed",
+        "ingestedAt": "2026-06-21T10:10:00+00:00",
+        "dossierRef": "demostad-woo-2025-017",
+        "ingestSource": "watched-folder"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "emailDocument",
+          "slug": "seed-email-outlook-export-failed"
+        },
+        "sourceFileRef": "814004",
+        "subject": "",
+        "references": [],
+        "attachmentNames": [],
+        "toAddresses": [],
+        "ccAddresses": [],
+        "contentHash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "status": "failed",
+        "failureReason": "unsupported-format",
+        "ingestedAt": "2026-06-22T07:30:00+00:00",
+        "dossierRef": "demostad-woo-2025-017",
+        "ingestSource": "watched-folder"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "wizardDefinition",
+          "slug": "seed-wizard-parkeervergunning"
+        },
+        "name": "Beschikking parkeervergunning, begeleid",
+        "description": "Asks for the dossier and the decision; asks the reason only for a rejection and the effective date only for a grant.",
+        "namespace": "filinq",
+        "templateId": "template-voorbeeld-name-1-1",
+        "active": true,
+        "questions": [
+          {
+            "key": "dossier",
+            "label": "Which dossier is this decision for?",
+            "type": "registerObject",
+            "required": true,
+            "register": "filinq",
+            "schema": "dossier"
+          },
+          {
+            "key": "besluit",
+            "label": "What is the decision?",
+            "type": "choice",
+            "required": true,
+            "choices": [
+              {
+                "value": "toegewezen",
+                "label": "Granted"
+              },
+              {
+                "value": "afgewezen",
+                "label": "Rejected"
+              }
+            ],
+            "mapsTo": "besluit.uitkomst"
+          },
+          {
+            "key": "afwijzingsreden",
+            "label": "Reason for rejection",
+            "type": "text",
+            "required": true,
+            "mapsTo": "besluit.afwijzingsreden",
+            "condition": {
+              "questionKey": "besluit",
+              "operator": "equals",
+              "value": "afgewezen"
+            }
+          },
+          {
+            "key": "ingangsdatum",
+            "label": "Effective date",
+            "type": "date",
+            "required": true,
+            "mapsTo": "besluit.ingangsdatum",
+            "condition": {
+              "questionKey": "besluit",
+              "operator": "equals",
+              "value": "toegewezen"
+            }
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "wizardDefinition",
+          "slug": "seed-wizard-ontvangstbevestiging"
+        },
+        "name": "Ontvangstbevestiging",
+        "description": "A short acknowledgement of receipt: the dossier and the date the request came in.",
+        "namespace": "filinq",
+        "templateId": "template-voorbeeld-name-2-2",
+        "active": true,
+        "questions": [
+          {
+            "key": "dossier",
+            "label": "Which dossier is this decision for?",
+            "type": "registerObject",
+            "required": true,
+            "register": "filinq",
+            "schema": "dossier"
+          },
+          {
+            "key": "ontvangen",
+            "label": "When did the request come in?",
+            "type": "date",
+            "required": true,
+            "mapsTo": "verzoek.ontvangen"
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "wizardDefinition",
+          "slug": "seed-wizard-informatieverzoek"
+        },
+        "name": "Informatieverzoek (concept)",
+        "description": "Not offered to clerks yet: asks what is missing and, when a deadline is given, by when.",
+        "namespace": "filinq",
+        "templateId": "template-voorbeeld-name-3-3",
+        "active": false,
+        "questions": [
+          {
+            "key": "ontbreekt",
+            "label": "What is missing?",
+            "type": "text",
+            "required": true,
+            "mapsTo": "verzoek.ontbreekt"
+          },
+          {
+            "key": "termijn",
+            "label": "Is there a deadline?",
+            "type": "choice",
+            "required": false,
+            "choices": [
+              {
+                "value": "ja",
+                "label": "Yes"
+              },
+              {
+                "value": "nee",
+                "label": "No"
+              }
+            ]
+          },
+          {
+            "key": "uiterlijk",
+            "label": "By when?",
+            "type": "date",
+            "required": true,
+            "mapsTo": "verzoek.uiterlijk",
+            "condition": {
+              "questionKey": "termijn",
+              "operator": "equals",
+              "value": "ja"
+            }
+          }
+        ]
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "classificationResult",
+          "slug": "seed-classification-factuur-heijmans"
+        },
+        "fileId": 812010,
+        "fileName": "scan-factuur-heijmans.pdf",
+        "suggestedDocumentType": "factuur",
+        "documentTypeConfidence": 0.86,
+        "method": "mixed",
+        "suggestedCorrespondent": {
+          "name": "Heijmans B.V.",
+          "entityType": "ORGANIZATION",
+          "source": "ner"
+        },
+        "correspondentPending": false,
+        "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "classificationResult",
+          "slug": "seed-classification-besluit-bezwaar"
+        },
+        "fileId": 812011,
+        "fileName": "brief-bezwaar-2026-114.pdf",
+        "suggestedDocumentType": "brief",
+        "documentTypeConfidence": 0.55,
+        "method": "rules",
+        "suggestedCorrespondent": {
+          "name": "J. de Vries",
+          "entityType": "PERSON",
+          "source": "ner"
+        },
+        "correspondentPending": false,
+        "suggestedDossier": "00000000-0000-0000-0000-00000000d055",
+        "status": "confirmed",
+        "confirmedDocumentType": "besluit",
+        "confirmedDossier": "00000000-0000-0000-0000-00000000d055",
+        "filing": "recorded",
+        "confirmedBy": "w.devries",
+        "confirmedAt": "2026-07-17T10:20:00Z"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "classificationResult",
+          "slug": "seed-classification-overig-pending"
+        },
+        "fileId": 812012,
+        "fileName": "scan-2026-07-18-0931.pdf",
+        "suggestedDocumentType": "overig",
+        "documentTypeConfidence": 0.2,
+        "method": "rules",
+        "correspondentPending": true,
+        "status": "suggested"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentReview",
+          "slug": "review-demostad-beschikking-2024-0042"
+        },
+        "fileId": 1001,
+        "checkedOn": "2026-03-14T10:20:00+01:00",
+        "checkedBy": "w.devries",
+        "entityCountAtCheck": 14,
+        "manualEntityCount": 1,
+        "note": "Eén BSN-passage handmatig toegevoegd op p. 2."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentReview",
+          "slug": "review-demostad-adviesrapport-2025-003"
+        },
+        "fileId": 1003,
+        "checkedOn": "2026-03-15T09:05:00+01:00",
+        "checkedBy": "w.devries",
+        "entityCountAtCheck": 37,
+        "manualEntityCount": 2,
+        "note": "Twee handmatige namen toegevoegd op p. 4."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "documentReview",
+          "slug": "review-demostad-raadsbrief-2025-011"
+        },
+        "fileId": 1005,
+        "checkedOn": "2026-03-16T15:40:00+01:00",
+        "checkedBy": "a.jansen",
+        "entityCountAtCheck": 6,
+        "manualEntityCount": 0,
+        "note": ""
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "waarmerk",
+          "slug": "demostad-waarmerk-woo-2025-017",
+          "id": "00000000-0000-0000-0000-000000000201"
+        },
+        "documentFileId": 0,
+        "documentName": "woo-besluit-2025-017-geanonimiseerd.pdf",
+        "documentHash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "sealType": "waarmerk",
+        "cmsSignature": "PLACEHOLDER_BASE64_CMS",
+        "certificateFingerprint": "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF",
+        "certificateSubject": "O=Gemeente Demostad, C=NL",
+        "verificationCode": "00000000-0000-0000-0000-000000000202",
+        "sealedAt": "2026-07-16T12:00:00+02:00",
+        "sealedBy": "demo-woo-officer",
+        "status": "active",
+        "anonymizationLinkId": "00000000-0000-0000-0000-000000000203"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "waarmerk",
+          "slug": "demostad-waarmerk-woo-2025-017-certificaat",
+          "id": "00000000-0000-0000-0000-000000000204"
+        },
+        "documentFileId": 0,
+        "documentName": "verwerkingscertificaat-woo-besluit-2025-017.pdf",
+        "documentHash": "1111111111111111111111111111111111111111111111111111111111111111",
+        "sealType": "processing-certificate",
+        "cmsSignature": "PLACEHOLDER_BASE64_CMS",
+        "certificateFingerprint": "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF",
+        "certificateSubject": "O=Gemeente Demostad, C=NL",
+        "verificationCode": "00000000-0000-0000-0000-000000000205",
+        "sealedAt": "2026-07-16T12:05:00+02:00",
+        "sealedBy": "demo-woo-officer",
+        "status": "active",
+        "anonymizationLinkId": "00000000-0000-0000-0000-000000000203"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "waarmerk",
+          "slug": "demostad-waarmerk-raadsvoorstel-2025-031",
+          "id": "00000000-0000-0000-0000-000000000206"
+        },
+        "documentFileId": 0,
+        "documentName": "raadsvoorstel-2025-031.pdf",
+        "documentHash": "2222222222222222222222222222222222222222222222222222222222222222",
+        "sealType": "waarmerk",
+        "cmsSignature": "PLACEHOLDER_BASE64_CMS",
+        "certificateFingerprint": "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF",
+        "certificateSubject": "O=Gemeente Demostad, C=NL",
+        "verificationCode": "00000000-0000-0000-0000-000000000207",
+        "sealedAt": "2026-06-02T09:30:00+02:00",
+        "sealedBy": "demo-woo-officer",
+        "status": "revoked",
+        "revokedAt": "2026-06-03T10:00:00+02:00",
+        "revokedBy": "demo-woo-officer",
+        "revocationReason": "Verkeerde versie gewaarmerkt; vervangen door de definitieve versie."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "flowOperationRun",
+          "slug": "demostad-flow-run-ocr-example"
+        },
+        "operation": "ocr",
+        "fileId": 812006,
+        "fileName": "scan-bezwaarschrift.pdf",
+        "ownerUserId": "w.devries",
+        "status": "succeeded",
+        "triggerEvent": "postCreate",
+        "startedAt": "2026-07-17T09:12:04Z",
+        "finishedAt": "2026-07-17T09:12:31Z",
+        "resultSummary": {
+          "confidence": 88.2,
+          "textLength": 3120
+        }
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "flowOperationRun",
+          "slug": "demostad-flow-run-pdfa-example"
+        },
+        "operation": "pdfa",
+        "fileId": 812007,
+        "fileName": "besluit-2026-114.pdf",
+        "ownerUserId": "w.devries",
+        "status": "failed",
+        "statusReason": "conversion_error",
+        "triggerEvent": "tag_assigned",
+        "startedAt": "2026-07-17T09:14:00Z",
+        "finishedAt": "2026-07-17T09:14:09Z",
+        "resultSummary": {},
+        "errorMessage": "The source PDF is encrypted and cannot be converted."
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "flowOperationRun",
+          "slug": "demostad-flow-run-skipped-example"
+        },
+        "operation": "pdfa",
+        "fileId": 812008,
+        "fileName": "besluit-2026-114.pdfa.pdf",
+        "ownerUserId": "w.devries",
+        "status": "skipped",
+        "statusReason": "own_output",
+        "triggerEvent": "postCreate",
+        "resultSummary": {}
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "caseSystemDestination",
+          "slug": "casesystemdestination-hrmq"
+        },
+        "templateNamespace": "hrmq",
+        "sourceId": "zgw-demo",
+        "informatieobjecttype": "https://zaken.example.nl/catalogi/api/v1/informatieobjecttypen/arbeidsovereenkomst",
+        "vertrouwelijkheidaanduiding": "vertrouwelijk",
+        "bronorganisatie": "002220647",
+        "active": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "caseSystemDestination",
+          "slug": "casesystemdestination-woo"
+        },
+        "templateNamespace": "woo",
+        "sourceId": "zgw-demo",
+        "informatieobjecttype": "https://zaken.example.nl/catalogi/api/v1/informatieobjecttypen/besluit",
+        "vertrouwelijkheidaanduiding": "openbaar",
+        "bronorganisatie": "002220647",
+        "active": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "caseSystemDestination",
+          "slug": "casesystemdestination-vergunning"
+        },
+        "templateId": "5b2f8a1e-3c4d-4e5f-8a9b-0c1d2e3f4a5b",
+        "sourceId": "zgw-demo",
+        "informatieobjecttype": "https://zaken.example.nl/catalogi/api/v1/informatieobjecttypen/vergunning",
+        "vertrouwelijkheidaanduiding": "zaakvertrouwelijk",
+        "bronorganisatie": "002220647",
+        "active": false
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "caseSystemDelivery",
+          "slug": "casesystemdelivery-written-back"
+        },
+        "generatedDocumentId": "a1d3c5e7-1111-4a2b-8c3d-000000000001",
+        "destinationId": "b2e4d6f8-2222-4b3c-9d4e-000000000001",
+        "sourceId": "zgw-demo",
+        "fileId": 4711,
+        "metadata": {
+          "titel": "Arbeidsovereenkomst Jansen",
+          "bestandsnaam": "Arbeidsovereenkomst Jansen.pdf",
+          "formaat": "application/pdf",
+          "taal": "dut",
+          "creatiedatum": "2026-11-02",
+          "auteur": "Anna de Vries",
+          "informatieobjecttype": "https://zaken.example.nl/catalogi/api/v1/informatieobjecttypen/arbeidsovereenkomst",
+          "vertrouwelijkheidaanduiding": "vertrouwelijk",
+          "bronorganisatie": "002220647"
+        },
+        "deliveryStatus": "written_back",
+        "externalUrl": "https://zaken.example.nl/documenten/api/v1/enkelvoudiginformatieobjecten/1",
+        "generatedBy": "anna"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "caseSystemDelivery",
+          "slug": "casesystemdelivery-waiting"
+        },
+        "generatedDocumentId": "a1d3c5e7-1111-4a2b-8c3d-000000000002",
+        "destinationId": "b2e4d6f8-2222-4b3c-9d4e-000000000001",
+        "sourceId": "zgw-demo",
+        "fileId": 4712,
+        "metadata": {
+          "titel": "Arbeidsovereenkomst de Boer",
+          "bestandsnaam": "Arbeidsovereenkomst de Boer.pdf",
+          "formaat": "application/pdf",
+          "taal": "dut",
+          "creatiedatum": "2026-11-02",
+          "auteur": "Anna de Vries",
+          "informatieobjecttype": "https://zaken.example.nl/catalogi/api/v1/informatieobjecttypen/arbeidsovereenkomst",
+          "vertrouwelijkheidaanduiding": "vertrouwelijk",
+          "bronorganisatie": "002220647"
+        },
+        "deliveryStatus": "ready_for_writeback",
+        "generatedBy": "anna"
+      },
+      {
+        "@self": {
+          "register": "filinq",
+          "schema": "caseSystemDelivery",
+          "slug": "casesystemdelivery-failed"
+        },
+        "generatedDocumentId": "a1d3c5e7-1111-4a2b-8c3d-000000000003",
+        "destinationId": "b2e4d6f8-2222-4b3c-9d4e-000000000001",
+        "sourceId": "zgw-demo",
+        "fileId": 4713,
+        "metadata": {
+          "titel": "Arbeidsovereenkomst Smit",
+          "bestandsnaam": "Arbeidsovereenkomst Smit.pdf",
+          "formaat": "application/pdf",
+          "taal": "dut",
+          "creatiedatum": "2026-11-02",
+          "auteur": "Anna de Vries",
+          "informatieobjecttype": "https://zaken.example.nl/catalogi/api/v1/informatieobjecttypen/arbeidsovereenkomst",
+          "vertrouwelijkheidaanduiding": "vertrouwelijk",
+          "bronorganisatie": "002220647"
+        },
+        "deliveryStatus": "writeback_failed",
+        "errorMessage": "Het informatieobjecttype is niet bekend in de catalogus.",
+        "generatedBy": "anna"
       }
     ]
   }

@@ -27,7 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\ComparisonException;
-use OCA\Filinq\Service\DocumentComparisonService;
+use OCA\Filinq\Kernel\Contracts\DocumentComparisonServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -48,13 +48,14 @@ use Throwable;
  * @link     https://www.filinq.app
  */
 class ComparisonController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor.
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
 	 * @param LoggerInterface $logger Logger.
-	 * @param DocumentComparisonService $service The comparison service.
+	 * @param DocumentComparisonServiceInterface $service The comparison service.
 	 * @param IL10N $l10n Localisation.
 	 * @param IUserSession $userSession User session.
 	 *
@@ -64,7 +65,7 @@ class ComparisonController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly DocumentComparisonService $service,
+		private readonly DocumentComparisonServiceInterface $service,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
@@ -92,33 +93,50 @@ class ComparisonController extends Controller {
 	#[NoAdminRequired]
 	public function compare(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['error' => $this->l10n->t('Not authenticated')],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 		}
 
 		$left = $this->request->getParam('left');
 		$right = $this->request->getParam('right');
-
-		if (is_array($left) === false || is_array($right) === false
-			|| isset($left['fileId']) === false || isset($right['fileId']) === false
-		) {
+		if ($this->isSubject(subject: $left) === false || $this->isSubject(subject: $right) === false) {
 			return new JSONResponse(
 				data: ['error' => $this->l10n->t('Both "left" and "right" subjects with a fileId are required')],
 				statusCode: Http::STATUS_BAD_REQUEST
 			);
 		}
 
+		return $this->runComparison(left: $left, right: $right);
+
+	}//end compare()
+
+	/**
+	 * Whether a request value is a subject: an array carrying a fileId.
+	 *
+	 * @param mixed $subject The request value.
+	 *
+	 * @return bool True for a subject.
+	 *
+	 * @psalm-assert-if-true array $subject
+	 */
+	private function isSubject(mixed $subject): bool {
+		return is_array($subject) === true && isset($subject['fileId']) === true;
+
+	}//end isSubject()
+
+	/**
+	 * Compare two subjects, answering a refusal with its reason and any other failure with a logged 500.
+	 *
+	 * @param array<array-key, mixed> $left  The left subject.
+	 * @param array<array-key, mixed> $right The right subject.
+	 *
+	 * @return JSONResponse The structured comparison or an error.
+	 */
+	private function runComparison(array $left, array $right): JSONResponse {
 		try {
-			$result = $this->service->compare(left: $left, right: $right);
-			return new JSONResponse(data: $result, statusCode: Http::STATUS_OK);
+			return new JSONResponse(data: $this->service->compare(left: $left, right: $right), statusCode: Http::STATUS_OK);
 		} catch (ComparisonException $e) {
 			return new JSONResponse(
-				data: [
-					'error' => $this->mapReasonToMessage(reason: $e->getReason()),
-					'reason' => $e->getReason(),
-				],
+				data: ['error' => $this->mapReasonToMessage(reason: $e->getReason()), 'reason' => $e->getReason()],
 				statusCode: $e->getStatusCode()
 			);
 		} catch (Throwable $e) {
@@ -129,7 +147,7 @@ class ComparisonController extends Controller {
 			);
 		}//end try
 
-	}//end compare()
+	}//end runComparison()
 
 	/**
 	 * Map a machine-readable reason code to a localised message.

@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+@spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 -->
 
 <template>
@@ -178,7 +178,7 @@ export default {
 	 *
 	 * @return {object} The store and the translator.
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	setup() {
 		const signingStore = useSigningStore()
@@ -212,7 +212,7 @@ export default {
 		 *
 		 * @return {Array} The folder entries.
 		 *
-		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		entries() {
 			return this.signingStore.folderEntries
@@ -225,7 +225,7 @@ export default {
 		 *
 		 * @param {string} requestId The signing request.
 		 *
-		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		toggle(requestId) {
 			if (this.selected.includes(requestId)) {
@@ -238,7 +238,7 @@ export default {
 		/**
 		 * Sign the selection in one pass and show what happened per document.
 		 *
-		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		async signSelection() {
 			const outcome = await this.signingStore.signFolderSelection(
@@ -266,7 +266,7 @@ export default {
 		 *
 		 * @param {object} entry The folder entry.
 		 *
-		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		readDocument(entry) {
 			this.reading = entry
@@ -278,7 +278,7 @@ export default {
 		 * @param {object} entry The folder entry.
 		 * @return {string} The label, or the reference when there is none.
 		 *
-		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		caseOf(entry) {
 			const record = entry?.record ?? {}
@@ -291,7 +291,7 @@ export default {
 		 * @param {string} value An ISO 8601 timestamp.
 		 * @return {string} The formatted date.
 		 *
-		 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		asDate(value) {
 			if (!value) {

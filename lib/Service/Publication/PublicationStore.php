@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Publication;
 
+use OCA\Filinq\Kernel\Contracts\PublicationStoreInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use RuntimeException;
 use Throwable;
@@ -39,22 +40,7 @@ use Throwable;
  *
  * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
-class PublicationStore {
-
-	/**
-	 * Filinq's register.
-	 */
-	public const REGISTER = 'filinq';
-
-	/**
-	 * The record schema.
-	 */
-	public const RECORD = 'publicationRecord';
-
-	/**
-	 * The log schema.
-	 */
-	public const LOG = 'publicationLogEntry';
+class PublicationStore implements PublicationStoreInterface {
 
 	/**
 	 * Constructor
@@ -226,13 +212,21 @@ class PublicationStore {
 	 */
 	private function save(string $register, string $schema, array $object, ?string $uuid): array {
 		unset($object['uuid'], $object['@self'], $object['log']);
-		$arguments = ['object' => $object, 'register' => $register, 'schema' => $schema];
-		if ($uuid !== null && $uuid !== '') {
-			$arguments['uuid'] = $uuid;
+		if ($uuid === '') {
+			$uuid = null;
 		}
 
 		try {
-			$stored = $this->normalise(row: $this->objects->resolve()->saveObject(...$arguments));
+			$stored = $this->normalise(
+				row: $this->objects->resolve()->saveObject(
+					object: $object,
+					register: $register,
+					schema: $schema,
+					uuid: $uuid,
+					_rbac: false,
+					_unowned: true
+				)
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException('OpenRegister refused the ' . $schema . ': ' . $e->getMessage(), (int) $e->getCode(), $e);
 		}

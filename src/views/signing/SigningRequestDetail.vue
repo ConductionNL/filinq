@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="signing-request-detail">
 		<NcLoadingIcon
@@ -5,6 +9,12 @@
 			:size="44" />
 		<template v-else-if="signingStore.signingRequest">
 			<h2>{{ signingStore.signingRequest.documentName }}</h2>
+			<NcButton
+				v-if="leafSidebarAvailable"
+				variant="tertiary"
+				@click="toggleLeafSidebar">
+				{{ t('filinq', 'Linked apps') }}
+			</NcButton>
 			<div class="detail-grid">
 				<div>
 					<strong>{{ t('filinq', 'Status') }}</strong
@@ -23,6 +33,10 @@
 					>: {{ signingStore.signingRequest.provider }}
 				</div>
 			</div>
+			<SigningEnvelopePanel
+				v-if="signingStore.signingRequest.envelopeRef"
+				:envelopeId="signingStore.signingRequest.envelopeRef"
+				@changed="reload" />
 			<NcNoteCard v-if="stepUpDone && !signed" type="success">
 				{{
 					t(
@@ -54,6 +68,28 @@
 				@click="openVerify">
 				{{ t('filinq', 'Verify') }}
 			</NcButton>
+			<NcButton
+				v-if="canWithdraw"
+				variant="error"
+				data-testid="signing-request-withdraw"
+				:disabled="signingStore.loading"
+				@click="confirmingWithdraw = true">
+				{{ t('filinq', 'Withdraw request') }}
+			</NcButton>
+			<CancelSigningRequestDialog
+				v-if="confirmingWithdraw"
+				:busy="signingStore.loading"
+				@cancel="confirmingWithdraw = false"
+				@confirm="withdraw" />
+			<NcNoteCard v-if="withdrawn" type="success">
+				{{ t('filinq', 'The signing request was withdrawn.') }}
+			</NcNoteCard>
+			<NcNoteCard
+				v-if="withdrawError"
+				type="error"
+				data-testid="signing-request-withdraw-error">
+				{{ withdrawError }}
+			</NcNoteCard>
 			<h3>{{ t('filinq', 'Audit Trail') }}</h3>
 			<table v-if="signingStore.auditTrail.length > 0" class="audit-table">
 				<thead>
@@ -87,15 +123,35 @@
 </template>
 
 <script>
+import { getCurrentUser } from '@nextcloud/auth'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import CancelSigningRequestDialog from '../../dialogs/CancelSigningRequestDialog.vue'
 import SignerStepUpModal from '../../modals/SignerStepUpModal.vue'
+import SigningEnvelopePanel from './SigningEnvelopePanel.vue'
 import { stepUpReturn } from '../../services/signerStepUp.js'
+import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { useSigningStore } from '../../store/modules/signing.js'
+
+/**
+ * The states a signing request can still be withdrawn from.
+ */
+const OPEN_STATUSES = ['DRAFT', 'PENDING', 'IN_PROGRESS']
 
 export default {
 	name: 'SigningRequestDetail',
-	components: { NcButton, NcLoadingIcon, NcNoteCard, SignerStepUpModal },
+	components: {
+		CancelSigningRequestDialog,
+		NcButton,
+		NcLoadingIcon,
+		NcNoteCard,
+		SignerStepUpModal,
+		SigningEnvelopePanel,
+	},
+
+	// leaf-integrations: the registry's leaves (Mail, Calendar) for this request.
+	mixins: [recordLeafSidebarMixin({ schema: 'signingRequest', record: (vm) => vm.signingStore.signingRequest, title: (request) => request.documentName })],
+
 	props: {
 		/**
 		 * The signing request to show.
@@ -129,10 +185,29 @@ export default {
 	},
 
 	data() {
-		return { signed: false }
+		return { signed: false, confirmingWithdraw: false, withdrawn: false, withdrawError: '' }
 	},
 
 	computed: {
+		/**
+		 * Whether the viewer may withdraw this request: only its creator, and
+		 * only while it is still open. The server decides; this only hides a
+		 * button that would be refused.
+		 *
+		 * @return {boolean} True for the creator of an open request.
+		 *
+		 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+		 */
+		canWithdraw() {
+			const request = this.signingStore.signingRequest || {}
+			const uid = getCurrentUser()?.uid || ''
+			return (
+				uid !== ''
+				&& request.initiatorUserId === uid
+				&& OPEN_STATUSES.includes(String(request.status || '').toUpperCase())
+			)
+		},
+
 		/**
 		 * What the identity broker left in the query when it sent the signer back.
 		 *
@@ -175,6 +250,39 @@ export default {
 				await this.signingStore.fetchSigningRequest(this.id)
 				await this.signingStore.fetchAuditTrail(this.id)
 			}
+		},
+
+		/**
+		 * Withdraw the request after the confirmation. A refusal shows the
+		 * server's message, which names the creator; success reloads the
+		 * request so its status reads cancelled.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+		 */
+		async withdraw() {
+			this.withdrawError = ''
+			const done = await this.signingStore.cancelRequest(this.id)
+			this.confirmingWithdraw = false
+			if (done === false) {
+				this.withdrawError = String(this.signingStore.error || '')
+				return
+			}
+			this.withdrawn = true
+			await this.reload()
+		},
+
+		/**
+		 * Read the request and its audit trail again after the envelope changed them.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/specs/bulk-signing-field-builder/spec.md#requirement-batch-and-envelope-surfaces-are-first-class-ui-req-ddbsf-005
+		 */
+		async reload() {
+			await this.signingStore.fetchSigningRequest(this.id)
+			await this.signingStore.fetchAuditTrail(this.id)
 		},
 
 		/**

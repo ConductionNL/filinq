@@ -1,0 +1,275 @@
+{
+    "a frame name with regex characters": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "PackagePartIo::writePart": {
+                "packageBytes": "pkg",
+                "part": "content.xml",
+                "xml": "<office:document-content><office:presentation><draw:page draw:name=\"Intro\"><draw:frame draw:name=\"T.(1)\"><draw:text-box><text:p>ok</text:p></draw:text-box></draw:frame></draw:page></office:presentation></office:document-content>"
+            }
+        },
+        {
+            "result": "package-bytes"
+        }
+    ],
+    "a notes frame is not on the slide": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Shape \"Notes\" was not found on \"Intro\" (slide).",
+                0
+            ]
+        }
+    ],
+    "a slide frame is not in the notes": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Shape \"Title\" was not found on \"Intro\" (notes).",
+                0
+            ]
+        }
+    ],
+    "an empty notes box gets a paragraph": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "PackagePartIo::writePart": {
+                "packageBytes": "pkg",
+                "part": "content.xml",
+                "xml": "<office:document-content><office:presentation><draw:page draw:name=\"Intro\"><draw:frame draw:name=\"Title\"><draw:text-box><text:p a=\"1\">Welcome</text:p><text:p>Second</text:p></draw:text-box></draw:frame><presentation:notes><draw:frame draw:name=\"Notes\"><draw:text-box><text:p>Filled</text:p></draw:text-box></draw:frame></presentation:notes></draw:page></office:presentation></office:document-content>"
+            }
+        },
+        {
+            "result": "package-bytes"
+        }
+    ],
+    "an empty text box gets a paragraph": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "PackagePartIo::writePart": {
+                "packageBytes": "pkg",
+                "part": "content.xml",
+                "xml": "<office:document-content><office:presentation><draw:page draw:name=\"Intro\"><draw:frame draw:name=\"Title\"><draw:text-box><text:p>Filled</text:p></draw:text-box></draw:frame><presentation:notes><draw:frame draw:name=\"Notes\"><draw:text-box><text:p>Mention the deadline</text:p></draw:text-box></draw:frame></presentation:notes></draw:page></office:presentation></office:document-content>"
+            }
+        },
+        {
+            "result": "package-bytes"
+        }
+    ],
+    "an unknown frame": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Shape \"Body\" was not found on \"Intro\" (slide).",
+                0
+            ]
+        }
+    ],
+    "an unknown slide": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Shape \"Title\" was not found on \"Missing\" (slide).",
+                0
+            ]
+        }
+    ],
+    "notes frame": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "PackagePartIo::writePart": {
+                "packageBytes": "pkg",
+                "part": "content.xml",
+                "xml": "<office:document-content><office:presentation><draw:page draw:name=\"Intro\"><draw:frame draw:name=\"Title\"><draw:text-box><text:p a=\"1\">Welcome</text:p><text:p>Second</text:p></draw:text-box></draw:frame><presentation:notes><draw:frame draw:name=\"Notes\"><draw:text-box><text:p>Say thanks</text:p></draw:text-box></draw:frame></presentation:notes></draw:page></office:presentation></office:document-content>"
+            }
+        },
+        {
+            "result": "package-bytes"
+        }
+    ],
+    "notes region on a page without notes": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "threw": [
+                "RuntimeException",
+                "Shape \"Title\" was not found on \"Intro\" (notes).",
+                0
+            ]
+        }
+    ],
+    "only the named page changes": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "PackagePartIo::writePart": {
+                "packageBytes": "pkg",
+                "part": "content.xml",
+                "xml": "<office:document-content><office:presentation><draw:page draw:name=\"Intro\"><draw:frame draw:name=\"Title\"><draw:text-box><text:p a=\"1\">Welcome</text:p><text:p>Second</text:p></draw:text-box></draw:frame></draw:page><draw:page draw:name=\"Outro\"><draw:frame draw:name=\"Title\"><draw:text-box><text:p>Bye</text:p><text:p>Second</text:p></draw:text-box></draw:frame><presentation:notes><draw:frame draw:name=\"Notes\"><draw:text-box><text:p>Mention the deadline</text:p></draw:text-box></draw:frame></presentation:notes></draw:page></office:presentation></office:document-content>"
+            }
+        },
+        {
+            "result": "package-bytes"
+        }
+    ],
+    "only the named page notes change": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "PackagePartIo::writePart": {
+                "packageBytes": "pkg",
+                "part": "content.xml",
+                "xml": "<office:document-content><office:presentation><draw:page draw:name=\"Intro\"><draw:frame draw:name=\"Title\"><draw:text-box><text:p a=\"1\">Welcome</text:p><text:p>Second</text:p></draw:text-box></draw:frame></draw:page><draw:page draw:name=\"Outro\"><draw:frame draw:name=\"Title\"><draw:text-box><text:p a=\"1\">Welcome</text:p><text:p>Second</text:p></draw:text-box></draw:frame><presentation:notes><draw:frame draw:name=\"Notes\"><draw:text-box><text:p>Bye</text:p></draw:text-box></draw:frame></presentation:notes></draw:page></office:presentation></office:document-content>"
+            }
+        },
+        {
+            "result": "package-bytes"
+        }
+    ],
+    "same name on slide and notes, notes": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "PackagePartIo::writePart": {
+                "packageBytes": "pkg",
+                "part": "content.xml",
+                "xml": "<office:document-content><office:presentation><draw:page draw:name=\"Intro\"><draw:frame draw:name=\"Notes\"><draw:text-box><text:p>On the slide</text:p></draw:text-box></draw:frame><presentation:notes><draw:frame draw:name=\"Notes\"><draw:text-box><text:p>Notes only</text:p></draw:text-box></draw:frame></presentation:notes></draw:page></office:presentation></office:document-content>"
+            }
+        },
+        {
+            "result": "package-bytes"
+        }
+    ],
+    "same name on slide and notes, slide": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "PackagePartIo::writePart": {
+                "packageBytes": "pkg",
+                "part": "content.xml",
+                "xml": "<office:document-content><office:presentation><draw:page draw:name=\"Intro\"><draw:frame draw:name=\"Notes\"><draw:text-box><text:p>Slide only</text:p></draw:text-box></draw:frame><presentation:notes><draw:frame draw:name=\"Notes\"><draw:text-box><text:p>Mention the deadline</text:p></draw:text-box></draw:frame></presentation:notes></draw:page></office:presentation></office:document-content>"
+            }
+        },
+        {
+            "result": "package-bytes"
+        }
+    ],
+    "slide frame on a page with notes": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "PackagePartIo::writePart": {
+                "packageBytes": "pkg",
+                "part": "content.xml",
+                "xml": "<office:document-content><office:presentation><draw:page draw:name=\"Intro\"><draw:frame draw:name=\"Title\"><draw:text-box><text:p>Hello</text:p><text:p>Second</text:p></draw:text-box></draw:frame><presentation:notes><draw:frame draw:name=\"Notes\"><draw:text-box><text:p>Mention the deadline</text:p></draw:text-box></draw:frame></presentation:notes></draw:page></office:presentation></office:document-content>"
+            }
+        },
+        {
+            "result": "package-bytes"
+        }
+    ],
+    "slide frame on a page without notes": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "PackagePartIo::writePart": {
+                "packageBytes": "pkg",
+                "part": "content.xml",
+                "xml": "<office:document-content><office:presentation><draw:page draw:name=\"Intro\"><draw:frame draw:name=\"Title\"><draw:text-box><text:p>Hello</text:p><text:p>Second</text:p></draw:text-box></draw:frame></draw:page></office:presentation></office:document-content>"
+            }
+        },
+        {
+            "result": "package-bytes"
+        }
+    ],
+    "text is escaped": [
+        {
+            "PackagePartIo::readPart": {
+                "packageBytes": "pkg",
+                "part": "content.xml"
+            }
+        },
+        {
+            "PackagePartIo::writePart": {
+                "packageBytes": "pkg",
+                "part": "content.xml",
+                "xml": "<office:document-content><office:presentation><draw:page draw:name=\"Intro\"><draw:frame draw:name=\"Title\"><draw:text-box><text:p>a &lt; b &amp; &quot;c&quot; &apos;d&apos;</text:p><text:p>Second</text:p></draw:text-box></draw:frame><presentation:notes><draw:frame draw:name=\"Notes\"><draw:text-box><text:p>Mention the deadline</text:p></draw:text-box></draw:frame></presentation:notes></draw:page></office:presentation></office:document-content>"
+            }
+        },
+        {
+            "result": "package-bytes"
+        }
+    ]
+}

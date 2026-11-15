@@ -3,6 +3,9 @@
 /**
  * Which schemas may be created by any authenticated user, and why.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * 🔴 THE CASCADE IS THE EFFECTIVE PERMISSION WHEN THE SERVICE DOES NOT BYPASS
  * IT. Filinq's own writes mostly pass `_rbac: false`, which is why the v7.9.0
  * note says the cascade governs only direct OpenRegister API access. For a
@@ -39,6 +42,44 @@ use PHPUnit\Framework\TestCase;
 class ServiceWrittenCreateTest extends TestCase {
 
 	/**
+	 * Schemas only the server writes.
+	 *
+	 * @var list<string>
+	 */
+	private const SERVER_ONLY = [
+		'documentVersion',
+		'publicationLogEntry',
+		'prohibitionOverrideAudit',
+		'signerRecord',
+		'signingSession',
+		'signingRequest',
+		'anonymizationLink',
+		'sanitizationRecord',
+		'erasureCertificate',
+		'legalHoldCase',
+		'publicationRecord',
+		'printJob',
+	];
+
+	/**
+	 * The classes that create those records.
+	 *
+	 * @var list<string>
+	 */
+	private const UNOWNED_WRITERS = [
+		'lib/Service/FinalDocumentRepository.php',
+		'lib/Service/Publication/PublicationStore.php',
+		'lib/Service/ProhibitionOverrideCommitter.php',
+		'lib/Service/SigningService.php',
+		'lib/Service/Signing/NativeSigningProvider.php',
+		'lib/Service/AnonymizationPersistenceService.php',
+		'lib/Service/Sanitization/SanitizationRecordRepository.php',
+		'lib/Service/SubjectErasure/SubjectErasureStore.php',
+		'lib/Service/LegalHold/LegalHoldCaseRepository.php',
+		'lib/Service/PrintJobRepository.php',
+	];
+
+	/**
 	 * The declared schemas.
 	 *
 	 * @return array<string, mixed> The schemas.
@@ -63,39 +104,44 @@ class ServiceWrittenCreateTest extends TestCase {
 		$create = $this->schemas()['signingAuditEntry']['authorization']['create'];
 
 		$this->assertNotContains('authenticated', $create);
-		$this->assertContains('docudesk-signing-admins', $create);
+		$this->assertContains('filinq-signing-admins', $create);
 	}//end testTheRetiredAuditSchemaNoLongerAcceptsAnybodysCreate()
 
 	/**
-	 * 🔴 AND THESE TWO STAY OPEN ON PURPOSE. Both are written from
-	 * #[NoAdminRequired] endpoints by ordinary users, and neither write passes
-	 * `_rbac: false`, so the acting user is that user. Restricting create would
-	 * fail the anonymise and the finalisation for everyone outside the group.
+	 * Evidence and audit records are written by the server only.
 	 *
-	 * The assertion is deliberately the opposite way round from the one above:
-	 * a later sweep that "tidies" these two closed would break a feature, and
-	 * this is what stops it.
+	 * Their writers pass `_rbac: false` and `_unowned: true`, so create,
+	 * update and delete stay empty: nobody but an admin writes one through the
+	 * OpenRegister API, and no user owns one to reopen it through the owner bypass.
 	 *
 	 * @return void
 	 */
-	public function testTheTwoUserWrittenSchemasStayOpenWithTheirReasonRecorded(): void {
+	public function testEvidenceSchemasAreWrittenByTheServerOnly(): void {
 		$schemas = $this->schemas();
 
-		foreach (['anonymizationLink', 'documentVersion'] as $slug) {
-			$this->assertContains(
-				'authenticated',
-				$schemas[$slug]['authorization']['create'],
-				sprintf('%s is written by the acting user; restricting create breaks the feature', $slug)
-			);
-
-			$this->assertStringContainsString(
-				'DELIBERATELY',
-				$schemas[$slug]['description'],
-				sprintf('%s must carry the reason it is open, or the next sweep re-opens the question', $slug)
-			);
-			$this->assertStringContainsString('NoAdminRequired', $schemas[$slug]['description']);
+		foreach (self::SERVER_ONLY as $slug) {
+			foreach (['create', 'update', 'delete'] as $action) {
+				$this->assertSame(
+					expected: [],
+					actual: $schemas[$slug]['authorization'][$action],
+					message: sprintf('%s.%s must stay empty: the record is evidence the server writes', $slug, $action)
+				);
+			}
 		}
-	}//end testTheTwoUserWrittenSchemasStayOpenWithTheirReasonRecorded()
+	}//end testEvidenceSchemasAreWrittenByTheServerOnly()
+
+	/**
+	 * Every server-only schema's writer stores it owned by the system.
+	 *
+	 * @return void
+	 */
+	public function testEvidenceWritersStoreRecordsUnowned(): void {
+		$root = dirname(__DIR__, 3);
+		foreach (self::UNOWNED_WRITERS as $file) {
+			$source = (string)file_get_contents($root.'/'.$file);
+			$this->assertMatchesRegularExpression(pattern: '/_unowned:\s*true/', string: $source, message: $file.' must save with _unowned: true');
+		}
+	}//end testEvidenceWritersStoreRecordsUnowned()
 
 	/**
 	 * The descriptor version is bumped, or the change never reaches an install.
@@ -122,4 +168,22 @@ class ServiceWrittenCreateTest extends TestCase {
 			);
 		}
 	}//end testEverySchemaStillDeclaresACascade()
+	/**
+	 * Nobody grants themselves a standing consent, and the intake inbox is the clerks' alone.
+	 *
+	 * @return void
+	 */
+	public function testConsentAndIntakeAreNotOpenToEveryUser(): void {
+		$schemas = $this->schemas();
+
+		$this->assertNotContains(needle: 'authenticated', haystack: $schemas['publicationConsent']['authorization']['create']);
+		$this->assertContains(
+			needle: ['group' => 'authenticated', 'match' => ['scope' => 'document']],
+			haystack: $schemas['publicationConsent']['authorization']['create']
+		);
+		$this->assertSame(expected: ['filinq-intake-clerks'], actual: $schemas['intakeDocument']['authorization']['read']);
+		$this->assertSame(expected: ['filinq-intake-clerks'], actual: $schemas['intakeDocument']['authorization']['update']);
+		$this->assertNotContains(needle: 'consent', haystack: $schemas['publicationProhibition']['authorization']['read']);
+
+	}//end testConsentAndIntakeAreNotOpenToEveryUser()
 }//end class

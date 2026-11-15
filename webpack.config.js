@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 const path = require('path')
 const fs = require('fs')
 const TerserPlugin = require('terser-webpack-plugin')
@@ -74,6 +78,14 @@ webpackConfig.entry = {
 	leaves: {
 		import: path.join(__dirname, 'src', 'leaves.js'),
 		filename: appId + '-leaves.js',
+	},
+	// The original/delivered split view for OTHER apps, as
+	// `OCA.Filinq.mountCompare` (anonymization-review-workbench REQ-DDARW-014).
+	// Loaded by the host only when its compare dialog opens. Kept out of the
+	// shared chunks below (see `chunks`), so the host loads this one file.
+	compare: {
+		import: path.join(__dirname, 'src', 'compare.js'),
+		filename: appId + '-compare.js',
 	},
 }
 
@@ -203,7 +215,9 @@ webpackConfig.optimization = {
 	minimizer: [new TerserPlugin({ parallel: 2 })],
 	splitChunks: {
 		...(webpackConfig.optimization?.splitChunks || {}),
-		chunks: 'all',
+		// Every entry shares the framework chunks except `compare`: another app
+		// loads that bundle on its own page and cannot know these chunk names.
+		chunks: (chunk) => chunk.name !== 'compare',
 		cacheGroups: {
 			default: false,
 			defaultVendors: false,

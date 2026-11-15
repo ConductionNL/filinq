@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\BackgroundJob;
 
 use DateTimeImmutable;
-use OCA\Filinq\Service\PeriodicDocumentService;
+use OCA\Filinq\Kernel\Contracts\PeriodicDocumentServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -46,14 +46,14 @@ class PeriodicDocumentJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory            $clock    The clock.
-	 * @param PeriodicDocumentService $periodic Runs the due schedules.
+	 * @param PeriodicDocumentServiceInterface $periodic Runs the due schedules.
 	 * @param LoggerInterface         $logger   Logs what the sweep did.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly ITimeFactory $clock,
-		private readonly PeriodicDocumentService $periodic,
+		private readonly PeriodicDocumentServiceInterface $periodic,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $clock);

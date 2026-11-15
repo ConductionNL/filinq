@@ -139,17 +139,16 @@ test.describe('page components — dashboard', () => {
 		).toBeVisible()
 	})
 
-	test('AnonymizationDashboardWidget paints its quick-anonymisation panel on the dashboard', async ({
+	test('the dashboard paints the one anonymisation widget in its quick-anonymisation panel', async ({
 		page,
 	}) => {
 		await go(page, '')
-		const widget = page.locator('.filinq-anon-widget')
+		const widget = page.locator('.anonymization-widget')
 		await expect(widget).toBeVisible()
-		// The dashboard widget's supported-format line omits ODT; the in-app
-		// AnonymizationWidget's includes it. Asserting the exact string keeps
-		// the two components' tests non-interchangeable.
+		// One widget serves the dashboard and the Anonymisation page, so the
+		// dashboard lists the same formats, ODT included.
 		await expect(widget.locator('.drop-subtitle')).toHaveText(
-			'Only Word (.docx), PDF or TXT files are supported. Maximum file size 500 MB.',
+			'Only Word (.docx), ODT, PDF or TXT files are supported. Maximum file size 500 MB.',
 		)
 		await expect(
 			widget.getByRole('button', { name: '+ Select files' }),

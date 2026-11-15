@@ -6,6 +6,11 @@ The intake inbox: every document that arrived through a scanner, a shared
 mailbox or digital post and does not belong to a record yet. A clerk assigns one
 to a record or rejects it with a reason, and either way it leaves the inbox.
 
+@visual exclude No pixel baseline CI runs yet: the page is driven through its /intake route by
+	tests/e2e/workflows/intake-inbox.spec.ts (list, assign, reject, reject without a reason), which
+	reaches it by URL rather than by component name. Its baseline in tests/e2e/visual is not collected
+	by the CI Playwright project.
+
 @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
 -->
 
@@ -33,6 +38,12 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 			data-testid="intake-index"
 			@refresh="refresh">
 			<template #below-header>
+				<NcNoteCard
+					v-if="reachWarningText"
+					type="warning"
+					data-testid="intake-reach-warning">
+					{{ reachWarningText }}
+				</NcNoteCard>
 				<div class="intake-modes">
 					<NcButton
 						:variant="mode === 'waiting' ? 'primary' : 'secondary'"
@@ -45,6 +56,12 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 						data-testid="intake-mode-detached"
 						@click="setMode('detached')">
 						{{ t('filinq', 'Taken off a record') }}
+					</NcButton>
+					<NcButton
+						variant="tertiary"
+						data-testid="intake-print-separators"
+						@click="separatorsOpen = true">
+						{{ t('filinq', 'Print separator sheets') }}
 					</NcButton>
 				</div>
 			</template>
@@ -78,6 +95,16 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 						</template>
 						{{ t('filinq', 'Assign') }}
 					</NcActionButton>
+					<NcActionButton
+						v-if="mayRemovePassword(row)"
+						closeAfterClick
+						data-testid="intake-remove-password"
+						@click="openUnlock(row)">
+						<template #icon>
+							<LockOpenVariant :size="20" />
+						</template>
+						{{ t('filinq', 'Remove password') }}
+					</NcActionButton>
 					<NcActionButton closeAfterClick @click="openReject(row)">
 						<template #icon>
 							<Delete :size="20" />
@@ -104,29 +131,49 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 			:confirmLabel="t('filinq', 'Reject')"
 			@confirm="reject"
 			@cancel="closeDialogs" />
+
+		<!-- REQ-PPR-004: the document then names the copy and keeps what arrived. -->
+		<PdfPasswordModal
+			:show="unlockTarget !== null"
+			:intakeUuid="unlockTarget ? unlockTarget.uuid : ''"
+			@unlocked="load"
+			@close="unlockTarget = null" />
+
+		<SeparatorSheetsDialog
+			v-if="separatorsOpen"
+			@close="separatorsOpen = false" />
 	</div>
 </template>
 
 <script>
-import { CnIndexPage, CnStatusBadge, NcButton } from '@conduction/nextcloud-vue'
+import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
-import { NcActionButton, NcActions } from '@nextcloud/vue'
+import { NcActionButton, NcActions, NcButton, NcNoteCard } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import LockOpenVariant from 'vue-material-design-icons/LockOpenVariant.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
-import { readingColorMap, readingLabel } from '../../services/intakeReading.js'
+import SeparatorSheetsDialog from '../../dialogs/SeparatorSheetsDialog.vue'
+import PdfPasswordModal from '../../modals/PdfPasswordModal.vue'
+import {
+	reachWarning,
+	readingColorMap,
+	readingLabel,
+} from '../../services/intakeReading.js'
 import {
 	assignIntakeDocument,
+	fetchWaitingInbox,
 	listDetachedDocuments,
-	listWaitingDocuments,
 	rejectIntakeDocument,
 } from '../../services/intakeService.js'
+import { mayRemovePassword } from '../../services/pdfPassword.js'
 
 export default {
 	name: 'IntakeIndex',
 	components: {
+		NcNoteCard,
 		CnIndexPage,
 		CnStatusBadge,
 		NcButton,
@@ -135,6 +182,9 @@ export default {
 		FinalDocumentReasonDialog,
 		FolderOutline,
 		IntakeAssignDialog,
+		SeparatorSheetsDialog,
+		PdfPasswordModal,
+		LockOpenVariant,
 		NcActionButton,
 		NcActions,
 	},
@@ -148,8 +198,11 @@ export default {
 			saving: false,
 			assignTarget: null,
 			rejectTarget: null,
+			unlockTarget: null,
 			actionError: '',
 			loadError: '',
+			notificationReach: null,
+			separatorsOpen: false,
 			readingColorMap: readingColorMap(),
 			channelColorMap: {
 				[t('filinq', 'Scan')]: 'primary',
@@ -160,6 +213,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The warning shown when a failed reading would reach nobody.
+		 *
+		 * @return {string} The warning, or '' when somebody will be told.
+		 * @spec openspec/changes/archive/2026-10-09-intake-failure-reaches-someone/tasks.md#task-3.3
+		 */
+		reachWarningText() {
+			return reachWarning(this.notificationReach)
+		},
+
 		title() {
 			return this.mode === 'detached'
 				? t('filinq', 'Taken off a record')
@@ -243,7 +306,7 @@ export default {
 		 *
 		 * @param {string} mode Either 'waiting' or 'detached'.
 		 * @return {Promise<void>} Resolves once the list has settled.
-		 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+		 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 		 */
 		async setMode(mode) {
 			this.mode = mode
@@ -283,12 +346,17 @@ export default {
 			this.loading = true
 			this.loadError = ''
 			try {
-				this.documents =
-					this.mode === 'detached'
-						? await listDetachedDocuments()
-						: await listWaitingDocuments()
+				if (this.mode === 'detached') {
+					this.documents = await listDetachedDocuments()
+					this.notificationReach = null
+				} else {
+					const inbox = await fetchWaitingInbox()
+					this.documents = inbox.results
+					this.notificationReach = inbox.notificationReach
+				}
 			} catch {
 				this.documents = []
+				this.notificationReach = null
 				this.loadError = t('filinq', 'The intake inbox could not be read.')
 			} finally {
 				this.loading = false
@@ -308,6 +376,19 @@ export default {
 			this.actionError = ''
 			this.rejectTarget = null
 			this.assignTarget = row
+		},
+
+		mayRemovePassword,
+
+		/**
+		 * Ask for the password of a row's locked PDF.
+		 *
+		 * @param {object} row The intake document.
+		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 */
+		openUnlock(row) {
+			this.closeDialogs()
+			this.unlockTarget = row
 		},
 
 		openReject(row) {

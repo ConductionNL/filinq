@@ -32,6 +32,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Pseudonymisation;
 
 use OCA\Filinq\Exception\PseudonymRestoreRefusedException;
+use OCA\Filinq\Kernel\Contracts\PseudonymRestoreServiceInterface;
 use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -48,7 +49,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class PseudonymRestoreService {
+class PseudonymRestoreService implements PseudonymRestoreServiceInterface {
 
 	/**
 	 * Mime types whose bytes are the text, so a placeholder in them can be

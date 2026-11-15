@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -42,42 +43,7 @@ use Throwable;
  *
  * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
  */
-class IntakeRepository {
-
-	/**
-	 * The register holding Filinq's schemas.
-	 *
-	 * @var string
-	 */
-	public const REGISTER = 'filinq';
-
-	/**
-	 * The schema holding the waiting documents.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA = 'intakeDocument';
-
-	/**
-	 * Waiting for a clerk. The initial state.
-	 *
-	 * @var string
-	 */
-	public const STATUS_RECEIVED = 'received';
-
-	/**
-	 * Assigned to a record. Terminal.
-	 *
-	 * @var string
-	 */
-	public const STATUS_ASSIGNED = 'assigned';
-
-	/**
-	 * Rejected with a reason. Terminal.
-	 *
-	 * @var string
-	 */
-	public const STATUS_REJECTED = 'rejected';
+class IntakeRepository implements IntakeRepositoryInterface {
 
 	/**
 	 * Constructor.
@@ -109,13 +75,6 @@ class IntakeRepository {
 	}//end findWaiting()
 
 	/**
-	 * Taken back off a record, waiting on the worklist.
-	 *
-	 * @var string
-	 */
-	public const STATUS_DETACHED = 'detached';
-
-	/**
 	 * Every document in one state, newest first.
 	 *
 	 * @param string $status The state to list.
@@ -124,7 +83,7 @@ class IntakeRepository {
 	 *
 	 * @throws RuntimeException When the register could not be read.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function findByStatus(string $status): array {
 		return $this->search(filters: ['status' => $status]);
@@ -138,7 +97,7 @@ class IntakeRepository {
 	 *
 	 * @return array<int, array<string, mixed>> The attachments.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function findArrivedWith(string $uuid): array {
 		if ($uuid === '') {
@@ -156,7 +115,7 @@ class IntakeRepository {
 	 *
 	 * @return array<string, mixed>|null The document, or null when the file never had one.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function findByFile(int $fileId): ?array {
 		if ($fileId <= 0) {
@@ -360,28 +319,7 @@ class IntakeRepository {
 	 * @spec exclude Shape adapter over an OpenRegister response; no behaviour of its own.
 	 */
 	private function normalise(mixed $row): array {
-		$data = $row;
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$data = $row->jsonSerialize();
-		}
-
-		if (is_array($data) === false) {
-			return [];
-		}
-
-		$self = [];
-		if (isset($data['@self']) === true && is_array($data['@self']) === true) {
-			$self = $data['@self'];
-		}
-
-		$fields = $data;
-		if (isset($data['object']) === true && is_array($data['object']) === true) {
-			$fields = $data['object'];
-		}
-
-		$fields['uuid'] = (string)($fields['uuid'] ?? ($data['uuid'] ?? ($self['uuid'] ?? ($data['id'] ?? ''))));
-
-		return $fields;
+		return (new StoredRecordFields())->read(row: $row);
 
 	}//end normalise()
 }//end class

@@ -21,7 +21,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,6 +34,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\IntakeRefusedException;
+use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -46,9 +47,10 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
-class IntakeDetachmentService {
+class IntakeDetachmentService implements IntakeDetachmentServiceInterface {
+	use ReadsCurrentUserId;
 
 	/**
 	 * Constructor.
@@ -80,7 +82,7 @@ class IntakeDetachmentService {
 	 *
 	 * @throws IntakeRefusedException When there is no reason, or the user may not write the intake register.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function detach(int $fileId, string $reason, string $documentName = ''): array {
 		$reason = trim($reason);
@@ -130,7 +132,7 @@ class IntakeDetachmentService {
 	 *
 	 * @return array<string, mixed> The record, before the detachment is stamped on it.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	private function recordFor(int $fileId, string $documentName): array {
 		return [
@@ -155,7 +157,7 @@ class IntakeDetachmentService {
 	 *
 	 * @return string|null The uuid, or null.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	private function uuidOf(?array $document): ?string {
 		$uuid = trim((string)($document['uuid'] ?? ''));
@@ -166,21 +168,4 @@ class IntakeDetachmentService {
 		return $uuid;
 
 	}//end uuidOf()
-
-	/**
-	 * The user id of the person at the keyboard.
-	 *
-	 * @return string The user id, or an empty string when there is no session.
-	 *
-	 * @spec exclude Session accessor with no behaviour of its own.
-	 */
-	private function currentUserId(): string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return '';
-		}
-
-		return $user->getUID();
-
-	}//end currentUserId()
 }//end class

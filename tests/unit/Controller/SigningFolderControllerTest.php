@@ -64,6 +64,7 @@ class SigningFolderControllerTest extends TestCase {
 	 * @param SigningFolderService      $service    The folder service.
 	 * @param array<string, mixed>|null $requestIds What `requestIds` holds, or null for nothing.
 	 * @param bool                      $loggedIn   Whether anybody is logged in.
+	 * @param array<string, mixed>      $params     Other request parameters, by name.
 	 *
 	 * @return SigningFolderController The controller.
 	 */
@@ -71,6 +72,7 @@ class SigningFolderControllerTest extends TestCase {
 		SigningFolderService $service,
 		?array $requestIds = null,
 		bool $loggedIn = true,
+		array $params = [],
 	): SigningFolderController {
 		$session = $this->createMock(IUserSession::class);
 		if ($loggedIn === true) {
@@ -82,13 +84,14 @@ class SigningFolderControllerTest extends TestCase {
 		}
 
 		$request = $this->createMock(IRequest::class);
-		$request->method('getParam')->willReturn($requestIds ?? []);
+		$request->method('getParam')->willReturnCallback(
+			static fn (string $key, $default = null) => ($key === 'requestIds') ? ($requestIds ?? []) : ($params[$key] ?? $default)
+		);
 
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnArgument(0);
 
 		return new SigningFolderController(
-			'filinq',
 			$request,
 			$service,
 			$this->getMockBuilder(SigningMandateService::class)
@@ -106,7 +109,7 @@ class SigningFolderControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function testASelectionIsSignedForThePersonAsking(): void {
 		$service = $this->folderService();
@@ -122,11 +125,52 @@ class SigningFolderControllerTest extends TestCase {
 	}//end testASelectionIsSignedForThePersonAsking()
 
 	/**
+	 * The folder is read for the session user, not for a userId the request names.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
+	 */
+	public function testTheFolderIsReadForThePersonAskingNotAForgedUserId(): void {
+		$service = $this->getMockBuilder(SigningFolderService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['folder'])
+			->getMock();
+		$service->expects($this->once())
+			->method('folder')
+			->with('ondertekenaar', 20, 40)
+			->willReturn(['results' => [], 'total' => 0]);
+
+		$response = $this->controller(service: $service, params: ['userId' => 'iemand-anders'])->folder(limit: 20, offset: 40);
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+	}//end testTheFolderIsReadForThePersonAskingNotAForgedUserId()
+
+	/**
+	 * With nobody logged in no folder is read, not even one a userId parameter names.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
+	 */
+	public function testNoFolderIsReadForNobody(): void {
+		$service = $this->getMockBuilder(SigningFolderService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['folder'])
+			->getMock();
+		$service->expects($this->never())->method('folder');
+
+		$response = $this->controller(service: $service, loggedIn: false, params: ['userId' => 'ondertekenaar'])->folder();
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+	}//end testNoFolderIsReadForNobody()
+
+	/**
 	 * An empty selection is refused rather than reported as signed.
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function testAnEmptySelectionIsRefused(): void {
 		$service = $this->folderService();
@@ -142,7 +186,7 @@ class SigningFolderControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-folder-across-cases/specs/document-signing/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 	 */
 	public function testNothingIsSignedForNobody(): void {
 		$service = $this->folderService();

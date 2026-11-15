@@ -288,4 +288,91 @@ class PlainLanguageRenditionServiceTest extends TestCase {
 		// letter about a decision that has since been corrected.
 		self::assertTrue($service->stale(['plainRenditionGeneratedAt' => '2026-09-18T12:00:00+02:00']));
 	}//end testAPlainRenditionLeftBehindReadsAsStale()
+
+	/**
+	 * The declaration is normalised: statements trimmed, de-duplicated and without blanks; a blank source is a template.
+	 *
+	 * @return void
+	 */
+	public function testTheDeclarationIsNormalised(): void {
+		$service = $this->service();
+
+		self::assertSame(
+			['templateId' => 'plain', 'requiredStatements' => ['besluit', 'termijn'], 'source' => 'template'],
+			$service->counterpartOf(template: ['plainLanguage' => [
+				'templateId' => ' plain ',
+				'requiredStatements' => [' besluit', '', 'termijn', 'besluit ', '  '],
+				'source' => '  ',
+			]])
+		);
+		self::assertSame(
+			['templateId' => 'p', 'requiredStatements' => ['enkel'], 'source' => 'template'],
+			$service->counterpartOf(template: ['plainLanguage' => ['templateId' => 'p', 'requiredStatements' => 'enkel']])
+		);
+		self::assertSame(
+			['templateId' => 'p', 'requiredStatements' => [], 'source' => 'machine'],
+			$service->counterpartOf(template: ['plainLanguage' => ['templateId' => 'p', 'source' => ' machine ']])
+		);
+		self::assertNull($service->counterpartOf(template: ['plainLanguage' => 'plain-besluit']));
+		self::assertNull($service->counterpartOf(template: ['plainLanguage' => ['templateId' => '  ']]));
+		self::assertNull($service->counterpartOf(template: []));
+	}//end testTheDeclarationIsNormalised()
+
+	/**
+	 * Null, blank strings and empty arrays are unresolved, in declaration order; false, 0 and filled arrays are answers.
+	 *
+	 * @return void
+	 */
+	public function testWhatCountsAsUnresolved(): void {
+		$data = ['a' => null, 'b' => '', 'c' => [], 'd' => false, 'e' => 0, 'f' => ['x'], 'g' => ' x ', 'h' => "\t"];
+
+		self::assertSame(
+			['h', 'a', 'b', 'c', 'missing'],
+			$this->service()->unresolved(required: ['h', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'missing'], data: $data)
+		);
+	}//end testWhatCountsAsUnresolved()
+
+	/**
+	 * The refusal names one statement as "it" and several as "them", and the full plan carries the acceptance.
+	 *
+	 * @return void
+	 */
+	public function testTheRefusalTextAndTheFullPlan(): void {
+		$service = $this->service();
+		try {
+			$service->plan(template: $this->declaring(), data: []);
+			self::fail('the generation should have been refused');
+		} catch (PlainRenditionRefusedException $e) {
+			self::assertSame(
+				'The plain-language version of this letter needs besluit, bezwaartermijn, and the data does not answer them. Neither version was filed.',
+				$e->getMessage()
+			);
+			self::assertSame(['besluit', 'bezwaartermijn'], $e->getUnresolved());
+		}
+
+		try {
+			$service->plan(template: $this->declaring(), data: ['besluit' => 'ja']);
+			self::fail('the generation should have been refused');
+		} catch (PlainRenditionRefusedException $e) {
+			self::assertSame(
+				'The plain-language version of this letter needs bezwaartermijn, and the data does not answer it. Neither version was filed.',
+				$e->getMessage()
+			);
+		}
+
+		try {
+			$this->service(new RuntimeException('gone'))->plan(template: $this->declaring(statements: []), data: []);
+			self::fail('the generation should have been refused');
+		} catch (PlainRenditionRefusedException $e) {
+			self::assertSame('The plain-language template this letter declares could not be read, so neither version was filed.', $e->getMessage());
+			self::assertSame(['counterpart'], $e->getUnresolved());
+			self::assertSame('gone', $e->getPrevious()?->getMessage());
+		}
+
+		$plan = $this->service(['name' => 'zonder inhoud'])->plan(template: $this->declaring(statements: ['besluit']), data: ['besluit' => 'ja']);
+		self::assertSame(['templateId', 'content', 'statements', 'source', 'acceptedBy', 'acceptedAt'], array_keys($plan));
+		self::assertSame('', $plan['content']);
+		self::assertSame(['besluit'], $plan['statements']);
+		self::assertSame('template', $plan['source']);
+	}//end testTheRefusalTextAndTheFullPlan()
 }//end class

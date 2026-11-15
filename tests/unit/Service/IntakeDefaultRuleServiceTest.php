@@ -14,7 +14,10 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -85,7 +88,7 @@ class IntakeDefaultRuleServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testNothingArrivesUnclassified(): void {
 		$service = $this->service(rules: [$this->scanRule()]);
@@ -103,7 +106,7 @@ class IntakeDefaultRuleServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testADocumentNoRuleMatchesIsStampedWithNothingAndSaysSo(): void {
 		$service = $this->service(rules: [$this->scanRule()]);
@@ -120,7 +123,7 @@ class IntakeDefaultRuleServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testASenderPatternNarrowsARuleToOneParty(): void {
 		$supplier = [
@@ -146,7 +149,7 @@ class IntakeDefaultRuleServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testTheLowestOrderWinsWhenSeveralRulesMatch(): void {
 		$general = ['uuid' => 'rule-general', 'channel' => '', 'stamps' => ['documentType' => 'stuk'], 'order' => 500, 'active' => true];
@@ -162,7 +165,7 @@ class IntakeDefaultRuleServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testAnInactiveRuleStampsNothing(): void {
 		$rule = ($this->scanRule() + []);
@@ -178,7 +181,7 @@ class IntakeDefaultRuleServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function testAnUnreadableRuleSetStampsNothingRatherThanFailing(): void {
 		$service = $this->service(rules: [], readable: false);

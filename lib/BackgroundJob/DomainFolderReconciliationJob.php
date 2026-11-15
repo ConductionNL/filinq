@@ -15,14 +15,14 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\BackgroundJob;
 
-use OCA\Filinq\Service\DomainFolderReconciler;
+use OCA\Filinq\Kernel\Contracts\DomainFolderReconcilerInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -42,7 +42,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
 class DomainFolderReconciliationJob extends TimedJob {
 
@@ -50,14 +50,14 @@ class DomainFolderReconciliationJob extends TimedJob {
 	 * Collaborators.
 	 *
 	 * @param ITimeFactory           $time       The clock the scheduler reads.
-	 * @param DomainFolderReconciler $reconciler Does the night's work.
+	 * @param DomainFolderReconcilerInterface $reconciler Does the night's work.
 	 * @param LoggerInterface        $logger     Structured logger.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly DomainFolderReconciler $reconciler,
+		private readonly DomainFolderReconcilerInterface $reconciler,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
@@ -77,7 +77,7 @@ class DomainFolderReconciliationJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	protected function run(mixed $argument): void {
 		try {

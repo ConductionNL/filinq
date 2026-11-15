@@ -36,52 +36,19 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+ * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Intake;
 
+use OCA\Filinq\Kernel\Contracts\IntakeReadingProgressInterface;
+
 /**
  * The reading states an intake document moves through, and what the inbox shows.
  */
-class IntakeReadingProgress {
-
-	/**
-	 * Nothing has been attempted yet.
-	 *
-	 * @var string
-	 */
-	public const QUEUED = 'queued';
-
-	/**
-	 * A job is reading it now.
-	 *
-	 * @var string
-	 */
-	public const READING = 'reading';
-
-	/**
-	 * The text was recognised and written to the searchable content.
-	 *
-	 * @var string
-	 */
-	public const READ = 'read';
-
-	/**
-	 * The reading failed, and says why.
-	 *
-	 * @var string
-	 */
-	public const FAILED = 'failed';
-
-	/**
-	 * Every state, so an inbox can account for each document exactly once.
-	 *
-	 * @var string[]
-	 */
-	public const STATES = [self::QUEUED, self::READING, self::READ, self::FAILED];
+class IntakeReadingProgress implements IntakeReadingProgressInterface {
 
 	/**
 	 * The progress to record when a reading step ends.
@@ -92,7 +59,7 @@ class IntakeReadingProgress {
 	 *
 	 * @return array<string, mixed> The progress to store on the intake record.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function progressFor(string $state, string $error = '', string $moment = ''): array {
 		$reached = $state;
@@ -143,7 +110,7 @@ class IntakeReadingProgress {
 	 *
 	 * @return bool True, always.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function showsInInbox(array $document): bool {
 		unset($document);
@@ -162,7 +129,7 @@ class IntakeReadingProgress {
 	 *
 	 * @return array<string, mixed> The counts and what they mean.
 	 *
-	 * @spec openspec/changes/inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function summarise(array $documents): array {
 		$counts = array_fill_keys(self::STATES, 0);

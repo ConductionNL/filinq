@@ -1,6 +1,6 @@
 # Tasks: scan-intake-with-separator-sheets
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 9. -->
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 10. -->
 
 ## 1. Schema and settings
 
@@ -11,21 +11,26 @@
 ## 2. Separator sheets
 
 - [x] 2.1 Add `lib/Service/SeparatorSheetService.php` rendering the sheets through `PdfService` with a locally drawn QR code (REQ-SCI-02)
-- [ ] 2.2 Add the print action and dialog on the intake page (REQ-SCI-02)
+- [x] 2.2 Add the print action and dialog on the intake page (REQ-SCI-02)
+  - 2026-10-09: "Print separator sheets" on the intake page opens `src/dialogs/SeparatorSheetsDialog.vue` (profile, case numbers one per line, one PDF from `POST api/scan/separators`), over `src/services/separatorSheets.js`; tests/vitest/separatorSheets.spec.js. Six locales.
 
 ## 3. Batch split
 
 - [x] 3.1 Add `lib/Service/ScanBatchService.php` with `receive` and `split` over FPDI, QR and blank-page detection, and the intake event per segment (REQ-SCI-03)
 - [ ] 3.2 Point the watched-folder job at `ScanBatchService::receive()` for profile folders; the OCR watch keeps its own folders (D2)
+  - Replaced by `scan-intake-from-a-watched-folder` (D4: integriq's watcher hands the file over); that change ticks this box. It waits on integriq's `WatchedFileArrivedEvent`, which is not on integriq `development` (checked 2026-10-09).
 
 ## 4. Inbox
 
-- [~] 4.1 Pre-fill the assign picker from `sourceRef` on the intake page and the leaf (REQ-SCI-04)
-  - The intake dialog pre-selects; the leaf still does not.
+- [x] 4.1 Pre-fill the assign picker from `sourceRef` on the intake page and the leaf (REQ-SCI-04)
+  - The intake dialog pre-selects; the `filinq-document-intake` leaf (built 2026-10-09) lists documents whose `sourceRef` names the host record first and marks them (`orderForHost()` in `src/services/intakeLeaf.js`, tests/vitest/documentIntakeLeaf.spec.js).
+
+- [ ] 4.2 List and add scanner profiles on the intake channels page as the board `filinq/FqInvoerkanalen` draws it, over the existing `scanIntake#listProfiles` and `scanIntake#declareProfiles` routes; extend `ScanProfileService` with `resolution`, `colourMode` and separator mode `none` (one document per batch, no split) (REQ-SCI-05)
 
 ## 5. Quality
 
-- [~] 5.1 PHPUnit for `ScanBatchService` with fixture batches (two separators, none, one undecodable page) inside the container; 75% on new code (ADR-009)
+- [x] 5.1 PHPUnit for `ScanBatchService` with fixture batches (two separators, none, one undecodable page) inside the container; 75% on new code (ADR-009)
+  - 2026-10-09: `receive()` is covered too, and every batch `receive()` and `split()` store is validated against the real `scanBatch` fragment of `lib/Settings/filinq_register.json` (tests/unit/Service/ScanBatchServiceTest.php, 13 tests).
 - [ ] 5.2 Playwright `tests/e2e/scan-separators.spec.ts` and the pre-fill case in `tests/e2e/intake-inbox.spec.ts`; Dutch and English strings; docs in `docs/features/scan-intake.md` with screenshots
 
 ## Status, 2026-09-18

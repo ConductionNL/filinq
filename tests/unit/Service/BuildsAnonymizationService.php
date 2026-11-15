@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\ProhibitionOverrideAuthority;
+use OCA\Filinq\Service\ProhibitionOverrideCommitter;
 use OCA\Filinq\Service\AnonymisationRunRecords;
 use OCA\Filinq\Service\AnonymisedPdfOutputService;
 use OCA\Filinq\Service\AnonymizationPersistenceService;
@@ -54,6 +56,8 @@ use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use OCA\Filinq\Service\RelationSkipDecisionService;
 use OCA\Filinq\Service\ReplacementVerificationService;
+use OCA\Filinq\Service\Support\AnonymisationRecords;
+use OCA\Filinq\Service\Support\AnonymisedOutputs;
 use OCP\App\IAppManager;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
@@ -101,14 +105,17 @@ trait BuildsAnonymizationService {
 				logger: $logger,
 				appConfig: $appConfig,
 				container: $container,
-				locator: $locator
+				locator: $locator,
+				authority: ($deps['overrideAuthority'] ?? $this->overrideAuthority(granted: true))
 			),
 			skipDecisions: new RelationSkipDecisionService(
 				logger: $logger,
 				container: $container,
 				locator: $locator,
 				userSession: ($deps['userSession'] ?? $this->createMock(IUserSession::class)),
-				rootFolder: ($deps['rootFolder'] ?? $this->createMock(IRootFolder::class))
+				rootFolder: ($deps['rootFolder'] ?? $this->createMock(IRootFolder::class)),
+				authority: ($deps['overrideAuthority'] ?? $this->overrideAuthority(granted: true)),
+				committer: new ProhibitionOverrideCommitter(logger: $logger, locator: $locator)
 			)
 		);
 
@@ -121,25 +128,7 @@ trait BuildsAnonymizationService {
 				consentService: ($deps['consentService'] ?? $this->createMock(ConsentService::class))
 			);
 			$anonymizeRunner = new DocumentAnonymizeRunner(
-				logger: $logger,
-				locator: $locator,
-				entityDetection: $entityDetection,
-				emlAnonymizer: new EmlAnonymizationService(
-					logger: $logger,
-					entityDetection: $entityDetection,
-					emlAssembly: ($deps['emlAssembly'] ?? $this->createMock(EmlPdfAssemblyService::class))
-				),
-				pdfOutput: new AnonymisedPdfOutputService(
-					logger: $logger,
-					pdfConversion: ($deps['pdfConversion'] ?? $this->createMock(PdfConversionService::class))
-				),
-				replacementVerifier: new ReplacementVerificationService(logger: $logger),
-				persistence: $persistence,
-				summaryAttacher: new GrondslagenSummaryAttacher(
-					logger: $logger,
-					grondslagenSummary: ($deps['grondslagenSummary'] ?? $this->createMock(LegalBasesSummaryService::class))
-				),
-				runRecords: new AnonymisationRunRecords(
+				records: new AnonymisationRecords(verifier: new ReplacementVerificationService(logger: $logger), persistence: $persistence, runs: new AnonymisationRunRecords(
 					verdicts: new RedactionVerdictRecorder(
 						verifier: new RedactionIrreversibilityVerifier(),
 						logger: $logger
@@ -152,7 +141,21 @@ trait BuildsAnonymizationService {
 						locator: $locator,
 						logger: $logger
 					)
-				)
+				)),
+				outputs: new AnonymisedOutputs(eml: new EmlAnonymizationService(
+					logger: $logger,
+					entityDetection: $entityDetection,
+					emlAssembly: ($deps['emlAssembly'] ?? $this->createMock(EmlPdfAssemblyService::class))
+				), pdf: new AnonymisedPdfOutputService(
+					logger: $logger,
+					pdfConversion: ($deps['pdfConversion'] ?? $this->createMock(PdfConversionService::class))
+				), summary: new GrondslagenSummaryAttacher(
+					logger: $logger,
+					grondslagenSummary: ($deps['grondslagenSummary'] ?? $this->createMock(LegalBasesSummaryService::class))
+				)),
+				logger: $logger,
+				locator: $locator,
+				entityDetection: $entityDetection
 			);
 		}
 
@@ -209,4 +212,19 @@ trait BuildsAnonymizationService {
 		return $guard;
 
 	}//end reviewingGuardThatAllows()
+
+	/**
+	 * An override authority that grants or refuses every user.
+	 *
+	 * @param bool $granted Whether the user may release a prohibition match.
+	 *
+	 * @return ProhibitionOverrideAuthority
+	 */
+	protected function overrideAuthority(bool $granted): ProhibitionOverrideAuthority {
+		$authority = $this->createMock(originalClassName: ProhibitionOverrideAuthority::class);
+		$authority->method('mayOverride')->willReturn($granted);
+
+		return $authority;
+
+	}//end overrideAuthority()
 }//end trait

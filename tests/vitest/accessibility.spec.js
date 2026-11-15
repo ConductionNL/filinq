@@ -55,7 +55,7 @@ describe('accessibility findings', () => {
 		)
 		const server = readFileSync(
 			new URL(
-				'../../lib/Service/DocumentValidationService.php',
+				'../../lib/Kernel/Contracts/DocumentValidationServiceInterface.php',
 				import.meta.url,
 			),
 			'utf8',
