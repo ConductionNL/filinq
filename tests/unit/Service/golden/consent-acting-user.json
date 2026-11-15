@@ -121,9 +121,9 @@
                     "contactEmail": "jan@example.org"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "publicationConsent"
                             }
@@ -132,7 +132,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -140,7 +140,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false
@@ -233,9 +233,9 @@
                     "contactEmail": "jan@example.org"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "publicationConsent"
                             }
@@ -244,7 +244,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -252,7 +252,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false
@@ -346,9 +346,9 @@
                     "contactAddress": "Dorpsstraat 1"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "publicationConsent"
                             }
@@ -357,7 +357,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -365,7 +365,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false

@@ -3,6 +3,9 @@
 /**
  * OutputLayoutResolver
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Pure-helper that decides where a batch anonymisation flow should write its
  * redacted output. The resolver implements two contracts from the
  * `anonymisation-batch-output-folder-layout` and
@@ -30,9 +33,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md
  * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md

@@ -30,7 +30,7 @@ use OCA\Filinq\Service\LegalHold\LegalHoldNotifications;
 use OCA\Filinq\Service\LegalHold\LegalHoldRecordFreeze;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -140,7 +140,7 @@ trait LegalHoldDoubles {
 		$apps->method('getInstalledApps')->willReturn(['openregister']);
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			fn (string $class) => ($class === 'OCA\OpenRegister\Service\Archival\LegalHoldService' ? $this->holdService : throw new RuntimeException('Unknown ' . $class))
+			fn (string $class) => ($class === 'OCA\OpenRegister\Service\Archival\LegalHoldServiceInterface' ? $this->holdService : throw new RuntimeException('Unknown ' . $class))
 		);
 
 		$time = $this->createMock(ITimeFactory::class);

@@ -31,7 +31,7 @@ use OCA\Filinq\Service\Support\PdfRendering;
 use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -50,6 +50,7 @@ use Stringable;
  * @covers \OCA\Filinq\Service\Support\PdfRendering
  * @covers \OCA\Filinq\Service\Support\OpenRegisterAccess
  * @uses   \OCA\Filinq\Service\CorrespondenceRequest
+ * @uses \OCA\Filinq\Service\DocumentObjectServiceResolver
  */
 class CorrespondenceLogGoldenTest extends TestCase {
 

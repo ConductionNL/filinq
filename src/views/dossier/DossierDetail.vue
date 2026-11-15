@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="dossier-detail">
 		<NcEmptyContent
@@ -84,6 +88,13 @@
 							<FilePdfBox :size="20" />
 						</template>
 						{{ t('filinq', 'Generate legal-bases PDF') }}
+					</NcButton>
+
+					<NcButton
+						v-if="leafSidebarAvailable"
+						variant="tertiary"
+						@click="toggleLeafSidebar">
+						{{ t('filinq', 'Linked apps') }}
 					</NcButton>
 
 					<NcButton variant="secondary" @click="startBatch">
@@ -287,7 +298,9 @@ import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import LegalHoldBadge from '../../components/LegalHoldBadge.vue'
 import WizardEntryActions from '../../components/WizardEntryActions.vue'
+import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { dossierStore } from '../../store/store.js'
+import { dossierStatusColors, dossierStatusLabel } from './dossierStatus.js'
 
 /**
  * Dossier detail.
@@ -318,6 +331,9 @@ export default {
 		WizardEntryActions,
 	},
 
+	// leaf-integrations: the registry's leaves (Files, Deck) for this dossier.
+	mixins: [recordLeafSidebarMixin({ schema: 'dossier', record: (vm) => vm.dossierStore.dossier, title: (dossier) => dossier.name })],
+
 	data() {
 		return {
 			dossierStore,
@@ -330,13 +346,7 @@ export default {
 			// e-discovery-legal-hold: set by LegalHoldBadge; removing (which can
 			// trash a file) is switched off while the dossier is held.
 			underLegalHold: false,
-			statusColorMap: {
-				[t('filinq', 'Open')]: 'default',
-				[t('filinq', 'In review')]: 'warning',
-				[t('filinq', 'Processed')]: 'primary',
-				[t('filinq', 'Published')]: 'success',
-				[t('filinq', 'Closed')]: 'default',
-			},
+			statusColorMap: dossierStatusColors(),
 		}
 	},
 
@@ -431,14 +441,7 @@ export default {
 		n,
 
 		statusLabel(status) {
-			const labels = {
-				open: t('filinq', 'Open'),
-				'in-review': t('filinq', 'In review'),
-				processed: t('filinq', 'Processed'),
-				published: t('filinq', 'Published'),
-				closed: t('filinq', 'Closed'),
-			}
-			return labels[status] || t('filinq', 'Open')
+			return dossierStatusLabel(status)
 		},
 
 		transitionLabel(target) {

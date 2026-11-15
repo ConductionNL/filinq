@@ -42,6 +42,9 @@
             }
         },
         {
+            "SettingsService::getTransitionEngine": []
+        },
+        {
             "ObjectService::saveObject": {
                 "object": {
                     "id": "req-1",
@@ -56,9 +59,9 @@
                     "subjectSchema": "besluit"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "signingRequest"
                             }
@@ -67,7 +70,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -75,7 +78,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false
@@ -317,9 +320,9 @@
                     "assuranceFloor": "low"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "signingRequest"
                             }
@@ -328,7 +331,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -336,7 +339,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": true
@@ -363,9 +366,9 @@
                     "status": "PENDING"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "signerRecord"
                             }
@@ -374,7 +377,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -382,7 +385,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": true
@@ -412,9 +415,9 @@
                     "id": "saved-11"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "signingRequest"
                             }
@@ -423,7 +426,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -431,7 +434,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false
@@ -577,9 +580,9 @@
                     "declineReason": "onjuist"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "signerRecord"
                             }
@@ -588,7 +591,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -596,7 +599,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false
@@ -622,9 +625,9 @@
                     "subjectSchema": "besluit"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "signingRequest"
                             }
@@ -633,7 +636,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -641,7 +644,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false
@@ -997,9 +1000,9 @@
                     "ipAddress": "192.0.2.10"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "signerRecord"
                             }
@@ -1008,7 +1011,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -1016,7 +1019,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false
@@ -1118,9 +1121,9 @@
                     "subjectSchema": "besluit"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "signingRequest"
                             }
@@ -1129,7 +1132,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -1137,7 +1140,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false
@@ -1238,9 +1241,9 @@
                     "signedDocumentRef": "file:11@v2"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "signingRequest"
                             }
@@ -1249,7 +1252,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -1257,7 +1260,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false
@@ -1666,9 +1669,9 @@
                     "signatureAssurance": "SES"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "signerRecord"
                             }
@@ -1677,7 +1680,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -1685,7 +1688,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false
@@ -1792,9 +1795,9 @@
                     "subjectSchema": "besluit"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "signingRequest"
                             }
@@ -1803,7 +1806,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -1811,7 +1814,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false
@@ -1917,9 +1920,9 @@
                     "signedDocumentRef": "file:11@v2"
                 },
                 "options": {
-                    "OCA\\OpenRegister\\Service\\Object\\ObjectSaveOptions": {
+                    "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectSaveOptions": {
                         "target": {
-                            "OCA\\OpenRegister\\Service\\Object\\ObjectFindTarget": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\ObjectFindTarget": {
                                 "register": "filinq",
                                 "schema": "signingRequest"
                             }
@@ -1928,7 +1931,7 @@
                         "extend": [],
                         "uploadedFiles": null,
                         "policy": {
-                            "OCA\\OpenRegister\\Service\\Object\\SavePolicy": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SavePolicy": {
                                 "silent": false,
                                 "validation": true,
                                 "failIfExists": false,
@@ -1936,7 +1939,7 @@
                             }
                         },
                         "actor": {
-                            "OCA\\OpenRegister\\Service\\Object\\SaveActor": {
+                            "OCA\\OpenRegister\\Kernel\\Contracts\\Value\\SaveActor": {
                                 "currentUser": null,
                                 "owner": null,
                                 "unowned": false

@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -28,8 +31,8 @@ use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Db\ObjectEntity;
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\BackgroundJob\IJobList;
@@ -256,6 +259,40 @@ class CorrespondenceServiceTest extends TestCase {
 		$this->assertEquals('<p>Hello</p>', $result['content']);
 
 	}//end testGenerateHtml()
+
+	/**
+	 * A letter's table is filled from two related records: the listRefs reach
+	 * the resolver and the resolved list reaches the renderer.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#3-generation-and-finality
+	 */
+	public function testATemplateTableIsFilledFromTwoRelatedRecords(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Besluit', 'content' => '{% for b in besluiten %}<tr>{{ b.title }}</tr>{% endfor %}']);
+
+		$listRefs = [['register' => 'zaken', 'schema' => 'besluit', 'as' => 'besluiten', 'filter' => ['zaak' => 'z-1']]];
+		$besluiten = [['title' => 'Vergunning verleend'], ['title' => 'Bezwaar ongegrond']];
+		$this->dataResolver->expects($this->once())->method('resolve')
+			->with([['register' => 'brp', 'schema' => 'x', 'id' => 'y']], $listRefs, ['naam' => 'Jan'])
+			->willReturn(['data' => ['naam' => 'Jan', 'besluiten' => $besluiten], 'errors' => [], 'warnings' => []]);
+
+		$this->renderer->expects($this->once())->method('renderTemplate')
+			->with($this->anything(), $this->callback(static fn (array $data): bool => ($data['besluiten'] ?? null) === $besluiten))
+			->willReturn('<tr>Vergunning verleend</tr><tr>Bezwaar ongegrond</tr>');
+
+		$logEntity = $this->createMock(ObjectEntity::class);
+		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
+		$this->objectSvc->method('saveObject')->willReturn($logEntity);
+
+		$result = $this->service->generate(
+			templateId: 'tmpl-1',
+			dataRefs: [['register' => 'brp', 'schema' => 'x', 'id' => 'y']],
+			options: ['format' => 'html', 'listRefs' => $listRefs, 'adHocData' => ['naam' => 'Jan']]
+		);
+
+		$this->assertStringContainsString('Bezwaar ongegrond', $result['content']);
+	}//end testATemplateTableIsFilledFromTwoRelatedRecords()
 
 	/**
 	 * A DOCX letter goes through the shared converter; without LibreOffice it

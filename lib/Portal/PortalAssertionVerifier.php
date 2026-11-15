@@ -3,6 +3,9 @@
 /**
  * Filinq Portal Assertion Verifier
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Verifies portaliq's frozen `X-Portal-Subject` A6 assertion — the ONLY
  * legitimate identity source for a portal-driven request to Filinq's
  * signing receiver (ADR-046, contribution contract v2, portal-signing-actions
@@ -44,9 +47,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @spec openspec/specs/portal-signing-actions/spec.md
  */

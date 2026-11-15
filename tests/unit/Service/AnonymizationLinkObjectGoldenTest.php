@@ -23,7 +23,7 @@ use OCA\Filinq\Service\AnonymizationPersistenceService;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -35,6 +35,8 @@ use Psr\Log\NullLogger;
  *
  * @covers \OCA\Filinq\Service\AnonymizationPersistenceService
  * @uses   \OCA\Filinq\Service\OpenRegisterServiceLocator
+ * @uses \OCA\Filinq\Service\SavedObjectReader
+ * @uses \OCA\Filinq\Service\ObjectResultExtractor
  */
 class AnonymizationLinkObjectGoldenTest extends TestCase {
 

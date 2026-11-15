@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { computed } from 'vue'
@@ -239,7 +243,7 @@ const documentRecordId = computed(() =>
 					label="label"
 					:reduce="(o) => o.value"
 					:multiple="true"
-					:inputLabel="t('filinq', 'Grondslagen')"
+					:inputLabel="t('filinq', 'Legal bases')"
 					:placeholder="t('filinq', 'Pick grondslagen…')" />
 				<NcNoteCard v-if="saveError" type="error">
 					{{ saveError }}
@@ -278,6 +282,22 @@ const documentRecordId = computed(() =>
 			     whichever review state is currently showing. -->
 			<!-- A scan detection could not read (ocr-trigger-surface): an empty
 			     entity list here does not mean the document is clean. -->
+			<!-- The organisation's language model could not run, so the default
+			     detection produced these entities (llm-entity-detection-provider). -->
+			<NcNoteCard
+				v-if="entry && entry.detectionFellBack"
+				type="warning"
+				class="detection-fallback-warning"
+				data-testid="detection-fallback-warning">
+				{{ entry.detectionWarning }}
+			</NcNoteCard>
+			<p
+				v-else-if="entry && entry.detectionProvider === 'llm'"
+				class="detection-provider-note"
+				data-testid="detection-provider-note">
+				{{ t('filinq', 'These entities were found by the local language model.') }}
+			</p>
+
 			<NcNoteCard
 				v-if="entry && entry.ocrWarning"
 				type="warning"
@@ -1965,6 +1985,13 @@ export default {
  * the two read-only signals read consistently. */
 .confidentiality-chip-row {
 	padding: 4px 12px 0;
+}
+
+/* Which engine found the entities, when it is the language model. */
+.detection-provider-note {
+	margin: 4px 12px 0;
+	color: var(--color-text-maxcontrast);
+	font-size: var(--font-size-small, 13px);
 }
 
 .confidentiality-chip {

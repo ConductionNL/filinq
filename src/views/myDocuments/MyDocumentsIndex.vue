@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { translate as t } from '@nextcloud/l10n'
 import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
@@ -61,6 +65,13 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 								)
 							">
 							{{ ocrBadgeFor(row) }}
+						</span>
+						<span
+							v-if="caseSystemFiles[String(row.fileId)]"
+							class="my-documents-case-system-badge"
+							data-testid="my-documents-case-system-badge"
+							:title="t('filinq', 'The case system holds this document')">
+							{{ t('filinq', 'In the case system') }}
 						</span>
 					</div>
 				</template>
@@ -301,6 +312,7 @@ import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import { ocrRun } from '../../mixins/ocrRun.js'
+import { fetchCaseSystemFiles } from '../../services/caseSystemFiles.js'
 import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { fetchReviewMarks } from '../../services/reviewMark.js'
 import { sanitizeFile } from '../../services/sanitization.js'
@@ -399,6 +411,7 @@ export default {
 			ocrResults: {},
 			// The latest review mark per file id on this page.
 			reviewMarks: {},
+			caseSystemFiles: {},
 			ocrRunning: {},
 		}
 	},
@@ -503,6 +516,7 @@ export default {
 			handler(rows) {
 				this.loadOcrStatus(rows)
 				this.loadReviewMarks(rows)
+				this.loadCaseSystemFiles(rows)
 			},
 		},
 	},
@@ -1051,6 +1065,28 @@ export default {
 		},
 
 		/**
+		 * Read which documents on this page are in the case system, in one request.
+		 *
+		 * @param {Array<object>} rows The rows on the page.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+		 */
+		async loadCaseSystemFiles(rows) {
+			const ids = (rows || [])
+				.filter((row) => !row.isFolder && row.fileId)
+				.map((row) => row.fileId)
+			if (ids.length === 0) {
+				return
+			}
+			try {
+				const delivered = await fetchCaseSystemFiles(ids)
+				this.caseSystemFiles = { ...this.caseSystemFiles, ...delivered }
+			} catch {
+				// No answer: no badge. The list itself still shows.
+			}
+		},
+
+		/**
 		 * Whether a person checked the document's findings.
 		 *
 		 * @param {object} row The row.
@@ -1177,6 +1213,16 @@ export default {
 	.my-documents-name__icon {
 		transition: none;
 	}
+}
+
+.my-documents-case-system-badge {
+	margin-inline-start: 8px;
+	padding: 0 6px;
+	border-radius: var(--border-radius-pill);
+	border: 1px solid var(--color-success);
+	background: var(--color-main-background);
+	color: var(--color-success-text);
+	font-size: 0.85em;
 }
 
 .my-documents-ocr-badge {

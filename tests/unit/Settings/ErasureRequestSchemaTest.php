@@ -18,6 +18,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/archive/2026-09-29-erase-a-person-while-the-records-stay/specs/anonymization-link/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Settings;

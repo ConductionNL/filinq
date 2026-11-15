@@ -41,7 +41,7 @@ use OCA\OpenRegister\Files\Service\TextExtraction\EmlAttachment;
 use OCA\OpenRegister\Files\Service\TextExtraction\EmlBody;
 use OCA\OpenRegister\Files\Service\TextExtraction\EmlStructure;
 use OCA\OpenRegister\Files\Service\TextExtractionService;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;

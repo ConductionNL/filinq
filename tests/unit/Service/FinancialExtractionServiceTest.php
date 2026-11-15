@@ -35,7 +35,7 @@ use OCA\Filinq\Service\FinancialExtractionService;
 use OCA\Filinq\Service\OcrService;
 use OCA\Filinq\Service\OpenRegisterResolver;
 use OCA\Filinq\Service\SettingsService;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;

@@ -29,8 +29,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Classification;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Filinq\Service\ReadsStoredObjectRows;
 
 /**
  * Storage of classificationResult records.
@@ -38,6 +39,8 @@ use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
  * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
  */
 class ClassificationResultRepository {
+
+	use ReadsStoredObjectRows;
 
 	/**
 	 * The schema slug.
@@ -152,21 +155,10 @@ class ClassificationResultRepository {
 	 * @return array<string, mixed> The record.
 	 */
 	private function normalise(mixed $row): array {
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
-			$row = $row->jsonSerialize();
-		}
-
-		if (is_array($row) === false) {
+		$fields = $this->storedFields(row: $row);
+		if ($fields === []) {
 			return ['uuid' => ''];
 		}
-
-		$fields = $row;
-		if (isset($row['object']) === true && is_array($row['object']) === true) {
-			$fields = $row['object'];
-		}
-
-		unset($fields['@self']);
-		$fields['uuid'] = (string) ($fields['uuid'] ?? ($row['uuid'] ?? ($row['@self']['id'] ?? ($row['id'] ?? ''))));
 
 		return $fields;
 

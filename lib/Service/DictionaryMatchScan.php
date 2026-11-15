@@ -33,11 +33,11 @@ namespace OCA\Filinq\Service;
 final class DictionaryMatchScan {
 
 	/**
-	 * Absolute `[start, end]` ranges already matched.
+	 * Absolute ranges already matched, created on the first claim.
 	 *
-	 * @var array<int, array{0: int, 1: int}>
+	 * @var ClaimedRanges|null
 	 */
-	private array $claimed = [];
+	private ?ClaimedRanges $claimed = null;
 
 	/**
 	 * Catalogue entity id per matched value.
@@ -69,14 +69,8 @@ final class DictionaryMatchScan {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function claim(int $start, int $end): bool {
-		foreach ($this->claimed as [$claimedStart, $claimedEnd]) {
-			if ($start < $claimedEnd && $end > $claimedStart) {
-				return false;
-			}
-		}
-
-		$this->claimed[] = [$start, $end];
-		return true;
+		$this->claimed ??= new ClaimedRanges();
+		return $this->claimed->claim(start: $start, end: $end);
 	}//end claim()
 
 	/**

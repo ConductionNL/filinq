@@ -237,6 +237,24 @@ class EnrichmentRunnerTest extends TestCase {
 	}//end testTheRunnerResolvesClassificationFromTheContainer()
 
 	/**
+	 * A container entry that is not a classification service leaves the runner as it was.
+	 *
+	 * @return void
+	 */
+	public function testAForeignContainerEntryKeepsTheSameRunner(): void {
+		$foreign = $this->createMock(ContainerInterface::class);
+		$foreign->method('get')->willReturn(new \stdClass());
+		$runner = new EnrichmentRunner();
+
+		$resolved = $runner->withClassificationFrom(container: $foreign);
+		$this->assertSame($runner, $resolved);
+
+		$resolved->enrichObject(object: $this->object(), services: $this->services(metadata: $this->metadata(metadata: []), settings: $this->settings(enrichment: true), logger: new NullLogger()), logContext: 'new object');
+		$this->assertSame([], $this->store->saves);
+
+	}//end testAForeignContainerEntryKeepsTheSameRunner()
+
+	/**
 	 * The intake document as OpenRegister hands it to the listener.
 	 *
 	 * @return ObjectEntity The object.

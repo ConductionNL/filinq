@@ -12,6 +12,9 @@
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.2
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -19,18 +22,21 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\BackgroundJob;
 
 use OCA\Filinq\BackgroundJob\IntakeOcrJob;
+use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
+use OCA\Filinq\Kernel\Contracts\OcrServiceInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Intake\IntakeReadingProgress;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\OcrService;
 use OCA\Filinq\Tests\Unit\Service\Ocr\OcrDoubles;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\IRootFolder;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -121,6 +127,40 @@ class IntakeOcrJobTest extends TestCase {
 		}
 
 	}//end testEveryPayloadValidatesAgainstTheRegister()
+
+	/**
+	 * A document that is gone is logged, and nothing is read or written.
+	 *
+	 * @return void
+	 */
+	public function testAGoneDocumentIsLoggedAndNothingIsRead(): void {
+		$repository = $this->createMock(IntakeRepositoryInterface::class);
+		$repository->expects($this->once())->method('findByUuid')->with('intake-9')->willReturn(null);
+		$repository->expects($this->never())->method('save');
+
+		$ocr = $this->createMock(OcrServiceInterface::class);
+		$ocr->expects($this->never())->method('isOcrEnabled');
+		$ocr->expects($this->never())->method('extractTextFromPdf');
+
+		$root = $this->createMock(IRootFolder::class);
+		$root->expects($this->never())->method('getFirstNodeById');
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())
+			->method('warning')
+			->with('IntakeOcrJob: the intake document is gone', ['uuid' => 'intake-9']);
+
+		$job = new IntakeOcrJob(
+			$this->createMock(ITimeFactory::class),
+			$repository,
+			$ocr,
+			$root,
+			new IntakeReadingProgress(),
+			$logger
+		);
+
+		(new \ReflectionMethod($job, 'run'))->invoke($job, ['uuid' => 'intake-9', 'fileId' => 4711]);
+	}//end testAGoneDocumentIsLoggedAndNothingIsRead()
 
 	/**
 	 * Run the job on intake-1 (file 4711).

@@ -13,6 +13,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -25,7 +28,7 @@ use OCA\Filinq\Service\DossierManagementService;
 use OCA\Filinq\Service\DossierObjectReader;
 use OCA\Filinq\Service\DossierObjectRepository;
 use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;

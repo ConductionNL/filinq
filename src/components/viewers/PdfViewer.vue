@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div
 		class="pdf-viewer"
@@ -151,7 +155,7 @@ export default {
 			wrapper.style.width = `${viewport.width}px`
 			wrapper.style.height = `${viewport.height}px`
 
-			wrapper.innerHTML = ''
+			wrapper.replaceChildren()
 			wrapper.appendChild(canvas)
 
 			await page.render({ canvasContext: ctx, viewport }).promise

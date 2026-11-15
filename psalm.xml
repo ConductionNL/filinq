@@ -225,6 +225,8 @@
                 <referencedClass name="OCA\OpenRegister\Db\AuditTrail\NamedActor"/>
                 <referencedClass name="OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent"/>
                 <referencedClass name="OCA\OpenRegister\Db\AuditTrail\ObjectAuditEventOptions"/>
+                <referencedClass name="OCA\OpenRegister\Files\Service\FileExtractionOptions"/>
+                <referencedClass name="OCA\OpenRegister\Files\Service\ProvidedTextRequest"/>
                 <referencedClass name="OCA\OpenRegister\Files\Service\TextExtractionService"/>
                 <referencedClass name="OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef"/>
                 <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions"/>

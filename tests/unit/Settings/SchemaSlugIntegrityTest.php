@@ -15,6 +15,9 @@
  * @link https://www.filinq.app
  *
  * @spec openspec/changes/filinq-configurable-report-templates/specs/template-management/spec.md#requirement-template-slug-resolution-req-tmpl-13
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Settings;

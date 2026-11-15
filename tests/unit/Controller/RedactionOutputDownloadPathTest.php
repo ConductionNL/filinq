@@ -3,6 +3,9 @@
 /**
  * The download gate as a reader meets it: controller, gate and store together.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * 🔴 THIS FILE EXISTS BECAUSE EVERY OTHER SUITE DOUBLED THE THING THAT WAS
  * BROKEN. `DownloadAgreementGateTest` hands the gate a `forDocument` stub that
  * returns the terms, so it proves the rule and says nothing about whether the
@@ -29,9 +32,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://www.filinq.app
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use OCA\Filinq\Service\Redaction\DownloadAgreementGate;
 use OCA\Filinq\Service\Redaction\DownloadAgreementRepository;
 use OCA\Filinq\Service\Redaction\PublicationListComposer;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;

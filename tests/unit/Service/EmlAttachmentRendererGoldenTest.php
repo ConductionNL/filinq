@@ -55,6 +55,7 @@ use Throwable;
  * @uses   \OCA\Filinq\Service\EmlTemplateLoader
  * @uses   \OCA\Filinq\Service\PdfService
  * @uses   \OCA\Filinq\Service\TemplateRenderer
+ * @uses   \OCA\Filinq\Service\Charts\CartesianChartRenderer
  *
  * @spec exclude characterization test of existing attachment rendering
  */

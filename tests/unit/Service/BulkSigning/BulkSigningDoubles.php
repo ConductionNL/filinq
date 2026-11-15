@@ -24,7 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Service\BulkSigning;
 
 use OCA\Filinq\Service\BulkSigning\BulkSigningBatchRepository;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;

@@ -12,6 +12,9 @@
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-4.1
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -22,7 +25,7 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Ocr\OcrResultRepository;
 use OCA\Filinq\Service\Ocr\OcrRunService;
 use OCA\Filinq\Service\OcrService;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -110,8 +113,10 @@ trait OcrDoubles {
 				[
 					new NullLogger(),
 					$appConfig,
-					$this->createMock(\OCP\Files\IRootFolder::class),
-					$this->createMock(\OCP\IUserSession::class),
+					new \OCA\Filinq\Service\SessionUserFile(
+						$this->createMock(\OCP\Files\IRootFolder::class),
+						$this->createMock(\OCP\IUserSession::class)
+					),
 				]
 			)
 			->onlyMethods(['isTesseractAvailable', 'getTesseractVersion', 'extractTextFromImage', 'extractTextFromPdf'])

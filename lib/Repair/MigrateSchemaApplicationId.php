@@ -3,6 +3,9 @@
 /**
  * Re-points this app's OpenRegister SCHEMAS at the new application id.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * A REGISTER-SLUG RENAME WOULD NOT COVER THIS, AND THIS APP DOES NOT DO ONE.
  * OpenRegister resolves the two halves of a configuration by DIFFERENT keys:
  *
@@ -41,9 +44,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 
 declare(strict_types=1);

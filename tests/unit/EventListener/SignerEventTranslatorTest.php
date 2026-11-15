@@ -51,6 +51,7 @@ use RuntimeException;
  * @uses \OCA\Filinq\Event\SignerChainCompletedEvent
  * @uses \OCA\Filinq\EventListener\SignerStepDecision
  * @uses \OCA\Filinq\EventListener\SignerStepTask
+ * @uses   \OCA\Filinq\Event\SignerStepDecisionEvent
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\EventListener

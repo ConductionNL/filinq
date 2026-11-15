@@ -213,8 +213,10 @@ class PolicyRuleNormaliser {
 	 * @param string $value The raw value (may be empty).
 	 *
 	 * @return DateTimeImmutable|null The parsed instant, or null.
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
-	private function parseDateTime(string $value): ?DateTimeImmutable {
+	public function parseDateTime(string $value): ?DateTimeImmutable {
 		if ($value === '') {
 			return null;
 		}

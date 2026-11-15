@@ -1,0 +1,32 @@
+{
+	"calls": [
+		[
+			"/index.php/apps/filinq/api/merge",
+			"POST",
+			{
+				"requesttoken": "token-1",
+				"Accept": "application/json",
+				"Content-Type": "application/json"
+			},
+			{
+				"inputs": [],
+				"options": {
+					"bookmarks": false,
+					"coverTemplateRef": "cover-1",
+					"name": "Bundel"
+				},
+				"hostObject": {
+					"register": "zaken",
+					"schema": "zaak",
+					"id": "z-1"
+				}
+			}
+		]
+	],
+	"outcome": {
+		"failed": true,
+		"message": "[t] The merge failed: [t] no reason was given",
+		"link": ""
+	},
+	"busy": false
+}
