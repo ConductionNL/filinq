@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\EventListener;
 
 use OCA\Filinq\EventListener\IntakeArrivalFollowUpListener;
+use OCA\Filinq\Service\Intake\AnsweringRegistration;
 use OCA\Filinq\Service\IntakeAcknowledgementService;
 use OCA\Filinq\Service\IntakeDefaultRuleService;
 use OCA\Filinq\Service\IntakeRepository;
@@ -76,7 +77,8 @@ class IntakeArrivalFollowUpListenerTest extends TestCase {
 		IntakeRepository $repository,
 		?LoggerInterface $logger = null,
 		?ContainerInterface $container = null,
-		?ReceivedStampService $stamp = null
+		?ReceivedStampService $stamp = null,
+		?AnsweringRegistration $registrations = null
 	): IntakeArrivalFollowUpListener {
 		return new IntakeArrivalFollowUpListener(
 			($container ?? $this->createMock(ContainerInterface::class)),
@@ -84,7 +86,8 @@ class IntakeArrivalFollowUpListenerTest extends TestCase {
 			$ack,
 			$repository,
 			($logger ?? $this->createMock(LoggerInterface::class)),
-			$stamp
+			$stamp,
+			$registrations
 		);
 	}//end listener()
 
@@ -137,6 +140,34 @@ class IntakeArrivalFollowUpListenerTest extends TestCase {
 
 		$this->listener($rules, $ack, $repository, stamp: $stamp)->handle(new ObjectCreatedEvent($entity));
 	}//end testAStampingRuleStoresTheStampedCopy()
+
+	/**
+	 * The inbound registration naming the document is read once, handed to the
+	 * acknowledgement, and its number goes on the stamp (D4).
+	 *
+	 * @return void
+	 */
+	public function testTheInboundRegistrationReachesTheAcknowledgementAndTheStamp(): void {
+		$entity = self::saved();
+		$entity->setObject(['channel' => 'mail', 'status' => 'received', 'defaultRule' => 'rule-mail', 'file' => 41, 'receivedAt' => '2026-10-02T08:15:00+02:00']);
+		$inbound = ['uuid' => 'reg-in', 'unit' => 'post', 'registrationNumber' => '2026-00042'];
+		$rules = $this->createMock(IntakeDefaultRuleService::class);
+		$rules->method('findRule')->willReturn(['uuid' => 'rule-mail', 'acknowledgeWith' => 'tpl', 'stampReceived' => true]);
+		$registrations = $this->createMock(AnsweringRegistration::class);
+		$registrations->expects($this->once())->method('inboundFor')->with('doc-1')->willReturn($inbound);
+		$ack = $this->createMock(IntakeAcknowledgementService::class);
+		$ack->expects($this->once())->method('acknowledge')->with($this->anything(), $this->anything(), $inbound)
+			->willReturn(['status' => 'sent', 'registration' => 'reg-out']);
+		$stamp = $this->createMock(ReceivedStampService::class);
+		$stamp->expects($this->once())->method('stampFile')->with(41, '02-10-2026', '2026-00042')->willReturn(77);
+		$repository = $this->createMock(IntakeRepository::class);
+		$repository->expects($this->once())->method('save')->with(
+			$this->callback(static fn (array $saved): bool => $saved['acknowledgement']['registration'] === 'reg-out' && $saved['stampedRendition'] === 77),
+			'doc-1'
+		)->willReturn([]);
+
+		$this->listener($rules, $ack, $repository, stamp: $stamp, registrations: $registrations)->handle(new ObjectCreatedEvent($entity));
+	}//end testTheInboundRegistrationReachesTheAcknowledgementAndTheStamp()
 
 	/**
 	 * Without the stamp on the rule, or without a file, no copy is asked for.

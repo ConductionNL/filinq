@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use DateTimeImmutable;
+use OCA\Filinq\Service\Intake\AnsweringRegistration;
 use OCA\Filinq\Service\IntakeAcknowledgementService;
 use OCA\Filinq\Service\IntakeDefaultRuleService;
 use OCA\Filinq\Service\IntakeRepository;
@@ -51,6 +52,7 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 	 * @param IntakeRepository             $repository      Writes the outcome.
 	 * @param LoggerInterface              $logger          Records a follow-up that failed.
 	 * @param ReceivedStampService|null    $stamp           Makes the stamped copy; absent, none is made.
+	 * @param AnsweringRegistration|null   $registrations   Finds the inbound registration; absent, the date only.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -59,6 +61,7 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 		private readonly IntakeRepository $repository,
 		private readonly LoggerInterface $logger,
 		private readonly ?ReceivedStampService $stamp = null,
+		private readonly ?AnsweringRegistration $registrations = null,
 	) {
 	}//end __construct()
 
@@ -105,9 +108,11 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 			return;
 		}
 
+		$inbound = $this->registrations?->inboundFor(documentUuid: $uuid);
+
 		$outcome = [];
 		try {
-			$acknowledgement = $this->acknowledgement->acknowledge(document: ['uuid' => $uuid] + $document, rule: $rule);
+			$acknowledgement = $this->acknowledgement->acknowledge(document: ['uuid' => $uuid] + $document, rule: $rule, inbound: $inbound);
 			if ($acknowledgement !== null) {
 				$outcome['acknowledgement'] = $acknowledgement;
 			}
@@ -118,7 +123,7 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 			);
 		}
 
-		$stamped = $this->stampedCopy(document: $document, rule: $rule);
+		$stamped = $this->stampedCopy(document: $document, rule: $rule, number: (string)($inbound['registrationNumber'] ?? ''));
 		if ($stamped !== null) {
 			$outcome['stampedRendition'] = $stamped;
 		}
@@ -132,24 +137,26 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 
 	/**
 	 * The stamped copy of the arrived PDF, when the rule asks for one
-	 * (intake-acknowledge-and-stamp D5). The stamp carries the received date;
-	 * the arrived file is never changed.
+	 * (intake-acknowledge-and-stamp D5). The stamp carries the received date
+	 * and the inbound registration number when there is one (D4); the arrived
+	 * file is never changed.
 	 *
 	 * @param array<string, mixed> $document The document as saved.
 	 * @param array<string, mixed> $rule     The rule it names.
+	 * @param string               $number   The inbound registration number, or empty.
 	 *
 	 * @return int|null The copy's file id.
 	 *
 	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-an-arriving-pdf-may-get-a-stamped-copy-req-ias-003
 	 */
-	private function stampedCopy(array $document, array $rule): ?int {
+	private function stampedCopy(array $document, array $rule, string $number): ?int {
 		$fileId = $document['file'] ?? null;
 		if ($this->stamp === null || ($rule['stampReceived'] ?? false) !== true || is_int($fileId) === false || $fileId <= 0) {
 			return null;
 		}
 
 		try {
-			return $this->stamp->stampFile(fileId: $fileId, date: self::receivedDate(receivedAt: (string)($document['receivedAt'] ?? '')));
+			return $this->stamp->stampFile(fileId: $fileId, date: self::receivedDate(receivedAt: (string)($document['receivedAt'] ?? '')), number: $number);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				message: '[IntakeArrivalFollowUpListener] the received stamp failed; the document is kept as it arrived',
