@@ -78,7 +78,8 @@ class DownloadAgreementRepositoryWriteTest extends TestCase {
 		$this->objects->expects($this->once())
 			->method('saveObject')
 			->willReturnCallback(function (...$args) use (&$written): array {
-				// Positional: object, register, schema.
+				// OpenRegister main passes (object, ObjectSaveOptions): read the target and uuid off the options.
+				$args = [$args[0], $args[1]->target->register, $args[1]->target->schema, $args[1]->uuid];
 				$written = $args;
 				return ['object' => $args[0] + ['stored' => true]];
 			});

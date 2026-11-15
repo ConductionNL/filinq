@@ -230,10 +230,7 @@ class PolicyRetroactiveServiceCoverageTest extends TestCase {
 			->method('saveObject')
 			->with(
 				$this->callback(static fn (array $o): bool => $o['policyMatch'] === 'prohib-2' && isset($o['@self']) === false),
-				$this->anything(),
-				'filinq',
-				'publicationConsent',
-				'rec-x',
+				$this->callback(static fn ($o): bool => $o instanceof \OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions && $o->target->register === 'filinq' && $o->target->schema === 'publicationConsent' && $o->uuid === 'rec-x'),
 				false,
 				false
 			);

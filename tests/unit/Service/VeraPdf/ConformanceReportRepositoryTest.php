@@ -180,6 +180,8 @@ class ConformanceReportRepositoryTest extends TestCase {
 		$saved = [];
 		$this->objects->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$saved): object {
+				// OpenRegister main passes (object, ObjectSaveOptions): read the target and uuid off the options.
+				$args = [$args[0], $args[1]->target->register, $args[1]->target->schema, $args[1]->uuid];
 				$saved = $args;
 
 				return $this->row('u-new', ['fileId' => 5, 'subject' => 'file', 'compliant' => true]);
@@ -188,7 +190,6 @@ class ConformanceReportRepositoryTest extends TestCase {
 
 		$stored = $this->repository->save(report: ['uuid' => 'caller-uuid', 'fileId' => 5, 'subject' => 'file', 'compliant' => true]);
 
-		// The mock receives the call positionally: object, register, schema, uuid.
 		$this->assertSame(['fileId' => 5, 'subject' => 'file', 'compliant' => true], $saved[0]);
 		$this->assertSame(IntakeRepository::REGISTER, $saved[1]);
 		$this->assertSame(ConformanceReportRepository::SCHEMA, $saved[2]);
@@ -212,6 +213,8 @@ class ConformanceReportRepositoryTest extends TestCase {
 		$saved = [];
 		$this->objects->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$saved): array {
+				// OpenRegister main passes (object, ObjectSaveOptions): read the target and uuid off the options.
+				$args = [$args[0], $args[1]->target->register, $args[1]->target->schema, $args[1]->uuid];
 				$saved = $args;
 
 				return ['uuid' => 'u-file', 'fileId' => 5, 'subject' => 'file', 'compliant' => false];
@@ -239,6 +242,8 @@ class ConformanceReportRepositoryTest extends TestCase {
 		$saved = [];
 		$this->objects->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$saved): array {
+				// OpenRegister main passes (object, ObjectSaveOptions): read the target and uuid off the options.
+				$args = [$args[0], $args[1]->target->register, $args[1]->target->schema, $args[1]->uuid];
 				$saved = $args;
 
 				return ['id' => 'u-new', 'fileId' => 5, 'subject' => 'file'];

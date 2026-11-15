@@ -189,9 +189,7 @@ class IntakeRepositoryTest extends TestCase {
 	 */
 	public function testFindByUuid(): void {
 		$this->objectService->method('find')->willReturnCallback(
-			static function (string $id, ?\OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions $options = null): ?array {
-				$register = (string) ($options?->target->register ?? '');
-				$schema = (string) ($options?->target->schema ?? '');
+			static function (string $id, string $register, string $schema): ?array {
 				TestCase::assertSame('filinq', $register);
 				TestCase::assertSame('intakeDocument', $schema);
 				if ($id === 'boom') {

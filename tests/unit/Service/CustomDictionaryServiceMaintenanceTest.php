@@ -136,6 +136,8 @@ class CustomDictionaryServiceMaintenanceTest extends TestCase {
 		);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$args): array {
+				// OpenRegister main passes (object, ObjectSaveOptions): read the target and uuid off the options.
+				$args = [$args[0], $args[1]->target->register, $args[1]->target->schema, $args[1]->uuid];
 				$this->saved[] = [$args[2], $args[0], ($args[3] ?? null)];
 
 				return $args[0] + ['id' => ($args[3] ?? 'new-id')];

@@ -40,7 +40,11 @@ require_once __DIR__ . '/../vendor/autoload.php';
 // RESOLVABLE, not who registered first. Appending a fallback autoloader does
 // NOT work: spl_autoload_register appends relative to registration order, and
 // that order across independently loaded apps is what nobody controls.
-foreach (['ObjectEntityInterface', 'ObjectServiceInterface'] as $contract) {
+// ObjectServiceInterface is NOT taken from hydra-gates: its copy still carries the
+// pre-options saveObject(register:, schema:, uuid:) signature, while this app calls
+// OpenRegister main's saveObject(object:, options: ObjectSaveOptions). The stub in
+// tests/stubs/OpenRegisterStubs.php carries main's saveObject and defines it instead.
+foreach (['ObjectEntityInterface'] as $contract) {
 	if (interface_exists('\\OCA\\OpenRegister\\Contract\\' . $contract) === false) {
 		$shipped = __DIR__ . '/../vendor/conduction/hydra-gates/hydra-gates/contracts/' . $contract . '.php';
 		if (file_exists($shipped) === true) {

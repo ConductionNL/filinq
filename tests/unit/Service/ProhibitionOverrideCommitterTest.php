@@ -112,8 +112,9 @@ class ProhibitionOverrideCommitterTest extends TestCase {
 		$this->objects->expects($this->exactly(2))
 			->method('saveObject')
 			->willReturnCallback(function (...$args) use (&$audits) {
-				// Positional: object, register, schema, uuid, _rbac, _multitenancy, _unowned.
-				$audits[] = $args;
+				// OpenRegister main passes (object, ObjectSaveOptions): read the target and uuid off the options.
+				$args = [$args[0], $args[1]->target->register, $args[1]->target->schema, $args[1]->uuid, ($args[2] ?? true), ($args[3] ?? true), $args[1]->actor->unowned];
+								$audits[] = $args;
 				return [];
 			});
 		$this->relations->expects($this->once())

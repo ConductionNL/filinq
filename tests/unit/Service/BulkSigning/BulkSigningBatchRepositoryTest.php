@@ -104,6 +104,8 @@ class BulkSigningBatchRepositoryTest extends TestCase {
 		$calls = [];
 		$this->objects->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$calls): array {
+				// OpenRegister main passes (object, ObjectSaveOptions): read the target and uuid off the options.
+				$args = [$args[0], $args[1]->target->register, $args[1]->target->schema, $args[1]->uuid];
 				$calls[] = $args;
 				return ['object' => ['title' => 'New'], '@self' => ['id' => 'fresh-1']];
 			}
