@@ -35,7 +35,7 @@ class SubjectErasureEraserTest extends TestCase {
 
 	private const VERSION_MANAGER = 'OCA\Files_Versions\Versions\IVersionManager';
 
-	private const PROCESSOR = 'OCA\OpenRegister\Service\File\DocumentProcessingHandler';
+	private const PROCESSOR = 'OCA\OpenRegister\Files\Service\File\DocumentProcessingHandler';
 
 	/**
 	 * The real eraser over the in-memory files and register.

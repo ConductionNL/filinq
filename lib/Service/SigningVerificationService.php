@@ -152,15 +152,35 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 	 * @spec openspec/specs/document-signing/spec.md
 	 */
 	private function extractSignatures(string $pdfContent): array {
-		$signatures = [];
-
 		$pattern = '/\/Type\s*\/Sig/';
 		$matches = preg_match_all($pattern, $pdfContent);
 
 		if ($matches === false || $matches === 0) {
-			return $signatures;
+			return [];
 		}
 
+		$signatures = $this->markedSignatures(pdfContent: $pdfContent);
+		if (empty($signatures) === true) {
+			// A `/Type /Sig` entry with no Filinq marker is a genuine
+			// external signature Filinq cannot yet validate — honestly
+			// `unverifiable`, never `invalid` (that would mislabel an
+			// inability to verify as tampering, REQ-DDSTR-005).
+			return $this->externalSignatures(count: $matches);
+		}
+
+		return $signatures;
+	}//end extractSignatures()
+
+	/**
+	 * The records of every Filinq signature marker in the PDF, each verified.
+	 *
+	 * @param string $pdfContent The PDF file content
+	 *
+	 * @return array<int, array<string, mixed>> List of signature records
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	private function markedSignatures(string $pdfContent): array {
 		// ⚠️ THE MARKER NAME STAYS `/DocuDesk-Signature` ACROSS THE FILINQ
 		// RENAME. It is not source text: it is a byte sequence written into
 		// every PDF this app has ever signed, and this regex is what reads it
@@ -175,62 +195,69 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 		$dataPattern = '/\/DocuDesk-Signature\s*\(([^)]+)\)/';
 		preg_match_all($dataPattern, $pdfContent, $dataMatches);
 
-		if (empty($dataMatches[1]) === false) {
-			foreach ($dataMatches[1] as $encoded) {
-				$decoded = json_decode(base64_decode($encoded), true);
-				if (is_array($decoded) === true) {
-					$verification = $this->verifyAssertion(
-						assertion: $decoded,
-						pdfContent: $pdfContent
-					);
+		$signatures = [];
+		foreach ($dataMatches[1] as $encoded) {
+			$decoded = json_decode(base64_decode($encoded), true);
+			if (is_array($decoded) === true) {
+				$verification = $this->verifyAssertion(
+					assertion: $decoded,
+					pdfContent: $pdfContent
+				);
 
-					$signatures[] = [
-						'signer' => $decoded['signer'] ?? 'Unknown',
-						'timestamp' => $decoded['timestamp'] ?? '',
-						'level' => $decoded['level'] ?? 'SES',
-						'method' => $decoded['method'] ?? 'unknown',
-						'ip' => $decoded['ip'] ?? '',
-						'status' => $verification['status'],
-						'reason' => $verification['reason'],
-						// What was checked, against which key, and what the
-						// verdict proves — so a result on a screen is readable
-						// by the person it is shown to.
-						'checked' => $verification['checked'],
-						'keyId' => $verification['keyId'],
-						'means' => $verification['means'],
-						// Derived boolean kept for response-shape
-						// compatibility (REQ-DDSTR-005).
-						'valid' => ($verification['status'] === 'verified'),
-					];
-				}
-			}//end foreach
-		}//end if
-
-		if (empty($signatures) === true) {
-			// A `/Type /Sig` entry with no Filinq marker is a genuine
-			// external signature Filinq cannot yet validate — honestly
-			// `unverifiable`, never `invalid` (that would mislabel an
-			// inability to verify as tampering, REQ-DDSTR-005).
-			for ($i = 0; $i < $matches; $i++) {
 				$signatures[] = [
-					'signer' => 'External signer',
-					'timestamp' => '',
-					'level' => 'unknown',
-					'method' => 'external',
-					'ip' => '',
-					'status' => 'unverifiable',
-					'reason' => 'external-signature-unsupported',
-					'checked' => 'nothing',
-					'keyId' => null,
-					'means' => 'A signature this instance did not produce. Check it with the tool that '
-						. 'made it; nothing here says whether it is good.',
-					'valid' => false,
+					'signer' => $decoded['signer'] ?? 'Unknown',
+					'timestamp' => $decoded['timestamp'] ?? '',
+					'level' => $decoded['level'] ?? 'SES',
+					'method' => $decoded['method'] ?? 'unknown',
+					'ip' => $decoded['ip'] ?? '',
+					'status' => $verification['status'],
+					'reason' => $verification['reason'],
+					// What was checked, against which key, and what the
+					// verdict proves — so a result on a screen is readable
+					// by the person it is shown to.
+					'checked' => $verification['checked'],
+					'keyId' => $verification['keyId'],
+					'means' => $verification['means'],
+					// Derived boolean kept for response-shape
+					// compatibility (REQ-DDSTR-005).
+					'valid' => ($verification['status'] === 'verified'),
 				];
 			}
 		}
 
 		return $signatures;
-	}//end extractSignatures()
+	}//end markedSignatures()
+
+	/**
+	 * One unverifiable record per signature entry Filinq did not write.
+	 *
+	 * @param int $count The number of `/Type /Sig` entries.
+	 *
+	 * @return array<int, array<string, mixed>> List of signature records
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	private function externalSignatures(int $count): array {
+		$signatures = [];
+		for ($i = 0; $i < $count; $i++) {
+			$signatures[] = [
+				'signer' => 'External signer',
+				'timestamp' => '',
+				'level' => 'unknown',
+				'method' => 'external',
+				'ip' => '',
+				'status' => 'unverifiable',
+				'reason' => 'external-signature-unsupported',
+				'checked' => 'nothing',
+				'keyId' => null,
+				'means' => 'A signature this instance did not produce. Check it with the tool that '
+					. 'made it; nothing here says whether it is good.',
+				'valid' => false,
+			];
+		}
+
+		return $signatures;
+	}//end externalSignatures()
 
 	/**
 	 * Cryptographically verify a self-asserted Filinq signature blob (v2)
@@ -254,18 +281,7 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 	 * @spec openspec/specs/document-signing/spec.md
 	 */
 	private function verifyAssertion(array $assertion, string $pdfContent): array {
-		$mac = $assertion['mac'] ?? '';
-		if (is_string($mac) === false || $mac === '') {
-			// No server-issued MAC present: legacy/malformed, never trusted.
-			return $this->account(status: 'unverifiable', reason: 'legacy-assertion-v1', checked: 'nothing');
-		}
-
-		if ((int)($assertion['v'] ?? 0) !== 2) {
-			// A pre-rebuild (v1) assertion carried a MAC over the content-hash
-			// ONLY — its identity fields were never covered. Reporting it
-			// `verified` would resurrect the #284 forgery for old artifacts;
-			// reporting it `invalid` would mislabel a merely-unverifiable
-			// legacy artifact as tampered. Fail-closed to `unverifiable`.
+		if ($this->isCurrentAssertion(assertion: $assertion) === false) {
 			return $this->account(status: 'unverifiable', reason: 'legacy-assertion-v1', checked: 'nothing');
 		}
 
@@ -275,6 +291,44 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 			return $this->account(status: 'unverifiable', reason: 'signing-secret-not-configured', checked: 'nothing');
 		}
 
+		$expected = hash_hmac('sha256', $this->macInput(assertion: $assertion, pdfContent: $pdfContent), $secret);
+
+		$checked = 'the document bytes and the assertion fields';
+		if (hash_equals($expected, $assertion['mac']) === false) {
+			return $this->account(status: 'invalid', reason: 'mac-mismatch', checked: $checked, secret: $secret);
+		}
+
+		return $this->account(status: 'verified', reason: 'ok', checked: $checked, secret: $secret);
+	}//end verifyAssertion()
+
+	/**
+	 * Whether an assertion carries a server-issued MAC over its v2 fields.
+	 *
+	 * Without a MAC it is legacy or malformed and never trusted.
+	 * A pre-rebuild (v1) assertion carried a MAC over the content-hash
+	 * ONLY — its identity fields were never covered. Reporting it
+	 * `verified` would resurrect the #284 forgery for old artifacts;
+	 * reporting it `invalid` would mislabel a merely-unverifiable
+	 * legacy artifact as tampered. Fail-closed to `unverifiable`.
+	 *
+	 * @param array<string, mixed> $assertion The decoded assertion.
+	 *
+	 * @return bool True for a non-empty string MAC on a v2 assertion.
+	 */
+	private function isCurrentAssertion(array $assertion): bool {
+		$mac = ($assertion['mac'] ?? '');
+		return is_string($mac) === true && $mac !== '' && (int)($assertion['v'] ?? 0) === 2;
+	}//end isCurrentAssertion()
+
+	/**
+	 * What the MAC of an assertion is computed over: the canonical document hash and the assertion fields.
+	 *
+	 * @param array<string, mixed> $assertion The decoded assertion, with its `mac`.
+	 * @param string $pdfContent The document bytes.
+	 *
+	 * @return string The content hash and the canonical JSON of the fields other than `mac`, on two lines.
+	 */
+	private function macInput(array $assertion, string $pdfContent): string {
 		// Recompute the MAC over the *canonical* form of the document — the
 		// bytes with every `/DocuDesk-Signature(...)` marker payload blanked —
 		// so the self-asserted blob (which carries the mac) cannot cover
@@ -285,10 +339,6 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 		// inside the marker payload, so it never appears literally and the hash
 		// stayed self-referential — no writer could satisfy it.
 		$canonical = $this->canonicaliseForAssertion(pdfContent: $pdfContent);
-		// Defensive: also strip any literal occurrence of the mac (a no-op on
-		// the canonical form, retained for the finding #284 fail-closed intent).
-		$canonical = $this->stripAssertionMac(pdfContent: $canonical, mac: $mac);
-		$contentHash = hash('sha256', $canonical);
 
 		// V2: the MAC covers the content-hash AND the canonical-JSON of the
 		// assertion fields (minus `mac` itself) — recompute over BOTH parts so
@@ -296,17 +346,9 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 		// or a bound portal-identity claim) invalidates the MAC.
 		$assertionWithoutMac = $assertion;
 		unset($assertionWithoutMac['mac']);
-		$payloadCore = $this->canonicalizer->canonicalJson(data: $assertionWithoutMac);
 
-		$expected = hash_hmac('sha256', $contentHash . "\n" . $payloadCore, $secret);
-
-		$checked = 'the document bytes and the assertion fields';
-		if (hash_equals($expected, $mac) === false) {
-			return $this->account(status: 'invalid', reason: 'mac-mismatch', checked: $checked, secret: $secret);
-		}
-
-		return $this->account(status: 'verified', reason: 'ok', checked: $checked, secret: $secret);
-	}//end verifyAssertion()
+		return hash('sha256', $canonical) . "\n" . $this->canonicalizer->canonicalJson(data: $assertionWithoutMac);
+	}//end macInput()
 
 	/**
 	 * Say what was checked, against which key, and what that proves.
@@ -399,20 +441,6 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 		) ?? $pdfContent;
 
 	}//end canonicaliseForAssertion()
-
-	/**
-	 * Remove the asserted MAC value from the PDF byte stream before hashing
-	 *
-	 * @param string $pdfContent The full PDF content
-	 * @param string $mac The asserted MAC value to strip
-	 *
-	 * @return string The PDF content with the MAC value removed
-	 */
-	private function stripAssertionMac(string $pdfContent, string $mac): string {
-		// Use preg_replace with a literal match (preg_quote) so that any
-		// special regex characters in the MAC value are treated as plain text.
-		return preg_replace('/' . preg_quote($mac, '/') . '/', '', $pdfContent) ?? $pdfContent;
-	}//end stripAssertionMac()
 
 	/**
 	 * Get the server-held signing secret used to verify assertions.

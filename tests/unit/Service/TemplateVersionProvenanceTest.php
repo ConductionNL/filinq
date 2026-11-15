@@ -15,6 +15,9 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -34,6 +37,11 @@ use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\OpenRegisterResolver;
 use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\Support\DocumentOutput;
+use OCA\Filinq\Service\Support\DocumentProduction;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\Filinq\Service\Support\PdfRendering;
+use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateVersionService;
@@ -160,7 +168,7 @@ class TemplateVersionProvenanceTest extends TestCase {
 		}
 
 		$versions = new TemplateVersionService($container, $appManager, $registers);
-		$templates = new TemplateService($container, $appManager, $registers, $versions, $this->createMock(IUserSession::class), $this->createMock(IAppConfig::class));
+		$templates = new TemplateService(new OpenRegisterAccess(apps: $appManager, container: $container), $registers, $versions, $this->createMock(IUserSession::class), $this->createMock(IAppConfig::class));
 
 		$resolver = $this->getMockBuilder(DataResolverService::class)->disableOriginalConstructor()->onlyMethods(['resolve'])->getMock();
 		$resolver->method('resolve')->willReturn(['data' => ['naam' => 'Jansen'], 'warnings' => [], 'errors' => []]);
@@ -185,15 +193,12 @@ class TemplateVersionProvenanceTest extends TestCase {
 		);
 
 		$objectResolver = new DocumentObjectServiceResolver($container, $appManager);
-		$pipeline = new DocumentRenderPipeline($renderer, $pdf, $objectResolver, new NullLogger(), $rasterizer);
+		$pipeline = new DocumentRenderPipeline(new PdfRendering(renderer: $renderer, pdf: $pdf), $objectResolver, new NullLogger(), $rasterizer);
 		$logger = new GeneratedDocumentLogger($objectResolver, new NullLogger());
 		$documents = new DocumentService(
-			templateService: $templates,
-			dataResolver: $resolver,
-			renderPipeline: $pipeline,
-			storageService: $storage,
-			documentLogger: $logger,
-			jobs: $this->createMock(originalClassName: DocumentJobStore::class)
+			production: new DocumentProduction(pipeline: $pipeline, jobs: $this->createMock(originalClassName: DocumentJobStore::class)),
+			output: new DocumentOutput(storage: $storage, log: $logger),
+			sources: new TemplateSources(templates: $templates, data: $resolver)
 		);
 
 		return ['documents' => $documents, 'templates' => $templates, 'versions' => $versions];

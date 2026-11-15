@@ -363,7 +363,7 @@ test.describe('guided document wizard: authoring', () => {
 			.getByTestId('wizard-question-maps-to')
 			.locator('input')
 			.fill('aanvrager.naam')
-		await page.getByTestId('wizard-question-save').click()
+		await page.getByTestId('cn-dialog-actions-submit').click()
 		await page.getByTestId('wizard-save').click()
 
 		await expect.poll(() => saved?.templateId).toBe('tmpl-1')

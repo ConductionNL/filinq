@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Publication;
 
 use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\PublicationAccessInterface;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -37,21 +38,7 @@ use Throwable;
  *
  * @spec openspec/specs/woo-publicatie-pipeline/spec.md
  */
-class PublicationAccess {
-
-	/**
-	 * The app setting naming the groups that may publish: a JSON list of group ids.
-	 *
-	 * @var string
-	 */
-	public const PUBLISHER_GROUPS_KEY = 'publication_publisher_groups';
-
-	/**
-	 * The publisher groups when nothing is configured.
-	 *
-	 * @var string
-	 */
-	public const DEFAULT_PUBLISHER_GROUPS = '["filinq-publishers"]';
+class PublicationAccess implements PublicationAccessInterface {
 
 	/**
 	 * Constructor

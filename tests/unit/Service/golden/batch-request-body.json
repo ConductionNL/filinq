@@ -1,0 +1,204 @@
+{
+    "no entities": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] No entities provided"
+            }
+        },
+        "request": null
+    },
+    "entities not a list": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] No entities provided"
+            }
+        },
+        "request": null
+    },
+    "empty entities": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] No entities provided"
+            }
+        },
+        "request": null
+    },
+    "only entities": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan"
+                }
+            ],
+            "hasStrayBases": false,
+            "appendBasisSummary": false,
+            "unredactedEntities": []
+        }
+    },
+    "stray bases": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan",
+                    "type": "PERSON"
+                },
+                {
+                    "text": "Delft",
+                    "bases": [
+                        "5.1.2e"
+                    ]
+                }
+            ],
+            "hasStrayBases": true,
+            "appendBasisSummary": false,
+            "unredactedEntities": []
+        }
+    },
+    "a string entry carries no bases": {
+        "error": null,
+        "request": {
+            "entities": [
+                "Jan",
+                {
+                    "text": "Delft"
+                }
+            ],
+            "hasStrayBases": false,
+            "appendBasisSummary": false,
+            "unredactedEntities": []
+        }
+    },
+    "a string flag": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] appendBasisSummary must be a boolean"
+            }
+        },
+        "request": null
+    },
+    "a null flag": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] appendBasisSummary must be a boolean"
+            }
+        },
+        "request": null
+    },
+    "the flag set": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan"
+                }
+            ],
+            "hasStrayBases": false,
+            "appendBasisSummary": true,
+            "unredactedEntities": []
+        }
+    },
+    "reversible is not read": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan"
+                }
+            ],
+            "hasStrayBases": false,
+            "appendBasisSummary": false,
+            "unredactedEntities": []
+        }
+    },
+    "unredacted not a list": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] unredactedEntities must be an array"
+            }
+        },
+        "request": null
+    },
+    "unredacted entry not an object is left for later": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan"
+                }
+            ],
+            "hasStrayBases": false,
+            "appendBasisSummary": false,
+            "unredactedEntities": [
+                "Jan"
+            ]
+        }
+    },
+    "unredacted entries": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan"
+                }
+            ],
+            "hasStrayBases": false,
+            "appendBasisSummary": false,
+            "unredactedEntities": [
+                {
+                    "entityId": 3,
+                    "entityText": "Jan",
+                    "entityType": "PERSON",
+                    "publicationBases": [
+                        "5.1.2e"
+                    ]
+                }
+            ]
+        }
+    },
+    "a wrong flag and wrong unredacted": {
+        "error": {
+            "status": 400,
+            "body": {
+                "error": "[t] appendBasisSummary must be a boolean"
+            }
+        },
+        "request": null
+    },
+    "everything": {
+        "error": null,
+        "request": {
+            "entities": [
+                {
+                    "text": "Jan",
+                    "type": "PERSON"
+                },
+                {
+                    "text": "Delft",
+                    "bases": [
+                        "5.1.2e"
+                    ]
+                }
+            ],
+            "hasStrayBases": true,
+            "appendBasisSummary": true,
+            "unredactedEntities": [
+                {
+                    "entityId": 3,
+                    "entityText": "Jan",
+                    "entityType": "PERSON",
+                    "publicationBases": [
+                        "5.1.2e"
+                    ]
+                }
+            ]
+        }
+    }
+}

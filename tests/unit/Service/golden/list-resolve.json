@@ -1,0 +1,337 @@
+{
+    "defaults": {
+        "items": [
+            {
+                "id": 1
+            },
+            {
+                "id": "serialized"
+            },
+            {
+                "id": 2
+            },
+            {
+                "object": {
+                    "id": "plain"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "setRegister",
+                "zaken"
+            ],
+            [
+                "setSchema",
+                "zaak"
+            ],
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "_limit": 50
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "a filter": {
+        "items": [
+            {
+                "id": 1
+            },
+            {
+                "id": "serialized"
+            },
+            {
+                "id": 2
+            },
+            {
+                "object": {
+                    "id": "plain"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "setRegister",
+                "zaken"
+            ],
+            [
+                "setSchema",
+                "zaak"
+            ],
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "status": "open",
+                        "_limit": 50
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "a limit": {
+        "items": [],
+        "calls": [
+            [
+                "setRegister",
+                "zaken"
+            ],
+            [
+                "setSchema",
+                "zaak"
+            ],
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "_limit": 5
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "a string limit": {
+        "items": [],
+        "calls": [
+            [
+                "setRegister",
+                "zaken"
+            ],
+            [
+                "setSchema",
+                "zaak"
+            ],
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "_limit": 7
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "a null limit": {
+        "items": [],
+        "calls": [
+            [
+                "setRegister",
+                "zaken"
+            ],
+            [
+                "setSchema",
+                "zaak"
+            ],
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "_limit": 50
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "an order": {
+        "items": [],
+        "calls": [
+            [
+                "setRegister",
+                "zaken"
+            ],
+            [
+                "setSchema",
+                "zaak"
+            ],
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "_limit": 50,
+                        "_order": {
+                            "created": "desc"
+                        }
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "an order not an array": {
+        "items": [],
+        "calls": [
+            [
+                "setRegister",
+                "zaken"
+            ],
+            [
+                "setSchema",
+                "zaak"
+            ],
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "_limit": 50
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "a filter that sets a limit": {
+        "items": [],
+        "calls": [
+            [
+                "setRegister",
+                "zaken"
+            ],
+            [
+                "setSchema",
+                "zaak"
+            ],
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "_limit": 50,
+                        "_order": {
+                            "x": "asc"
+                        }
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "everything": {
+        "items": [
+            {
+                "id": 1
+            },
+            {
+                "id": "serialized"
+            },
+            {
+                "id": 2
+            },
+            {
+                "object": {
+                    "id": "plain"
+                }
+            }
+        ],
+        "calls": [
+            [
+                "setRegister",
+                "zaken"
+            ],
+            [
+                "setSchema",
+                "zaak"
+            ],
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "a": 1,
+                        "_limit": 3,
+                        "_order": {
+                            "b": "asc"
+                        }
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "numeric slugs": {
+        "items": [],
+        "calls": [
+            [
+                "setRegister",
+                "4"
+            ],
+            [
+                "setSchema",
+                "9"
+            ],
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "_limit": 50
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "no results key": {
+        "items": [],
+        "calls": [
+            [
+                "setRegister",
+                "zaken"
+            ],
+            [
+                "setSchema",
+                "zaak"
+            ],
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "_limit": 50
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "the search fails": {
+        "error": [
+            "Exception",
+            "List resolution failed for register=zaken, schema=zaak: index gone"
+        ],
+        "calls": [
+            [
+                "setRegister",
+                "zaken"
+            ],
+            [
+                "setSchema",
+                "zaak"
+            ],
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "_limit": 50
+                    },
+                    true,
+                    true
+                ]
+            ]
+        ]
+    }
+}

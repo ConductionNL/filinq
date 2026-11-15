@@ -29,10 +29,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
-use OCP\Files\IRootFolder;
+use OCA\Filinq\Kernel\Contracts\FlatFileListServiceInterface;
 use OCP\Files\Node;
-use OCP\IUserSession;
-use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
@@ -46,23 +44,19 @@ use Throwable;
  *
  * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
  */
-class FlatFileListService {
+class FlatFileListService implements FlatFileListServiceInterface {
 
 	/**
 	 * Constructor.
 	 *
 	 * @param FinalDocumentRepository $repository The document record store.
-	 * @param IRootFolder $rootFolder The file tree.
-	 * @param IUserSession $userSession The current session.
-	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param ReadableFileResolver $files The file behind an id, as the reader may read it.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly FinalDocumentRepository $repository,
-		private readonly IRootFolder $rootFolder,
-		private readonly IUserSession $userSession,
-		private readonly LoggerInterface $logger,
+		private readonly ReadableFileResolver $files,
 	) {
 
 	}//end __construct()
@@ -83,7 +77,7 @@ class FlatFileListService {
 		$rows     = [];
 		$dossiers = null;
 		foreach ($this->repository->findByDomain(domain: $domain) as $record) {
-			$dossiers ??= $this->repository->dossiersByFile();
+			$dossiers ??= $this->repository->dossierIndex();
 			$row        = $this->row(record: $record, dossiers: $dossiers);
 			if ($row === null) {
 				continue;
@@ -138,23 +132,23 @@ class FlatFileListService {
 	 * One row of the flat list: the file, and the record it belongs to.
 	 *
 	 * A record whose file the reader cannot see is LEFT OUT rather than listed
-	 * as a name with nothing behind it. The flat list obeys the same
-	 * permissions as the folder it flattens.
+	 * as a name with nothing behind it. A file in an object's folder is seen
+	 * through the read right on that object (ReadableFileResolver).
 	 *
 	 * @param array<string, mixed> $record The document record.
-	 * @param array<int, array{id: string, name: string}> $dossiers The dossier by file id.
+	 * @param DossierFileIndex|null $dossiers The dossiers, by member file and by folder.
 	 *
 	 * @return array<string, mixed>|null The row, or null when there is no readable file; `dossier` names the dossier the file is in, or is null.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
-	private function row(array $record, array $dossiers=[]): ?array {
+	private function row(array $record, ?DossierFileIndex $dossiers=null): ?array {
 		$fileId = (int)($record['fileId'] ?? 0);
 		if ($fileId <= 0) {
 			return null;
 		}
 
-		$node = $this->node(fileId: $fileId);
+		$node = $this->files->node(fileId: $fileId);
 		if ($node === null) {
 			return null;
 		}
@@ -171,42 +165,24 @@ class FlatFileListService {
 				'name' => (string)($record['documentName'] ?? $node->getName()),
 				'status' => (string)($record['status'] ?? ''),
 			],
-			'dossier' => ($dossiers[$fileId] ?? null),
+			'dossier' => $dossiers?->dossierOf(fileId: $fileId, folderId: $this->folderOf(node: $node)),
 		];
 
 	}//end row()
 
 	/**
-	 * The file behind one id, as the current user can see it.
+	 * The id of the folder a file is in, 0 when it has none to give.
 	 *
-	 * @param int $fileId The Nextcloud file id.
+	 * @param Node $node The file.
 	 *
-	 * @return Node|null The node, or null when this user cannot see it.
-	 *
-	 * @spec exclude File lookup with no behaviour of its own.
+	 * @return int
 	 */
-	private function node(int $fileId): ?Node {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
+	private function folderOf(Node $node): int {
 		try {
-			$nodes = $this->rootFolder->getUserFolder($user->getUID())->getById($fileId);
-		} catch (Throwable $e) {
-			$this->logger->debug(
-				message: '[FlatFileListService] could not resolve a file of the flat list',
-				context: ['file' => __FILE__, 'line' => __LINE__, 'fileId' => $fileId, 'error' => $e->getMessage()]
-			);
-
-			return null;
+			return (int) $node->getParent()->getId();
+		} catch (Throwable) {
+			return 0;
 		}
 
-		if ($nodes === []) {
-			return null;
-		}
-
-		return $nodes[0];
-
-	}//end node()
+	}//end folderOf()
 }//end class

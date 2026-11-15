@@ -454,7 +454,7 @@ trait SubjectErasureDoubles {
 			fn (string $id) => in_array($id, $this->absent, true) === true ? throw new RuntimeException($id . ' is not registered.') : match ($id) {
 				'OCA\OpenRegister\Db\GdprEntityMapper' => $entities,
 				'OCA\OpenRegister\Db\EntityRelationMapper' => $relations,
-				'OCA\OpenRegister\Service\File\DocumentProcessingHandler' => $processor,
+				'OCA\OpenRegister\Files\Service\File\DocumentProcessingHandler' => $processor,
 				'OCA\Files_Versions\Versions\IVersionManager' => $versions,
 				default => $objects,
 			}

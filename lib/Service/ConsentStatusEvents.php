@@ -19,7 +19,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
+ * @spec openspec/specs/consent-management/spec.md
  */
 
 declare(strict_types=1);
@@ -72,7 +72,7 @@ class ConsentStatusEvents {
 	 *
 	 * @throws InvalidArgumentException With code 400 for an undeclared move or missing evidence.
 	 *
-	 * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
+	 * @spec openspec/specs/consent-management/spec.md
 	 */
 	public function apply(array $existing, array $changes, string $actor, string $evidence, DateTimeImmutable $now): array {
 		$events = [];

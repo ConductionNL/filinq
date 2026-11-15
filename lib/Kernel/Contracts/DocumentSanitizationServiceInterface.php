@@ -39,7 +39,7 @@ interface DocumentSanitizationServiceInterface {
 	/**
 	 * OpenRegister's office sanitizer.
 	 */
-	public const OFFICE_ENGINE = 'OCA\OpenRegister\Service\File\OfficeDocumentSanitizer';
+	public const OFFICE_ENGINE = 'OCA\OpenRegister\Files\Service\File\OfficeDocumentSanitizer';
 
 	/**
 	 * Sanitize a file the user can read into a derivative beside it.

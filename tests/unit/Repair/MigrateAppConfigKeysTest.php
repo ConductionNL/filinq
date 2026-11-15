@@ -3,6 +3,9 @@
 /**
  * Tests for the docudesk -> filinq app-config migration.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * WHY THIS EXISTS. `IAppConfig` is namespaced by app id in `oc_appconfig`, so
  * the rename does not move a single row — it makes every stored value
  * unreachable. The step that copies them across is therefore a DATA MIGRATION,
@@ -26,9 +29,6 @@
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

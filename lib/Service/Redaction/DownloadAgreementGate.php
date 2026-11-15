@@ -97,13 +97,26 @@ class DownloadAgreementGate implements DownloadAgreementGateInterface {
 			return ['mayDownload' => true, 'gated' => false];
 		}
 
-		$version = trim((string)($agreement['version'] ?? ''));
 		try {
 			$accepted = $this->agreements->acceptanceOf(document: $document, person: $person);
 		} catch (AgreementStoreUnreadableException $e) {
 			return $this->cannotTell(error: $e);
 		}
 
+		return $this->verdict(agreement: $agreement, accepted: $accepted);
+
+	}//end check()
+
+	/**
+	 * Whether an acceptance covers the terms in force, and what to show when it does not.
+	 *
+	 * @param array<string, mixed>      $agreement The terms in force.
+	 * @param array<string, mixed>|null $accepted  The reader's acceptance, or null.
+	 *
+	 * @return array<string, mixed> `mayDownload`, and the agreement to show when not.
+	 */
+	private function verdict(array $agreement, ?array $accepted): array {
+		$version = trim((string)($agreement['version'] ?? ''));
 		$acceptedVersion = '';
 		if ($accepted !== null) {
 			$acceptedVersion = trim((string)($accepted['acceptedVersion'] ?? ''));
@@ -142,7 +155,7 @@ class DownloadAgreementGate implements DownloadAgreementGateInterface {
 			'acceptedVersion' => $acceptedVersion,
 		];
 
-	}//end check()
+	}//end verdict()
 
 	/**
 	 * Record an acceptance, and say whether the file may now be served.

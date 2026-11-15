@@ -32,6 +32,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Service\Support\RegisterSetup;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -51,6 +52,37 @@ use RuntimeException;
 class SettingsService implements SettingsServiceInterface {
 
 	/**
+	 * The scalar feature toggles, in the order the settings list them:
+	 * key => [default, kind]. Kinds: `int` casts to an integer, `on` is true
+	 * only for '1', `notOff` is true for anything but '0', `text` is the
+	 * stored string.
+	 *
+	 * The guardian consent age (signer-identity-rails REQ-DDSIR-008) defaults
+	 * to 16, the Dutch age of consent. The anonymise output format is the
+	 * tenant-wide default for the anonymise endpoint's `outputFormat`:
+	 * 'pdf-only' converts via the cascade and deletes the native anonymised
+	 * intermediate, 'pdf' converts but keeps it, 'preserve' returns the
+	 * native input format.
+	 *
+	 * @var array<string, array{0: string, 1: string}>
+	 */
+	private const TOGGLE_DEFAULTS = [
+		'publication_objection_period_days'          => ['28', 'int'],
+		'enable_language_detection'                  => ['1', 'on'],
+		'enable_keyword_extraction'                  => ['1', 'on'],
+		'enable_topic_classification'                => ['1', 'on'],
+		'enable_contract_term_extraction'            => ['1', 'on'],
+		'enable_inbound_classification'              => ['1', 'notOff'],
+		'signing_enabled'                            => ['0', 'on'],
+		'signing_provider'                           => ['native', 'text'],
+		'signing_default_level'                      => ['SES', 'text'],
+		'libresign_qualified'                        => ['0', 'on'],
+		'signing_request_expiry_days'                => ['30', 'int'],
+		'signing_guardian_consent_age'               => ['16', 'text'],
+		'filinq.anonymisation.default_output_format' => ['pdf-only', 'text'],
+	];
+
+	/**
 	 * The application name for identification and configuration purposes
 	 *
 	 * @var string The name of the app
@@ -62,8 +94,7 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @param IAppConfig $config App configuration interface
 	 * @param LoggerInterface $logger Logger interface
-	 * @param RegisterDiscoveryService $discoveryService Register discovery service
-	 * @param SettingsInitializer $initializer Settings initializer
+	 * @param RegisterSetup $registers Register discovery and the settings initializer.
 	 * @param OcrService $ocrService OCR service for Tesseract status
 	 * @param LegalBasisProposalService $legalBasisProposal Grondslag-per-entity-type proposal service
 	 * @param OpenRegisterAvailabilityService $openRegister OpenRegister availability resolver
@@ -75,8 +106,7 @@ class SettingsService implements SettingsServiceInterface {
 	public function __construct(
 		private readonly IAppConfig $config,
 		private readonly LoggerInterface $logger,
-		private readonly RegisterDiscoveryService $discoveryService,
-		private readonly SettingsInitializer $initializer,
+		private readonly RegisterSetup $registers,
 		private readonly OcrService $ocrService,
 		private readonly LegalBasisProposalService $legalBasisProposal,
 		private readonly OpenRegisterAvailabilityService $openRegister,
@@ -93,6 +123,17 @@ class SettingsService implements SettingsServiceInterface {
 	private function isOpenRegisterInstalled(): bool {
 		return $this->openRegister->isInstalled();
 	}//end isOpenRegisterInstalled()
+
+	/**
+	 * OpenRegister's lifecycle transition engine, or null when this OpenRegister has none.
+	 *
+	 * @return object|null The engine, exposing `transitionAsSystem()`.
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function getTransitionEngine(): ?object {
+		return $this->openRegister->getTransitionEngine();
+	}//end getTransitionEngine()
 
 	/**
 	 * Attempts to retrieve the OpenRegister service from the container
@@ -117,7 +158,7 @@ class SettingsService implements SettingsServiceInterface {
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
 	public function initialize(): array {
-		return $this->initializer->initialize();
+		return $this->registers->initializer->initialize();
 	}//end initialize()
 
 	/**
@@ -172,59 +213,13 @@ class SettingsService implements SettingsServiceInterface {
 	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.4
 	 */
 	private function loadFeatureToggles(): array {
+		$toggles = [];
+		foreach (self::TOGGLE_DEFAULTS as $key => $spec) {
+			$toggles[$key] = $this->toggleValue(key: $key, spec: $spec);
+		}
+
 		return [
-			'publication_objection_period_days' => (int)$this->config->getValueString(
-				$this->appName,
-				'publication_objection_period_days',
-				'28'
-			),
-			'enable_language_detection' => $this->config->getValueString(
-				$this->appName,
-				'enable_language_detection',
-				'1'
-			) === '1',
-			'enable_keyword_extraction' => $this->config->getValueString(
-				$this->appName,
-				'enable_keyword_extraction',
-				'1'
-			) === '1',
-			'enable_topic_classification' => $this->config->getValueString(
-				$this->appName,
-				'enable_topic_classification',
-				'1'
-			) === '1',
-			'enable_contract_term_extraction' => $this->config->getValueString($this->appName, 'enable_contract_term_extraction', '1') === '1',
-			'enable_inbound_classification' => $this->config->getValueString($this->appName, 'enable_inbound_classification', '1') !== '0',
-			'signing_enabled' => $this->config->getValueString(
-				$this->appName,
-				'signing_enabled',
-				'0'
-			) === '1',
-			'signing_provider' => $this->config->getValueString($this->appName, 'signing_provider', 'native'),
-			'signing_default_level' => $this->config->getValueString(
-				$this->appName,
-				'signing_default_level',
-				'SES'
-			),
-			'libresign_qualified' => $this->config->getValueString($this->appName, 'libresign_qualified', '0') === '1',
-			'signing_request_expiry_days' => (int)$this->config->getValueString(
-				$this->appName,
-				'signing_request_expiry_days',
-				'30'
-			),
-			// Guardian consent age (signer-identity-rails REQ-DDSIR-008): default 16, the Dutch age of consent.
-			'signing_guardian_consent_age' => $this->config->getValueString($this->appName, 'signing_guardian_consent_age', '16'),
-			// Anonymise-output-as-pdf-by-default — tenant-wide default
-			// for the anonymise endpoint's `outputFormat` request param.
-			// 'pdf-only' (default) converts via the cascade and deletes the
-			// native anonymised intermediate so only the PDF remains;
-			// 'pdf' converts but keeps the native intermediate too;
-			// 'preserve' returns it in the native input format.
-			'filinq.anonymisation.default_output_format' => $this->config->getValueString(
-				$this->appName,
-				'filinq.anonymisation.default_output_format',
-				'pdf-only'
-			),
+			...$toggles,
 			// OCR document scanning (ocr-document-scanning) and reading on
 			// arrival (intake-ocr-on-arrival).
 			...$this->loadOcrSettings(),
@@ -267,6 +262,26 @@ class SettingsService implements SettingsServiceInterface {
 		];
 
 	}//end loadFeatureToggles()
+
+	/**
+	 * One scalar toggle, read with its default and typed by its kind.
+	 *
+	 * @param string                       $key  The app config key.
+	 * @param array{0: string, 1: string} $spec The default and the kind.
+	 *
+	 * @return int|bool|string The typed value.
+	 */
+	private function toggleValue(string $key, array $spec): int|bool|string {
+		$raw = $this->config->getValueString($this->appName, $key, $spec[0]);
+
+		return match ($spec[1]) {
+			'int' => (int)$raw,
+			'on' => $raw === '1',
+			'notOff' => $raw !== '0',
+			default => $raw,
+		};
+
+	}//end toggleValue()
 
 	/**
 	 * Read the configured confidentiality-label vocabulary for the settings
@@ -331,7 +346,7 @@ class SettingsService implements SettingsServiceInterface {
 		try {
 			if ($this->isOpenRegisterInstalled() === true) {
 				$data['openRegisters'] = true;
-				$data['availableRegisters'] = $this->discoveryService->fetchAvailableRegisters();
+				$data['availableRegisters'] = $this->registers->discovery->fetchAvailableRegisters();
 			}
 		} catch (\RuntimeException $e) {
 			$this->logger->info(
@@ -341,7 +356,7 @@ class SettingsService implements SettingsServiceInterface {
 		}//end try
 
 		try {
-			$data['configuration'] = $this->discoveryService->loadObjectTypeConfiguration(
+			$data['configuration'] = $this->registers->discovery->loadObjectTypeConfiguration(
 				$data['objectTypes']
 			);
 			$data = array_merge($data, $this->loadFeatureToggles());

@@ -215,4 +215,110 @@ class PublicationListComposerTest extends TestCase {
 		$this->assertSame('Besluit', $list['entries'][0]['record']);
 
 	}//end testAnOpenRegisterShapedRecordIsRead()
+	/**
+	 * The composed list in full: labels fall back to the file id and then to a
+	 * placeholder, `sourceFileId` stands in for `fileId`, and the title defaults to the view.
+	 *
+	 * @return void
+	 */
+	public function testTheComposedListInFull(): void {
+		$serialisable = new class implements \JsonSerializable {
+			public function jsonSerialize(): array {
+				return ['name' => 'Uit een entiteit', 'fileId' => 14];
+			}
+		};
+		$this->views->method('records')->willReturn(
+			[
+				['fileId' => 12],
+				['sourceFileId' => 13, 'title' => '  Besluit mei  '],
+				$serialisable,
+				'not a record',
+			]
+		);
+		$this->links->method('forSource')->willReturnCallback(
+			fn (int $sourceFileId): array => [
+				'anonymizedFileId' => ($sourceFileId + 1000),
+				'anonymizedFileName' => 'copy-'.$sourceFileId.'.pdf',
+				'anonymizedFilePath' => '/Woo/copies/'.$sourceFileId,
+			]
+		);
+
+		$list = $this->composer->compose(view: 'woo-published');
+
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00$/', $list['composedAt']);
+		unset($list['composedAt']);
+		$this->assertSame(
+			[
+				'view' => 'woo-published',
+				'title' => 'woo-published',
+				'count' => 4,
+				'entries' => [
+					['record' => 'Document 12', 'fileId' => 1012, 'fileName' => 'copy-12.pdf', 'filePath' => '/Woo/copies/12'],
+					['record' => 'Besluit mei', 'fileId' => 1013, 'fileName' => 'copy-13.pdf', 'filePath' => '/Woo/copies/13'],
+					['record' => 'Uit een entiteit', 'fileId' => 1014, 'fileName' => 'copy-14.pdf', 'filePath' => '/Woo/copies/14'],
+					['record' => 'Unnamed record', 'fileId' => 1000, 'fileName' => 'copy-0.pdf', 'filePath' => '/Woo/copies/0'],
+				],
+			],
+			$list
+		);
+
+	}//end testTheComposedListInFull()
+
+	/**
+	 * The not-ready refusal in full: it counts against every record in the view.
+	 *
+	 * @return void
+	 */
+	public function testTheNotReadyRefusalInFull(): void {
+		$this->views->method('records')->willReturn(
+			[
+				['title' => 'Klaar', 'fileId' => 11],
+				['title' => 'Niet klaar', 'fileId' => 12],
+				['fileId' => 13],
+			]
+		);
+		$this->links->method('forSource')->willReturnCallback(
+			fn (int $sourceFileId): ?array => $sourceFileId === 11 ? ['anonymizedFileId' => 1011] : null
+		);
+
+		$this->assertSame(
+			[
+				'refused' => PublicationListComposer::NOT_READY,
+				'message' => '2 of 3 records in this view have no redacted copy yet, so the list is not composed. '
+					.'Redact them, or take them out of the view.',
+				'view' => 'woo-published',
+				'notReady' => [
+					['record' => 'Niet klaar', 'sourceFileId' => 12],
+					['record' => 'Document 13', 'sourceFileId' => 13],
+				],
+			],
+			$this->composer->compose(view: 'woo-published', title: 'Lijst')
+		);
+
+	}//end testTheNotReadyRefusalInFull()
+
+	/**
+	 * The unresolved-view refusal in full, and a given title is kept.
+	 *
+	 * @return void
+	 */
+	public function testTheUnresolvedViewRefusalInFullAndAGivenTitle(): void {
+		$this->views->method('records')->willReturnCallback(
+			fn (string $view): ?array => $view === 'gone' ? null : [['title' => 'A', 'fileId' => 1]]
+		);
+		$this->links->method('forSource')->willReturn(['anonymizedFileId' => 5]);
+
+		$this->assertSame(
+			[
+				'refused' => PublicationListComposer::NO_SUCH_VIEW,
+				'message' => 'The view "gone" does not resolve, so there is nothing to compose.',
+				'view' => 'gone',
+			],
+			$this->composer->compose(view: 'gone')
+		);
+		$list = $this->composer->compose(view: 'here', title: 'Lijst');
+		$this->assertSame('Lijst', $list['title']);
+		$this->assertSame(['record' => 'A', 'fileId' => 5, 'fileName' => '', 'filePath' => ''], $list['entries'][0]);
+
+	}//end testTheUnresolvedViewRefusalInFullAndAGivenTitle()
 }//end class

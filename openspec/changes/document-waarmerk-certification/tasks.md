@@ -1,14 +1,14 @@
 # Tasks: document-waarmerk-certification
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 14.
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 16.
      Acceptance criteria are plain bullets, not checkboxes. -->
 
 ## 1. Register & data model
 
-- [ ] 1.1 Add the `certification` register + `waarmerk` schema to `lib/Settings/filinq_register.json` (fields per design.md: document refs, `documentHash`, `sealType` enum, `cmsSignature`, certificate fingerprint/subject, `verificationCode`, `sealedAt`/`sealedBy`, `status` enum, revocation fields, optional `anonymizationLinkId` relation)
+- [x] 1.1 Add the `certification` register + `waarmerk` schema to `lib/Settings/filinq_register.json` (fields per design.md: document refs, `documentHash`, `sealType` enum, `cmsSignature`, certificate fingerprint/subject, `verificationCode`, `sealedAt`/`sealedBy`, `status` enum, revocation fields, optional `anonymizationLinkId` relation)
   - Additive import on boot; `tests/validate-manifest.js` passes; NO key material fields anywhere (ADR-064)
 
-- [ ] 1.2 Seed data: demo `waarmerk` object (nil-UUID, Demostad, placeholder CMS/fingerprint per design.md Seed Data); test bootstrap generates a throwaway self-signed org certificate at runtime — no PEM/key fixture committed
+- [x] 1.2 Seed data: demo `waarmerk` object (nil-UUID, Demostad, placeholder CMS/fingerprint per design.md Seed Data); test bootstrap generates a throwaway self-signed org certificate at runtime — no PEM/key fixture committed
 
 ## 2. Backend
 
@@ -20,6 +20,9 @@
 - [ ] 2.3 `ProcessingCertificateService`: anonymization certificate PDF from `anonymizationLink` + run entity-type counts + backend id + acting user; types/counts only — never entity values; sealed with `sealType: processing-certificate` + `anonymizationLinkId` (REQ-DDWMK-003)
 
 - [ ] 2.4 Verification: `POST /api/waarmerk/verify` (`{code, sha256}` → `valid|hash-mismatch|revoked|unknown`, CMS validation via `openssl_cms_verify`, fail-closed, oracle-free response parity, rate-limited) and revocation endpoint with in-method admin-or-sealer guard, reason mandatory, irreversible (REQ-DDWMK-004/005)
+
+- [ ] 2.5 `SigningEvidenceService`: builds the evidence PDF/A for a terminal `signingRequest` from its `signerRecord` objects and `signingAuditEntry` trail through `PdfService`, seals it with `sealType: signing-evidence` via `WaarmerkService::seal()`, refuses an open request with 409 (REQ-DDWMK-006)
+  - Titles and checksums only, never document content; covered by `tests/unit/Service/SigningEvidenceServiceTest.php`
 
 ## 3. Routes & controller
 
@@ -33,6 +36,8 @@
 - [ ] 4.2 Public verification page: standalone entry, client-side WebCrypto hash of a locally selected file (bytes never uploaded), status rendering incl. `certificateExpired` advisory; NL Design System tokens, WCAG AA (citizen-facing)
 
 - [ ] 4.3 Admin settings panel (settings framework, NOT vue-router): PEM upload, fingerprint/expiry, `credentialRef`, custody-mode label, test-seal button
+
+- [ ] 4.4 Signing request page: "Bewijsdocument downloaden (pdf)" and "Kopie naar dossier" on the evidence card, as the board `filinq/FqOndertekenverzoek` draws it; route `GET /api/signing/{id}/evidence` (REQ-DDWMK-006)
 
 ## 5. Quality, i18n, docs
 

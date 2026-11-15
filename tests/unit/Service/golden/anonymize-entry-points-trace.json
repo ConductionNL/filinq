@@ -1,0 +1,985 @@
+{
+    "0": {
+        "result": {
+            "anonymizedFileId": 944,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 1,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 44,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": ""
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 44,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 44,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": false,
+                        "outputFormat": "pdf-only",
+                        "unredactedEntities": [],
+                        "scope": "document",
+                        "dossierKey": null,
+                        "reversible": false,
+                        "userId": ""
+                    }
+                }
+            }
+        ]
+    },
+    "1": {
+        "result": {
+            "anonymizedFileId": 944,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 1,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 44,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": ""
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 44,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 44,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": false,
+                        "outputFormat": "pdf-only",
+                        "unredactedEntities": [],
+                        "scope": "document",
+                        "dossierKey": null,
+                        "reversible": false,
+                        "userId": ""
+                    }
+                }
+            },
+            {
+                "gate": {
+                    "fileId": 44,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": ""
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 44,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 44,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": true,
+                        "outputFormat": "pdf-only",
+                        "unredactedEntities": [],
+                        "scope": "document",
+                        "dossierKey": null,
+                        "reversible": false,
+                        "userId": ""
+                    }
+                }
+            }
+        ]
+    },
+    "batch plain": {
+        "result": {
+            "anonymizedFileId": 957,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 1,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 57,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": ""
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 57,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 57,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": false,
+                        "outputFormat": "pdf-only",
+                        "unredactedEntities": [],
+                        "scope": "dossier",
+                        "dossierKey": null,
+                        "reversible": false,
+                        "userId": ""
+                    }
+                }
+            }
+        ]
+    },
+    "batch plain, consent": {
+        "result": {
+            "anonymizedFileId": 957,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 1,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 57,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": ""
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 57,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 57,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": false,
+                        "outputFormat": "preserve",
+                        "unredactedEntities": [
+                            {
+                                "text": "Jan"
+                            }
+                        ],
+                        "scope": "document",
+                        "dossierKey": null,
+                        "reversible": false,
+                        "userId": ""
+                    }
+                }
+            }
+        ]
+    },
+    "batch summary": {
+        "result": {
+            "anonymizedFileId": 957,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 1,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 57,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": ""
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 57,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 57,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": true,
+                        "outputFormat": "pdf",
+                        "unredactedEntities": [],
+                        "scope": "dossier",
+                        "dossierKey": null,
+                        "reversible": false,
+                        "userId": ""
+                    }
+                }
+            }
+        ]
+    },
+    "batch summary, consent": {
+        "result": {
+            "anonymizedFileId": 957,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 1,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 57,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": ""
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 57,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 57,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON"
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": true,
+                        "outputFormat": "pdf-only",
+                        "unredactedEntities": [
+                            {
+                                "text": "Utrecht"
+                            }
+                        ],
+                        "scope": "document",
+                        "dossierKey": null,
+                        "reversible": false,
+                        "userId": ""
+                    }
+                }
+            }
+        ]
+    },
+    "plain, consent and overrides": {
+        "result": {
+            "anonymizedFileId": 931,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 1,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 31,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        }
+                    ],
+                    "overrides": [
+                        {
+                            "ruleId": "r1",
+                            "entityId": "e1"
+                        }
+                    ],
+                    "userId": "carol"
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": false,
+                        "outputFormat": "pdf",
+                        "unredactedEntities": [
+                            {
+                                "text": "Utrecht"
+                            }
+                        ],
+                        "scope": "document",
+                        "dossierKey": null,
+                        "reversible": false,
+                        "userId": "carol"
+                    }
+                }
+            }
+        ]
+    },
+    "plain, defaults": {
+        "result": {
+            "anonymizedFileId": 931,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 2,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 31,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": "alice"
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": false,
+                        "outputFormat": "pdf-only",
+                        "unredactedEntities": [],
+                        "scope": "document",
+                        "dossierKey": null,
+                        "reversible": false,
+                        "userId": "alice"
+                    }
+                }
+            }
+        ]
+    },
+    "plain, every option": {
+        "result": {
+            "anonymizedFileId": 931,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 1,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 31,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": "bob"
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": false,
+                        "outputFormat": "preserve",
+                        "unredactedEntities": [],
+                        "scope": "dossier",
+                        "dossierKey": "folder-7",
+                        "reversible": true,
+                        "userId": "bob"
+                    }
+                }
+            }
+        ]
+    },
+    "plain, forged user in body and params": {
+        "result": {
+            "anonymizedFileId": 931,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 2,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 31,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": "grace"
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": false,
+                        "outputFormat": "pdf-only",
+                        "unredactedEntities": [],
+                        "scope": "document",
+                        "dossierKey": null,
+                        "reversible": false,
+                        "userId": "grace"
+                    }
+                }
+            }
+        ]
+    },
+    "plain, reversible not exactly true": {
+        "result": {
+            "anonymizedFileId": 931,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 2,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 31,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": "dave"
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": false,
+                        "outputFormat": "pdf-only",
+                        "unredactedEntities": [],
+                        "scope": "document",
+                        "dossierKey": "12",
+                        "reversible": false,
+                        "userId": "dave"
+                    }
+                }
+            }
+        ]
+    },
+    "summary, defaults": {
+        "result": {
+            "anonymizedFileId": 931,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 2,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 31,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": "erin"
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": true,
+                        "outputFormat": "pdf-only",
+                        "unredactedEntities": [],
+                        "scope": "document",
+                        "dossierKey": null,
+                        "reversible": false,
+                        "userId": "erin"
+                    }
+                }
+            }
+        ]
+    },
+    "summary, every option": {
+        "result": {
+            "anonymizedFileId": 931,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 2,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 31,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ],
+                    "overrides": [
+                        {
+                            "ruleId": "r2",
+                            "entityId": "e2",
+                            "reason": "ok"
+                        }
+                    ],
+                    "userId": "frank"
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": true,
+                        "outputFormat": "preserve",
+                        "unredactedEntities": [
+                            {
+                                "text": "Jan"
+                            }
+                        ],
+                        "scope": "dossier",
+                        "dossierKey": "folder-9",
+                        "reversible": true,
+                        "userId": "frank"
+                    }
+                }
+            }
+        ]
+    },
+    "summary, forged user in body and params": {
+        "result": {
+            "anonymizedFileId": 931,
+            "detection": {
+                "ran": true,
+                "backend": "presidio",
+                "entitiesRedacted": 2,
+                "outcome": "redacted"
+            }
+        },
+        "calls": [
+            {
+                "gate": {
+                    "fileId": 31,
+                    "requestEntities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ],
+                    "overrides": [],
+                    "userId": "heidi"
+                }
+            },
+            {
+                "guard": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ]
+                }
+            },
+            {
+                "runner": {
+                    "fileId": 31,
+                    "entities": [
+                        {
+                            "text": "Jan",
+                            "type": "PERSON",
+                            "confidence": 0.9
+                        },
+                        {
+                            "text": "Utrecht",
+                            "type": "LOCATION",
+                            "confidence": 0.4
+                        }
+                    ],
+                    "options": {
+                        "appendBasisSummary": true,
+                        "outputFormat": "pdf",
+                        "unredactedEntities": [],
+                        "scope": "document",
+                        "dossierKey": null,
+                        "reversible": false,
+                        "userId": "heidi"
+                    }
+                }
+            }
+        ]
+    }
+}

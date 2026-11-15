@@ -28,6 +28,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Wizard;
 
 use DateTimeImmutable;
+use OCA\Filinq\Exception\WizardRefused;
+use OCA\Filinq\Kernel\Contracts\WizardServiceInterface;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\TemplateService;
 use OCA\OpenRegister\Db\SchemaMapper;
@@ -36,7 +38,7 @@ use Throwable;
 /**
  * Wizard authoring and prefill.
  */
-class WizardService {
+class WizardService implements WizardServiceInterface {
 
 	/**
 	 * Minutes a template edit lock holds, as in TemplateService.

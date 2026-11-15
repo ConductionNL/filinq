@@ -3,6 +3,9 @@
 /**
  * A registration number, once issued, is final.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * 🔴 THE VALUE OF A POST REGISTER IS THAT ITS NUMBERS DO NOT MOVE. A number is a
  * claim about an official act: a letter went out on this date under this number,
  * and somebody may have quoted it in a reply. Editing it afterwards means a
@@ -27,9 +30,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://www.filinq.app
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
  */
 
 declare(strict_types=1);

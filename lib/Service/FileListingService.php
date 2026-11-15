@@ -28,9 +28,14 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
+use OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface;
 use OCA\Filinq\Service\Ocr\OcrResultRepository;
 use OCA\Filinq\Service\Ocr\OcrRunService;
+use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCP\Files\File;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Service for listing processed files with entity and risk data
@@ -42,8 +47,11 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/ocr-document-scanning/tasks.md#task-3.5
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The status of a document reads every store that
+ *     keeps something about it (entities, OCR, review marks, generation and signing records).
  */
-class FileListingService {
+class FileListingService implements FileListingServiceInterface {
 	/**
 	 * Constructor for FileListingService
 	 *
@@ -52,6 +60,9 @@ class FileListingService {
 	 * @param FileEntityStatsService $entityStatsService Entity counts and risk levels
 	 * @param OcrResultRepository $ocrResults The ocrResult rows, for the real OCR status
 	 * @param OcrRunService $ocrRuns Which MIME types OCR reads
+	 * @param ReadableFileResolver $readableFiles The file behind an id, as the current user may read it
+	 * @param RedactionOutputGuardInterface $reviewGuard The review marks of documents
+	 * @param FileRecordReferences $records The generation and signing records of a file, and its validation verdict
 	 *
 	 * @return void
 	 */
@@ -61,6 +72,9 @@ class FileListingService {
 		private readonly FileEntityStatsService $entityStatsService,
 		private readonly OcrResultRepository $ocrResults,
 		private readonly OcrRunService $ocrRuns,
+		private readonly ReadableFileResolver $readableFiles,
+		private readonly RedactionOutputGuardInterface $reviewGuard,
+		private readonly FileRecordReferences $records,
 	) {
 
 	}//end __construct()
@@ -70,7 +84,7 @@ class FileListingService {
 	 *
 	 * @param \OCP\Files\File $file The file
 	 * @param \OCA\OpenRegister\Db\EntityRelationMapper|null $entityRelationMapper The mapper
-	 * @param \OCA\OpenRegister\Service\RiskLevelService|null $riskLevelService The service
+	 * @param \OCA\OpenRegister\Files\Service\RiskLevelService|null $riskLevelService The service
 	 *
 	 * @return array<string, mixed> File info
 	 *
@@ -80,7 +94,7 @@ class FileListingService {
 	private function buildFileInfo(
 		\OCP\Files\File $file,
 		?\OCA\OpenRegister\Db\EntityRelationMapper $entityRelationMapper,
-		?\OCA\OpenRegister\Service\RiskLevelService $riskLevelService,
+		?\OCA\OpenRegister\Files\Service\RiskLevelService $riskLevelService,
 	): array {
 		$fileId = $file->getId();
 		$entityStats = $this->entityStatsService->getEntityStats($fileId, $entityRelationMapper);
@@ -194,6 +208,84 @@ class FileListingService {
 		}//end try
 
 	}//end listProcessedFiles()
+
+	#[McpTool(
+		name: 'getDocumentStatus',
+		subject: 'document',
+		action: 'get',
+		description: 'Report where one document stands in Filinq: its anonymisation status, how many '
+			. 'entities were detected per type, whether a person has checked the detection, its OCR '
+			. 'state, its validation verdict, and the ids and statuses of the generation and signing records '
+			. 'that refer to it. Counts and statuses only -- never entity values, document text or file contents. '
+			. 'A file you may not read answers not_found.',
+		readOnlyHint: true,
+		destructiveHint: false,
+		idempotentHint: true,
+		scope: 'read'
+	)]
+	/**
+	 * The status of one file as the current user may see it.
+	 *
+	 * A file the user cannot read answers exactly like one that does not
+	 * exist. The result carries counts and statuses only: no entity values,
+	 * no text, no path or name of the file.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return array<string, mixed> `status` not_found, or the pipeline status with entity counts, review mark,
+	 *                              OCR state, the validation verdict and the generation and signing references.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.2
+	 */
+	public function getFileStatus(int $fileId): array {
+		$node = $this->readableFiles->node(fileId: $fileId);
+		if (($node instanceof File) === false) {
+			return ['fileId' => $fileId, 'status' => 'not_found'];
+		}
+
+		$entityRelationMapper = $this->entityStatsService->tryGetEntityRelationMapper();
+		$info = $this->buildFileInfo(
+			file: $node,
+			entityRelationMapper: $entityRelationMapper,
+			riskLevelService: $this->entityStatsService->tryGetRiskLevelService()
+		);
+
+		$mark = $this->reviewMark(fileId: $fileId);
+
+		return [
+			'fileId' => $fileId,
+			'status' => $info['status'],
+			'entityCount' => $info['entityCount'],
+			'anonymizedCount' => $info['anonymizedCount'],
+			'entityCounts' => $this->entityStatsService->entityCountsByType(fileId: $fileId, entityRelationMapper: $entityRelationMapper),
+			'riskLevel' => $info['riskLevel'],
+			'reviewChecked' => $mark !== null,
+			'reviewCheckedAt' => ($mark['checkedAt'] ?? null),
+			'ocrAvailable' => $info['ocrAvailable'],
+			'ocrProcessed' => $info['ocrProcessed'],
+			'ocrConfidence' => $info['ocrConfidence'],
+		] + $this->records->forFile(fileId: $fileId);
+
+	}//end getFileStatus()
+
+	/**
+	 * The latest review mark of a file, or null when nobody checked it or it cannot be read.
+	 *
+	 * @param int $fileId The file.
+	 *
+	 * @return array<string, mixed>|null The mark.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.2
+	 */
+	private function reviewMark(int $fileId): ?array {
+		try {
+			return ($this->reviewGuard->marksFor(fileIds: [$fileId])[$fileId] ?? null);
+		} catch (Throwable $e) {
+			$this->logger->warning('The review mark could not be read', ['fileId' => $fileId, 'exception' => $e->getMessage()]);
+			return null;
+		}
+
+	}//end reviewMark()
 
 	/**
 	 * Upload a file to the user's Filinq folder

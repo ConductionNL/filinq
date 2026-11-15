@@ -204,7 +204,6 @@ class DocumentProductionControllerContractTest extends TestCase {
 		}
 
 		return new DocumentProductionController(
-			'filinq',
 			$this->createMock(IRequest::class),
 			$this->layouts,
 			$this->archives,

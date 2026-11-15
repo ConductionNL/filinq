@@ -92,37 +92,73 @@ class DocumentRegistrationWriteGuard implements IEventListener {
 			return;
 		}
 
-		$new = $event->getNewObject();
-		$old = $event->getOldObject();
-
-		if ($old === null) {
-			// A create, not an update. There is nothing to move yet.
+		$was = $this->movedNumber(event: $event);
+		if ($was === null) {
 			return;
 		}
 
-		if ($this->isRegistration(schema: (string)$new->getSchema()) === false
-			&& $this->isRegistration(schema: (string)$old->getSchema()) === false
-		) {
-			return;
+		$this->refuse(event: $event, was: $was);
+	}//end handle()
+
+	/**
+	 * The issued number an update would move, or null when it moves none.
+	 *
+	 * @param ObjectUpdatingEvent $event The pre-write event.
+	 *
+	 * @return string|null The number already issued, when the update changes it.
+	 */
+	private function movedNumber(ObjectUpdatingEvent $event): ?string {
+		$old = $event->getOldObject();
+		if ($old === null) {
+			// A create, not an update. There is nothing to move yet.
+			return null;
+		}
+
+		if ($this->concernsRegistration(new: $event->getNewObject(), old: $old) === false) {
+			return null;
 		}
 
 		$was = $this->numberOf(object: $old);
-		$now = $this->numberOf(object: $new);
-
 		if ($was === '') {
 			// Nothing was issued yet, so the first number may still land. This
 			// is the ordinary case: the platform writes the number on create,
 			// and an object saved before it had one may legitimately gain one.
-			return;
+			return null;
 		}
 
-		if ($was === $now) {
-			return;
+		if ($was === $this->numberOf(object: $event->getNewObject())) {
+			return null;
 		}
 
+		return $was;
+	}//end movedNumber()
+
+	/**
+	 * Whether either side of the update is a post-register entry.
+	 *
+	 * @param object $new The incoming object.
+	 * @param object $old The stored object.
+	 *
+	 * @return bool Whether the guard applies.
+	 */
+	private function concernsRegistration(object $new, object $old): bool {
+		return $this->isRegistration(schema: (string)$new->getSchema())
+			|| $this->isRegistration(schema: (string)$old->getSchema());
+	}//end concernsRegistration()
+
+	/**
+	 * Log the refused move and stop the write with a message naming the way forward.
+	 *
+	 * @param ObjectUpdatingEvent $event The pre-write event.
+	 * @param string $was The number already issued.
+	 *
+	 * @return void
+	 */
+	private function refuse(ObjectUpdatingEvent $event, string $was): void {
+		$new = $event->getNewObject();
 		$this->logger->warning(
 			'filinq.post-register.number-change-refused',
-			['was' => $was, 'now' => $now, 'uuid' => (string)$new->getUuid()]
+			['was' => $was, 'now' => $this->numberOf(object: $new), 'uuid' => (string)$new->getUuid()]
 		);
 
 		$event->setErrors(
@@ -138,7 +174,7 @@ class DocumentRegistrationWriteGuard implements IEventListener {
 			]
 		);
 		$event->stopPropagation();
-	}//end handle()
+	}//end refuse()
 
 	/**
 	 * Whether this is a post-register entry.

@@ -57,6 +57,7 @@ use Throwable;
  * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
  */
 class PostRegisterController extends Controller {
+	use AnswersNotAuthenticated;
 
 	/**
 	 * Constructor.
@@ -86,6 +87,10 @@ class PostRegisterController extends Controller {
 	 * @return JSONResponse The undischarged inbound entries.
 	 *
 	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 *
+	 * @no-admin-idor-exempt read-only. PostRegisterReader queries the documentRegistration schema through
+	 * searchObjectsBySlug() with RBAC and multitenancy on, so the caller sees only rows OpenRegister lets
+	 * them read.
 	 */
 	#[NoAdminRequired]
 	public function openPost(string $unit = ''): JSONResponse {
@@ -101,6 +106,10 @@ class PostRegisterController extends Controller {
 	 * @return JSONResponse The answers, and whether there are any.
 	 *
 	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 *
+	 * @no-admin-idor-exempt read-only. PostRegisterReader queries the documentRegistration schema through
+	 * searchObjectsBySlug() with RBAC and multitenancy on, so the caller sees only rows OpenRegister lets
+	 * them read.
 	 */
 	#[NoAdminRequired]
 	public function answers(string $uuid = ''): JSONResponse {
@@ -126,6 +135,10 @@ class PostRegisterController extends Controller {
 	 * @return JSONResponse The series.
 	 *
 	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 *
+	 * @no-admin-idor-exempt read-only. PostRegisterReader queries the documentRegistration schema through
+	 * searchObjectsBySlug() with RBAC and multitenancy on, so the caller sees only rows OpenRegister lets
+	 * them read.
 	 */
 	#[NoAdminRequired]
 	public function series(string $unit = ''): JSONResponse {
@@ -144,10 +157,7 @@ class PostRegisterController extends Controller {
 	 */
 	private function read(callable $handler): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(
-				data: ['error' => 'You must be logged in to read the post register.'],
-				statusCode: Http::STATUS_UNAUTHORIZED
-			);
+			return $this->notAuthenticated(message: 'You must be logged in to read the post register.');
 		}
 
 		try {

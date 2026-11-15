@@ -11,7 +11,7 @@
  * `reviewSignature` lets the screen notice that the list changed after the
  * check, in which case the server would refuse the old mark anyway.
  *
- * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
  */
 
 import axios from '@nextcloud/axios'
@@ -26,7 +26,7 @@ import { generateUrl } from '@nextcloud/router'
  *
  * @param {Array<{type: string, value: string, confidence: number}>} entities The included entities.
  * @return {Array<{type: string, value: string, confidence: number}>} The sorted copy.
- * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
  */
 export function redactionPayload(entities) {
 	return (entities || [])
@@ -42,7 +42,7 @@ export function redactionPayload(entities) {
  *
  * @param {Array<{type: string, value: string}>} entities The entities.
  * @return {string} The signature.
- * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
  */
 export function reviewSignature(entities) {
 	return JSON.stringify(
@@ -56,7 +56,7 @@ export function reviewSignature(entities) {
  * @param {{signature: string}|null} mark The mark recorded this session.
  * @param {Array<object>} entities The entities that would be sent now.
  * @return {boolean} True when the mark is about exactly these entities.
- * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
  */
 export function reviewIsCurrent(mark, entities) {
 	return !!mark && mark.signature === reviewSignature(entities)
@@ -68,7 +68,7 @@ export function reviewIsCurrent(mark, entities) {
  * @param {number} fileId The document.
  * @param {Array<object>} entities The entities exactly as the anonymise call will send them.
  * @return {Promise<{checkedBy: string, checkedAt: string, signature: string}>} The mark.
- * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-4
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
  */
 export async function markChecked(fileId, entities) {
 	const response = await axios.post(
@@ -87,7 +87,7 @@ export async function markChecked(fileId, entities) {
  *
  * @param {Array<number|string>} fileIds The files, at most 100.
  * @return {Promise<object>} Marks keyed by file id; a file nobody checked is absent.
- * @spec openspec/changes/anonymise-asks-for-the-review-mark/tasks.md#task-5
+ * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-5
  */
 export async function fetchReviewMarks(fileIds = []) {
 	if (fileIds.length === 0) {

@@ -19,6 +19,9 @@
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/specs/consent-management/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -26,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\ConsentUpdate;
 use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
 use Psr\Log\LoggerInterface;
 
@@ -354,6 +358,9 @@ class ConsentCrudService implements ConsentCrudServiceInterface {
 		array $data,
 		?\OCP\IUser $user = null,
 	): array {
-		return $this->consentService->validateAndUpdateConsent($consentId, $register, $schema, $data, $user);
+		return $this->consentService->validateAndUpdateConsent(
+			new ConsentUpdate(consentId: $consentId, register: $register, schema: $schema, data: $data),
+			$user
+		);
 	}//end updateConsentStatus()
 }//end class

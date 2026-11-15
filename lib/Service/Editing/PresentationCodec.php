@@ -135,42 +135,58 @@ class PresentationCodec {
 		$applied = [];
 
 		foreach ($edits as $position => $edit) {
-			$slide = (string)($edit['slide'] ?? '');
-			$shape = (string)($edit['shape'] ?? '');
-			$region = strtolower((string)($edit['region'] ?? 'slide'));
-
-			if ($slide === '' || $shape === '') {
-				throw new RuntimeException(
-					sprintf('Edit %d: both a slide id and a shape id are required.', ((int)$position + 1))
-				);
-			}
-
-			// An unknown region is refused rather than quietly treated as the
-			// slide: "notez" must not silently publish talking points on screen.
-			if (in_array($region, self::REGIONS, true) === false) {
-				throw new RuntimeException(
-					sprintf(
-						'Edit %d: unknown region "%s". Supported: %s.',
-						((int)$position + 1),
-						$region,
-						implode(', ', self::REGIONS)
-					)
-				);
-			}
-
+			$address = $this->shapeAddress(edit: $edit, number: ((int)$position + 1));
 			$bytes = $codec->writeShape(
 				packageBytes: $bytes,
-				slide: $slide,
-				shape: $shape,
-				region: $region,
+				slide: $address['slide'],
+				shape: $address['shape'],
+				region: $address['region'],
 				text: (string)($edit['text'] ?? '')
 			);
 
-			$applied[] = $slide . '/' . $region . '!' . $shape;
-		}//end foreach
+			$applied[] = $address['slide'] . '/' . $address['region'] . '!' . $address['shape'];
+		}
 
 		return ['bytes' => $bytes, 'applied' => $applied];
 	}//end applyShapeEdits()
+
+	/**
+	 * The slide, shape and region an edit addresses.
+	 *
+	 * @param array<string, mixed> $edit   The edit.
+	 * @param int                  $number The edit's place in the call, from 1.
+	 *
+	 * @return array{slide: string, shape: string, region: string} The address.
+	 *
+	 * @throws RuntimeException When the slide or shape is missing or the region is unknown.
+	 */
+	private function shapeAddress(array $edit, int $number): array {
+		$slide = (string)($edit['slide'] ?? '');
+		$shape = (string)($edit['shape'] ?? '');
+		$region = strtolower((string)($edit['region'] ?? 'slide'));
+
+		if ($slide === '' || $shape === '') {
+			throw new RuntimeException(
+				sprintf('Edit %d: both a slide id and a shape id are required.', $number)
+			);
+		}
+
+		// An unknown region is refused rather than quietly treated as the
+		// slide: "notez" must not silently publish talking points on screen.
+		if (in_array($region, self::REGIONS, true) === false) {
+			throw new RuntimeException(
+				sprintf(
+					'Edit %d: unknown region "%s". Supported: %s.',
+					$number,
+					$region,
+					implode(', ', self::REGIONS)
+				)
+			);
+		}
+
+		return ['slide' => $slide, 'shape' => $shape, 'region' => $region];
+
+	}//end shapeAddress()
 
 	/**
 	 * The codec for an extension, or null.

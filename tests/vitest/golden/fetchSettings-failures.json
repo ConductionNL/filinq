@@ -1,0 +1,167 @@
+{
+	"notOk": {
+		"result": null,
+		"during": {
+			"loading": true,
+			"error": null
+		},
+		"after": {
+			"config": "previous",
+			"openRegisters": "previous",
+			"isAdmin": "previous",
+			"loading": false,
+			"error": "Failed to fetch settings: Forbidden",
+			"initialized": "previous"
+		},
+		"fetchCalls": [
+			[
+				"/index.php/apps/filinq/api/settings",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1",
+						"OCS-APIREQUEST": "true"
+					}
+				}
+			]
+		],
+		"consoleErrors": [
+			[
+				"Error fetching Filinq settings:",
+				"Error: Failed to fetch settings: Forbidden"
+			]
+		]
+	},
+	"rejected": {
+		"result": null,
+		"during": {
+			"loading": true,
+			"error": null
+		},
+		"after": {
+			"config": "previous",
+			"openRegisters": "previous",
+			"isAdmin": "previous",
+			"loading": false,
+			"error": "network down",
+			"initialized": "previous"
+		},
+		"fetchCalls": [
+			[
+				"/index.php/apps/filinq/api/settings",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1",
+						"OCS-APIREQUEST": "true"
+					}
+				}
+			]
+		],
+		"consoleErrors": [
+			[
+				"Error fetching Filinq settings:",
+				"TypeError: network down"
+			]
+		]
+	},
+	"badJson": {
+		"result": null,
+		"during": {
+			"loading": true,
+			"error": null
+		},
+		"after": {
+			"config": "previous",
+			"openRegisters": "previous",
+			"isAdmin": "previous",
+			"loading": false,
+			"error": "bad json",
+			"initialized": "previous"
+		},
+		"fetchCalls": [
+			[
+				"/index.php/apps/filinq/api/settings",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1",
+						"OCS-APIREQUEST": "true"
+					}
+				}
+			]
+		],
+		"consoleErrors": [
+			[
+				"Error fetching Filinq settings:",
+				"SyntaxError: bad json"
+			]
+		]
+	},
+	"nullBody": {
+		"result": null,
+		"during": {
+			"loading": true,
+			"error": null
+		},
+		"after": {
+			"config": "previous",
+			"openRegisters": "previous",
+			"isAdmin": "previous",
+			"loading": false,
+			"error": "Cannot read properties of null (reading 'config')",
+			"initialized": "previous"
+		},
+		"fetchCalls": [
+			[
+				"/index.php/apps/filinq/api/settings",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1",
+						"OCS-APIREQUEST": "true"
+					}
+				}
+			]
+		],
+		"consoleErrors": [
+			[
+				"Error fetching Filinq settings:",
+				"TypeError: Cannot read properties of null (reading 'config')"
+			]
+		]
+	},
+	"emptyBody": {
+		"result": {},
+		"during": {
+			"loading": true,
+			"error": null
+		},
+		"after": {
+			"config": {},
+			"openRegisters": false,
+			"isAdmin": false,
+			"loading": false,
+			"error": null,
+			"initialized": true
+		},
+		"fetchCalls": [
+			[
+				"/index.php/apps/filinq/api/settings",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1",
+						"OCS-APIREQUEST": "true"
+					}
+				}
+			]
+		],
+		"consoleErrors": []
+	}
+}

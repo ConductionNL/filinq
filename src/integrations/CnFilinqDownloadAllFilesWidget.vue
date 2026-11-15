@@ -92,6 +92,7 @@ import {
 	megabytes,
 	needsWarning,
 } from '../services/archiveBundle.js'
+import { hostObjectLeaf } from './hostObjectLeaf.js'
 
 /**
  * Download every file filinq holds for one object as one archive.
@@ -104,14 +105,7 @@ import {
  */
 export default {
 	name: 'CnFilinqDownloadAllFilesWidget',
-	props: {
-		/** The host object's register slug. */
-		register: { type: String, default: '' },
-		/** The host object's schema slug. */
-		schema: { type: String, default: '' },
-		/** The host object's id. */
-		objectId: { type: String, default: '' },
-	},
+	mixins: [hostObjectLeaf],
 
 	data() {
 		return {
@@ -193,54 +187,19 @@ export default {
 		},
 
 		/**
-		 * The host object as query parameters.
-		 *
-		 * @return {URLSearchParams} The parameters.
-		 *
-		 * @spec openspec/specs/document-creatie-sjablonen/spec.md
-		 */
-		params() {
-			return new URLSearchParams({
-				register: this.register,
-				schema: this.schema,
-				id: this.objectId,
-			})
-		},
-
-		/**
 		 * Read the preflight.
 		 *
 		 * @return {Promise<void>} Resolves once `preflight` is set.
 		 *
 		 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 		 */
-		async load() {
-			if (this.objectId === '') {
-				this.loading = false
-				return
-			}
-			try {
-				const response = await fetch(
-					generateUrl('/apps/filinq/api/case-archive/preflight')
-						+ '?'
-						+ this.params().toString(),
-					{
-						headers: {
-							requesttoken: this.requestToken(),
-							Accept: 'application/json',
-						},
-					},
-				)
-				if (response.ok === false) {
-					this.error = true
-					return
-				}
-				this.preflight = await response.json()
-			} catch {
-				this.error = true
-			} finally {
-				this.loading = false
-			}
+		load() {
+			return this.loadForHostObject(
+				'/apps/filinq/api/case-archive/preflight',
+				(body) => {
+					this.preflight = body
+				},
+			)
 		},
 
 		/**
@@ -254,17 +213,9 @@ export default {
 			this.busy = true
 			this.result = null
 			try {
-				const response = await fetch(
-					generateUrl('/apps/filinq/api/case-archive/manifest')
-						+ '?'
-						+ this.params().toString(),
-					{
-						method: 'POST',
-						headers: {
-							requesttoken: this.requestToken(),
-							Accept: 'application/json',
-						},
-					},
+				const response = await this.fetchForHostObject(
+					'/apps/filinq/api/case-archive/manifest',
+					'POST',
 				)
 				const body = await response.json().catch(() => ({}))
 				if (response.ok === false) {
@@ -292,19 +243,6 @@ export default {
 			} finally {
 				this.busy = false
 			}
-		},
-
-		/**
-		 * The current page's request token, read from the DOM because this
-		 * widget renders inside another app's page.
-		 *
-		 * @return {string} The token, or ''.
-		 *
-		 * @spec openspec/specs/document-creatie-sjablonen/spec.md
-		 */
-		requestToken() {
-			const head = document.getElementsByTagName('head')[0]
-			return (head && head.getAttribute('data-requesttoken')) || ''
 		},
 	},
 }

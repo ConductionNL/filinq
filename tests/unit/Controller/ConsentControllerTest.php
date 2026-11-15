@@ -378,7 +378,7 @@ class ConsentControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
+	 * @spec openspec/specs/consent-management/spec.md
 	 */
 	public function testUpdateIsRefusedForTheOwnerWhoIsNoOfficer(): void {
 		$this->mockCrudService->method('getConsentConfig')
@@ -399,7 +399,7 @@ class ConsentControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
+	 * @spec openspec/specs/consent-management/spec.md
 	 */
 	public function testUpdateSucceedsForAConsentOfficer(): void {
 		$this->mockGroupManager->method('isInGroup')
@@ -422,7 +422,7 @@ class ConsentControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/consent-changes-are-recorded-events/specs/consent-management/spec.md
+	 * @spec openspec/specs/consent-management/spec.md
 	 */
 	public function testARefusedMoveAnswers400WithTheReason(): void {
 		$this->mockGroupManager->method('isInGroup')->willReturn(true);
