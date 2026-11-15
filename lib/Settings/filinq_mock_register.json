@@ -5857,6 +5857,25 @@
         "readingUpdatedAt": "2026-09-19T10:00:05+00:00"
       },
       {
+          "@self": {
+              "register": "filinq",
+              "schema": "intakeDocument",
+              "slug": "intakedocument-4"
+          },
+          "channel": "mail",
+          "subject": "Offerte onderhoud speeltoestellen",
+          "sender": "offertes@leverancier.example.nl",
+          "receivedAt": "2026-09-20T08:30:00+00:00",
+          "file": 9205,
+          "fileName": "offerte (unlocked).pdf",
+          "lockedOriginal": 9204,
+          "sourceRef": "voorbeeld-mail-0004",
+          "status": "received",
+          "readingState": "queued",
+          "readingError": "",
+          "readingUpdatedAt": "2026-09-19T10:00:05+00:00"
+      },
+      {
         "@self": {
           "register": "filinq",
           "schema": "pseudonymMap",
