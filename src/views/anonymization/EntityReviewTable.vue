@@ -469,9 +469,18 @@ export default {
 			}
 		},
 
-		// Persist one entity's skip/include across all its relations through
-		// the guarded endpoint; only mutate local state on success so a blocked
-		// skip leaves the toggle reverted.
+		/**
+		 * Persist one entity's skip/include across all its relations through
+		 * the guarded endpoint; only mutate local state on success so a blocked
+		 * skip leaves the toggle reverted. A saved skip or include is the
+		 * reviewer's explicit decision on the finding.
+		 *
+		 * @param {object} entity The review row.
+		 * @param {boolean} skip Whether to skip it.
+		 * @param {boolean} force Release a sub-threshold prohibition match.
+		 * @return {Promise<{ok: boolean, status: number, body: object}>}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+		 */
 		persistSkip(entity, skip, force) {
 			const relationIds =
 				Array.isArray(entity.relationIds) && entity.relationIds.length > 0
