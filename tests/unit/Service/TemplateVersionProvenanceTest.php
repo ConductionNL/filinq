@@ -55,6 +55,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Template version provenance over the real services.
@@ -119,7 +121,7 @@ class TemplateVersionProvenanceTest extends TestCase {
 	private function services(bool $chainReadable = true): array {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('find')->willReturnCallback(
-			fn (string $id, ?string $register = null, ?string $schema = null): array => [
+			fn (string $id, ?ObjectFindOptions $options = null): array => [
 				'id' => 'tmpl-1',
 				'name' => 'Besluit',
 				'content' => 'Versie 4 {{ naam }}',
@@ -142,7 +144,9 @@ class TemplateVersionProvenanceTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, $register = null, $schema = null): array {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				if ($schema === 'generatedDocument') {
 					$this->logged[] = $object;
 				} else {

@@ -32,6 +32,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * An override is only applied when its audit entry was written, and a
@@ -112,6 +113,7 @@ class ProhibitionOverrideCommitterTest extends TestCase {
 		$this->objects->expects($this->exactly(2))
 			->method('saveObject')
 			->willReturnCallback(function (...$args) use (&$audits) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				// Positional: object, register, schema, uuid, _rbac, _multitenancy, _unowned.
 				$audits[] = $args;
 				return [];
@@ -232,15 +234,15 @@ class ProhibitionOverrideCommitterTest extends TestCase {
 		$this->locator->method('get')->with('OCA\OpenRegister\Service\ObjectService')->willReturn($this->objects);
 		$this->objects->expects($this->once())
 			->method('saveObject')
-			->with(
-				$this->callback(static fn (array $entry): bool => $entry['ruleId'] === 'rule-z'
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->callback(static fn (array $entry): bool => $entry['ruleId'] === 'rule-z'
 					&& $entry['entityRelationId'] === 12
 					&& $entry['fileId'] === 34
 					&& $entry['reason'] === 'Consent on file'
 					&& $entry['acknowledgedBy'] === 'bob'),
-				'filinq',
-				'prohibitionOverrideAudit'
-			)
+					'register' => 'filinq',
+					'schema' => 'prohibitionOverrideAudit',
+				]))
 			->willReturn([]);
 
 		$this->committer->recordRelease(ruleId: 'rule-z', relationId: 12, fileId: 34, reason: 'Consent on file', userId: 'bob');
