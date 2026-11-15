@@ -41,12 +41,14 @@ class BatchReportService implements BatchReportServiceInterface {
 	/**
 	 * Constructor for BatchReportService
 	 *
-	 * @param BatchStateService $stateService Service that exposes stored batch state.
+	 * @param BatchStateService       $stateService      Service that exposes stored batch state.
+	 * @param ReportOrganisationLabel $organisationLabel Names the organisation the batch belongs to.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly BatchStateService $stateService,
+		private readonly ReportOrganisationLabel $organisationLabel,
 	) {
 
 	}//end __construct()
@@ -56,11 +58,14 @@ class BatchReportService implements BatchReportServiceInterface {
 	 *
 	 * @param string $batchId Identifier of the batch to report on.
 	 *
-	 * @return string CSV document (header row + one row per file).
+	 * @return string CSV document (header row + one row per file). Every row
+	 *                names the organisation the batch belongs to, by name and
+	 *                UUID, so the report states its scope (REQ-DDMTH-005).
 	 *
 	 * @throws Exception When the batch cannot be found or is not yet completed.
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-completion-report
+	 * @spec openspec/changes/multi-tenant-hardening/tasks.md#3-backend-per-organisation-behaviour
 	 */
 	public function generateReport(string $batchId): string {
 		$batch = $this->stateService->getBatch($batchId);
@@ -71,6 +76,8 @@ class BatchReportService implements BatchReportServiceInterface {
 		if ($batch['status'] !== 'completed') {
 			throw new Exception('Batch is not yet completed', 409);
 		}
+
+		$organisation = $this->organisationLabel->describe(uuid: $batch['organisation'] ?? null);
 
 		$output = fopen('php://temp', 'r+');
 		fputcsv(
@@ -83,6 +90,8 @@ class BatchReportService implements BatchReportServiceInterface {
 				'replacementCount',
 				'status',
 				'timestamp',
+				'organisationName',
+				'organisationUuid',
 			]
 		);
 		foreach ($batch['files'] as $f) {
@@ -96,6 +105,8 @@ class BatchReportService implements BatchReportServiceInterface {
 					$f['replacementCount'] ?? 0,
 					$f['status'] ?? '',
 					date('c', $batch['createdAt'] ?? time()),
+					$organisation['name'],
+					$organisation['uuid'],
 				]
 			);
 		}

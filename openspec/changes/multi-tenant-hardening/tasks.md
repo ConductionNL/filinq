@@ -39,6 +39,7 @@
 
 - [ ] 3.2 Scope dashboard counters and batch/anonymisation reports to the active organisation; label reports with organisation name + UUID (REQ-DDMTH-005)
   - Instance-wide variant admin-only through the seam, labelled "all organisations".
+  - Built: the batch CSV report (`BatchReportService`) names the organisation the batch is stamped with on every row (`organisationName`, `organisationUuid`), read from the OpenRegister envelope by `BatchStateRepository` and never written back; `ReportOrganisationLabel` names it from the caller's own organisations only (a foreign or unreadable one keeps its UUID and gets no name). The dashboard counters come from `api/consents`, whose list call passes no bypass flag, so OpenRegister already counts the active organisation only. No instance-wide report exists at HEAD, so there is nothing to route through the seam. Tests: `ReportOrganisationLabelTest`, `BatchReportServiceTest`, `BatchStateRepositoryTest`. Left: the batch report reads its batch past the organisation filter (`BatchStateRepository`, recorded bypass with an owner check), so "computed over the active organisation" holds by ownership, not by OpenRegister; moving it under the filter belongs with 2.4.
 
 ## 4. Frontend
 

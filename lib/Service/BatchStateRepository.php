@@ -258,7 +258,7 @@ class BatchStateRepository {
 	 */
 	private function toStoredShape(array $batch): array {
 		$stored = $batch;
-		unset($stored['files']);
+		unset($stored['files'], $stored['organisation']);
 		$stored[self::DOCUMENTS_PROPERTY] = array_values((array)($batch['files'] ?? []));
 
 		return $stored;
@@ -280,6 +280,14 @@ class BatchStateRepository {
 		$batch = $stored;
 		unset($batch['@self'], $batch['id'], $batch[self::DOCUMENTS_PROPERTY]);
 		$batch['files'] = array_values((array)($stored[self::DOCUMENTS_PROPERTY] ?? []));
+		// The organisation OpenRegister stamped the batch with, so its report can
+		// state its scope (multi-tenant-hardening REQ-DDMTH-005). Read-only: the
+		// stored shape drops it again, Filinq never writes the stamp.
+		$organisation = ($stored['@self']['organisation'] ?? null);
+		$batch['organisation'] = null;
+		if (is_string($organisation) === true && $organisation !== '') {
+			$batch['organisation'] = $organisation;
+		}
 
 		return $batch;
 	}//end fromStoredShape()
