@@ -109,6 +109,8 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 	 * @param array<string, mixed> $prohibition The prohibition record's plain data.
 	 *
 	 * @return int Number of in-flight records that were force-resolved.
+	 *
+	 * @spec openspec/changes/multi-tenant-hardening/tasks.md#task-2.2
 	 */
 	public function applyProhibitionMutation(array $prohibition): int {
 		if ($this->isProhibitionEligible(prohibition: $prohibition) === false) {
