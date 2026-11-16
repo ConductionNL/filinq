@@ -288,9 +288,11 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 			// what this method actually needs. The defensive PHP scope
 			// check below is retained as a belt-and-braces.
 			// No RBAC or multitenancy bypass (multi-tenant-hardening D2): this
-			// runs in the request of the policy admin who changed the
-			// prohibition, so OpenRegister scopes the records to what that
-			// admin may read and change in the active organisation.
+			// runs in the request of the policy or prohibition admin who
+			// changed the prohibition, so OpenRegister scopes the records to
+			// what that admin may read and change in the active organisation
+			// (the publicationConsent cascade grants both groups document
+			// consents for this pass).
 			$result = $this->objectService->findAll(
 				config: [
 					'filters' => [
