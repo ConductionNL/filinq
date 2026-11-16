@@ -62,17 +62,33 @@ class TemplateScope {
 		}
 
 		foreach ($templates as $template) {
-			if ($template instanceof \JsonSerializable) {
-				$template = $template->jsonSerialize();
-			}
-
-			if (is_array($template) === true && $this->appliesTo(template: $template, register: $register, schema: $schema) === true) {
+			$template = self::asArray(template: $template);
+			if ($template !== null && $this->appliesTo(template: $template, register: $register, schema: $schema) === true) {
 				$applicable[] = $template;
 			}
 		}
 
 		return $applicable;
 	}//end applicable()
+
+	/**
+	 * A listed template as an array: entities through `jsonSerialize()`, anything else that is not an array as null.
+	 *
+	 * @param mixed $template The listed template.
+	 *
+	 * @return array<string, mixed>|null The template, or null when it is none.
+	 */
+	private static function asArray(mixed $template): ?array {
+		if ($template instanceof \JsonSerializable) {
+			$template = $template->jsonSerialize();
+		}
+
+		if (is_array($template) === false) {
+			return null;
+		}
+
+		return $template;
+	}//end asArray()
 
 	/**
 	 * Whether a template's scope is empty or names this register and schema.
@@ -98,14 +114,27 @@ class TemplateScope {
 		}
 
 		foreach ($scope as $pair) {
-			if (is_array($pair) === true
-				&& trim((string)($pair['register'] ?? '')) === $register
-				&& trim((string)($pair['schema'] ?? '')) === $schema
-			) {
+			if (self::pairMatches(pair: $pair, target: [$register, $schema]) === true) {
 				return true;
 			}
 		}
 
 		return false;
 	}//end appliesTo()
+
+	/**
+	 * Whether one scope entry names a register and schema.
+	 *
+	 * @param mixed                 $pair   The scope entry.
+	 * @param array{0: string, 1: string} $target The register and schema slugs.
+	 *
+	 * @return bool True when it names both.
+	 */
+	private static function pairMatches(mixed $pair, array $target): bool {
+		if (is_array($pair) === false) {
+			return false;
+		}
+
+		return trim((string)($pair['register'] ?? '')) === $target[0] && trim((string)($pair['schema'] ?? '')) === $target[1];
+	}//end pairMatches()
 }//end class

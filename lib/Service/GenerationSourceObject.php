@@ -94,22 +94,34 @@ class GenerationSourceObject {
 		$source = $this->matchingReference(candidate: $options['sourceObject'], dataRefs: $dataRefs);
 		unset($options['sourceObject']);
 
-		$output = [];
-		if (isset($options['output']) === true && is_array($options['output']) === true) {
-			$output = $options['output'];
+		$path = null;
+		if (self::needsTargetPath(options: $options) === true) {
+			$path = $this->hostFolderPath(source: $source, userId: $userId);
 		}
 
-		$stored = in_array(($output['mode'] ?? 'return'), ['files', 'both'], true);
-		if ($stored === true && trim((string)($output['targetPath'] ?? '')) === '') {
-			$path = $this->hostFolderPath(source: $source, userId: $userId);
-			if ($path !== null) {
-				$options['output'] = array_merge($output, ['targetPath' => $path]);
-			}
+		if ($path !== null) {
+			$options['output'] = array_merge($options['output'], ['targetPath' => $path]);
 		}
 
 		return ['options' => $options, 'recordFields' => ['sourceObject' => $source]];
 
 	}//end apply()
+
+	/**
+	 * Whether the options store the output in Files without naming a target path.
+	 *
+	 * @param array<string, mixed> $options The generation options.
+	 *
+	 * @return bool True when the host folder should become the target.
+	 */
+	private static function needsTargetPath(array $options): bool {
+		$output = ($options['output'] ?? null);
+		if (is_array($output) === false) {
+			return false;
+		}
+
+		return in_array(($output['mode'] ?? 'return'), ['files', 'both'], true) && trim((string)($output['targetPath'] ?? '')) === '';
+	}//end needsTargetPath()
 
 	/**
 	 * The data reference the candidate names.
@@ -154,7 +166,7 @@ class GenerationSourceObject {
 		$reference = [];
 		foreach (['register', 'schema', 'id'] as $key) {
 			$part = ($value[$key] ?? null);
-			if ((is_string($part) === false && is_int($part) === false) || trim((string)$part) === '') {
+			if (self::isPart(part: $part) === false) {
 				return null;
 			}
 
@@ -164,6 +176,21 @@ class GenerationSourceObject {
 		return $reference;
 
 	}//end reference()
+
+	/**
+	 * Whether a reference part is a non-blank string or an integer.
+	 *
+	 * @param mixed $part The part.
+	 *
+	 * @return bool True when it can name a register, schema or id.
+	 */
+	private static function isPart(mixed $part): bool {
+		if (is_string($part) === false && is_int($part) === false) {
+			return false;
+		}
+
+		return trim((string)$part) !== '';
+	}//end isPart()
 
 	/**
 	 * The source object's folder, relative to the caller's Files, or null.
@@ -176,43 +203,87 @@ class GenerationSourceObject {
 	 * @spec openspec/changes/template-library-leaf/tasks.md#task-2.3
 	 */
 	private function hostFolderPath(array $source, string $userId): ?string {
-		try {
-			$found = $this->objects->resolve()->find(
-				id: $source['id'],
-				options: new ObjectFindOptions(register: $source['register'], schema: $source['schema'])
-			);
-			$self  = ((new StoredRecordFields())->read(row: $found)['@self'] ?? []);
-			$folderId = 0;
-			if (is_array($self) === true && is_numeric($self['folder'] ?? null) === true) {
-				$folderId = (int)$self['folder'];
-			}
-
-			if ($folderId <= 0 || $userId === '') {
-				return null;
-			}
-
-			$userFolder = $this->rootFolder->getUserFolder($userId);
-			$node = $userFolder->getFirstNodeById($folderId);
-			if (($node instanceof Folder) === false) {
-				return null;
-			}
-
-			$path = trim((string)$userFolder->getRelativePath($node->getPath()), '/');
-		} catch (Throwable) {
-			return null;
-		}//end try
-
-		if ($path === '') {
+		if ($userId === '') {
 			return null;
 		}
 
-		foreach (explode('/', $path) as $segment) {
-			if ($segment === '.' || $segment === '..' || preg_match(self::SEGMENT_PATTERN, $segment) !== 1) {
-				return null;
-			}
+		try {
+			$path = $this->reachableFolderPath(folderId: $this->folderIdOf(source: $source), userId: $userId);
+		} catch (Throwable) {
+			return null;
+		}
+
+		if ($path === null || self::isSafeRelativePath(path: $path) === false) {
+			return null;
 		}
 
 		return $path;
 
 	}//end hostFolderPath()
+
+	/**
+	 * The id of the source object's folder, or 0 when it has none.
+	 *
+	 * @param array{register: string, schema: string, id: string} $source The source object.
+	 *
+	 * @return int The folder id.
+	 */
+	private function folderIdOf(array $source): int {
+		$found = $this->objects->resolve()->find(
+			id: $source['id'],
+			options: new ObjectFindOptions(register: $source['register'], schema: $source['schema'])
+		);
+		$self = ((new StoredRecordFields())->read(row: $found)['@self'] ?? []);
+		if (is_array($self) === true && is_numeric($self['folder'] ?? null) === true) {
+			return (int)$self['folder'];
+		}
+
+		return 0;
+
+	}//end folderIdOf()
+
+	/**
+	 * A folder's path relative to the caller's Files, or null when the caller cannot reach it.
+	 *
+	 * @param int    $folderId The folder id.
+	 * @param string $userId   The caller.
+	 *
+	 * @return string|null The path without surrounding slashes.
+	 */
+	private function reachableFolderPath(int $folderId, string $userId): ?string {
+		if ($folderId <= 0) {
+			return null;
+		}
+
+		$userFolder = $this->rootFolder->getUserFolder($userId);
+		$node = $userFolder->getFirstNodeById($folderId);
+		if (($node instanceof Folder) === false) {
+			return null;
+		}
+
+		return trim((string)$userFolder->getRelativePath($node->getPath()), '/');
+
+	}//end reachableFolderPath()
+
+	/**
+	 * Whether a relative path is non-empty and every segment is a plain name.
+	 *
+	 * @param string $path The path.
+	 *
+	 * @return bool True when it is safe to use as a target path.
+	 */
+	private static function isSafeRelativePath(string $path): bool {
+		if ($path === '') {
+			return false;
+		}
+
+		foreach (explode('/', $path) as $segment) {
+			if ($segment === '.' || $segment === '..' || preg_match(self::SEGMENT_PATTERN, $segment) !== 1) {
+				return false;
+			}
+		}
+
+		return true;
+
+	}//end isSafeRelativePath()
 }//end class
