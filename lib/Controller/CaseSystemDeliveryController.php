@@ -25,8 +25,8 @@ namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\BridgeApiInterface;
 use OCA\Filinq\Kernel\Contracts\CaseSystemDeliveryServiceInterface;
-use OCA\Filinq\Service\BridgeApi;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -61,12 +61,12 @@ class CaseSystemDeliveryController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                  $request      The request.
+	 * @param IRequest                           $request      The request.
 	 * @param CaseSystemDeliveryServiceInterface $deliveries   The deliveries.
-	 * @param IUserSession              $userSession  The session.
-	 * @param IGroupManager             $groupManager The admin check.
-	 * @param BridgeApi|null            $bridge       The bridge sources, for the panel's source list.
-	 * @param LoggerInterface|null      $logger       Logs a failed source read.
+	 * @param IUserSession                       $userSession  The session.
+	 * @param IGroupManager                      $groupManager The admin check.
+	 * @param BridgeApiInterface|null            $bridge       The bridge sources, for the panel's source list.
+	 * @param LoggerInterface|null               $logger       Logs a failed source read.
 	 *
 	 * @return void
 	 */
@@ -75,7 +75,7 @@ class CaseSystemDeliveryController extends Controller {
 		private readonly CaseSystemDeliveryServiceInterface $deliveries,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
-		private readonly ?BridgeApi $bridge = null,
+		private readonly ?BridgeApiInterface $bridge = null,
 		private readonly ?LoggerInterface $logger = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
