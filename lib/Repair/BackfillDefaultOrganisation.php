@@ -9,12 +9,20 @@
  * users who own them. This step stamps them with OpenRegister's default
  * organisation (multi-tenant-hardening D6, REQ-DDMTH-006).
  *
- * It touches only the envelope column `_organisation`, never a data property,
- * and only where it is empty, so a second run changes nothing and an object
- * already stamped keeps its organisation. Sealed audit rows
- * (`signingAuditEntry`) are never changed. It logs a count per schema; an
- * instance with several organisations reviews that log and reassigns through
- * OpenRegister's own tooling.
+ * Filinq does not write OpenRegister's object tables itself: the write is
+ * OpenRegister's own organisation adoption (the tooling behind
+ * `occ openregister:adopt-organisationless-rows`), scoped here to Filinq's
+ * register and given the default organisation. An object cannot be given an
+ * organisation through ObjectService here: a repair step has no session user,
+ * and OpenRegister only accepts `@self.organisation` from an administrator or
+ * a member of that organisation.
+ *
+ * It touches only the envelope organisation, never a data property, and only
+ * where it is empty, so a second run changes nothing and an object already
+ * stamped keeps its organisation. Sealed audit rows (`signingAuditEntry`) are
+ * never changed. It logs a count per schema; an instance with several
+ * organisations reviews that log and reassigns through OpenRegister's own
+ * tooling. Without that tooling (an older OpenRegister) it changes nothing.
  *
  * @category Repair
  * @package  OCA\Filinq\Repair
@@ -37,9 +45,9 @@ namespace OCA\Filinq\Repair;
 
 use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
 use OCP\IAppConfig;
-use OCP\IDBConnection;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
+use Psr\Container\ContainerInterface;
 use Throwable;
 
 /**
@@ -57,14 +65,28 @@ class BackfillDefaultOrganisation implements IRepairStep {
 	public const SKIPPED = ['signingAuditEntry'];
 
 	/**
+	 * OpenRegister's selection of object tables by register and schema.
+	 *
+	 * @var string
+	 */
+	public const SELECTION = 'OCA\\OpenRegister\\Command\\MagicTableSelection';
+
+	/**
+	 * OpenRegister's adoption of objects that carry no organisation.
+	 *
+	 * @var string
+	 */
+	public const ADOPTION = 'OCA\\OpenRegister\\Service\\Organisation\\OrganisationlessRowAdoption';
+
+	/**
 	 * Constructor.
 	 *
-	 * @param IDBConnection $db        The database.
-	 * @param IAppConfig    $appConfig OpenRegister's configured default organisation.
+	 * @param IAppConfig         $appConfig OpenRegister's configured default organisation.
+	 * @param ContainerInterface $container Resolves OpenRegister's adoption tooling when it is installed.
 	 */
 	public function __construct(
-		private readonly IDBConnection $db,
 		private readonly IAppConfig $appConfig,
+		private readonly ContainerInterface $container,
 	) {
 
 	}//end __construct()
@@ -97,18 +119,23 @@ class BackfillDefaultOrganisation implements IRepairStep {
 			return;
 		}
 
+		$tooling = $this->tooling();
+		if ($tooling === null) {
+			$output->info(
+				'OpenRegister has no organisation adoption, nothing was changed; run occ openregister:adopt-organisationless-rows --apply after upgrading it.'
+			);
+			return;
+		}
+
 		try {
-			$tables = $this->tables();
+			$tables = $this->tables(selection: $tooling['selection']);
 		} catch (Throwable $e) {
 			$output->info('OpenRegister tables are not readable, nothing was changed: ' . $e->getMessage());
 			return;
 		}
 
 		foreach ($tables as $slug => $table) {
-			$changed = $this->db->executeStatement(
-				'UPDATE `*PREFIX*' . $table . "` SET _organisation = ? WHERE _organisation IS NULL OR _organisation = ''",
-				[$organisation]
-			);
+			$changed = (int)$tooling['adoption']->adopt(tableName: $table, organisation: $organisation);
 			$output->info(sprintf('%s: %d object(s) given the default organisation', $slug, $changed));
 		}
 
@@ -136,30 +163,40 @@ class BackfillDefaultOrganisation implements IRepairStep {
 	}//end defaultOrganisation()
 
 	/**
+	 * OpenRegister's table selection and organisation adoption, or null when it has none.
+	 *
+	 * @return array{selection: mixed, adoption: mixed}|null
+	 */
+	private function tooling(): ?array {
+		try {
+			return [
+				'selection' => $this->container->get(self::SELECTION),
+				'adoption'  => $this->container->get(self::ADOPTION),
+			];
+		} catch (Throwable) {
+			return null;
+		}
+
+	}//end tooling()
+
+	/**
 	 * The existing table of every schema of Filinq's register except the sealed ones, by slug.
 	 *
-	 * @return array<string, string> Schema slug => table name without prefix.
+	 * @param mixed $selection OpenRegister's MagicTableSelection.
+	 *
+	 * @return array<string, string> Schema slug => table name.
 	 */
-	private function tables(): array {
-		if ($this->db->tableExists('openregister_registers') === false || $this->db->tableExists('openregister_schemas') === false) {
-			return [];
-		}
+	private function tables(mixed $selection): array {
+		$targets = $selection->tables(
+			registers: $selection->registers(registerRef: IntakeRepositoryInterface::REGISTER),
+			schemas: $selection->schemas(schemaRef: null)
+		);
 
-		$register = $this->db->executeQuery(
-			'SELECT id FROM `*PREFIX*openregister_registers` WHERE slug = ?',
-			[IntakeRepositoryInterface::REGISTER]
-		)->fetch();
-		if (is_array($register) === false || isset($register['id']) === false) {
-			return [];
-		}
-
-		$registerId = (string)$register['id'];
 		$tables = [];
-		foreach ($this->db->executeQuery('SELECT id, slug FROM `*PREFIX*openregister_schemas`')->fetchAll() as $row) {
-			$slug = (string)$row['slug'];
-			$table = 'openregister_table_' . $registerId . '_' . $row['id'];
-			if (in_array($slug, self::SKIPPED, true) === false && $this->db->tableExists($table) === true) {
-				$tables[$slug] = $table;
+		foreach ($targets as $target) {
+			$slug = (string)$target->schema->getSlug();
+			if (in_array($slug, self::SKIPPED, true) === false) {
+				$tables[$slug] = (string)$target->tableName;
 			}
 		}
 

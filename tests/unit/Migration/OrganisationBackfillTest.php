@@ -23,68 +23,164 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Migration;
 
 use OCA\Filinq\Repair\BackfillDefaultOrganisation;
-use OCP\DB\IResult;
 use OCP\IAppConfig;
-use OCP\IDBConnection;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+use RuntimeException;
 
 /**
- * REQ-DDMTH-006: null-organisation objects become default-organisation objects, once.
+ * REQ-DDMTH-006: null-organisation objects become default-organisation objects, once,
+ * through OpenRegister's own organisation adoption.
  *
  * @covers \OCA\Filinq\Repair\BackfillDefaultOrganisation
  */
 class OrganisationBackfillTest extends TestCase {
 
 	/**
-	 * The `_organisation` of each row, per table: a tiny database.
+	 * The `_organisation` of each row, per table: a tiny database the fake adoption writes.
 	 *
 	 * @var array<string, list<string|null>>
 	 */
-	private array $rows = [];
+	public array $rows = [];
 
 	/**
-	 * Every statement run, with its parameters.
+	 * Every adopt() call: table and organisation.
 	 *
-	 * @var list<array{0: string, 1: array<int, mixed>}>
+	 * @var list<array{0: string, 1: string}>
 	 */
-	private array $statements = [];
+	public array $adopted = [];
 
 	/**
-	 * The step over Filinq's register (id 4) and the given config.
+	 * The register reference the selection was asked for.
 	 *
-	 * @param array<string, string> $config OpenRegister's app config.
+	 * @var list<string|null>
+	 */
+	public array $registerRefs = [];
+
+	/**
+	 * Filinq's register's tables by schema slug, in the selection's own order.
+	 *
+	 * @var array<string, string>
+	 */
+	private const TABLES = [
+		'otherApps' => 'openregister_table_4_13',
+		'generatedDocument' => 'openregister_table_4_10',
+		'signingAuditEntry' => 'openregister_table_4_11',
+		'dossier' => 'openregister_table_4_12',
+	];
+
+	/**
+	 * The step over the given config and a container holding the tooling, or failing to.
+	 *
+	 * @param array<string, string> $config  OpenRegister's app config.
+	 * @param bool                  $tooling Whether OpenRegister has its adoption tooling.
+	 * @param bool                  $readable Whether the selection can read the tables.
 	 *
 	 * @return BackfillDefaultOrganisation
 	 */
-	private function step(array $config): BackfillDefaultOrganisation {
-		$db = $this->createMock(IDBConnection::class);
-		$db->method('tableExists')->willReturnCallback(
-			fn (string $table): bool => in_array($table, ['openregister_registers', 'openregister_schemas'], true) || isset($this->rows[$table])
-		);
-		$db->method('executeQuery')->willReturnCallback(
-			function (string $sql): IResult {
-				$result = $this->createMock(IResult::class);
-				$result->method('fetch')->willReturn(['id' => 4]);
-				$result->method('fetchAll')->willReturn(
-					[['id' => 10, 'slug' => 'generatedDocument'], ['id' => 11, 'slug' => 'signingAuditEntry'], ['id' => 12, 'slug' => 'dossier'], ['id' => 13, 'slug' => 'otherApps']]
-				);
-				return $result;
+	private function step(array $config, bool $tooling = true, bool $readable = true): BackfillDefaultOrganisation {
+		$test = $this;
+		$selection = new class($test, $readable) {
+
+			/**
+			 * @param OrganisationBackfillTest $test     The test, which records the calls.
+			 * @param bool                     $readable Whether the tables can be read.
+			 */
+			public function __construct(private OrganisationBackfillTest $test, private bool $readable) {
 			}
-		);
-		$db->method('executeStatement')->willReturnCallback(
-			function (string $sql, array $params): int {
-				$this->statements[] = [$sql, $params];
-				preg_match('/`\*PREFIX\*(openregister_table_\d+_\d+)`/', $sql, $match);
+
+			/**
+			 * @param string|null $registerRef The register asked for.
+			 *
+			 * @return list<string>
+			 */
+			public function registers(?string $registerRef): array {
+				$this->test->registerRefs[] = $registerRef;
+				if ($this->readable === false) {
+					throw new RuntimeException('register not found');
+				}
+
+				return ['register:' . $registerRef];
+			}
+
+			/**
+			 * @param string|null $schemaRef The schema asked for.
+			 *
+			 * @return list<string>
+			 */
+			public function schemas(?string $schemaRef): array {
+				return ['all schemas'];
+			}
+
+			/**
+			 * @param array<int, string> $registers The registers.
+			 * @param array<int, string> $schemas   The schemas.
+			 *
+			 * @return list<object>
+			 */
+			public function tables(array $registers, array $schemas): array {
+				$targets = [];
+				foreach (OrganisationBackfillTest::tables() as $slug => $table) {
+					$schema = new class($slug) {
+						/**
+						 * @param string $slug The schema slug.
+						 */
+						public function __construct(private string $slug) {
+						}
+
+						/**
+						 * @return string
+						 */
+						public function getSlug(): string {
+							return $this->slug;
+						}
+					};
+					$targets[] = (object)['schema' => $schema, 'tableName' => $table];
+				}
+
+				return $targets;
+			}
+		};
+		$adoption = new class($test) {
+
+			/**
+			 * @param OrganisationBackfillTest $test The test, whose rows this writes.
+			 */
+			public function __construct(private OrganisationBackfillTest $test) {
+			}
+
+			/**
+			 * @param string $tableName    The table.
+			 * @param string $organisation The organisation.
+			 *
+			 * @return int
+			 */
+			public function adopt(string $tableName, string $organisation): int {
+				$this->test->adopted[] = [$tableName, $organisation];
 				$changed = 0;
-				foreach ($this->rows[$match[1]] as $index => $organisation) {
-					if ($organisation === null || $organisation === '') {
-						$this->rows[$match[1]][$index] = $params[0];
+				foreach ($this->test->rows[$tableName] ?? [] as $index => $current) {
+					if ($current === null || $current === '') {
+						$this->test->rows[$tableName][$index] = $organisation;
 						$changed++;
 					}
 				}
 
 				return $changed;
+			}
+		};
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturnCallback(
+			static function (string $id) use ($tooling, $selection, $adoption): object {
+				if ($tooling === false) {
+					throw new RuntimeException('Could not resolve ' . $id);
+				}
+
+				return match ($id) {
+					BackfillDefaultOrganisation::SELECTION => $selection,
+					BackfillDefaultOrganisation::ADOPTION => $adoption,
+				};
 			}
 		);
 		$appConfig = $this->createMock(IAppConfig::class);
@@ -92,8 +188,17 @@ class OrganisationBackfillTest extends TestCase {
 			static fn (string $app, string $key, string $default = ''): string => ($app === 'openregister' ? ($config[$key] ?? $default) : $default)
 		);
 
-		return new BackfillDefaultOrganisation(db: $db, appConfig: $appConfig);
+		return new BackfillDefaultOrganisation(appConfig: $appConfig, container: $container);
 	}//end step()
+
+	/**
+	 * Filinq's register's tables by schema slug.
+	 *
+	 * @return array<string, string>
+	 */
+	public static function tables(): array {
+		return self::TABLES;
+	}//end tables()
 
 	/**
 	 * The info lines a run writes.
@@ -114,50 +219,97 @@ class OrganisationBackfillTest extends TestCase {
 	}//end runStep()
 
 	/**
-	 * The first run stamps every empty row with the default organisation and counts per schema;
-	 * the second changes nothing; sealed audit rows and stamped rows are never touched.
+	 * The first run stamps every empty row of Filinq's register with the default organisation and
+	 * counts per schema, in slug order; the second changes nothing; sealed audit rows and stamped
+	 * rows are never touched.
 	 *
 	 * @return void
 	 */
 	public function testNullOrganisationObjectsBecomeDefaultOrganisationObjectsOnce(): void {
 		$this->rows = [
-			'openregister_table_4_10' => [null, '', 'org-other'],
-			'openregister_table_4_11' => [null, null],
-			'openregister_table_4_12' => ['org-default'],
+			'openregister_table_4_10' => [null, 'org-b', ''],
+			'openregister_table_4_11' => [null],
+			'openregister_table_4_12' => [null],
+			'openregister_table_4_13' => ['org-b'],
 		];
 		$step = $this->step(config: ['defaultOrganisation' => 'org-default']);
 
 		$this->assertSame(
-			['dossier: 0 object(s) given the default organisation', 'generatedDocument: 2 object(s) given the default organisation'],
-			$this->runStep(step: $step)
+			[
+				'dossier: 1 object(s) given the default organisation',
+				'generatedDocument: 2 object(s) given the default organisation',
+				'otherApps: 0 object(s) given the default organisation',
+			],
+			$this->runStep($step)
 		);
-		$this->assertSame(['org-default', 'org-default', 'org-other'], $this->rows['openregister_table_4_10']);
-		$this->assertSame([null, null], $this->rows['openregister_table_4_11']);
-		$this->assertStringContainsString("SET _organisation = ? WHERE _organisation IS NULL OR _organisation = ''", $this->statements[0][0]);
+		$this->assertSame(['filinq'], $this->registerRefs);
+		$this->assertSame(
+			[
+				['openregister_table_4_12', 'org-default'],
+				['openregister_table_4_10', 'org-default'],
+				['openregister_table_4_13', 'org-default'],
+			],
+			$this->adopted
+		);
+		$this->assertSame(['org-default', 'org-b', 'org-default'], $this->rows['openregister_table_4_10']);
+		$this->assertSame([null], $this->rows['openregister_table_4_11']);
+		$this->assertSame(['org-b'], $this->rows['openregister_table_4_13']);
 
 		$this->assertSame(
-			['dossier: 0 object(s) given the default organisation', 'generatedDocument: 0 object(s) given the default organisation'],
-			$this->runStep(step: $step)
+			[
+				'dossier: 0 object(s) given the default organisation',
+				'generatedDocument: 0 object(s) given the default organisation',
+				'otherApps: 0 object(s) given the default organisation',
+			],
+			$this->runStep($step)
 		);
 	}//end testNullOrganisationObjectsBecomeDefaultOrganisationObjectsOnce()
 
 	/**
-	 * The legacy config form names the default too; without any default nothing is changed.
+	 * The legacy config spelling is read; without any default organisation nothing is adopted.
 	 *
 	 * @return void
 	 */
 	public function testTheLegacyConfigWorksAndNoDefaultChangesNothing(): void {
 		$this->rows = ['openregister_table_4_12' => [null]];
-		$this->runStep(step: $this->step(config: ['organisation' => json_encode(['default_organisation' => 'org-legacy'])]));
+		$this->runStep($this->step(config: ['organisation' => json_encode(['default_organisation' => ' org-legacy '])]));
 		$this->assertSame(['org-legacy'], $this->rows['openregister_table_4_12']);
 
 		$this->rows = ['openregister_table_4_12' => [null]];
-		$this->statements = [];
-		$this->assertSame(
-			['OpenRegister has no default organisation, so no Filinq object was given one.'],
-			$this->runStep(step: $this->step(config: []))
-		);
-		$this->assertSame([], $this->statements);
+		$this->adopted = [];
+		$this->registerRefs = [];
+		$lines = $this->runStep($this->step(config: []));
+		$this->assertSame(['OpenRegister has no default organisation, so no Filinq object was given one.'], $lines);
+		$this->assertSame([], $this->adopted);
+		$this->assertSame([], $this->registerRefs);
 		$this->assertSame([null], $this->rows['openregister_table_4_12']);
 	}//end testTheLegacyConfigWorksAndNoDefaultChangesNothing()
+
+	/**
+	 * An OpenRegister without the adoption tooling changes nothing and names the command to run.
+	 *
+	 * @return void
+	 */
+	public function testWithoutOpenRegistersAdoptionNothingIsChanged(): void {
+		$this->rows = ['openregister_table_4_12' => [null]];
+		$lines = $this->runStep($this->step(config: ['defaultOrganisation' => 'org-default'], tooling: false));
+
+		$this->assertCount(1, $lines);
+		$this->assertStringContainsString('occ openregister:adopt-organisationless-rows --apply', $lines[0]);
+		$this->assertSame([], $this->adopted);
+		$this->assertSame([null], $this->rows['openregister_table_4_12']);
+	}//end testWithoutOpenRegistersAdoptionNothingIsChanged()
+
+	/**
+	 * A register the selection cannot read changes nothing and says why.
+	 *
+	 * @return void
+	 */
+	public function testUnreadableTablesChangeNothing(): void {
+		$this->rows = ['openregister_table_4_12' => [null]];
+		$lines = $this->runStep($this->step(config: ['defaultOrganisation' => 'org-default'], readable: false));
+
+		$this->assertSame(['OpenRegister tables are not readable, nothing was changed: register not found'], $lines);
+		$this->assertSame([], $this->adopted);
+	}//end testUnreadableTablesChangeNothing()
 }//end class
