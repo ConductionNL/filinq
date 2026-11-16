@@ -118,6 +118,7 @@ export default {
 		 * The headline for the overall status.
 		 *
 		 * @return {{type: string, text: string}}
+		 * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
 		 */
 		headline() {
 			return verdictHeadline(this.verdict.status)
@@ -127,6 +128,7 @@ export default {
 		 * The audit summary.
 		 *
 		 * @return {string}
+		 * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
 		 */
 		audit() {
 			return auditLine(this.verdict.audit)
@@ -136,12 +138,19 @@ export default {
 		 * The seal line, or ''.
 		 *
 		 * @return {string}
+		 * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
 		 */
 		seal() {
 			return sealLine(this.verdict.seal)
 		},
 	},
 
+	/**
+	 * Fetch the verdict for the token in the link.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+	 */
 	async mounted() {
 		this.verdict = await fetchVerdict(this.token)
 		this.loading = false
