@@ -24,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use InvalidArgumentException;
 use OCA\Filinq\Controller\BridgeController;
+use OCA\Filinq\Service\BridgeApi;
 use OCA\Filinq\Service\BridgeDossierPickUp;
 use OCA\Filinq\Service\BridgeService;
 use OCA\Filinq\Service\BridgeSourceBadges;
@@ -39,6 +40,7 @@ use RuntimeException;
 
 /**
  * @covers \OCA\Filinq\Controller\BridgeController
+ * @covers \OCA\Filinq\Service\BridgeApi
  */
 final class BridgeControllerTest extends TestCase {
 
@@ -56,7 +58,7 @@ final class BridgeControllerTest extends TestCase {
 		$this->pickUp  = $this->createMock(BridgeDossierPickUp::class);
 		$this->logger  = $this->createMock(LoggerInterface::class);
 
-		return new BridgeController(request: $this->request, bridge: $this->bridge, pickUp: $this->pickUp, logger: $this->logger);
+		return new BridgeController(request: $this->request, bridge: new BridgeApi(bridge: $this->bridge, pickUp: $this->pickUp), logger: $this->logger);
 	}//end controller()
 
 	public function testSourcesAreAnAdminSettingAndTheRestNeedsASignedInUser(): void {
@@ -126,7 +128,11 @@ final class BridgeControllerTest extends TestCase {
 		$this->request->method('getParam')->with('fileIds', '')->willReturn('10,11');
 		$badges = $this->createMock(BridgeSourceBadges::class);
 		$badges->expects($this->once())->method('forFiles')->with(['10', '11'])->willReturn([10 => 'zaaksysteem.nl']);
-		$controller = new BridgeController(request: $this->request, bridge: $this->bridge, pickUp: $this->pickUp, logger: $this->logger, badges: $badges);
+		$controller = new BridgeController(
+			request: $this->request,
+			bridge: new BridgeApi(bridge: $this->bridge, pickUp: $this->pickUp, badges: $badges),
+			logger: $this->logger
+		);
 
 		$response = $controller->badges();
 

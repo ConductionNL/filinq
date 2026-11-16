@@ -107,6 +107,7 @@ export default {
 		 *
 		 * @param {string} value ISO 8601.
 		 * @return {string}
+		 * @spec openspec/changes/zgw-document-bridge/tasks.md#3-1
 		 */
 		formatDate(value) {
 			if (!value) {

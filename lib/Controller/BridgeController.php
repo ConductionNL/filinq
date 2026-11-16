@@ -26,9 +26,7 @@ namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Service\BridgeDossierPickUp;
-use OCA\Filinq\Service\BridgeService;
-use OCA\Filinq\Service\BridgeSourceBadges;
+use OCA\Filinq\Service\BridgeApi;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -55,11 +53,9 @@ class BridgeController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest            $request The request.
-	 * @param BridgeService       $bridge  The bridge register.
-	 * @param BridgeDossierPickUp $pickUp  Attaches staged documents to a dossier.
-	 * @param LoggerInterface     $logger  Logs an unexpected failure.
-	 * @param BridgeSourceBadges|null $badges The source badge per file, for a listing page.
+	 * @param IRequest        $request The request.
+	 * @param BridgeApi       $bridge  The bridge services.
+	 * @param LoggerInterface $logger  Logs an unexpected failure.
 	 *
 	 * @return void
 	 *
@@ -67,10 +63,8 @@ class BridgeController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly BridgeService $bridge,
-		private readonly BridgeDossierPickUp $pickUp,
+		private readonly BridgeApi $bridge,
 		private readonly LoggerInterface $logger,
-		private readonly ?BridgeSourceBadges $badges = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -122,7 +116,7 @@ class BridgeController extends Controller {
 		}
 
 		return $this->answer(
-			work: fn (): array => ['badges' => (object)($this->badges?->forFiles(fileIds: $ids) ?? [])]
+			work: fn (): array => ['badges' => (object)$this->bridge->badges(fileIds: $ids)]
 		);
 
 	}//end badges()
@@ -144,7 +138,7 @@ class BridgeController extends Controller {
 		}
 
 		return $this->answer(
-			work: fn (): array => ['results' => $this->pickUp->attach(dossierUuid: $dossierId, documentIds: array_values($documentIds))]
+			work: fn (): array => ['results' => $this->bridge->attach(dossierUuid: $dossierId, documentIds: array_values($documentIds))]
 		);
 
 	}//end attach()
