@@ -435,6 +435,14 @@ $extra = [
         // resolves to a class that does not exist and 500s.
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
         ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+        // zgw-document-bridge 2.4: sources (admin), staged documents, dossier pick-up, release and retry.
+        ['name' => 'caseSystemDelivery#sources', 'url' => '/api/bridge/sources', 'verb' => 'GET'],
+        ['name' => 'bridge#externalDocuments', 'url' => '/api/bridge/external-documents', 'verb' => 'GET'],
+        // zgw-document-bridge 3.2: the source badge of a listing page's files, in one lookup.
+        ['name' => 'bridge#badges', 'url' => '/api/bridge/badges', 'verb' => 'GET'],
+        ['name' => 'bridge#attach', 'url' => '/api/bridge/dossiers/{dossierId}/attach', 'verb' => 'POST'],
+        ['name' => 'bridge#release', 'url' => '/api/bridge/external-documents/{id}/release', 'verb' => 'POST'],
+        ['name' => 'bridge#retry', 'url' => '/api/bridge/external-documents/{id}/retry', 'verb' => 'POST'],
 ];
 
 // Preferred path: the OpenRegister AppHost owns the canonical route table.
