@@ -374,6 +374,10 @@ $extra = [
         ['name' => 'signerIdentitySettings#index', 'url' => 'api/settings/signer-identity', 'verb' => 'GET'],
         ['name' => 'signerIdentitySettings#update', 'url' => 'api/settings/signer-identity', 'verb' => 'PUT'],
 
+        // Woo refusal grounds for the pickers, read through the one resolver
+        // (grondslagen-read-from-dossiq REQ-GRD-002). Read only.
+        ['name' => 'grounds#index', 'url' => 'api/grounds', 'verb' => 'GET'],
+
         // Detection provider (llm-entity-detection-provider): per-organisation
         // provider choice and the local hermiq agentflow. Admin only: the
         // attribute and an in-method guard both refuse anyone else.

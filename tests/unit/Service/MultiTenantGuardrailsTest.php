@@ -80,6 +80,7 @@ class MultiTenantGuardrailsTest extends TestCase {
 	private const RECORDED_ORGANISATION_BYPASSES = [
 		'lib/Controller/PortalSigningReceiverController.php' => 1,
 		'lib/EventListener/DocumentRegistrationWriteGuard.php' => 1,
+		'lib/Repair/RepointRefusalGrounds.php' => 1,
 		'lib/Service/BaseLabelResolver.php' => 1,
 		'lib/Service/BatchStateRepository.php' => 3,
 		'lib/Service/Classification/ClassificationResultRepository.php' => 2,

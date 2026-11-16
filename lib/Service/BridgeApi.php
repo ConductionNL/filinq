@@ -24,12 +24,14 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\BridgeApiInterface;
+
 /**
  * Hands each bridge request to the service that answers it.
  *
  * @spec openspec/changes/zgw-document-bridge
  */
-class BridgeApi {
+class BridgeApi implements BridgeApiInterface {
 
 	/**
 	 * Constructor.

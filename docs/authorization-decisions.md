@@ -247,7 +247,9 @@ fails it, and so does any change to the set of `_multitenancy: false` call sites
 That set predates the change, and every site in it is a row of the table above with its
 compensating control, plus one schema lookup: `EventListener/DocumentRegistrationWriteGuard.php`
 resolves a schema id to its slug through `SchemaMapper`, which reads schema metadata, not an
-object, and returns only the slug. The set may only shrink: a new cross-organisation read goes
+object, and returns only the slug; and `Repair/RepointRefusalGrounds.php` (grondslagen-read-from-dossiq),
+a repair step that runs at upgrade with no user session and rewrites only the `bases` of Filinq's
+own objects to dossiq's codes, in every organisation. The set may only shrink: a new cross-organisation read goes
 through the seam.
 
 `Service/ConsentCrudService.php` contains the string `_rbac: false` in a comment that

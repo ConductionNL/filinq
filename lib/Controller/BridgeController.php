@@ -26,7 +26,7 @@ namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Service\BridgeApi;
+use OCA\Filinq\Kernel\Contracts\BridgeApiInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -52,9 +52,9 @@ class BridgeController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest        $request The request.
-	 * @param BridgeApi       $bridge  The bridge services.
-	 * @param LoggerInterface $logger  Logs an unexpected failure.
+	 * @param IRequest           $request The request.
+	 * @param BridgeApiInterface $bridge  The bridge services.
+	 * @param LoggerInterface    $logger  Logs an unexpected failure.
 	 *
 	 * @return void
 	 *
@@ -62,7 +62,7 @@ class BridgeController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly BridgeApi $bridge,
+		private readonly BridgeApiInterface $bridge,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
