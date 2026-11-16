@@ -352,14 +352,16 @@ class PolicyMatchService {
 		$rules = [];
 
 		// The seam lifts organisation filtering, so the rules are kept to the
-		// user's own organisation here (REQ-DDMTH-003). A user whose
-		// organisation cannot be resolved gets none (fail-closed); without a
-		// user session (a background job) every organisation's rules apply.
+		// user's own organisation here (REQ-DDMTH-003). Without a user session
+		// (a background job) every organisation's rules apply. A user whose
+		// organisation cannot be resolved gets every organisation's
+		// prohibitions and no standing consent: a deny-list fails closed.
 		$organisation = $this->scope?->organisation();
+		$withConsents = true;
 		if ($organisation === '') {
-			$this->logger->info('PolicyMatchService: no active organisation; no policy rules apply');
-			$this->rulesCache = $rules;
-			return $rules;
+			$this->logger->info('PolicyMatchService: no active organisation; every prohibition and no standing consent applies');
+			$organisation = null;
+			$withConsents = false;
 		}
 
 		try {
@@ -373,7 +375,7 @@ class PolicyMatchService {
 				reason: 'anonymisation applies every prohibition and standing consent, whatever the user may read',
 				operation: fn (): array => array_merge(
 					$this->loadProhibitions(organisation: $organisation),
-					$this->loadStandingConsents(organisation: $organisation)
+					$this->consentsIf(load: $withConsents, organisation: $organisation)
 				)
 			);
 			if (is_array($loaded) === true) {
@@ -469,6 +471,22 @@ class PolicyMatchService {
 
 		return $rules;
 	}//end loadStandingConsents()
+
+	/**
+	 * The active standing consents, or none when consents must not apply.
+	 *
+	 * @param bool        $load         Whether standing consents apply.
+	 * @param string|null $organisation Only this organisation's records; null for every organisation's.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function consentsIf(bool $load, ?string $organisation): array {
+		if ($load === false) {
+			return [];
+		}
+
+		return $this->loadStandingConsents(organisation: $organisation);
+	}//end consentsIf()
 
 	/**
 	 * Whether a loaded rule belongs to the organisation whose rules apply.

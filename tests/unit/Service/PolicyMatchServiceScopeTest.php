@@ -45,11 +45,11 @@ use Psr\Log\NullLogger;
 class PolicyMatchServiceScopeTest extends TestCase {
 
 	/**
-	 * Whether the object service was asked for anything.
+	 * The schemas the object service was asked for, in order.
 	 *
-	 * @var bool
+	 * @var array<int, string>
 	 */
-	private bool $searched = false;
+	private array $schemasSearched = [];
 
 	/**
 	 * A prohibition on "Pieter de Vries" in org-a and one on "Jan Jansen" in org-b,
@@ -65,7 +65,7 @@ class PolicyMatchServiceScopeTest extends TestCase {
 		$objectService->method('runAsSystem')->willReturnCallback(static fn (callable $operation): mixed => $operation());
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
 			function (string $registerSlug, string $schemaSlug): array {
-				$this->searched = true;
+				$this->schemasSearched[] = $schemaSlug;
 				if ($schemaSlug === 'publicationProhibition') {
 					return [
 						self::prohibition(id: 'p-a', name: 'Pieter de Vries', organisation: 'org-a'),
@@ -151,16 +151,19 @@ class PolicyMatchServiceScopeTest extends TestCase {
 	}//end testAnotherOrganisationsUserGetsTheirOwnRules()
 
 	/**
-	 * A user whose organisation cannot be resolved gets no rules, and nothing is loaded.
+	 * A user whose organisation cannot be resolved gets every organisation's
+	 * prohibitions and no standing consent: the deny-list fails closed.
 	 *
 	 * @return void
 	 */
-	public function testAUserWithoutAnOrganisationGetsNoRules(): void {
+	public function testAUserWithoutAnOrganisationGetsEveryProhibitionAndNoConsent(): void {
 		$matcher = $this->matcher(organisation: '');
 
-		self::assertNull($matcher->match(entityText: 'Pieter de Vries', entityType: 'PERSON'));
-		self::assertFalse($this->searched, 'Nothing is loaded through the seam for a user without an organisation.');
-	}//end testAUserWithoutAnOrganisationGetsNoRules()
+		self::assertSame('p-b', $matcher->matchProhibitionHint(entityType: 'PERSON', entityValue: 'Jan Jansen')['ruleId'] ?? null);
+		self::assertSame('p-none', $matcher->matchProhibitionHint(entityType: 'PERSON', entityValue: 'Karel Klaassen')['ruleId'] ?? null);
+		self::assertSame(PolicyMatchService::KIND_PROHIBITION, $matcher->match(entityText: 'Pieter de Vries', entityType: 'PERSON')['kind'] ?? null);
+		self::assertSame(['publicationProhibition'], $this->schemasSearched, 'Standing consents are not loaded for a user without an organisation.');
+	}//end testAUserWithoutAnOrganisationGetsEveryProhibitionAndNoConsent()
 
 	/**
 	 * Without a user session (a background job) every organisation's rules apply.
