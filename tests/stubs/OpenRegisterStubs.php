@@ -727,6 +727,24 @@ class Register {
  */
 class Schema {
 	/**
+	 * Get the archive block.
+	 *
+	 * @return array
+	 */
+	public function getArchive(): array {
+		return [];
+	}//end getArchive()
+
+	/**
+	 * Get the configuration.
+	 *
+	 * @return array|null
+	 */
+	public function getConfiguration(): ?array {
+		return null;
+	}//end getConfiguration()
+
+	/**
 	 * Get title
 	 *
 	 * @return string
