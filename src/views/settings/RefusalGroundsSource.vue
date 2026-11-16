@@ -48,11 +48,23 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The address of the grounds page in dossiq, where the list is maintained.
+		 *
+		 * @return {string} The URL.
+		 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-the-snapshot-is-read-only-and-the-admin-says-where-the-list-lives-req-grd-004
+		 */
 		dossiqUrl() {
 			return dossiqGroundsUrl()
 		},
 	},
 
+	/**
+	 * Reads where the grounds come from, once, when the section is shown.
+	 *
+	 * @return {Promise<void>}
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-the-snapshot-is-read-only-and-the-admin-says-where-the-list-lives-req-grd-004
+	 */
 	async mounted() {
 		this.summary = await fetchGroundsSource()
 		this.loading = false

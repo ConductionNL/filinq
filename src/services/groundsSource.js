@@ -35,6 +35,7 @@ function isCitable(ground) {
  *
  * @param {object|null} answer The `/api/grounds` answer.
  * @return {{source: string, version: string, grounds: Array<{code: string, label: string}>}|null} The summary, or null when nothing could be read.
+ * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-the-snapshot-is-read-only-and-the-admin-says-where-the-list-lives-req-grd-004
  */
 export function sourceSummary(answer) {
 	if (!hasGrounds(answer)) {
@@ -53,7 +54,8 @@ export function sourceSummary(answer) {
 /**
  * The address of dossiq's grounds page.
  *
- * @return {string}
+ * @return {string} The URL of the grounds page in dossiq.
+ * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-the-snapshot-is-read-only-and-the-admin-says-where-the-list-lives-req-grd-004
  */
 export function dossiqGroundsUrl() {
 	return generateUrl('/apps/dossiq/settings/woo-refusal-grounds')

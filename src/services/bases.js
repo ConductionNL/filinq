@@ -24,6 +24,7 @@ import { generateUrl } from '@nextcloud/router'
  *
  * @param {object} ground A ground of the list (`code`, `label`, `citable`).
  * @return {{label: string, value: string}|null} The option, or null.
+ * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
  */
 export function groundOption(ground) {
 	const code = typeof ground?.code === 'string' ? ground.code : ''
