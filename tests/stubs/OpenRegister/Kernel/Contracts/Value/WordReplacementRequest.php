@@ -29,7 +29,7 @@ use OCP\Files\Node;
 /**
  * One request to replace words in a document.
  *
- * @spec openspec/specs/file-actions/spec.md
+ * @spec exclude Test stub of OpenRegister's value object for DocumentProcessingHandler::replaceWords(); behaviour owned by OpenRegister.
  */
 final class WordReplacementRequest {
 	/**
@@ -47,7 +47,7 @@ final class WordReplacementRequest {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $strict selects strict vs lenient validation per the entity-anonymisation contract.
 	 *
-	 * @spec openspec/specs/file-actions/spec.md
+	 * @spec exclude Test stub of OpenRegister's value object for DocumentProcessingHandler::replaceWords(); behaviour owned by OpenRegister.
 	 */
 	public function __construct(
 		public readonly Node $node,
