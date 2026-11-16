@@ -727,6 +727,24 @@ class Register {
  */
 class Schema {
 	/**
+	 * Get the archive block.
+	 *
+	 * @return array
+	 */
+	public function getArchive(): array {
+		return [];
+	}//end getArchive()
+
+	/**
+	 * Get the configuration.
+	 *
+	 * @return array|null
+	 */
+	public function getConfiguration(): ?array {
+		return null;
+	}//end getConfiguration()
+
+	/**
 	 * Get title
 	 *
 	 * @return string
@@ -2099,6 +2117,15 @@ interface Node {
 	 * @return \OCP\Files\Node The moved node.
 	 */
 	public function move(string $targetPath): \OCP\Files\Node;
+
+	/**
+	 * Copy the node to a path; the real OCP declares it here. BridgeDossierPickUp copies a staged file with it.
+	 *
+	 * @param string $targetPath The full target path.
+	 *
+	 * @return \OCP\Files\Node The copy.
+	 */
+	public function copy(string $targetPath): \OCP\Files\Node;
 
 	/**
 	 * Remove this node, through the trashbin when one is enabled.
