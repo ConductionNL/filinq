@@ -53,6 +53,7 @@ import History from 'vue-material-design-icons/History.vue'
 import InboxArrowDown from 'vue-material-design-icons/InboxArrowDown.vue'
 import Magnify from 'vue-material-design-icons/Magnify.vue'
 import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
+import OfficeBuildingCog from 'vue-material-design-icons/OfficeBuildingCog.vue'
 import Palette from 'vue-material-design-icons/Palette.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Printer from 'vue-material-design-icons/Printer.vue'
@@ -125,6 +126,7 @@ export default {
 	TagCheckOutline,
 	Stamper,
 	MapMarkerPath,
+	OfficeBuildingCog,
 	Palette,
 	Plus,
 	Printer,

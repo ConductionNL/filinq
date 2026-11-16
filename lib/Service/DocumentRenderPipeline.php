@@ -114,7 +114,7 @@ class DocumentRenderPipeline {
 		}
 
 		if (empty($huisstijlId) === true) {
-			return null;
+			return $this->soleOrganisationHuisstijl();
 		}
 
 		try {
@@ -144,6 +144,47 @@ class DocumentRenderPipeline {
 		}//end try
 
 	}//end loadHuisstijl()
+
+	/**
+	 * The organisation's only huisstijl, when it has exactly one (REQ-DDMTH-004).
+	 *
+	 * Read under OpenRegister's enforcement, so only the active organisation's
+	 * huisstijl objects count. None, more than one, or an unreadable store
+	 * means neutral styling: never another organisation's branding.
+	 *
+	 * @return array|null The huisstijl, or null for neutral styling.
+	 *
+	 * @spec openspec/changes/multi-tenant-hardening/specs/multi-tenant-hardening/spec.md#requirement-per-organisation-template-library-and-branding-req-ddmth-004
+	 */
+	private function soleOrganisationHuisstijl(): ?array {
+		try {
+			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
+				registerSlug: 'filinq',
+				schemaSlug: 'huisstijl',
+				filters: []
+			);
+		} catch (Exception $e) {
+			$this->logger->warning(message: 'The organisation huisstijl objects could not be read: ' . $e->getMessage());
+			return null;
+		}
+
+		$rows = array_values((array)$rows);
+		if (count($rows) !== 1) {
+			return null;
+		}
+
+		$row = $rows[0];
+		if (is_object($row) === true && method_exists(object_or_class: $row, method: 'jsonSerialize') === true) {
+			$row = $row->jsonSerialize();
+		}
+
+		if (is_array($row) === false || $row === []) {
+			return null;
+		}
+
+		return $row;
+
+	}//end soleOrganisationHuisstijl()
 
 	/**
 	 * Build PDF generation options from template and huisstijl config.

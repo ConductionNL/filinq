@@ -174,8 +174,7 @@ deliberately.
 ## Deliberate RBAC bypasses
 
 A cascade only guards callers that go through it. `ObjectService::find()` and
-`findAll()` accept `_rbac: false`, and Filinq passes it at **35 call sites in 14
-files**. Each is paired with a compensating control rather than being an oversight,
+`findAll()` accept `_rbac: false`, and Filinq passes it at the call sites listed below. Each is paired with a compensating control rather than being an oversight,
 and the coverage test pins the set: **a new bypass fails the test until it is added
 here with a reason.**
 
@@ -217,6 +216,7 @@ anonymisation must apply every prohibition and standing consent).
 | `Service/SigningEnvelope/SigningEnvelopeRepository.php` | 3 | The schema grants the sender and admins only. The repository reads an envelope (find, list) and stores it, including the roll-up a signer's visit writes back, for SigningEnvelopeService alone, which lets the sender, a signer the envelope names or an admin read, only a named signer sign through it and only the sender or an admin cancel; anybody else gets 404. The member requests are read and signed through SigningService with their own checks. |
 | `Service/Redaction/AnonymizationLinkReader.php` | 1 | `storedObject()` reads one anonymisation link only for its OpenRegister ids (id, uuid, register, schema), which `PseudonymRestoreAudit` writes the restore entry on. The object never reaches a caller or a response, so no link data is disclosed; reading past RBAC is what lets a denied caller's attempt land on the same object as a granted one. |
 | `Service/SubjectErasure/SubjectErasureStore.php` | 3 | The `subjectErasureRequest` and `erasureCertificate` schemas grant the erasure groups only. Every call follows `SubjectErasureAuthority::assertMayErase()` (admins plus `subject_erasure_groups`, default the two groups the schemas grant, fail closed on an unreadable setting), and each refusal is audited. `storedRequest()` reads the request only for the ids an audit entry sits on. |
+| `Service/OrganisationSettingsService.php` | 1 | The one write of an `organisationSettings` object. The schema grants writes to instance admins; organisation admins write their own organisation's settings through this path only, after `mayEdit()` (an instance admin, or `OrganisationService::isOrganisationAdmin()` for the active organisation; a failing lookup refuses). The organisation filter stays on, so a new object is stamped with the active organisation and an existing one is found only inside it; only the schema's own fields are saved (`OrganisationSettingsInput`). |
 | `Service/PrintJobRepository.php` | 3 | The schema grants writes to nobody. `PrintJobService` creates a job for the session user and the controller shows or downloads one only when `requestedBy` is the caller or the caller is an admin; `findForUser()` filters on the caller and checks again in PHP. |
 | `Service/FinalDocumentRepository.php` | 1 | Writes `documentVersion` only for `FinalDocumentService`, `FinalDocumentCorrectionService`, `FinalDocumentUnfreezeService` (after `mayUnfreeze`) and `SubjectErasureEraser` (after `SubjectErasureAuthority`); each resolves the file in the caller's own folder first. Creates are owned by the system. |
 | `Service/Publication/PublicationStore.php` | 1 | One save for publication records and log entries, reached only after `PublicationAccess::mayAct`. Creates are owned by the system so the owner bypass cannot reopen a record. |
@@ -233,6 +233,22 @@ anonymisation must apply every prohibition and standing consent).
 | `Service/Editing/DocumentGuard.php` | 1 | Looks for a live signing request or anonymisation link on a file to REFUSE an edit; it must see every row whoever asks, or the guard fails open. Returns a refusal sentence only. |
 | `Service/ConsentRecordWriter.php` | 1 | The idempotent re-request path updates an existing consent record for the same document and entity, which another user may have opened; it writes only operator fields and keeps every workflow field (`PRESERVED_FIELDS`). |
 | `Controller/PortalSigningReceiverController.php` | 1 | The signer portal is anonymous by design and binds a `signerRecord` to a token **and** an email **and** a signing-request id, refusing with the same `null` for a wrong email, a wrong request, and an unresolvable register — so no new signal is exposed. |
+
+### Organisation filter bypasses (`_multitenancy: false`)
+
+Since multi-tenant-hardening, `SystemContextSeam` is the place that relaxes the organisation
+filter: it runs an operation as the system through OpenRegister's `runAsSystem()`, with a literal
+reason, and logs reason and caller on every use. The services the change cleared
+(`BasesResolverService`, `ConsentService`, `PolicyCrudService`, `PolicyMatchService`,
+`PolicyRetroactiveService`) pass no bypass flag at all.
+
+`tests/unit/Service/MultiTenantGuardrailsTest.php` pins both: a bypass flag in a cleared service
+fails it, and so does any change to the set of `_multitenancy: false` call sites outside the seam.
+That set predates the change, and every site in it is a row of the table above with its
+compensating control, plus one schema lookup: `EventListener/DocumentRegistrationWriteGuard.php`
+resolves a schema id to its slug through `SchemaMapper`, which reads schema metadata, not an
+object, and returns only the slug. The set may only shrink: a new cross-organisation read goes
+through the seam.
 
 `Service/ConsentCrudService.php` contains the string `_rbac: false` in a comment that
 **forbids** the bypass, and is not a bypass. It ends:

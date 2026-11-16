@@ -240,6 +240,10 @@
             "description": "Start a step-up for a signing act, and receive the broker's callback"
         },
         {
+            "name": "organisation-settings",
+            "description": "Reads the active organisation's settings for every member; writes them for an admin of that organisation or an instance admin"
+        },
+        {
             "name": "signer-identity-settings",
             "description": "Reads and writes the `signer_auth_*` settings, for admins only"
         },
@@ -7996,6 +8000,72 @@
                     }
                 },
                 "x-provided-by": "openregister"
+            }
+        },
+        "/organisation-settings": {
+            "get": {
+                "operationId": "organisation-settings-index",
+                "summary": "GET /api/organisation-settings",
+                "description": "GET /api/organisation-settings",
+                "tags": [
+                    "organisation-settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The active organisation, whether the caller may change its settings, its stored overrides and the instance defaults. No active organisation: organisation and settings are null.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "organisation-settings-update",
+                "summary": "PUT /api/organisation-settings",
+                "description": "PUT /api/organisation-settings",
+                "tags": [
+                    "organisation-settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The view after the save. Only an admin of the active organisation or an instance admin may save.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    }
+                }
             }
         },
         "/settings/signer-identity": {

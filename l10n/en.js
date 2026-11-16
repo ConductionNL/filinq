@@ -3029,7 +3029,21 @@ OC.L10N.register(
         "Your copy is the document that was signed.": "Your copy is the document that was signed.",
         "Your copy is not the document that was signed.": "Your copy is not the document that was signed.",
         "{verified} of %n signature verified": ["{verified} of %n signature verified","{verified} of %n signatures verified"],
-        "{verified} of %n signatures verified": "{verified} of %n signatures verified"
+        "{verified} of %n signatures verified": "{verified} of %n signatures verified",
+        "Organisation settings": "Organisation settings",
+        "Settings that apply to your active organisation only. A field left empty uses the setting of the whole instance.": "Settings that apply to your active organisation only. A field left empty uses the setting of the whole instance.",
+        "The organisation settings could not be loaded.": "The organisation settings could not be loaded.",
+        "No active organisation. Choose an organisation in OpenRegister to see its settings.": "No active organisation. Choose an organisation in OpenRegister to see its settings.",
+        "Only an admin of this organisation can change these settings.": "Only an admin of this organisation can change these settings.",
+        "Objection period (days)": "Objection period (days)",
+        "Empty uses the instance period of {days} days. The Woo asks for at least four weeks.": "Empty uses the instance period of {days} days. The Woo asks for at least four weeks.",
+        "Anonymise": "Anonymise",
+        "Keep visible": "Keep visible",
+        "Leave both lists empty to use the instance anonymisation profile.": "Leave both lists empty to use the instance anonymisation profile.",
+        "Default huisstijl": "Default huisstijl",
+        "No default huisstijl": "No default huisstijl",
+        "The organisation settings could not be saved.": "The organisation settings could not be saved.",
+        "Organisation settings saved": "Organisation settings saved"
     },
     "nplurals=2; plural=(n != 1);"
 )

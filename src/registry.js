@@ -82,6 +82,7 @@ import ComponentGallery from './views/gallery/ComponentGallery.vue'
 import IntakeIndex from './views/intake/IntakeIndex.vue'
 import LegalHolds from './views/legalHolds/LegalHolds.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
+import OrganisationSettings from './views/organisation/OrganisationSettings.vue'
 import PolicyRuleIndex from './views/policy/PolicyRuleIndex.vue'
 import PrintJobs from './views/printJobs/PrintJobs.vue'
 import PublicationsPage from './views/publications/PublicationsPage.vue'
@@ -119,6 +120,7 @@ export default {
 	ContractPipeline: { kind: 'page', component: ContractPipeline },
 	SubjectErasures: { kind: 'page', component: SubjectErasures },
 	EmailIngestion: { kind: 'page', component: EmailIngestion },
+	OrganisationSettings: { kind: 'page', component: OrganisationSettings },
 	ClassificationPending: { kind: 'page', component: ClassificationPending },
 	EntitySearch: { kind: 'page', component: EntitySearch },
 	PublicationsPage: { kind: 'page', component: PublicationsPage },

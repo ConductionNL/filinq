@@ -127,6 +127,28 @@ class EffectiveSettingsTest extends TestCase {
 	}//end testTheOrganisationOverridesTheInstanceWhichOverridesTheCode()
 
 	/**
+	 * The instance period ignores the organisation's override and falls back on an unusable setting.
+	 *
+	 * @return void
+	 */
+	public function testTheInstancePeriodIgnoresTheOverride(): void {
+		$this->instance = ['publication_objection_period_days' => '35'];
+		$this->objects->expects($this->never())->method('searchObjectsBySlug');
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($this->objects);
+		$apps = $this->createMock(IAppManager::class);
+		$apps->method('getInstalledApps')->willReturn(['openregister']);
+		$settings = new EffectiveSettings(objectResolver: new DocumentObjectServiceResolver($container, $apps), config: $this->config(), logger: $this->logger);
+
+		$this->assertSame(35, $settings->instanceConsentPeriodDays());
+
+		foreach (['0', '366', '4.5', 'x', ''] as $unusable) {
+			$this->instance = ['publication_objection_period_days' => $unusable];
+			$this->assertSame(28, $settings->instanceConsentPeriodDays(), 'instance setting ' . var_export($unusable, true));
+		}
+	}//end testTheInstancePeriodIgnoresTheOverride()
+
+	/**
 	 * An out-of-range period is not used; an unknown setting resolves to null.
 	 *
 	 * @return void

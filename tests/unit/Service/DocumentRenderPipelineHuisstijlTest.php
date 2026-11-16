@@ -51,11 +51,19 @@ class DocumentRenderPipelineHuisstijlTest extends TestCase {
 	 *
 	 * @param string|null $default The organisation's default huisstijl.
 	 * @param array<int, string> $asked Receives the huisstijl ids looked up.
+	 * @param array<int, mixed>|\Throwable $visible The huisstijl objects of the active organisation, or the failure reading them.
 	 *
 	 * @return DocumentRenderPipeline
 	 */
-	private function pipeline(?string $default, array &$asked): DocumentRenderPipeline {
+	private function pipeline(?string $default, array &$asked, array|\Throwable $visible = []): DocumentRenderPipeline {
 		$objects = $this->createMock(ObjectService::class);
+		$searched = $objects->method('searchObjectsBySlug')->with('filinq', 'huisstijl', []);
+		if ($visible instanceof \Throwable) {
+			$searched->willThrowException($visible);
+		} else {
+			$searched->willReturn($visible);
+		}
+
 		$objects->method('find')->willReturnCallback(
 			function (...$args) use (&$asked): ?array {
 				$asked[] = (string)($args['id'] ?? $args[0]);
@@ -104,4 +112,34 @@ class DocumentRenderPipelineHuisstijlTest extends TestCase {
 		$this->assertNull($this->pipeline(default: null, asked: $asked)->loadHuisstijl(''));
 		$this->assertSame([], $asked);
 	}//end testWithoutADefaultNoHuisstijlIsLoaded()
+
+	/**
+	 * Without a default, the organisation's only huisstijl is used.
+	 *
+	 * @return void
+	 */
+	public function testWithoutADefaultTheOrganisationsOnlyHuisstijlIsUsed(): void {
+		$asked = [];
+		$only = new class implements \JsonSerializable {
+			public function jsonSerialize(): array {
+				return ['id' => 'hs-only', 'primaryColor' => '#00785a'];
+			}
+		};
+
+		$this->assertSame(['id' => 'hs-only', 'primaryColor' => '#00785a'], $this->pipeline(default: null, asked: $asked, visible: [$only])->loadHuisstijl(null));
+		$this->assertSame([], $asked);
+	}//end testWithoutADefaultTheOrganisationsOnlyHuisstijlIsUsed()
+
+	/**
+	 * Two huisstijl objects without a default, or an unreadable store, give neutral styling.
+	 *
+	 * @return void
+	 */
+	public function testSeveralOrNoReadableHuisstijlGiveNeutralStyling(): void {
+		$asked = [];
+
+		$this->assertNull($this->pipeline(default: null, asked: $asked, visible: [['id' => 'a'], ['id' => 'b']])->loadHuisstijl(null));
+		$this->assertNull($this->pipeline(default: null, asked: $asked, visible: new \RuntimeException('down'))->loadHuisstijl(null));
+		$this->assertSame([], $asked);
+	}//end testSeveralOrNoReadableHuisstijlGiveNeutralStyling()
 }//end class

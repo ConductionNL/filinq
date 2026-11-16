@@ -142,6 +142,27 @@ class EffectiveSettings {
 	}//end get()
 
 	/**
+	 * The instance objection period an organisation without an override inherits.
+	 *
+	 * The instance setting when it is a whole number from 1 to 365, else the
+	 * code default; never an organisation's override.
+	 *
+	 * @return int The days.
+	 *
+	 * @spec openspec/changes/multi-tenant-hardening/specs/admin-settings/spec.md#requirement-effective-settings-resolve-organisation-override-then-instance-default-req-ddmth-008
+	 */
+	public function instanceConsentPeriodDays(): int {
+		[$key, $default] = self::SETTINGS[self::CONSENT_PERIOD_DAYS];
+		$days            = trim($this->config->getValueString('filinq', $key, ''));
+		if (preg_match('/^\d+$/', $days) !== 1 || (int)$days < 1 || (int)$days > 365) {
+			return (int)$default;
+		}
+
+		return (int)$days;
+
+	}//end instanceConsentPeriodDays()
+
+	/**
 	 * The objection period in days, from 1 to 365; 28 when no setting gives a usable one.
 	 *
 	 * @return int The days.
