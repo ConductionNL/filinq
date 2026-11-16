@@ -27,10 +27,8 @@ namespace OCA\Filinq\Controller;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Service\BridgeApi;
-use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
-use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -40,7 +38,8 @@ use Throwable;
 /**
  * The bridge endpoints under `api/bridge/*`.
  *
- * The sources and their health are admin settings. Everything about a
+ * The sources and their health are an admin setting, served by the admin
+ * bridge panel's CaseSystemDeliveryController. Everything about a
  * document is read and written with the caller's own OpenRegister access:
  * the listing is RBAC-scoped, a document the caller cannot read answers 404,
  * a save the caller may not make is refused by OpenRegister, and the dossier
@@ -69,19 +68,6 @@ class BridgeController extends Controller {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
-
-	/**
-	 * GET /api/bridge/sources
-	 *
-	 * @return JSONResponse `{results: [...source, health]}`.
-	 *
-	 * @spec openspec/changes/zgw-document-bridge
-	 */
-	#[AuthorizedAdminSetting(FilinqAdmin::class)]
-	public function sources(): JSONResponse {
-		return $this->answer(work: fn (): array => ['results' => $this->bridge->sources()]);
-
-	}//end sources()
 
 	/**
 	 * GET /api/bridge/external-documents?sourceId=

@@ -25,7 +25,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use InvalidArgumentException;
 use OCA\Filinq\Service\BridgeDossierPickUp;
 use OCA\Filinq\Service\BridgeService;
-use OCA\Filinq\Service\DossierObjectRepository;
+use OCA\Filinq\Service\DossierFileService;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -73,7 +73,7 @@ final class BridgeDossierPickUpTest extends TestCase {
 
 	private BridgeService&MockObject $bridge;
 
-	private DossierObjectRepository&MockObject $dossiers;
+	private DossierFileService&MockObject $dossiers;
 
 	protected function setUp(): void {
 		$this->documents = [
@@ -107,7 +107,7 @@ final class BridgeDossierPickUpTest extends TestCase {
 			return array_merge($document, ['processingStatus' => 'in_processing', 'dossierRef' => $dossierRef]);
 		});
 
-		$this->dossiers = $this->createMock(DossierObjectRepository::class);
+		$this->dossiers = $this->createMock(DossierFileService::class);
 	}//end setUp()
 
 	private function pickUp(?Folder $folder = null, ?LoggerInterface $logger = null): BridgeDossierPickUp {
@@ -117,8 +117,7 @@ final class BridgeDossierPickUpTest extends TestCase {
 			$folder->method('getNonExistingName')->willReturnCallback(static fn (string $name): string => $name === 'besluit.pdf' ? 'besluit (2).pdf' : $name);
 		}
 
-		$this->dossiers->method('loadDossierContext')->with('dossier-21')->willReturn(['name' => 'Woo-verzoek 2026-021', 'folderRef' => 77]);
-		$this->dossiers->method('resolveDossierFolder')->with(77)->willReturn($folder);
+		$this->dossiers->method('folderOfDossier')->with('dossier-21')->willReturn($folder);
 
 		$userFolder = $this->createMock(Folder::class);
 		$userFolder->method('getById')->willReturnCallback(function (int $id): array {
@@ -180,7 +179,7 @@ final class BridgeDossierPickUpTest extends TestCase {
 	}//end testAStagedFileTheOperatorCannotReadRefusesThePickUp()
 
 	public function testADossierWithoutAFolderIsNotFound(): void {
-		$this->dossiers->method('loadDossierContext')->willThrowException(new RuntimeException('no dossier'));
+		$this->dossiers->method('folderOfDossier')->willThrowException(new RuntimeException('no dossier'));
 		$pickUp = new BridgeDossierPickUp(
 			bridge: $this->bridge,
 			dossiers: $this->dossiers,

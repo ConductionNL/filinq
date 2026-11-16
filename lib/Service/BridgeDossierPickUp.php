@@ -50,7 +50,7 @@ class BridgeDossierPickUp {
 	 * Constructor.
 	 *
 	 * @param BridgeService           $bridge     Reads and moves the external documents.
-	 * @param DossierObjectRepository $dossiers   Reads the dossier and resolves its folder.
+	 * @param DossierFileService      $dossiers   Resolves the dossier's folder.
 	 * @param IRootFolder             $rootFolder The file system.
 	 * @param IUserSession            $session    The operator.
 	 * @param LoggerInterface         $logger     Logs a document saved after its copy failed.
@@ -59,7 +59,7 @@ class BridgeDossierPickUp {
 	 */
 	public function __construct(
 		private readonly BridgeService $bridge,
-		private readonly DossierObjectRepository $dossiers,
+		private readonly DossierFileService $dossiers,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $session,
 		private readonly LoggerInterface $logger,
@@ -137,9 +137,7 @@ class BridgeDossierPickUp {
 	 */
 	private function dossierFolder(string $dossierUuid): Folder {
 		try {
-			$context = $this->dossiers->loadDossierContext(dossierUuid: $dossierUuid);
-
-			return $this->dossiers->resolveDossierFolder(folderRef: ($context['folderRef'] ?? null));
+			return $this->dossiers->folderOfDossier(dossierUuid: $dossierUuid);
 		} catch (Throwable $e) {
 			throw new RuntimeException('The dossier or its folder was not found.', 404, $e);
 		}

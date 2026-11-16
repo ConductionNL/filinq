@@ -28,8 +28,6 @@ use OCA\Filinq\Service\BridgeApi;
 use OCA\Filinq\Service\BridgeDossierPickUp;
 use OCA\Filinq\Service\BridgeService;
 use OCA\Filinq\Service\BridgeSourceBadges;
-use OCA\Filinq\Settings\FilinqAdmin;
-use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\IRequest;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -61,20 +59,12 @@ final class BridgeControllerTest extends TestCase {
 		return new BridgeController(request: $this->request, bridge: new BridgeApi(bridge: $this->bridge, pickUp: $this->pickUp), logger: $this->logger);
 	}//end controller()
 
-	public function testSourcesAreAnAdminSettingAndTheRestNeedsASignedInUser(): void {
-		$admin = (new ReflectionMethod(BridgeController::class, 'sources'))->getAttributes(AuthorizedAdminSetting::class);
-		$this->assertSame([FilinqAdmin::class], $admin[0]->getArguments());
+	public function testEveryEndpointNeedsASignedInUser(): void {
+		$this->assertFalse(method_exists(BridgeController::class, 'sources'), 'the sources are an admin setting on CaseSystemDeliveryController');
 		foreach (['externalDocuments', 'attach', 'release', 'retry'] as $method) {
 			$this->assertCount(1, (new ReflectionMethod(BridgeController::class, $method))->getAttributes(NoAdminRequired::class), $method);
 		}
-	}//end testSourcesAreAnAdminSettingAndTheRestNeedsASignedInUser()
-
-	public function testSourcesAnswerWithTheirHealth(): void {
-		$controller = $this->controller();
-		$this->bridge->method('sources')->willReturn([['uuid' => 's-1', 'health' => 'fresh']]);
-
-		$this->assertSame(['results' => [['uuid' => 's-1', 'health' => 'fresh']]], $controller->sources()->getData());
-	}//end testSourcesAnswerWithTheirHealth()
+	}//end testEveryEndpointNeedsASignedInUser()
 
 	public function testTheListingIsFilteredByTheGivenSource(): void {
 		$controller = $this->controller();
