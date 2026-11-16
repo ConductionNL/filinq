@@ -32,8 +32,8 @@ use Exception;
 use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\ErrorDetailsInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
+use OCA\Filinq\Kernel\Contracts\GenerationSourceObjectInterface;
 use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
-use OCA\Filinq\Service\GenerationSourceObject;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -75,7 +75,7 @@ class DocumentController extends Controller {
 	 * @param IUserSession $userSession User session for authentication
 	 * @param ControllerFeedback $feedback Translations for the answers and the failure log.
 	 * @param MultiFormatOutputProducerInterface|null $multiFormat Answers a request with options.formats
-	 * @param GenerationSourceObject|null $sourceObject Reads options.sourceObject: records it and files the document there
+	 * @param GenerationSourceObjectInterface|null $sourceObject Reads options.sourceObject: records it and files the document there
 	 *
 	 * @return void
 	 */
@@ -86,7 +86,7 @@ class DocumentController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly ControllerFeedback $feedback,
 		private readonly ?MultiFormatOutputProducerInterface $multiFormat = null,
-		private readonly ?GenerationSourceObject $sourceObject = null,
+		private readonly ?GenerationSourceObjectInterface $sourceObject = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
