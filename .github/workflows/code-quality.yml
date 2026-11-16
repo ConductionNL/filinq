@@ -192,7 +192,7 @@ jobs:
       # exercises the same OpenRegister the rest of the fleet integrates
       # against; `beta` lags and the importer contract this seed relies on
       # (`POST /api/configurations/import`) is read from `development`.
-      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"development"}]'
+      additional-apps: '[{"repo":"ConductionNL/openregister","app":"openregister","ref":"main"}]'
       # Shared `E2E Tests (Playwright)` job.
       #
       # `playwright-test-path` does double duty: it is where the job looks for
