@@ -26,7 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
+use OCA\Filinq\Kernel\Contracts\RefusalGroundsLegacyMapInterface;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -53,12 +54,12 @@ class BaseRefusalGroundGuard implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param RefusalGroundsLegacyMap $legacy    The old Woo slugs.
+	 * @param RefusalGroundsLegacyMapInterface $legacy    The old Woo slugs.
 	 * @param LoggerInterface         $logger    Records a refused write.
 	 * @param ContainerInterface      $container Resolves OpenRegister's SchemaMapper lazily.
 	 */
 	public function __construct(
-		private readonly RefusalGroundsLegacyMap $legacy,
+		private readonly RefusalGroundsLegacyMapInterface $legacy,
 		private readonly LoggerInterface $logger,
 		private readonly ContainerInterface $container,
 	) {
@@ -99,7 +100,9 @@ class BaseRefusalGroundGuard implements IEventListener {
 
 	/**
 	 * Whether a schema reference (OpenRegister stores the numeric id; a slug is
-	 * accepted too) is the `base` schema.
+	 * accepted too) is the `base` schema. A schema that does not exist is not
+	 * `base`; a lookup that fails otherwise counts as `base`, so the write is
+	 * refused rather than let through unchecked.
 	 *
 	 * @param string $schema The object's schema reference.
 	 *
@@ -119,8 +122,11 @@ class BaseRefusalGroundGuard implements IEventListener {
 		try {
 			$found = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')->find($schema);
 			return strtolower((string)$found->getSlug()) === self::SCHEMA;
-		} catch (Throwable) {
+		} catch (DoesNotExistException) {
 			return false;
+		} catch (Throwable $e) {
+			$this->logger->error('filinq.grounds.schema-lookup-failed', ['schema' => $schema, 'exception' => $e]);
+			return true;
 		}
 	}//end isBaseSchema()
 
@@ -196,6 +202,8 @@ class BaseRefusalGroundGuard implements IEventListener {
 
 	/**
 	 * Whether a slug names a Woo ground: a Woo article code or an old Woo slug.
+	 * When the old slugs cannot be read the slug counts as one, so the schema
+	 * check still decides and a `base` write is refused rather than let through.
 	 *
 	 * @param string $slug The slug.
 	 *
@@ -210,8 +218,9 @@ class BaseRefusalGroundGuard implements IEventListener {
 
 		try {
 			return $this->legacy->isLegacySlug(slug: $slug);
-		} catch (Throwable) {
-			return false;
+		} catch (Throwable $e) {
+			$this->logger->error('filinq.grounds.legacy-map-unreadable', ['exception' => $e]);
+			return true;
 		}
 	}//end isWooGround()
 }//end class

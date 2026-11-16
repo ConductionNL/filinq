@@ -25,7 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
+use OCA\Filinq\Kernel\Contracts\RefusalGroundsResolverInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -46,13 +46,13 @@ class GroundsController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest               $request     The request.
-	 * @param RefusalGroundsResolver $grounds     The one grounds reader.
+	 * @param RefusalGroundsResolverInterface $grounds The one grounds reader.
 	 * @param IUserSession           $userSession The signed-in user.
 	 * @param LoggerInterface        $logger      Records a list that cannot be read.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly RefusalGroundsResolver $grounds,
+		private readonly RefusalGroundsResolverInterface $grounds,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 	) {

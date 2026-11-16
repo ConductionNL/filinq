@@ -24,6 +24,7 @@ use OCA\Filinq\EventListener\BaseRefusalGroundGuard;
 use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -59,13 +60,15 @@ class BaseSchemaGuardTest extends TestCase {
 	/**
 	 * The guard with the shipped legacy map and a logger that expects the given warning count.
 	 *
-	 * Schema id 42 is `base`, id 7 is `dossier`; any other reference is unknown.
+	 * Schema id 42 is `base`, id 7 is `dossier`, id 500 fails to load; any
+	 * other reference does not exist.
 	 *
-	 * @param int $warnings How often a refusal is logged.
+	 * @param int                          $warnings How often a refusal is logged.
+	 * @param RefusalGroundsLegacyMap|null $legacy   The old slugs; null is the shipped map.
 	 *
 	 * @return BaseRefusalGroundGuard
 	 */
-	private function guard(int $warnings): BaseRefusalGroundGuard {
+	private function guard(int $warnings, ?RefusalGroundsLegacyMap $legacy = null): BaseRefusalGroundGuard {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->exactly($warnings))->method('warning')->with('filinq.grounds.woo-base-refused');
 
@@ -79,8 +82,12 @@ class BaseSchemaGuardTest extends TestCase {
 			 */
 			public function find(string $id): object {
 				$slugs = ['42' => 'base', '7' => 'dossier'];
+				if ($id === '500') {
+					throw new RuntimeException('Database unavailable');
+				}
+
 				if (isset($slugs[$id]) === false) {
-					throw new RuntimeException('Schema not found');
+					throw new DoesNotExistException('Schema not found');
 				}
 
 				return new class ($slugs[$id]) {
@@ -103,7 +110,7 @@ class BaseSchemaGuardTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->with('OCA\OpenRegister\Db\SchemaMapper')->willReturn($mapper);
 
-		return new BaseRefusalGroundGuard(new RefusalGroundsLegacyMap(), $logger, $container);
+		return new BaseRefusalGroundGuard(($legacy ?? new RefusalGroundsLegacyMap()), $logger, $container);
 
 	}//end guard()
 
@@ -169,4 +176,42 @@ class BaseSchemaGuardTest extends TestCase {
 		$this->assertFalse($event->isPropagationStopped());
 
 	}//end testOtherWritesPass()
+
+	/**
+	 * A schema lookup that fails, rather than finding no schema, refuses a Woo
+	 * ground instead of letting it through unchecked.
+	 *
+	 * @return void
+	 */
+	public function testAFailedSchemaLookupRefusesAWooGround(): void {
+		$guard = $this->guard(warnings: 1);
+
+		$event = self::creating(schema: '500', slug: '5.1.2.e');
+		$guard->handle($event);
+		$this->assertTrue(condition: $event->isPropagationStopped());
+
+		$own = self::creating(schema: '500', slug: 'eigen-grond');
+		$guard->handle($own);
+		$this->assertFalse(condition: $own->isPropagationStopped());
+
+	}//end testAFailedSchemaLookupRefusesAWooGround()
+
+	/**
+	 * When the old slugs cannot be read, a `base` write is refused and a write
+	 * on another schema still passes.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableLegacyMapRefusesBaseWrites(): void {
+		$guard = $this->guard(warnings: 1, legacy: new RefusalGroundsLegacyMap(path: '/nonexistent/refusal-grounds-legacy-map.json'));
+
+		$onBase = self::creating(schema: 'base', slug: 'art-5-1-2-e');
+		$guard->handle($onBase);
+		$this->assertTrue(condition: $onBase->isPropagationStopped());
+
+		$onDossier = self::creating(schema: '7', slug: 'art-5-1-2-e');
+		$guard->handle($onDossier);
+		$this->assertFalse(condition: $onDossier->isPropagationStopped());
+
+	}//end testAnUnreadableLegacyMapRefusesBaseWrites()
 }//end class

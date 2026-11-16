@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Grounds;
 
+use OCA\Filinq\Kernel\Contracts\RefusalGroundsLegacyMapInterface;
 use RuntimeException;
 
 /**
@@ -32,7 +33,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
  */
-class RefusalGroundsLegacyMap {
+class RefusalGroundsLegacyMap implements RefusalGroundsLegacyMapInterface {
 
 	/**
 	 * The value that marks a slug without a one-to-one code.

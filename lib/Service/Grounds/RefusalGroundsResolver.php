@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Grounds;
 
+use OCA\Filinq\Kernel\Contracts\RefusalGroundsResolverInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -37,7 +38,7 @@ use Throwable;
  *
  * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-one-resolver-reads-the-grounds-from-dossiq-or-from-a-read-only-snapshot-req-grd-001
  */
-class RefusalGroundsResolver {
+class RefusalGroundsResolver implements RefusalGroundsResolverInterface {
 
 	/**
 	 * dossiq's grounds list.

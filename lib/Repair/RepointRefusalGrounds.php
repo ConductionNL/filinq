@@ -31,9 +31,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Repair;
 
-use OCA\Filinq\Service\DossierObjectReader;
-use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
-use OCA\Filinq\Service\LegalBasisProposalService;
+use OCA\Filinq\Kernel\Contracts\DossierObjectReaderInterface;
+use OCA\Filinq\Kernel\Contracts\LegalBasisProposalServiceInterface;
+use OCA\Filinq\Kernel\Contracts\RefusalGroundsLegacyMapInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IAppConfig;
@@ -65,8 +65,8 @@ class RepointRefusalGrounds implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param DossierObjectReader     $reader     Object-shape reading.
-	 * @param RefusalGroundsLegacyMap     $legacy     The old slug to code map.
+	 * @param DossierObjectReaderInterface     $reader     Object-shape reading.
+	 * @param RefusalGroundsLegacyMapInterface $legacy     The old slug to code map.
 	 * @param IAppConfig              $appConfig  Holds the entity-type mapping.
 	 * @param LoggerInterface         $logger     Names an object that could not be written.
 	 * @param ContainerInterface|null $container  Reaches OpenRegister's object service and entity relations.
@@ -74,8 +74,8 @@ class RepointRefusalGrounds implements IRepairStep {
 	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	public function __construct(
-		private readonly DossierObjectReader $reader,
-		private readonly RefusalGroundsLegacyMap $legacy,
+		private readonly DossierObjectReaderInterface $reader,
+		private readonly RefusalGroundsLegacyMapInterface $legacy,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly ?ContainerInterface $container = null,
@@ -420,7 +420,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function repointMapping(array $report): array {
-		$raw = $this->appConfig->getValueString('filinq', LegalBasisProposalService::CONFIG_KEY, '');
+		$raw = $this->appConfig->getValueString('filinq', LegalBasisProposalServiceInterface::CONFIG_KEY, '');
 		$mapping = json_decode($raw, true);
 		if (is_array($mapping) === false) {
 			return $report;
@@ -432,7 +432,7 @@ class RepointRefusalGrounds implements IRepairStep {
 		}
 
 		if ($mapping !== $before) {
-			$this->appConfig->setValueString('filinq', LegalBasisProposalService::CONFIG_KEY, (string)json_encode($mapping));
+			$this->appConfig->setValueString('filinq', LegalBasisProposalServiceInterface::CONFIG_KEY, (string)json_encode($mapping));
 		}
 
 		return $report;
@@ -456,7 +456,7 @@ class RepointRefusalGrounds implements IRepairStep {
 
 		$result = $this->repoint(bases: $bases);
 		foreach ($result['left'] as $slug) {
-			$report['left'][] = LegalBasisProposalService::CONFIG_KEY . ' ' . $type . ' (' . $slug . ')';
+			$report['left'][] = LegalBasisProposalServiceInterface::CONFIG_KEY . ' ' . $type . ' (' . $slug . ')';
 		}
 
 		if ($result['bases'] !== $bases) {
