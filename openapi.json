@@ -1355,6 +1355,37 @@
                 }
             }
         },
+        "/reports/personal-data": {
+            "get": {
+                "operationId": "personal-data-report-index",
+                "summary": "The documents the caller may read in which detection found personal data, with entity types and counts.",
+                "description": "The documents the caller may read in which detection found personal data, each with its entity types and counts and whether an anonymised copy exists. Never a detected value.",
+                "tags": [
+                    "personal-data-report"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The report: results, total, available, truncated.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
         "/case-documents/upload-policy": {
             "get": {
                 "operationId": "case-documents-upload-policy",

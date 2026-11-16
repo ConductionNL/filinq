@@ -3114,7 +3114,15 @@ OC.L10N.register(
         "Health": "Health",
         "Could not load the case system sources": "Could not load the case system sources",
         "Never": "Never",
-        "The master record of this document is in the case system": "The master record of this document is in the case system"
+        "The master record of this document is in the case system": "The master record of this document is in the case system",
+        "Personal data": "Personal data",
+        "Which documents hold personal data, of which kind, and whether an anonymised copy exists.": "Which documents hold personal data, of which kind, and whether an anonymised copy exists.",
+        "Documents with personal data": "Documents with personal data",
+        "Personal data found": "Personal data found",
+        "Anonymised copy": "Anonymised copy",
+        "No anonymised copy": "No anonymised copy",
+        "No document you may read holds detected personal data": "No document you may read holds detected personal data",
+        "The personal data report could not be read": "The personal data report could not be read"
     },
     "nplurals=2; plural=(n != 1);"
 )

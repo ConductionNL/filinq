@@ -3298,7 +3298,15 @@
         "Health": "Gezondheid",
         "Could not load the case system sources": "De zaaksysteembronnen konden niet worden geladen",
         "Never": "Nooit",
-        "The master record of this document is in the case system": "Het brondocument hiervan staat in het zaaksysteem"
+        "The master record of this document is in the case system": "Het brondocument hiervan staat in het zaaksysteem",
+        "Personal data": "Persoonsgegevens",
+        "Which documents hold personal data, of which kind, and whether an anonymised copy exists.": "Welke documenten persoonsgegevens bevatten, van welke soort, en of er een geanonimiseerde kopie is.",
+        "Documents with personal data": "Documenten met persoonsgegevens",
+        "Personal data found": "Gevonden persoonsgegevens",
+        "Anonymised copy": "Geanonimiseerde kopie",
+        "No anonymised copy": "Geen geanonimiseerde kopie",
+        "No document you may read holds detected personal data": "Geen document dat je mag lezen bevat gevonden persoonsgegevens",
+        "The personal data report could not be read": "Het overzicht van persoonsgegevens kon niet worden gelezen"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
