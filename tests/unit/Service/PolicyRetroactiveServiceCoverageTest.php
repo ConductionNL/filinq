@@ -22,7 +22,9 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
 use OCA\Filinq\Service\PolicyMatchService;
+use OCA\Filinq\Service\ObjectResultExtractor;
 use OCA\Filinq\Service\PolicyRetroactiveService;
+use OCA\Filinq\Service\SystemContextSeam;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -37,6 +39,7 @@ use OCA\Filinq\Tests\Support\LegacyObjectArgs;
  * @covers \OCA\Filinq\Service\PolicyRetroactiveService
  * @uses   \OCA\Filinq\Service\ObjectResultExtractor
  * @uses   \OCA\Filinq\Service\PolicyRuleNormaliser
+ * @uses   \OCA\Filinq\Service\SystemContextSeam
  *
  * @psalm-suppress PropertyNotSetInConstructor
  */
@@ -64,6 +67,20 @@ class PolicyRetroactiveServiceCoverageTest extends TestCase {
 	private ObjectServiceInterface&MockObject $objectService;
 
 	/**
+	 * The seam's own logger, apart from the service's.
+	 *
+	 * @var LoggerInterface&MockObject
+	 */
+	private LoggerInterface&MockObject $seamLogger;
+
+	/**
+	 * Operations the object service ran as the system.
+	 *
+	 * @var int
+	 */
+	private int $systemRuns = 0;
+
+	/**
 	 * Build the mocks.
 	 *
 	 * @return void
@@ -74,6 +91,14 @@ class PolicyRetroactiveServiceCoverageTest extends TestCase {
 		$this->logger = $this->createMock(LoggerInterface::class);
 		$this->matcher = $this->createMock(PolicyMatchService::class);
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
+		$this->seamLogger = $this->createMock(originalClassName: LoggerInterface::class);
+		$this->systemRuns = 0;
+		$this->objectService->method('runAsSystem')->willReturnCallback(
+			function (callable $operation): mixed {
+				$this->systemRuns++;
+				return $operation();
+			}
+		);
 
 	}//end setUp()
 
@@ -83,7 +108,13 @@ class PolicyRetroactiveServiceCoverageTest extends TestCase {
 	 * @return PolicyRetroactiveService
 	 */
 	private function service(): PolicyRetroactiveService {
-		return new PolicyRetroactiveService($this->logger, $this->matcher, $this->objectService);
+		return new PolicyRetroactiveService(
+			$this->logger,
+			$this->matcher,
+			$this->objectService,
+			new ObjectResultExtractor(),
+			new SystemContextSeam(logger: $this->seamLogger)
+		);
 
 	}//end service()
 
@@ -269,6 +300,69 @@ class PolicyRetroactiveServiceCoverageTest extends TestCase {
 		$this->assertSame(2, $this->service()->applyProhibitionMutation($prohibition));
 
 	}//end testMissingEntityTypeSweepsAllTypes()
+
+	/**
+	 * The pass reads and writes the consents only inside one logged system run.
+	 *
+	 * The prohibition admins who may save a prohibition hold no grant on
+	 * document consents, so the load and every force-resolve must happen as the
+	 * system, through the seam, with its literal reason logged.
+	 *
+	 * @return void
+	 */
+	public function testSweepRunsAsTheSystemThroughTheLoggedSeam(): void {
+		$inside = false;
+		$this->objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$this->objectService->expects($this->once())->method('runAsSystem')->willReturnCallback(
+			function (callable $operation) use (&$inside): mixed {
+				$inside = true;
+				$result = $operation();
+				$inside = false;
+				return $result;
+			}
+		);
+		$calls = [];
+		$this->objectService->method('findAll')->willReturnCallback(
+			function () use (&$inside, &$calls): array {
+				$calls[] = ['findAll', $inside];
+				return [['id' => 'r1', 'consentStatus' => 'pending', 'entityType' => 'PERSON', 'entityText' => 'Jan']];
+			}
+		);
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function () use (&$inside, &$calls): ObjectEntityInterface {
+				$calls[] = ['saveObject', $inside];
+				return $this->createMock(originalClassName: ObjectEntityInterface::class);
+			}
+		);
+		$this->matcher->method('entityMatchesAnyRule')->willReturn(true);
+		$this->seamLogger->expects($this->once())
+			->method('info')
+			->with(
+				'Filinq ran an operation as the system, across organisations',
+				$this->callback(
+					callback: fn (array $context): bool => $context['reason'] === 'a saved prohibition force-resolves the in-flight document consents it matches'
+						&& $context['caller'] === PolicyRetroactiveService::class . '::applyProhibitionMutation'
+				)
+			);
+
+		$this->assertSame(expected: 1, actual: $this->service()->applyProhibitionMutation(prohibition: $this->prohibition()));
+		$this->assertSame(expected: [['findAll', true], ['saveObject', true]], actual: $calls);
+
+	}//end testSweepRunsAsTheSystemThroughTheLoggedSeam()
+
+	/**
+	 * An ineligible prohibition never reaches the seam.
+	 *
+	 * @return void
+	 */
+	public function testIneligibleProhibitionDoesNotRunAsTheSystem(): void {
+		$this->seamLogger->expects($this->never())->method('info');
+		$this->objectService->expects($this->never())->method('findAll');
+
+		$this->assertSame(expected: 0, actual: $this->service()->applyProhibitionMutation(prohibition: $this->prohibition(overrides: ['active' => false])));
+		$this->assertSame(expected: 0, actual: $this->systemRuns);
+
+	}//end testIneligibleProhibitionDoesNotRunAsTheSystem()
 
 	/**
 	 * When nothing is resolved, no info line is logged but the cache is still

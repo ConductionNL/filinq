@@ -73,19 +73,29 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 	];
 
 	/**
+	 * The logged seam the retroactive pass runs through.
+	 *
+	 * @var SystemContextSeam
+	 */
+	private readonly SystemContextSeam $seam;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger Structured log sink.
 	 * @param PolicyMatchService $policyMatcher Reusable rule-evaluation primitives.
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object contract (ADR-084).
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
+	 * @param SystemContextSeam|null $seam The one place Filinq relaxes OpenRegister enforcement; built from the logger when absent.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
 		private readonly PolicyMatchService $policyMatcher,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),
+		?SystemContextSeam $seam = null,
 	) {
+		$this->seam = ($seam ?? new SystemContextSeam(logger: $logger));
 
 	}//end __construct()
 
@@ -118,10 +128,19 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 			return 0;
 		}
 
-		$resolved = $this->sweepInFlightRecords(
-			matchRules: $matchRules,
-			entityType: (string)($prohibition['entityType'] ?? 'OTHER'),
-			prohibitionUuid: $prohibitionUuid
+		// A prohibition applies to every anonymisation (the rule load in
+		// PolicyMatchService runs as the system for that reason), and the
+		// prohibition admins who may save one hold no read or update of
+		// document consents. So the pass runs through the one logged seam,
+		// never through a grant on the consent schema.
+		$resolved = (int)$this->seam->run(
+			objectService: $this->objectService,
+			reason: 'a saved prohibition force-resolves the in-flight document consents it matches',
+			operation: fn (): int => $this->sweepInFlightRecords(
+				matchRules: $matchRules,
+				entityType: (string)($prohibition['entityType'] ?? 'OTHER'),
+				prohibitionUuid: $prohibitionUuid
+			)
 		);
 
 		$this->policyMatcher->invalidateCache();
@@ -287,12 +306,10 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 			// `scope=document` to the filter bounds the result set to
 			// what this method actually needs. The defensive PHP scope
 			// check below is retained as a belt-and-braces.
-			// No RBAC or multitenancy bypass (multi-tenant-hardening D2): this
-			// runs in the request of the policy or prohibition admin who
-			// changed the prohibition, so OpenRegister scopes the records to
-			// what that admin may read and change in the active organisation
-			// (the publicationConsent cascade grants both groups document
-			// consents for this pass).
+			// No bypass flags (multi-tenant-hardening D2): the caller runs
+			// this load and the writes through SystemContextSeam, because the
+			// prohibition admin who saved the rule has no direct read or
+			// update of document consents.
 			$result = $this->objectService->findAll(
 				config: [
 					'filters' => [

@@ -188,37 +188,29 @@ class ServiceWrittenCreateTest extends TestCase {
 	}//end testConsentAndIntakeAreNotOpenToEveryUser()
 
 	/**
-	 * Whoever may save a prohibition reaches the document consents its retroactive pass resolves.
+	 * Saving a prohibition gives its writers no reach into consent records.
 	 *
-	 * Saving a publish-never rule force-resolves the matching in-flight document
-	 * consents in the saver's own request, under the cascade (no bypass since
-	 * multi-tenant-hardening). A group that may write `publicationProhibition` but
-	 * not read and update document consents would save the rule while the pass
-	 * silently resolved nothing. The grant stays limited to `scope: document`:
-	 * standing consents and deletes remain out of its reach.
+	 * The retroactive pass that resolves in-flight document consents when a
+	 * prohibition is saved runs as the system through `SystemContextSeam`, so
+	 * the prohibition admins need, and get, no grant on `publicationConsent`.
 	 *
 	 * @return void
 	 */
-	public function testProhibitionWritersReachTheDocumentConsentsTheRetroactivePassResolves(): void {
-		$schemas     = $this->schemas();
-		$consent     = $schemas['publicationConsent']['authorization'];
-		$prohibition = $schemas['publicationProhibition']['authorization'];
-		$scoped      = ['group' => 'filinq-prohibition-admins', 'match' => ['scope' => 'document']];
+	public function testProhibitionWritersHoldNoGrantOnConsents(): void {
+		$schemas = $this->schemas();
+		$consent = $schemas['publicationConsent']['authorization'];
 
-		$this->assertContains(needle: 'filinq-prohibition-admins', haystack: $prohibition['create']);
-		$this->assertContains(needle: 'filinq-prohibition-admins', haystack: $prohibition['update']);
-		$this->assertContains(needle: $scoped, haystack: $consent['read']);
-		$this->assertContains(needle: $scoped, haystack: $consent['update']);
-		$this->assertNotContains(needle: 'filinq-prohibition-admins', haystack: $consent['read']);
-		$this->assertNotContains(needle: 'filinq-prohibition-admins', haystack: $consent['update']);
-		foreach ($consent['delete'] as $entry) {
-			$group = $entry;
-			if (is_array($entry) === true) {
-				$group = ($entry['group'] ?? '');
+		$this->assertContains(needle: 'filinq-prohibition-admins', haystack: $schemas['publicationProhibition']['authorization']['update']);
+		foreach ($consent as $action => $entries) {
+			foreach ($entries as $entry) {
+				$group = $entry;
+				if (is_array($entry) === true) {
+					$group = ($entry['group'] ?? '');
+				}
+
+				$this->assertNotSame(expected: 'filinq-prohibition-admins', actual: $group, message: 'publicationConsent ' . $action);
 			}
-
-			$this->assertNotSame(expected: 'filinq-prohibition-admins', actual: $group);
 		}
 
-	}//end testProhibitionWritersReachTheDocumentConsentsTheRetroactivePassResolves()
+	}//end testProhibitionWritersHoldNoGrantOnConsents()
 }//end class
