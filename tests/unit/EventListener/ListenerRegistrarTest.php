@@ -89,7 +89,7 @@ class ListenerRegistrarTest extends TestCase {
 
 		(new ListenerRegistrar())->register($context);
 
-		self::assertCount(21, $registered);
+		self::assertCount(23, $registered);
 		self::assertSame(['OCA\Filinq\Event\IntakeDocumentReceivedEvent', 'OCA\Filinq\EventListener\IntakeDocumentReceivedListener'], $registered[0]);
 		self::assertSame(
 			[
@@ -101,8 +101,8 @@ class ListenerRegistrarTest extends TestCase {
 			array_slice($registered, 9, 4)
 		);
 		self::assertSame(
-			array_fill(0, 5, IntegrationLeafRegistrar::LEAF_EVENT),
-			array_column(array_slice($registered, 13, 5), 0)
+			array_fill(0, 7, IntegrationLeafRegistrar::LEAF_EVENT),
+			array_column(array_slice($registered, 13, 7), 0)
 		);
 		self::assertSame(
 			[
@@ -110,7 +110,7 @@ class ListenerRegistrarTest extends TestCase {
 				[DocumentGenerationRequestedEvent::class, DocumentGenerationRequestedListener::class],
 				[DocumentStampRequestedEvent::class, DocumentStampRequestedListener::class],
 			],
-			array_slice($registered, 18)
+			array_slice($registered, 20)
 		);
 	}//end testRegisterDelegatesToEveryAreaInOrder()
 
