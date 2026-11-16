@@ -7,7 +7,7 @@
     "tools": [
       {
         "name": "composer",
-        "version": "2.8.12"
+        "version": "2.10.2"
       },
       {
         "vendor": "cyclonedx",
@@ -384,10 +384,10 @@
       ]
     },
     {
-      "bom-ref": "opis/json-schema-2.6.0.0",
+      "bom-ref": "opis/json-schema-2.6.2.0",
       "type": "library",
       "name": "json-schema",
-      "version": "2.6.0",
+      "version": "2.6.2",
       "group": "opis",
       "description": "Json Schema Validator for PHP",
       "author": "Sorin Sarca, Marius Sarca",
@@ -398,17 +398,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/opis/json-schema@2.6.0",
+      "purl": "pkg:composer/opis/json-schema@2.6.2",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/opis/json-schema/zipball/8458763e0dd0b6baa310e04f1829fc73da4e8c8a",
-          "comment": "dist reference: 8458763e0dd0b6baa310e04f1829fc73da4e8c8a"
+          "url": "https://api.github.com/repos/opis/json-schema/zipball/b87b424da3fbeaab09567910fda48dc88d9dcbd8",
+          "comment": "dist reference: b87b424da3fbeaab09567910fda48dc88d9dcbd8"
         },
         {
           "type": "vcs",
           "url": "https://github.com/opis/json-schema.git",
-          "comment": "source reference: 8458763e0dd0b6baa310e04f1829fc73da4e8c8a"
+          "comment": "source reference: b87b424da3fbeaab09567910fda48dc88d9dcbd8"
         },
         {
           "type": "website",
@@ -422,18 +422,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/opis/json-schema/tree/2.6.0",
+          "url": "https://github.com/opis/json-schema/tree/2.6.2",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "8458763e0dd0b6baa310e04f1829fc73da4e8c8a"
+          "value": "b87b424da3fbeaab09567910fda48dc88d9dcbd8"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "8458763e0dd0b6baa310e04f1829fc73da4e8c8a"
+          "value": "b87b424da3fbeaab09567910fda48dc88d9dcbd8"
         },
         {
           "name": "cdx:composer:package:type",
@@ -949,10 +949,10 @@
       ]
     },
     {
-      "bom-ref": "symfony/deprecation-contracts-3.7.1.0",
+      "bom-ref": "symfony/deprecation-contracts-3.8.1.0",
       "type": "library",
       "name": "deprecation-contracts",
-      "version": "v3.7.1",
+      "version": "v3.8.1",
       "group": "symfony",
       "description": "A generic function and convention to trigger deprecation notices",
       "author": "Nicolas Grekas, Symfony Community",
@@ -963,17 +963,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/symfony/deprecation-contracts@v3.7.1",
+      "purl": "pkg:composer/symfony/deprecation-contracts@v3.8.1",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/f3202fa1b5097b0af062dc978b32ecf63404e31d",
-          "comment": "dist reference: f3202fa1b5097b0af062dc978b32ecf63404e31d"
+          "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/feb1edf4e546af3b85c5caebe8359a20db230ca3",
+          "comment": "dist reference: feb1edf4e546af3b85c5caebe8359a20db230ca3"
         },
         {
           "type": "vcs",
           "url": "https://github.com/symfony/deprecation-contracts.git",
-          "comment": "source reference: f3202fa1b5097b0af062dc978b32ecf63404e31d"
+          "comment": "source reference: feb1edf4e546af3b85c5caebe8359a20db230ca3"
         },
         {
           "type": "website",
@@ -982,18 +982,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/symfony/deprecation-contracts/tree/v3.7.1",
+          "url": "https://github.com/symfony/deprecation-contracts/tree/v3.8.1",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "f3202fa1b5097b0af062dc978b32ecf63404e31d"
+          "value": "feb1edf4e546af3b85c5caebe8359a20db230ca3"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "f3202fa1b5097b0af062dc978b32ecf63404e31d"
+          "value": "feb1edf4e546af3b85c5caebe8359a20db230ca3"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1055,10 +1055,10 @@
       ]
     },
     {
-      "bom-ref": "symfony/polyfill-mbstring-1.38.2.0",
+      "bom-ref": "symfony/polyfill-mbstring-1.43.3.0",
       "type": "library",
       "name": "polyfill-mbstring",
-      "version": "v1.38.2",
+      "version": "v1.43.3",
       "group": "symfony",
       "description": "Symfony polyfill for the Mbstring extension",
       "author": "Nicolas Grekas, Symfony Community",
@@ -1069,17 +1069,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/symfony/polyfill-mbstring@v1.38.2",
+      "purl": "pkg:composer/symfony/polyfill-mbstring@v1.43.3",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6",
-          "comment": "dist reference: d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+          "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/122889ed24dc000165bcbfd77ec412f15cbdfc6a",
+          "comment": "dist reference: 122889ed24dc000165bcbfd77ec412f15cbdfc6a"
         },
         {
           "type": "vcs",
           "url": "https://github.com/symfony/polyfill-mbstring.git",
-          "comment": "source reference: d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+          "comment": "source reference: 122889ed24dc000165bcbfd77ec412f15cbdfc6a"
         },
         {
           "type": "website",
@@ -1088,18 +1088,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/symfony/polyfill-mbstring/tree/v1.38.2",
+          "url": "https://github.com/symfony/polyfill-mbstring/tree/v1.43.3",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+          "value": "122889ed24dc000165bcbfd77ec412f15cbdfc6a"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+          "value": "122889ed24dc000165bcbfd77ec412f15cbdfc6a"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1267,10 +1267,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-barcode-2.17.2.0",
+      "bom-ref": "tecnickcom/tc-lib-barcode-2.17.4.0",
       "type": "library",
       "name": "tc-lib-barcode",
-      "version": "2.17.2",
+      "version": "2.17.4",
       "group": "tecnickcom",
       "description": "PHP library to generate 73 types of linear, 2D and postal barcodes as SVG, PNG, HTML or GD images",
       "author": "Nicola Asuni",
@@ -1281,17 +1281,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-barcode@2.17.2",
+      "purl": "pkg:composer/tecnickcom/tc-lib-barcode@2.17.4",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-barcode/zipball/b6c42dd1ca3cae0ddadfe29640d6018d48082054",
-          "comment": "dist reference: b6c42dd1ca3cae0ddadfe29640d6018d48082054"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-barcode/zipball/37315623ccf80167e5d0641deaa511b750bd9449",
+          "comment": "dist reference: 37315623ccf80167e5d0641deaa511b750bd9449"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-barcode.git",
-          "comment": "source reference: b6c42dd1ca3cae0ddadfe29640d6018d48082054"
+          "comment": "source reference: 37315623ccf80167e5d0641deaa511b750bd9449"
         },
         {
           "type": "website",
@@ -1312,11 +1312,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "b6c42dd1ca3cae0ddadfe29640d6018d48082054"
+          "value": "37315623ccf80167e5d0641deaa511b750bd9449"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "b6c42dd1ca3cae0ddadfe29640d6018d48082054"
+          "value": "37315623ccf80167e5d0641deaa511b750bd9449"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1325,10 +1325,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-color-3.0.13.0",
+      "bom-ref": "tecnickcom/tc-lib-color-3.0.15.0",
       "type": "library",
       "name": "tc-lib-color",
-      "version": "3.0.13",
+      "version": "3.0.15",
       "group": "tecnickcom",
       "description": "PHP library to manipulate various color representations",
       "author": "Nicola Asuni",
@@ -1339,17 +1339,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-color@3.0.13",
+      "purl": "pkg:composer/tecnickcom/tc-lib-color@3.0.15",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-color/zipball/076424ab943b43c2830c2e278d5510c52b9ab904",
-          "comment": "dist reference: 076424ab943b43c2830c2e278d5510c52b9ab904"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-color/zipball/6f75f9086a8e849f845f55fb19b0aca4193dfa73",
+          "comment": "dist reference: 6f75f9086a8e849f845f55fb19b0aca4193dfa73"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-color.git",
-          "comment": "source reference: 076424ab943b43c2830c2e278d5510c52b9ab904"
+          "comment": "source reference: 6f75f9086a8e849f845f55fb19b0aca4193dfa73"
         },
         {
           "type": "website",
@@ -1370,11 +1370,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "076424ab943b43c2830c2e278d5510c52b9ab904"
+          "value": "6f75f9086a8e849f845f55fb19b0aca4193dfa73"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "076424ab943b43c2830c2e278d5510c52b9ab904"
+          "value": "6f75f9086a8e849f845f55fb19b0aca4193dfa73"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1383,10 +1383,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-file-3.9.9.0",
+      "bom-ref": "tecnickcom/tc-lib-file-3.9.11.0",
       "type": "library",
       "name": "tc-lib-file",
-      "version": "3.9.9",
+      "version": "3.9.11",
       "group": "tecnickcom",
       "description": "PHP library for safe low-level file access: byte-level reads, path allowlisting, file caching and directory lookup",
       "author": "Nicola Asuni",
@@ -1397,17 +1397,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-file@3.9.9",
+      "purl": "pkg:composer/tecnickcom/tc-lib-file@3.9.11",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-file/zipball/973e4b9b13dc3cd910f4f6aeb996ed92250f4218",
-          "comment": "dist reference: 973e4b9b13dc3cd910f4f6aeb996ed92250f4218"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-file/zipball/64cad1a5513193d0c90c67225ecbc51ea631cfd1",
+          "comment": "dist reference: 64cad1a5513193d0c90c67225ecbc51ea631cfd1"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-file.git",
-          "comment": "source reference: 973e4b9b13dc3cd910f4f6aeb996ed92250f4218"
+          "comment": "source reference: 64cad1a5513193d0c90c67225ecbc51ea631cfd1"
         },
         {
           "type": "website",
@@ -1428,11 +1428,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "973e4b9b13dc3cd910f4f6aeb996ed92250f4218"
+          "value": "64cad1a5513193d0c90c67225ecbc51ea631cfd1"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "973e4b9b13dc3cd910f4f6aeb996ed92250f4218"
+          "value": "64cad1a5513193d0c90c67225ecbc51ea631cfd1"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1441,10 +1441,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-pdf-encrypt-2.12.1.0",
+      "bom-ref": "tecnickcom/tc-lib-pdf-encrypt-2.12.3.0",
       "type": "library",
       "name": "tc-lib-pdf-encrypt",
-      "version": "2.12.1",
+      "version": "2.12.3",
       "group": "tecnickcom",
       "description": "PHP library to encrypt and decrypt PDF data",
       "author": "Nicola Asuni",
@@ -1455,17 +1455,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-encrypt@2.12.1",
+      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-encrypt@2.12.3",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-encrypt/zipball/1aca6aab0dc4b34621c8b6256258e247a486a06b",
-          "comment": "dist reference: 1aca6aab0dc4b34621c8b6256258e247a486a06b"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-encrypt/zipball/34752d29921e86b236bd6d250ef37027dccd57e3",
+          "comment": "dist reference: 34752d29921e86b236bd6d250ef37027dccd57e3"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-pdf-encrypt.git",
-          "comment": "source reference: 1aca6aab0dc4b34621c8b6256258e247a486a06b"
+          "comment": "source reference: 34752d29921e86b236bd6d250ef37027dccd57e3"
         },
         {
           "type": "website",
@@ -1486,11 +1486,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "1aca6aab0dc4b34621c8b6256258e247a486a06b"
+          "value": "34752d29921e86b236bd6d250ef37027dccd57e3"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "1aca6aab0dc4b34621c8b6256258e247a486a06b"
+          "value": "34752d29921e86b236bd6d250ef37027dccd57e3"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1499,10 +1499,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-pdf-filter-2.11.8.0",
+      "bom-ref": "tecnickcom/tc-lib-pdf-filter-2.11.10.0",
       "type": "library",
       "name": "tc-lib-pdf-filter",
-      "version": "2.11.8",
+      "version": "2.11.10",
       "group": "tecnickcom",
       "description": "PHP library to decode PDF compression and encryption filters",
       "author": "Nicola Asuni",
@@ -1513,17 +1513,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-filter@2.11.8",
+      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-filter@2.11.10",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-filter/zipball/84e490e0590174930e86955372d753abe356850c",
-          "comment": "dist reference: 84e490e0590174930e86955372d753abe356850c"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-filter/zipball/401e0a75c1f4ce3ab19b3d4d4fa9abf12d2d8e4d",
+          "comment": "dist reference: 401e0a75c1f4ce3ab19b3d4d4fa9abf12d2d8e4d"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-pdf-filter.git",
-          "comment": "source reference: 84e490e0590174930e86955372d753abe356850c"
+          "comment": "source reference: 401e0a75c1f4ce3ab19b3d4d4fa9abf12d2d8e4d"
         },
         {
           "type": "website",
@@ -1544,11 +1544,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "84e490e0590174930e86955372d753abe356850c"
+          "value": "401e0a75c1f4ce3ab19b3d4d4fa9abf12d2d8e4d"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "84e490e0590174930e86955372d753abe356850c"
+          "value": "401e0a75c1f4ce3ab19b3d4d4fa9abf12d2d8e4d"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1557,10 +1557,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-pdf-font-4.6.2.0",
+      "bom-ref": "tecnickcom/tc-lib-pdf-font-4.9.1.0",
       "type": "library",
       "name": "tc-lib-pdf-font",
-      "version": "4.6.2",
+      "version": "4.9.1",
       "group": "tecnickcom",
       "description": "PHP library containing PDF font methods and utilities",
       "author": "Nicola Asuni",
@@ -1571,17 +1571,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-font@4.6.2",
+      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-font@4.9.1",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-font/zipball/668d73e853c6027afd9cdaae8ea042957ba11e08",
-          "comment": "dist reference: 668d73e853c6027afd9cdaae8ea042957ba11e08"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-font/zipball/9c515cf5659e9afc23d5476d1ecc3753fa69d4c2",
+          "comment": "dist reference: 9c515cf5659e9afc23d5476d1ecc3753fa69d4c2"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-pdf-font.git",
-          "comment": "source reference: 668d73e853c6027afd9cdaae8ea042957ba11e08"
+          "comment": "source reference: 9c515cf5659e9afc23d5476d1ecc3753fa69d4c2"
         },
         {
           "type": "website",
@@ -1602,11 +1602,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "668d73e853c6027afd9cdaae8ea042957ba11e08"
+          "value": "9c515cf5659e9afc23d5476d1ecc3753fa69d4c2"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "668d73e853c6027afd9cdaae8ea042957ba11e08"
+          "value": "9c515cf5659e9afc23d5476d1ecc3753fa69d4c2"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1615,10 +1615,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-pdf-graph-2.18.6.0",
+      "bom-ref": "tecnickcom/tc-lib-pdf-graph-2.18.8.0",
       "type": "library",
       "name": "tc-lib-pdf-graph",
-      "version": "2.18.6",
+      "version": "2.18.8",
       "group": "tecnickcom",
       "description": "PHP library containing PDF graphic and geometric methods",
       "author": "Nicola Asuni",
@@ -1629,17 +1629,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-graph@2.18.6",
+      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-graph@2.18.8",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-graph/zipball/602d8593a4b368e744da430c7fc716eb25b4beaa",
-          "comment": "dist reference: 602d8593a4b368e744da430c7fc716eb25b4beaa"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-graph/zipball/29b97167efe2d25c05718cb4f285c1bda3175e0d",
+          "comment": "dist reference: 29b97167efe2d25c05718cb4f285c1bda3175e0d"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-pdf-graph.git",
-          "comment": "source reference: 602d8593a4b368e744da430c7fc716eb25b4beaa"
+          "comment": "source reference: 29b97167efe2d25c05718cb4f285c1bda3175e0d"
         },
         {
           "type": "website",
@@ -1660,11 +1660,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "602d8593a4b368e744da430c7fc716eb25b4beaa"
+          "value": "29b97167efe2d25c05718cb4f285c1bda3175e0d"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "602d8593a4b368e744da430c7fc716eb25b4beaa"
+          "value": "29b97167efe2d25c05718cb4f285c1bda3175e0d"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1673,10 +1673,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-pdf-image-3.15.2.0",
+      "bom-ref": "tecnickcom/tc-lib-pdf-image-3.15.4.0",
       "type": "library",
       "name": "tc-lib-pdf-image",
-      "version": "3.15.2",
+      "version": "3.15.4",
       "group": "tecnickcom",
       "description": "PHP library containing PDF Image methods",
       "author": "Nicola Asuni",
@@ -1687,17 +1687,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-image@3.15.2",
+      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-image@3.15.4",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-image/zipball/da7d69e084a692cb55bbab3b27e66d31bf5edc50",
-          "comment": "dist reference: da7d69e084a692cb55bbab3b27e66d31bf5edc50"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-image/zipball/59d2f5e119aec150ee1abacc34712c81c6753d9f",
+          "comment": "dist reference: 59d2f5e119aec150ee1abacc34712c81c6753d9f"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-pdf-image.git",
-          "comment": "source reference: da7d69e084a692cb55bbab3b27e66d31bf5edc50"
+          "comment": "source reference: 59d2f5e119aec150ee1abacc34712c81c6753d9f"
         },
         {
           "type": "website",
@@ -1718,11 +1718,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "da7d69e084a692cb55bbab3b27e66d31bf5edc50"
+          "value": "59d2f5e119aec150ee1abacc34712c81c6753d9f"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "da7d69e084a692cb55bbab3b27e66d31bf5edc50"
+          "value": "59d2f5e119aec150ee1abacc34712c81c6753d9f"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1731,10 +1731,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-pdf-page-4.18.0.0",
+      "bom-ref": "tecnickcom/tc-lib-pdf-page-4.18.2.0",
       "type": "library",
       "name": "tc-lib-pdf-page",
-      "version": "4.18.0",
+      "version": "4.18.2",
       "group": "tecnickcom",
       "description": "PHP library containing PDF page formats and definitions",
       "author": "Nicola Asuni",
@@ -1745,17 +1745,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-page@4.18.0",
+      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-page@4.18.2",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-page/zipball/49b70ca9b909454ad7f83a8df1150be65fe1b5ef",
-          "comment": "dist reference: 49b70ca9b909454ad7f83a8df1150be65fe1b5ef"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-page/zipball/092f6412d038259bb29387389215b0bf6b5c0f0c",
+          "comment": "dist reference: 092f6412d038259bb29387389215b0bf6b5c0f0c"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-pdf-page.git",
-          "comment": "source reference: 49b70ca9b909454ad7f83a8df1150be65fe1b5ef"
+          "comment": "source reference: 092f6412d038259bb29387389215b0bf6b5c0f0c"
         },
         {
           "type": "website",
@@ -1776,11 +1776,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "49b70ca9b909454ad7f83a8df1150be65fe1b5ef"
+          "value": "092f6412d038259bb29387389215b0bf6b5c0f0c"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "49b70ca9b909454ad7f83a8df1150be65fe1b5ef"
+          "value": "092f6412d038259bb29387389215b0bf6b5c0f0c"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1789,10 +1789,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-pdf-parser-3.16.6.0",
+      "bom-ref": "tecnickcom/tc-lib-pdf-parser-3.16.8.0",
       "type": "library",
       "name": "tc-lib-pdf-parser",
-      "version": "3.16.6",
+      "version": "3.16.8",
       "group": "tecnickcom",
       "description": "PHP library to parse PDF documents",
       "author": "Nicola Asuni",
@@ -1803,17 +1803,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-parser@3.16.6",
+      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-parser@3.16.8",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-parser/zipball/35f317cfca78bf986f6d9b5058b951de30b3413d",
-          "comment": "dist reference: 35f317cfca78bf986f6d9b5058b951de30b3413d"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-parser/zipball/65c72e6ff4e2674d2da8bbcf47bb6de0b2a0b459",
+          "comment": "dist reference: 65c72e6ff4e2674d2da8bbcf47bb6de0b2a0b459"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-pdf-parser.git",
-          "comment": "source reference: 35f317cfca78bf986f6d9b5058b951de30b3413d"
+          "comment": "source reference: 65c72e6ff4e2674d2da8bbcf47bb6de0b2a0b459"
         },
         {
           "type": "website",
@@ -1834,11 +1834,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "35f317cfca78bf986f6d9b5058b951de30b3413d"
+          "value": "65c72e6ff4e2674d2da8bbcf47bb6de0b2a0b459"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "35f317cfca78bf986f6d9b5058b951de30b3413d"
+          "value": "65c72e6ff4e2674d2da8bbcf47bb6de0b2a0b459"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1847,10 +1847,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-pdf-sign-2.0.9.0",
+      "bom-ref": "tecnickcom/tc-lib-pdf-sign-2.0.11.0",
       "type": "library",
       "name": "tc-lib-pdf-sign",
-      "version": "2.0.9",
+      "version": "2.0.11",
       "group": "tecnickcom",
       "description": "PHP library to create and embed digital signatures (PKCS#7 / CAdES / PAdES) in PDF documents",
       "author": "Nicola Asuni",
@@ -1861,17 +1861,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-sign@2.0.9",
+      "purl": "pkg:composer/tecnickcom/tc-lib-pdf-sign@2.0.11",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-sign/zipball/614c001b885b04045935cd18860bdd0e174eada0",
-          "comment": "dist reference: 614c001b885b04045935cd18860bdd0e174eada0"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf-sign/zipball/45294506de2411f24178f40ed256bbf7a058b0a5",
+          "comment": "dist reference: 45294506de2411f24178f40ed256bbf7a058b0a5"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-pdf-sign.git",
-          "comment": "source reference: 614c001b885b04045935cd18860bdd0e174eada0"
+          "comment": "source reference: 45294506de2411f24178f40ed256bbf7a058b0a5"
         },
         {
           "type": "website",
@@ -1892,11 +1892,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "614c001b885b04045935cd18860bdd0e174eada0"
+          "value": "45294506de2411f24178f40ed256bbf7a058b0a5"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "614c001b885b04045935cd18860bdd0e174eada0"
+          "value": "45294506de2411f24178f40ed256bbf7a058b0a5"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1905,10 +1905,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-pdf-8.82.2.0",
+      "bom-ref": "tecnickcom/tc-lib-pdf-8.84.0.0",
       "type": "library",
       "name": "tc-lib-pdf",
-      "version": "8.82.2",
+      "version": "8.84.0",
       "group": "tecnickcom",
       "description": "PHP PDF Library",
       "author": "Nicola Asuni",
@@ -1919,17 +1919,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-pdf@8.82.2",
+      "purl": "pkg:composer/tecnickcom/tc-lib-pdf@8.84.0",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/81d1ed0dd17f16fbfc3746d5cd2b2711ac1afbda",
-          "comment": "dist reference: 81d1ed0dd17f16fbfc3746d5cd2b2711ac1afbda"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/2be3a522329df9d2941381ce8315b6647d620c69",
+          "comment": "dist reference: 2be3a522329df9d2941381ce8315b6647d620c69"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-pdf.git",
-          "comment": "source reference: 81d1ed0dd17f16fbfc3746d5cd2b2711ac1afbda"
+          "comment": "source reference: 2be3a522329df9d2941381ce8315b6647d620c69"
         },
         {
           "type": "website",
@@ -1950,11 +1950,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "81d1ed0dd17f16fbfc3746d5cd2b2711ac1afbda"
+          "value": "2be3a522329df9d2941381ce8315b6647d620c69"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "81d1ed0dd17f16fbfc3746d5cd2b2711ac1afbda"
+          "value": "2be3a522329df9d2941381ce8315b6647d620c69"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1963,10 +1963,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-unicode-data-3.1.2.0",
+      "bom-ref": "tecnickcom/tc-lib-unicode-data-3.1.4.0",
       "type": "library",
       "name": "tc-lib-unicode-data",
-      "version": "3.1.2",
+      "version": "3.1.4",
       "group": "tecnickcom",
       "description": "PHP library containing Unicode definitions",
       "author": "Nicola Asuni",
@@ -1977,17 +1977,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-unicode-data@3.1.2",
+      "purl": "pkg:composer/tecnickcom/tc-lib-unicode-data@3.1.4",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode-data/zipball/b9b5b2fe8c9db2408b99f15d46b6e8031f73fb0d",
-          "comment": "dist reference: b9b5b2fe8c9db2408b99f15d46b6e8031f73fb0d"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode-data/zipball/d6ef484416ba6c6d67a5f1d8b1df5b9e5f3f158b",
+          "comment": "dist reference: d6ef484416ba6c6d67a5f1d8b1df5b9e5f3f158b"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-unicode-data.git",
-          "comment": "source reference: b9b5b2fe8c9db2408b99f15d46b6e8031f73fb0d"
+          "comment": "source reference: d6ef484416ba6c6d67a5f1d8b1df5b9e5f3f158b"
         },
         {
           "type": "website",
@@ -2008,11 +2008,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "b9b5b2fe8c9db2408b99f15d46b6e8031f73fb0d"
+          "value": "d6ef484416ba6c6d67a5f1d8b1df5b9e5f3f158b"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "b9b5b2fe8c9db2408b99f15d46b6e8031f73fb0d"
+          "value": "d6ef484416ba6c6d67a5f1d8b1df5b9e5f3f158b"
         },
         {
           "name": "cdx:composer:package:type",
@@ -2021,10 +2021,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-unicode-3.2.2.0",
+      "bom-ref": "tecnickcom/tc-lib-unicode-3.2.4.0",
       "type": "library",
       "name": "tc-lib-unicode",
-      "version": "3.2.2",
+      "version": "3.2.4",
       "group": "tecnickcom",
       "description": "PHP library to process UTF-8 and Unicode text",
       "author": "Nicola Asuni",
@@ -2035,17 +2035,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-unicode@3.2.2",
+      "purl": "pkg:composer/tecnickcom/tc-lib-unicode@3.2.4",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode/zipball/fe78012e28bb6a6cc1e7401d8b0dd6b1be0706c9",
-          "comment": "dist reference: fe78012e28bb6a6cc1e7401d8b0dd6b1be0706c9"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-unicode/zipball/fc3dac583bab177bc18c46dd5f22f8a3359fa5c7",
+          "comment": "dist reference: fc3dac583bab177bc18c46dd5f22f8a3359fa5c7"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-unicode.git",
-          "comment": "source reference: fe78012e28bb6a6cc1e7401d8b0dd6b1be0706c9"
+          "comment": "source reference: fc3dac583bab177bc18c46dd5f22f8a3359fa5c7"
         },
         {
           "type": "website",
@@ -2066,11 +2066,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "fe78012e28bb6a6cc1e7401d8b0dd6b1be0706c9"
+          "value": "fc3dac583bab177bc18c46dd5f22f8a3359fa5c7"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "fe78012e28bb6a6cc1e7401d8b0dd6b1be0706c9"
+          "value": "fc3dac583bab177bc18c46dd5f22f8a3359fa5c7"
         },
         {
           "name": "cdx:composer:package:type",
@@ -2137,10 +2137,10 @@
       ]
     },
     {
-      "bom-ref": "twig/twig-3.28.0.0",
+      "bom-ref": "twig/twig-3.30.0.0",
       "type": "library",
       "name": "twig",
-      "version": "v3.28.0",
+      "version": "v3.30.0",
       "group": "twig",
       "description": "Twig, the flexible, fast, and secure template language for PHP",
       "author": "Fabien Potencier, Twig Team, Armin Ronacher",
@@ -2151,17 +2151,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/twig/twig@v3.28.0",
+      "purl": "pkg:composer/twig/twig@v3.30.0",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/twigphp/Twig/zipball/597c12ed286fb9d1701a36684ce6e0cbe28ebc8b",
-          "comment": "dist reference: 597c12ed286fb9d1701a36684ce6e0cbe28ebc8b"
+          "url": "https://api.github.com/repos/twigphp/Twig/zipball/8c737079b726af72ff8ef3c595be9f6a810ea1ef",
+          "comment": "dist reference: 8c737079b726af72ff8ef3c595be9f6a810ea1ef"
         },
         {
           "type": "vcs",
           "url": "https://github.com/twigphp/Twig.git",
-          "comment": "source reference: 597c12ed286fb9d1701a36684ce6e0cbe28ebc8b"
+          "comment": "source reference: 8c737079b726af72ff8ef3c595be9f6a810ea1ef"
         },
         {
           "type": "website",
@@ -2175,18 +2175,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/twigphp/Twig/tree/v3.28.0",
+          "url": "https://github.com/twigphp/Twig/tree/v3.30.0",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "597c12ed286fb9d1701a36684ce6e0cbe28ebc8b"
+          "value": "8c737079b726af72ff8ef3c595be9f6a810ea1ef"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "597c12ed286fb9d1701a36684ce6e0cbe28ebc8b"
+          "value": "8c737079b726af72ff8ef3c595be9f6a810ea1ef"
         },
         {
           "name": "cdx:composer:package:type",
@@ -3314,10 +3314,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/aix-ppc64"
         }
@@ -3352,10 +3348,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/android-arm64"
@@ -3392,10 +3384,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/android-arm"
         }
@@ -3430,10 +3418,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/android-x64"
@@ -3470,10 +3454,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/darwin-arm64"
         }
@@ -3508,10 +3488,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/darwin-x64"
@@ -3548,10 +3524,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/freebsd-arm64"
         }
@@ -3586,10 +3558,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/freebsd-x64"
@@ -3626,10 +3594,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/linux-arm64"
         }
@@ -3664,10 +3628,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/linux-arm"
@@ -3704,10 +3664,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/linux-ia32"
         }
@@ -3742,10 +3698,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/linux-loong64"
@@ -3782,10 +3734,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/linux-mips64el"
         }
@@ -3820,10 +3768,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/linux-ppc64"
@@ -3860,10 +3804,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/linux-riscv64"
         }
@@ -3898,10 +3838,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/linux-s390x"
@@ -3938,10 +3874,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/linux-x64"
         }
@@ -3976,10 +3908,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/netbsd-arm64"
@@ -4016,10 +3944,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/netbsd-x64"
         }
@@ -4054,10 +3978,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/openbsd-arm64"
@@ -4094,10 +4014,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/openbsd-x64"
         }
@@ -4132,10 +4048,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/openharmony-arm64"
@@ -4172,10 +4084,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/sunos-x64"
         }
@@ -4210,10 +4118,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/win32-arm64"
@@ -4250,10 +4154,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/win32-ia32"
         }
@@ -4288,10 +4188,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@esbuild/win32-x64"
@@ -4926,6 +4822,40 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@humanwhocodes/retry"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "nonrecursive-glob-match",
+      "group": "@isaacs",
+      "version": "1.1.0",
+      "bom-ref": "filinq@1.0.0|@isaacs/nonrecursive-glob-match@1.1.0",
+      "licenses": [
+        {
+          "license": {
+            "id": "BlueOak-1.0.0"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40isaacs/nonrecursive-glob-match@1.1.0",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@isaacs/nonrecursive-glob-match/-/nonrecursive-glob-match-1.1.0.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "18f9bf0dbbe4e512e68519f15c86bb9d3a4ad31b65e04d308f432c96cb8d889d45211394fb6fbd960502fdd805ec4cb84025a17c4b20c6294c44c09d1cf7c37f"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@isaacs/nonrecursive-glob-match"
         }
       ]
     },
@@ -7211,10 +7141,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-android-arm64"
         }
@@ -7249,10 +7175,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-darwin-arm64"
@@ -7289,10 +7211,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-darwin-x64"
         }
@@ -7327,10 +7245,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-freebsd-x64"
@@ -7367,10 +7281,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-arm-glibc"
         }
@@ -7405,10 +7315,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-arm-musl"
@@ -7445,10 +7351,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-arm64-glibc"
         }
@@ -7483,10 +7385,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-arm64-musl"
@@ -7523,10 +7421,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-x64-glibc"
         }
@@ -7561,10 +7455,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-x64-musl"
@@ -7601,10 +7491,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-win32-arm64"
         }
@@ -7640,10 +7526,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-win32-x64"
         }
@@ -7678,10 +7560,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher"
@@ -7752,10 +7630,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-android-arm-eabi"
         }
@@ -7790,10 +7664,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-android-arm64"
@@ -7830,10 +7700,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-android-x64"
         }
@@ -7868,10 +7734,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-darwin-arm64"
@@ -7908,10 +7770,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-darwin-x64"
         }
@@ -7946,10 +7804,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-freebsd-arm64"
@@ -7986,10 +7840,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-freebsd-x64"
         }
@@ -8024,10 +7874,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-arm-gnueabihf"
@@ -8064,10 +7910,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-arm-musleabihf"
         }
@@ -8102,10 +7944,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-arm64-gnu"
@@ -8142,10 +7980,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-arm64-musl"
         }
@@ -8180,10 +8014,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-loong64-gnu"
@@ -8220,10 +8050,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-loong64-musl"
         }
@@ -8258,10 +8084,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-ppc64-gnu"
@@ -8298,10 +8120,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-ppc64-musl"
         }
@@ -8336,10 +8154,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-riscv64-gnu"
@@ -8376,10 +8190,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-riscv64-musl"
         }
@@ -8414,10 +8224,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-s390x-gnu"
@@ -8454,10 +8260,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-x64-gnu"
         }
@@ -8492,10 +8294,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-linux-x64-musl"
@@ -8532,10 +8330,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-openbsd-x64"
         }
@@ -8570,10 +8364,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-openharmony-arm64"
@@ -8610,10 +8400,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-win32-arm64-msvc"
         }
@@ -8648,10 +8434,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-win32-ia32-msvc"
@@ -8688,10 +8470,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-win32-x64-gnu"
         }
@@ -8726,10 +8504,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@rollup/rollup-win32-x64-msvc"
@@ -12705,10 +12479,6 @@
       ],
       "properties": [
         {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
-        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/balanced-match"
         }
@@ -12947,10 +12717,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/brace-expansion"
@@ -14726,10 +14492,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/detect-libc"
@@ -17207,10 +16969,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/fsevents"
@@ -22250,10 +22008,6 @@
         }
       ],
       "properties": [
-        {
-          "name": "cdx:npm:package:development",
-          "value": "true"
-        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/node-addon-api"
@@ -28476,24 +28230,24 @@
         {
           "type": "library",
           "name": "minimatch",
-          "version": "9.0.9",
-          "bom-ref": "filinq@1.0.0|webdav@5.11.0|minimatch@9.0.9",
+          "version": "11.0.8",
+          "bom-ref": "filinq@1.0.0|webdav@5.11.0|minimatch@11.0.8",
           "licenses": [
             {
               "license": {
-                "id": "ISC"
+                "id": "BlueOak-1.0.0"
               }
             }
           ],
-          "purl": "pkg:npm/minimatch@9.0.9",
+          "purl": "pkg:npm/minimatch@11.0.8",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/minimatch/-/minimatch-9.0.9.tgz",
+              "url": "https://registry.npmjs.org/minimatch/-/minimatch-11.0.8.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "381c0137d00be1daa61139694b6cdab31faf4de59c956ce46e57d993b2930398f78de38e373fed4429d9a26532bcd83cdf02f966ff52b3a1cc2570202fc47662"
+                  "content": "9c542e6124d5ac6bf2b15069b39221fb405d9d814dfc28f70bcd7aafafa9ef22be147ad52c61383b837d005c3292b94d96f3361d8b7e45a775522ae8ea1f3c22"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -28503,72 +28257,6 @@
             {
               "name": "cdx:npm:package:path",
               "value": "node_modules/webdav/node_modules/minimatch"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "brace-expansion",
-          "version": "2.1.8",
-          "bom-ref": "filinq@1.0.0|webdav@5.11.0|brace-expansion@2.1.8",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/brace-expansion@2.1.8",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.1.8.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "067943cc3610a29953b194af3e2f3a08dce66dc6f4ed7f2e7d1f1f935ce2bda8842655c9922ab5310c830959a559cb166e3e9a597a879ebc307af6eb9bf49a8a"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/webdav/node_modules/brace-expansion"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "balanced-match",
-          "version": "1.0.2",
-          "bom-ref": "filinq@1.0.0|webdav@5.11.0|balanced-match@1.0.2",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/balanced-match@1.0.2",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "de849e50ed13315ebb84dd4099b5ec2b8c9aa94eed8e21e56f144364ea47d0a5bdf82797e1b440697d009f1b74b71d8cae94695b041a3f02252121098585393f"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/webdav/node_modules/balanced-match"
             }
           ]
         }
@@ -29000,7 +28688,7 @@
       "ref": "myclabs/deep-copy-1.13.4.0"
     },
     {
-      "ref": "opis/json-schema-2.6.0.0",
+      "ref": "opis/json-schema-2.6.2.0",
       "dependsOn": [
         "opis/string-2.1.0.0",
         "opis/uri-1.1.0.0"
@@ -29040,13 +28728,13 @@
       "ref": "setasign/fpdi-2.6.8.0"
     },
     {
-      "ref": "symfony/deprecation-contracts-3.7.1.0"
+      "ref": "symfony/deprecation-contracts-3.8.1.0"
     },
     {
       "ref": "symfony/polyfill-ctype-1.37.0.0"
     },
     {
-      "ref": "symfony/polyfill-mbstring-1.38.2.0"
+      "ref": "symfony/polyfill-mbstring-1.43.3.0"
     },
     {
       "ref": "symfony/polyfill-uuid-1.37.0.0"
@@ -29060,101 +28748,101 @@
     {
       "ref": "symfony/yaml-6.4.48.0",
       "dependsOn": [
-        "symfony/deprecation-contracts-3.7.1.0",
+        "symfony/deprecation-contracts-3.8.1.0",
         "symfony/polyfill-ctype-1.37.0.0"
       ]
     },
     {
-      "ref": "tecnickcom/tc-lib-barcode-2.17.2.0",
+      "ref": "tecnickcom/tc-lib-barcode-2.17.4.0",
       "dependsOn": [
-        "tecnickcom/tc-lib-color-3.0.13.0"
+        "tecnickcom/tc-lib-color-3.0.15.0"
       ]
     },
     {
-      "ref": "tecnickcom/tc-lib-color-3.0.13.0"
+      "ref": "tecnickcom/tc-lib-color-3.0.15.0"
     },
     {
-      "ref": "tecnickcom/tc-lib-file-3.9.9.0"
+      "ref": "tecnickcom/tc-lib-file-3.9.11.0"
     },
     {
-      "ref": "tecnickcom/tc-lib-pdf-8.82.2.0",
+      "ref": "tecnickcom/tc-lib-pdf-8.84.0.0",
       "dependsOn": [
-        "tecnickcom/tc-lib-barcode-2.17.2.0",
-        "tecnickcom/tc-lib-color-3.0.13.0",
-        "tecnickcom/tc-lib-file-3.9.9.0",
-        "tecnickcom/tc-lib-pdf-encrypt-2.12.1.0",
-        "tecnickcom/tc-lib-pdf-font-4.6.2.0",
-        "tecnickcom/tc-lib-pdf-graph-2.18.6.0",
-        "tecnickcom/tc-lib-pdf-image-3.15.2.0",
-        "tecnickcom/tc-lib-pdf-page-4.18.0.0",
-        "tecnickcom/tc-lib-pdf-parser-3.16.6.0",
-        "tecnickcom/tc-lib-pdf-sign-2.0.9.0",
-        "tecnickcom/tc-lib-unicode-3.2.2.0",
-        "tecnickcom/tc-lib-unicode-data-3.1.2.0"
+        "tecnickcom/tc-lib-barcode-2.17.4.0",
+        "tecnickcom/tc-lib-color-3.0.15.0",
+        "tecnickcom/tc-lib-file-3.9.11.0",
+        "tecnickcom/tc-lib-pdf-encrypt-2.12.3.0",
+        "tecnickcom/tc-lib-pdf-font-4.9.1.0",
+        "tecnickcom/tc-lib-pdf-graph-2.18.8.0",
+        "tecnickcom/tc-lib-pdf-image-3.15.4.0",
+        "tecnickcom/tc-lib-pdf-page-4.18.2.0",
+        "tecnickcom/tc-lib-pdf-parser-3.16.8.0",
+        "tecnickcom/tc-lib-pdf-sign-2.0.11.0",
+        "tecnickcom/tc-lib-unicode-3.2.4.0",
+        "tecnickcom/tc-lib-unicode-data-3.1.4.0"
       ]
     },
     {
-      "ref": "tecnickcom/tc-lib-pdf-encrypt-2.12.1.0"
+      "ref": "tecnickcom/tc-lib-pdf-encrypt-2.12.3.0"
     },
     {
-      "ref": "tecnickcom/tc-lib-pdf-filter-2.11.8.0"
+      "ref": "tecnickcom/tc-lib-pdf-filter-2.11.10.0"
     },
     {
-      "ref": "tecnickcom/tc-lib-pdf-font-4.6.2.0",
+      "ref": "tecnickcom/tc-lib-pdf-font-4.9.1.0",
       "dependsOn": [
-        "tecnickcom/tc-lib-file-3.9.9.0",
-        "tecnickcom/tc-lib-pdf-encrypt-2.12.1.0",
-        "tecnickcom/tc-lib-unicode-data-3.1.2.0"
+        "tecnickcom/tc-lib-file-3.9.11.0",
+        "tecnickcom/tc-lib-pdf-encrypt-2.12.3.0",
+        "tecnickcom/tc-lib-unicode-data-3.1.4.0"
       ]
     },
     {
-      "ref": "tecnickcom/tc-lib-pdf-graph-2.18.6.0",
+      "ref": "tecnickcom/tc-lib-pdf-graph-2.18.8.0",
       "dependsOn": [
-        "tecnickcom/tc-lib-color-3.0.13.0",
-        "tecnickcom/tc-lib-pdf-encrypt-2.12.1.0"
+        "tecnickcom/tc-lib-color-3.0.15.0",
+        "tecnickcom/tc-lib-pdf-encrypt-2.12.3.0"
       ]
     },
     {
-      "ref": "tecnickcom/tc-lib-pdf-image-3.15.2.0",
+      "ref": "tecnickcom/tc-lib-pdf-image-3.15.4.0",
       "dependsOn": [
-        "tecnickcom/tc-lib-file-3.9.9.0",
-        "tecnickcom/tc-lib-pdf-encrypt-2.12.1.0"
+        "tecnickcom/tc-lib-file-3.9.11.0",
+        "tecnickcom/tc-lib-pdf-encrypt-2.12.3.0"
       ]
     },
     {
-      "ref": "tecnickcom/tc-lib-pdf-page-4.18.0.0",
+      "ref": "tecnickcom/tc-lib-pdf-page-4.18.2.0",
       "dependsOn": [
-        "tecnickcom/tc-lib-color-3.0.13.0",
-        "tecnickcom/tc-lib-pdf-encrypt-2.12.1.0"
+        "tecnickcom/tc-lib-color-3.0.15.0",
+        "tecnickcom/tc-lib-pdf-encrypt-2.12.3.0"
       ]
     },
     {
-      "ref": "tecnickcom/tc-lib-pdf-parser-3.16.6.0",
+      "ref": "tecnickcom/tc-lib-pdf-parser-3.16.8.0",
       "dependsOn": [
-        "tecnickcom/tc-lib-pdf-filter-2.11.8.0"
+        "tecnickcom/tc-lib-pdf-filter-2.11.10.0"
       ]
     },
     {
-      "ref": "tecnickcom/tc-lib-pdf-sign-2.0.9.0"
+      "ref": "tecnickcom/tc-lib-pdf-sign-2.0.11.0"
     },
     {
-      "ref": "tecnickcom/tc-lib-unicode-3.2.2.0",
+      "ref": "tecnickcom/tc-lib-unicode-3.2.4.0",
       "dependsOn": [
-        "tecnickcom/tc-lib-unicode-data-3.1.2.0"
+        "tecnickcom/tc-lib-unicode-data-3.1.4.0"
       ]
     },
     {
-      "ref": "tecnickcom/tc-lib-unicode-data-3.1.2.0"
+      "ref": "tecnickcom/tc-lib-unicode-data-3.1.4.0"
     },
     {
       "ref": "thiagoalessio/tesseract_ocr-2.13.0.0"
     },
     {
-      "ref": "twig/twig-3.28.0.0",
+      "ref": "twig/twig-3.30.0.0",
       "dependsOn": [
-        "symfony/deprecation-contracts-3.7.1.0",
+        "symfony/deprecation-contracts-3.8.1.0",
         "symfony/polyfill-ctype-1.37.0.0",
-        "symfony/polyfill-mbstring-1.38.2.0"
+        "symfony/polyfill-mbstring-1.43.3.0"
       ]
     },
     {
@@ -29162,15 +28850,15 @@
       "dependsOn": [
         "adbario/php-dot-notation-3.5.0.0",
         "mpdf/mpdf-8.3.1.0",
-        "opis/json-schema-2.6.0.0",
+        "opis/json-schema-2.6.2.0",
         "phpoffice/phpword-1.4.0.0",
         "psr/log-3.0.2.0",
         "setasign/fpdf-1.9.0.0",
         "symfony/uid-6.4.32.0",
         "symfony/yaml-6.4.48.0",
-        "tecnickcom/tc-lib-pdf-8.82.2.0",
+        "tecnickcom/tc-lib-pdf-8.84.0.0",
         "thiagoalessio/tesseract_ocr-2.13.0.0",
-        "twig/twig-3.28.0.0"
+        "twig/twig-3.30.0.0"
       ]
     }
   ]
