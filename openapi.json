@@ -294,6 +294,10 @@
         {
             "name": "detection-provider-settings",
             "description": "Reads and writes the per-organisation entity-detection provider settings, for admins only"
+        },
+        {
+            "name": "grounds",
+            "description": "Reads the Woo refusal grounds the pickers offer, from dossiq or the read-only snapshot"
         }
     ],
     "paths": {
@@ -10915,6 +10919,40 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/grounds": {
+            "get": {
+                "operationId": "grounds-index",
+                "summary": "GET /api/grounds",
+                "description": "The Woo refusal grounds the pickers offer, read from dossiq or, without it, from the read-only snapshot. Read only; any signed-in user.",
+                "tags": [
+                    "grounds"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "source (dossiq or snapshot), version and grounds",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "503": {
+                        "description": "No grounds list can be read"
                     }
                 }
             }

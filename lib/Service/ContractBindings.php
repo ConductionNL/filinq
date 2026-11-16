@@ -69,6 +69,7 @@ use OCA\Filinq\Kernel\Contracts\DocumentVersionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DomainFolderReconcilerInterface;
 use OCA\Filinq\Kernel\Contracts\DomainFolderServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DossierManagementServiceInterface;
+use OCA\Filinq\Kernel\Contracts\DossierObjectReaderInterface;
 use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
 use OCA\Filinq\Kernel\Contracts\EmailDocumentRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\EmailIngestionServiceInterface;
@@ -98,6 +99,7 @@ use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\LegalBasesSummaryServiceInterface;
+use OCA\Filinq\Kernel\Contracts\LegalBasisProposalServiceInterface;
 use OCA\Filinq\Kernel\Contracts\LegalHoldCaseServiceInterface;
 use OCA\Filinq\Kernel\Contracts\LegalHoldNotificationsInterface;
 use OCA\Filinq\Kernel\Contracts\LibreSignCompletionInterface;
@@ -135,6 +137,8 @@ use OCA\Filinq\Kernel\Contracts\PublicationListComposerInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationPipelineServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationStoreInterface;
 use OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface;
+use OCA\Filinq\Kernel\Contracts\RefusalGroundsLegacyMapInterface;
+use OCA\Filinq\Kernel\Contracts\RefusalGroundsResolverInterface;
 use OCA\Filinq\Kernel\Contracts\ReportRenderServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SanitizationStatusInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
@@ -175,13 +179,17 @@ use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCA\Filinq\Service\Detection\DetectionProviderConfig;
 use OCA\Filinq\Service\Detection\LlmDetectionProvider;
+use OCA\Filinq\Service\DossierObjectReader;
 use OCA\Filinq\Service\EmailIngestion\EmailDocumentRepository;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionService;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
 use OCA\Filinq\Service\EntitySearch\EntitySearchService;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
+use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
 use OCA\Filinq\Service\Intake\IntakeNotificationReach;
 use OCA\Filinq\Service\Intake\IntakePasswordRemoval;
 use OCA\Filinq\Service\Intake\IntakeReadingProgress;
+use OCA\Filinq\Service\LegalBasisProposalService;
 use OCA\Filinq\Service\LegalHold\LegalHoldCaseService;
 use OCA\Filinq\Service\LegalHold\LegalHoldNotifications;
 use OCA\Filinq\Service\Ocr\OcrResultRepository;
@@ -276,6 +284,7 @@ final class ContractBindings {
 		DomainFolderReconcilerInterface::class         => DomainFolderReconciler::class,
 		DomainFolderServiceInterface::class            => DomainFolderService::class,
 		DossierManagementServiceInterface::class       => DossierManagementService::class,
+		DossierObjectReaderInterface::class            => DossierObjectReader::class,
 		DownloadAgreementGateInterface::class          => DownloadAgreementGate::class,
 		EmailDocumentRepositoryInterface::class        => EmailDocumentRepository::class,
 		EmailIngestionServiceInterface::class          => EmailIngestionService::class,
@@ -305,6 +314,7 @@ final class ContractBindings {
 		IntakeRoutingServiceInterface::class           => IntakeRoutingService::class,
 		IntakeServiceInterface::class                  => IntakeService::class,
 		LegalBasesSummaryServiceInterface::class       => LegalBasesSummaryService::class,
+		LegalBasisProposalServiceInterface::class      => LegalBasisProposalService::class,
 		LegalHoldCaseServiceInterface::class           => LegalHoldCaseService::class,
 		LegalHoldNotificationsInterface::class         => LegalHoldNotifications::class,
 		LibreSignCompletionInterface::class            => LibreSignCompletion::class,
@@ -342,6 +352,8 @@ final class ContractBindings {
 		PublicationPipelineServiceInterface::class     => PublicationPipelineService::class,
 		PublicationStoreInterface::class               => PublicationStore::class,
 		RedactionOutputGuardInterface::class           => RedactionOutputGuard::class,
+		RefusalGroundsLegacyMapInterface::class        => RefusalGroundsLegacyMap::class,
+		RefusalGroundsResolverInterface::class         => RefusalGroundsResolver::class,
 		ReportRenderServiceInterface::class            => ReportRenderService::class,
 		SanitizationStatusInterface::class             => SanitizationStatus::class,
 		ScanBatchRepositoryInterface::class            => ScanBatchRepository::class,
