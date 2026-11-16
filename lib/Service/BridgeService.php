@@ -85,6 +85,8 @@ class BridgeService {
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolves OpenRegister's object service.
 	 * @param ITimeFactory                  $time           The clock health is computed against.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
@@ -235,6 +237,8 @@ class BridgeService {
 	 * @return array<string, mixed> The saved document.
 	 *
 	 * @throws InvalidArgumentException When the document is not in the transition's from state.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
 	 */
 	private function transition(array $document, string $action, array $changes): array {
 		[$from, $to] = self::TRANSITIONS[$action];
@@ -268,6 +272,8 @@ class BridgeService {
 	 * @return array<string, mixed> The document, with its uuid.
 	 *
 	 * @throws RuntimeException When there is none.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
 	 */
 	private function document(string $id): array {
 		$found = $this->objectResolver->resolve()->find(
@@ -293,6 +299,8 @@ class BridgeService {
 	 * @param array<string, mixed> $filters Equality filters.
 	 *
 	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
 	 */
 	private function search(string $schema, array $filters): array {
 		$results = $this->objectResolver->resolve()->searchObjectsBySlug(registerSlug: self::REGISTER, schemaSlug: $schema, filters: $filters);

@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/zgw-document-bridge/tasks.md#3-2
+ * @spec openspec/changes/zgw-document-bridge/specs/zgw-document-bridge/spec.md#requirement-source-badge-on-externally-sourced-documents-req-ddzgw-009
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,6 +27,8 @@ namespace OCA\Filinq\Service;
 /**
  * One batched lookup per listing page: the bridge records of the files the
  * caller can open, and the vendor of each record's source.
+ *
+ * @spec openspec/changes/zgw-document-bridge/specs/zgw-document-bridge/spec.md#requirement-source-badge-on-externally-sourced-documents-req-ddzgw-009
  */
 class BridgeSourceBadges {
 
@@ -42,6 +44,8 @@ class BridgeSourceBadges {
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver OpenRegister's ObjectService.
 	 * @param SessionUserFile               $files          The caller's own files.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
@@ -111,6 +115,8 @@ class BridgeSourceBadges {
 	 * @param array<string, mixed> $filters The filters.
 	 *
 	 * @return array<int, array<string, mixed>> The rows as flat fields.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
 	 */
 	private function search(string $schema, array $filters): array {
 		$results = $this->objectResolver->resolve()->searchObjectsBySlug(

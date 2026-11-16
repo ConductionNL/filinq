@@ -62,6 +62,8 @@ class BridgeController extends Controller {
 	 * @param BridgeSourceBadges|null $badges The source badge per file, for a listing page.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
 	 */
 	public function __construct(
 		IRequest $request,
@@ -110,7 +112,7 @@ class BridgeController extends Controller {
 	 *
 	 * @return JSONResponse `{badges: {fileId: vendor}}`, only for files the caller can open.
 	 *
-	 * @spec openspec/changes/zgw-document-bridge/tasks.md#3-2
+	 * @spec openspec/changes/zgw-document-bridge/specs/zgw-document-bridge/spec.md#requirement-source-badge-on-externally-sourced-documents-req-ddzgw-009
 	 */
 	#[NoAdminRequired]
 	public function badges(): JSONResponse {
@@ -183,6 +185,8 @@ class BridgeController extends Controller {
 	 * @param callable $work Returns the response body.
 	 *
 	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
 	 */
 	private function answer(callable $work): JSONResponse {
 		try {

@@ -132,6 +132,8 @@ class BridgeDossierPickUp {
 	 * @return Folder
 	 *
 	 * @throws RuntimeException When the dossier or its folder cannot be resolved (code 404).
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
 	 */
 	private function dossierFolder(string $dossierUuid): Folder {
 		try {
@@ -151,6 +153,8 @@ class BridgeDossierPickUp {
 	 * @return File
 	 *
 	 * @throws InvalidArgumentException When it has no staged file the operator can read.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
 	 */
 	private function stagedFile(array $document): File {
 		$user = $this->session->getUser();
