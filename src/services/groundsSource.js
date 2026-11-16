@@ -11,13 +11,33 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 
 /**
+ * Whether a grounds answer carries at least one ground.
+ *
+ * @param {object|null} answer The `/api/grounds` answer.
+ * @return {boolean} True when it does.
+ */
+function hasGrounds(answer) {
+	return Boolean(answer) && Array.isArray(answer.grounds) && answer.grounds.length > 0
+}
+
+/**
+ * Whether a ground has a code and may be cited.
+ *
+ * @param {object} ground A ground of the answer.
+ * @return {boolean} True when it may be cited.
+ */
+function isCitable(ground) {
+	return typeof ground?.code === 'string' && ground.code !== '' && ground.citable !== false
+}
+
+/**
  * The summary of a grounds answer: its source, version and the citable grounds.
  *
  * @param {object|null} answer The `/api/grounds` answer.
  * @return {{source: string, version: string, grounds: Array<{code: string, label: string}>}|null} The summary, or null when nothing could be read.
  */
 export function sourceSummary(answer) {
-	if (!answer || !Array.isArray(answer.grounds) || answer.grounds.length === 0) {
+	if (!hasGrounds(answer)) {
 		return null
 	}
 
@@ -25,7 +45,7 @@ export function sourceSummary(answer) {
 		source: answer.source === 'dossiq' ? 'dossiq' : 'snapshot',
 		version: typeof answer.version === 'string' ? answer.version : '',
 		grounds: answer.grounds
-			.filter((ground) => typeof ground?.code === 'string' && ground.code !== '' && ground.citable !== false)
+			.filter(isCitable)
 			.map((ground) => ({ code: ground.code, label: typeof ground.label === 'string' ? ground.label : '' })),
 	}
 }

@@ -30,8 +30,8 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
-use OCA\Filinq\Service\Grounds\WooGroundLabels;
-use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
+use OCA\Filinq\Service\Grounds\RefusalGroundLabels;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -62,7 +62,7 @@ class BaseLabelResolver {
 	 * @param LoggerInterface $logger Structured logger.
 	 * @param RefusalGroundsResolver|null $grounds The Woo refusal grounds (dossiq or the snapshot); when
 	 *                                             given, Woo grounds are labelled from it, never from `base`.
-	 * @param WooGroundsLegacyMap|null $legacy Re-points an old Woo `base` slug the repair has not reached yet.
+	 * @param RefusalGroundsLegacyMap|null $legacy Re-points an old Woo `base` slug the repair has not reached yet.
 	 *
 	 * @return void
 	 */
@@ -70,7 +70,7 @@ class BaseLabelResolver {
 		private readonly DossierObjectRepository $repository,
 		private readonly LoggerInterface $logger,
 		private readonly ?RefusalGroundsResolver $grounds = null,
-		private readonly ?WooGroundsLegacyMap $legacy = null,
+		private readonly ?RefusalGroundsLegacyMap $legacy = null,
 	) {
 
 	}//end __construct()
@@ -95,6 +95,8 @@ class BaseLabelResolver {
 	 *                                                                 reference to its
 	 *                                                                 display name and
 	 *                                                                 Woo Art. 5 toelichting.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	public function resolve(array $baseRefs): array {
 		if (count($baseRefs) === 0) {
@@ -138,7 +140,7 @@ class BaseLabelResolver {
 	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private function resolveThroughGrounds(array $baseRefs): array {
-		$woo = new WooGroundLabels(grounds: $this->grounds, legacy: $this->legacy, logger: $this->logger);
+		$woo = new RefusalGroundLabels(grounds: $this->grounds, legacy: $this->legacy, logger: $this->logger);
 
 		$labels = [];
 		$lookups = null;
@@ -162,6 +164,8 @@ class BaseLabelResolver {
 	 * The `base` lookups for a tenant's own (non-Woo) bases; empty without OpenRegister.
 	 *
 	 * @return array<string, array<string,string>> The lookups.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private function tenantBaseLookups(): array {
 		$objectService = $this->repository->objectService();
@@ -317,6 +321,8 @@ class BaseLabelResolver {
 	 * @param array<string, array<string,string>> $lookups The lookups.
 	 *
 	 * @return array{name: string, description: string} The label.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private function labelFor(string $refString, array $lookups): array {
 		if (isset($lookups['slugToName'][$refString]) === true) {

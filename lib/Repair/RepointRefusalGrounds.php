@@ -32,8 +32,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Repair;
 
 use OCA\Filinq\Service\DossierObjectReader;
-use OCA\Filinq\Service\DossierObjectRepository;
-use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCA\Filinq\Service\LegalBasisProposalService;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -49,7 +48,7 @@ use Throwable;
  *
  * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
  */
-class RepointWooGrounds implements IRepairStep {
+class RepointRefusalGrounds implements IRepairStep {
 
 	/**
 	 * The register the objects live in.
@@ -66,22 +65,37 @@ class RepointWooGrounds implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param DossierObjectRepository $repository OpenRegister access.
 	 * @param DossierObjectReader     $reader     Object-shape reading.
-	 * @param WooGroundsLegacyMap     $legacy     The old slug to code map.
+	 * @param RefusalGroundsLegacyMap     $legacy     The old slug to code map.
 	 * @param IAppConfig              $appConfig  Holds the entity-type mapping.
 	 * @param LoggerInterface         $logger     Names an object that could not be written.
-	 * @param ContainerInterface|null $container  Reaches OpenRegister's entity relations.
+	 * @param ContainerInterface|null $container  Reaches OpenRegister's object service and entity relations.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	public function __construct(
-		private readonly DossierObjectRepository $repository,
 		private readonly DossierObjectReader $reader,
-		private readonly WooGroundsLegacyMap $legacy,
+		private readonly RefusalGroundsLegacyMap $legacy,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,
 		private readonly ?ContainerInterface $container = null,
 	) {
 	}//end __construct()
+
+	/**
+	 * OpenRegister's object service, or null when OpenRegister is not there.
+	 *
+	 * @return object|null
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 */
+	private function objectService(): ?object {
+		try {
+			return $this->container?->get('OCA\\OpenRegister\\Service\\ObjectService');
+		} catch (Throwable $e) {
+			return null;
+		}
+	}//end objectService()
 
 	/**
 	 * The step's name in the upgrade log.
@@ -107,30 +121,43 @@ class RepointWooGrounds implements IRepairStep {
 		try {
 			$this->legacy->all();
 		} catch (Throwable $e) {
-			$output->warning('RepointWooGrounds: the legacy map cannot be read, nothing was changed: ' . $e->getMessage());
+			$output->warning('RepointRefusalGrounds: the legacy map cannot be read, nothing was changed: ' . $e->getMessage());
 			return;
 		}
 
-		$report = ['rewritten' => 0, 'left' => []];
-		$objectService = $this->repository->objectService();
-		if ($objectService === null) {
-			$output->info('RepointWooGrounds: OpenRegister is not available, no objects were re-pointed.');
-		}
-
-		foreach (self::SCHEMAS as $schema) {
-			if ($objectService !== null) {
-				$report = $this->repointSchema(objectService: $objectService, schema: $schema, report: $report);
-			}
-		}
-
+		$report = $this->repointObjects(report: ['rewritten' => 0, 'left' => []], output: $output);
 		$report = $this->repointMapping(report: $report);
 		$report = $this->repointRelations(report: $report, output: $output);
 
-		$output->info('RepointWooGrounds: re-pointed ' . $report['rewritten'] . ' references, left ' . count($report['left']) . '.');
+		$output->info('RepointRefusalGrounds: re-pointed ' . $report['rewritten'] . ' references, left ' . count($report['left']) . '.');
 		foreach ($report['left'] as $left) {
-			$output->warning('RepointWooGrounds: ' . $left . ' has no one-to-one dossiq code and was left as it is.');
+			$output->warning('RepointRefusalGrounds: ' . $left . ' has no one-to-one dossiq code and was left as it is.');
 		}
 	}//end run()
+
+	/**
+	 * Re-point the `bases` of the objects of every schema that carries them.
+	 *
+	 * @param array{rewritten: int, left: list<string>} $report The report so far.
+	 * @param IOutput                                   $output The upgrade output.
+	 *
+	 * @return array{rewritten: int, left: list<string>} The report.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 */
+	private function repointObjects(array $report, IOutput $output): array {
+		$objectService = $this->objectService();
+		if ($objectService === null) {
+			$output->info('RepointRefusalGrounds: OpenRegister is not available, no objects were re-pointed.');
+			return $report;
+		}
+
+		foreach (self::SCHEMAS as $schema) {
+			$report = $this->repointSchema(objectService: $objectService, schema: $schema, report: $report);
+		}
+
+		return $report;
+	}//end repointObjects()
 
 	/**
 	 * A list of grounds with every one-to-one old slug replaced by its code.
@@ -167,6 +194,8 @@ class RepointWooGrounds implements IRepairStep {
 	 * @param array{rewritten: int, left: list<string>}      $report        The report so far.
 	 *
 	 * @return array{rewritten: int, left: list<string>} The report.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function repointSchema(object $objectService, string $schema, array $report): array {
 		try {
@@ -177,30 +206,66 @@ class RepointWooGrounds implements IRepairStep {
 		}
 
 		foreach ($objects as $object) {
-			$payload = $object;
-			if (is_object($object) === true) {
-				$payload = $this->reader->payloadOf(object: $object);
-			}
-
-			if (is_array($payload) === false || is_array($payload['bases'] ?? null) === false) {
-				continue;
-			}
-
-			$uuid = (string)($payload['@self']['uuid'] ?? $payload['@self']['id'] ?? $payload['id'] ?? '');
-			$result = $this->repoint(bases: $payload['bases']);
-			foreach ($result['left'] as $slug) {
-				$report['left'][] = $schema . ' ' . $uuid . ' (' . $slug . ')';
-			}
-
-			if ($result['bases'] !== $payload['bases']
-				&& $this->save(objectService: $objectService, schema: $schema, payload: ['bases' => $result['bases']] + $payload) === true
-			) {
-				$report['rewritten']++;
-			}
+			$report = $this->repointObject(objectService: $objectService, schema: $schema, object: $object, report: $report);
 		}
 
 		return $report;
 	}//end repointSchema()
+
+	/**
+	 * Re-point the `bases` of one object and save it when they changed.
+	 *
+	 * @param object                                    $objectService OpenRegister's object service.
+	 * @param string                                    $schema        The schema slug.
+	 * @param mixed                                     $object        The stored object or its array.
+	 * @param array{rewritten: int, left: list<string>} $report        The report so far.
+	 *
+	 * @return array{rewritten: int, left: list<string>} The report.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 */
+	private function repointObject(object $objectService, string $schema, mixed $object, array $report): array {
+		$payload = $this->payloadWithBases(object: $object);
+		if ($payload === null) {
+			return $report;
+		}
+
+		$uuid   = (string)($payload['@self']['uuid'] ?? $payload['@self']['id'] ?? $payload['id'] ?? '');
+		$result = $this->repoint(bases: $payload['bases']);
+		foreach ($result['left'] as $slug) {
+			$report['left'][] = $schema . ' ' . $uuid . ' (' . $slug . ')';
+		}
+
+		if ($result['bases'] !== $payload['bases']
+			&& $this->save(objectService: $objectService, schema: $schema, payload: ['bases' => $result['bases']] + $payload) === true
+		) {
+			$report['rewritten']++;
+		}
+
+		return $report;
+	}//end repointObject()
+
+	/**
+	 * The payload of a stored object when it carries a `bases` list, else null.
+	 *
+	 * @param mixed $object The stored object or its array.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 */
+	private function payloadWithBases(mixed $object): ?array {
+		$payload = $object;
+		if (is_object($object) === true) {
+			$payload = $this->reader->payloadOf(object: $object);
+		}
+
+		if (is_array($payload) === false || is_array($payload['bases'] ?? null) === false) {
+			return null;
+		}
+
+		return $payload;
+	}//end payloadWithBases()
 
 	/**
 	 * Write one re-pointed object back.
@@ -210,6 +275,8 @@ class RepointWooGrounds implements IRepairStep {
 	 * @param array<string, mixed> $payload       The object with its re-pointed `bases`.
 	 *
 	 * @return bool True when the object was written.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function save(object $objectService, string $schema, array $payload): bool {
 		$uuid = (string)($payload['@self']['uuid'] ?? $payload['@self']['id'] ?? $payload['id'] ?? '');
@@ -260,15 +327,9 @@ class RepointWooGrounds implements IRepairStep {
 	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function repointRelations(array $report, IOutput $output): array {
-		$mapper = null;
-		try {
-			$mapper = $this->container?->get('OCA\\OpenRegister\\Db\\EntityRelationMapper');
-		} catch (Throwable $e) {
-			$mapper = null;
-		}
-
-		if (is_object($mapper) === false || method_exists($mapper, 'findWithBases') === false) {
-			$output->info('RepointWooGrounds: this OpenRegister cannot list entity relations with grounds; their grounds were left as they are.');
+		$mapper = $this->relationMapper();
+		if ($mapper === null) {
+			$output->info('RepointRefusalGrounds: this OpenRegister cannot list entity relations with grounds; their grounds were left as they are.');
 			return $report;
 		}
 
@@ -290,6 +351,27 @@ class RepointWooGrounds implements IRepairStep {
 	}//end repointRelations()
 
 	/**
+	 * OpenRegister's EntityRelationMapper when it can list relations with grounds, else null.
+	 *
+	 * @return object|null
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 */
+	private function relationMapper(): ?object {
+		try {
+			$mapper = $this->container?->get('OCA\\OpenRegister\\Db\\EntityRelationMapper');
+		} catch (Throwable $e) {
+			return null;
+		}
+
+		if (is_object($mapper) === false || method_exists($mapper, 'findWithBases') === false) {
+			return null;
+		}
+
+		return $mapper;
+	}//end relationMapper()
+
+	/**
 	 * Re-point one entity relation's `bases`.
 	 *
 	 * @param object                                    $mapper   OpenRegister's EntityRelationMapper.
@@ -297,6 +379,8 @@ class RepointWooGrounds implements IRepairStep {
 	 * @param array{rewritten: int, left: list<string>} $report   The report so far.
 	 *
 	 * @return array{rewritten: int, left: list<string>} The report.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function repointRelation(object $mapper, object $relation, array $report): array {
 		$bases = $relation->getBases();
@@ -332,6 +416,8 @@ class RepointWooGrounds implements IRepairStep {
 	 * @param array{rewritten: int, left: list<string>} $report The report so far.
 	 *
 	 * @return array{rewritten: int, left: list<string>} The report.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function repointMapping(array $report): array {
 		$raw = $this->appConfig->getValueString('filinq', LegalBasisProposalService::CONFIG_KEY, '');
@@ -340,28 +426,43 @@ class RepointWooGrounds implements IRepairStep {
 			return $report;
 		}
 
-		$changed = false;
+		$before = $mapping;
 		foreach ($mapping as $type => $bases) {
-			if (is_array($bases) === false) {
-				continue;
-			}
-
-			$result = $this->repoint(bases: $bases);
-			foreach ($result['left'] as $slug) {
-				$report['left'][] = LegalBasisProposalService::CONFIG_KEY . ' ' . $type . ' (' . $slug . ')';
-			}
-
-			if ($result['bases'] !== $bases) {
-				$mapping[$type] = $result['bases'];
-				$changed = true;
-				$report['rewritten']++;
-			}
+			[$mapping[$type], $report] = $this->repointMappingType(type: (string)$type, bases: $bases, report: $report);
 		}
 
-		if ($changed === true) {
+		if ($mapping !== $before) {
 			$this->appConfig->setValueString('filinq', LegalBasisProposalService::CONFIG_KEY, (string)json_encode($mapping));
 		}
 
 		return $report;
 	}//end repointMapping()
+
+	/**
+	 * Re-point the grounds of one entity type in the mapping.
+	 *
+	 * @param string                                    $type   The entity type.
+	 * @param mixed                                     $bases  Its grounds as stored.
+	 * @param array{rewritten: int, left: list<string>} $report The report so far.
+	 *
+	 * @return array{0: mixed, 1: array{rewritten: int, left: list<string>}} The grounds and the report.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 */
+	private function repointMappingType(string $type, mixed $bases, array $report): array {
+		if (is_array($bases) === false) {
+			return [$bases, $report];
+		}
+
+		$result = $this->repoint(bases: $bases);
+		foreach ($result['left'] as $slug) {
+			$report['left'][] = LegalBasisProposalService::CONFIG_KEY . ' ' . $type . ' (' . $slug . ')';
+		}
+
+		if ($result['bases'] !== $bases) {
+			$report['rewritten']++;
+		}
+
+		return [$result['bases'], $report];
+	}//end repointMappingType()
 }//end class

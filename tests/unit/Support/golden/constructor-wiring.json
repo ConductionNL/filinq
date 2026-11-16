@@ -157,17 +157,17 @@
                     ]
                 },
                 {
+                    "built OCA\\Filinq\\Service\\Grounds\\RefusalGroundsLegacyMap": [
+                        null,
+                        null
+                    ]
+                },
+                {
                     "built OCA\\Filinq\\Service\\Grounds\\RefusalGroundsResolver": [
                         "OCA\\Dossiq\\Woo\\WooRefusalGrounds",
                         "double ContainerInterface",
                         "double IAppManager",
                         "double LoggerInterface",
-                        null
-                    ]
-                },
-                {
-                    "built OCA\\Filinq\\Service\\Grounds\\WooGroundsLegacyMap": [
-                        null,
                         null
                     ]
                 }
@@ -179,8 +179,8 @@
                 {
                     "built OCA\\Filinq\\Service\\BaseLabelResolver": [
                         "built OCA\\Filinq\\Service\\DossierObjectRepository",
+                        "built OCA\\Filinq\\Service\\Grounds\\RefusalGroundsLegacyMap",
                         "built OCA\\Filinq\\Service\\Grounds\\RefusalGroundsResolver",
-                        "built OCA\\Filinq\\Service\\Grounds\\WooGroundsLegacyMap",
                         "double LoggerInterface"
                     ]
                 },

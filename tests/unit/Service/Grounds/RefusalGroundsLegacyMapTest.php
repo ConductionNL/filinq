@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for WooGroundsLegacyMap
+ * Unit tests for RefusalGroundsLegacyMap
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Service\Grounds
@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Grounds;
 
-use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -30,8 +30,8 @@ use RuntimeException;
 /**
  * The legacy map re-points exactly filinq's seeded slugs, to codes the snapshot carries.
  */
-#[CoversClass(WooGroundsLegacyMap::class)]
-class WooGroundsLegacyMapTest extends TestCase {
+#[CoversClass(RefusalGroundsLegacyMap::class)]
+class RefusalGroundsLegacyMapTest extends TestCase {
 
 	/**
 	 * A fixture file, removed after each test.
@@ -57,12 +57,12 @@ class WooGroundsLegacyMapTest extends TestCase {
 	 *
 	 * @param string $contents The file contents.
 	 *
-	 * @return WooGroundsLegacyMap
+	 * @return RefusalGroundsLegacyMap
 	 */
-	private function mapOf(string $contents): WooGroundsLegacyMap {
+	private function mapOf(string $contents): RefusalGroundsLegacyMap {
 		$this->fixture = (string)tempnam(sys_get_temp_dir(), 'legacy-map');
 		file_put_contents($this->fixture, $contents);
-		return new WooGroundsLegacyMap($this->fixture);
+		return new RefusalGroundsLegacyMap($this->fixture);
 
 	}//end mapOf()
 
@@ -83,7 +83,7 @@ class WooGroundsLegacyMapTest extends TestCase {
 		$snapshot = json_decode((string)file_get_contents(__DIR__ . '/../../../../lib/Settings/woo-refusal-grounds.snapshot.json'), true);
 		$codes = array_column($snapshot['grounds'], 'code');
 
-		$map = (new WooGroundsLegacyMap())->all();
+		$map = (new RefusalGroundsLegacyMap())->all();
 
 		$this->assertCount(19, $map);
 		$this->assertSame(
@@ -97,15 +97,15 @@ class WooGroundsLegacyMapTest extends TestCase {
 		);
 		$this->assertSame([], array_intersect($seeded, array_keys($map)), 'A retired Woo slug is still seeded');
 		foreach ($map as $slug => $code) {
-			if ($code === WooGroundsLegacyMap::UNMAPPED) {
+			if ($code === RefusalGroundsLegacyMap::UNMAPPED) {
 				continue;
 			}
 
 			$this->assertContains($code, $codes, $slug . ' maps to a code the snapshot does not carry');
 		}
 
-		$this->assertSame('5.1.2.e', (new WooGroundsLegacyMap())->codeFor('art-5-1-2-e'));
-		$this->assertSame('5.2.2', (new WooGroundsLegacyMap())->codeFor('art-5-2-2'));
+		$this->assertSame('5.1.2.e', (new RefusalGroundsLegacyMap())->codeFor('art-5-1-2-e'));
+		$this->assertSame('5.2.2', (new RefusalGroundsLegacyMap())->codeFor('art-5-2-2'));
 
 	}//end testTheMapCoversTheSeedAndTheSnapshot()
 

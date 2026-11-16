@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Filinq BaseWooGroundGuard
+ * Filinq BaseRefusalGroundGuard
  *
  * Refuses a new Woo refusal ground on the `base` schema: the Woo grounds come
  * from dossiq's one list (or its read-only snapshot), so `base` keeps only a
@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -37,7 +37,7 @@ use Throwable;
  *
  * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
  */
-class BaseWooGroundGuard implements IEventListener {
+class BaseRefusalGroundGuard implements IEventListener {
 
 	/**
 	 * The schema that no longer holds Woo grounds.
@@ -52,11 +52,11 @@ class BaseWooGroundGuard implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param WooGroundsLegacyMap $legacy The old Woo slugs.
+	 * @param RefusalGroundsLegacyMap $legacy The old Woo slugs.
 	 * @param LoggerInterface     $logger Records a refused write.
 	 */
 	public function __construct(
-		private readonly WooGroundsLegacyMap $legacy,
+		private readonly RefusalGroundsLegacyMap $legacy,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -95,19 +95,46 @@ class BaseWooGroundGuard implements IEventListener {
 	 * @param Event $event The event.
 	 *
 	 * @return object|null
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function createdObject(Event $event): ?object {
-		if (is_a($event, 'OCA\\OpenRegister\\Event\\ObjectCreatingEvent') === false || method_exists($event, 'getObject') === false) {
+		if (self::isCreatingEvent(event: $event) === false || method_exists($event, 'getObject') === false) {
 			return null;
 		}
 
-		$object = $event->getObject();
+		return self::withSchema(object: $event->getObject());
+	}//end createdObject()
+
+	/**
+	 * The object when it is an entity with a schema, else null.
+	 *
+	 * @param mixed $object The event's object.
+	 *
+	 * @return object|null
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 */
+	private static function withSchema(mixed $object): ?object {
 		if (is_object($object) === false || method_exists($object, 'getSchema') === false) {
 			return null;
 		}
 
 		return $object;
-	}//end createdObject()
+	}//end withSchema()
+
+	/**
+	 * Whether the event is OpenRegister's object-creating event.
+	 *
+	 * @param Event $event The event.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 */
+	private static function isCreatingEvent(Event $event): bool {
+		return is_a($event, 'OCA\\OpenRegister\\Event\\ObjectCreatingEvent') === true;
+	}//end isCreatingEvent()
 
 	/**
 	 * The slug the new object asks for: its payload's `slug`, else the entity's.
@@ -115,6 +142,8 @@ class BaseWooGroundGuard implements IEventListener {
 	 * @param object $object The object entity.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private static function slugOf(object $object): string {
 		$payload = [];
@@ -136,6 +165,8 @@ class BaseWooGroundGuard implements IEventListener {
 	 * @param string $slug The slug.
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function isWooGround(string $slug): bool {
 		if (preg_match('/^5\.\d/', $slug) === 1) {

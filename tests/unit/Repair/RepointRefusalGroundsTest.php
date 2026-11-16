@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for RepointWooGrounds
+ * Unit tests for RepointRefusalGrounds
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Repair
@@ -20,10 +20,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Repair;
 
-use OCA\Filinq\Repair\RepointWooGrounds;
+use OCA\Filinq\Repair\RepointRefusalGrounds;
 use OCA\Filinq\Service\DossierObjectReader;
-use OCA\Filinq\Service\DossierObjectRepository;
-use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -36,11 +35,11 @@ use RuntimeException;
  * Stored Woo slugs are re-pointed to dossiq's codes one to one, an unmapped
  * slug is reported and kept, and a second run changes nothing.
  *
- * @covers \OCA\Filinq\Repair\RepointWooGrounds
+ * @covers \OCA\Filinq\Repair\RepointRefusalGrounds
  * @uses   \OCA\Filinq\Service\DossierObjectReader
- * @uses   \OCA\Filinq\Service\Grounds\WooGroundsLegacyMap
+ * @uses   \OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap
  */
-class RepointWooGroundsTest extends TestCase {
+class RepointRefusalGroundsTest extends TestCase {
 
 	/**
 	 * The upgrade output lines, as [level, message].
@@ -121,16 +120,13 @@ class RepointWooGroundsTest extends TestCase {
 	 * The repair over a fake object service (or none) and a legacy map.
 	 *
 	 * @param object|null              $objectService The object service, null without OpenRegister.
-	 * @param WooGroundsLegacyMap|null $legacy        The map; the shipped one when null.
+	 * @param RefusalGroundsLegacyMap|null $legacy        The map; the shipped one when null.
 	 * @param object|null              $relations     OpenRegister's EntityRelationMapper, null when the container has none.
 	 * @param LoggerInterface|null     $logger        The logger.
 	 *
-	 * @return RepointWooGrounds
+	 * @return RepointRefusalGrounds
 	 */
-	private function repair(?object $objectService, ?WooGroundsLegacyMap $legacy = null, ?object $relations = null, ?LoggerInterface $logger = null): RepointWooGrounds {
-		$repository = $this->createMock(DossierObjectRepository::class);
-		$repository->method('objectService')->willReturn($objectService);
-
+	private function repair(?object $objectService, ?RefusalGroundsLegacyMap $legacy = null, ?object $relations = null, ?LoggerInterface $logger = null): RepointRefusalGrounds {
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(fn (string $app, string $key, string $default = ''): string => ($this->config[$key] ?? $default));
 		$appConfig->method('setValueString')->willReturnCallback(
@@ -142,7 +138,11 @@ class RepointWooGroundsTest extends TestCase {
 
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			static function (string $id) use ($relations): object {
+			static function (string $id) use ($relations, $objectService): object {
+				if ($id === 'OCA\\OpenRegister\\Service\\ObjectService' && $objectService !== null) {
+					return $objectService;
+				}
+
 				if ($id !== 'OCA\\OpenRegister\\Db\\EntityRelationMapper' || $relations === null) {
 					throw new RuntimeException('not registered: ' . $id);
 				}
@@ -151,7 +151,7 @@ class RepointWooGroundsTest extends TestCase {
 			}
 		);
 
-		return new RepointWooGrounds($repository, new DossierObjectReader(), ($legacy ?? new WooGroundsLegacyMap()), $appConfig, ($logger ?? $this->createMock(LoggerInterface::class)), $container);
+		return new RepointRefusalGrounds(new DossierObjectReader(), ($legacy ?? new RefusalGroundsLegacyMap()), $appConfig, ($logger ?? $this->createMock(LoggerInterface::class)), $container);
 
 	}//end repair()
 
@@ -176,13 +176,13 @@ class RepointWooGroundsTest extends TestCase {
 	/**
 	 * A map file with one unmapped slug, beside the shipped one-to-one slugs.
 	 *
-	 * @return WooGroundsLegacyMap
+	 * @return RefusalGroundsLegacyMap
 	 */
-	private static function mapWithAnUnmappedSlug(): WooGroundsLegacyMap {
+	private static function mapWithAnUnmappedSlug(): RefusalGroundsLegacyMap {
 		$path = tempnam(sys_get_temp_dir(), 'woo-map');
 		file_put_contents($path, json_encode(['map' => ['art-5-1-2-e' => '5.1.2.e', 'art-5-1-5' => 'unmapped']]));
 
-		return new WooGroundsLegacyMap($path);
+		return new RefusalGroundsLegacyMap($path);
 
 	}//end mapWithAnUnmappedSlug()
 
@@ -197,7 +197,7 @@ class RepointWooGroundsTest extends TestCase {
 		$this->repair($objects)->run($this->upgradeOutput());
 
 		$this->assertSame([['dossier', 'd-1', ['bases' => ['5.1.2.e', 'eigen-grond', '5.1.4'], 'title' => 'Dossier']]], $objects->saved);
-		$this->assertContains(['info', 'RepointWooGrounds: re-pointed 1 references, left 0.'], $this->lines);
+		$this->assertContains(['info', 'RepointRefusalGrounds: re-pointed 1 references, left 0.'], $this->lines);
 
 	}//end testAOneToOneSlugIsRewritten()
 
@@ -212,7 +212,7 @@ class RepointWooGroundsTest extends TestCase {
 		$this->repair($objects, self::mapWithAnUnmappedSlug())->run($this->upgradeOutput());
 
 		$this->assertSame([], $objects->saved);
-		$this->assertContains(['warning', 'RepointWooGrounds: publicationProhibition p-1 (art-5-1-5) has no one-to-one dossiq code and was left as it is.'], $this->lines);
+		$this->assertContains(['warning', 'RepointRefusalGrounds: publicationProhibition p-1 (art-5-1-5) has no one-to-one dossiq code and was left as it is.'], $this->lines);
 
 	}//end testAnUnmappedSlugIsReported()
 
@@ -232,7 +232,7 @@ class RepointWooGroundsTest extends TestCase {
 
 		$repair->run($this->upgradeOutput());
 		$this->assertCount(1, $objects->saved);
-		$this->assertSame('RepointWooGrounds: re-pointed 0 references, left 0.', end($this->lines)[1]);
+		$this->assertSame('RepointRefusalGrounds: re-pointed 0 references, left 0.', end($this->lines)[1]);
 
 	}//end testTheRepairIsIdempotent()
 
@@ -247,7 +247,7 @@ class RepointWooGroundsTest extends TestCase {
 		$this->repair(null)->run($this->upgradeOutput());
 
 		$this->assertSame(['PERSON' => ['5.1.2.e']], json_decode($this->config['filinq.grondslagen.entity_type_bases'], true));
-		$this->assertContains(['info', 'RepointWooGrounds: OpenRegister is not available, no objects were re-pointed.'], $this->lines);
+		$this->assertContains(['info', 'RepointRefusalGrounds: OpenRegister is not available, no objects were re-pointed.'], $this->lines);
 
 	}//end testWithoutOpenRegisterOnlyTheMappingIsRepointed()
 
@@ -258,13 +258,13 @@ class RepointWooGroundsTest extends TestCase {
 	 */
 	public function testAnUnreadableMapChangesNothing(): void {
 		$objects = self::objectService(['dossier' => [['@self' => ['uuid' => 'd-1'], 'bases' => ['art-5-1-2-e']]]]);
-		$legacy = $this->createMock(WooGroundsLegacyMap::class);
+		$legacy = $this->createMock(RefusalGroundsLegacyMap::class);
 		$legacy->method('all')->willThrowException(new RuntimeException('gone'));
 
 		$this->repair($objects, $legacy)->run($this->upgradeOutput());
 
 		$this->assertSame([], $objects->saved);
-		$this->assertSame([['warning', 'RepointWooGrounds: the legacy map cannot be read, nothing was changed: gone']], $this->lines);
+		$this->assertSame([['warning', 'RepointRefusalGrounds: the legacy map cannot be read, nothing was changed: gone']], $this->lines);
 
 	}//end testAnUnreadableMapChangesNothing()
 	/**
@@ -384,8 +384,8 @@ class RepointWooGroundsTest extends TestCase {
 		$repair->run($this->upgradeOutput());
 
 		$this->assertSame([[3, ['bases' => ['5.1.2.e', '5.1.4']]]], $relations->writes);
-		$this->assertContains(['info', 'RepointWooGrounds: re-pointed 1 references, left 1.'], $this->lines);
-		$this->assertContains(['warning', 'RepointWooGrounds: entity relation 4 (art-5-1-5) has no one-to-one dossiq code and was left as it is.'], $this->lines);
+		$this->assertContains(['info', 'RepointRefusalGrounds: re-pointed 1 references, left 1.'], $this->lines);
+		$this->assertContains(['warning', 'RepointRefusalGrounds: entity relation 4 (art-5-1-5) has no one-to-one dossiq code and was left as it is.'], $this->lines);
 		$this->assertSame([[0, 500]], $relations->reads);
 
 		$repair->run($this->upgradeOutput());
@@ -424,7 +424,7 @@ class RepointWooGroundsTest extends TestCase {
 		$this->repair(null, null, $relations, $logger)->run($this->upgradeOutput());
 
 		$this->assertSame([2], array_column($relations->writes, 0));
-		$this->assertContains(['info', 'RepointWooGrounds: re-pointed 1 references, left 0.'], $this->lines);
+		$this->assertContains(['info', 'RepointRefusalGrounds: re-pointed 1 references, left 0.'], $this->lines);
 	}//end testARefusedRelationWriteIsLogged()
 
 	/**
@@ -437,7 +437,7 @@ class RepointWooGroundsTest extends TestCase {
 		})->run($this->upgradeOutput());
 		$this->repair(null)->run($this->upgradeOutput());
 
-		$notice = ['info', 'RepointWooGrounds: this OpenRegister cannot list entity relations with grounds; their grounds were left as they are.'];
+		$notice = ['info', 'RepointRefusalGrounds: this OpenRegister cannot list entity relations with grounds; their grounds were left as they are.'];
 		$this->assertSame(2, count(array_filter($this->lines, static fn (array $line): bool => $line === $notice)));
 	}//end testAnOpenRegisterWithoutThePagedReadLeavesTheRelations()
 }//end class

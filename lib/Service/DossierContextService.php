@@ -32,7 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
-use OCA\Filinq\Service\Grounds\WooGroundLabels;
+use OCA\Filinq\Service\Grounds\RefusalGroundLabels;
 use OCP\Files\Folder;
 use OCP\Files\Node;
 use Psr\Log\LoggerInterface;
@@ -62,7 +62,7 @@ class DossierContextService {
 	 * @param DossierFileService $files The filesystem half.
 	 * @param DossierObjectReader $reader Object-shape reading.
 	 * @param LoggerInterface $logger Logger.
-	 * @param WooGroundLabels|null $wooGrounds The Woo refusal grounds (dossiq or the snapshot); when given,
+	 * @param RefusalGroundLabels|null $wooGrounds The Woo refusal grounds (dossiq or the snapshot); when given,
 	 *                                         Woo grounds are labelled from it, never from `base`.
 	 */
 	public function __construct(
@@ -70,7 +70,7 @@ class DossierContextService {
 		private readonly DossierFileService $files,
 		private readonly DossierObjectReader $reader,
 		private readonly LoggerInterface $logger,
-		private readonly ?WooGroundLabels $wooGrounds = null,
+		private readonly ?RefusalGroundLabels $wooGrounds = null,
 	) {
 
 	}//end __construct()

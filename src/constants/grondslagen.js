@@ -1,7 +1,7 @@
 /**
  * Canonical Woo Art. 5 grondslagen, as dossiq's refusal ground codes
  * (grondslagen-read-from-dossiq: the stored value is the code, the old
- * `art-*` slugs are re-pointed by the RepointWooGrounds repair). Formerly
+ * `art-*` slugs are re-pointed by the RepointRefusalGrounds repair). Formerly
  * seeded by the `filinq` register
  * (Wave 1.1 + Wave 4a; seeded by the `dossier` register until the five
  * registers were consolidated into one) and used as the fallback list

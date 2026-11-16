@@ -35,7 +35,7 @@ import { dossiqGroundsUrl, fetchGroundsSource } from '../../services/groundsSour
 // this section shows where they come from and offers no editor
 // (grondslagen-read-from-dossiq REQ-GRD-004).
 export default {
-	name: 'WooGroundsSource',
+	name: 'RefusalGroundsSource',
 	components: {
 		NcNoteCard,
 	},

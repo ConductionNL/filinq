@@ -3,7 +3,7 @@
 /**
  * Woo Grounds Legacy Map
  *
- * Reads lib/Settings/woo-grounds-legacy-map.json: each of filinq's old Woo
+ * Reads lib/Settings/refusal-grounds-legacy-map.json: each of filinq's old Woo
  * `base` slugs to the dossiq refusal ground code it re-points to, or
  * `unmapped` when there is no one-to-one code.
  *
@@ -32,7 +32,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
  */
-class WooGroundsLegacyMap {
+class RefusalGroundsLegacyMap {
 
 	/**
 	 * The value that marks a slug without a one-to-one code.
@@ -42,7 +42,7 @@ class WooGroundsLegacyMap {
 	/**
 	 * The shipped mapping file.
 	 */
-	public const PATH = __DIR__ . '/../../Settings/woo-grounds-legacy-map.json';
+	public const PATH = __DIR__ . '/../../Settings/refusal-grounds-legacy-map.json';
 
 	/**
 	 * The mapping, read once.
@@ -75,22 +75,11 @@ class WooGroundsLegacyMap {
 			return $this->map;
 		}
 
-		$decoded = null;
-		$path = ($this->path ?? self::PATH);
-		if (is_readable($path) === true) {
-			$raw = file_get_contents($path);
-			if (is_string($raw) === true) {
-				$decoded = json_decode($raw, true);
-			}
-		}
-
-		if (is_array($decoded) === false || is_array($decoded['map'] ?? null) === false) {
-			throw new RuntimeException('The Woo grounds legacy map cannot be read.');
-		}
+		$decoded = $this->decoded();
 
 		$map = [];
 		foreach ($decoded['map'] as $slug => $code) {
-			if (is_string($slug) === true && is_string($code) === true && $code !== '') {
+			if (self::isEntry(slug: $slug, code: $code) === true) {
 				$map[$slug] = $code;
 			}
 		}
@@ -98,6 +87,44 @@ class WooGroundsLegacyMap {
 		$this->map = $map;
 		return $this->map;
 	}//end all()
+
+	/**
+	 * The mapping file, decoded.
+	 *
+	 * @return array{map: array<mixed>} The decoded file.
+	 *
+	 * @throws RuntimeException When the mapping file cannot be read.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/tasks.md
+	 */
+	private function decoded(): array {
+		$decoded = null;
+		$path    = ($this->path ?? self::PATH);
+		if (is_readable($path) === true) {
+			$raw     = file_get_contents($path);
+			$decoded = json_decode((string)$raw, true);
+		}
+
+		if (is_array($decoded) === false || is_array($decoded['map'] ?? null) === false) {
+			throw new RuntimeException('The Woo grounds legacy map cannot be read.');
+		}
+
+		return $decoded;
+	}//end decoded()
+
+	/**
+	 * Whether a row of the mapping file is a slug with a non-empty code.
+	 *
+	 * @param mixed $slug The key.
+	 * @param mixed $code The value.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/tasks.md
+	 */
+	private static function isEntry(mixed $slug, mixed $code): bool {
+		return is_string($slug) === true && is_string($code) === true && $code !== '';
+	}//end isEntry()
 
 	/**
 	 * Whether a reference is one of filinq's old Woo slugs.

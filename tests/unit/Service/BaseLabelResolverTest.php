@@ -24,7 +24,7 @@ use Exception;
 use OCA\Filinq\Service\BaseLabelResolver;
 use OCA\Filinq\Service\DossierObjectRepository;
 use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
-use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
@@ -42,8 +42,8 @@ use RuntimeException;
  *
  * @covers \OCA\Filinq\Service\BaseLabelResolver
  * @uses   \OCA\Filinq\Service\DossierObjectRepository
- * @uses   \OCA\Filinq\Service\Grounds\WooGroundsLegacyMap
- * @uses   \OCA\Filinq\Service\Grounds\WooGroundLabels
+ * @uses   \OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap
+ * @uses   \OCA\Filinq\Service\Grounds\RefusalGroundLabels
  */
 class BaseLabelResolverTest extends TestCase {
 
@@ -353,7 +353,7 @@ class BaseLabelResolverTest extends TestCase {
 			$this->createMock(LoggerInterface::class)
 		);
 
-		return new BaseLabelResolver($repository, $this->logger, $grounds, new WooGroundsLegacyMap());
+		return new BaseLabelResolver($repository, $this->logger, $grounds, new RefusalGroundsLegacyMap());
 
 	}//end resolverOverGrounds()
 

@@ -28,7 +28,7 @@ use RecursiveIteratorIterator;
 /**
  * Every class in `lib/` that queries the `base` schema is one that reads a
  * tenant's own bases next to the Woo grounds, and takes those grounds from
- * the resolver (through `WooGroundLabels`). A new reader of `base` fails here
+ * the resolver (through `RefusalGroundLabels`). A new reader of `base` fails here
  * until it is either routed through the resolver or shown not to serve Woo
  * grounds.
  *
@@ -90,7 +90,7 @@ class GroundsReadersTest extends TestCase {
 		$root = dirname(__DIR__, 4);
 		foreach ($readers as $reader) {
 			$this->assertStringContainsString(
-				'WooGroundLabels',
+				'RefusalGroundLabels',
 				(string)file_get_contents($root . '/' . $reader),
 				$reader . ' queries `base` but does not take the Woo grounds from the resolver.'
 			);

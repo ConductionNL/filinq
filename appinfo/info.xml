@@ -33,7 +33,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
-    <version>0.2.8-unstable.20261116110000</version>
+    <version>0.2.8-unstable.20261116144500</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Filinq</namespace>
@@ -237,7 +237,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
                  keeps the entries, a later pass moves them. -->
             <step>OCA\Filinq\Repair\MigratePrintJobsOutOfAppConfig</step>
             <!-- grondslagen-read-from-dossiq: re-points stored Woo `base` slugs to dossiq's codes; post-migration only, idempotent, deletes nothing. -->
-            <step>OCA\Filinq\Repair\RepointWooGrounds</step>
+            <step>OCA\Filinq\Repair\RepointRefusalGrounds</step>
         </post-migration>
         <install>
             <step>OCA\Filinq\Repair\MigrateAppConfigKeys</step>

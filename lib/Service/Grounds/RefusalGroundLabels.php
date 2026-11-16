@@ -33,7 +33,7 @@ use Throwable;
  *
  * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
  */
-class WooGroundLabels {
+class RefusalGroundLabels {
 
 	/**
 	 * The label of a Woo reference that resolves to no ground, before the reference.
@@ -51,12 +51,12 @@ class WooGroundLabels {
 	 * Constructor.
 	 *
 	 * @param RefusalGroundsResolver   $grounds The one grounds reader.
-	 * @param WooGroundsLegacyMap|null $legacy  Re-points an old Woo `base` slug.
+	 * @param RefusalGroundsLegacyMap|null $legacy  Re-points an old Woo `base` slug.
 	 * @param LoggerInterface          $logger  Records a list or map that cannot be read.
 	 */
 	public function __construct(
 		private readonly RefusalGroundsResolver $grounds,
-		private readonly ?WooGroundsLegacyMap $legacy,
+		private readonly ?RefusalGroundsLegacyMap $legacy,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -178,6 +178,8 @@ class WooGroundLabels {
 	 * @param mixed $ground One ground of the list.
 	 *
 	 * @return array{code: string, name: string, description: string}|null
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private static function labelOf(mixed $ground): ?array {
 		if (is_array($ground) === false) {

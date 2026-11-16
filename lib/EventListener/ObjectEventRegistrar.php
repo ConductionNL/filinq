@@ -116,7 +116,7 @@ class ObjectEventRegistrar {
 		// the Woo grounds come from dossiq's list.
 		$context->registerEventListener(
 			'OCA\\OpenRegister\\Event\\ObjectCreatingEvent',
-			BaseWooGroundGuard::class
+			BaseRefusalGroundGuard::class
 		);
 		// A contract saved without a notice deadline gets end date minus
 		// notice period, however it is saved (contract-lifecycle-management).

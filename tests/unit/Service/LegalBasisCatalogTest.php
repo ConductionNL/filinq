@@ -22,8 +22,8 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
 use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
-use OCA\Filinq\Service\Grounds\WooGroundLabels;
-use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
+use OCA\Filinq\Service\Grounds\RefusalGroundLabels;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCA\Filinq\Service\LegalBasisCatalog;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
@@ -39,8 +39,8 @@ use RuntimeException;
  * rows, and degrades to nothing when OpenRegister is absent or fails.
  *
  * @covers \OCA\Filinq\Service\LegalBasisCatalog
- * @uses   \OCA\Filinq\Service\Grounds\WooGroundLabels
- * @uses   \OCA\Filinq\Service\Grounds\WooGroundsLegacyMap
+ * @uses   \OCA\Filinq\Service\Grounds\RefusalGroundLabels
+ * @uses   \OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap
  */
 class LegalBasisCatalogTest extends TestCase {
 
@@ -239,7 +239,7 @@ class LegalBasisCatalogTest extends TestCase {
 			$appManager,
 			$container,
 			$this->logger,
-			new WooGroundLabels($grounds, new WooGroundsLegacyMap(), $this->logger)
+			new RefusalGroundLabels($grounds, new RefusalGroundsLegacyMap(), $this->logger)
 		);
 
 		$this->assertSame(

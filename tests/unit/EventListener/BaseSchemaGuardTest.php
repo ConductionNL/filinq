@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for BaseWooGroundGuard
+ * Unit tests for BaseRefusalGroundGuard
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\EventListener
@@ -20,8 +20,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\EventListener;
 
-use OCA\Filinq\EventListener\BaseWooGroundGuard;
-use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
+use OCA\Filinq\EventListener\BaseRefusalGroundGuard;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCP\EventDispatcher\Event;
@@ -32,8 +32,8 @@ use Psr\Log\LoggerInterface;
  * A new `base` object naming a Woo ground is stopped; a tenant's own basis,
  * another schema and other events pass.
  *
- * @covers \OCA\Filinq\EventListener\BaseWooGroundGuard
- * @uses   \OCA\Filinq\Service\Grounds\WooGroundsLegacyMap
+ * @covers \OCA\Filinq\EventListener\BaseRefusalGroundGuard
+ * @uses   \OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap
  */
 class BaseSchemaGuardTest extends TestCase {
 
@@ -59,13 +59,13 @@ class BaseSchemaGuardTest extends TestCase {
 	 *
 	 * @param int $warnings How often a refusal is logged.
 	 *
-	 * @return BaseWooGroundGuard
+	 * @return BaseRefusalGroundGuard
 	 */
-	private function guard(int $warnings): BaseWooGroundGuard {
+	private function guard(int $warnings): BaseRefusalGroundGuard {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->exactly($warnings))->method('warning')->with('filinq.grounds.woo-base-refused');
 
-		return new BaseWooGroundGuard(new WooGroundsLegacyMap(), $logger);
+		return new BaseRefusalGroundGuard(new RefusalGroundsLegacyMap(), $logger);
 
 	}//end guard()
 

@@ -31,10 +31,18 @@ export function groundOption(ground) {
 		return null
 	}
 
-	const label = typeof ground?.label === 'string' && ground.label !== ''
-		? `${code} — ${ground.label}`
-		: code
-	return { label, value: code }
+	return { label: optionLabel(code, ground.label), value: code }
+}
+
+/**
+ * The picker label of a ground: its code, with its label when it has one.
+ *
+ * @param {string} code The ground's code.
+ * @param {string|undefined} label The ground's label as answered.
+ * @return {string} The label.
+ */
+function optionLabel(code, label) {
+	return typeof label === 'string' && label !== '' ? `${code} — ${label}` : code
 }
 
 /**

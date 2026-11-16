@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for WooGroundLabels
+ * Unit tests for RefusalGroundLabels
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Service\Grounds
@@ -21,8 +21,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service\Grounds;
 
 use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
-use OCA\Filinq\Service\Grounds\WooGroundLabels;
-use OCA\Filinq\Service\Grounds\WooGroundsLegacyMap;
+use OCA\Filinq\Service\Grounds\RefusalGroundLabels;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -32,10 +32,10 @@ use RuntimeException;
  * Woo grounds read as labels and picker options through the resolver, by
  * code or by old slug, and fail soft when the list or the map cannot be read.
  *
- * @covers \OCA\Filinq\Service\Grounds\WooGroundLabels
- * @uses   \OCA\Filinq\Service\Grounds\WooGroundsLegacyMap
+ * @covers \OCA\Filinq\Service\Grounds\RefusalGroundLabels
+ * @uses   \OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap
  */
-class WooGroundLabelsTest extends TestCase {
+class RefusalGroundLabelsTest extends TestCase {
 
 	/**
 	 * The helper's logger.
@@ -58,11 +58,11 @@ class WooGroundLabelsTest extends TestCase {
 	 * A helper over a resolver answering the list (or throwing it), with the shipped legacy map.
 	 *
 	 * @param mixed                    $list   The list, or a Throwable to throw.
-	 * @param WooGroundsLegacyMap|null $legacy The legacy map; the shipped one when omitted.
+	 * @param RefusalGroundsLegacyMap|null $legacy The legacy map; the shipped one when omitted.
 	 *
-	 * @return WooGroundLabels
+	 * @return RefusalGroundLabels
 	 */
-	private function labelsOver(mixed $list, ?WooGroundsLegacyMap $legacy = null): WooGroundLabels {
+	private function labelsOver(mixed $list, ?RefusalGroundsLegacyMap $legacy = null): RefusalGroundLabels {
 		$grounds = $this->createMock(RefusalGroundsResolver::class);
 		if ($list instanceof \Throwable) {
 			$grounds->expects($this->once())->method('list')->willThrowException($list);
@@ -70,7 +70,7 @@ class WooGroundLabelsTest extends TestCase {
 			$grounds->expects($this->once())->method('list')->willReturn($list);
 		}
 
-		return new WooGroundLabels($grounds, ($legacy ?? new WooGroundsLegacyMap()), $this->logger);
+		return new RefusalGroundLabels($grounds, ($legacy ?? new RefusalGroundsLegacyMap()), $this->logger);
 
 	}//end labelsOver()
 
@@ -164,13 +164,13 @@ class WooGroundLabelsTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnreadableMapRepointsNothing(): void {
-		$legacy = $this->createMock(WooGroundsLegacyMap::class);
+		$legacy = $this->createMock(RefusalGroundsLegacyMap::class);
 		$legacy->method('codeFor')->willThrowException(new RuntimeException('map gone'));
 		$legacy->method('isLegacySlug')->willThrowException(new RuntimeException('map gone'));
 		$this->logger->expects($this->once())->method('warning')->with('Filinq: the Woo grounds legacy map cannot be read');
 
 		$grounds = $this->createMock(RefusalGroundsResolver::class);
-		$labels = new WooGroundLabels($grounds, $legacy, $this->logger);
+		$labels = new RefusalGroundLabels($grounds, $legacy, $this->logger);
 
 		$this->assertNull($labels->codeFor(ref: 'art-5-1-2-e'));
 		$this->assertFalse($labels->isWooReference(ref: 'art-5-1-2-e'));
@@ -184,7 +184,7 @@ class WooGroundLabelsTest extends TestCase {
 	 * @return void
 	 */
 	public function testWithoutAMapOnlyCodesAreWoo(): void {
-		$labels = new WooGroundLabels($this->createMock(RefusalGroundsResolver::class), null, $this->logger);
+		$labels = new RefusalGroundLabels($this->createMock(RefusalGroundsResolver::class), null, $this->logger);
 
 		$this->assertNull($labels->codeFor(ref: 'art-5-1-2-e'));
 		$this->assertFalse($labels->isWooReference(ref: 'art-5-1-2-e'));

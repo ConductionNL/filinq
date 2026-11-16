@@ -56,8 +56,8 @@ use RuntimeException;
  *
  * @uses \OCA\Filinq\Service\DossierFileService
  * @uses \OCA\Filinq\Service\DossierObjectReader
- * @uses \OCA\Filinq\Service\Grounds\WooGroundLabels
- * @uses \OCA\Filinq\Service\Grounds\WooGroundsLegacyMap
+ * @uses \OCA\Filinq\Service\Grounds\RefusalGroundLabels
+ * @uses \OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap
  */
 class DossierContextServiceTest extends TestCase {
 
@@ -342,7 +342,7 @@ class DossierContextServiceTest extends TestCase {
 			new DossierFileService($this->repository, $this->rootFolder, $this->createMock(IUserSession::class), $logger),
 			new DossierObjectReader(),
 			$logger,
-			new \OCA\Filinq\Service\Grounds\WooGroundLabels($grounds, new \OCA\Filinq\Service\Grounds\WooGroundsLegacyMap(), $logger),
+			new \OCA\Filinq\Service\Grounds\RefusalGroundLabels($grounds, new \OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap(), $logger),
 		);
 
 		$this->assertSame(

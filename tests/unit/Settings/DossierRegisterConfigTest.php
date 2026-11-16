@@ -285,7 +285,7 @@ class DossierRegisterConfigTest extends TestCase {
 		// grondslagen-read-from-dossiq retired the 19 Woo Art. 5 `base` seeds
 		// (art-5-1-1-a … art-5-2-2): the Woo grounds come from dossiq's list,
 		// and stored references to the old slugs are re-pointed by the
-		// RepointWooGrounds repair. `base` keeps a tenant's own bases only.
+		// RepointRefusalGrounds repair. `base` keeps a tenant's own bases only.
 		$foundSlugs = array_map(
 			static fn (array $object): string => (string)($object['@self']['slug'] ?? ''),
 			$this->seedObjectsForSchema('base')

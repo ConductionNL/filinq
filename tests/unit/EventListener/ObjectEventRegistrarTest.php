@@ -86,7 +86,7 @@ class ObjectEventRegistrarTest extends TestCase {
 				[ObjectCreatedEvent::class, FilinqEventListener::class],
 				[ObjectUpdatedEvent::class, FilinqEventListener::class],
 				['OCA\OpenRegister\Event\ObjectUpdatingEvent', DocumentRegistrationWriteGuard::class],
-				['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\Filinq\EventListener\BaseWooGroundGuard'],
+				['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\Filinq\EventListener\BaseRefusalGroundGuard'],
 				['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\Filinq\EventListener\ContractNoticeDeadlineListener'],
 				['OCA\OpenRegister\Event\ObjectUpdatingEvent', 'OCA\Filinq\EventListener\ContractNoticeDeadlineListener'],
 				[ObjectDeletedEvent::class, FilinqEventListener::class],
