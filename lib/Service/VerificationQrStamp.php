@@ -122,18 +122,7 @@ class VerificationQrStamp {
 		// The mPDF library switches mb_internal_encoding and restores it only on Output().
 		$encoding = mb_internal_encoding();
 		try {
-			$mpdf = $this->pdfService->createMpdfInstance();
-			$pages = $mpdf->setSourceFile($this->streamReaders->fromString(content: $pdf));
-			if ($pages < 1) {
-				throw new RuntimeException('The PDF has no pages');
-			}
-
-			$mpdf->SetAutoPageBreak(false);
-			for ($page = 1; $page <= $pages; $page++) {
-				$mpdf->AddPage();
-				$mpdf->useTemplate(tpl: $mpdf->importPage($page), adjustPageSize: true);
-			}
-
+			$mpdf = $this->importPages(pdf: $pdf);
 			$this->drawStamp(mpdf: $mpdf, matrix: $matrix, url: $url, caption: $caption);
 
 			return $mpdf->Output('', 'S');
@@ -145,6 +134,31 @@ class VerificationQrStamp {
 			mb_internal_encoding($encoding);
 		}
 	}//end stamp()
+
+	/**
+	 * A new document holding every page of a PDF, positioned on its last page.
+	 *
+	 * @param string $pdf The PDF bytes.
+	 *
+	 * @return Mpdf The document.
+	 *
+	 * @throws RuntimeException When the PDF has no pages.
+	 */
+	private function importPages(string $pdf): Mpdf {
+		$mpdf = $this->pdfService->createMpdfInstance();
+		$pages = $mpdf->setSourceFile($this->streamReaders->fromString(content: $pdf));
+		if ($pages < 1) {
+			throw new RuntimeException('The PDF has no pages');
+		}
+
+		$mpdf->SetAutoPageBreak(false);
+		for ($page = 1; $page <= $pages; $page++) {
+			$mpdf->AddPage();
+			$mpdf->useTemplate(tpl: $mpdf->importPage($page), adjustPageSize: true);
+		}
+
+		return $mpdf;
+	}//end importPages()
 
 	/**
 	 * Draw the QR code at the bottom right of the current page, and the caption and link to its left.

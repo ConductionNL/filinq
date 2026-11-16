@@ -136,12 +136,8 @@ class SignatureVerificationLinkService {
 	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function mint(string $signedBytes, string $fileRef, string $fileName, ?string $waarmerkRef = null, ?string $token = null): array {
-		if ($token !== null && self::isWellFormed(token: $token) === false) {
-			throw new RuntimeException('A verification record needs a token of 32 lowercase hex characters');
-		}
-
 		$record = [
-			'token' => ($token ?? $this->newToken()),
+			'token' => $this->tokenFor(token: $token),
 			'fileRef' => $fileRef,
 			'fileName' => $fileName,
 			'contentHash' => hash('sha256', $signedBytes),
@@ -153,8 +149,42 @@ class SignatureVerificationLinkService {
 			$record['waarmerkRef'] = $waarmerkRef;
 		}
 
+		return array_merge($record, $this->storedFields(row: $this->store(record: $record)), ['token' => $record['token']]);
+	}//end mint()
+
+	/**
+	 * The token a record is minted under: the one given, checked, or a new one.
+	 *
+	 * @param string|null $token The token taken before signing, or null.
+	 *
+	 * @return string The token.
+	 *
+	 * @throws RuntimeException When the given token is malformed.
+	 */
+	private function tokenFor(?string $token): string {
+		if ($token === null) {
+			return $this->newToken();
+		}
+
+		if (self::isWellFormed(token: $token) === false) {
+			throw new RuntimeException('A verification record needs a token of 32 lowercase hex characters');
+		}
+
+		return $token;
+	}//end tokenFor()
+
+	/**
+	 * Save a record as a system-owned object.
+	 *
+	 * @param array<string, mixed> $record The record.
+	 *
+	 * @return mixed The stored row.
+	 *
+	 * @throws RuntimeException When the record cannot be stored.
+	 */
+	private function store(array $record): mixed {
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(
+			return $this->objectResolver->resolve()->saveObject(
 				object: $record,
 				options: new ObjectSaveOptions(
 					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
@@ -165,9 +195,7 @@ class SignatureVerificationLinkService {
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'Could not store the signature verification record: ' . $e->getMessage(), code: 0, previous: $e);
 		}
-
-		return array_merge($record, $this->storedFields(row: $stored), ['token' => $record['token']]);
-	}//end mint()
+	}//end store()
 
 	/**
 	 * The record a token names.
@@ -189,6 +217,26 @@ class SignatureVerificationLinkService {
 			return null;
 		}
 
+		foreach ($this->rowsFor(token: $token) as $row) {
+			$fields = $this->storedFields(row: $row);
+			if (hash_equals($token, (string)($fields['token'] ?? '')) === true) {
+				return $fields;
+			}
+		}
+
+		return null;
+	}//end findByToken()
+
+	/**
+	 * The rows a token search returns; none when the search answers with something other than a list.
+	 *
+	 * @param string $token A well-formed token.
+	 *
+	 * @return array<int|string, mixed> The rows.
+	 *
+	 * @throws RuntimeException When the records cannot be read.
+	 */
+	private function rowsFor(string $token): array {
 		try {
 			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
 				registerSlug: self::REGISTER,
@@ -201,16 +249,9 @@ class SignatureVerificationLinkService {
 		}
 
 		if (is_array($rows) === false) {
-			return null;
+			return [];
 		}
 
-		foreach ($rows as $row) {
-			$fields = $this->storedFields(row: $row);
-			if (hash_equals($token, (string)($fields['token'] ?? '')) === true) {
-				return $fields;
-			}
-		}
-
-		return null;
-	}//end findByToken()
+		return $rows;
+	}//end rowsFor()
 }//end class

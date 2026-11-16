@@ -249,37 +249,61 @@ class QrCodeEncoder {
 	 */
 	private function withErrorCorrection(array $data, int $version): array {
 		[, $blockCount, $ecPerBlock] = self::VERSIONS[$version];
+		$dataBlocks = $this->splitBlocks(data: $data, blockCount: $blockCount);
+		$generator = $this->generator(degree: $ecPerBlock);
+		$ecBlocks = [];
+		foreach ($dataBlocks as $block) {
+			$ecBlocks[] = $this->remainder(data: $block, generator: $generator);
+		}
+
+		return array_merge(
+			self::interleave(blocks: $dataBlocks, width: (intdiv(count($data), $blockCount) + 1)),
+			self::interleave(blocks: $ecBlocks, width: $ecPerBlock)
+		);
+	}//end withErrorCorrection()
+
+	/**
+	 * Split the data codewords into blocks; the last (length mod count) blocks are one longer.
+	 *
+	 * @param array<int, int> $data       The data codewords.
+	 * @param int             $blockCount The number of blocks.
+	 *
+	 * @return array<int, array<int, int>> The blocks.
+	 */
+	private function splitBlocks(array $data, int $blockCount): array {
 		$shortLength = intdiv(count($data), $blockCount);
 		$longBlocks = (count($data) % $blockCount);
-		$generator = $this->generator(degree: $ecPerBlock);
-
-		$dataBlocks = [];
-		$ecBlocks = [];
+		$blocks = [];
 		$offset = 0;
 		for ($block = 0; $block < $blockCount; $block++) {
 			$length = $shortLength + (int)($block >= ($blockCount - $longBlocks));
-			$dataBlocks[$block] = array_slice($data, $offset, $length);
-			$ecBlocks[$block] = $this->remainder(data: $dataBlocks[$block], generator: $generator);
+			$blocks[] = array_slice($data, $offset, $length);
 			$offset += $length;
 		}
 
+		return $blocks;
+	}//end splitBlocks()
+
+	/**
+	 * Interleave blocks column by column, skipping positions a shorter block lacks.
+	 *
+	 * @param array<int, array<int, int>> $blocks The blocks.
+	 * @param int                         $width  The length of the longest block.
+	 *
+	 * @return array<int, int> The interleaved codewords.
+	 */
+	private static function interleave(array $blocks, int $width): array {
 		$result = [];
-		for ($i = 0; $i <= $shortLength; $i++) {
-			foreach ($dataBlocks as $block) {
+		for ($i = 0; $i < $width; $i++) {
+			foreach ($blocks as $block) {
 				if (isset($block[$i]) === true) {
 					$result[] = $block[$i];
 				}
 			}
 		}
 
-		for ($i = 0; $i < $ecPerBlock; $i++) {
-			foreach ($ecBlocks as $block) {
-				$result[] = $block[$i];
-			}
-		}
-
 		return $result;
-	}//end withErrorCorrection()
+	}//end interleave()
 
 	/**
 	 * The Reed-Solomon generator polynomial of a degree, highest coefficient first.
@@ -355,35 +379,48 @@ class QrCodeEncoder {
 			$this->setFunction(row: $i, column: 6, dark: ($i % 2) === 0);
 		}
 
-		foreach ([[3, 3], [3, ($this->size - 4)], [($this->size - 4), 3]] as [$row, $column]) {
-			for ($dy = -4; $dy <= 4; $dy++) {
-				for ($dx = -4; $dx <= 4; $dx++) {
-					$distance = max(abs($dx), abs($dy));
-					$this->setFunction(row: ($row + $dy), column: ($column + $dx), dark: ($distance !== 2 && $distance !== 4));
-				}
-			}
+		foreach ([[3, 3], [3, ($this->size - 4)], [($this->size - 4), 3]] as $centre) {
+			$this->drawSquare(centre: $centre, radius: 4);
 		}
 
 		$centres = self::ALIGNMENT[$version];
 		$last = (count($centres) - 1);
 		foreach ($centres as $i => $row) {
 			foreach ($centres as $j => $column) {
-				if (($i === 0 && $j === 0) || ($i === 0 && $j === $last) || ($i === $last && $j === 0)) {
-					continue;
-				}
-
-				for ($dy = -2; $dy <= 2; $dy++) {
-					for ($dx = -2; $dx <= 2; $dx++) {
-						$this->setFunction(row: ($row + $dy), column: ($column + $dx), dark: max(abs($dx), abs($dy)) !== 1);
-					}
+				if (in_array([$i, $j], [[0, 0], [0, $last], [$last, 0]], true) === false) {
+					$this->drawSquare(centre: [$row, $column], radius: 2);
 				}
 			}
 		}
 
 		// Reserve the format areas now; the bits are written per mask.
-		$this->drawFormat(modules: $this->modules, mask: 0, functionOnly: true);
+		$this->reserveFormat();
 		$this->drawVersion(version: $version);
 	}//end drawFunctionPatterns()
+
+	/**
+	 * Draw a finder (radius 4, with its separator) or alignment (radius 2) pattern
+	 * as concentric squares: light at distance 2 and 4 for a finder, at distance 1
+	 * for an alignment pattern, dark elsewhere.
+	 *
+	 * @param array{0: int, 1: int} $centre The centre row and column.
+	 * @param int                   $radius  4 for a finder, 2 for an alignment pattern.
+	 *
+	 * @return void
+	 */
+	private function drawSquare(array $centre, int $radius): void {
+		$light = [1];
+		if ($radius === 4) {
+			$light = [2, 4];
+		}
+
+		for ($dy = -$radius; $dy <= $radius; $dy++) {
+			for ($dx = -$radius; $dx <= $radius; $dx++) {
+				$distance = max(abs($dx), abs($dy));
+				$this->setFunction(row: ($centre[0] + $dy), column: ($centre[1] + $dx), dark: in_array($distance, $light, true) === false);
+			}
+		}
+	}//end drawSquare()
 
 	/**
 	 * Set one function-pattern module, ignoring positions outside the matrix.
@@ -404,22 +441,61 @@ class QrCodeEncoder {
 	}//end setFunction()
 
 	/**
+	 * Reserve both format areas and the dark module in the build matrix.
+	 *
+	 * @return void
+	 */
+	private function reserveFormat(): void {
+		$bits = self::formatBits(mask: 0);
+		foreach ($this->formatPositions() as [$row, $column, $bit]) {
+			$this->setFunction(row: $row, column: $column, dark: ((($bits >> $bit) & 1) === 1));
+		}
+
+		$this->setFunction(row: ($this->size - 8), column: 8, dark: true);
+	}//end reserveFormat()
+
+	/**
 	 * Write the 15 format bits (level M, a mask) into both format areas, and the dark module.
 	 *
-	 * @param array<int, array<int, bool>> $modules      The matrix to write into.
-	 * @param int                          $mask         The mask number.
-	 * @param bool                         $functionOnly True to reserve the areas in the build matrix.
+	 * @param array<int, array<int, bool>> $modules The matrix to write into.
+	 * @param int                          $mask    The mask number.
 	 *
 	 * @return array<int, array<int, bool>> The matrix with the format written.
 	 */
-	private function drawFormat(array $modules, int $mask, bool $functionOnly = false): array {
+	private function drawFormat(array $modules, int $mask): array {
+		$bits = self::formatBits(mask: $mask);
+		foreach ($this->formatPositions() as [$row, $column, $bit]) {
+			$modules[$row][$column] = ((($bits >> $bit) & 1) === 1);
+		}
+
+		$modules[($this->size - 8)][8] = true;
+
+		return $modules;
+	}//end drawFormat()
+
+	/**
+	 * The 15 format bits of level M and a mask, BCH-coded and XOR-masked.
+	 *
+	 * @param int $mask The mask number.
+	 *
+	 * @return int The format bits.
+	 */
+	private static function formatBits(int $mask): int {
 		$data = ((self::LEVEL_M << 3) | $mask);
 		$remainder = $data;
 		for ($i = 0; $i < 10; $i++) {
 			$remainder = (($remainder << 1) ^ (($remainder >> 9) * 0x537));
 		}
 
-		$bits = ((($data << 10) | $remainder) ^ 0x5412);
+		return ((($data << 10) | $remainder) ^ 0x5412);
+	}//end formatBits()
+
+	/**
+	 * Every format module as [row, column, bit index], both copies.
+	 *
+	 * @return array<int, array{0: int, 1: int, 2: int}> The positions.
+	 */
+	private function formatPositions(): array {
 		$positions = [];
 		for ($i = 0; $i <= 5; $i++) {
 			$positions[] = [$i, 8, $i];
@@ -440,25 +516,8 @@ class QrCodeEncoder {
 			$positions[] = [($this->size - 15 + $i), 8, $i];
 		}
 
-		foreach ($positions as [$row, $column, $bit]) {
-			$dark = ((($bits >> $bit) & 1) === 1);
-			if ($functionOnly === true) {
-				$this->setFunction(row: $row, column: $column, dark: $dark);
-				continue;
-			}
-
-			$modules[$row][$column] = $dark;
-		}
-
-		if ($functionOnly === true) {
-			$this->setFunction(row: ($this->size - 8), column: 8, dark: true);
-			return $this->modules;
-		}
-
-		$modules[($this->size - 8)][8] = true;
-
-		return $modules;
-	}//end drawFormat()
+		return $positions;
+	}//end formatPositions()
 
 	/**
 	 * Write the 18 version bits, for version 7 and up.
@@ -501,7 +560,21 @@ class QrCodeEncoder {
 		}
 
 		$index = 0;
-		$count = strlen($bits);
+		foreach ($this->dataPath() as [$row, $column]) {
+			// Remainder bits past the codewords stay light.
+			$this->modules[$row][$column] = (($bits[$index] ?? '0') === '1');
+			$index++;
+		}
+	}//end placeData()
+
+	/**
+	 * The non-function modules in placement order: column pairs from the right,
+	 * skipping the vertical timing column, alternately upward and downward.
+	 *
+	 * @return array<int, array{0: int, 1: int}> Row and column of each data module.
+	 */
+	private function dataPath(): array {
+		$path = [];
 		for ($right = ($this->size - 1); $right >= 1; $right -= 2) {
 			if ($right === 6) {
 				$right = 5;
@@ -514,19 +587,16 @@ class QrCodeEncoder {
 					$row = ($this->size - 1 - $vertical);
 				}
 
-				for ($j = 0; $j < 2; $j++) {
-					$column = ($right - $j);
-					if ($this->function[$row][$column] === true) {
-						continue;
+				foreach ([$right, ($right - 1)] as $column) {
+					if ($this->function[$row][$column] === false) {
+						$path[] = [$row, $column];
 					}
-
-					// Remainder bits past the codewords stay light.
-					$this->modules[$row][$column] = ($index < $count && $bits[$index] === '1');
-					$index++;
 				}
 			}
 		}
-	}//end placeData()
+
+		return $path;
+	}//end dataPath()
 
 	/**
 	 * The matrix with a mask applied to the data modules and that mask's format bits written.
@@ -580,6 +650,33 @@ class QrCodeEncoder {
 	 */
 	private static function penalty(array $matrix): int {
 		$size = count($matrix);
+		$penalty = 0;
+		foreach (self::matrixLines(matrix: $matrix) as $line) {
+			$penalty += self::linePenalty(line: $line);
+		}
+
+		$dark = 0;
+		for ($i = 0; $i < $size; $i++) {
+			$dark += array_sum(array_map('intval', $matrix[$i]));
+			for ($j = 0; ($j + 1) < $size && ($i + 1) < $size; $j++) {
+				$penalty += (3 * (int)self::isUniformBlock(matrix: $matrix, origin: [$i, $j]));
+			}
+		}
+
+		$penalty += (10 * intdiv(abs((int)(($dark * 100) / ($size * $size)) - 50), 5));
+
+		return $penalty;
+	}//end penalty()
+
+	/**
+	 * Every row and every column of a matrix as a string of 0 and 1.
+	 *
+	 * @param array<int, array<int, bool>> $matrix The matrix.
+	 *
+	 * @return array<int, string> The lines, row and column interleaved.
+	 */
+	private static function matrixLines(array $matrix): array {
+		$size = count($matrix);
 		$lines = [];
 		for ($i = 0; $i < $size; $i++) {
 			$row = '';
@@ -593,32 +690,38 @@ class QrCodeEncoder {
 			$lines[] = $column;
 		}
 
+		return $lines;
+	}//end matrixLines()
+
+	/**
+	 * The penalty of one line: runs of five or more, and finder-like sequences.
+	 *
+	 * @param string $line The line as 0 and 1.
+	 *
+	 * @return int The penalty.
+	 */
+	private static function linePenalty(string $line): int {
 		$penalty = 0;
-		foreach ($lines as $line) {
-			preg_match_all('/0{5,}|1{5,}/', $line, $runs);
-			foreach ($runs[0] as $run) {
-				$penalty += (3 + strlen($run) - 5);
-			}
-
-			$penalty += (40 * (substr_count($line, '10111010000') + substr_count($line, '00001011101')));
+		preg_match_all('/0{5,}|1{5,}/', $line, $runs);
+		foreach ($runs[0] as $run) {
+			$penalty += (3 + strlen($run) - 5);
 		}
 
-		$dark = 0;
-		for ($i = 0; $i < $size; $i++) {
-			for ($j = 0; $j < $size; $j++) {
-				$dark += (int)$matrix[$i][$j];
-				if ($i + 1 < $size && $j + 1 < $size
-					&& $matrix[$i][$j] === $matrix[$i][($j + 1)]
-					&& $matrix[$i][$j] === $matrix[($i + 1)][$j]
-					&& $matrix[$i][$j] === $matrix[($i + 1)][($j + 1)]
-				) {
-					$penalty += 3;
-				}
-			}
-		}
+		return $penalty + (40 * (substr_count($line, '10111010000') + substr_count($line, '00001011101')));
+	}//end linePenalty()
 
-		$penalty += (10 * intdiv(abs((int)(($dark * 100) / ($size * $size)) - 50), 5));
+	/**
+	 * Whether the 2x2 block at an origin is one colour.
+	 *
+	 * @param array<int, array<int, bool>> $matrix The matrix.
+	 * @param array{0: int, 1: int}        $origin The top-left row and column.
+	 *
+	 * @return bool True when all four modules match.
+	 */
+	private static function isUniformBlock(array $matrix, array $origin): bool {
+		[$i, $j] = $origin;
+		$colour = $matrix[$i][$j];
 
-		return $penalty;
-	}//end penalty()
+		return $matrix[$i][($j + 1)] === $colour && $matrix[($i + 1)][$j] === $colour && $matrix[($i + 1)][($j + 1)] === $colour;
+	}//end isUniformBlock()
 }//end class
