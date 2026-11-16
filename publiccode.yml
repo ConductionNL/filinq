@@ -25,6 +25,7 @@ description:
       4-week objection period), automatic language detection, keyword extraction,
       topic classification, PDF generation, document signing (SES/AES/QES), and
       anonymization.
+      Conduction maintains this component on behalf of the Municipality of Haarlem.
     features:
       - GDPR publication consent tracking
       - Wet Open Overheid (WOO) compliance
@@ -44,6 +45,7 @@ description:
       bezwaarperiodes, WOO-compliance (minimaal 4 weken bezwaartermijn), automatische
       taaldetectie, trefwoordextractie, onderwerpclassificatie, PDF-generatie,
       documentondertekening (SES/AES/QES) en anonimisering.
+      Conduction onderhoudt dit component in opdracht van Gemeente Haarlem.
     features:
       - AVG-publicatietoestemmingsbeheer
       - Wet Open Overheid (WOO)-compliance
@@ -58,7 +60,12 @@ legal:
   repoOwner: "Conduction B.V."
 
 maintenance:
-  type: community
+  type: contract
+  contractors:
+    - name: Conduction B.V.
+      until: "2026-12-31"
+      email: info@conduction.nl
+      website: https://conduction.nl
   contacts:
     - name: Conduction B.V.
       email: info@conduction.nl
