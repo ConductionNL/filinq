@@ -24,6 +24,7 @@ namespace OCA\Filinq\Service\Signing;
 
 use DateInterval;
 use DateTimeImmutable;
+use OCA\Filinq\Kernel\Contracts\SigningRetentionCheckInterface;
 use Throwable;
 
 /**
@@ -46,17 +47,12 @@ use Throwable;
  *
  * @spec openspec/changes/signing-trust-rebuild/specs/signing-audit-via-or/spec.md
  */
-class SigningRetentionCheck {
+class SigningRetentionCheck implements SigningRetentionCheckInterface {
 
 	/**
 	 * The minimum retention, in days, Archiefwet 1995 requires for signing records.
 	 */
 	public const MINIMUM_DAYS = 3650;
-
-	/**
-	 * The legal basis the minimum comes from, named in every failure.
-	 */
-	public const LEGAL_BASIS = 'Archiefwet 1995';
 
 	/**
 	 * Source token when no schema duration applies (rows are kept indefinitely).

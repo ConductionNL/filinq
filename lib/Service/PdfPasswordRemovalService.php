@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\PdfPasswordRemovalServiceInterface;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -37,32 +38,7 @@ use Throwable;
  *
  * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
  */
-class PdfPasswordRemovalService {
-
-	/**
-	 * The copy was written.
-	 */
-	public const UNLOCKED = 'unlocked';
-
-	/**
-	 * The password is not correct (422).
-	 */
-	public const WRONG_PASSWORD = 'wrong-password';
-
-	/**
-	 * The document is final (409).
-	 */
-	public const FINAL = 'final';
-
-	/**
-	 * qpdf is not installed (503).
-	 */
-	public const NO_TOOL = 'no-tool';
-
-	/**
-	 * The file is not a PDF, or could not be read or written (400 / 500).
-	 */
-	public const FAILED = 'failed';
+class PdfPasswordRemovalService implements PdfPasswordRemovalServiceInterface {
 
 	/**
 	 * Constructor.

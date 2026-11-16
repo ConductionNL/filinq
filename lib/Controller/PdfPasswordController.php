@@ -29,9 +29,9 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Service\Intake\IntakePasswordRemoval;
-use OCA\Filinq\Service\PdfPasswordRemovalService;
-use OCA\Filinq\Service\SessionUserFile;
+use OCA\Filinq\Kernel\Contracts\IntakePasswordRemovalInterface;
+use OCA\Filinq\Kernel\Contracts\PdfPasswordRemovalServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SessionUserFileInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -49,18 +49,18 @@ class PdfPasswordController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                  $request The request.
-	 * @param PdfPasswordRemovalService $removal Unlocks the PDF into a copy.
-	 * @param SessionUserFile           $files   The signed-in user's own files.
-	 * @param IL10N                     $l10n    Translations.
-	 * @param IntakePasswordRemoval|null $intake Unlocks an intake document's file and points the document at the copy.
+	 * @param IRequest                            $request The request.
+	 * @param PdfPasswordRemovalServiceInterface  $removal Unlocks the PDF into a copy.
+	 * @param SessionUserFileInterface            $files   The signed-in user's own files.
+	 * @param IL10N                               $l10n    Translations.
+	 * @param IntakePasswordRemovalInterface|null $intake  Unlocks an intake document's file and points the document at the copy.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly PdfPasswordRemovalService $removal,
-		private readonly SessionUserFile $files,
+		private readonly PdfPasswordRemovalServiceInterface $removal,
+		private readonly SessionUserFileInterface $files,
 		private readonly IL10N $l10n,
-		private readonly ?IntakePasswordRemoval $intake = null,
+		private readonly ?IntakePasswordRemovalInterface $intake = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
@@ -144,10 +144,10 @@ class PdfPasswordController extends Controller {
 		$t = fn (string $text): array => ['error' => $this->l10n->t($text)];
 
 		return match ($result['outcome']) {
-			PdfPasswordRemovalService::UNLOCKED => new JSONResponse(array_diff_key($result, ['outcome' => true])),
-			PdfPasswordRemovalService::WRONG_PASSWORD => new JSONResponse($t('The password is not correct'), Http::STATUS_UNPROCESSABLE_ENTITY),
-			PdfPasswordRemovalService::FINAL => new JSONResponse($t('This document is final and cannot be changed'), Http::STATUS_CONFLICT),
-			PdfPasswordRemovalService::NO_TOOL => new JSONResponse($t('qpdf is not installed on this server'), Http::STATUS_SERVICE_UNAVAILABLE),
+			PdfPasswordRemovalServiceInterface::UNLOCKED => new JSONResponse(array_diff_key($result, ['outcome' => true])),
+			PdfPasswordRemovalServiceInterface::WRONG_PASSWORD => new JSONResponse($t('The password is not correct'), Http::STATUS_UNPROCESSABLE_ENTITY),
+			PdfPasswordRemovalServiceInterface::FINAL => new JSONResponse($t('This document is final and cannot be changed'), Http::STATUS_CONFLICT),
+			PdfPasswordRemovalServiceInterface::NO_TOOL => new JSONResponse($t('qpdf is not installed on this server'), Http::STATUS_SERVICE_UNAVAILABLE),
 			default => $this->failed(message: (string)($result['message'] ?? '')),
 		};
 	}//end answer()
