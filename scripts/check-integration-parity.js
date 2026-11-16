@@ -868,6 +868,13 @@ function checkIdCorrelation(ctx) {
 			continue
 		}
 		counts.R2++
+		// R2 as documented above: a RENDER-SURFACE leaf needs a JS half. A
+		// data-provider-only descriptor (filinq-templates) is served by
+		// OpenRegister's integrations route and never mounts, so it has none.
+		// Same rule as portaliq's copy of this gate.
+		if (f.kind === 'LeafDescriptor' && f.renderSurface === false) {
+			continue
+		}
 		if (jsById.has(f.id) === false) {
 			failures.push(
 				`✗ [R2 id-correlation] server leaf "${f.id}" (${f.kind}, ${f.file}) has NO matching `

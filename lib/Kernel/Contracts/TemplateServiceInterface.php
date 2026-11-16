@@ -54,6 +54,21 @@ interface TemplateServiceInterface {
 	public function getTemplates(array $filters = [], int $limit = 20, int $offset = 0): array;
 
 	/**
+	 * The templates that apply to a host object of one register and schema.
+	 *
+	 * @param string $register The host object's register slug.
+	 * @param string $schema   The host object's schema slug.
+	 * @param int    $limit    How many templates to consider at most.
+	 *
+	 * @return list<array<string, mixed>> The applicable templates, in listing order.
+	 *
+	 * @throws \Exception If listing fails
+	 *
+	 * @spec openspec/changes/template-library-leaf/specs/template-management/spec.md#requirement-template-scope-per-register-and-schema-req-tmpl-13
+	 */
+	public function listForObject(string $register, string $schema, int $limit=100): array;
+
+	/**
 	 * Get a single template by UUID
 	 *
 	 * @param string $id The template UUID

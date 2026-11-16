@@ -326,6 +326,8 @@ $extra = [
 
         // Template routes.
         ['name' => 'templates#index', 'url' => 'api/templates', 'verb' => 'GET'],
+        // template-library-leaf 2.2: the templates that apply to one host object, for the generate-document leaf. Before api/templates/{id}.
+        ['name' => 'templates#forObject', 'url' => 'api/templates/for-object', 'verb' => 'GET'],
         ['name' => 'templates#create', 'url' => 'api/templates', 'verb' => 'POST'],
         ['name' => 'templatePreview#preview', 'url' => 'api/templates/preview', 'verb' => 'POST'],
         ['name' => 'templates#show', 'url' => 'api/templates/{id}', 'verb' => 'GET'],

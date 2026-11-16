@@ -28,6 +28,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Integration\TemplateLeafRow;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -130,6 +131,54 @@ class TemplatesController extends Controller {
 		}//end try
 
 	}//end index()
+
+	/**
+	 * The templates that apply to one host object, for the
+	 * `filinq-generate-document` widget.
+	 *
+	 * GET /api/templates/for-object?register=&schema=
+	 *
+	 * Answers the same rows as the `filinq-templates` data provider. The
+	 * register and schema are slugs; a template applies when its scope is
+	 * empty or holds the pair.
+	 *
+	 * @return JSONResponse `{results: [{id, name, format, description}]}`
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/changes/template-library-leaf/tasks.md#task-2.2
+	 *
+	 * @no-admin-idor-exempt lists templates through the template service under
+	 * OpenRegister's RBAC, exactly as `index()` does; no object id is read.
+	 */
+	public function forObject(): JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return $this->notAuthenticated(message: 'Not authenticated');
+		}
+
+		$register = trim((string) $this->request->getParam('register', ''));
+		$schema   = trim((string) $this->request->getParam('schema', ''));
+		if ($register === '' || $schema === '') {
+			return new JSONResponse(
+				data: ['error' => 'register and schema are required'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		try {
+			$rows = array_map(
+				static fn (array|object $template): array => TemplateLeafRow::fromTemplate(template: $template),
+				$this->templateService->listForObject(register: $register, schema: $schema)
+			);
+
+			return new JSONResponse(data: ['results' => $rows]);
+		} catch (RegisterNotConfiguredException $e) {
+			return new JSONResponse(data: ['results' => [], 'notConfigured' => true]);
+		} catch (Exception $e) {
+			return $this->requestHandler->buildErrorResponse($e, 'Failed to list templates: ');
+		}//end try
+
+	}//end forObject()
 
 	/**
 	 * Get a single template by ID

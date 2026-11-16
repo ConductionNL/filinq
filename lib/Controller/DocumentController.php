@@ -33,6 +33,7 @@ use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\ErrorDetailsInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
+use OCA\Filinq\Service\GenerationSourceObject;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -74,6 +75,7 @@ class DocumentController extends Controller {
 	 * @param IUserSession $userSession User session for authentication
 	 * @param ControllerFeedback $feedback Translations for the answers and the failure log.
 	 * @param MultiFormatOutputProducerInterface|null $multiFormat Answers a request with options.formats
+	 * @param GenerationSourceObject|null $sourceObject Reads options.sourceObject: records it and files the document there
 	 *
 	 * @return void
 	 */
@@ -84,6 +86,7 @@ class DocumentController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly ControllerFeedback $feedback,
 		private readonly ?MultiFormatOutputProducerInterface $multiFormat = null,
+		private readonly ?GenerationSourceObject $sourceObject = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -110,6 +113,9 @@ class DocumentController extends Controller {
 	 *     response headers.
 	 * - filename (string, optional): Download filename (also used as the
 	 *   stored filename's basename when output.mode is 'files'/'both')
+	 * - options.sourceObject (object, optional): {register, schema, id}, one of
+	 *   dataRefs — recorded on the generated document's entry; a stored
+	 *   document without a targetPath goes into that object's folder
 	 *
 	 * @return DataDownloadResponse|JSONResponse Generated document binary,
 	 *                                           stored-file JSON refs, or error
@@ -120,6 +126,7 @@ class DocumentController extends Controller {
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-3.1
+	 * @spec openspec/changes/template-library-leaf/tasks.md#task-2.3
 	 */
 	public function generate(): DataDownloadResponse|JSONResponse {
 		try {
@@ -133,10 +140,17 @@ class DocumentController extends Controller {
 				return $params;
 			}
 
+			$recordFields = [];
+			if ($this->sourceObject !== null) {
+				$placed = $this->sourceObject->apply(dataRefs: $params['dataRefs'], options: $params['options'], userId: $user->getUID());
+				$params['options'] = $placed['options'];
+				$recordFields      = $placed['recordFields'];
+			}
+
 			$params['options']['userId'] = $user->getUID();
 			$params['options']['filename'] = $params['filename'];
 
-			return $this->produce(params: $params);
+			return $this->produce(params: $params, recordFields: $recordFields);
 		} catch (Exception $e) {
 			return $this->handleException(exception: $e);
 		}//end try
@@ -146,13 +160,16 @@ class DocumentController extends Controller {
 	/**
 	 * Render the parsed request: several formats through the multi-format producer when it is there, else one document.
 	 *
-	 * @param array{templateId: mixed, dataRefs: array, options: array, filename: mixed} $params The parsed request, options stamped.
+	 * @param array{templateId: mixed, dataRefs: array, options: array, filename: mixed} $params       The parsed request, options stamped.
+	 * @param array<string, mixed>                                                         $recordFields Server-derived fields for the
+	 *                                                                                                   generated document's entry,
+	 *                                                                                                   such as its source object.
 	 *
 	 * @return DataDownloadResponse|JSONResponse The document or its manifest.
 	 *
 	 * @throws Exception When rendering fails.
 	 */
-	private function produce(array $params): DataDownloadResponse|JSONResponse {
+	private function produce(array $params, array $recordFields = []): DataDownloadResponse|JSONResponse {
 		if (array_key_exists('formats', $params['options']) === true && $this->multiFormat !== null) {
 			$result = $this->multiFormat->generate(
 				templateId: $params['templateId'],
@@ -168,7 +185,8 @@ class DocumentController extends Controller {
 		$result = $this->documentSvc->generateDocument(
 			templateId: $params['templateId'],
 			dataRefs: $params['dataRefs'],
-			options: $params['options']
+			options: $params['options'],
+			recordFields: $recordFields
 		);
 
 		return $this->buildDocumentResponse(result: $result, filename: $params['filename']);

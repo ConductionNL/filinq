@@ -130,7 +130,8 @@ class DocumentProductionSchemaTest extends TestCase {
 		// `generated-document-names-its-template-version` (optional templateVersion).
 		// 1.6.0 since `guided-document-wizard` (optional wizardContext).
 		// 1.7.0 since `generate-store-in-case-system` (optional caseSystemDeliveryId).
-		$this->assertSame('1.7.0', $document['version']);
+		// 1.8.0 since `template-library-leaf` (optional sourceObject).
+		$this->assertSame('1.8.0', $document['version']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],
@@ -161,11 +162,11 @@ class DocumentProductionSchemaTest extends TestCase {
 		// 1.4.0 since filinq-configurable-report-templates, which added `slug`
 		// and `tenantId`; 1.4.1 since both moved inside `properties` (see
 		// SchemaSlugIntegrityTest); 1.5.0 since template-merge-preview added
-		// `mergeFields`; 1.6.0 since office-template-authoring added
-		// `templateType`, the office source and the tag report. An importer
-		// skips an unchanged version, so this pin moves whenever the schema
-		// actually does.
-		$this->assertSame(expected: '1.6.0', actual: $schemas['template']['version']);
+		// `mergeFields`; 1.6.0 since template-library-leaf added `scope`; 1.7.0
+		// since specify-capability-rows added `status` and `publishedVersion`. An
+		// importer skips an unchanged version, so this pin moves whenever the
+		// schema actually does.
+		$this->assertSame(expected: '1.7.0', actual: $schemas['template']['version']);
 
 		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
 			$this->assertArrayHasKey(
@@ -175,8 +176,7 @@ class DocumentProductionSchemaTest extends TestCase {
 			);
 		}
 
-		// specify-capability-rows adds `status` and `publishedVersion` in the
-		// same 1.6.0, so the two changes ship as one schema move.
+		// specify-capability-rows adds `status` and `publishedVersion` (1.7.0).
 		foreach (['status', 'publishedVersion'] as $field) {
 			$this->assertArrayHasKey(key: $field, array: $schemas['template']['properties']);
 		}

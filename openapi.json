@@ -9800,6 +9800,54 @@
                 }
             }
         },
+        "/templates/for-object": {
+            "get": {
+                "operationId": "templates-for-object",
+                "summary": "The templates that apply to one host object, as leaf rows (id, name, format, description)",
+                "description": "The templates that apply to one host object, as leaf rows (id, name, format, description)",
+                "tags": [
+                    "templates"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON response with the results array",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "register",
+                        "in": "query",
+                        "required": true,
+                        "description": "The host object's register slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "schema",
+                        "in": "query",
+                        "required": true,
+                        "description": "The host object's schema slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/templates/preview": {
             "post": {
                 "operationId": "template-preview-preview",
