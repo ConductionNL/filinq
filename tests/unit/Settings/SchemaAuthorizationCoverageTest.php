@@ -85,6 +85,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 	private const RECORDED_BYPASSES = [
 		'lib/Controller/PortalSigningReceiverController.php' => 1,
 		'lib/Service/AnonymizationPersistenceService.php' => 2,
+		'lib/Service/Audit/DocumentActionAudit.php' => 1,
 		'lib/Service/BaseLabelResolver.php' => 1,
 		'lib/Service/BasesResolverService.php' => 1,
 		'lib/Service/BatchStateRepository.php' => 3,
