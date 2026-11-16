@@ -67,11 +67,18 @@ class SignatureVerificationLinkService {
 	public const SCHEMA = 'signatureVerification';
 
 	/**
+	 * Thirty-two zero hex digits: the nil value, not a credential.
+	 *
+	 * @var string
+	 */
+	private const ZERO_HEX_32 = '00000000000000000000000000000000';
+
+	/**
 	 * The demo record's token, which is never a public handle.
 	 *
 	 * @var string
 	 */
-	public const NIL_TOKEN = '00000000000000000000000000000000';
+	public const NIL_TOKEN = self::ZERO_HEX_32;
 
 	/**
 	 * Constructor.
