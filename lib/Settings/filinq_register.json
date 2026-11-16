@@ -842,10 +842,14 @@
                             "properties": {
                                 "register": {
                                     "type": "string",
+                                    "title": "Register",
+                                    "description": "Slug van het register waarop de sjabloon van toepassing is.",
                                     "maxLength": 255
                                 },
                                 "schema": {
                                     "type": "string",
+                                    "title": "Schema",
+                                    "description": "Slug van het schema waarop de sjabloon van toepassing is.",
                                     "maxLength": 255
                                 }
                             },
@@ -1700,13 +1704,19 @@
                         "description": "The object this document was generated on, as {register, schema, id}: one of its data sources, named by the caller (template-library-leaf). Absent for a document generated without one.",
                         "properties": {
                             "register": {
-                                "type": "string"
+                                "type": "string",
+                                "title": "Source register",
+                                "description": "Slug of the register that holds the source object."
                             },
                             "schema": {
-                                "type": "string"
+                                "type": "string",
+                                "title": "Source schema",
+                                "description": "Slug of the source object's schema."
                             },
                             "id": {
-                                "type": "string"
+                                "type": "string",
+                                "title": "Source object ID",
+                                "description": "The id of the object the document was generated on."
                             }
                         },
                         "visible": true,

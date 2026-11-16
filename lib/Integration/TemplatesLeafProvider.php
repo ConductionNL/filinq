@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Integration;
 
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Service\TemplateService;
+use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\OpenRegister\Service\Integration\IntegrationProvider;
 use OCP\IL10N;
 
@@ -65,13 +65,13 @@ class TemplatesLeafProvider implements IntegrationProvider {
 	/**
 	 * Constructor.
 	 *
-	 * @param TemplateService $templates The template store, namespace enforcement included.
+	 * @param TemplateServiceInterface $templates The template store, namespace enforcement included.
 	 * @param IL10N           $l10n      Translates the label.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly TemplateService $templates,
+		private readonly TemplateServiceInterface $templates,
 		private readonly IL10N $l10n,
 	) {
 
