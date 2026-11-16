@@ -29,6 +29,7 @@ namespace OCA\Filinq\EventListener;
 use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -52,12 +53,14 @@ class BaseRefusalGroundGuard implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param RefusalGroundsLegacyMap $legacy The old Woo slugs.
-	 * @param LoggerInterface     $logger Records a refused write.
+	 * @param RefusalGroundsLegacyMap $legacy    The old Woo slugs.
+	 * @param LoggerInterface         $logger    Records a refused write.
+	 * @param ContainerInterface      $container Resolves OpenRegister's SchemaMapper lazily.
 	 */
 	public function __construct(
 		private readonly RefusalGroundsLegacyMap $legacy,
 		private readonly LoggerInterface $logger,
+		private readonly ContainerInterface $container,
 	) {
 	}//end __construct()
 
@@ -72,12 +75,17 @@ class BaseRefusalGroundGuard implements IEventListener {
 	 */
 	public function handle(Event $event): void {
 		$object = $this->createdObject(event: $event);
-		if ($object === null || strtolower((string)$object->getSchema()) !== self::SCHEMA) {
+		if ($object === null) {
 			return;
 		}
 
+		// Cheap test first: only a Woo-shaped slug costs a schema lookup.
 		$slug = self::slugOf(object: $object);
 		if ($this->isWooGround(slug: $slug) === false) {
+			return;
+		}
+
+		if ($this->isBaseSchema(schema: trim((string)$object->getSchema())) === false) {
 			return;
 		}
 
@@ -88,6 +96,33 @@ class BaseRefusalGroundGuard implements IEventListener {
 
 		$event->stopPropagation();
 	}//end handle()
+
+	/**
+	 * Whether a schema reference (OpenRegister stores the numeric id; a slug is
+	 * accepted too) is the `base` schema.
+	 *
+	 * @param string $schema The object's schema reference.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 */
+	private function isBaseSchema(string $schema): bool {
+		if (strtolower($schema) === self::SCHEMA) {
+			return true;
+		}
+
+		if ($schema === '') {
+			return false;
+		}
+
+		try {
+			$found = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')->find($schema);
+			return strtolower((string)$found->getSlug()) === self::SCHEMA;
+		} catch (Throwable) {
+			return false;
+		}
+	}//end isBaseSchema()
 
 	/**
 	 * The object being created, or null for any other event.

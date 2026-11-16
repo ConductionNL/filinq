@@ -26,7 +26,9 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * A new `base` object naming a Woo ground is stopped; a tenant's own basis,
@@ -57,6 +59,8 @@ class BaseSchemaGuardTest extends TestCase {
 	/**
 	 * The guard with the shipped legacy map and a logger that expects the given warning count.
 	 *
+	 * Schema id 42 is `base`, id 7 is `dossier`; any other reference is unknown.
+	 *
 	 * @param int $warnings How often a refusal is logged.
 	 *
 	 * @return BaseRefusalGroundGuard
@@ -65,7 +69,41 @@ class BaseSchemaGuardTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects($this->exactly($warnings))->method('warning')->with('filinq.grounds.woo-base-refused');
 
-		return new BaseRefusalGroundGuard(new RefusalGroundsLegacyMap(), $logger);
+		$mapper = new class {
+			/**
+			 * A schema stand-in by id.
+			 *
+			 * @param string $id The schema id.
+			 *
+			 * @return object
+			 */
+			public function find(string $id): object {
+				$slugs = ['42' => 'base', '7' => 'dossier'];
+				if (isset($slugs[$id]) === false) {
+					throw new RuntimeException('Schema not found');
+				}
+
+				return new class ($slugs[$id]) {
+					/**
+					 * @param string $slug The schema slug.
+					 */
+					public function __construct(private readonly string $slug) {
+					}
+
+					/**
+					 * @return string
+					 */
+					public function getSlug(): string {
+						return $this->slug;
+					}
+				};
+			}
+		};
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCA\OpenRegister\Db\SchemaMapper')->willReturn($mapper);
+
+		return new BaseRefusalGroundGuard(new RefusalGroundsLegacyMap(), $logger, $container);
 
 	}//end guard()
 
@@ -86,6 +124,29 @@ class BaseSchemaGuardTest extends TestCase {
 		$this->assertTrue($bySlug->isPropagationStopped());
 
 	}//end testANewWooGroundIsRefused()
+
+	/**
+	 * OpenRegister stores the numeric schema id on the entity: the guard
+	 * resolves it to the slug and still refuses a Woo ground on `base`.
+	 *
+	 * @return void
+	 */
+	public function testANumericBaseSchemaIdIsResolved(): void {
+		$guard = $this->guard(1);
+
+		$onBase = self::creating('42', '5.1.2.e');
+		$guard->handle($onBase);
+		$this->assertTrue($onBase->isPropagationStopped());
+
+		$onDossier = self::creating('7', '5.1.2.e');
+		$guard->handle($onDossier);
+		$this->assertFalse($onDossier->isPropagationStopped());
+
+		$unknown = self::creating('999', '5.1.2.e');
+		$guard->handle($unknown);
+		$this->assertFalse($unknown->isPropagationStopped());
+
+	}//end testANumericBaseSchemaIdIsResolved()
 
 	/**
 	 * A tenant's own basis, a Woo-like slug on another schema, and another event all pass.
