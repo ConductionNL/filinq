@@ -12358,12 +12358,16 @@
                         "type": "object",
                         "properties": {
                             "anonymize": {
+                                "title": "Anonymize",
+                                "description": "Entiteitscategorieën die geanonimiseerd worden",
                                 "type": "array",
                                 "items": {
                                     "type": "string"
                                 }
                             },
                             "keepVisible": {
+                                "title": "Keep visible",
+                                "description": "Entiteitscategorieën die zichtbaar blijven",
                                 "type": "array",
                                 "items": {
                                     "type": "string"
