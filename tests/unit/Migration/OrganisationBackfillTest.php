@@ -52,6 +52,13 @@ class OrganisationBackfillTest extends TestCase {
 	public array $adopted = [];
 
 	/**
+	 * Tables whose adoption fails.
+	 *
+	 * @var list<string>
+	 */
+	public array $failingTables = [];
+
+	/**
 	 * The register reference the selection was asked for.
 	 *
 	 * @var list<string|null>
@@ -158,6 +165,10 @@ class OrganisationBackfillTest extends TestCase {
 			 */
 			public function adopt(string $tableName, string $organisation): int {
 				$this->test->adopted[] = [$tableName, $organisation];
+				if (in_array($tableName, $this->test->failingTables, true) === true) {
+					throw new RuntimeException('table is locked');
+				}
+
 				$changed = 0;
 				foreach ($this->test->rows[$tableName] ?? [] as $index => $current) {
 					if ($current === null || $current === '') {
@@ -312,4 +323,24 @@ class OrganisationBackfillTest extends TestCase {
 		$this->assertSame(['OpenRegister tables are not readable, nothing was changed: register not found'], $lines);
 		$this->assertSame([], $this->adopted);
 	}//end testUnreadableTablesChangeNothing()
+
+	/**
+	 * A table whose adoption fails is reported and skipped; the tables after it are still adopted.
+	 *
+	 * @return void
+	 */
+	public function testAFailingTableIsReportedAndTheRestAreStillAdopted(): void {
+		$this->rows = [
+			'openregister_table_4_10' => [null],
+			'openregister_table_4_12' => [null],
+		];
+		$this->failingTables = ['openregister_table_4_12'];
+
+		$lines = $this->runStep($this->step(config: ['defaultOrganisation' => 'org-default']));
+
+		$this->assertContains('dossier: nothing was changed: table is locked', $lines);
+		$this->assertContains('generatedDocument: 1 object(s) given the default organisation', $lines);
+		$this->assertSame([null], $this->rows['openregister_table_4_12']);
+		$this->assertSame(['org-default'], $this->rows['openregister_table_4_10']);
+	}//end testAFailingTableIsReportedAndTheRestAreStillAdopted()
 }//end class

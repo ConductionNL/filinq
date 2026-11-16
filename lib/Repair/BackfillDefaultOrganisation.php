@@ -134,8 +134,16 @@ class BackfillDefaultOrganisation implements IRepairStep {
 			return;
 		}
 
+		// One table that cannot be adopted is reported and skipped, so it does
+		// not stop the upgrade or the tables after it.
 		foreach ($tables as $slug => $table) {
-			$changed = (int)$tooling['adoption']->adopt(tableName: $table, organisation: $organisation);
+			try {
+				$changed = (int)$tooling['adoption']->adopt(tableName: $table, organisation: $organisation);
+			} catch (Throwable $e) {
+				$output->info(sprintf('%s: nothing was changed: %s', $slug, $e->getMessage()));
+				continue;
+			}
+
 			$output->info(sprintf('%s: %d object(s) given the default organisation', $slug, $changed));
 		}
 

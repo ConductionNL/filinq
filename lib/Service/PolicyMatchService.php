@@ -105,6 +105,8 @@ class PolicyMatchService {
 	 * @param TextNormaliser $textNormaliser Accent-stripping text normaliser.
 	 * @param PolicyRuleNormaliser $ruleNormaliser Admission + normalisation of stored policy rows.
 	 * @param SystemContextSeam|null $seam The one place Filinq relaxes OpenRegister enforcement; built from the logger when absent.
+	 * @param PolicyRuleScope|null $scope Whose rules apply: the user's active organisation, or every organisation's without a
+	 *                                    user session. Null applies every organisation's, as on a non-user path.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
@@ -114,6 +116,7 @@ class PolicyMatchService {
 		private readonly TextNormaliser $textNormaliser = new TextNormaliser(),
 		private readonly PolicyRuleNormaliser $ruleNormaliser = new PolicyRuleNormaliser(),
 		?SystemContextSeam $seam = null,
+		private readonly ?PolicyRuleScope $scope = null,
 	) {
 		$this->seam = ($seam ?? new SystemContextSeam(logger: $logger));
 
@@ -348,18 +351,29 @@ class PolicyMatchService {
 
 		$rules = [];
 
+		// The seam lifts organisation filtering, so the rules are kept to the
+		// user's own organisation here (REQ-DDMTH-003). A user whose
+		// organisation cannot be resolved gets none (fail-closed); without a
+		// user session (a background job) every organisation's rules apply.
+		$organisation = $this->scope?->organisation();
+		if ($organisation === '') {
+			$this->logger->info('PolicyMatchService: no active organisation; no policy rules apply');
+			$this->rulesCache = $rules;
+			return $rules;
+		}
+
 		try {
 			// The rules are a safety policy, not data the user reads: the
 			// schemas grant read to policy admins only, and an ordinary
 			// user's anonymisation must still apply every prohibition and
-			// standing consent. So the load runs as the system, through the
-			// one logged seam, instead of passing bypass flags.
+			// standing consent of their organisation. So the load runs as the
+			// system, through the one logged seam, instead of passing bypass flags.
 			$loaded = $this->seam->run(
 				objectService: $this->objectService,
 				reason: 'anonymisation applies every prohibition and standing consent, whatever the user may read',
 				operation: fn (): array => array_merge(
-					$this->loadProhibitions(),
-					$this->loadStandingConsents()
+					$this->loadProhibitions(organisation: $organisation),
+					$this->loadStandingConsents(organisation: $organisation)
 				)
 			);
 			if (is_array($loaded) === true) {
@@ -379,9 +393,11 @@ class PolicyMatchService {
 	/**
 	 * Load active prohibition records.
 	 *
+	 * @param string|null $organisation Only this organisation's records; null for every organisation's.
+	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function loadProhibitions(): array {
+	private function loadProhibitions(?string $organisation): array {
 		// OR's findAll/searchObjects require NUMERIC register/schema ids and
 		// silently return nothing for slugs; searchObjectsBySlug resolves the
 		// slugs first (same call PolicyCrudService uses for the admin list).
@@ -396,6 +412,10 @@ class PolicyMatchService {
 
 		$rules = [];
 		foreach ($this->resultExtractor->extractRows(result: $result) as $obj) {
+			if (self::inScope(row: $obj, organisation: $organisation) === false) {
+				continue;
+			}
+
 			$normalised = $this->ruleNormaliser->normaliseRule(
 				kind: self::KIND_PROHIBITION,
 				object: $obj
@@ -411,9 +431,11 @@ class PolicyMatchService {
 	/**
 	 * Load active standing-consent records (scope=entity).
 	 *
+	 * @param string|null $organisation Only this organisation's records; null for every organisation's.
+	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function loadStandingConsents(): array {
+	private function loadStandingConsents(?string $organisation): array {
 		// Push the scope filter down to the DB. The schema is shared with
 		// scope=document records, so a naive `findAll(register, schema)` loads
 		// every consent record across every tenant and every file, then
@@ -432,7 +454,7 @@ class PolicyMatchService {
 
 		$rules = [];
 		foreach ($this->resultExtractor->extractRows(result: $result) as $obj) {
-			if (($obj['scope'] ?? 'document') !== 'entity') {
+			if (($obj['scope'] ?? 'document') !== 'entity' || self::inScope(row: $obj, organisation: $organisation) === false) {
 				continue;
 			}
 
@@ -447,6 +469,27 @@ class PolicyMatchService {
 
 		return $rules;
 	}//end loadStandingConsents()
+
+	/**
+	 * Whether a loaded rule belongs to the organisation whose rules apply.
+	 *
+	 * @param array<string, mixed> $row          The stored rule.
+	 * @param string|null          $organisation The organisation, or null for every organisation.
+	 *
+	 * @return bool
+	 */
+	private static function inScope(array $row, ?string $organisation): bool {
+		if ($organisation === null) {
+			return true;
+		}
+
+		$self = ($row['@self'] ?? []);
+		if (is_array($self) === false) {
+			return false;
+		}
+
+		return (string)($self['organisation'] ?? '') === $organisation;
+	}//end inScope()
 
 	/**
 	 * Match a detected entity against prohibition rules only.
