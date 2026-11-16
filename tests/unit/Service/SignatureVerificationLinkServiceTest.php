@@ -283,4 +283,50 @@ class SignatureVerificationLinkServiceTest extends TestCase {
 		$this->service->findByToken(token: str_repeat('ab', 16));
 
 	}//end testAnUnreadableStoreThrows()
+
+	/**
+	 * A token that names a record answers with that record's verdict.
+	 *
+	 * @return void
+	 */
+	public function testVerdictForAKnownTokenIsTheRecordVerdict(): void {
+		$token = str_repeat('ab', 16);
+		$this->objects->method('searchObjectsBySlug')->willReturn([['token' => $token, 'fileName' => 'mine.pdf']]);
+		$verdict = ['status' => 'valid', 'fileName' => 'mine.pdf'];
+		$this->verifier->expects($this->once())->method('verifyByRecord')
+			->with($this->callback(static fn (array $record): bool => $record['fileName'] === 'mine.pdf'))
+			->willReturn($verdict);
+
+		$this->assertSame($verdict, $this->service->verdictFor(token: $token));
+
+	}//end testVerdictForAKnownTokenIsTheRecordVerdict()
+
+	/**
+	 * A token that names nothing, or a malformed one, answers with the unknown verdict and verifies nothing.
+	 *
+	 * @return void
+	 */
+	public function testVerdictForAnUnknownTokenIsUnknown(): void {
+		$this->objects->method('searchObjectsBySlug')->willReturn([]);
+		$this->verifier->expects($this->never())->method('verifyByRecord');
+
+		$this->assertSame(SigningVerificationService::unknownVerdict(), $this->service->verdictFor(token: str_repeat('ab', 16)));
+		$this->assertSame(SignatureVerificationLinkService::unknownVerdict(), $this->service->verdictFor(token: 'nope'));
+
+	}//end testVerdictForAnUnknownTokenIsUnknown()
+
+	/**
+	 * An unreadable store is raised by verdictFor() too, for the caller to answer fail-closed.
+	 *
+	 * @return void
+	 */
+	public function testVerdictForAnUnreadableStoreThrows(): void {
+		$this->objects->method('searchObjectsBySlug')->willThrowException(new \Exception('index gone'));
+		$this->verifier->expects($this->never())->method('verifyByRecord');
+
+		$this->expectException(RuntimeException::class);
+
+		$this->service->verdictFor(token: str_repeat('ab', 16));
+
+	}//end testVerdictForAnUnreadableStoreThrows()
 }//end class

@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Service\SignatureVerificationLinkService;
-use OCA\Filinq\Service\SigningVerificationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\BruteForceProtection;
@@ -68,13 +67,12 @@ class PublicVerificationController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string                           $appName  The app name.
-	 * @param IRequest                         $request  The request.
-	 * @param SignatureVerificationLinkService $links    Finds the record a token names.
-	 * @param SigningVerificationService       $verifier Turns a record into the public verdict.
+	 * @param string                           $appName   The app name.
+	 * @param IRequest                         $request   The request.
+	 * @param SignatureVerificationLinkService $links     Turns a token into the public verdict.
 	 * @param IThrottler                       $throttler Counts tokens that name nothing.
-	 * @param LoggerInterface                  $logger   Logger.
-	 * @param IL10N                            $l10n     The page title's language.
+	 * @param LoggerInterface                  $logger    Logger.
+	 * @param IL10N                            $l10n      The page title's language.
 	 *
 	 * @return void
 	 */
@@ -82,7 +80,6 @@ class PublicVerificationController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly SignatureVerificationLinkService $links,
-		private readonly SigningVerificationService $verifier,
 		private readonly IThrottler $throttler,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
@@ -110,13 +107,10 @@ class PublicVerificationController extends Controller {
 	#[AnonRateLimit(limit: 30, period: 60)]
 	#[BruteForceProtection(action: self::THROTTLE_ACTION)]
 	public function verify(string $token): JSONResponse {
-		$verdict = SigningVerificationService::unknownVerdict();
+		$verdict = SignatureVerificationLinkService::unknownVerdict();
 
 		try {
-			$record = $this->links->findByToken(token: $token);
-			if ($record !== null) {
-				$verdict = $this->verifier->verifyByRecord(record: $record);
-			}
+			$verdict = $this->links->verdictFor(token: $token);
 		} catch (Throwable $e) {
 			// An unreadable store answers like an unknown token: the page must
 			// not report anything valid, and must not differ from "no such

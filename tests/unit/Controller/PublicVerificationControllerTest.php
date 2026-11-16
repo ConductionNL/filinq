@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\PublicVerificationController;
+use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\SignatureVerificationLinkService;
 use OCA\Filinq\Service\SigningVerificationService;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -40,6 +41,7 @@ use ReflectionMethod;
  * The public verify endpoint: no existence oracle, throttled on unknown tokens, fail-closed.
  *
  * @covers \OCA\Filinq\Controller\PublicVerificationController
+ * @uses   \OCA\Filinq\Service\SignatureVerificationLinkService
  * @uses   \OCA\Filinq\Service\SigningVerificationService
  *
  * @category Tests
@@ -88,7 +90,17 @@ class PublicVerificationControllerTest extends TestCase {
 
 		$request = $this->createMock(IRequest::class);
 		$request->method('getRemoteAddress')->willReturn('203.0.113.9');
-		$this->links = $this->createMock(SignatureVerificationLinkService::class);
+		// A real link service over a real verifier; only the store lookup is stubbed.
+		$this->links = $this->getMockBuilder(SignatureVerificationLinkService::class)
+			->setConstructorArgs([
+				$this->createMock(DocumentObjectServiceResolver::class),
+				new SigningVerificationService(
+					rootFolder: $this->createMock(\OCP\Files\IRootFolder::class),
+					config: $this->createMock(\OCP\IAppConfig::class)
+				),
+			])
+			->onlyMethods(['findByToken'])
+			->getMock();
 		$this->throttler = $this->createMock(IThrottler::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
 
@@ -98,10 +110,6 @@ class PublicVerificationControllerTest extends TestCase {
 			appName: 'filinq',
 			request: $request,
 			links: $this->links,
-			verifier: new SigningVerificationService(
-				rootFolder: $this->createMock(\OCP\Files\IRootFolder::class),
-				config: $this->createMock(\OCP\IAppConfig::class)
-			),
 			throttler: $this->throttler,
 			logger: $this->logger,
 			l10n: $l10n,
@@ -150,7 +158,7 @@ class PublicVerificationControllerTest extends TestCase {
 		$response = $this->controller->verify(token: str_repeat('ef', 16));
 
 		$this->assertSame(200, $response->getStatus());
-		$this->assertSame(SigningVerificationService::unknownVerdict(), $response->getData());
+		$this->assertSame(SignatureVerificationLinkService::unknownVerdict(), $response->getData());
 
 	}//end testAnUnknownTokenIsNotAnOracle()
 
@@ -163,7 +171,7 @@ class PublicVerificationControllerTest extends TestCase {
 		$this->links->method('findByToken')->willReturn(['signatures' => [], 'revoked' => true]);
 		$this->throttler->expects($this->once())->method('registerAttempt');
 
-		$this->assertSame(SigningVerificationService::unknownVerdict(), $this->controller->verify(token: str_repeat('ab', 16))->getData());
+		$this->assertSame(SignatureVerificationLinkService::unknownVerdict(), $this->controller->verify(token: str_repeat('ab', 16))->getData());
 
 	}//end testARevokedRecordAnswersLikeAnUnknownToken()
 
@@ -179,7 +187,7 @@ class PublicVerificationControllerTest extends TestCase {
 		$response = $this->controller->verify(token: str_repeat('ab', 16));
 
 		$this->assertSame(200, $response->getStatus());
-		$this->assertSame(SigningVerificationService::unknownVerdict(), $response->getData());
+		$this->assertSame(SignatureVerificationLinkService::unknownVerdict(), $response->getData());
 		$this->assertStringNotContainsString('index gone', (string)json_encode($response->getData()));
 
 	}//end testAnUnreadableStoreFailsClosed()

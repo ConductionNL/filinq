@@ -198,6 +198,38 @@ class SignatureVerificationLinkService {
 	}//end store()
 
 	/**
+	 * The verdict for a token that resolves to nothing, in the shape of every other verdict.
+	 *
+	 * @return array<string, mixed> The neutral `unknown` verdict.
+	 *
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 */
+	public static function unknownVerdict(): array {
+		return SigningVerificationService::unknownVerdict();
+	}//end unknownVerdict()
+
+	/**
+	 * The public verdict for a token: the verdict of the record it names, or
+	 * the `unknown` verdict when it names none.
+	 *
+	 * @param string $token The token from the verification link.
+	 *
+	 * @return array<string, mixed> The verdict.
+	 *
+	 * @throws RuntimeException When the records cannot be read.
+	 *
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 */
+	public function verdictFor(string $token): array {
+		$record = $this->findByToken(token: $token);
+		if ($record === null) {
+			return self::unknownVerdict();
+		}
+
+		return $this->verifier->verifyByRecord(record: $record);
+	}//end verdictFor()
+
+	/**
 	 * The record a token names.
 	 *
 	 * A malformed or nil token finds nothing without a read, and a row is
