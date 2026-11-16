@@ -46,6 +46,7 @@ use DateTimeImmutable;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\PolicyRetroactiveServiceInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
@@ -130,18 +131,31 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 			return 0;
 		}
 
-		// A prohibition applies to every anonymisation (the rule load in
-		// PolicyMatchService runs as the system for that reason), and the
-		// prohibition admins who may save one hold no read or update of
-		// document consents. So the pass runs through the one logged seam,
-		// never through a grant on the consent schema.
+		// The pass resolves consents of the prohibition's own organisation
+		// only, as the organisation-scoped load did before it ran through the
+		// seam. The organisation is read in the saving user's own context; a
+		// prohibition that resolves to none sweeps nothing (fail-closed).
+		$organisation = $this->prohibitionOrganisation(prohibitionUuid: $prohibitionUuid);
+		if ($organisation === '') {
+			$this->logger->warning(
+				'PolicyRetroactiveService: prohibition has no organisation; skipping retroactive sweep',
+				['prohibitionUuid' => $prohibitionUuid]
+			);
+			return 0;
+		}
+
+		// The prohibition admins who may save a prohibition hold no read or
+		// update of document consents. So the pass runs through the one logged
+		// seam, never through a grant on the consent schema, and keeps to the
+		// organisation itself because the seam lifts organisation filtering.
 		$resolved = (int)$this->seam->run(
 			objectService: $this->objectService,
-			reason: 'a saved prohibition force-resolves the in-flight document consents it matches',
+			reason: 'a saved prohibition force-resolves the in-flight document consents it matches in its own organisation',
 			operation: fn (): int => $this->sweepInFlightRecords(
 				matchRules: $matchRules,
 				entityType: (string)($prohibition['entityType'] ?? 'OTHER'),
-				prohibitionUuid: $prohibitionUuid
+				prohibitionUuid: $prohibitionUuid,
+				organisation: $organisation
 			)
 		);
 
@@ -166,6 +180,7 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 	 * @param array<int, array<string, mixed>> $matchRules The prohibition's match rules.
 	 * @param string $entityType Entity type the prohibition targets.
 	 * @param string $prohibitionUuid UUID recorded on each resolved record.
+	 * @param string $organisation The prohibition's organisation; records of any other are left alone.
 	 *
 	 * @return int Number of records that were successfully force-resolved.
 	 */
@@ -173,10 +188,11 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 		array $matchRules,
 		string $entityType,
 		string $prohibitionUuid,
+		string $organisation,
 	): int {
 		$resolved = 0;
 
-		foreach ($this->loadInFlightDocumentRecords(entityType: $entityType) as $candidate) {
+		foreach ($this->loadInFlightDocumentRecords(entityType: $entityType, organisation: $organisation) as $candidate) {
 			if ($this->candidateMatches(candidate: $candidate, matchRules: $matchRules) === false) {
 				continue;
 			}
@@ -230,6 +246,31 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 		);
 
 	}//end readRecordUuid()
+
+	/**
+	 * The organisation a prohibition belongs to, read as the user who saved it.
+	 *
+	 * @param string $prohibitionUuid The prohibition's UUID.
+	 *
+	 * @return string The organisation UUID, or an empty string when the prohibition is not visible or carries none.
+	 */
+	private function prohibitionOrganisation(string $prohibitionUuid): string {
+		try {
+			$prohibition = $this->objectService->find(
+				id: $prohibitionUuid,
+				options: new ObjectFindOptions(register: 'filinq', schema: 'publicationProhibition')
+			);
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'PolicyRetroactiveService: failed to read the prohibition organisation',
+				['prohibitionUuid' => $prohibitionUuid, 'error' => $e->getMessage()]
+			);
+			return '';
+		}
+
+		return (string)($prohibition?->getOrganisation() ?? '');
+
+	}//end prohibitionOrganisation()
 
 	/**
 	 * Standing-consent mutations are intentionally NOT applied retroactively.
@@ -291,15 +332,16 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 	/**
 	 * Load in-flight `scope: "document"` `publicationConsent` records.
 	 *
-	 * Filters: scope=document, consentStatus in IN_FLIGHT_STATUSES, policyMatch
+	 * Filters: scope=document, the given organisation, consentStatus in IN_FLIGHT_STATUSES, policyMatch
 	 * not already set (records pre-empted by a different policy stay as-is and
 	 * are not re-pointed by this routine).
 	 *
-	 * @param string $entityType Optional entity-type filter.
+	 * @param string $entityType   Optional entity-type filter.
+	 * @param string $organisation Only records of this organisation are returned.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function loadInFlightDocumentRecords(string $entityType): array {
+	private function loadInFlightDocumentRecords(string $entityType, string $organisation): array {
 		try {
 			// Push the scope filter down to the DB. The schema is shared
 			// with scope=entity (standing-consent) records, so a naive
@@ -326,8 +368,14 @@ class PolicyRetroactiveService implements PolicyRetroactiveServiceInterface {
 			return array_values(
 				array_filter(
 					$records,
-					function (array $r) use ($entityType): bool {
+					function (array $r) use ($entityType, $organisation): bool {
 						if (($r['scope'] ?? 'document') !== 'document') {
+							return false;
+						}
+
+						// The load runs as the system, which lifts organisation
+						// filtering; another organisation's consents stay as they are.
+						if ((string)($r['@self']['organisation'] ?? '') !== $organisation) {
 							return false;
 						}
 
