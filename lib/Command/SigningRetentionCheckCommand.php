@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Command;
 
-use OCA\Filinq\Service\Signing\SigningRetentionCheck;
+use OCA\Filinq\Kernel\Contracts\SigningRetentionCheckInterface;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCP\IAppConfig;
 use Symfony\Component\Console\Command\Command;
@@ -72,14 +72,14 @@ class SigningRetentionCheckCommand extends Command {
 	/**
 	 * Constructor.
 	 *
-	 * @param SigningRetentionCheck $check The retention evaluation.
+	 * @param SigningRetentionCheckInterface $check The retention evaluation.
 	 * @param SchemaMapper $schemaMapper OpenRegister's schema mapper.
 	 * @param IAppConfig $appConfig App configuration (the configured schema ids).
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly SigningRetentionCheck $check,
+		private readonly SigningRetentionCheckInterface $check,
 		private readonly SchemaMapper $schemaMapper,
 		private readonly IAppConfig $appConfig,
 	) {
@@ -141,7 +141,7 @@ class SigningRetentionCheckCommand extends Command {
 			return [
 				'passed' => false,
 				'message' => 'Signing register schema "' . $slug . '" is not configured (' . $slug . '_schema is empty); '
-					. 'its ' . SigningRetentionCheck::LEGAL_BASIS . ' retention cannot be verified.',
+					. 'its ' . SigningRetentionCheckInterface::LEGAL_BASIS . ' retention cannot be verified.',
 			];
 		}
 
@@ -151,7 +151,7 @@ class SigningRetentionCheckCommand extends Command {
 			return [
 				'passed' => false,
 				'message' => 'Signing register schema "' . $slug . '" (' . $schemaId . ') could not be read: '
-					. $e->getMessage() . '; its ' . SigningRetentionCheck::LEGAL_BASIS . ' retention cannot be verified.',
+					. $e->getMessage() . '; its ' . SigningRetentionCheckInterface::LEGAL_BASIS . ' retention cannot be verified.',
 			];
 		}
 

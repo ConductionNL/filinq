@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Kernel\Contracts\SignatureVerificationLinksInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
@@ -49,7 +50,7 @@ use Throwable;
  *
  * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
  */
-class SignatureVerificationLinkService {
+class SignatureVerificationLinkService implements SignatureVerificationLinksInterface {
 	use ReadsStoredObjectRows;
 
 	/**

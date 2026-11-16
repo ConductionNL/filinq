@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\Contracts\GenerationSourceObjectInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -49,7 +50,7 @@ use Throwable;
  *
  * @spec openspec/changes/template-library-leaf/specs/template-management/spec.md#requirement-generate-from-template-is-a-render-surface-leaf-req-tmpl-15
  */
-class GenerationSourceObject {
+class GenerationSourceObject implements GenerationSourceObjectInterface {
 
 	/**
 	 * A folder path segment the document storage accepts.

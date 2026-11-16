@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\SignatureVerificationLinkService;
+use OCA\Filinq\Kernel\Contracts\SignatureVerificationLinksInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\BruteForceProtection;
@@ -67,19 +67,19 @@ class PublicVerificationController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string                           $appName   The app name.
-	 * @param IRequest                         $request   The request.
-	 * @param SignatureVerificationLinkService $links     Turns a token into the public verdict.
-	 * @param IThrottler                       $throttler Counts tokens that name nothing.
-	 * @param LoggerInterface                  $logger    Logger.
-	 * @param IL10N                            $l10n      The page title's language.
+	 * @param string                              $appName   The app name.
+	 * @param IRequest                            $request   The request.
+	 * @param SignatureVerificationLinksInterface $links     Turns a token into the public verdict.
+	 * @param IThrottler                          $throttler Counts tokens that name nothing.
+	 * @param LoggerInterface                     $logger    Logger.
+	 * @param IL10N                               $l10n      The page title's language.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly SignatureVerificationLinkService $links,
+		private readonly SignatureVerificationLinksInterface $links,
 		private readonly IThrottler $throttler,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
@@ -107,7 +107,7 @@ class PublicVerificationController extends Controller {
 	#[AnonRateLimit(limit: 30, period: 60)]
 	#[BruteForceProtection(action: self::THROTTLE_ACTION)]
 	public function verify(string $token): JSONResponse {
-		$verdict = SignatureVerificationLinkService::unknownVerdict();
+		$verdict = $this->links::unknownVerdict();
 
 		try {
 			$verdict = $this->links->verdictFor(token: $token);

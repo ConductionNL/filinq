@@ -35,9 +35,11 @@ use OCA\Filinq\Kernel\Contracts\BatchReportServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
+use OCA\Filinq\Kernel\Contracts\BridgeApiInterface;
 use OCA\Filinq\Kernel\Contracts\BulkSigningRunnerInterface;
 use OCA\Filinq\Kernel\Contracts\BulkSigningServiceInterface;
 use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
+use OCA\Filinq\Kernel\Contracts\CaseSystemDeliveredFilesInterface;
 use OCA\Filinq\Kernel\Contracts\CaseSystemDeliveryServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ClassificationDecisionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ConformanceServiceInterface;
@@ -85,10 +87,12 @@ use OCA\Filinq\Kernel\Contracts\FlatFileListServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FormatMatrixServiceInterface;
 use OCA\Filinq\Kernel\Contracts\GenerationRequestServiceInterface;
+use OCA\Filinq\Kernel\Contracts\GenerationSourceObjectInterface;
 use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
+use OCA\Filinq\Kernel\Contracts\IntakePasswordRemovalInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeReadingProgressInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
@@ -113,6 +117,7 @@ use OCA\Filinq\Kernel\Contracts\OutputLayoutResolverInterface;
 use OCA\Filinq\Kernel\Contracts\PageLayoutServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PdfPasswordRemovalServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PdfStampServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PeriodicDocumentServiceInterface;
@@ -136,7 +141,9 @@ use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SessionUserFileInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SignatureVerificationLinksInterface;
 use OCA\Filinq\Kernel\Contracts\SignerAuthSettingsInterface;
 use OCA\Filinq\Kernel\Contracts\SignerStepUpServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
@@ -144,6 +151,7 @@ use OCA\Filinq\Kernel\Contracts\SigningCancellationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningEnvelopeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningMandateServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningRetentionCheckInterface;
 use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningVerificationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SubjectErasureRunInterface;
@@ -172,6 +180,7 @@ use OCA\Filinq\Service\EmailIngestion\EmailIngestionService;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
 use OCA\Filinq\Service\EntitySearch\EntitySearchService;
 use OCA\Filinq\Service\Intake\IntakeNotificationReach;
+use OCA\Filinq\Service\Intake\IntakePasswordRemoval;
 use OCA\Filinq\Service\Intake\IntakeReadingProgress;
 use OCA\Filinq\Service\LegalHold\LegalHoldCaseService;
 use OCA\Filinq\Service\LegalHold\LegalHoldNotifications;
@@ -195,6 +204,7 @@ use OCA\Filinq\Service\SignerAuth\SignerStepUpService;
 use OCA\Filinq\Service\Signing\LibreSignCompletion;
 use OCA\Filinq\Service\Signing\SigningCancellationService;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
+use OCA\Filinq\Service\Signing\SigningRetentionCheck;
 use OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeService;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureRun;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureService;
@@ -232,9 +242,11 @@ final class ContractBindings {
 		BatchRequestServiceInterface::class            => BatchRequestService::class,
 		BatchStateServiceInterface::class              => BatchStateService::class,
 		BatchUploadServiceInterface::class             => BatchUploadService::class,
+		BridgeApiInterface::class                      => BridgeApi::class,
 		BulkSigningRunnerInterface::class              => BulkSigningRunner::class,
 		BulkSigningServiceInterface::class             => BulkSigningService::class,
 		CaseArchiveServiceInterface::class             => CaseArchiveService::class,
+		CaseSystemDeliveredFilesInterface::class       => CaseSystemDeliveredFiles::class,
 		CaseSystemDeliveryServiceInterface::class      => CaseSystemDeliveryService::class,
 		ClassificationDecisionServiceInterface::class  => ClassificationDecisionService::class,
 		ConformanceServiceInterface::class             => ConformanceService::class,
@@ -282,10 +294,12 @@ final class ContractBindings {
 		FolderBatchServiceInterface::class             => FolderBatchService::class,
 		FormatMatrixServiceInterface::class            => FormatMatrixService::class,
 		GenerationRequestServiceInterface::class       => DocumentGenerationRequestService::class,
+		GenerationSourceObjectInterface::class         => GenerationSourceObject::class,
 		GlAccountSuggestionServiceInterface::class     => GlAccountSuggestionService::class,
 		InboundClassificationServiceInterface::class   => InboundClassificationService::class,
 		IntakeDetachmentServiceInterface::class        => IntakeDetachmentService::class,
 		IntakeNotificationReachInterface::class        => IntakeNotificationReach::class,
+		IntakePasswordRemovalInterface::class          => IntakePasswordRemoval::class,
 		IntakeReadingProgressInterface::class          => IntakeReadingProgress::class,
 		IntakeRepositoryInterface::class               => IntakeRepository::class,
 		IntakeRoutingServiceInterface::class           => IntakeRoutingService::class,
@@ -310,6 +324,7 @@ final class ContractBindings {
 		PageLayoutServiceInterface::class              => PageLayoutService::class,
 		PartySuggestionServiceInterface::class         => PartySuggestionService::class,
 		Pdfa3ConversionServiceInterface::class         => Pdfa3ConversionService::class,
+		PdfPasswordRemovalServiceInterface::class      => PdfPasswordRemovalService::class,
 		PdfServiceInterface::class                     => PdfService::class,
 		PdfStampServiceInterface::class                => PdfStampService::class,
 		PeriodicDocumentServiceInterface::class        => PeriodicDocumentService::class,
@@ -333,7 +348,9 @@ final class ContractBindings {
 		ScanBatchServiceInterface::class               => ScanBatchService::class,
 		ScanProfileServiceInterface::class             => ScanProfileService::class,
 		SeparatorSheetServiceInterface::class          => SeparatorSheetService::class,
+		SessionUserFileInterface::class                => SessionUserFile::class,
 		SettingsServiceInterface::class                => SettingsService::class,
+		SignatureVerificationLinksInterface::class     => SignatureVerificationLinkService::class,
 		SignerAuthSettingsInterface::class             => SignerAuthSettings::class,
 		SignerStepUpServiceInterface::class            => SignerStepUpService::class,
 		SigningAuditServiceInterface::class            => SigningAuditService::class,
@@ -341,6 +358,7 @@ final class ContractBindings {
 		SigningEnvelopeServiceInterface::class         => SigningEnvelopeService::class,
 		SigningFolderServiceInterface::class           => SigningFolderService::class,
 		SigningMandateServiceInterface::class          => SigningMandateService::class,
+		SigningRetentionCheckInterface::class          => SigningRetentionCheck::class,
 		SigningServiceInterface::class                 => SigningService::class,
 		SigningVerificationServiceInterface::class     => SigningVerificationService::class,
 		SubjectErasureRunInterface::class              => SubjectErasureRun::class,
