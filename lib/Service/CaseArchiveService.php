@@ -34,6 +34,8 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCP\Files\File;
 use OCA\Filinq\Kernel\Contracts\CaseArchiveServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -456,8 +458,7 @@ class CaseArchiveService implements CaseArchiveServiceInterface {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $job,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA))
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

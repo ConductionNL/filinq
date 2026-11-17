@@ -26,6 +26,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * @covers \OCA\Filinq\Service\VeraPdf\ConformanceReportRepository
@@ -180,6 +181,7 @@ class ConformanceReportRepositoryTest extends TestCase {
 		$saved = [];
 		$this->objects->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$saved): object {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$saved = $args;
 
 				return $this->row('u-new', ['fileId' => 5, 'subject' => 'file', 'compliant' => true]);
@@ -212,6 +214,7 @@ class ConformanceReportRepositoryTest extends TestCase {
 		$saved = [];
 		$this->objects->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$saved): array {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$saved = $args;
 
 				return ['uuid' => 'u-file', 'fileId' => 5, 'subject' => 'file', 'compliant' => false];
@@ -239,6 +242,7 @@ class ConformanceReportRepositoryTest extends TestCase {
 		$saved = [];
 		$this->objects->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$saved): array {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$saved = $args;
 
 				return ['id' => 'u-new', 'fileId' => 5, 'subject' => 'file'];
