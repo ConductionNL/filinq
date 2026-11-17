@@ -17,6 +17,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\FinalDocumentService;
 use OCA\Filinq\Service\IntegrityScanService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -53,8 +54,8 @@ class IntegrityScanServiceTest extends TestCase {
 			static fn (string $registerSlug, string $schemaSlug): array => ($rows[$schemaSlug] ?? [])
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, mixed $register = null, mixed $schema = null) {
-				$this->saved[] = ['schema' => $schema, 'object' => $object];
+			function (array $object, ObjectSaveOptions $options, bool $_rbac = true) {
+				$this->saved[] = ['register' => $options->target->register, 'schema' => $options->target->schema, 'rbac' => $_rbac, 'object' => $object];
 				return $object;
 			}
 		);
@@ -113,7 +114,7 @@ class IntegrityScanServiceTest extends TestCase {
 
 		$this->assertSame([0, 0, 0, 2, []], [$run['missing'], $run['changed'], $run['orphaned'], $run['checked'], $run['findings']]);
 		$this->assertCount(1, $this->saved);
-		$this->assertSame('integrityScan', $this->saved[0]['schema']);
+		$this->assertSame(['filinq', 'integrityScan', false], [$this->saved[0]['register'], $this->saved[0]['schema'], $this->saved[0]['rbac']]);
 		$this->assertSame($run, $this->saved[0]['object']);
 		$this->assertNotSame('', $run['startedAt']);
 	}

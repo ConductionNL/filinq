@@ -31,6 +31,8 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\Files\IRootFolder;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -105,7 +107,11 @@ class IntegrityScanService {
 		}
 
 		$run['findings'] = $findings;
-		$this->objects->resolve()->saveObject(object: $run, register: self::REGISTER, schema: self::SCHEMA, _rbac: false);
+		$this->objects->resolve()->saveObject(
+			object: $run,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA)),
+			_rbac: false
+		);
 
 		return $run;
 	}//end run()
