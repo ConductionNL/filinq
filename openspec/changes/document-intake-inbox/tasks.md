@@ -27,6 +27,6 @@
 - [x] 4.1 PHPUnit for `IntakeService` (assign, reject, refused assign) inside the container; 75% on new code (ADR-009)
 - [x] 4.2 Playwright e2e `tests/e2e/intake-inbox.spec.ts` for the inbox page and both actions
 - [ ] 4.3 Dutch and English strings (ADR-005); docs in `docs/features/document-intake.md` with screenshots (ADR-010)
-  - Strings: done in all six locales. Docs with screenshots: (not run: screenshots need the live instance).
+  - Strings: done in all six locales. Docs: `docs/features/document-intake.md` written (2026-11-17). Screenshots: not run, they need the live instance.
 - [x] 4.4 Tell dossiq the leaf id and props so it can place the leaf (dossiq change `consume-filinq-intake-leaf`)
   - Filed 2026-10-09 for the coordinator as ask 2 in `~/memcap-work/build-all/for-ruben/filinq-sibling-asks.md`: id, surfaces, props and the assign route.

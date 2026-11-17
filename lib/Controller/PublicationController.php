@@ -24,6 +24,7 @@ use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
 use OCA\Filinq\Kernel\Contracts\OpenCatalogiPlatformInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationAccessInterface;
+use OCA\Filinq\Service\Audit\DocumentDownloadLog;
 use OCA\Filinq\Service\Publication\DiwooMissingFields;
 use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCP\AppFramework\Controller;
@@ -64,6 +65,7 @@ class PublicationController extends Controller {
 	 * @param IUserSession               $session  The caller
 	 * @param LoggerInterface            $logger   Logger
 	 * @param DownloadAgreementGateInterface|null $agreements The download conditions (REQ-RWB-04)
+	 * @param DocumentDownloadLog|null            $downloads  Records each served copy in its trail (REQ-DIO-06); null records nothing
 	 *
 	 * @return void
 	 */
@@ -75,6 +77,7 @@ class PublicationController extends Controller {
 		private readonly IUserSession $session,
 		private readonly LoggerInterface $logger,
 		private readonly ?DownloadAgreementGateInterface $agreements = null,
+		private readonly ?DocumentDownloadLog $downloads = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -174,8 +177,10 @@ class PublicationController extends Controller {
 
 		try {
 			$file = $this->platform->readCopy(fileId: $copy, actor: $uid);
+			$response = new DataDownloadResponse($file->getContent(), $file->getName(), $file->getMimeType());
+			$this->downloads?->downloaded(fileId: (int) $file->getId(), version: '', route: DocumentDownloadLog::ROUTE_UI);
 
-			return new DataDownloadResponse($file->getContent(), $file->getName(), $file->getMimeType());
+			return $response;
 		} catch (Throwable $e) {
 			$this->logger->warning('[PublicationController] the published copy could not be read', ['record' => $id, 'error' => $e->getMessage()]);
 
