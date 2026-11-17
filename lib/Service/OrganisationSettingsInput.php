@@ -100,21 +100,34 @@ final class OrganisationSettingsInput {
 	 * @throws InvalidArgumentException When it is not a whole number in range.
 	 */
 	private static function period(mixed $value): ?int {
-		if ($value === null || $value === '') {
+		if (self::isBlank(value: $value) === true) {
 			return null;
 		}
 
-		if (is_int($value) === false && (is_string($value) === false || preg_match('/^\d+$/', trim($value)) !== 1)) {
-			throw new InvalidArgumentException('The objection period is a whole number of days.');
-		}
-
-		$days = (int)$value;
+		$days = self::wholeNumber(value: $value);
 		if ($days < 1 || $days > 365) {
 			throw new InvalidArgumentException('The objection period is between 1 and 365 days.');
 		}
 
 		return $days;
 	}//end period()
+
+	/**
+	 * A submitted whole number: an int, or digits as text.
+	 *
+	 * @param mixed $value The submitted value.
+	 *
+	 * @return int The number.
+	 *
+	 * @throws InvalidArgumentException When it is not a whole number.
+	 */
+	private static function wholeNumber(mixed $value): int {
+		if (is_int($value) === false && self::matches(value: $value, pattern: '/^\d+$/') === false) {
+			throw new InvalidArgumentException('The objection period is a whole number of days.');
+		}
+
+		return (int)$value;
+	}//end wholeNumber()
 
 	/**
 	 * The anonymisation profile: two lists of entity categories, or null.
@@ -126,7 +139,7 @@ final class OrganisationSettingsInput {
 	 * @throws InvalidArgumentException When it is not two lists of categories, or a category is in both.
 	 */
 	private static function profile(mixed $value): ?array {
-		if ($value === null || $value === '' || $value === []) {
+		if (self::isBlank(value: $value) === true || $value === []) {
 			return null;
 		}
 
@@ -134,8 +147,23 @@ final class OrganisationSettingsInput {
 			throw new InvalidArgumentException('The anonymisation profile lists the categories to anonymise and to keep visible.');
 		}
 
-		$anonymize   = self::categories(value: ($value['anonymize'] ?? []));
-		$keepVisible = self::categories(value: ($value['keepVisible'] ?? []));
+		return self::profileOf(
+			anonymize: self::listed(value: $value, key: 'anonymize'),
+			keepVisible: self::listed(value: $value, key: 'keepVisible')
+		);
+	}//end profile()
+
+	/**
+	 * The profile of two category lists, or null when both are empty.
+	 *
+	 * @param array<int, string> $anonymize   The categories to anonymise.
+	 * @param array<int, string> $keepVisible The categories to keep visible.
+	 *
+	 * @return array{anonymize: array<int, string>, keepVisible: array<int, string>}|null The profile.
+	 *
+	 * @throws InvalidArgumentException When a category is in both.
+	 */
+	private static function profileOf(array $anonymize, array $keepVisible): ?array {
 		if ($anonymize === [] && $keepVisible === []) {
 			return null;
 		}
@@ -145,7 +173,21 @@ final class OrganisationSettingsInput {
 		}
 
 		return ['anonymize' => $anonymize, 'keepVisible' => $keepVisible];
-	}//end profile()
+	}//end profileOf()
+
+	/**
+	 * The categories listed under one key of a submitted profile.
+	 *
+	 * @param array<mixed> $value The submitted profile.
+	 * @param string       $key   The list's key.
+	 *
+	 * @return array<int, string> The categories; none when the key is absent.
+	 *
+	 * @throws InvalidArgumentException When it is not a list of categories.
+	 */
+	private static function listed(array $value, string $key): array {
+		return self::categories(value: ($value[$key] ?? []));
+	}//end listed()
 
 	/**
 	 * A list of entity categories, upper case, without duplicates.
@@ -163,15 +205,28 @@ final class OrganisationSettingsInput {
 
 		$categories = [];
 		foreach ($value as $category) {
-			if (is_string($category) === false || preg_match(self::CATEGORY_PATTERN, $category) !== 1) {
-				throw new InvalidArgumentException('An entity category is a name such as PERSON or BSN.');
-			}
-
-			$categories[$category] = $category;
+			$categories[self::category(value: $category)] = $category;
 		}
 
 		return array_values($categories);
 	}//end categories()
+
+	/**
+	 * One entity category.
+	 *
+	 * @param mixed $value The submitted category.
+	 *
+	 * @return string The category.
+	 *
+	 * @throws InvalidArgumentException When it is not a category name.
+	 */
+	private static function category(mixed $value): string {
+		if (is_string($value) === false || preg_match(self::CATEGORY_PATTERN, $value) !== 1) {
+			throw new InvalidArgumentException('An entity category is a name such as PERSON or BSN.');
+		}
+
+		return $value;
+	}//end category()
 
 	/**
 	 * A huisstijl reference: a UUID, or null.
@@ -183,13 +238,11 @@ final class OrganisationSettingsInput {
 	 * @throws InvalidArgumentException When it is not a UUID.
 	 */
 	private static function reference(mixed $value): ?string {
-		if ($value === null || $value === '') {
+		if (self::isBlank(value: $value) === true) {
 			return null;
 		}
 
-		if (is_string($value) === false
-			|| preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', trim($value)) !== 1
-		) {
+		if (self::matches(value: $value, pattern: '/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i') === false) {
 			throw new InvalidArgumentException('The default huisstijl is not a huisstijl reference.');
 		}
 
@@ -221,10 +274,48 @@ final class OrganisationSettingsInput {
 			return null;
 		}
 
+		return self::limited(value: $value, field: $field, max: $max);
+	}//end text()
+
+	/**
+	 * A text that is at most a number of characters long.
+	 *
+	 * @param string $value The trimmed text.
+	 * @param string $field The field, for the message.
+	 * @param int    $max   Longest accepted.
+	 *
+	 * @return string The text.
+	 *
+	 * @throws InvalidArgumentException When it is too long.
+	 */
+	private static function limited(string $value, string $field, int $max): string {
 		if (mb_strlen($value) > $max) {
 			throw new InvalidArgumentException('The ' . $field . ' is at most ' . $max . ' characters.');
 		}
 
 		return $value;
-	}//end text()
+	}//end limited()
+
+	/**
+	 * Whether a submitted value is absent: null or the empty string.
+	 *
+	 * @param mixed $value The submitted value.
+	 *
+	 * @return bool True when blank.
+	 */
+	private static function isBlank(mixed $value): bool {
+		return $value === null || $value === '';
+	}//end isBlank()
+
+	/**
+	 * Whether a submitted value is text that, trimmed, matches a pattern.
+	 *
+	 * @param mixed  $value   The submitted value.
+	 * @param string $pattern The pattern.
+	 *
+	 * @return bool True when it matches.
+	 */
+	private static function matches(mixed $value, string $pattern): bool {
+		return is_string($value) === true && preg_match($pattern, trim($value)) === 1;
+	}//end matches()
 }//end class

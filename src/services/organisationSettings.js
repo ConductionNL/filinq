@@ -62,19 +62,49 @@ export function saveOrganisationSettings(form) {
  * @spec openspec/changes/multi-tenant-hardening/tasks.md#4-frontend
  */
 export function toPayload(form) {
-	const anonymize = [...(form.anonymize || [])]
-	const keepVisible = [...(form.keepVisible || [])]
-	const period = String(form.consentPeriodDays ?? '').trim()
+	const anonymize = copyList(form.anonymize)
+	const keepVisible = copyList(form.keepVisible)
 	return {
-		name: (form.name || '').trim() || null,
-		consentPeriodDays: period === '' ? null : period,
-		anonymizationProfile:
-			anonymize.length === 0 && keepVisible.length === 0
-				? null
-				: { anonymize, keepVisible },
+		name: trimmedOrNull(form.name),
+		consentPeriodDays: trimmedOrNull(String(form.consentPeriodDays ?? '')),
+		anonymizationProfile: profileOrNull(anonymize, keepVisible),
 		defaultHuisstijl: form.defaultHuisstijl || null,
-		notes: (form.notes || '').trim() || null,
+		notes: trimmedOrNull(form.notes),
 	}
+}
+
+/**
+ * A trimmed text, or null when nothing is left.
+ *
+ * @param {string|null|undefined} value The text.
+ * @return {string|null} The trimmed text, or null.
+ */
+function trimmedOrNull(value) {
+	return (value || '').trim() || null
+}
+
+/**
+ * A copy of a list; an absent list is empty.
+ *
+ * @param {Array|null|undefined} list The list.
+ * @return {Array} The copy.
+ */
+function copyList(list) {
+	return [...(list || [])]
+}
+
+/**
+ * The anonymization profile of two category lists, or null when both are empty.
+ *
+ * @param {Array} anonymize The categories to anonymize.
+ * @param {Array} keepVisible The categories to keep visible.
+ * @return {object|null} The profile, or null.
+ */
+function profileOrNull(anonymize, keepVisible) {
+	if (anonymize.length === 0 && keepVisible.length === 0) {
+		return null
+	}
+	return { anonymize, keepVisible }
 }
 
 /**
@@ -85,18 +115,38 @@ export function toPayload(form) {
  * @spec openspec/changes/multi-tenant-hardening/tasks.md#4-frontend
  */
 export function toForm(settings) {
-	const profile = settings?.anonymizationProfile || {}
+	const stored = settings || {}
 	return {
-		name: settings?.name || '',
-		consentPeriodDays:
-			settings?.consentPeriodDays === null || settings?.consentPeriodDays === undefined
-				? ''
-				: String(settings.consentPeriodDays),
-		anonymize: [...(profile.anonymize || [])],
-		keepVisible: [...(profile.keepVisible || profile.keep || [])],
-		defaultHuisstijl: settings?.defaultHuisstijl || null,
-		notes: settings?.notes || '',
+		name: stored.name || '',
+		consentPeriodDays: textOrEmpty(stored.consentPeriodDays),
+		...profileLists(stored.anonymizationProfile),
+		defaultHuisstijl: stored.defaultHuisstijl || null,
+		notes: stored.notes || '',
 	}
+}
+
+/**
+ * The two category lists of a stored anonymization profile, as copies.
+ *
+ * @param {object|null|undefined} stored The stored profile.
+ * @return {{anonymize: Array, keepVisible: Array}} The lists.
+ */
+function profileLists(stored) {
+	const profile = stored || {}
+	return {
+		anonymize: copyList(profile.anonymize),
+		keepVisible: copyList(profile.keepVisible || profile.keep),
+	}
+}
+
+/**
+ * A value as text; null and undefined become empty.
+ *
+ * @param {string|number|null|undefined} value The value.
+ * @return {string} The text.
+ */
+function textOrEmpty(value) {
+	return value === null || value === undefined ? '' : String(value)
 }
 
 /**
@@ -116,10 +166,27 @@ export async function loadHuisstijlOptions() {
 	}
 	const rows = Array.isArray(result.data?.results) ? result.data.results : []
 	return rows
-		.map((row) => ({
-			id: row?.['@self']?.id || row?.id || row?.uuid || '',
-			label: row?.name || row?.title || row?.['@self']?.name || '',
-		}))
+		.map((row) => ({ id: optionId(row), label: optionLabel(row) }))
 		.filter((option) => option.id !== '')
 		.map((option) => ({ ...option, label: option.label || option.id }))
+}
+
+/**
+ * The id of a huisstijl row.
+ *
+ * @param {object|null} row The row.
+ * @return {string} The id; empty when it has none.
+ */
+function optionId(row) {
+	return row?.['@self']?.id || row?.id || row?.uuid || ''
+}
+
+/**
+ * The label of a huisstijl row.
+ *
+ * @param {object|null} row The row.
+ * @return {string} The label; empty when it has none.
+ */
+function optionLabel(row) {
+	return row?.name || row?.title || row?.['@self']?.name || ''
 }

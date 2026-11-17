@@ -137,17 +137,31 @@ class BackfillDefaultOrganisation implements IRepairStep {
 		// One table that cannot be adopted is reported and skipped, so it does
 		// not stop the upgrade or the tables after it.
 		foreach ($tables as $slug => $table) {
-			try {
-				$changed = (int)$tooling['adoption']->adopt(tableName: $table, organisation: $organisation);
-			} catch (Throwable $e) {
-				$output->info(sprintf('%s: nothing was changed: %s', $slug, $e->getMessage()));
-				continue;
-			}
-
-			$output->info(sprintf('%s: %d object(s) given the default organisation', $slug, $changed));
+			$output->info($this->adoptTable(adoption: $tooling['adoption'], slug: (string)$slug, table: $table, organisation: $organisation));
 		}
 
 	}//end run()
+
+	/**
+	 * Stamp the default organisation on one table.
+	 *
+	 * @param mixed  $adoption     OpenRegister's organisation adoption.
+	 * @param string $slug         The schema slug, for the report.
+	 * @param string $table        The table.
+	 * @param string $organisation The default organisation.
+	 *
+	 * @return string The report line for the upgrade output.
+	 */
+	private function adoptTable(mixed $adoption, string $slug, string $table, string $organisation): string {
+		try {
+			$changed = (int)$adoption->adopt(tableName: $table, organisation: $organisation);
+		} catch (Throwable $e) {
+			return sprintf('%s: nothing was changed: %s', $slug, $e->getMessage());
+		}
+
+		return sprintf('%s: %d object(s) given the default organisation', $slug, $changed);
+
+	}//end adoptTable()
 
 	/**
 	 * OpenRegister's default organisation, newer config key first; null when none is set.

@@ -143,28 +143,12 @@ class OrganisationSettingsService {
 	 * @spec openspec/changes/multi-tenant-hardening/specs/admin-settings/spec.md#requirement-per-organisation-settings-are-stored-as-organisationsettings-objects-req-ddmth-007
 	 */
 	public function save(array $input): array {
-		$organisation = $this->activeOrganisation();
-		if ($organisation === null) {
-			throw new OrganisationSettingsDeniedException(message: 'No active organisation; organisation settings cannot be saved.');
-		}
-
-		if ($this->mayEdit(organisationUuid: $organisation['uuid']) === false) {
-			throw new OrganisationSettingsDeniedException(message: 'Only an admin of this organisation may change its settings.');
-		}
+		$organisation = $this->editableOrganisation();
 
 		$fields = OrganisationSettingsInput::fields(input: $input, defaultName: $organisation['name'], maxLength: self::MAX_LENGTH);
-		if ($fields['defaultHuisstijl'] !== null && $this->huisstijlIsVisible(uuid: $fields['defaultHuisstijl']) === false) {
-			throw new InvalidArgumentException('The default huisstijl is not a huisstijl of this organisation.');
-		}
+		$this->assertHuisstijlVisible(uuid: $fields['defaultHuisstijl']);
 
-		$stored  = $this->storedObject(organisationUuid: $organisation['uuid']);
-		$options = new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: EffectiveSettings::SCHEMA));
-		if ($stored !== null) {
-			$options = new ObjectSaveOptions(
-				target: new ObjectFindTarget(register: self::REGISTER, schema: EffectiveSettings::SCHEMA),
-				uuid: (string)$stored['uuid']
-			);
-		}
+		$options = $this->saveOptions(stored: $this->storedObject(organisationUuid: $organisation['uuid']));
 
 		// The schema grants writes to instance admins; an organisation admin
 		// is checked above, at this single write path. The organisation
@@ -178,6 +162,59 @@ class OrganisationSettingsService {
 
 		return $this->view();
 	}//end save()
+
+	/**
+	 * The active organisation, when the caller may change its settings.
+	 *
+	 * @return array{uuid: string, name: string} The organisation.
+	 *
+	 * @throws OrganisationSettingsDeniedException When the caller may not write, or no organisation is active.
+	 */
+	private function editableOrganisation(): array {
+		$organisation = $this->activeOrganisation();
+		if ($organisation === null) {
+			throw new OrganisationSettingsDeniedException(message: 'No active organisation; organisation settings cannot be saved.');
+		}
+
+		if ($this->mayEdit(organisationUuid: $organisation['uuid']) === false) {
+			throw new OrganisationSettingsDeniedException(message: 'Only an admin of this organisation may change its settings.');
+		}
+
+		return $organisation;
+	}//end editableOrganisation()
+
+	/**
+	 * Refuses a default huisstijl the caller cannot read in the active organisation.
+	 *
+	 * @param string|null $uuid The submitted default huisstijl; null sets none.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When the huisstijl does not resolve.
+	 */
+	private function assertHuisstijlVisible(?string $uuid): void {
+		if ($uuid !== null && $this->huisstijlIsVisible(uuid: $uuid) === false) {
+			throw new InvalidArgumentException('The default huisstijl is not a huisstijl of this organisation.');
+		}
+	}//end assertHuisstijlVisible()
+
+	/**
+	 * The save options: a create, or an update of the stored object.
+	 *
+	 * @param array<string, mixed>|null $stored The stored object, or null when there is none.
+	 *
+	 * @return ObjectSaveOptions The options.
+	 */
+	private function saveOptions(?array $stored): ObjectSaveOptions {
+		if ($stored === null) {
+			return new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: EffectiveSettings::SCHEMA));
+		}
+
+		return new ObjectSaveOptions(
+			target: new ObjectFindTarget(register: self::REGISTER, schema: EffectiveSettings::SCHEMA),
+			uuid: (string)$stored['uuid']
+		);
+	}//end saveOptions()
 
 	/**
 	 * Whether the caller is an instance admin or an admin of the organisation.
@@ -223,6 +260,17 @@ class OrganisationSettingsService {
 			return null;
 		}
 
+		return $this->organisationOf(organisation: $organisation);
+	}//end activeOrganisation()
+
+	/**
+	 * The uuid and name of a resolved organisation, or null without a uuid.
+	 *
+	 * @param mixed $organisation The resolved organisation.
+	 *
+	 * @return array{uuid: string, name: string}|null
+	 */
+	private function organisationOf(mixed $organisation): ?array {
 		if (is_object($organisation) === false || method_exists($organisation, 'getUuid') === false) {
 			return null;
 		}
@@ -232,13 +280,23 @@ class OrganisationSettingsService {
 			return null;
 		}
 
-		$name = '';
-		if (method_exists($organisation, 'getName') === true) {
-			$name = (string)$organisation->getName();
+		return ['uuid' => $uuid, 'name' => $this->organisationName(organisation: $organisation)];
+	}//end organisationOf()
+
+	/**
+	 * The name of a resolved organisation; empty when it has none.
+	 *
+	 * @param object $organisation The resolved organisation.
+	 *
+	 * @return string The name.
+	 */
+	private function organisationName(object $organisation): string {
+		if (method_exists($organisation, 'getName') === false) {
+			return '';
 		}
 
-		return ['uuid' => $uuid, 'name' => $name];
-	}//end activeOrganisation()
+		return (string)$organisation->getName();
+	}//end organisationName()
 
 	/**
 	 * The stored object of the organisation, or null when it has none.
@@ -270,15 +328,28 @@ class OrganisationSettingsService {
 		}
 
 		$fields = $this->storedFieldsKeepingSelf(row: $rows[0]);
-		$stamp  = (string)($fields['@self']['organisation'] ?? '');
-		if ($stamp !== '' && $stamp !== $organisationUuid) {
-			throw new RuntimeException('The visible organisation settings belong to another organisation; nothing is changed.');
-		}
-
+		$this->assertOwnStamp(fields: $fields, organisationUuid: $organisationUuid);
 		unset($fields['@self']);
 
 		return $fields;
 	}//end storedObject()
+
+	/**
+	 * Refuses stored fields stamped with another organisation.
+	 *
+	 * @param array<string, mixed> $fields           The stored fields with `@self`.
+	 * @param string               $organisationUuid The active organisation.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the stamp is another organisation.
+	 */
+	private function assertOwnStamp(array $fields, string $organisationUuid): void {
+		$stamp = (string)($fields['@self']['organisation'] ?? '');
+		if ($stamp !== '' && $stamp !== $organisationUuid) {
+			throw new RuntimeException('The visible organisation settings belong to another organisation; nothing is changed.');
+		}
+	}//end assertOwnStamp()
 
 	/**
 	 * Whether a huisstijl is readable by the caller, inside the active organisation.
