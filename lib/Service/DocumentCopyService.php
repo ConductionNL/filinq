@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\FinalDocumentRepositoryInterface;
 use OCA\Filinq\Exception\DomainLinkRefusedException;
 use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
@@ -76,7 +77,7 @@ class DocumentCopyService {
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
 	 * @param IntakeAuthorizationGate       $recordGate     Whether the caller may write the target.
 	 * @param IntakeFilePlacement           $placement      The folder a record owns.
-	 * @param FinalDocumentRepository       $documents      The document records.
+	 * @param FinalDocumentRepositoryInterface       $documents      The document records.
 	 * @param IRootFolder                   $rootFolder     The file tree.
 	 * @param IUserSession                  $userSession    The current session.
 	 * @param AuditTrailMapper              $auditTrail     OpenRegister's audit trail.
@@ -88,7 +89,7 @@ class DocumentCopyService {
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly IntakeAuthorizationGate $recordGate,
 		private readonly IntakeFilePlacement $placement,
-		private readonly FinalDocumentRepository $documents,
+		private readonly FinalDocumentRepositoryInterface $documents,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly AuditTrailMapper $auditTrail,
@@ -131,7 +132,7 @@ class DocumentCopyService {
 			record: [
 				'fileId' => (int)$copy->getId(),
 				'documentName' => $copy->getName(),
-				'status' => FinalDocumentRepository::STATUS_DRAFT,
+				'status' => FinalDocumentRepositoryInterface::STATUS_DRAFT,
 				'domains' => [$target],
 				'createdByUser' => $uid,
 			]

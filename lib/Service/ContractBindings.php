@@ -82,6 +82,7 @@ use OCA\Filinq\Kernel\Contracts\ExternalMountValidatorInterface;
 use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentCorrectionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentFailureMapperInterface;
+use OCA\Filinq\Kernel\Contracts\FinalDocumentRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentUnfreezeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
@@ -303,6 +304,7 @@ final class ContractBindings {
 		FileListingServiceInterface::class             => FileListingService::class,
 		FinalDocumentCorrectionServiceInterface::class => FinalDocumentCorrectionService::class,
 		FinalDocumentFailureMapperInterface::class     => FinalDocumentFailureMapper::class,
+		FinalDocumentRepositoryInterface::class        => FinalDocumentRepository::class,
 		FinalDocumentServiceInterface::class           => FinalDocumentService::class,
 		FinalDocumentUnfreezeServiceInterface::class   => FinalDocumentUnfreezeService::class,
 		FinancialExtractionServiceInterface::class     => FinancialExtractionService::class,

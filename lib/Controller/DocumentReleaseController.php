@@ -70,32 +70,28 @@ class DocumentReleaseController extends Controller {
 	/**
 	 * Release one document on a record to the person who requested it.
 	 *
-	 * @param string $uuid       The document record.
-	 * @param string $register   The record's register.
-	 * @param string $schema     The record's schema.
-	 * @param string $id         The record's id.
-	 * @param string $contactRef The requester's contact reference.
-	 * @param string $kind       `decision` or `document`.
+	 * The body names the record (`register`, `schema`, `id`), the requester's
+	 * contact reference (`contactRef`) and the kind, `decision` or `document`
+	 * (`kind`, default `document`).
+	 *
+	 * @param string $uuid The document record.
 	 *
 	 * @return JSONResponse The release; 403 when the caller may not write the record.
 	 *
 	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
 	 */
 	#[NoAdminRequired]
-	public function release(
-		string $uuid,
-		string $register = '',
-		string $schema = '',
-		string $id = '',
-		string $contactRef = '',
-		string $kind = 'document'
-	): JSONResponse {
+	public function release(string $uuid): JSONResponse {
 		return $this->answer(
 			handler: fn (): array => $this->releases->release(
 				uuid: $uuid,
-				record: ['register' => $register, 'schema' => $schema, 'id' => $id],
-				contactRef: $contactRef,
-				kind: $kind
+				record: [
+					'register' => (string) $this->request->getParam('register', ''),
+					'schema' => (string) $this->request->getParam('schema', ''),
+					'id' => (string) $this->request->getParam('id', ''),
+				],
+				contactRef: (string) $this->request->getParam('contactRef', ''),
+				kind: (string) $this->request->getParam('kind', 'document')
 			)
 		);
 

@@ -59,7 +59,11 @@ class DocumentReleaseControllerTest extends TestCase {
 			'decision'
 		)->willReturn(['uuid' => 'rel-1']);
 
-		$response = $this->controller(service: $service, uid: 'anna')->release(uuid: 'doc-1', register: 'zaken', schema: 'zaak', id: 'zaak-1', contactRef: 'contact-7', kind: 'decision');
+		$response = $this->controller(
+			service: $service,
+			uid: 'anna',
+			params: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1', 'contactRef' => 'contact-7', 'kind' => 'decision']
+		)->release(uuid: 'doc-1');
 
 		$this->assertSame(expected: 200, actual: $response->getStatus());
 		$this->assertSame(expected: ['uuid' => 'rel-1'], actual: $response->getData());
@@ -100,7 +104,11 @@ class DocumentReleaseControllerTest extends TestCase {
 		$service = $this->createMock(DocumentReleaseService::class);
 		$service->expects($this->never())->method('release');
 
-		$response = $this->controller(service: $service, uid: null)->release(uuid: 'doc-1', register: 'zaken', schema: 'zaak', id: 'zaak-1', contactRef: 'contact-7');
+		$response = $this->controller(
+			service: $service,
+			uid: null,
+			params: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1', 'contactRef' => 'contact-7']
+		)->release(uuid: 'doc-1');
 
 		$this->assertSame(expected: 401, actual: $response->getStatus());
 
@@ -111,10 +119,11 @@ class DocumentReleaseControllerTest extends TestCase {
 	 *
 	 * @param DocumentReleaseService $service The release double.
 	 * @param string|null            $uid     The caller, or null.
+	 * @param array<string, mixed>   $params  The request body.
 	 *
 	 * @return DocumentReleaseController The controller.
 	 */
-	private function controller(DocumentReleaseService $service, ?string $uid): DocumentReleaseController {
+	private function controller(DocumentReleaseService $service, ?string $uid, array $params = []): DocumentReleaseController {
 		$session = $this->createMock(IUserSession::class);
 		if ($uid !== null) {
 			$user = $this->createMock(IUser::class);
@@ -122,9 +131,14 @@ class DocumentReleaseControllerTest extends TestCase {
 			$session->method('getUser')->willReturn($user);
 		}
 
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			static fn (string $key, $default = null) => ($params[$key] ?? $default)
+		);
+
 		return new DocumentReleaseController(
 			appName: 'filinq',
-			request: $this->createMock(IRequest::class),
+			request: $request,
 			releases: $service,
 			userSession: $session
 		);

@@ -57,15 +57,19 @@ class DocumentCopyControllerTest extends TestCase {
 			['register' => 'zaken', 'schema' => 'zaak', 'id' => 'case-b']
 		)->willReturn(['fileId' => 99]);
 
-		$response = $this->controller(service: $service, uid: 'anna')->copy(
-			fileId: 11,
-			sourceRegister: 'zaken',
-			sourceSchema: 'zaak',
-			sourceId: 'case-a',
-			register: 'zaken',
-			schema: 'zaak',
-			id: 'case-b'
-		);
+		$response = $this->controller(
+			service: $service,
+			uid: 'anna',
+			params: [
+				'fileId'         => '11',
+				'sourceRegister' => 'zaken',
+				'sourceSchema'   => 'zaak',
+				'sourceId'       => 'case-a',
+				'register'       => 'zaken',
+				'schema'         => 'zaak',
+				'id'             => 'case-b',
+			]
+		)->copy();
 
 		$this->assertSame(expected: 200, actual: $response->getStatus());
 		$this->assertSame(expected: ['fileId' => 99], actual: $response->getData());
@@ -81,12 +85,12 @@ class DocumentCopyControllerTest extends TestCase {
 		$service = $this->createMock(DocumentCopyService::class);
 		$service->method('copy')->willThrowException(new DomainLinkRefusedException('You may not change the documents of that record.'));
 
-		$refused = $this->controller(service: $service, uid: 'anna')->copy(fileId: 11);
+		$refused = $this->controller(service: $service, uid: 'anna', params: ['fileId' => 11])->copy();
 		$this->assertSame(expected: 403, actual: $refused->getStatus());
 
 		$nobody = $this->createMock(DocumentCopyService::class);
 		$nobody->expects($this->never())->method('copy');
-		$this->assertSame(expected: 401, actual: $this->controller(service: $nobody, uid: null)->copy(fileId: 11)->getStatus());
+		$this->assertSame(expected: 401, actual: $this->controller(service: $nobody, uid: null, params: ['fileId' => 11])->copy()->getStatus());
 
 	}//end testRefusals()
 
@@ -95,10 +99,11 @@ class DocumentCopyControllerTest extends TestCase {
 	 *
 	 * @param DocumentCopyService $service The copy double.
 	 * @param string|null         $uid     The caller, or null.
+	 * @param array<string, mixed> $params  The request body.
 	 *
 	 * @return DocumentCopyController The controller.
 	 */
-	private function controller(DocumentCopyService $service, ?string $uid): DocumentCopyController {
+	private function controller(DocumentCopyService $service, ?string $uid, array $params = []): DocumentCopyController {
 		$session = $this->createMock(IUserSession::class);
 		if ($uid !== null) {
 			$user = $this->createMock(IUser::class);
@@ -106,9 +111,14 @@ class DocumentCopyControllerTest extends TestCase {
 			$session->method('getUser')->willReturn($user);
 		}
 
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			static fn (string $key, $default = null) => ($params[$key] ?? $default)
+		);
+
 		return new DocumentCopyController(
 			appName: 'filinq',
-			request: $this->createMock(IRequest::class),
+			request: $request,
 			copies: $service,
 			userSession: $session
 		);

@@ -526,7 +526,15 @@ class SigningService implements SigningServiceInterface {
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null): array {
-		return $this->signAct(requestId: $requestId, signerId: $signerId, verifiedActor: $verifiedActor, signatureData: $signatureData, onBehalfOf: null);
+		return $this->signAct(
+			act: [
+				'requestId'     => $requestId,
+				'signerId'      => $signerId,
+				'verifiedActor' => $verifiedActor,
+				'signatureData' => $signatureData,
+				'onBehalfOf'    => null,
+			]
+		);
 	}//end sign()
 
 	/**
@@ -552,23 +560,37 @@ class SigningService implements SigningServiceInterface {
 			throw new RuntimeException('A delegated signature names the signer it is for');
 		}
 
-		return $this->signAct(requestId: $requestId, signerId: $signerId, verifiedActor: null, signatureData: null, onBehalfOf: $delegator);
+		return $this->signAct(
+			act: [
+				'requestId'     => $requestId,
+				'signerId'      => $signerId,
+				'verifiedActor' => null,
+				'signatureData' => null,
+				'onBehalfOf'    => $delegator,
+			]
+		);
 	}//end signOnBehalfOf()
 
 	/**
 	 * The signing act behind sign() and signOnBehalfOf().
 	 *
-	 * @param string                    $requestId     The signing request ID
-	 * @param string                    $signerId      The signer record ID
-	 * @param array<string, mixed>|null $verifiedActor The verified external actor, or null
-	 * @param array<string, mixed>|null $signatureData Evidence for `signatureData`
-	 * @param string|null               $onBehalfOf    The signer a delegate signs for, or null
+	 * The act holds the signing request id (`requestId`), the signer record id
+	 * (`signerId`), the verified external actor or null (`verifiedActor`), the
+	 * evidence for `signatureData` or null, and the signer a delegate signs for
+	 * or null (`onBehalfOf`).
+	 *
+	 * @param array<string, mixed> $act The act.
 	 *
 	 * @return array<string, mixed> The updated signer record
 	 *
 	 * @throws RuntimeException If signing fails
 	 */
-	private function signAct(string $requestId, string $signerId, ?array $verifiedActor, ?array $signatureData, ?string $onBehalfOf): array {
+	private function signAct(array $act): array {
+		$requestId     = $act['requestId'];
+		$signerId      = $act['signerId'];
+		$verifiedActor = $act['verifiedActor'];
+		$signatureData = $act['signatureData'];
+		$onBehalfOf    = $act['onBehalfOf'];
 		[$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
 
 		// A delegated signature is refused before anything is read unless a

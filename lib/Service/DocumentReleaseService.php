@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\FinalDocumentRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentReleaseServiceInterface;
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -83,7 +84,7 @@ class DocumentReleaseService implements DocumentReleaseServiceInterface {
 	 * Constructor.
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
-	 * @param FinalDocumentRepository       $documents      The document records.
+	 * @param FinalDocumentRepositoryInterface       $documents      The document records.
 	 * @param IntakeAuthorizationGate       $recordGate     Whether the caller may write the record.
 	 * @param IUserSession                  $userSession    The current session.
 	 *
@@ -91,7 +92,7 @@ class DocumentReleaseService implements DocumentReleaseServiceInterface {
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
-		private readonly FinalDocumentRepository $documents,
+		private readonly FinalDocumentRepositoryInterface $documents,
 		private readonly IntakeAuthorizationGate $recordGate,
 		private readonly IUserSession $userSession,
 	) {

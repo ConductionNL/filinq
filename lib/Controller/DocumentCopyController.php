@@ -69,37 +69,24 @@ class DocumentCopyController extends Controller {
 	/**
 	 * Copy one file of a record to another record.
 	 *
-	 * @param int    $fileId         The file on the source record.
-	 * @param string $sourceRegister The source record's register.
-	 * @param string $sourceSchema   The source record's schema.
-	 * @param string $sourceId       The source record's id.
-	 * @param string $register       The target record's register.
-	 * @param string $schema         The target record's schema.
-	 * @param string $id             The target record's id.
+	 * The body names the file (`fileId`), the source record (`sourceRegister`,
+	 * `sourceSchema`, `sourceId`) and the target record (`register`, `schema`, `id`).
 	 *
 	 * @return JSONResponse The copy; 403 when a check refuses, and nothing is written then.
 	 *
 	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
 	 */
 	#[NoAdminRequired]
-	public function copy(
-		int $fileId = 0,
-		string $sourceRegister = '',
-		string $sourceSchema = '',
-		string $sourceId = '',
-		string $register = '',
-		string $schema = '',
-		string $id = ''
-	): JSONResponse {
+	public function copy(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
 			return new JSONResponse(data: ['error' => 'You must be logged in to copy documents.'], statusCode: Http::STATUS_UNAUTHORIZED);
 		}
 
 		try {
 			$copy = $this->copies->copy(
-				fileId: $fileId,
-				source: ['register' => $sourceRegister, 'schema' => $sourceSchema, 'id' => $sourceId],
-				target: ['register' => $register, 'schema' => $schema, 'id' => $id]
+				fileId: (int) $this->request->getParam('fileId', 0),
+				source: $this->record(prefix: 'source'),
+				target: $this->record(prefix: '')
 			);
 		} catch (DomainLinkRefusedException $e) {
 			return new JSONResponse(data: ['error' => $e->getMessage()], statusCode: Http::STATUS_FORBIDDEN);
@@ -110,4 +97,28 @@ class DocumentCopyController extends Controller {
 		return new JSONResponse(data: $copy, statusCode: Http::STATUS_OK);
 
 	}//end copy()
+
+	/**
+	 * One record reference from the request body, as register, schema and id.
+	 *
+	 * @param string $prefix 'source' for the source record, '' for the target.
+	 *
+	 * @return array{register: string, schema: string, id: string}
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+	 */
+	private function record(string $prefix): array {
+		$reference = [];
+		foreach (['register', 'schema', 'id'] as $field) {
+			$name = $field;
+			if ($prefix !== '') {
+				$name = $prefix . ucfirst($field);
+			}
+
+			$reference[$field] = (string) $this->request->getParam($name, '');
+		}
+
+		return $reference;
+
+	}//end record()
 }//end class
