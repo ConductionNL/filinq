@@ -42,7 +42,7 @@ use Throwable;
  * language) and reported as a generation warning, the same honest failure as
  * the Twig `chart()` function.
  *
- * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-003
+ * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
  */
 class OfficeChartFiller {
 

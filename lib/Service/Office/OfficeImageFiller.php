@@ -40,7 +40,7 @@ use Throwable;
  * read becomes the `[image unavailable: …]` marker plus a warning, never a
  * blank and never another user's file.
  *
- * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-008
+ * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-008
  */
 class OfficeImageFiller {
 
