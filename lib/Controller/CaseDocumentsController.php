@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Controller\Support\HandlerAnswer;
+use OCA\Filinq\Exception\DomainLinkRefusedException;
 use OCA\Filinq\Kernel\Contracts\DocumentDomainServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FlatFileListServiceInterface;
 use OCA\Filinq\Kernel\Contracts\UploadPolicyServiceInterface;
@@ -225,7 +225,15 @@ class CaseDocumentsController extends Controller {
 			return $unauthenticated;
 		}
 
-		return (new HandlerAnswer())->answer(handler: $handler);
+		try {
+			$record = $handler();
+		} catch (DomainLinkRefusedException $e) {
+			return new JSONResponse(data: ['error' => $e->getMessage()], statusCode: Http::STATUS_FORBIDDEN);
+		} catch (Throwable $e) {
+			return new JSONResponse(data: ['error' => $e->getMessage()], statusCode: Http::STATUS_BAD_REQUEST);
+		}
+
+		return new JSONResponse(data: $record, statusCode: Http::STATUS_OK);
 
 	}//end domainCall()
 

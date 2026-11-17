@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
 use Exception;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -58,6 +59,7 @@ class AnonymizationPersistenceService {
 	 * @param OpenRegisterServiceLocator $locator Resolver for OpenRegister services and mappers.
 	 * @param ConsentCrudService $consentCrud Consent CRUD service for register/schema config.
 	 * @param ConsentService $consentService Consent service for creating publication consents.
+	 * @param DocumentActionAudit|null $audit Writes the anonymisation into the source document's trail; null writes nothing.
 	 *
 	 * @return void
 	 */
@@ -66,6 +68,7 @@ class AnonymizationPersistenceService {
 		private readonly OpenRegisterServiceLocator $locator,
 		private readonly ConsentCrudService $consentCrud,
 		private readonly ConsentService $consentService,
+		private readonly ?DocumentActionAudit $audit = null,
 	) {
 
 	}//end __construct()
@@ -120,6 +123,15 @@ class AnonymizationPersistenceService {
 			if ($linkId !== null) {
 				$resultInfo['anonymizationLinkId'] = $linkId;
 			}
+
+			// The source document's own trail says it was anonymised
+			// (specify-capability-rows REQ-SCR-007). Best-effort like the
+			// link: the audit never throws for a failed write.
+			$this->audit?->record(
+				fileId: $fileId,
+				action: 'anonymised',
+				context: ['anonymizedFileId' => $object['anonymizedFileId'], 'runCount' => $object['runCount']]
+			);
 
 			$this->logger->info(
 				'Anonymisation link recorded',

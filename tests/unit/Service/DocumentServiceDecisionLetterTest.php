@@ -75,7 +75,7 @@ class DocumentServiceDecisionLetterTest extends TestCase {
 		$appConfig->method('getValueInt')->willReturnArgument(2);
 
 		$templates = $this->createMock(TemplateService::class);
-		$templates->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Besluit', 'content' => $content]);
+		$templates->method($this->matchesRegularExpression('/^get(Published)?Template$/'))->willReturn(['id' => 'tmpl-1', 'name' => 'Besluit', 'content' => $content]);
 
 		$renderer = new TemplateRenderer($logger, new ChartSvgRenderer(), new TableHtmlRenderer());
 		$rasterizer = $this->createMock(SvgRasterizer::class);
