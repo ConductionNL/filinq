@@ -12,6 +12,7 @@
         "double OpenRegisterServiceLocator",
         "double ProhibitionPolicyService",
         "double RedactionOutputGuard",
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -21,6 +22,7 @@
         "double ConfidentialityLabelService",
         "double ContainerInterface",
         "double CustomDictionaryDetectionRunner",
+        "double DetectionProviderResolver",
         "double DocumentAnonymizeRunner",
         "double EntityDetectionService",
         "double FileEntityStatsService",
@@ -121,11 +123,13 @@
         null,
         null,
         null,
+        null,
         {
             "distinct objects built by the class": 0
         }
     ],
     "DocumentService given": [
+        "double CaseSystemDeliveryService",
         "double DataResolverService",
         "double DocumentJobStore",
         "double DocumentRenderPipeline",
@@ -151,6 +155,21 @@
                         "double IUserSession",
                         "double LoggerInterface"
                     ]
+                },
+                {
+                    "built OCA\\Filinq\\Service\\Grounds\\RefusalGroundsLegacyMap": [
+                        null,
+                        null
+                    ]
+                },
+                {
+                    "built OCA\\Filinq\\Service\\Grounds\\RefusalGroundsResolver": [
+                        "OCA\\Dossiq\\Woo\\WooRefusalGrounds",
+                        "double ContainerInterface",
+                        "double IAppManager",
+                        "double LoggerInterface",
+                        null
+                    ]
                 }
             ]
         },
@@ -160,6 +179,8 @@
                 {
                     "built OCA\\Filinq\\Service\\BaseLabelResolver": [
                         "built OCA\\Filinq\\Service\\DossierObjectRepository",
+                        "built OCA\\Filinq\\Service\\Grounds\\RefusalGroundsLegacyMap",
+                        "built OCA\\Filinq\\Service\\Grounds\\RefusalGroundsResolver",
                         "double LoggerInterface"
                     ]
                 },
@@ -204,7 +225,7 @@
             ]
         },
         {
-            "distinct objects built by the class": 4
+            "distinct objects built by the class": 6
         }
     ],
     "DossierSummaryDataService given": [

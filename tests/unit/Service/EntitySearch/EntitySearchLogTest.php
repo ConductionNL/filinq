@@ -27,6 +27,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * A search row carries a digest, never the text; a detail row the entity;
@@ -57,7 +58,10 @@ class EntitySearchLogTest extends TestCase {
 	private function log(mixed $answer = ['id' => 1]): EntitySearchLog {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true) use ($answer): mixed {
+			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true) use ($answer): mixed {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
 				$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema, '_rbac' => $_rbac];
 				if ($answer instanceof \Throwable) {
 					throw $answer;

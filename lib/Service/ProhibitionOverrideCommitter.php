@@ -31,6 +31,9 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -199,10 +202,14 @@ class ProhibitionOverrideCommitter {
 		try {
 			$objectService->saveObject(
 				object: $auditEntry,
-				register: self::OVERRIDE_AUDIT_REGISTER,
-				schema: self::OVERRIDE_AUDIT_SCHEMA,
-				_rbac: false,
-				_unowned: true
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: self::OVERRIDE_AUDIT_REGISTER,
+							schema: self::OVERRIDE_AUDIT_SCHEMA
+						),
+					actor: new SaveActor(unowned: true)
+				),
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

@@ -50,6 +50,8 @@ use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The pipeline from a document to OpenCatalogi.
@@ -121,7 +123,10 @@ class PublicationPipelineServiceTest extends TestCase {
 	private function pipeline(): PublicationPipelineService {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions()): array {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
 				$this->saves[] = [$schema, $object];
 				$uuid = $uuid ?? ($schema . '-' . (count($this->rows[$schema] ?? []) + 1));
 				$this->rows[$schema][$uuid] = array_merge($object, ['uuid' => $uuid]);
@@ -129,7 +134,7 @@ class PublicationPipelineServiceTest extends TestCase {
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			fn (string $id = '', ?string $register = null, ?string $schema = null): ?array => $this->rows[$schema][$id] ?? null
+			fn (string $id = '', ?ObjectFindOptions $options = null): ?array => $this->rows[($options?->schema)][$id] ?? null
 		);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
 			fn (string $registerSlug, string $schemaSlug, array $filters = []): array => array_values(
@@ -254,7 +259,7 @@ class PublicationPipelineServiceTest extends TestCase {
 
 		return $pipeline->updateMetadata(
 			record: $record,
-			metadata: ['officieleTitel' => 'Besluit 2025-017', 'wooCategory' => 'c_8c840238', 'documentsoort' => 'besluit', 'publicatiedatum' => '2026-09-29'],
+			metadata: ['officieleTitel' => 'Besluit 2025-017', 'wooCategory' => 'infocat009', 'documentsoort' => 'besluit', 'publicatiedatum' => '2026-09-29'],
 			actor: 'anna'
 		);
 
@@ -439,13 +444,96 @@ class PublicationPipelineServiceTest extends TestCase {
 		$pipeline = $this->pipeline();
 		$record = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
 
-		$this->assertSame('c_8c840238', $pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'c_8c840238'], actor: 'anna')['wooCategory']);
+		$this->assertSame('infocat009', $pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'infocat009'], actor: 'anna')['wooCategory']);
 
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionCode(400);
 		$pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'besluiten'], actor: 'anna');
 
 	}//end testTheCategoryComesFromOpenCatalogisList()
+
+	/**
+	 * The hand-off files the publication under OpenCatalogi's code for its category.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.2
+	 */
+	public function testTheHandOffFilesTheCategoryCode(): void {
+		$pipeline = $this->pipeline();
+
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+
+		$this->assertSame('infocat009', $this->rows['publication'][$record['endpointPublicationRef']]['wooCategory']);
+
+	}//end testTheHandOffFilesTheCategoryCode()
+
+	/**
+	 * A record that still holds the TOOI basename hands off under the code of that category.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.2
+	 */
+	public function testARecordFromBeforeTheCodesIsTranslated(): void {
+		$pipeline = $this->pipeline();
+		$record = $this->readyRecord(pipeline: $pipeline);
+		$record['wooCategory'] = 'c_8c840238';
+
+		$record = $pipeline->handoff(record: $record, actor: 'anna');
+
+		$this->assertSame('infocat009', $this->rows['publication'][$record['endpointPublicationRef']]['wooCategory']);
+		$this->assertSame('c_8c840238', $record['wooCategory'], 'the stored record is not migrated');
+
+	}//end testARecordFromBeforeTheCodesIsTranslated()
+
+	/**
+	 * A category that is neither a code nor a known basename blocks the hand-off and writes nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.2
+	 */
+	public function testAnUnknownCategoryBlocksTheHandOff(): void {
+		$pipeline = $this->pipeline();
+		$record = $this->readyRecord(pipeline: $pipeline);
+		$record['wooCategory'] = 'notacategory';
+
+		try {
+			$pipeline->handoff(record: $record, actor: 'anna');
+			$this->fail('An unknown category must not be handed off');
+		} catch (PublicationNotReadyException $e) {
+			$this->assertSame(['Unknown Woo category'], $e->getReasons());
+		}
+
+		$this->assertArrayNotHasKey('publication', $this->rows);
+		$this->assertSame([], $this->attached);
+
+	}//end testAnUnknownCategoryBlocksTheHandOff()
+
+	/**
+	 * Changing the category of a handed-off record moves its publication; a record not handed off moves nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.3
+	 */
+	public function testChangingTheCategoryMovesThePublication(): void {
+		$pipeline = $this->pipeline();
+		$draft = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$pipeline->updateMetadata(record: $draft, metadata: ['wooCategory' => 'infocat001'], actor: 'anna');
+		$this->assertArrayNotHasKey('publication', $this->rows);
+
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+		$ref = $record['endpointPublicationRef'];
+
+		$pipeline->updateMetadata(record: $record, metadata: ['officieleTitel' => 'Besluit 2025-017 (herzien)'], actor: 'anna');
+		$this->assertSame('infocat009', $this->rows['publication'][$ref]['wooCategory'], 'no category in the edit, no move');
+
+		$pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'infocat001'], actor: 'anna');
+		$this->assertSame('infocat001', $this->rows['publication'][$ref]['wooCategory']);
+
+	}//end testChangingTheCategoryMovesThePublication()
 
 	/**
 	 * Withdrawing needs a reason, sets the depublication date and never deletes.
