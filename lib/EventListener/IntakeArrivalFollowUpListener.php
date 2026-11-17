@@ -93,14 +93,14 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 	}//end handle()
 
 	/**
-	 * Whether the event is an object creation that carries its object.
+	 * Whether the event is an object creation.
 	 *
 	 * @param Event $event The event.
 	 *
 	 * @return bool
 	 */
 	private static function isObjectCreated(Event $event): bool {
-		return is_a($event, 'OCA\\OpenRegister\\Event\\ObjectCreatedEvent') === true && method_exists($event, 'getObject') === true;
+		return is_a($event, 'OCA\\OpenRegister\\Event\\ObjectCreatedEvent') === true;
 	}//end isObjectCreated()
 
 	/**
@@ -111,6 +111,10 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 	 * @return object|null The object, or null when it is not an intake document.
 	 */
 	private function intakeObject(Event $event): object|null {
+		if (method_exists($event, 'getObject') === false) {
+			return null;
+		}
+
 		$object = $event->getObject();
 		if (is_object($object) === false) {
 			return null;
