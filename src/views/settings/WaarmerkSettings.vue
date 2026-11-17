@@ -104,14 +104,7 @@ import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import {
-	NcButton,
-	NcLoadingIcon,
-	NcNoteCard,
-	NcSelect,
-	NcSettingsSection,
-	NcTextField,
-} from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect, NcSettingsSection, NcTextField } from '@nextcloud/vue'
 
 // The waarmerk certificate panel (document-waarmerk-certification
 // REQ-DDWMK-001). It talks to its own admin-only endpoint. The server never
@@ -119,14 +112,7 @@ import {
 // cleared after saving.
 export default {
 	name: 'WaarmerkSettings',
-	components: {
-		NcButton,
-		NcLoadingIcon,
-		NcNoteCard,
-		NcSelect,
-		NcSettingsSection,
-		NcTextField,
-	},
+	components: { NcButton, NcLoadingIcon, NcNoteCard, NcSelect, NcSettingsSection, NcTextField },
 
 	data() {
 		return {

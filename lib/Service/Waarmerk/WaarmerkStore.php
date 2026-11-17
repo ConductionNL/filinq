@@ -132,13 +132,7 @@ class WaarmerkStore {
 			return null;
 		}
 
-		foreach ($this->search(filters: []) as $row) {
-			if ($row['uuid'] === $uuid) {
-				return $row;
-			}
-		}
-
-		return null;
+		return self::firstWith(rows: $this->search(filters: []), match: ['uuid' => $uuid]);
 
 	}//end find()
 
@@ -156,15 +150,34 @@ class WaarmerkStore {
 			return null;
 		}
 
-		foreach ($this->search(filters: ['verificationCode' => $code]) as $row) {
-			if (hash_equals((string) ($row['verificationCode'] ?? ''), $code) === true) {
-				return $row;
+		return self::firstWith(rows: $this->search(filters: ['verificationCode' => $code]), match: ['verificationCode' => $code]);
+
+	}//end findByCode()
+
+	/**
+	 * The first row whose fields equal every value given, compared in constant time.
+	 *
+	 * @param array<int, array<string, mixed>> $rows  The rows.
+	 * @param array<string, string>            $match Field => value.
+	 *
+	 * @return array<string, mixed>|null
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-waarmerk-is-publicly-verifiable-fail-closed-req-ddwmk-004
+	 */
+	private static function firstWith(array $rows, array $match): ?array {
+		foreach ($rows as $row) {
+			foreach ($match as $field => $value) {
+				if (hash_equals((string) ($row[$field] ?? ''), $value) === false) {
+					continue 2;
+				}
 			}
+
+			return $row;
 		}
 
 		return null;
 
-	}//end findByCode()
+	}//end firstWith()
 
 	/**
 	 * Seals matching exact field filters (re-checked locally).

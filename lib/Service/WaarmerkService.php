@@ -26,6 +26,7 @@ use DateTimeInterface;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
 use OCA\Filinq\Kernel\Contracts\WaarmerkServiceInterface;
 use OCA\Filinq\Kernel\SealedArtifact;
+use OCA\Filinq\Service\Waarmerk\WaarmerkCertificate;
 use OCA\Filinq\Service\Waarmerk\WaarmerkCms;
 use OCA\Filinq\Service\Waarmerk\WaarmerkKeyResolver;
 use OCA\Filinq\Service\Waarmerk\WaarmerkSettings;
@@ -106,59 +107,133 @@ class WaarmerkService implements WaarmerkServiceInterface {
 		string $sealType = 'waarmerk',
 		?string $anonymizationLinkId = null,
 	): SealedArtifact {
-		if (in_array($sealType, self::SEAL_TYPES, true) === false) {
-			throw new WaarmerkRefusedException(message: 'Unknown seal type', status: 400);
-		}
-
-		$certificate = $this->settings->certificate();
-		if ($certificate === null) {
-			throw new WaarmerkRefusedException(message: 'No organisation certificate is configured for the waarmerk', status: 503);
-		}
-
+		self::assertSealType(sealType: $sealType);
 		$now = $this->time->getDateTime();
-		if ($certificate->isExpiredAt(at: $now) === true) {
-			throw new WaarmerkRefusedException(message: 'The organisation certificate has expired; sealing is refused', status: 422);
-		}
+		$certificate = $this->usableCertificate(at: $now);
 
 		// Before composing anything: an unresolvable key leaves no artifact at all.
 		$key = $this->keys->resolve(certificate: $certificate);
 
-		$code = $this->verificationCode();
-		$sealedAt = $now->format(DateTimeInterface::ATOM);
-		$sealed = $this->composer->compose(
-			sourcePdf: $pdf,
-			stamp: [
-				'organisation' => $certificate->organisation,
-				'documentName' => $documentName,
-				'sealedAt' => $sealedAt,
-				'verificationCode' => $code,
-				'verificationUrl' => $this->urls->linkToRouteAbsolute('filinq.waarmerk.verifyPage', ['code' => $code]),
-			]
-		);
+		$seal = [
+			'documentName' => $documentName,
+			'sealType' => $sealType,
+			'verificationCode' => $this->verificationCode(),
+			'sealedAt' => $now->format(DateTimeInterface::ATOM),
+			'sealedBy' => $userId,
+			'anonymizationLinkId' => $anonymizationLinkId,
+		];
+		$sealed = $this->stamped(pdf: $pdf, seal: $seal + ['organisation' => $certificate->organisation]);
 
 		$hash = hash('sha256', $sealed);
 		$signature = $this->cms->sign(hash: $hash, certificatePem: $certificate->pem, keyPem: $key);
 		unset($key);
 
-		$record = [
-			'documentName' => mb_substr($documentName, 0, 255),
-			'documentHash' => $hash,
-			'sealType' => $sealType,
-			'cmsSignature' => $signature,
-			'certificateFingerprint' => $certificate->fingerprint,
-			'certificateSubject' => mb_substr($certificate->subject, 0, 512),
-			'verificationCode' => $code,
-			'sealedAt' => $sealedAt,
-			'sealedBy' => mb_substr($userId, 0, 255),
-			'status' => 'active',
-		];
-		if ($anonymizationLinkId !== null && $anonymizationLinkId !== '') {
-			$record['anonymizationLinkId'] = $anonymizationLinkId;
-		}
+		$seal['documentHash'] = $hash;
+		$seal['cmsSignature'] = $signature;
 
-		return new SealedArtifact(pdf: $sealed, record: $record);
+		return new SealedArtifact(pdf: $sealed, record: self::sealRecord(seal: $seal, certificate: $certificate));
 
 	}//end prepare()
+
+	/**
+	 * Refuse a seal type the service does not know.
+	 *
+	 * @param string $sealType The requested seal type.
+	 *
+	 * @return void
+	 *
+	 * @throws WaarmerkRefusedException 400 for an unknown seal type.
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
+	 */
+	private static function assertSealType(string $sealType): void {
+		if (in_array($sealType, self::SEAL_TYPES, true) === false) {
+			throw new WaarmerkRefusedException(message: 'Unknown seal type', status: 400);
+		}
+
+	}//end assertSealType()
+
+	/**
+	 * The configured organisation certificate, when it is valid at the moment given.
+	 *
+	 * @param DateTimeInterface $at The sealing moment.
+	 *
+	 * @return WaarmerkCertificate
+	 *
+	 * @throws WaarmerkRefusedException 503 without a certificate, 422 with an expired one.
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
+	 */
+	private function usableCertificate(DateTimeInterface $at): WaarmerkCertificate {
+		$certificate = $this->settings->certificate();
+		if ($certificate === null) {
+			throw new WaarmerkRefusedException(message: 'No organisation certificate is configured for the waarmerk', status: 503);
+		}
+
+		if ($certificate->isExpiredAt(at: $at) === true) {
+			throw new WaarmerkRefusedException(message: 'The organisation certificate has expired; sealing is refused', status: 422);
+		}
+
+		return $certificate;
+
+	}//end usableCertificate()
+
+	/**
+	 * The PDF with the visible stamp of a seal composed onto it.
+	 *
+	 * @param string               $pdf  The PDF bytes to seal.
+	 * @param array<string, mixed> $seal The organisation, document name, moment and verification code.
+	 *
+	 * @return string The stamped PDF bytes.
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
+	 */
+	private function stamped(string $pdf, array $seal): string {
+		$code = (string)$seal['verificationCode'];
+
+		return $this->composer->compose(
+			sourcePdf: $pdf,
+			stamp: [
+				'organisation' => $seal['organisation'],
+				'documentName' => $seal['documentName'],
+				'sealedAt' => $seal['sealedAt'],
+				'verificationCode' => $code,
+				'verificationUrl' => $this->urls->linkToRouteAbsolute('filinq.waarmerk.verifyPage', ['code' => $code]),
+			]
+		);
+
+	}//end stamped()
+
+	/**
+	 * The write-once record of a signed seal.
+	 *
+	 * @param array<string, mixed> $seal        The seal's fields, its hash and its signature.
+	 * @param WaarmerkCertificate  $certificate The certificate it was signed with.
+	 *
+	 * @return array<string, mixed> The record.
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
+	 */
+	private static function sealRecord(array $seal, WaarmerkCertificate $certificate): array {
+		$record = [
+			'documentName' => mb_substr((string)$seal['documentName'], 0, 255),
+			'documentHash' => $seal['documentHash'],
+			'sealType' => $seal['sealType'],
+			'cmsSignature' => $seal['cmsSignature'],
+			'certificateFingerprint' => $certificate->fingerprint,
+			'certificateSubject' => mb_substr($certificate->subject, 0, 512),
+			'verificationCode' => $seal['verificationCode'],
+			'sealedAt' => $seal['sealedAt'],
+			'sealedBy' => mb_substr((string)$seal['sealedBy'], 0, 255),
+			'status' => 'active',
+		];
+		if ($seal['anonymizationLinkId'] !== null && $seal['anonymizationLinkId'] !== '') {
+			$record['anonymizationLinkId'] = $seal['anonymizationLinkId'];
+		}
+
+		return $record;
+
+	}//end sealRecord()
 
 	/**
 	 * Store the write-once record of a sealed artifact the caller has written.
