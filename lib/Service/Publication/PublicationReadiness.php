@@ -127,13 +127,29 @@ class PublicationReadiness {
 		$accessible = $this->isAccessible(record: $record);
 
 		return ($record['withheld'] ?? false) !== true
-			&& ($record['entitiesReviewed'] ?? false) === true
-			&& ($record['consentClear'] ?? false) === true
-			&& ($record['prohibitionsClear'] ?? false) === true
+			&& self::checksPassed(record: $record) === true
 			&& $accessible === true
 			&& PdfUaReadinessCheck::lets(gate: (string) ($record['pdfUaGate'] ?? PdfUaReadinessCheck::GATE_CLEAR)) === true;
 
 	}//end isReady()
+
+	/**
+	 * Whether the review, consent and prohibition checks all passed.
+	 *
+	 * @param array<string, mixed> $record An evaluated record
+	 *
+	 * @return bool True when each of the three is true.
+	 */
+	private static function checksPassed(array $record): bool {
+		foreach (['entitiesReviewed', 'consentClear', 'prohibitionsClear'] as $check) {
+			if (($record[$check] ?? false) !== true) {
+				return false;
+			}
+		}
+
+		return true;
+
+	}//end checksPassed()
 
 	/**
 	 * The consent and prohibition verdicts.

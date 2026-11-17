@@ -33,6 +33,25 @@ function base(fileId) {
 }
 
 /**
+ * The warning for images the extract run did not look at.
+ *
+ * @param {object} skipped The extract answer's imageDetectionSkipped.
+ * @return {string} The warning.
+ */
+function skippedImagesWarning(skipped) {
+	if (skipped.reason === 'backend_unavailable') {
+		return t(
+			'filinq',
+			'This document contains images, and no image detection is available here, so the images were not checked for personal data. Review them by hand.',
+		)
+	}
+	return t(
+		'filinq',
+		'The images in this document could not be checked for personal data. Review them by hand.',
+	)
+}
+
+/**
  * The warning for the image content of an extract answer.
  *
  * @param {object} data The extract endpoint's answer.
@@ -43,18 +62,8 @@ export function imageExtractionWarning(data) {
 	if (!data) {
 		return null
 	}
-	const skipped = data.imageDetectionSkipped
-	if (skipped && skipped.reason === 'backend_unavailable') {
-		return t(
-			'filinq',
-			'This document contains images, and no image detection is available here, so the images were not checked for personal data. Review them by hand.',
-		)
-	}
-	if (skipped) {
-		return t(
-			'filinq',
-			'The images in this document could not be checked for personal data. Review them by hand.',
-		)
+	if (data.imageDetectionSkipped) {
+		return skippedImagesWarning(data.imageDetectionSkipped)
 	}
 	if (data.objectDetection === 'not-run') {
 		return t(
@@ -94,6 +103,20 @@ export function imageRedactionWarning(result) {
 export function applyImageFlags(entry, data) {
 	entry.imageWarning = imageExtractionWarning(data)
 	return Boolean(data && data.imageDetectionSkipped)
+}
+
+/**
+ * Copy the image redaction state of an anonymise answer onto a queue entry.
+ *
+ * @param {object} entry The queue entry.
+ * @param {object} data The anonymise endpoint's answer.
+ * @return {void}
+ * @spec openspec/changes/image-redaction/tasks.md#task-4.2
+ */
+export function applyImageRedactionResult(entry, data) {
+	// Image content the seam did not burn (image-redaction REQ-DDIMR-006).
+	entry.imageRedactionPending = data.imageRedactionPending === true
+	entry.burnedRegionCount = data.burnedRegionCount ?? null
 }
 
 /**

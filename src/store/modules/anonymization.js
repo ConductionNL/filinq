@@ -39,7 +39,7 @@ import { defineStore } from 'pinia'
 import { applyDetectionNotice } from '../../services/detectionProvider.js'
 import { extractDocumentText } from '../../services/fileViewerService.js'
 import { FOUR_EYES_REASONS } from '../../services/fourEyes.js'
-import { applyImageFlags } from '../../services/imageRedaction.js'
+import { applyImageFlags, applyImageRedactionResult } from '../../services/imageRedaction.js'
 import { applyOcrFlags } from '../../services/ocr.js'
 import {
 	markChecked,
@@ -1034,9 +1034,7 @@ function applyAnonymizeResult(entry, data) {
 	entry.pseudonymisation = data.pseudonymisation || null
 	entry.structurePreservation = data.structurePreservation || null
 	entry.sanitizationReport = data.sanitizationReport || null
-	// Image content the seam did not burn (image-redaction REQ-DDIMR-006).
-	entry.imageRedactionPending = data.imageRedactionPending === true
-	entry.burnedRegionCount = data.burnedRegionCount ?? null
+	applyImageRedactionResult(entry, data)
 	entry.reanonymize = false
 	entry.status = 'completed'
 }

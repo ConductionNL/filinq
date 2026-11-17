@@ -184,6 +184,35 @@ class ImageRedactionService {
 	 * @spec openspec/changes/image-redaction/tasks.md#task-3.2
 	 */
 	public function attachRegions(array $entities, array $regions): array {
+		$byRelation = self::relationIndex(entities: $entities);
+		foreach ($regions as $region) {
+			$box = ['page' => ($region['page'] ?? null)] + (array) ($region['box'] ?? []);
+			$relation = (string) ($region['relationId'] ?? '');
+			$index = self::indexOf(byRelation: $byRelation, relation: $relation);
+			if ($index !== null) {
+				$entities[$index]['origin'] = 'image';
+				$entities[$index]['boxes'] = array_merge((array) ($entities[$index]['boxes'] ?? []), [$box]);
+				continue;
+			}
+
+			$entities[] = self::regionRow(region: $region, box: $box);
+			if ($relation !== '') {
+				$byRelation[$relation] = (count($entities) - 1);
+			}
+		}
+
+		return $entities;
+
+	}//end attachRegions()
+
+	/**
+	 * The index of every entity row by its relation id.
+	 *
+	 * @param list<array<string, mixed>> $entities The rows.
+	 *
+	 * @return array<string, int> Row index per relation id.
+	 */
+	private static function relationIndex(array $entities): array {
 		$byRelation = [];
 		foreach ($entities as $index => $entity) {
 			$relation = ($entity['relationId'] ?? null);
@@ -192,35 +221,50 @@ class ImageRedactionService {
 			}
 		}
 
-		foreach ($regions as $region) {
-			$box = ['page' => ($region['page'] ?? null)] + (array) ($region['box'] ?? []);
-			$relation = (string) ($region['relationId'] ?? '');
-			if ($relation !== '' && isset($byRelation[$relation]) === true) {
-				$index = $byRelation[$relation];
-				$entities[$index]['origin'] = 'image';
-				$entities[$index]['boxes'] = array_merge((array) ($entities[$index]['boxes'] ?? []), [$box]);
-				continue;
-			}
+		return $byRelation;
 
-			// The shape EntityDetectionService::normalizeEntities() gives a text finding.
-			$entities[] = [
-				'type' => (string) ($region['entityType'] ?? ''),
-				'value' => '',
-				'confidence' => (float) ($region['confidence'] ?? 0.0),
-				'relationId' => ($region['relationId'] ?? null),
-				'bases' => null,
-				'skipAnonymization' => false,
-				'origin' => 'image',
-				'boxes' => [$box],
-			];
-			if ($relation !== '') {
-				$byRelation[$relation] = (count($entities) - 1);
-			}
-		}//end foreach
+	}//end relationIndex()
 
-		return $entities;
+	/**
+	 * The row index a region's relation id points at, or null.
+	 *
+	 * @param array<string, int> $byRelation Row index per relation id.
+	 * @param string             $relation   The region's relation id, '' when it has none.
+	 *
+	 * @return int|null The index.
+	 */
+	private static function indexOf(array $byRelation, string $relation): ?int {
+		if ($relation === '') {
+			return null;
+		}
 
-	}//end attachRegions()
+		return ($byRelation[$relation] ?? null);
+
+	}//end indexOf()
+
+	/**
+	 * A new entity row for a region no text finding matched.
+	 *
+	 * The shape EntityDetectionService::normalizeEntities() gives a text finding.
+	 *
+	 * @param array<string, mixed> $region The seam's region.
+	 * @param array<string, mixed> $box    The region's page and box.
+	 *
+	 * @return array<string, mixed> The row.
+	 */
+	private static function regionRow(array $region, array $box): array {
+		return [
+			'type' => (string) ($region['entityType'] ?? ''),
+			'value' => '',
+			'confidence' => (float) ($region['confidence'] ?? 0.0),
+			'relationId' => ($region['relationId'] ?? null),
+			'bases' => null,
+			'skipAnonymization' => false,
+			'origin' => 'image',
+			'boxes' => [$box],
+		];
+
+	}//end regionRow()
 
 	/**
 	 * The anonymise fields: whether image content is still pending, and what was burned.
@@ -240,19 +284,34 @@ class ImageRedactionService {
 	public function anonymizeFields(File $file, array $ocrFields = []): array {
 		$decided = $this->seam->decidedRegionCount(file: $file);
 		$standalone = in_array((string) $file->getMimeType(), DocumentPageCounter::IMAGE_TYPES, true);
-		if ($standalone === false && $decided === 0 && $this->isImageBearing(file: $file, ocrFields: $ocrFields) === false) {
+		if ($this->hasImageContent(file: $file, standalone: $standalone, decided: $decided, ocrFields: $ocrFields) === false) {
 			return [];
 		}
 
-		if ($this->seam->available() === false) {
-			return ['imageRedactionPending' => true, 'burnedRegionCount' => 0];
-		}
-
-		if ($standalone === true) {
+		if ($standalone === true && $this->seam->available() === true) {
 			return ['imageRedactionPending' => false, 'burnedRegionCount' => $decided];
 		}
 
 		return ['imageRedactionPending' => true, 'burnedRegionCount' => 0];
 
 	}//end anonymizeFields()
+
+	/**
+	 * Whether a file carries image content an anonymise run must account for.
+	 *
+	 * @param File                 $file       The source file.
+	 * @param bool                 $standalone Whether the file is a standalone image.
+	 * @param int                  $decided    The decided regions the seam holds for it.
+	 * @param array<string, mixed> $ocrFields  What the OCR fallback reported, when known.
+	 *
+	 * @return bool True for a standalone image, a file with decided regions, or an image-bearing file.
+	 */
+	private function hasImageContent(File $file, bool $standalone, int $decided, array $ocrFields): bool {
+		if ($standalone === true || $decided > 0) {
+			return true;
+		}
+
+		return $this->isImageBearing(file: $file, ocrFields: $ocrFields);
+
+	}//end hasImageContent()
 }//end class

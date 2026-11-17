@@ -164,6 +164,37 @@ class ImageSeamGateway {
 		}
 
 		$seam = $this->locator->get(className: self::SEAM_CLASS);
+		$values = $this->regionValues(file: $file, regions: $regions, bases: $bases);
+
+		try {
+			$output = $seam->redactImage(file: $file, regions: $values);
+		} catch (Throwable $e) {
+			throw new ScopeDecisionRefusedException(
+				message: 'OpenRegister could not burn these pages, so nothing was written: ' . $e->getMessage(),
+				previous: $e
+			);
+		}
+
+		if (($output instanceof File) === false) {
+			throw new ScopeDecisionRefusedException(message: 'OpenRegister wrote no redacted file, so nothing was written.');
+		}
+
+		return $output;
+
+	}//end burn()
+
+	/**
+	 * The seam's region values for the regions to burn.
+	 *
+	 * A standalone image has no pages, so its regions carry none.
+	 *
+	 * @param File                                                                    $file    The source document.
+	 * @param list<array{page: int, box: array{x: float, y: float, w: float, h: float}}> $regions The regions.
+	 * @param list<string>                                                            $bases   The grounds, recorded as the source.
+	 *
+	 * @return list<object> The region values.
+	 */
+	private function regionValues(File $file, array $regions, array $bases): array {
 		$standalone = in_array((string) $file->getMimeType(), constant(self::SEAM_CLASS . '::STANDALONE_TYPES'), true);
 		$regionClass = self::REGION_CLASS;
 		$values = [];
@@ -182,20 +213,7 @@ class ImageSeamGateway {
 			);
 		}
 
-		try {
-			$output = $seam->redactImage(file: $file, regions: $values);
-		} catch (Throwable $e) {
-			throw new ScopeDecisionRefusedException(
-				message: 'OpenRegister could not burn these pages, so nothing was written: ' . $e->getMessage(),
-				previous: $e
-			);
-		}
+		return $values;
 
-		if (($output instanceof File) === false) {
-			throw new ScopeDecisionRefusedException(message: 'OpenRegister wrote no redacted file, so nothing was written.');
-		}
-
-		return $output;
-
-	}//end burn()
+	}//end regionValues()
 }//end class

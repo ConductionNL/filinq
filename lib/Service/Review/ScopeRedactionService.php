@@ -279,23 +279,12 @@ class ScopeRedactionService {
 	 * @throws ScopeDecisionRefusedException When there is no ground.
 	 */
 	private function basesOf(array $input): array {
-		$bases = [];
 		$raw = $input['bases'] ?? [];
 		if (is_array($raw) === false) {
 			$raw = [];
 		}
 
-		foreach ($raw as $basis) {
-			if (is_scalar($basis) === false) {
-				continue;
-			}
-
-			$basis = trim((string) $basis);
-			if ($basis !== '' && in_array($basis, $bases, true) === false) {
-				$bases[] = $basis;
-			}
-		}
-
+		$bases = self::uniqueGrounds(raw: $raw);
 		if ($bases === []) {
 			throw new ScopeDecisionRefusedException(message: 'A redaction needs at least one ground.');
 		}
@@ -303,6 +292,26 @@ class ScopeRedactionService {
 		return $bases;
 
 	}//end basesOf()
+
+	/**
+	 * The scalar grounds of a list, trimmed, without empties and duplicates, in order.
+	 *
+	 * @param array<mixed> $raw The grounds as entered.
+	 *
+	 * @return list<string> The grounds.
+	 */
+	private static function uniqueGrounds(array $raw): array {
+		$bases = [];
+		foreach (array_filter($raw, 'is_scalar') as $basis) {
+			$basis = trim((string) $basis);
+			if ($basis !== '' && in_array($basis, $bases, true) === false) {
+				$bases[] = $basis;
+			}
+		}
+
+		return $bases;
+
+	}//end uniqueGrounds()
 
 	/**
 	 * The first and last page of a page or range decision.
@@ -335,19 +344,31 @@ class ScopeRedactionService {
 		}
 
 		if ($to > $pageCount) {
-			$pages = sprintf('page %d', $from);
-			if ($from !== $to) {
-				$pages = sprintf('pages %d to %d', $from, $to);
-			}
-
 			throw new ScopeDecisionRefusedException(
-				message: sprintf('The document has %d pages, so %s cannot be redacted.', $pageCount, $pages)
+				message: sprintf('The document has %d pages, so %s cannot be redacted.', $pageCount, self::pagesLabel(from: $from, to: $to))
 			);
 		}
 
 		return [$from, $to];
 
 	}//end pagesOf()
+
+	/**
+	 * "page N" or "pages N to M", for a refusal.
+	 *
+	 * @param int $from The first page.
+	 * @param int $to   The last page.
+	 *
+	 * @return string The label.
+	 */
+	private static function pagesLabel(int $from, int $to): string {
+		if ($from === $to) {
+			return sprintf('page %d', $from);
+		}
+
+		return sprintf('pages %d to %d', $from, $to);
+
+	}//end pagesLabel()
 
 	/**
 	 * A 1-based page number.
