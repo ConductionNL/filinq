@@ -5,7 +5,7 @@
 
 ## 1. Register & seed data
 
-- [ ] 1.1 Add additive `anonymizationLink` fields `burnedRegionCount` (int) and `imageRedactionPending` (bool) to `lib/Settings/filinq_register.json` — union-merge only, never hand-pick (REQ-DDIMR-006)
+- [x] 1.1 Add additive `anonymizationLink` fields `burnedRegionCount` (int) and `imageRedactionPending` (bool) to `lib/Settings/filinq_register.json` — union-merge only, never hand-pick (REQ-DDIMR-006)
 - [ ] 1.2 Seed one scanned Demostad sample letter (printed BSN + handwritten-style signature block) under `tests/sample-documents/` for overlay/burn demos on a clean install
 
 ## 2. Cross-app (OpenRegister)
@@ -51,7 +51,7 @@ delegates the burn and the reassembly to it (decision D2). Every test named here
 `development` today: no scope decision exists. Acceptance lines are plain bullets so the checkbox cap
 of 20 holds.
 
-- [ ] 6.1 The scope decision in the model (REQ-DDIMR-009). Files: `lib/Settings/filinq_register.json` (`anonymizationLink.withheld`, `withheldBases`; a `scopeDecisions` list on `documentReview`; register version bump), `lib/Service/Review/ScopeRedactionService.php` (validate and store a decision).
+- [x] 6.1 The scope decision in the model (REQ-DDIMR-009). Files: `lib/Settings/filinq_register.json` (`anonymizationLink.withheld`, `withheldBases`; a `scopeDecisions` list on `documentReview`; register version bump), `lib/Service/Review/ScopeRedactionService.php` (validate and store a decision).
   - GIVEN a 4-page document WHEN pages 3 to 6 are entered THEN refused naming the page count.
   - GIVEN a decision without a ground WHEN saved THEN refused.
   - Test: PHPUnit `ScopeRedactionServiceTest::testARangeBeyondTheLastPageIsRefused`, `::testAScopeNeedsAGround`. Show `testARangeBeyondTheLastPageIsRefused` failing on `development` first; paste the line in the PR body.
