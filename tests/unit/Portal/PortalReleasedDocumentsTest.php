@@ -24,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Portal;
 
 use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
 use OCA\Filinq\Portal\PortalContributionProvider;
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
 use OCA\Filinq\Service\DocumentReleaseService;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
@@ -146,4 +147,28 @@ class PortalReleasedDocumentsTest extends TestCase {
 		$this->assertTrue(condition: (new PortalContributionProvider(releases: $this->releases(), agreements: $open))->releasedDocumentOpened(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject));
 
 	}//end testAnUndecidableDownloadIsRefused()
+
+	/**
+	 * An opening portaliq may go ahead with enters the document's trail once;
+	 * a refused one writes nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.3
+	 */
+	public function testAnAllowedOpeningIsWrittenIntoTheTrail(): void {
+		$agreements = $this->createMock(DownloadAgreementGateInterface::class);
+		$agreements->method('check')->willReturnCallback(
+			static fn (string $document, string $person): array => ['mayDownload' => ($person === 'portal:subject-accepted')]
+		);
+		$audit = $this->createMock(DocumentActionAudit::class);
+		$audit->expects($this->once())->method('record')
+			->with(4711, 'opened', ['release' => 'rel-1', 'via' => 'portal'])
+			->willReturn(true);
+		$provider = new PortalContributionProvider(releases: $this->releases(), agreements: $agreements, documentAudit: $audit);
+
+		$this->assertFalse(condition: $provider->releasedDocumentOpened(releaseId: 'rel-1', documentId: 'rel-1', subject: ['subjectRef' => 'subject-new']));
+		$this->assertTrue(condition: $provider->releasedDocumentOpened(releaseId: 'rel-1', documentId: 'rel-1', subject: ['subjectRef' => 'subject-accepted']));
+
+	}//end testAnAllowedOpeningIsWrittenIntoTheTrail()
 }//end class

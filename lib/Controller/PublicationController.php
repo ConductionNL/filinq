@@ -25,6 +25,7 @@ use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
 use OCA\Filinq\Kernel\Contracts\OpenCatalogiPlatformInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationAccessInterface;
 use OCA\Filinq\Service\Publication\DiwooMissingFields;
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
 use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -64,6 +65,7 @@ class PublicationController extends Controller {
 	 * @param IUserSession               $session  The caller
 	 * @param LoggerInterface            $logger   Logger
 	 * @param DownloadAgreementGateInterface|null $agreements The download conditions (REQ-RWB-04)
+	 * @param DocumentActionAudit|null            $documentAudit Writes `downloaded` into the served copy's trail (REQ-SCR-007)
 	 *
 	 * @return void
 	 */
@@ -75,6 +77,7 @@ class PublicationController extends Controller {
 		private readonly IUserSession $session,
 		private readonly LoggerInterface $logger,
 		private readonly ?DownloadAgreementGateInterface $agreements = null,
+		private readonly ?DocumentActionAudit $documentAudit = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -151,6 +154,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return Response The file, 404 when not visible or not published, 409 with the agreement to accept
 	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.3
 	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
 	 */
 	#[NoAdminRequired]
@@ -174,8 +178,12 @@ class PublicationController extends Controller {
 
 		try {
 			$file = $this->platform->readCopy(fileId: $copy, actor: $uid);
+			$response = new DataDownloadResponse($file->getContent(), $file->getName(), $file->getMimeType());
 
-			return new DataDownloadResponse($file->getContent(), $file->getName(), $file->getMimeType());
+			// The bytes are served: the download enters the copy's trail (REQ-SCR-007).
+			$this->documentAudit?->record(fileId: (int) $copy, action: 'downloaded', context: ['publication' => $id]);
+
+			return $response;
 		} catch (Throwable $e) {
 			$this->logger->warning('[PublicationController] the published copy could not be read', ['record' => $id, 'error' => $e->getMessage()]);
 

@@ -42,6 +42,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\DocumentFinalException;
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
 use OCA\Filinq\Service\Signing\LibreSignProvider;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\Files\File;
@@ -78,6 +79,7 @@ class SignedArtifactProducer {
 	 * @param VerificationQrStamp|null $qrStamp Draws the verification QR code on the document before it is signed.
 	 * @param IURLGenerator|null $urlGenerator Builds the absolute verification link the QR code encodes.
 	 * @param IL10N|null $l10n Translates the caption beside the QR code.
+	 * @param DocumentActionAudit|null $documentAudit Writes `signed` into the document's audit trail.
 	 *
 	 * @return void
 	 */
@@ -92,6 +94,7 @@ class SignedArtifactProducer {
 		private readonly ?VerificationQrStamp $qrStamp = null,
 		private readonly ?IURLGenerator $urlGenerator = null,
 		private readonly ?IL10N $l10n = null,
+		private readonly ?DocumentActionAudit $documentAudit = null,
 	) {
 
 	}//end __construct()
@@ -135,6 +138,7 @@ class SignedArtifactProducer {
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.3
 	 */
 	public function produce(array $request, ?array $verifiedActor = null, array $signers = [], ?string $verificationToken = null): string {
 		$fileId = (int)($request['documentFileId'] ?? 0);
@@ -184,6 +188,11 @@ class SignedArtifactProducer {
 		} catch (\Throwable $e) {
 			throw new RuntimeException('Cannot store the signed artifact as a new file version: ' . $e->getMessage());
 		}
+
+		// The signed bytes are on the document: every provider's completion
+		// passes here, so this is where `signed` enters the document's trail
+		// (REQ-SCR-007). A failed entry is logged by the writer, never thrown.
+		$this->documentAudit?->record(fileId: $fileId, action: 'signed', context: ['provider' => $providerName]);
 
 		// The signed-artifact reference is the file id plus a content-derived
 		// version tag identifying this specific signed version — never the bare

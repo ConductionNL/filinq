@@ -3125,7 +3125,21 @@ OC.L10N.register(
         "Anonymised copy": "Anonymised copy",
         "No anonymised copy": "No anonymised copy",
         "No document you may read holds detected personal data": "No document you may read holds detected personal data",
-        "The personal data report could not be read": "The personal data report could not be read"
+        "The personal data report could not be read": "The personal data report could not be read",
+        "Registered": "Registered",
+        "Changed": "Changed",
+        "Opened": "Opened",
+        "Downloaded": "Downloaded",
+        "New version": "New version",
+        "Shared": "Shared",
+        "Anonymised": "Anonymised",
+        "Deleted": "Deleted",
+        "Copied to another record": "Copied to another record",
+        "Copied from another record": "Copied from another record",
+        "System": "System",
+        "Activity": "Activity",
+        "The activity of this document could not be loaded.": "The activity of this document could not be loaded.",
+        "No activity recorded for this document yet.": "No activity recorded for this document yet."
     },
     "nplurals=2; plural=(n != 1);"
 )

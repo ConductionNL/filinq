@@ -22,6 +22,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\PublicationController;
 use OCA\Filinq\Controller\Support\PublicationFlow;
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
 use OCA\Filinq\Service\Publication\ActivePublicationList;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\PublicationAccess;
@@ -63,6 +64,7 @@ class PublicationControllerTest extends TestCase {
 	 * @param array<string, mixed>       $params    The request parameters
 	 * @param array<int, array<string, mixed>>|null $records What the store lists, null for one record per caller
 	 * @param DownloadAgreementGateInterface|null $agreements The download conditions
+	 * @param DocumentActionAudit|null   $documentAudit The document trail writer
 	 *
 	 * @return PublicationController
 	 */
@@ -73,7 +75,8 @@ class PublicationControllerTest extends TestCase {
 		bool $publisher = true,
 		array $params = [],
 		?array $records = null,
-		?DownloadAgreementGateInterface $agreements = null
+		?DownloadAgreementGateInterface $agreements = null,
+		?DocumentActionAudit $documentAudit = null
 	): PublicationController {
 		$store = $this->createMock(PublicationStore::class);
 		$store->method('findRecord')->willReturn($record);
@@ -108,7 +111,8 @@ class PublicationControllerTest extends TestCase {
 			new PublicationAccess(rootFolder: $root, groups: $groups, appConfig: $config),
 			$session,
 			new NullLogger(),
-			$agreements
+			$agreements,
+			$documentAudit
 		);
 
 	}//end controller()
@@ -372,4 +376,43 @@ class PublicationControllerTest extends TestCase {
 		$this->assertSame(503, $this->controller(pipeline: $pipeline, record: $record, platform: $platform)->download('mine')->getStatus());
 
 	}//end testADownloadWaitsForTheAcceptedAgreement()
+
+	/**
+	 * A served download enters the copy's trail once; a refused one does not.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.3
+	 */
+	public function testAServedDownloadIsWrittenIntoTheCopysTrail(): void {
+		$pipeline = $this->createMock(PublicationPipelineService::class);
+		$record = ['uuid' => 'mine', 'documentFileRef' => '42', 'redactedFileRef' => '43', 'status' => 'published'];
+		$file = $this->createMock(File::class);
+		$file->method('getContent')->willReturn('%PDF-redacted');
+		$file->method('getName')->willReturn('besluit-geanonimiseerd.pdf');
+		$file->method('getMimeType')->willReturn('application/pdf');
+		$platform = $this->createMock(OpenCatalogiPlatform::class);
+		$platform->method('readCopy')->with('43', 'anna')->willReturn($file);
+
+		$accepted = false;
+		$agreements = $this->createMock(DownloadAgreementGateInterface::class);
+		$agreements->method('check')->willReturnCallback(
+			static function () use (&$accepted): array {
+				return ['mayDownload' => $accepted, 'gated' => true];
+			}
+		);
+
+		$audit = $this->createMock(DocumentActionAudit::class);
+		$audit->expects($this->once())->method('record')
+			->with(43, 'downloaded', ['publication' => 'mine'])
+			->willReturn(true);
+
+		$controller = $this->controller(pipeline: $pipeline, record: $record, platform: $platform, agreements: $agreements, documentAudit: $audit);
+
+		$this->assertSame(409, $controller->download('mine')->getStatus());
+
+		$accepted = true;
+		$this->assertSame(200, $controller->download('mine')->getStatus());
+
+	}//end testAServedDownloadIsWrittenIntoTheCopysTrail()
 }//end class

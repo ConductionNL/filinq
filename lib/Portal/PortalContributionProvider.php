@@ -67,6 +67,7 @@ namespace OCA\Filinq\Portal;
 
 use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentReleaseServiceInterface;
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
 use OCP\L10N\IFactory;
 use Throwable;
 
@@ -181,11 +182,13 @@ class PortalContributionProvider {
 	 * @param IFactory|null                       $l10nFactory Resolves Filinq's translator.
 	 * @param DocumentReleaseServiceInterface|null          $releases    The documents released to a requester.
 	 * @param DownloadAgreementGateInterface|null $agreements  The download conditions a released document carries.
+	 * @param DocumentActionAudit|null            $documentAudit Writes `opened` into the document's trail.
 	 */
 	public function __construct(
 		private readonly ?IFactory $l10nFactory = null,
 		private readonly ?DocumentReleaseServiceInterface $releases = null,
 		private readonly ?DownloadAgreementGateInterface $agreements = null,
+		private readonly ?DocumentActionAudit $documentAudit = null,
 	) {
 	}//end __construct()
 
@@ -225,6 +228,7 @@ class PortalContributionProvider {
 	 *
 	 * @return bool True only when the download may go ahead.
 	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.3
 	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
 	 */
 	public function releasedDocumentOpened(string $releaseId, string $documentId, array $subject): bool {
@@ -244,7 +248,15 @@ class PortalContributionProvider {
 				return false;
 			}
 
-			return ($decision['mayDownload'] ?? false) === true;
+			if (($decision['mayDownload'] ?? false) !== true) {
+				return false;
+			}
+
+			// Portaliq streams the document on this answer: the opening enters
+			// the document's trail (REQ-SCR-007), naming the release.
+			$this->documentAudit?->record(fileId: (int)$entry['file']['fileId'], action: 'opened', context: ['release' => $releaseId, 'via' => 'portal']);
+
+			return true;
 		}
 
 		return false;

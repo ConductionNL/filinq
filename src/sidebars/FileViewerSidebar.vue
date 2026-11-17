@@ -6,6 +6,7 @@
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { computed } from 'vue'
 import ClassificationCard from '../components/ClassificationCard.vue'
+import DocumentAuditTrail from '../components/DocumentAuditTrail.vue'
 import DocumentLeafTabs from '../components/DocumentLeafTabs.vue'
 import { documentRecordIdFor } from '../services/documentLeafTabs.js'
 import {
@@ -590,6 +591,9 @@ const documentRecordId = computed(() =>
 		<!-- The document's classification suggestion, when it has one
 		     (inbound-auto-classification): confirm, correct or reject. -->
 		<ClassificationCard :fileId="currentFileId" />
+		<!-- Every recorded action on the document, from OpenRegister's audit
+		     trail of its record (specify-capability-rows task 2.3). -->
+		<DocumentAuditTrail :fileId="currentFileId" />
 		<DocumentLeafTabs
 			register="filinq"
 			schema="anonymizationLink"
