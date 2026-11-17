@@ -39,6 +39,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -148,8 +152,7 @@ class BatchStateRepository {
 		try {
 			$object = $objectService->find(
 				id: $batchId,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
+				options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -195,9 +198,10 @@ class BatchStateRepository {
 		try {
 			$objectService->saveObject(
 				object: $this->toStoredShape(batch: $batch),
-				register: self::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $batchId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+					uuid: $batchId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -234,9 +238,10 @@ class BatchStateRepository {
 
 		try {
 			$this->openRegister->getObjectService()->deleteObject(
-				uuid: $batchId,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
+				new ObjectDeletion(
+					uuid: $batchId,
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

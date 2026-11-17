@@ -23,6 +23,8 @@ namespace OCA\Filinq\Service\Redaction;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -125,8 +127,7 @@ class RedactionReviewMarkRepository {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $mark,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA))
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(

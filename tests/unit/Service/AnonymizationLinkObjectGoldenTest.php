@@ -27,6 +27,7 @@ use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The lookup and the saved link object per run result, compared with JSON
@@ -155,7 +156,10 @@ class AnonymizationLinkObjectGoldenTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object = [], string $register = '', string $schema = '', bool $_rbac = true, bool $_unowned = false): array {
+			public function saveObject(array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$_unowned = $options->actor->unowned ?? false;
 				$this->saved = $object;
 				return ['@self' => ['id' => 'saved-1']];
 			}
@@ -268,7 +272,10 @@ class AnonymizationLinkObjectGoldenTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function saveObject(array $object = [], string $register = '', string $schema = '', bool $_rbac = true, bool $_unowned = false): array {
+			public function saveObject(array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$_unowned = $options->actor->unowned ?? false;
 				$this->calls[] = ['save' => [$object, $register, $schema, $_rbac, $_unowned]];
 				return $object;
 			}

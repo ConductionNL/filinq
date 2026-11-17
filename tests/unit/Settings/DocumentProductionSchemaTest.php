@@ -129,7 +129,9 @@ class DocumentProductionSchemaTest extends TestCase {
 		// the next. 1.4.0 since `multi-format-output` (`outputs`). 1.5.0 since
 		// `generated-document-names-its-template-version` (optional templateVersion).
 		// 1.6.0 since `guided-document-wizard` (optional wizardContext).
-		$this->assertSame('1.6.0', $document['version']);
+		// 1.7.0 since `generate-store-in-case-system` (optional caseSystemDeliveryId).
+		// 1.8.0 since `template-library-leaf` (optional sourceObject).
+		$this->assertSame('1.8.0', $document['version']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],
@@ -160,10 +162,10 @@ class DocumentProductionSchemaTest extends TestCase {
 		// 1.4.0 since filinq-configurable-report-templates, which added `slug`
 		// and `tenantId`; 1.4.1 since both moved inside `properties` (see
 		// SchemaSlugIntegrityTest); 1.5.0 since template-merge-preview added
-		// `mergeFields`; 1.6.0 since woo-request-workflow added `dataContract`.
-		// An importer skips an unchanged version, so this pin
-		// moves whenever the schema actually does.
-		$this->assertSame(expected: '1.6.0', actual: $schemas['template']['version']);
+		// `mergeFields`; 1.6.0 since template-library-leaf added `scope`; 1.7.0
+		// since woo-request-workflow added `dataContract`. An importer skips an
+		// unchanged version, so this pin moves whenever the schema actually does.
+		$this->assertSame(expected: '1.7.0', actual: $schemas['template']['version']);
 
 		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
 			$this->assertArrayHasKey(

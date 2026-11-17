@@ -162,45 +162,39 @@ describe('versionService', () => {
 })
 
 describe('fetchBaseOptions', () => {
-	const fallback = WOO_BASES.map((slug) => ({ label: slug, value: slug }))
-
-	it('maps register objects to options, preferring the slug and the name', async () => {
+	it('asks the grounds endpoint and offers the citable grounds by code', async () => {
 		respond({
-			results: [
-				{ '@self': { slug: 'art-5-1-1-a' }, name: 'Unity of the Crown' },
-				{ slug: 'art-5-1-2-e', id: 'x' },
-				{ id: 'only-id', name: '' },
-				{ name: 'No identity' },
+			source: 'dossiq',
+			version: '2026-10-09',
+			grounds: [
+				{ code: '5.1', label: 'Uitzonderingen', citable: false },
+				{ code: '5.1.2.e', label: 'Persoonlijke levenssfeer', citable: true },
+				{ code: '5.1.4', label: '' },
+				{ label: 'zonder code' },
 				null,
 			],
 		})
 
 		expect(await fetchBaseOptions()).toEqual([
-			{ label: 'Unity of the Crown', value: 'art-5-1-1-a' },
-			{ label: 'art-5-1-2-e', value: 'art-5-1-2-e' },
-			{ label: 'only-id', value: 'only-id' },
+			{ label: '5.1.2.e — Persoonlijke levenssfeer', value: '5.1.2.e' },
+			{ label: '5.1.4', value: '5.1.4' },
 		])
-		expect(http.calls).toEqual([['get', '/apps/openregister/api/objects/filinq/base', undefined]])
+		expect(http.calls).toEqual([['get', '/apps/filinq/api/grounds', undefined]])
 	})
 
-	it('accepts a bare list answer', async () => {
-		respond([{ slug: 'b-1', name: 'Base one' }])
-
-		expect(await fetchBaseOptions()).toEqual([{ label: 'Base one', value: 'b-1' }])
+	it('offers nothing for an answer without grounds', async () => {
+		respond({ error: 'The Woo refusal grounds cannot be read.' })
+		expect(await fetchBaseOptions()).toEqual([])
 	})
 
-	it('falls back to the statutory list when the register is empty', async () => {
-		respond({ results: [] })
-		expect(await fetchBaseOptions()).toEqual(fallback)
+	it('offers nothing, never a hard-coded list, when the grounds cannot be read', async () => {
+		http.answer = () => Promise.reject(new Error('503'))
 
-		respond({})
-		expect(await fetchBaseOptions()).toEqual(fallback)
+		expect(await fetchBaseOptions()).toEqual([])
 	})
 
-	it('falls back to the statutory list when the register cannot be read', async () => {
-		http.answer = () => Promise.reject(new Error('404'))
-
-		expect(await fetchBaseOptions()).toEqual(fallback)
-		expect(fallback.length).toBeGreaterThan(0)
+	it('keeps the statutory codes as the store fallback, never the old slugs', () => {
+		expect(WOO_BASES).toContain('5.1.2.e')
+		expect(WOO_BASES.some((value) => value.startsWith('art-'))).toBe(false)
 	})
 })

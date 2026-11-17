@@ -54,6 +54,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * In-memory OpenRegister for emailDocument rows.
@@ -89,13 +91,14 @@ class EmailObjectStore extends ObjectService {
 	 */
 	public function find(
 		string $id = '',
-		string $register = '',
-		string $schema = '',
+		?ObjectFindOptions $options = null,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $_render = true,
-		bool $_audit = true,
+		bool $_multitenancy = true
 	) {
+		$register = $options?->register ?? '';
+		$schema = $options?->schema ?? '';
+		$_render = $options?->render ?? true;
+		$_audit = $options?->audit ?? true;
 		if (isset($this->rows[$id]) === false) {
 			return null;
 		}
@@ -118,14 +121,15 @@ class EmailObjectStore extends ObjectService {
 	 */
 	public function saveObject(
 		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $_unowned = false,
-		?string $_owner = null,
+		bool $_multitenancy = true
 	) {
+		$register = $options->target->register ?? '';
+		$schema = $options->target->schema ?? '';
+		$uuid = $options->uuid;
+		$_unowned = $options->actor->unowned ?? false;
+		$_owner = $options->actor->owner;
 		if ($register !== 'filinq' || $schema !== 'emailDocument') {
 			throw new RuntimeException('unexpected target ' . $register . '/' . $schema);
 		}

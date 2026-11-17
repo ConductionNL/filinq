@@ -30,6 +30,13 @@
 					}}
 				</NcButton>
 				<span
+					v-if="sourceVendor"
+					class="file-viewer-page__ocr-badge"
+					data-testid="file-viewer-source-badge"
+					:title="t('filinq', 'The master record of this document is in the case system')">
+					{{ sourceBadgeLabel(sourceVendor) }}
+				</span>
+				<span
 					v-if="ocrBadge"
 					class="file-viewer-page__ocr-badge"
 					:title="
@@ -126,6 +133,7 @@ import WordViewer from '../../components/viewers/WordViewer.vue'
 import AccessibilityPublishWarningModal from '../../modals/AccessibilityPublishWarningModal.vue'
 import ConformanceReportModal from '../../modals/ConformanceReportModal.vue'
 import { ocrRun } from '../../mixins/ocrRun.js'
+import { fetchSourceBadges, sourceBadgeLabel } from '../../services/bridge.js'
 import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { startPublication } from '../../services/publications.js'
 import { publicationReadiness } from '../../services/validationService.js'
@@ -177,6 +185,7 @@ export default {
 			ocrAvailable: false,
 			ocrResult: null,
 			ocrRunning: false,
+			sourceVendor: '',
 			conformanceOpen: false,
 			publishWarning: {
 				show: false,
@@ -315,12 +324,34 @@ export default {
 			 */
 			handler() {
 				this.loadOcrStatus()
+				this.loadSourceBadge()
 			},
 		},
 	},
 
 	methods: {
 		t,
+		sourceBadgeLabel,
+
+		/**
+		 * Read whether this file came in from a case system, for the header badge
+		 * (zgw-document-bridge REQ-DDZGW-009).
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/zgw-document-bridge/tasks.md#3-2
+		 */
+		async loadSourceBadge() {
+			const fileId = fileViewerStore.currentFile?.fileId
+			this.sourceVendor = ''
+			if (!fileId) {
+				return
+			}
+			try {
+				this.sourceVendor = (await fetchSourceBadges([fileId]))[String(fileId)] || ''
+			} catch {
+				// No answer: no badge. The file itself still shows.
+			}
+		},
 
 		/**
 		 * Read whether OCR can run and this file's last result.

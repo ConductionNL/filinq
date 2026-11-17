@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Grounds;
 
+use OCA\Filinq\Kernel\Contracts\RefusalGroundsResolverInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -37,7 +38,7 @@ use Throwable;
  *
  * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-one-resolver-reads-the-grounds-from-dossiq-or-from-a-read-only-snapshot-req-grd-001
  */
-class RefusalGroundsResolver {
+class RefusalGroundsResolver implements RefusalGroundsResolverInterface {
 
 	/**
 	 * dossiq's grounds list.
@@ -61,14 +62,14 @@ class RefusalGroundsResolver {
 	 * @param ContainerInterface $container     Resolves dossiq's list by name.
 	 * @param LoggerInterface    $logger        Records a fall-back to the snapshot.
 	 * @param string             $groundsClass  dossiq's list class; a test names a double.
-	 * @param string             $snapshotPath  The snapshot file; a test names a fixture.
+	 * @param string|null        $snapshotPath  The snapshot file; a test names a fixture, null is the shipped one.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 		private readonly string $groundsClass = self::DOSSIQ_GROUNDS,
-		private readonly string $snapshotPath = self::SNAPSHOT,
+		private readonly ?string $snapshotPath = null,
 	) {
 	}//end __construct()
 
@@ -185,8 +186,9 @@ class RefusalGroundsResolver {
 	 */
 	private function fromSnapshot(bool $withRetired): array {
 		$snapshot = null;
-		if (is_readable($this->snapshotPath) === true) {
-			$raw = file_get_contents($this->snapshotPath);
+		$path = ($this->snapshotPath ?? self::SNAPSHOT);
+		if (is_readable($path) === true) {
+			$raw = file_get_contents($path);
 			if (is_string($raw) === true) {
 				$snapshot = json_decode($raw, true);
 			}
