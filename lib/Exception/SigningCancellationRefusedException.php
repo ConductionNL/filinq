@@ -19,7 +19,7 @@
  *
  * @link https://filinq.app
  *
- * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+ * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
  */
 
 declare(strict_types=1);
@@ -35,7 +35,7 @@ use RuntimeException;
  * not exist: the two are one refusal so ids cannot be enumerated), and 409 for
  * a request whose state no longer allows a withdrawal.
  *
- * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+ * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
  */
 final class SigningCancellationRefusedException extends RuntimeException {
 

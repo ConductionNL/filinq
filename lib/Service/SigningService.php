@@ -25,6 +25,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
+use OCA\Filinq\Exception\SigningRequestWithdrawnException;
 use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Kernel\SigningAuditActor;
 use OCA\Filinq\Kernel\SigningAuditEvent;
@@ -693,6 +694,7 @@ class SigningService implements SigningServiceInterface {
 	 * @return array<string, mixed> The signing request
 	 *
 	 * @throws RuntimeException When the request does not exist or is not PENDING or IN_PROGRESS
+	 * @throws SigningRequestWithdrawnException When the request was cancelled
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
 	 */
@@ -704,6 +706,10 @@ class SigningService implements SigningServiceInterface {
 		}
 
 		$status = $request['status'] ?? '';
+		if ($status === 'CANCELLED') {
+			throw new SigningRequestWithdrawnException();
+		}
+
 		if (in_array($status, ['PENDING', 'IN_PROGRESS'], true) === false) {
 			throw new RuntimeException('Signing request is not in a signable state: ' . $status);
 		}
@@ -915,7 +921,7 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
 	 */
 	private function moveToCancelled(array $request, string $requestId, array $store): void {
 		$engine = $this->settingsService->getTransitionEngine();
