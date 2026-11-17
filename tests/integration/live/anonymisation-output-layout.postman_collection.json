@@ -1,0 +1,575 @@
+{
+	"info": {
+		"name": "Filinq batch anonymisation output folder layout",
+		"description": "anonymisation-batch-output-folder-layout task 11. Three text files in one folder go through a folder batch: extract, anonymise (format kept). The anonymised copies land in the folder's anonymised/ subfolder under their own names, and no _anonymized file is left beside the sources. It needs a live instance with entity detection, so it sits in tests/integration/live/, outside the flat glob the CI Newman job runs. Run it with: npx newman run tests/integration/live/anonymisation-output-layout.postman_collection.json --env-var baseUrl=$BASE_URL --env-var adminUser=$ADMIN_USER --env-var adminPass=$ADMIN_PASS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "MKCOL the batch folder",
+			"request": {
+				"method": "MKCOL",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}"
+				}
+			},
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"// anonymisation-batch-output-folder-layout task 11: one folder per run.",
+							"pm.collectionVariables.set('layoutFolder', 'filinq-layout-' + Date.now());",
+							"pm.collectionVariables.set('extractTries', '0');"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Folder created', () => pm.expect(pm.response.code).to.equal(201));"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "PUT verslag-a.txt",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					},
+					{
+						"key": "Content-Type",
+						"value": "text/plain"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}/verslag-a.txt"
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "Gesprek met Jan Jansen op 3 maart. BSN 111222333. Telefoon 06-12345678."
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('verslag-a.txt uploaded', () => pm.expect(pm.response.code).to.be.oneOf([201, 204]));"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "PUT verslag-b.txt",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					},
+					{
+						"key": "Content-Type",
+						"value": "text/plain"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}/verslag-b.txt"
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "Gesprek met Jan Jansen op 3 maart. BSN 111222333. Telefoon 06-12345678."
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('verslag-b.txt uploaded', () => pm.expect(pm.response.code).to.be.oneOf([201, 204]));"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "PUT verslag-c.txt",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					},
+					{
+						"key": "Content-Type",
+						"value": "text/plain"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}/verslag-c.txt"
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "Gesprek met Jan Jansen op 3 maart. BSN 111222333. Telefoon 06-12345678."
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('verslag-c.txt uploaded', () => pm.expect(pm.response.code).to.be.oneOf([201, 204]));"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "POST batch/folder - one batch for the three files",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/folder"
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "{\"folderPath\": \"/{{layoutFolder}}\"}"
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Status is 200', () => pm.response.to.have.status(200));",
+							"const body = pm.response.json();",
+							"pm.test('The three files are in the batch', () => pm.expect(body.fileCount).to.equal(3));",
+							"pm.collectionVariables.set('layoutBatchId', body.batchId);"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "POST batch/{id}/extract - next file",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{layoutBatchId}}/extract"
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Extraction step answered', () => pm.expect(pm.response.code).to.be.oneOf([200, 409]));"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "GET batch/{id}/entities - until extraction completes",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{layoutBatchId}}/entities"
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"// Extraction runs one file per call (or in the background for a folder batch):",
+							"// go back to the extract step until the batch is in review, at most 30 times.",
+							"const body = pm.response.json();",
+							"const tries = Number(pm.collectionVariables.get('extractTries') || 0) + 1;",
+							"pm.collectionVariables.set('extractTries', String(tries));",
+							"if (body.complete !== true && tries < 30) {",
+							"    postman.setNextRequest('POST batch/{id}/extract - next file');",
+							"    return;",
+							"}",
+							"pm.test('Extraction completed', () => pm.expect(body.complete).to.equal(true));",
+							"pm.test('Entities were found', () => pm.expect(body.entityCount).to.be.above(0));",
+							"pm.collectionVariables.set('layoutEntities', JSON.stringify(body.entities));"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "POST batch/{id}/anonymize - keep the format",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{layoutBatchId}}/anonymize"
+				},
+				"body": {
+					"mode": "raw",
+					"raw": "{\"entities\": {{layoutEntities}}, \"outputFormat\": \"preserve\"}"
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Anonymisation ran', () => pm.expect(pm.response.code).to.be.oneOf([200, 207]));",
+							"const files = pm.response.json().files || [];",
+							"pm.test('Every recorded path is in the anonymised subfolder', () => {",
+							"    files.filter((f) => f.anonymizedFilePath).forEach((f) => pm.expect(f.anonymizedFilePath).to.match(/\\/anonymised\\/[^/]+$/));",
+							"});"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "PROPFIND the folder - an anonymised subfolder and no _anonymized file",
+			"request": {
+				"method": "PROPFIND",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					},
+					{
+						"key": "Depth",
+						"value": "1"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}"
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const xml = pm.response.text();",
+							"pm.test('Status is 207', () => pm.response.to.have.status(207));",
+							"pm.test('The anonymised subfolder is there', () => pm.expect(xml).to.include(pm.collectionVariables.get('layoutFolder') + '/anonymised/'));",
+							"pm.test('No copy carries the _anonymized suffix', () => pm.expect(xml).to.not.include('_anonymized'));"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "PROPFIND anonymised/ - the three clean names",
+			"request": {
+				"method": "PROPFIND",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					},
+					{
+						"key": "Depth",
+						"value": "1"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}/anonymised"
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"const xml = pm.response.text();",
+							"pm.test('Status is 207', () => pm.response.to.have.status(207));",
+							"['verslag-a.txt', 'verslag-b.txt', 'verslag-c.txt'].forEach((name) => {",
+							"    pm.test(name + ' is there under its own name', () => pm.expect(xml).to.include('/anonymised/' + name));",
+							"});",
+							"pm.test('No suffixed name', () => pm.expect(xml).to.not.include('_anonymized'));"
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "DELETE the batch folder",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}"
+				}
+			},
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('Folder removed', () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+						]
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": ""
+		},
+		{
+			"key": "adminUser",
+			"value": ""
+		},
+		{
+			"key": "adminPass",
+			"value": ""
+		},
+		{
+			"key": "layoutFolder",
+			"value": ""
+		},
+		{
+			"key": "layoutBatchId",
+			"value": ""
+		},
+		{
+			"key": "layoutEntities",
+			"value": "[]"
+		},
+		{
+			"key": "extractTries",
+			"value": "0"
+		}
+	]
+}
