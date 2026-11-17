@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\SessionUserFileInterface;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IUserSession;
@@ -38,7 +39,7 @@ use OCP\IUserSession;
  *
  * @spec openspec/specs/financial-document-field-extraction/spec.md
  */
-final class SessionUserFile {
+final class SessionUserFile implements SessionUserFileInterface {
 
 	/**
 	 * Constructor.

@@ -24,6 +24,7 @@ namespace OCA\Filinq\Service;
 
 use Mpdf\Mpdf;
 use OCA\Filinq\Exception\PdfStampRefusal;
+use OCA\Filinq\Kernel\Contracts\PdfStampServiceInterface;
 use OCP\IAppConfig;
 use Throwable;
 
@@ -38,7 +39,7 @@ use Throwable;
  *
  * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-1.1
  */
-class PdfStampService {
+class PdfStampService implements PdfStampServiceInterface {
 
 	/**
 	 * Placements a caller can ask for.

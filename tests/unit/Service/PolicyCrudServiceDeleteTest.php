@@ -30,6 +30,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 
 /**
  * A named argument that does not exist on the callee is a RUNTIME error, not a
@@ -102,7 +103,8 @@ class PolicyCrudServiceDeleteTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('deleteObject')->willReturnCallback(
-			function (string $uuid = '', ...$rest) use (&$captured): bool {
+			function (ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false, ...$rest) use (&$captured): bool {
+				$uuid = $deletion->uuid ?? '';
 				$captured = $uuid;
 				return true;
 			}

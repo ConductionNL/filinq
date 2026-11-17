@@ -15,7 +15,14 @@ import { consentStore } from '../../store/store.js'
 		:loading="consentStore.loading"
 		:loadingLabel="t('filinq', 'Loading consent record...')"
 		:error="!consentStore.consentItem"
-		:errorMessage="t('filinq', 'No consent record selected.')">
+		:errorMessage="t('filinq', 'No consent record selected.')"
+		objectType="filinq-publicationConsent"
+		:objectId="consentStore.consentItem?.id || ''"
+		:sidebar="{
+			enabled: true,
+			register: 'filinq',
+			schema: 'publicationConsent',
+		}">
 		<!--
 			ENTITY INFORMATION IS A DEFAULT-SLOT SECTION, NOT A STATS TABLE, AND
 			THAT IS LOAD-BEARING.

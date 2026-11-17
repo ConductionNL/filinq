@@ -91,6 +91,13 @@
 						{{ t('filinq', 'Generate legal-bases PDF') }}
 					</NcButton>
 
+					<NcButton
+						v-if="leafSidebarAvailable"
+						variant="tertiary"
+						@click="toggleLeafSidebar">
+						{{ t('filinq', 'Linked apps') }}
+					</NcButton>
+
 					<NcButton variant="secondary" @click="startBatch">
 						<template #icon>
 							<EyeOffOutline :size="20" />
@@ -293,6 +300,7 @@ import Plus from 'vue-material-design-icons/Plus.vue'
 import LegalHoldBadge from '../../components/LegalHoldBadge.vue'
 import MdtoPanel from '../../components/MdtoPanel.vue'
 import WizardEntryActions from '../../components/WizardEntryActions.vue'
+import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { dossierStore } from '../../store/store.js'
 import { dossierStatusColors, dossierStatusLabel } from './dossierStatus.js'
 
@@ -325,6 +333,9 @@ export default {
 		Plus,
 		WizardEntryActions,
 	},
+
+	// leaf-integrations: the registry's leaves (Files, Deck) for this dossier.
+	mixins: [recordLeafSidebarMixin({ schema: 'dossier', record: (vm) => vm.dossierStore.dossier, title: (dossier) => dossier.name })],
 
 	data() {
 		return {
