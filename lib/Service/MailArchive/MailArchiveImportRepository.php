@@ -30,6 +30,9 @@ namespace OCA\Filinq\Service\MailArchive;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Mail archive imports in OpenRegister.
@@ -71,9 +74,10 @@ class MailArchiveImportRepository {
 		unset($record['uuid']);
 		$stored = $this->objectResolver->resolve()->saveObject(
 			object: $record,
-			register: self::REGISTER,
-			schema: self::SCHEMA,
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+				uuid: $uuid
+			),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -97,7 +101,12 @@ class MailArchiveImportRepository {
 	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function find(string $uuid): ?array {
-		$row = $this->objectResolver->resolve()->find(id: $uuid, register: self::REGISTER, schema: self::SCHEMA, _rbac: false, _multitenancy: false);
+		$row = $this->objectResolver->resolve()->find(
+			id: $uuid,
+			options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA),
+			_rbac: false,
+			_multitenancy: false
+		);
 		if ($row === null) {
 			return null;
 		}

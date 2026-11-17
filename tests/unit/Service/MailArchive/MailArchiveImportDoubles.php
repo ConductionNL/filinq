@@ -20,6 +20,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\MailArchive;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
@@ -56,24 +58,18 @@ class MailArchiveObjectStore extends ObjectService {
 	/**
 	 * Find a row.
 	 *
-	 * @param string $id            Id
-	 * @param string $register      Register
-	 * @param string $schema        Schema
-	 * @param bool   $_rbac         RBAC
-	 * @param bool   $_multitenancy Multitenancy
-	 * @param bool   $_render       Render
-	 * @param bool   $_audit        Audit
+	 * @param string                 $id            Id
+	 * @param ObjectFindOptions|null $options       Register, schema and read options
+	 * @param bool                   $_rbac         RBAC
+	 * @param bool                   $_multitenancy Multitenancy
 	 *
 	 * @return array<string, mixed>|null
 	 */
 	public function find(
 		string $id = '',
-		string $register = '',
-		string $schema = '',
+		?ObjectFindOptions $options = null,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $_render = true,
-		bool $_audit = true,
+		bool $_multitenancy = true
 	) {
 		$this->readRbac[] = $_rbac;
 		if (isset($this->rows[$id]) === false) {
@@ -88,26 +84,21 @@ class MailArchiveObjectStore extends ObjectService {
 	 * Save a row after validating it against the real schema.
 	 *
 	 * @param array<string, mixed> $object        Object
-	 * @param string               $register      Register
-	 * @param string               $schema        Schema
-	 * @param string|null          $uuid          Uuid
+	 * @param ObjectSaveOptions    $options       Target register and schema, and the uuid when updating
 	 * @param bool                 $_rbac         RBAC
 	 * @param bool                 $_multitenancy Multitenancy
-	 * @param bool                 $_unowned      Unowned
-	 * @param string|null          $_owner        Owner
 	 *
 	 * @return array<string, mixed>
 	 */
 	public function saveObject(
 		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $_unowned = false,
-		?string $_owner = null,
+		bool $_multitenancy = true
 	) {
+		$register = (string) ($options->target->register ?? '');
+		$schema = (string) ($options->target->schema ?? '');
+		$uuid = $options->uuid;
 		if ($register !== 'filinq' || $schema !== 'mailArchiveImport') {
 			throw new RuntimeException('unexpected target ' . $register . '/' . $schema);
 		}

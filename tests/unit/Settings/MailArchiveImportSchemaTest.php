@@ -76,7 +76,7 @@ class MailArchiveImportSchemaTest extends TestCase {
 	 */
 	public function testTheRegisterListsTheImport(): void {
 		$this->assertContains('mailArchiveImport', $this->descriptor()['components']['registers']['filinq']['schemas']);
-		$this->assertSame('8.56.0', $this->descriptor()['info']['version']);
+		$this->assertSame('8.64.0', $this->descriptor()['info']['version']);
 		$this->assertSame('mailArchiveImport', $this->importSchema()['slug']);
 
 	}//end testTheRegisterListsTheImport()
