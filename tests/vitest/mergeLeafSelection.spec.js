@@ -147,6 +147,7 @@ describe('merge leaf: describe', () => {
 			failed: false,
 			message: '[t] The PDF is ready.',
 			link: '/index.php/f/77',
+			fileId: 77,
 		})
 	})
 
@@ -173,5 +174,30 @@ describe('merge leaf: describe', () => {
 			'/index.php/apps/filinq/api/case-documents/files?register=zaken&schema=zaak&id=z-1',
 			'/index.php/apps/filinq/api/templates',
 		])
+	})
+})
+
+describe('merge leaf: copy the finished PDF to another record', () => {
+	it('copies the result from this record to the one the form names', async () => {
+		answerWith(200, { fileId: 99 })
+		const vm = await leaf({ outcome: { failed: false, message: '', link: '', fileId: 77 }, copyForm: { register: 'zaken', schema: 'zaak', id: 'z-2' } })
+		await vm.copyMergedPdf()
+		expect(calls[0].url).toBe('/index.php/apps/filinq/api/case-documents/copy?fileId=77&sourceRegister=zaken&sourceSchema=zaak&sourceId=z-1&register=zaken&schema=zaak&id=z-2')
+		expect(calls[0].init.method).toBe('POST')
+		expect(vm.copyMessage).toBe('[t] The PDF is now also on the other record.')
+	})
+
+	it('says so when the other record may not be written', async () => {
+		answerWith(403, { error: 'no' })
+		const vm = await leaf({ outcome: { failed: false, message: '', link: '', fileId: 77 }, copyForm: { register: 'zaken', schema: 'zaak', id: 'z-2' } })
+		await vm.copyMergedPdf()
+		expect(vm.copyMessage).toBe('[t] You may not copy this document to that record.')
+	})
+
+	it('asks nothing while the form does not name a whole record', async () => {
+		answerWith(200, {})
+		const vm = await leaf({ outcome: { failed: false, message: '', link: '', fileId: 77 }, copyForm: { register: 'zaken', schema: 'zaak', id: '' } })
+		await vm.copyMergedPdf()
+		expect(calls).toHaveLength(0)
 	})
 })

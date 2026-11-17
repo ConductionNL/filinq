@@ -106,7 +106,7 @@ class DossierController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * @spec openspec/changes/fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
+	 * @spec openspec/changes/archive/2026-11-17-fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
 	 */
 	public function generateGrondslagenSummary(string $dossierId): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -137,7 +137,7 @@ class DossierController extends Controller {
 	 *
 	 * @return JSONResponse The generated file's metadata, or an error payload.
 	 *
-	 * @spec openspec/changes/fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
+	 * @spec openspec/changes/archive/2026-11-17-fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
 	 */
 	private function renderSummary(string $dossierId): JSONResponse {
 		try {
@@ -175,7 +175,7 @@ class DossierController extends Controller {
 	 *
 	 * @return JSONResponse A 403 with a localised error.
 	 *
-	 * @spec openspec/changes/fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
+	 * @spec openspec/changes/archive/2026-11-17-fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
 	 */
 	private function refused(): JSONResponse {
 		return new JSONResponse(

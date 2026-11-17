@@ -99,7 +99,7 @@ class DownloadAgreementCheckTraceTest extends TestCase {
 		$l10n = null;
 		if ($translated === true) {
 			$l10n = $this->createMock(IL10N::class);
-			$l10n->method('t')->willReturnCallback(static fn (string $text): string => '[nl] ' . $text);
+			$l10n->method('t')->willReturnCallback(static fn (string $text, array $parameters = []): string => '[nl] ' . vsprintf($text, $parameters));
 		}
 
 		$verdict = (new DownloadAgreementGate(agreements: $repository, l10n: $l10n))->check(document: 'doc-1', person: 'burger-7');

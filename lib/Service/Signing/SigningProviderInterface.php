@@ -117,7 +117,7 @@ interface SigningProviderInterface {
 	 * @throws SigningCancellationNotSupportedException When the provider cannot cancel at all.
 	 * @throws RuntimeException When the provider could be reached but refused or failed.
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function cancelSigning(string $externalId): void;
 

@@ -25,6 +25,7 @@ namespace OCA\Filinq\Controller\Support;
 
 use OCA\Filinq\Kernel\Contracts\PublicationPipelineServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationStoreInterface;
+use OCA\Filinq\Service\Publication\ActivePublicationList;
 
 /**
  * The publication pipeline and the store of publications it writes.
@@ -44,6 +45,7 @@ final class PublicationFlow {
 	 *
 	 * @param PublicationPipelineServiceInterface $pipeline Runs a publication
 	 * @param PublicationStoreInterface           $store    Stored publications
+	 * @param ActivePublicationList|null          $active   The records that must be published actively
 	 *
 	 * @return void
 	 *
@@ -52,6 +54,7 @@ final class PublicationFlow {
 	public function __construct(
 		public readonly PublicationPipelineServiceInterface $pipeline,
 		public readonly PublicationStoreInterface $store,
+		public readonly ?ActivePublicationList $active = null,
 	) {
 
 	}//end __construct()
