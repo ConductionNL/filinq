@@ -24,6 +24,7 @@ namespace OCA\Filinq\Service;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
 use OCA\Filinq\Service\Waarmerk\SealedArtifact;
 use OCA\Filinq\Service\Waarmerk\SealedFileWriter;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use Throwable;
@@ -244,7 +245,7 @@ class SigningEvidenceService {
 		['register' => $register, 'schema' => $schema] = $this->bindings->getSignerRecordRegisterAndSchema();
 		$signers = [];
 		foreach ((array) ($request['signerIds'] ?? []) as $signerId) {
-			$object = $objects->find(id: (string) $signerId, register: $register, schema: $schema, _rbac: false);
+			$object = $objects->find(id: (string) $signerId, options: new ObjectFindOptions(register: $register, schema: $schema), _rbac: false);
 			if ($object !== null) {
 				$signers[] = $this->storedFields(row: $object);
 			}

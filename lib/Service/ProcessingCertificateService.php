@@ -23,6 +23,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\WaarmerkRefusedException;
 use OCA\Filinq\Service\Waarmerk\SealedFileWriter;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\Files\Folder;
 use Throwable;
 
@@ -191,8 +192,7 @@ class ProcessingCertificateService {
 		try {
 			$object = $this->objectResolver->resolve()->find(
 				id: $linkId,
-				register: 'filinq',
-				schema: 'anonymizationLink',
+				options: new ObjectFindOptions(register: 'filinq', schema: 'anonymizationLink'),
 				_rbac: false,
 				_multitenancy: false
 			);

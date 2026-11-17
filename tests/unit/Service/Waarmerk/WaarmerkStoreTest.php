@@ -20,6 +20,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Waarmerk;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Waarmerk\WaarmerkStore;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -75,7 +76,16 @@ class WaarmerkStoreTest extends TestCase {
 		$row = $this->seal();
 		unset($row['uuid']);
 		$this->objects->expects($this->once())->method('saveObject')
-			->with($row, 'filinq', 'waarmerk', null, false, true, true)
+			->with(
+				$row,
+				self::callback(
+					static fn (ObjectSaveOptions $options): bool => $options->target->register === 'filinq'
+						&& $options->target->schema === 'waarmerk'
+						&& $options->uuid === null
+						&& $options->actor->unowned === true
+				),
+				false
+			)
 			->willReturn(['uuid' => 'new-1'] + $row);
 
 		$stored = $store->create(row: $row);
@@ -113,7 +123,16 @@ class WaarmerkStoreTest extends TestCase {
 		$expected = array_merge($seal, $revocation);
 		unset($expected['uuid']);
 		$this->objects->expects($this->once())->method('saveObject')
-			->with($expected, 'filinq', 'waarmerk', 'w-1', false, true, true)
+			->with(
+				$expected,
+				self::callback(
+					static fn (ObjectSaveOptions $options): bool => $options->target->register === 'filinq'
+						&& $options->target->schema === 'waarmerk'
+						&& $options->uuid === 'w-1'
+						&& $options->actor->unowned === true
+				),
+				false
+			)
 			->willReturn(['uuid' => 'w-1'] + $expected);
 
 		$revoked = $store->revoke(seal: $seal, revocation: $revocation);

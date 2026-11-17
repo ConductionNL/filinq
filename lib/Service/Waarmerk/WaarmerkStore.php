@@ -23,6 +23,9 @@ namespace OCA\Filinq\Service\Waarmerk;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use Throwable;
 
 /**
@@ -218,11 +221,12 @@ class WaarmerkStore {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $row,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $uuid,
-				_rbac: false,
-				_unowned: true
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid,
+					actor: new SaveActor(unowned: true)
+				),
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			throw new WaarmerkRefusedException(message: 'The waarmerk could not be stored', status: 503, previous: $e);
