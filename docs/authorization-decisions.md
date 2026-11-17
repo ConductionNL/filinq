@@ -175,6 +175,8 @@ deliberately.
 | `document` | authenticated | authenticated | authenticated / admin | A governed document is everyday work: whoever drafts or handles one must be able to create and edit it, and the lifecycle (`x-openregister-lifecycle`) governs what may happen to its status. Deleting a record that carries archival retention is an administrator's act. |
 | `documentType` | authenticated | admin | admin | The classification vocabulary every document refers to: readable by everybody who classifies, changed only by administrators because a type carries the retention and selectielijst category documents inherit. |
 
+| `documentDraft` | its owner (`authorization.scope: private`: the clerk who made it, and admins) | authenticated, for themselves | its owner | A draft is a rendered document before it is stored and holds personal data merged from the records, so nobody but its maker reads it, not even a manager while the clerk is away. `DocumentDraftService::finish()` answers 404 unless the session user owns the draft, the same answer as for one that does not exist. `DocumentDraftExpiryJob` lists and deletes drafts past `expiresAt` with RBAC off, as the system from a cron tick with no user; it touches this schema only. |
+
 ## Deliberate RBAC bypasses
 
 A cascade only guards callers that go through it. `ObjectService::find()` and
