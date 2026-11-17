@@ -57,7 +57,7 @@ use RuntimeException;
  *
  * @link https://filinq.app
  *
- * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+ * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
  */
 class SigningCancellationNotSupportedException extends RuntimeException {
 
@@ -69,7 +69,7 @@ class SigningCancellationNotSupportedException extends RuntimeException {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function __construct(string $provider, string $reason = '') {
 		$message = sprintf(

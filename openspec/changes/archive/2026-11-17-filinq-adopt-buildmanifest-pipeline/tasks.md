@@ -42,8 +42,12 @@ All tasks are `[filinq]`. Estimates: S = half-day, M = 1–2 days, L = 3+ days.
   post-migration; diff MUST be empty (menu-layout.json's relocations /
   sections / removals / settingsSection are all currently empty, so output
   should be byte-identical modulo the pipeline implementation).
-- [ ] B-2.2 Manual or Playwright smoke test: navigate all 13 manifest pages
+- [x] B-2.2 Manual or Playwright smoke test: navigate all 13 manifest pages
   via the in-app nav and confirm each resolves (no 404/blank page).
+  - Live pass 2026-11-17: `tests/e2e/spec-coverage/manifest-navigation.spec.ts` reads every entry from the
+    rendered navigation (now well over 13), opens each (folded ones by address) and requires the address to
+    move, the content area to carry text that is not an error page, and no page error. Passed on a throwaway
+    NC 34.0.6 + openregister main.
 
 ## [filinq] Dead navigation code removal
 
