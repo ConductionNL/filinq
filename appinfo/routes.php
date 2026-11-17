@@ -62,6 +62,10 @@ $extra = [
         ['name' => 'conformance#status', 'url' => 'api/validation/conformance-status', 'verb' => 'GET'],
         ['name' => 'conformance#show', 'url' => 'api/validation/conformance/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\d+']],
         ['name' => 'conformance#check', 'url' => 'api/validation/conformance/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\d+']],
+        // PDF/UA-1 accessibility conformance (veraPDF ua1), stored apart from the PDF/A report.
+        ['name' => 'accessibilityConformance#check', 'url' => 'api/validation/accessibility/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\d+']],
+        ['name' => 'accessibilityConformance#show', 'url' => 'api/validation/accessibility/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\d+']],
+        ['name' => 'accessibilityConformance#regenerate', 'url' => 'api/validation/accessibility/{fileId}/regenerate', 'verb' => 'POST', 'requirements' => ['fileId' => '\d+']],
 
         // Document comparison route.
         ['name' => 'comparison#compare', 'url' => 'api/comparison/compare', 'verb' => 'POST'],
@@ -313,6 +317,10 @@ $extra = [
         ['name' => 'document#mergePreview', 'url' => 'api/documents/generate/merge-preview', 'verb' => 'POST'],
         ['name' => 'document#generateBulk', 'url' => 'api/documents/generate/bulk', 'verb' => 'POST'],
         ['name' => 'document#jobStatus', 'url' => 'api/documents/jobs/{jobId}', 'verb' => 'GET'],
+
+        // Document drafts (generate-draft-and-attended-edit): open a generation for editing, finish it.
+        ['name' => 'documentDraft#create', 'url' => 'api/documents/drafts', 'verb' => 'POST'],
+        ['name' => 'documentDraft#finish', 'url' => 'api/documents/drafts/{id}/finish', 'verb' => 'POST'],
 
         // External render contract (filinq-configurable-report-templates): a
         // stable, slug-addressed endpoint for server-to-server callers (e.g.

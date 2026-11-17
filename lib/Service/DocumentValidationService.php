@@ -39,7 +39,9 @@ use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
 use OCA\Filinq\Service\Validation\AccessibilityChecks;
 use OCA\Filinq\Service\Validation\ArchivalChecks;
 use OCA\Filinq\Service\Validation\DocumentFileInspector;
+use OCA\Filinq\Service\Validation\PdfUaChecks;
 use OCA\Filinq\Service\Validation\ValidationProfileResolver;
+use OCA\Filinq\Service\VeraPdf\AccessibilityConformanceService;
 use OCA\Filinq\Service\VeraPdf\ConformanceService;
 use OCP\Files\File;
 use OCP\IAppConfig;
@@ -95,6 +97,13 @@ class DocumentValidationService implements DocumentValidationServiceInterface {
 	private readonly AccessibilityChecks $accessibility;
 
 	/**
+	 * The validator-backed accessibility checks (veraPDF ua1).
+	 *
+	 * @var PdfUaChecks
+	 */
+	private readonly PdfUaChecks $pdfUa;
+
+	/**
 	 * Constructor.
 	 *
 	 * The two collaborators are composed here rather than injected so the
@@ -104,17 +113,25 @@ class DocumentValidationService implements DocumentValidationServiceInterface {
 	 *
 	 * @param LoggerInterface         $logger      Logger.
 	 * @param IAppConfig              $appConfig   App configuration.
-	 * @param ConformanceService|null $conformance The veraPDF conformance check for the archival checks.
+	 * @param ConformanceService|null              $conformance   The veraPDF conformance check for the archival checks.
+	 * @param AccessibilityConformanceService|null $accessibility The veraPDF PDF/UA-1 check for the validator-backed accessibility checks.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-2.4
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/document-validation-checks/spec.md#requirement-the-check-catalogue-must-include-validator-backed-pdfua-accessibility-checks-req-ddpum-005
 	 */
-	public function __construct(LoggerInterface $logger, IAppConfig $appConfig, ?ConformanceService $conformance = null) {
+	public function __construct(
+		LoggerInterface $logger,
+		IAppConfig $appConfig,
+		?ConformanceService $conformance = null,
+		?AccessibilityConformanceService $accessibility = null,
+	) {
 		$this->profiles = new ValidationProfileResolver(logger: $logger, appConfig: $appConfig);
 		$this->inspector = new DocumentFileInspector(appConfig: $appConfig);
 		$this->archival = new ArchivalChecks(conformance: $conformance);
 		$this->accessibility = new AccessibilityChecks();
+		$this->pdfUa = new PdfUaChecks(conformance: $accessibility);
 
 	}//end __construct()
 
@@ -146,6 +163,7 @@ class DocumentValidationService implements DocumentValidationServiceInterface {
 			$this->textLayerFindings(profile: $profile, mime: $mime, content: $read['content']),
 			$this->metadataFindings(profile: $profile, record: $record),
 			$this->accessibility->findings(profile: $profile, mime: $mime, content: $read['content']),
+			$this->pdfUa->findings(profile: $profile, mime: $mime, file: $file),
 			$this->archival->findings(profile: $profile, mime: $mime, file: $file)
 		);
 
