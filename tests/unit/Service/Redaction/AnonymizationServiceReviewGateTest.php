@@ -36,9 +36,11 @@ use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\DocumentAnonymizeRunner;
 use OCA\Filinq\Service\Redaction\DetectionRunIdentity;
+use OCA\Filinq\Service\Redaction\FourEyesPolicy;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use OCA\Filinq\Service\Redaction\RedactionReviewGate;
 use OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository;
+use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Tests\Unit\Service\BuildsAnonymizationService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -184,7 +186,8 @@ class AnonymizationServiceReviewGateTest extends TestCase {
 		$guard = new RedactionOutputGuard(
 			gate: new RedactionReviewGate(),
 			marks: $marks,
-			runs: new DetectionRunIdentity()
+			runs: new DetectionRunIdentity(),
+			fourEyes: new FourEyesPolicy(settings: $this->createConfiguredMock(SettingsService::class, ['getFourEyesMode' => 'off']))
 		);
 
 		return $this->makeAnonymizationServiceFrom(
