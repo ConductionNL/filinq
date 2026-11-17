@@ -155,4 +155,16 @@ interface PublicationPipelineServiceInterface {
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.4
 	 */
 	public function sync(array $record): array;
+
+	/**
+	 * Withdraw every handed-off publication whose document or dossier was destroyed.
+	 *
+	 * @param list<string> $sourceRefs The destroyed object's uuid and file ids
+	 * @param string       $detail     What was destroyed, for the reason
+	 *
+	 * @return list<array<string, mixed>> The withdrawn records.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-a-publication-goes-offline-when-its-source-document-is-destroyed-req-scr-009
+	 */
+	public function withdrawDestroyedSource(array $sourceRefs, string $detail): array;
 }//end interface
