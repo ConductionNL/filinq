@@ -6,7 +6,7 @@
  * to the creator of an open request, a refusal shows the server's message
  * (which names the creator), and a withdrawal reloads the request.
  *
- * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+ * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
  */
 
 let mockCurrentUser = { uid: 'alice' }

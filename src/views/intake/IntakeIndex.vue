@@ -161,6 +161,8 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 		<SeparatorSheetsDialog
 			v-if="separatorsOpen"
 			@close="separatorsOpen = false" />
+
+		<IntakeRoutingDeclaration />
 	</div>
 </template>
 
@@ -173,6 +175,7 @@ import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import LockOpenVariant from 'vue-material-design-icons/LockOpenVariant.vue'
+import IntakeRoutingDeclaration from '../../components/intake/IntakeRoutingDeclaration.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
 import SeparatorSheetsDialog from '../../dialogs/SeparatorSheetsDialog.vue'
@@ -209,6 +212,7 @@ export default {
 		FinalDocumentReasonDialog,
 		FolderOutline,
 		IntakeAssignDialog,
+		IntakeRoutingDeclaration,
 		SeparatorSheetsDialog,
 		PdfPasswordModal,
 		LockOpenVariant,

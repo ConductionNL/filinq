@@ -46,6 +46,14 @@
 						"icon": "FileDocumentMultipleOutline",
 						"category": "documents",
 						"route": "ProducedDocumentsReport"
+					},
+					{
+						"id": "PersonalDataReport",
+						"label": "Personal data",
+						"description": "Which documents hold personal data, of which kind, and whether an anonymised copy exists.",
+						"icon": "ShieldLockOutline",
+						"category": "documents",
+						"route": "PersonalDataReport"
 					}
 				]
 			}
@@ -491,6 +499,71 @@
 						"gridY": 6,
 						"gridWidth": 12,
 						"gridHeight": 4,
+						"showTitle": true
+					}
+				]
+			}
+		},
+		{
+			"id": "PersonalDataReport",
+			"route": "/reports/personal-data",
+			"type": "dashboard",
+			"title": "Personal data",
+			"_note": "specify-capability-rows REQ-SCR-010. One record-list over GET api/reports/personal-data, which lists only the documents the reader may read in which detection found personal data: the entity types with their counts and whether an anonymised copy exists, never a detected value.",
+			"config": {
+				"widgets": [
+					{
+						"id": "personal-data-documents",
+						"title": "Documents with personal data",
+						"type": "record-list",
+						"content": {
+							"endpointSource": {
+								"url": "/apps/filinq/api/reports/personal-data",
+								"responsePath": "results"
+							},
+							"presentation": "table",
+							"limit": 100,
+							"columns": [
+								{
+									"label": "Document",
+									"value": "{name}"
+								},
+								{
+									"label": "Personal data found",
+									"value": "{entityTypes}"
+								},
+								{
+									"label": "Anonymised copy",
+									"value": "{copy}",
+									"tone": {
+										"field": "copy",
+										"map": {
+											"present": "success",
+											"missing": "warning"
+										},
+										"default": "default"
+									}
+								}
+							],
+							"valueLabels": {
+								"copy": {
+									"present": "Anonymised copy",
+									"missing": "No anonymised copy"
+								}
+							},
+							"emptyText": "No document you may read holds detected personal data",
+							"errorText": "The personal data report could not be read"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "personal-data-documents",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 8,
 						"showTitle": true
 					}
 				]

@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md#requirement-navigation-manifest-assembled-via-shared-buildmanifest
+ * @spec openspec/changes/archive/2026-11-17-filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md#requirement-navigation-manifest-assembled-via-shared-buildmanifest
  */
 
 import { describe, expect, it } from 'vitest'
@@ -31,6 +31,7 @@ const PAGES_BEFORE = [
 	['Versions', '/versions'], ['ComponentGallery', '/gallery'], ['Prohibitions', '/policy/prohibitions'],
 	['StandingConsents', '/policy/standing-consents'], ['Reports', '/reports'], ['SigningReport', '/reports/signing'],
 	['AnonymizationReport', '/reports/anonymization'], ['ProducedDocumentsReport', '/reports/documents'],
+	['PersonalDataReport', '/reports/personal-data'],
 	['Intake', '/intake'], ['IntakeRules', '/intake/rules'], ['ClassificationPending', '/classification'], ['FeaturesRoadmap', '/features-roadmap'],
 	['Flows', '/flows'], ['FlowDetail', '/flows/:id'],
 ]

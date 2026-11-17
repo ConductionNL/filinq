@@ -117,6 +117,25 @@ class RedactionReviewGateTest extends TestCase {
 	}//end testTheStaleRefusalNamesWhoCheckedItBefore()
 
 	/**
+	 * With a language the stale refusal still names who checked it: the names
+	 * reach IL10N::t() as its parameters, which Nextcloud formats with exactly
+	 * the parameters given and refuses a `%s` it was not handed.
+	 *
+	 * @return void
+	 */
+	public function testTheStaleRefusalNamesWhoCheckedItBeforeInTheReadersLanguage(): void {
+		$l10n = $this->createMock(\OCP\IL10N::class);
+		$l10n->method('t')->willReturnCallback(
+			static fn (string $text, array $parameters = []): string => vsprintf($text, $parameters)
+		);
+
+		$refusal = (new RedactionReviewGate(l10n: $l10n))->refuse(mark: $this->mark(run: 'run-1'), detectionRunId: 'run-2');
+
+		$this->assertStringContainsString('jdevries', $refusal['message']);
+		$this->assertStringContainsString('2026-09-18', $refusal['message']);
+	}//end testTheStaleRefusalNamesWhoCheckedItBeforeInTheReadersLanguage()
+
+	/**
 	 * 🔴 A RE-RUN LEAVES NO MARK AT ALL, AND AN OLD ONE DOES NOT STAND IN FOR
 	 * ONE. Carrying the old mark forward "for reference" is how it ends up
 	 * read as an approval: every surface that asks "is there a mark" gets yes.
