@@ -731,14 +731,13 @@ echo "[ci-seed] done."
 # Installing would push the app's whole demo dataset into every list the suite
 # asserts on. `demo-data-setup-step.spec.ts` exercises the install deliberately.
 #
-# Uses the workflow's own exported credentials rather than this script's, so it
-# does not depend on where in the file it sits.
+# Targets the same resolved ${BASE} and credentials as every other write above,
+# so off CI it can never fall through to the shared localhost:8080 container.
 #
 # Tolerant on purpose: an app whose wizard has no demo-data step answers 400
 # here, and that is not a seeding failure.
-DEMO_BASE="${BASE_URL:-${NEXTCLOUD_URL:-http://localhost:8080}}"
 DEMO_CODE="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 300 \
-	-u "${ADMIN_USER:-admin}:${ADMIN_PASSWORD:-admin}" -X POST \
+	-u "${USER_NAME}:${USER_PASS}" -X POST \
 	-H 'Content-Type: application/json' -H 'OCS-APIRequest: true' --data '{}' \
-	"${DEMO_BASE}/index.php/apps/filinq/api/setup/action/skip-demo-data" || echo 000)"
+	"${BASE}/index.php/apps/filinq/api/setup/action/skip-demo-data" || echo 000)"
 echo "[ci-seed] POST setup/action/skip-demo-data -> HTTP ${DEMO_CODE}"
