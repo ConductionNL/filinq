@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\LegalBasisProposalServiceInterface;
 use Exception;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -56,14 +57,8 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md
  */
-class LegalBasisProposalService {
+class LegalBasisProposalService implements LegalBasisProposalServiceInterface {
 
-	/**
-	 * App config key holding the entity-type → base-slug[] mapping.
-	 *
-	 * @var string
-	 */
-	public const CONFIG_KEY = 'filinq.grondslagen.entity_type_bases';
 
 	/**
 	 * App config key holding the JSON array of entity types left enabled for

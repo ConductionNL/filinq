@@ -48,6 +48,10 @@
             "description": "Controller that wires the batch-anonymization routes to their service layer"
         },
         {
+            "name": "bridge",
+            "description": "The ZGW document bridge: staged documents from case systems, their dossier pick-up, release and retry, and source badges"
+        },
+        {
             "name": "bulk-signing",
             "description": "Every endpoint is for a signed-in user and reaches only the caller's own batches, or every batch for an admin"
         },
@@ -168,6 +172,10 @@
             "description": "Controller for PDF generation endpoints"
         },
         {
+            "name": "pdf-password",
+            "description": "Remove the password of an encrypted PDF into an unlocked copy, for a user's own file or a waiting intake document"
+        },
+        {
             "name": "pdfa3-conversion",
             "description": "Controller for the PDF/A-3 conversion endpoint"
         },
@@ -286,6 +294,10 @@
         {
             "name": "detection-provider-settings",
             "description": "Reads and writes the per-organisation entity-detection provider settings, for admins only"
+        },
+        {
+            "name": "grounds",
+            "description": "Reads the Woo refusal grounds the pickers offer, from dossiq or the read-only snapshot"
         }
     ],
     "paths": {
@@ -3435,6 +3447,169 @@
                         "in": "path",
                         "required": true,
                         "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/documents/{fileId}/remove-password": {
+            "post": {
+                "operationId": "pdf-password-remove",
+                "summary": "Remove the password of a PDF into a copy beside it",
+                "description": "Unlock a password-protected PDF the caller can open into `<name> (unlocked).pdf` in the same folder, and check the copy. The original stays. The password is used once and never kept.",
+                "tags": [
+                    "pdf-password"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "password"
+                                ],
+                                "properties": {
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "description": "The PDF's password."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The unlocked copy's id and name, and its validation findings.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/intake/documents/{uuid}/remove-password": {
+            "post": {
+                "operationId": "pdf-password-remove-for-intake",
+                "summary": "Remove the password of a waiting intake document's PDF",
+                "description": "Unlock the locked PDF of a waiting intake document into `<name> (unlocked).pdf` beside it and check the copy. The document then names the copy as its `file` and keeps the file that arrived as `lockedOriginal`. Only a caller who may change intake documents can use it. The password is used once and never kept.",
+                "tags": [
+                    "pdf-password"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "password"
+                                ],
+                                "properties": {
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "description": "The PDF's password."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The unlocked copy's id, name and validation findings, and the stored intake document.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The intake document.",
                         "schema": {
                             "type": "string"
                         }
@@ -9421,6 +9596,54 @@
                 }
             }
         },
+        "/templates/for-object": {
+            "get": {
+                "operationId": "templates-for-object",
+                "summary": "The templates that apply to one host object, as leaf rows (id, name, format, description)",
+                "description": "The templates that apply to one host object, as leaf rows (id, name, format, description)",
+                "tags": [
+                    "templates"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON response with the results array",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "register",
+                        "in": "query",
+                        "required": true,
+                        "description": "The host object's register slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "schema",
+                        "in": "query",
+                        "required": true,
+                        "description": "The host object's schema slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/templates/preview": {
             "post": {
                 "operationId": "template-preview-preview",
@@ -10698,6 +10921,292 @@
                         "$ref": "#/components/responses/Problem403"
                     }
                 }
+            }
+        },
+        "/grounds": {
+            "get": {
+                "operationId": "grounds-index",
+                "summary": "GET /api/grounds",
+                "description": "The Woo refusal grounds the pickers offer, read from dossiq or, without it, from the read-only snapshot. Read only; any signed-in user.",
+                "tags": [
+                    "grounds"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "source (dossiq or snapshot), version and grounds",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "503": {
+                        "description": "No grounds list can be read"
+                    }
+                }
+            }
+        },
+        "/bridge/sources": {
+            "get": {
+                "operationId": "bridge-sources",
+                "summary": "GET /api/bridge/sources",
+                "description": "GET /api/bridge/sources",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Every bridge source with its health (admin setting).",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bridge/external-documents": {
+            "get": {
+                "operationId": "bridge-external-documents",
+                "summary": "GET /api/bridge/external-documents",
+                "description": "GET /api/bridge/external-documents",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The staged documents the caller may read, optionally of one source.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bridge/badges": {
+            "get": {
+                "operationId": "bridge-badges",
+                "summary": "The source badge of a listing page's files",
+                "description": "The case-system vendor of each listed file that came in through the bridge, in one lookup. Only files the caller can open are answered for.",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`badges`: the vendor per file id.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileIds",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated file ids of the listing page.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/dossiers/{dossierId}/attach": {
+            "post": {
+                "operationId": "bridge-attach",
+                "summary": "POST /api/bridge/dossiers/{dossierId}/attach",
+                "description": "POST /api/bridge/dossiers/{dossierId}/attach",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The documents attached to the dossier.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "dossierId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/external-documents/{id}/release": {
+            "post": {
+                "operationId": "bridge-release",
+                "summary": "POST /api/bridge/external-documents/{id}/release",
+                "description": "POST /api/bridge/external-documents/{id}/release",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The released document.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/external-documents/{id}/retry": {
+            "post": {
+                "operationId": "bridge-retry",
+                "summary": "POST /api/bridge/external-documents/{id}/retry",
+                "description": "POST /api/bridge/external-documents/{id}/retry",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The document queued for write-back again.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/verify/{token}": {
+            "get": {
+                "operationId": "publicVerification-verify",
+                "summary": "Verify a signed document by its verification token",
+                "description": "Public, account-free. Answers the outcome recorded for one signed document: file name, content hash, and per signature the status, level, the signer as asserted and whether content integrity and the signer are covered by the check. An unknown, malformed or revoked token answers 200 with status unknown, in the same shape. Rate-limited and throttled.",
+                "tags": [
+                    "signing"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The verdict, or status unknown",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "description": "The 32-character verification token.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "security": []
             }
         }
     },

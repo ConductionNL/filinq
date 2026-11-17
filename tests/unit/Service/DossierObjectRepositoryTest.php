@@ -38,6 +38,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The repository resolves OpenRegister services and the dossier folder, loads
@@ -353,7 +354,13 @@ class DossierObjectRepositoryTest extends TestCase {
 
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->expects($this->once())->method('find')
-			->with('uuid-1', 'filinq', 'dossier', false, false)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'uuid-1',
+				'register' => 'filinq',
+				'schema' => 'dossier',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturn($entity);
 		$this->withObjectService($objectService);
 
@@ -515,7 +522,13 @@ class DossierObjectRepositoryTest extends TestCase {
 	public function testUpdateDossierConfigurationSkipsAMissingDossier(): void {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->expects($this->once())->method('find')
-			->with('uuid-9', 'filinq', 'dossier', false, false)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'uuid-9',
+				'register' => 'filinq',
+				'schema' => 'dossier',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturn(null);
 		$objectService->expects($this->never())->method('saveObject');
 		$this->withObjectService($objectService);
@@ -546,7 +559,14 @@ class DossierObjectRepositoryTest extends TestCase {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('find')->willReturn($entity);
 		$objectService->expects($this->once())->method('saveObject')
-			->with($this->anything(), 'filinq', 'dossier', 'uuid-10', false, false)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->anything(),
+				'register' => 'filinq',
+				'schema' => 'dossier',
+				'uuid' => 'uuid-10',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturnCallback(
 				static function (array $object) use (&$saved) {
 					$saved = $object;

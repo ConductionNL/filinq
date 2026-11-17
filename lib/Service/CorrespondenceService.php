@@ -40,6 +40,9 @@ use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCA\Filinq\Service\Support\PdfRendering;
 use OCA\Filinq\Service\Support\TemplateSources;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -600,8 +603,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 			$objectService = $this->getObjectService();
 			$result = $objectService->find(
 				id: $huisstijlId,
-				register: 'filinq',
-				schema: 'huisstijl'
+				options: new ObjectFindOptions(register: 'filinq', schema: 'huisstijl')
 			);
 
 			if (empty($result) === true) {
@@ -843,8 +845,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 
 			$result = $objectService->saveObject(
 				object: $entry,
-				register: 'filinq',
-				schema: 'correspondence'
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'correspondence'))
 			);
 
 			if (is_object($result) === true
