@@ -70,6 +70,7 @@ class AccessibilityChecksProbeTest extends TestCase {
 			[
 				'checkId' => 'pdf-not-tagged',
 				'category' => 'accessibility',
+				'source' => 'heuristic',
 				'severity' => 'warning',
 				'message' => 'The PDF has no tags, so a screen reader cannot follow its structure.',
 				'params' => [],
