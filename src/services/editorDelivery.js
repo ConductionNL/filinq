@@ -53,6 +53,7 @@ const connectorAdapter = {
 	 *
 	 * @param {object} connector The editor's automation connector.
 	 * @return {Promise<void>}
+	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-the-stored-document-must-be-made-current-before-the-agent-reads-it
 	 */
 	flush(connector) {
 		return runCommand(connector, 'Api.Save(); return true;').then(() => undefined)
@@ -64,6 +65,7 @@ const connectorAdapter = {
 	 * @param {object} connector The editor's automation connector.
 	 * @param {string} find The text.
 	 * @return {Promise<number>}
+	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-an-edit-must-be-expressed-as-text-to-match-never-as-an-offset
 	 */
 	count(connector, find) {
 		return runCommand(
@@ -78,6 +80,7 @@ const connectorAdapter = {
 	 * @param {object} connector The editor's automation connector.
 	 * @param {{find: string, replace: string}} replacement The replacement.
 	 * @return {Promise<void>}
+	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-an-edit-must-be-expressed-as-text-to-match-never-as-an-offset
 	 */
 	replace(connector, { find, replace }) {
 		const options = JSON.stringify({ searchString: find, replaceString: replace, matchCase: true })
@@ -102,6 +105,7 @@ const postMessageAdapter = {
 	 *
 	 * @param {{window: Window, origin: string, events?: EventTarget, timeoutMs?: number}} target The editor frame.
 	 * @return {Promise<void>}
+	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-the-stored-document-must-be-made-current-before-the-agent-reads-it
 	 */
 	flush(target) {
 		return new Promise((resolve, reject) => {
@@ -149,6 +153,7 @@ const postMessageAdapter = {
 	 * Not available through this API.
 	 *
 	 * @return {Promise<null>}
+	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-an-edit-must-be-expressed-as-text-to-match-never-as-an-offset
 	 */
 	count() {
 		return Promise.resolve(null)
@@ -160,6 +165,7 @@ const postMessageAdapter = {
 	 * @param {{window: Window, origin: string}} target The editor frame.
 	 * @param {{find: string, replace: string}} replacement The replacement.
 	 * @return {Promise<void>}
+	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-an-edit-must-be-expressed-as-text-to-match-never-as-an-offset
 	 */
 	replace(target, { find, replace }) {
 		post(target, {
@@ -196,6 +202,7 @@ export const EDITOR_ADAPTERS = Object.freeze({
  * @param {string} [suite] The suite, for the message.
  * @return {EditorAdapter}
  * @throws {Error} When no adapter by that name exists.
+ * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#scenario-an-unknown-suite-refuses-rather-than-guesses
  */
 export function resolveAdapter(name, suite = '') {
 	const adapter = Object.hasOwn(EDITOR_ADAPTERS, String(name)) ? EDITOR_ADAPTERS[name] : null
@@ -251,6 +258,7 @@ export async function flushThenRead(editor, handle, read) {
  * @param {object} delivery The backend's `delivery: "editor"` answer.
  * @return {Array<{find: string, replace: string}>}
  * @throws {Error} When the answer is not deliverable.
+ * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-an-edit-must-be-expressed-as-text-to-match-never-as-an-offset
  */
 export function replacementsOf(delivery) {
 	if (delivery?.delivery !== 'editor') {
