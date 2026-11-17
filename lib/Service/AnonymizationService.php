@@ -415,11 +415,18 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		// included. Best-effort — a failure here is logged and surfaced as a
 		// warning but never blocks OR's own detection.
 		$detected = ['customDictionaryWarning' => $this->dictionaryRunner->run(fileId: $fileId, entityTypeWhitelist: $entityTypes)];
-		$detected += $this->detectedEntities(fileId: $fileId, legalBasisProposal: $legalBasisProposal);
 
 		// The image leg (image-redaction REQ-DDIMR-002/007): after the OCR
-		// fallback, so a scan is known; it never makes image content silent.
-		$imageFields = $this->imageLeg(fileId: $fileId, detected: $detected, ocrFields: $ocrFields);
+		// fallback, so a scan is known, and before the read-back, so the
+		// regions the seam stores take the same proposals and policy as a
+		// text finding. It never makes image content silent.
+		$imageDetection = $this->imageDetection(fileId: $fileId, ocrFields: $ocrFields);
+		$detected += $this->detectedEntities(fileId: $fileId, legalBasisProposal: $legalBasisProposal);
+		$imageFields = ['entities' => $detected['entities'], 'fields' => []];
+		if ($this->images !== null) {
+			$imageFields = $this->images->withRegions(entities: array_values((array) $detected['entities']), detection: $imageDetection);
+		}
+
 		$detected['entities'] = $imageFields['entities'];
 
 		return array_merge(
@@ -431,25 +438,23 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	}//end extractAndDetect()
 
 	/**
-	 * Run the image leg over the extracted file.
+	 * Send the extracted file to the image seam when it carries image content.
 	 *
 	 * @param int                  $fileId    The file.
-	 * @param array<string, mixed> $detected  The detected entities under `entities`.
 	 * @param array<string, mixed> $ocrFields What the OCR fallback reported.
 	 *
-	 * @return array{entities: array<int, mixed>, fields: array<string, mixed>} The rows and the fields to add.
+	 * @return array{regions: list<array<string, mixed>>, fields: array<string, mixed>} The regions and the fields to add.
 	 *
 	 * @spec openspec/changes/image-redaction/tasks.md#task-3.2
 	 */
-	private function imageLeg(int $fileId, array $detected, array $ocrFields): array {
-		$entities = (array) ($detected['entities'] ?? []);
+	private function imageDetection(int $fileId, array $ocrFields): array {
 		$file = $this->sourceFile(fileId: $fileId);
 		if ($this->images === null || $file === null) {
-			return ['entities' => $entities, 'fields' => []];
+			return ['regions' => [], 'fields' => []];
 		}
 
-		return $this->images->afterExtraction(file: $file, entities: array_values($entities), ocrFields: $ocrFields);
-	}//end imageLeg()
+		return $this->images->detect(file: $file, ocrFields: $ocrFields);
+	}//end imageDetection()
 
 	/**
 	 * The source file through OpenRegister's FileService, or null when it cannot be read.

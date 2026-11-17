@@ -80,6 +80,37 @@ class AnonymizationServiceImageLegTest extends TestCase {
 
 	}//end testASignatureFoundOnAScanBecomesAReviewRow()
 
+	public function testRegionsTheSeamStoresAreReadBackAsOrdinaryRows(): void {
+		$detectedFirst = false;
+		$seam = $this->createMock(ImageSeamGateway::class);
+		$seam->method('available')->willReturn(true);
+		$seam->method('detect')->willReturnCallback(
+			static function () use (&$detectedFirst): array {
+				$detectedFirst = true;
+
+				return [
+					'detected' => true,
+					'reason' => null,
+					'regions' => [['page' => 1, 'box' => ['x' => 0.1, 'y' => 0.2, 'w' => 0.3, 'h' => 0.05], 'entityType' => 'BSN', 'confidence' => 0.9, 'relationId' => 7]],
+					'detectors' => [],
+					'objectDetection' => 'not-run',
+					'objectDetectionReason' => 'No region detector ran.',
+				];
+			}
+		);
+		$rows = static function () use (&$detectedFirst): array {
+			return $detectedFirst === true ? [['entity_type' => 'BSN', 'entity_value' => '111222333', 'relation_id' => 7, 'confidence' => 0.9]] : [];
+		};
+
+		$result = $this->serviceOver(seam: $seam, rows: $rows)->extractAndDetectEntities(fileId: 812004);
+
+		$this->assertCount(1, $result['entities'], 'The region joins the row the seam stored, once.');
+		$this->assertSame('111222333', $result['entities'][0]['value']);
+		$this->assertSame('image', $result['entities'][0]['origin']);
+		$this->assertSame('not-run', $result['objectDetection']);
+
+	}//end testRegionsTheSeamStoresAreReadBackAsOrdinaryRows()
+
 	public function testWithoutTheImageLegTheResultIsUnchanged(): void {
 		$result = $this->serviceOver(seam: null)->extractAndDetectEntities(fileId: 812004);
 
@@ -124,12 +155,13 @@ class AnonymizationServiceImageLegTest extends TestCase {
 	 *
 	 * @param ImageSeamGateway|null        $seam   The seam, or null for no image leg.
 	 * @param DocumentAnonymizeRunner|null $runner The anonymise runner, or the real one.
+	 * @param callable|null                $rows   What the relation mapper reads back, when asked.
 	 *
 	 * @return AnonymizationService The service.
 	 */
-	private function serviceOver(?ImageSeamGateway $seam, ?DocumentAnonymizeRunner $runner = null): AnonymizationService {
+	private function serviceOver(?ImageSeamGateway $seam, ?DocumentAnonymizeRunner $runner = null, ?callable $rows = null): AnonymizationService {
 		$mapper = $this->createMock(EntityRelationMapper::class);
-		$mapper->method('findEntitiesForFile')->willReturn([]);
+		$mapper->method('findEntitiesForFile')->willReturnCallback($rows ?? static fn (): array => []);
 		$basis = $this->createMock(\OCA\Filinq\Service\LegalBasisProposalService::class);
 		$basis->method('enrichEntitiesWithBases')->willReturnArgument(0);
 		$file = $this->ocrFile();

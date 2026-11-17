@@ -101,19 +101,39 @@ class ImageRedactionService {
 	 * @spec openspec/changes/image-redaction/tasks.md#task-3.2
 	 */
 	public function afterExtraction(File $file, array $entities, array $ocrFields = []): array {
+		$detection = $this->detect(file: $file, ocrFields: $ocrFields);
+
+		return $this->withRegions(entities: $entities, detection: $detection);
+
+	}//end afterExtraction()
+
+	/**
+	 * Send an image-bearing file to the seam, before the entity rows are read back.
+	 *
+	 * The seam stores what it finds as entity relations, so detecting first
+	 * lets those rows take the same proposals and policy as a text finding.
+	 *
+	 * @param File                 $file      The file.
+	 * @param array<string, mixed> $ocrFields What the OCR fallback reported.
+	 *
+	 * @return array{regions: list<array<string, mixed>>, fields: array<string, mixed>} The regions and the fields to add.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.2
+	 */
+	public function detect(File $file, array $ocrFields = []): array {
 		if ($this->isImageBearing(file: $file, ocrFields: $ocrFields) === false) {
-			return ['entities' => $entities, 'fields' => []];
+			return ['regions' => [], 'fields' => []];
 		}
 
 		if ($this->seam->available() === false) {
-			return ['entities' => $entities, 'fields' => ['imageDetectionSkipped' => ['reason' => self::REASON_BACKEND_UNAVAILABLE]]];
+			return ['regions' => [], 'fields' => ['imageDetectionSkipped' => ['reason' => self::REASON_BACKEND_UNAVAILABLE]]];
 		}
 
 		try {
 			$outcome = $this->seam->detect(file: $file);
 		} catch (Throwable $e) {
 			return [
-				'entities' => $entities,
+				'regions' => [],
 				'fields' => ['imageDetectionSkipped' => ['reason' => self::REASON_BACKEND_UNAVAILABLE, 'detail' => $e->getMessage()]],
 			];
 		}
@@ -125,14 +145,29 @@ class ImageRedactionService {
 		if ($outcome['detected'] === false) {
 			$fields['imageDetectionSkipped'] = ['reason' => self::REASON_NOT_DETECTED, 'detail' => (string) $outcome['reason']];
 
-			return ['entities' => $entities, 'fields' => $fields];
+			return ['regions' => [], 'fields' => $fields];
 		}
 
 		$fields['imageRegionCount'] = count($outcome['regions']);
 
-		return ['entities' => $this->attachRegions(entities: $entities, regions: $outcome['regions']), 'fields' => $fields];
+		return ['regions' => $outcome['regions'], 'fields' => $fields];
 
-	}//end afterExtraction()
+	}//end detect()
+
+	/**
+	 * The entity rows with a detection's regions attached, and its fields.
+	 *
+	 * @param list<array<string, mixed>>                                                  $entities  The entity rows.
+	 * @param array{regions: list<array<string, mixed>>, fields: array<string, mixed>} $detection What detect() answered.
+	 *
+	 * @return array{entities: list<array<string, mixed>>, fields: array<string, mixed>} The rows and the fields to add.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.2
+	 */
+	public function withRegions(array $entities, array $detection): array {
+		return ['entities' => $this->attachRegions(entities: $entities, regions: $detection['regions']), 'fields' => $detection['fields']];
+
+	}//end withRegions()
 
 	/**
 	 * Attach each region to the entity row of its relation as `origin: image` and `boxes`.
