@@ -36,7 +36,8 @@ Acceptance criteria:
 
 - [ ] Bring up ONLYOFFICE and confirm its WOPI probe resolves available
 - [ ] Round-trip a `.docx`: save through the suite, re-read with `PackageCodec`, record which content-hash anchors still resolve
-- [ ] Make the test report `not run` distinctly from `passed` when no suite is reachable, and verify the distinction appears in output a human reads
+- [x] Make the test report `not run` distinctly from `passed` when no suite is reachable, and verify the distinction appears in output a human reads
+  - Verified 17 Nov 2026 with no suite reachable: `phpunit --display-skipped tests/unit/Service/Office/AnchorRoundTripTest.php` prints `NOT MEASURED: no office suite reachable. ... This is NOT a pass` and counts it as skipped, not passed.
 - [ ] Write the result into the change — including a negative one
 
 Acceptance criteria:
@@ -46,7 +47,8 @@ Acceptance criteria:
 
 ## 5. Verify
 
-- [ ] Playwright E2E: read and edit a document with NO suite installed, proving no capability depends on one
+- [x] Playwright E2E: read and edit a document with NO suite installed, proving no capability depends on one
+  - `tests/e2e/workflows/no-office-suite.spec.ts`: asserts the capability endpoint reports no suite (else skips, saying not run), reads and edits a `.docx` through the document tools, re-reads the edit. The MCP helpers and fixture moved to `tests/e2e/workflows/_mcp.ts`, shared with `agent-document-editing.spec.ts`. Written, not run here.
 - [ ] `composer check:strict` clean; hydra gates measured against the base run, not against zero
 
 Acceptance criteria:

@@ -27,6 +27,9 @@ use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\PublicationAccess;
 use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
+use OCA\Filinq\Service\Audit\DocumentDownloadLog;
+use OCA\Filinq\Service\DocumentDownloadRecorder;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\Files\File;
 use OCA\Filinq\Service\Publication\DiwooMissingFields;
@@ -73,7 +76,8 @@ class PublicationControllerTest extends TestCase {
 		bool $publisher = true,
 		array $params = [],
 		?array $records = null,
-		?DownloadAgreementGateInterface $agreements = null
+		?DownloadAgreementGateInterface $agreements = null,
+		?DocumentActionAudit $audit = null
 	): PublicationController {
 		$store = $this->createMock(PublicationStore::class);
 		$store->method('findRecord')->willReturn($record);
@@ -108,7 +112,8 @@ class PublicationControllerTest extends TestCase {
 			new PublicationAccess(rootFolder: $root, groups: $groups, appConfig: $config),
 			$session,
 			new NullLogger(),
-			$agreements
+			$agreements,
+			($audit === null) ? null : new DocumentDownloadLog(new DocumentDownloadRecorder(), $audit, $session, new NullLogger())
 		);
 
 	}//end controller()
@@ -372,4 +377,41 @@ class PublicationControllerTest extends TestCase {
 		$this->assertSame(503, $this->controller(pipeline: $pipeline, record: $record, platform: $platform)->download('mine')->getStatus());
 
 	}//end testADownloadWaitsForTheAcceptedAgreement()
+	/**
+	 * A served published copy writes one download record on the copy, naming the route and the caller;
+	 * a refused download writes none.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md#requirement-a-download-is-recorded-with-its-route-and-its-identity-req-dio-06
+	 */
+	public function testAServedCopyIsRecordedOnce(): void {
+		$pipeline = $this->createMock(PublicationPipelineService::class);
+		$record = ['uuid' => 'mine', 'documentFileRef' => '42', 'redactedFileRef' => '43', 'status' => 'published'];
+		$file = $this->createMock(File::class);
+		$file->method('getId')->willReturn(43);
+		$file->method('getContent')->willReturn('%PDF-redacted');
+		$file->method('getName')->willReturn('besluit.pdf');
+		$file->method('getMimeType')->willReturn('application/pdf');
+		$platform = $this->createMock(OpenCatalogiPlatform::class);
+		$platform->method('readCopy')->willReturn($file);
+		$agreements = $this->createMock(DownloadAgreementGateInterface::class);
+		$agreements->method('check')->willReturn(['mayDownload' => true, 'gated' => false]);
+
+		$audit = $this->createMock(DocumentActionAudit::class);
+		$audit->expects($this->once())->method('record')->with(
+			43,
+			'downloaded',
+			$this->callback(static fn (array $context): bool => $context['route'] === 'ui' && $context['identity'] === 'anna' && $context['version'] === '')
+		)->willReturn(true);
+
+		$served = $this->controller(pipeline: $pipeline, record: $record, platform: $platform, agreements: $agreements, audit: $audit)->download('mine');
+		$this->assertSame(200, $served->getStatus());
+
+		$never = $this->createMock(DocumentActionAudit::class);
+		$never->expects($this->never())->method('record');
+		$draft = $this->controller(pipeline: $pipeline, record: ['status' => 'draft'] + $record, platform: $platform, agreements: $agreements, audit: $never);
+		$this->assertSame(404, $draft->download('mine')->getStatus());
+
+	}//end testAServedCopyIsRecordedOnce()
 }//end class
