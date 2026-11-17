@@ -50,7 +50,8 @@
                         "scope": "document",
                         "dossierKey": null,
                         "reversible": false,
-                        "userId": ""
+                        "userId": "",
+                        "wooCase": false
                     }
                 }
             }
@@ -107,7 +108,8 @@
                         "scope": "document",
                         "dossierKey": null,
                         "reversible": false,
-                        "userId": ""
+                        "userId": "",
+                        "wooCase": false
                     }
                 }
             },
@@ -151,7 +153,8 @@
                         "scope": "document",
                         "dossierKey": null,
                         "reversible": false,
-                        "userId": ""
+                        "userId": "",
+                        "wooCase": false
                     }
                 }
             }
@@ -208,7 +211,8 @@
                         "scope": "dossier",
                         "dossierKey": null,
                         "reversible": false,
-                        "userId": ""
+                        "userId": "",
+                        "wooCase": false
                     }
                 }
             }
@@ -269,7 +273,8 @@
                         "scope": "document",
                         "dossierKey": null,
                         "reversible": false,
-                        "userId": ""
+                        "userId": "",
+                        "wooCase": false
                     }
                 }
             }
@@ -326,7 +331,8 @@
                         "scope": "dossier",
                         "dossierKey": null,
                         "reversible": false,
-                        "userId": ""
+                        "userId": "",
+                        "wooCase": false
                     }
                 }
             }
@@ -387,7 +393,8 @@
                         "scope": "document",
                         "dossierKey": null,
                         "reversible": false,
-                        "userId": ""
+                        "userId": "",
+                        "wooCase": false
                     }
                 }
             }
@@ -456,7 +463,8 @@
                         "scope": "document",
                         "dossierKey": null,
                         "reversible": false,
-                        "userId": "carol"
+                        "userId": "carol",
+                        "wooCase": false
                     }
                 }
             }
@@ -531,7 +539,8 @@
                         "scope": "document",
                         "dossierKey": null,
                         "reversible": false,
-                        "userId": "alice"
+                        "userId": "alice",
+                        "wooCase": false
                     }
                 }
             }
@@ -591,7 +600,8 @@
                         "scope": "dossier",
                         "dossierKey": "folder-7",
                         "reversible": true,
-                        "userId": "bob"
+                        "userId": "bob",
+                        "wooCase": false
                     }
                 }
             }
@@ -666,7 +676,8 @@
                         "scope": "document",
                         "dossierKey": null,
                         "reversible": false,
-                        "userId": "grace"
+                        "userId": "grace",
+                        "wooCase": false
                     }
                 }
             }
@@ -741,7 +752,8 @@
                         "scope": "document",
                         "dossierKey": "12",
                         "reversible": false,
-                        "userId": "dave"
+                        "userId": "dave",
+                        "wooCase": false
                     }
                 }
             }
@@ -816,7 +828,8 @@
                         "scope": "document",
                         "dossierKey": null,
                         "reversible": false,
-                        "userId": "erin"
+                        "userId": "erin",
+                        "wooCase": false
                     }
                 }
             }
@@ -901,7 +914,8 @@
                         "scope": "dossier",
                         "dossierKey": "folder-9",
                         "reversible": true,
-                        "userId": "frank"
+                        "userId": "frank",
+                        "wooCase": false
                     }
                 }
             }
@@ -976,7 +990,8 @@
                         "scope": "document",
                         "dossierKey": null,
                         "reversible": false,
-                        "userId": "heidi"
+                        "userId": "heidi",
+                        "wooCase": false
                     }
                 }
             }
