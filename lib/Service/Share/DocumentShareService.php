@@ -120,11 +120,7 @@ class DocumentShareService {
 	 */
 	public function shareDocument(int $fileId, string $expiresOn, ?string $password, string $note, bool $labelConfirmed): array {
 		$uid = $this->uid();
-		$policy = $this->links->linkPolicy();
-		[$expires, $shortened] = $this->expiry(expiresOn: $expiresOn, maxDays: $policy['maxDays']);
-		if ($policy['passwordRequired'] === true && trim((string) $password) === '') {
-			throw new InvalidArgumentException('Nextcloud requires a password on every link', 400);
-		}
+		[$expires, $shortened] = $this->linkTerms(expiresOn: $expiresOn, password: $password);
 
 		$file = $this->files->node(fileId: $fileId);
 		if (($file instanceof File) === false) {
@@ -327,33 +323,9 @@ class DocumentShareService {
 			throw new InvalidArgumentException('A bundle needs a name', 400);
 		}
 
-		$policy = $this->links->linkPolicy();
-		[$expires, $shortened] = $this->expiry(expiresOn: $expiresOn, maxDays: $policy['maxDays']);
-		if ($policy['passwordRequired'] === true && trim((string) $password) === '') {
-			throw new InvalidArgumentException('Nextcloud requires a password on every link', 400);
-		}
+		[$expires, $shortened] = $this->linkTerms(expiresOn: $expiresOn, password: $password);
 
-		$readable = $this->readableIds(fileIds: $fileIds);
-		$refused  = [];
-		foreach ($readable as $fileId) {
-			if ($this->links->mayShare(fileId: $fileId, uid: $uid) === false) {
-				$refused[] = $fileId;
-			}
-		}
-
-		// A file the user may not share by link must not leave inside an archive either.
-		if ($refused !== []) {
-			throw new RuntimeException(
-				'Nextcloud does not let you share '.count($refused).' of the chosen documents by link',
-				403
-			);
-		}
-
-		$labels = [];
-		foreach ($readable as $fileId) {
-			$labels[$fileId] = $this->labelOf(fileId: $fileId);
-		}
-
+		$labels   = $this->bundleLabels(fileIds: $fileIds, uid: $uid);
 		$labelled = array_values(array_unique(array_filter($labels, static fn (string $label): bool => $label !== '')));
 		if ($labelled !== [] && $labelConfirmed === false) {
 			throw new InvalidArgumentException(
@@ -373,20 +345,9 @@ class DocumentShareService {
 			throw $e;
 		}
 
-		$files = [];
-		foreach ($built['included'] as $entry) {
-			$fileId  = (int) ($entry['fileId'] ?? 0);
-			$files[] = [
-				'fileId' => $fileId,
-				'name' => (string) ($entry['name'] ?? ''),
-				'version' => (string) ($entry['version'] ?? ''),
-				'label' => ($labels[$fileId] ?? ''),
-			];
-		}
-
 		$record = [
 			'kind' => 'bundle',
-			'files' => $files,
+			'files' => $this->bundleFiles(included: $built['included'], labels: $labels),
 			'shareId' => $link['id'],
 			'archiveJob' => (string) ($built['job']['uuid'] ?? ''),
 			'archiveFileId' => $archiveFileId,
@@ -416,6 +377,92 @@ class DocumentShareService {
 		];
 
 	}//end shareBundle()
+
+	/**
+	 * The expiry a new link gets under Nextcloud's rules, after checking its password rule.
+	 *
+	 * @param string      $expiresOn The last day asked for (YYYY-MM-DD); empty means 14 days ahead.
+	 * @param string|null $password  The link password, or null for none.
+	 *
+	 * @return array{0: DateTimeImmutable, 1: bool} The expiry, and whether Nextcloud's maximum shortened it.
+	 *
+	 * @throws InvalidArgumentException When the date is no future date, or Nextcloud requires a password (400).
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 */
+	private function linkTerms(string $expiresOn, ?string $password): array {
+		$policy = $this->links->linkPolicy();
+		$terms  = $this->expiry(expiresOn: $expiresOn, maxDays: $policy['maxDays']);
+		if ($policy['passwordRequired'] === true && trim((string) $password) === '') {
+			throw new InvalidArgumentException('Nextcloud requires a password on every link', 400);
+		}
+
+		return $terms;
+
+	}//end linkTerms()
+
+	/**
+	 * The label of every chosen file the user can open, after checking that each of them may be shared by link.
+	 *
+	 * A bundle is an archive the sharer owns, so Nextcloud's own reshare check never sees the files inside it:
+	 * a file the user may not share by link must not leave inside an archive either.
+	 *
+	 * @param array<int, int> $fileIds The chosen documents.
+	 * @param string          $uid     The sharer.
+	 *
+	 * @return array<int, string> The label per readable file id, empty when it has none.
+	 *
+	 * @throws RuntimeException When a file may not be shared (403), or a label cannot be read (503).
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 */
+	private function bundleLabels(array $fileIds, string $uid): array {
+		$readable = $this->readableIds(fileIds: $fileIds);
+		$refused  = array_filter(
+			$readable,
+			fn (int $fileId): bool => $this->links->mayShare(fileId: $fileId, uid: $uid) === false
+		);
+		if ($refused !== []) {
+			throw new RuntimeException(
+				'Nextcloud does not let you share '.count($refused).' of the chosen documents by link',
+				403
+			);
+		}
+
+		$labels = [];
+		foreach ($readable as $fileId) {
+			$labels[$fileId] = $this->labelOf(fileId: $fileId);
+		}
+
+		return $labels;
+
+	}//end bundleLabels()
+
+	/**
+	 * The record's file list: each file that went into the archive, with its label.
+	 *
+	 * @param array<int, array<string, mixed>> $included The manifest's included files.
+	 * @param array<int, string>               $labels   The label per file id.
+	 *
+	 * @return array<int, array{fileId: int, name: string, version: string, label: string}> The files.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 */
+	private function bundleFiles(array $included, array $labels): array {
+		$files = [];
+		foreach ($included as $entry) {
+			$fileId  = (int) ($entry['fileId'] ?? 0);
+			$files[] = [
+				'fileId' => $fileId,
+				'name' => (string) ($entry['name'] ?? ''),
+				'version' => (string) ($entry['version'] ?? ''),
+				'label' => ($labels[$fileId] ?? ''),
+			];
+		}
+
+		return $files;
+
+	}//end bundleFiles()
 
 	/**
 	 * Close the links that ran out or were removed in Files (D7, REQ-SDL-004).
