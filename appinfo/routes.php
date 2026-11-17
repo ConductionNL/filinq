@@ -100,6 +100,14 @@ $extra = [
         ['name' => 'caseDocuments#linkDomain', 'url' => 'api/case-documents/{uuid}/domains', 'verb' => 'POST'],
         ['name' => 'caseDocuments#unlinkDomain', 'url' => 'api/case-documents/{uuid}/domains', 'verb' => 'DELETE'],
         ['name' => 'caseDocuments#mine', 'url' => 'api/case-documents/mine', 'verb' => 'GET'],
+        // Release a document to the person who requested its record; the portal serves it (specify-capability-rows task 5.1).
+        // Copy a document to another record the user may write (specify-capability-rows task 6.1).
+        ['name' => 'documentCopy#copy', 'url' => 'api/case-documents/copy', 'verb' => 'POST'],
+        ['name' => 'documentRelease#release', 'url' => 'api/case-documents/{uuid}/releases', 'verb' => 'POST'],
+        ['name' => 'documentRelease#withdraw', 'url' => 'api/document-releases/{releaseId}', 'verb' => 'DELETE'],
+        ['name' => 'waitingWork#index', 'url' => 'api/documents/waiting', 'verb' => 'GET'],
+        ['name' => 'personalDataReport#index', 'url' => 'api/reports/personal-data', 'verb' => 'GET'],
+        ['name' => 'documentAudit#index', 'url' => 'api/documents/{fileId}/audit', 'verb' => 'GET'],
         ['name' => 'caseDocuments#uploadPolicy', 'url' => 'api/case-documents/upload-policy', 'verb' => 'GET'],
 
         // The post register's derived reads. The open post list is offered here
@@ -287,6 +295,7 @@ $extra = [
         ['name' => 'publication#index', 'url' => 'api/publications', 'verb' => 'GET'],
         ['name' => 'publication#create', 'url' => 'api/publications', 'verb' => 'POST'],
         ['name' => 'publication#categories', 'url' => 'api/publications/categories', 'verb' => 'GET'],
+        ['name' => 'publication#active', 'url' => 'api/publications/active', 'verb' => 'GET'],
         ['name' => 'publication#bulkMetadata', 'url' => 'api/publications/metadata', 'verb' => 'PUT'],
         ['name' => 'publication#show', 'url' => 'api/publications/{id}', 'verb' => 'GET'],
         ['name' => 'publication#readiness', 'url' => 'api/publications/{id}/readiness', 'verb' => 'POST'],
@@ -294,6 +303,7 @@ $extra = [
         ['name' => 'publication#handoff', 'url' => 'api/publications/{id}/handoff', 'verb' => 'POST'],
         ['name' => 'publication#withdraw', 'url' => 'api/publications/{id}/withdraw', 'verb' => 'POST'],
         ['name' => 'publication#destructionDate', 'url' => 'api/publications/{id}/destruction-date', 'verb' => 'POST'],
+        ['name' => 'publication#download', 'url' => 'api/publications/{id}/download', 'verb' => 'GET'],
 
         // Document generation routes (document-creatie-sjablonen).
         ['name' => 'document#generate', 'url' => 'api/documents/generate', 'verb' => 'POST'],
@@ -330,6 +340,7 @@ $extra = [
         ['name' => 'templateVersions#diffVersions', 'url' => 'api/templates/{id}/versions/diff', 'verb' => 'GET'],
         ['name' => 'templateVersions#restoreVersion', 'url' => 'api/templates/{id}/versions/{versionId}/restore', 'verb' => 'POST'],
         ['name' => 'templatePreview#previewTemplate', 'url' => 'api/templates/{id}/preview', 'verb' => 'POST'],
+        ['name' => 'templates#publish', 'url' => 'api/templates/{id}/publish', 'verb' => 'POST'],
         ['name' => 'templates#duplicate', 'url' => 'api/templates/{id}/duplicate', 'verb' => 'POST'],
         ['name' => 'templates#lock', 'url' => 'api/templates/{id}/lock', 'verb' => 'POST'],
         ['name' => 'templates#unlock', 'url' => 'api/templates/{id}/lock', 'verb' => 'DELETE'],
@@ -383,6 +394,8 @@ $extra = [
         ['name' => 'signerIdentity#callback', 'url' => 'api/signing/identity/callback', 'verb' => 'GET'],
         ['name' => 'signerIdentitySettings#index', 'url' => 'api/settings/signer-identity', 'verb' => 'GET'],
         ['name' => 'signerIdentitySettings#update', 'url' => 'api/settings/signer-identity', 'verb' => 'PUT'],
+        // one-signing-rail-for-the-fleet REQ-DDSRC-004: which apps raise signing requests, admin only.
+        ['name' => 'signingSourcesSettings#index', 'url' => 'api/settings/signing-sources', 'verb' => 'GET'],
 
         // Woo refusal grounds for the pickers, read through the one resolver
         // (grondslagen-read-from-dossiq REQ-GRD-002). Read only.
@@ -413,6 +426,9 @@ $extra = [
         ['name' => 'signingFolder#mandates', 'url' => 'api/signing/mandates', 'verb' => 'GET'],
         ['name' => 'signingFolder#declareMandate', 'url' => 'api/signing/mandates', 'verb' => 'POST'],
         ['name' => 'signingFolder#withdrawMandate', 'url' => 'api/signing/mandates/{typeApp}/{typeSchema}', 'verb' => 'DELETE'],
+        ['name' => 'signingFolder#delegations', 'url' => 'api/signing/delegations', 'verb' => 'GET'],
+        ['name' => 'signingFolder#declareDelegation', 'url' => 'api/signing/delegations', 'verb' => 'POST'],
+        ['name' => 'signingFolder#withdrawDelegation', 'url' => 'api/signing/delegations/{id}', 'verb' => 'DELETE'],
 
         // Portal signing receiver routes (portal-signing-actions,
         // portal-signing-surface): the A6 endpoint-forward targets portaliq

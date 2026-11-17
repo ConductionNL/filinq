@@ -54,7 +54,7 @@ class EntityConsolidationService implements EntityConsolidationServiceInterface 
 	 *
 	 * Mirrors AnonymizationService::HIGH_CONFIDENCE_THRESHOLD_KEY.
 	 */
-	private const HIGH_CONFIDENCE_THRESHOLD_KEY = 'prohibition.high_confidence_threshold';
+	private const HIGH_CONFIDENCE_THRESHOLD_KEY = 'filinq.prohibition.high_confidence_threshold';
 
 	/**
 	 * Default threshold value (inclusive boundary).

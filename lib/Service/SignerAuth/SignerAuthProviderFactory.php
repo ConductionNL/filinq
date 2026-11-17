@@ -57,6 +57,7 @@ class SignerAuthProviderFactory {
 	 * @param OidcBrokerProvider $brokerProvider The OIDC broker provider.
 	 * @param iterable<SignerAuthenticationProviderInterface> $additional Providers a plugin registers
 	 *                                                                    (for example a future `eudi-wallet`).
+	 * @param PhoneCodeProvider|null $phoneCodeProvider The phone code provider (REQ-SCR-004).
 	 *
 	 * @return void
 	 */
@@ -65,9 +66,12 @@ class SignerAuthProviderFactory {
 		NextcloudSessionProvider $sessionProvider,
 		OidcBrokerProvider $brokerProvider,
 		iterable $additional = [],
+		?PhoneCodeProvider $phoneCodeProvider = null,
 	) {
-		foreach ([$sessionProvider, $brokerProvider] as $provider) {
-			$this->providers[$provider->getIdentifier()] = $provider;
+		foreach ([$sessionProvider, $brokerProvider, $phoneCodeProvider] as $provider) {
+			if ($provider !== null) {
+				$this->providers[$provider->getIdentifier()] = $provider;
+			}
 		}
 
 		foreach ($additional as $provider) {
