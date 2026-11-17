@@ -333,8 +333,24 @@ class DocumentShareService {
 			throw new InvalidArgumentException('Nextcloud requires a password on every link', 400);
 		}
 
+		$readable = $this->readableIds(fileIds: $fileIds);
+		$refused  = [];
+		foreach ($readable as $fileId) {
+			if ($this->links->mayShare(fileId: $fileId, uid: $uid) === false) {
+				$refused[] = $fileId;
+			}
+		}
+
+		// A file the user may not share by link must not leave inside an archive either.
+		if ($refused !== []) {
+			throw new RuntimeException(
+				'Nextcloud does not let you share '.count($refused).' of the chosen documents by link',
+				403
+			);
+		}
+
 		$labels = [];
-		foreach ($this->readableIds(fileIds: $fileIds) as $fileId) {
+		foreach ($readable as $fileId) {
 			$labels[$fileId] = $this->labelOf(fileId: $fileId);
 		}
 

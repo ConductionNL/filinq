@@ -163,4 +163,25 @@ class NextcloudLinkShareGateway implements LinkShareGateway {
 		return ['maxDays' => $maxDays, 'passwordRequired' => $this->shareManager->shareApiLinkEnforcePassword()];
 
 	}//end linkPolicy()
+
+	/**
+	 * Whether the user may share this file by link.
+	 *
+	 * @param int    $fileId The Nextcloud file id, as the user sees it.
+	 * @param string $uid    The user who shares.
+	 *
+	 * @return bool True when the file is in the user's Files and carries the share permission.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+	 */
+	public function mayShare(int $fileId, string $uid): bool {
+		try {
+			$node = $this->rootFolder->getUserFolder($uid)->getFirstNodeById($fileId);
+		} catch (Throwable) {
+			return false;
+		}
+
+		return ($node instanceof File) === true && $node->isShareable() === true;
+
+	}//end mayShare()
 }//end class

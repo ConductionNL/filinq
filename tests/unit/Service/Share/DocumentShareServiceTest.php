@@ -63,6 +63,13 @@ class InMemoryLinkShares implements LinkShareGateway {
 	public ?string $refuse = null;
 
 	/**
+	 * Files the user may not share.
+	 *
+	 * @var array<int, int>
+	 */
+	public array $unshareable = [];
+
+	/**
 	 * Make a link.
 	 *
 	 * @param int               $fileId   The file.
@@ -113,6 +120,18 @@ class InMemoryLinkShares implements LinkShareGateway {
 	 */
 	public function linkPolicy(): array {
 		return $this->policy;
+	}
+
+	/**
+	 * Whether the user may share the file.
+	 *
+	 * @param int    $fileId The file.
+	 * @param string $uid    The sharer.
+	 *
+	 * @return bool
+	 */
+	public function mayShare(int $fileId, string $uid): bool {
+		return in_array($fileId, $this->unshareable, true) === false;
 	}
 }
 
@@ -473,6 +492,22 @@ class DocumentShareServiceTest extends TestCase {
 			} catch (InvalidArgumentException $e) {
 				$this->assertSame([$code, $message], [$e->getCode(), $e->getMessage()]);
 			}
+		}
+
+		$this->assertSame([[], []], [$this->links->shares, $this->saved]);
+	}
+
+	public function testAFileTheClerkMayNotShareKeepsTheWholeBundleIn(): void {
+		$this->readable(7, 8);
+		$this->links->unshareable = [8];
+		$this->archives->expects($this->never())->method('buildFromFiles');
+		$this->labels->expects($this->never())->method('getLabelForFile');
+
+		try {
+			$this->service()->share([7, 8], 'Bundel', '', null, '', true);
+			$this->fail('A bundle holding a file the clerk may not share must be refused');
+		} catch (RuntimeException $e) {
+			$this->assertSame([403, 'Nextcloud does not let you share 1 of the chosen documents by link'], [$e->getCode(), $e->getMessage()]);
 		}
 
 		$this->assertSame([[], []], [$this->links->shares, $this->saved]);

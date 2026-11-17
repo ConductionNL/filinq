@@ -84,4 +84,17 @@ interface LinkShareGateway {
 	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
 	 */
 	public function linkPolicy(): array;
+
+	/**
+	 * Whether the user may share this file by link: it is in the user's own Files and carries
+	 * the share permission there, the same rule Nextcloud applies to a link on the file itself.
+	 *
+	 * @param int    $fileId The Nextcloud file id, as the user sees it.
+	 * @param string $uid    The user who shares.
+	 *
+	 * @return bool True when the user may share the file.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+	 */
+	public function mayShare(int $fileId, string $uid): bool;
 }//end interface
