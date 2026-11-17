@@ -36,6 +36,15 @@
 			</template>
 			{{ t('filinq', 'Mark as checked') }}
 		</NcButton>
+		<!-- Four eyes (redaction-four-eyes-setting REQ-RWB-09): checked, but a
+		     colleague has to anonymise it. -->
+		<p
+			v-if="checked && colleagueHint"
+			class="review-mark__hint review-mark__colleague"
+			role="status"
+			data-testid="review-mark-colleague">
+			{{ colleagueHint }}
+		</p>
 		<p v-if="error" class="review-mark__error" role="alert">
 			{{ error }}
 		</p>
@@ -82,6 +91,12 @@ export default {
 		disabled: {
 			type: Boolean,
 			default: false,
+		},
+
+		/** Why a colleague has to anonymise this document, or empty (REQ-RWB-09). */
+		colleagueHint: {
+			type: String,
+			default: '',
 		},
 
 		/** A refusal or failure to show, or empty. */
