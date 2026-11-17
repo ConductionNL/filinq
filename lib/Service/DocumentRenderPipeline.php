@@ -44,6 +44,9 @@ use setasign\Fpdi\Fpdi;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * The house style default (templates-house-style-from-thematiq) adds the
+ * profile sync and its mapper to the classes the pipeline touches.
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The pipeline meets every rendering collaborator
  *     (templates, PDF, charts, office conversion, the organisation's huisstijl) at one seam.
  */
@@ -80,6 +83,7 @@ class DocumentRenderPipeline {
 	 * @param ObjectionTermCalculator|null $objectionTerm Adds the legal basis and the objection deadline of a decision letter
 	 * @param HtmlToOfficeConverter|null $officeConverter Makes DOCX and ODT; without it both answer 503
 	 * @param EffectiveSettings|null $effective The organisation's default huisstijl (multi-tenant-hardening REQ-DDMTH-004).
+	 * @param HuisstijlProfileSync|null $profileSync The managed house style used when a request names none
 	 *
 	 * @return void
 	 */
@@ -91,6 +95,7 @@ class DocumentRenderPipeline {
 		private readonly ?ObjectionTermCalculator $objectionTerm = null,
 		private readonly ?HtmlToOfficeConverter $officeConverter = null,
 		private readonly ?EffectiveSettings $effective = null,
+		private readonly ?HuisstijlProfileSync $profileSync = null,
 	) {
 		$this->templateRenderer = $rendering->renderer;
 		$this->pdfService = $rendering->pdf;
@@ -100,21 +105,27 @@ class DocumentRenderPipeline {
 	/**
 	 * Load the huisstijl configuration from OpenRegister.
 	 *
-	 * @param string|null $huisstijlId UUID of the huisstijl object, or null for the organisation's default
+	 * A named id always wins. Without one the organisation's default
+	 * huisstijl applies, then the managed house style of the user's thematiq
+	 * token set, then the organisation's only huisstijl.
+	 *
+	 * @param string|null $huisstijlId UUID of the huisstijl object, or null for the default
+	 * @param string|null $uid The requesting user; null for the signed-in user
 	 *
 	 * @return array|null The huisstijl configuration or null if not configured
 	 *
 	 * @spec openspec/specs/document-register/spec.md
 	 * @spec openspec/changes/multi-tenant-hardening/tasks.md#task-3.1
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
-	public function loadHuisstijl(?string $huisstijlId): ?array {
+	public function loadHuisstijl(?string $huisstijlId, ?string $uid = null): ?array {
 		// A request that names no huisstijl uses its organisation's default (REQ-DDMTH-004).
 		if (empty($huisstijlId) === true) {
 			$huisstijlId = $this->effective?->defaultHuisstijl();
 		}
 
 		if (empty($huisstijlId) === true) {
-			return $this->soleOrganisationHuisstijl();
+			return $this->profileSync?->syncFor(uid: $uid) ?? $this->soleOrganisationHuisstijl();
 		}
 
 		try {
@@ -196,6 +207,7 @@ class DocumentRenderPipeline {
 	 * @return array The merged PDF options
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.3
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	public function buildPdfOptions(array $template, ?array $huisstijl, array $options): array {
 		$pdfOptions = [
@@ -206,6 +218,8 @@ class DocumentRenderPipeline {
 		if ($huisstijl !== null && isset($huisstijl['defaultMargins']) === true) {
 			$pdfOptions['margin'] = $huisstijl['defaultMargins'];
 		}
+
+		$pdfOptions = array_merge($pdfOptions, (new HuisstijlProfileMapper())->pdfAssets(template: $template, huisstijl: $huisstijl));
 
 		// What accessible output needs from the template: its name as the
 		// fallback title, its language when it has one. The caller's own

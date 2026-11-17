@@ -88,6 +88,7 @@ class MultiTenantGuardrailsTest extends TestCase {
 		'lib/Service/CustomDictionaryRepository.php' => 4,
 		'lib/Service/DossierObjectRepository.php' => 3,
 		'lib/Service/EmailIngestion/EmailDocumentRepository.php' => 3,
+		'lib/Service/HuisstijlProfileSync.php' => 2,
 		'lib/Service/LegalBasisCatalog.php' => 1,
 		'lib/Service/Redaction/AnonymizationLinkReader.php' => 1,
 		'lib/Service/SubjectErasure/SubjectErasureStore.php' => 1,
