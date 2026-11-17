@@ -77,9 +77,20 @@ trait RecordsCalls {
 							continue;
 						}
 
+						// OpenRegister's option objects are traced as the named values they carry.
+						$flat = \OCA\Filinq\Tests\Support\LegacyObjectArgs::flatten(args: [$argument]);
+						if (array_key_exists(0, $flat) === false) {
+							foreach ($flat as $name => $value) {
+								$named[$name] = $this->traced(value: $value);
+							}
+
+							continue;
+						}
+
 						$named[($parameter?->getName() ?? (string) $index)] = $this->traced(value: $argument);
 					}
 
+					$named = \OCA\Filinq\Tests\Support\LegacyObjectArgs::ordered(method: $method, named: $named);
 					$this->trace[] = [$label.'::'.$method => $named];
 					if ($answer instanceof Closure) {
 						return $answer(...$arguments);

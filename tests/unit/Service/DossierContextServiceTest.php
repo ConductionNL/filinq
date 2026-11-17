@@ -56,6 +56,8 @@ use RuntimeException;
  *
  * @uses \OCA\Filinq\Service\DossierFileService
  * @uses \OCA\Filinq\Service\DossierObjectReader
+ * @uses \OCA\Filinq\Service\Grounds\RefusalGroundLabels
+ * @uses \OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap
  */
 class DossierContextServiceTest extends TestCase {
 
@@ -315,6 +317,45 @@ class DossierContextServiceTest extends TestCase {
 		);
 
 	}//end testAnUnknownLegalBasisIsKeptAndFlagged()
+
+	/**
+	 * With the grounds reader, a Woo ground is labelled from the resolver by
+	 * code or old slug, never from `base`; an unresolvable Woo code stays
+	 * flagged; a tenant's own basis still reads its `base` object.
+	 *
+	 * @return void
+	 */
+	public function testWooGroundsAreLabelledFromTheResolver(): void {
+		$this->repository->method('objectService')->willReturn(
+			$this->objectService([
+				$this->object(['@self' => ['slug' => 'art-5-1-2-e'], 'name' => 'Oud label uit base']),
+				$this->object(['@self' => ['slug' => 'eigen-grond'], 'name' => 'Eigen grond']),
+			])
+		);
+		$grounds = $this->createMock(\OCA\Filinq\Service\Grounds\RefusalGroundsResolver::class);
+		$grounds->method('list')->willReturn(
+			['source' => 'dossiq', 'version' => '2026-10-09', 'grounds' => [['code' => '5.1.2.e', 'label' => 'Persoonlijke levenssfeer']]]
+		);
+		$logger = $this->createMock(LoggerInterface::class);
+		$service = new DossierContextService(
+			$this->repository,
+			new DossierFileService($this->repository, $this->rootFolder, $this->createMock(IUserSession::class), $logger),
+			new DossierObjectReader(),
+			$logger,
+			new \OCA\Filinq\Service\Grounds\RefusalGroundLabels($grounds, new \OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap(), $logger),
+		);
+
+		$this->assertSame(
+			[
+				['slug' => '5.1.2.e', 'label' => 'Persoonlijke levenssfeer', 'known' => true],
+				['slug' => 'art-5-1-2-e', 'label' => 'Persoonlijke levenssfeer', 'known' => true],
+				['slug' => '5.9.9', 'label' => '5.9.9', 'known' => false],
+				['slug' => 'eigen-grond', 'label' => 'Eigen grond', 'known' => true],
+			],
+			$service->resolveBases(['bases' => ['5.1.2.e', 'art-5-1-2-e', '5.9.9', 'eigen-grond']])
+		);
+
+	}//end testWooGroundsAreLabelledFromTheResolver()
 
 	/**
 	 * A dossier with no bases asks the vocabulary nothing.

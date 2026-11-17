@@ -39,6 +39,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Unit tests for CorrespondenceService
@@ -439,15 +440,15 @@ class CorrespondenceServiceTest extends TestCase {
 		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log-entry']);
 		$this->objectSvc->expects($this->once())
 			->method('saveObject')
-			->with(
-				$this->callback(function ($entry) {
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->callback(function ($entry) {
 					return $entry['templateId'] === 'tmpl-1'
 						&& $entry['status'] === 'generated'
 						&& $entry['format'] === 'pdf';
 				}),
-				$this->equalTo('filinq'),
-				$this->equalTo('correspondence')
-			)
+					'register' => $this->equalTo('filinq'),
+					'schema' => $this->equalTo('correspondence'),
+				]))
 			->willReturn($logEntity);
 
 		$result = $this->service->generate(

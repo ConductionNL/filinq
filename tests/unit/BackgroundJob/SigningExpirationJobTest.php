@@ -38,6 +38,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for SigningExpirationJob deadline enforcement
@@ -147,15 +148,15 @@ class SigningExpirationJobTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(
-				$this->callback(
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->callback(
 					function (array $obj): bool {
 						return $obj['status'] === 'EXPIRED';
 					}
 				),
-				$this->anything(),
-				$this->anything()
-			);
+					'register' => $this->anything(),
+					'schema' => $this->anything(),
+				]));
 
 		$this->auditService->expects($this->once())
 			->method('logEvent')
