@@ -25,6 +25,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\StepUpRequiredException;
+use OCA\Filinq\Service\Signing\SigningDelegationService;
 use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
 use RuntimeException;
 
@@ -64,6 +65,7 @@ class SigningFolderService implements SigningFolderServiceInterface {
 	 * @param SigningService $signingService The per-request signing path, reused unchanged.
 	 * @param SigningActorResolver $actorResolver Finds the caller's pending signer record.
 	 * @param SigningMandateService $mandateService Applies the consuming app's mandate.
+	 * @param SigningDelegationService|null $delegations Who may sign for whom, for a period (REQ-SCR-003).
 	 *
 	 * @return void
 	 */
@@ -71,6 +73,7 @@ class SigningFolderService implements SigningFolderServiceInterface {
 		private readonly SigningService $signingService,
 		private readonly SigningActorResolver $actorResolver,
 		private readonly SigningMandateService $mandateService,
+		private readonly ?SigningDelegationService $delegations = null,
 	) {
 
 	}//end __construct()
@@ -107,6 +110,8 @@ class SigningFolderService implements SigningFolderServiceInterface {
 				$entries[] = $entry;
 			}
 		}
+
+		$entries = array_merge($entries, $this->delegatedEntries(userId: $userId));
 
 		usort($entries, [$this, 'compareEntries']);
 
@@ -182,7 +187,8 @@ class SigningFolderService implements SigningFolderServiceInterface {
 		try {
 			$request = $this->signingService->getRequest(requestId: $requestId, callerUserId: $userId);
 			if ($request === null) {
-				return $this->refusal(requestId: $requestId, reason: 'This signing request is not available to you');
+				// A delegate is no party to the request; the delegation reaches it.
+				return $this->delegatedOrRefused(requestId: $requestId, userId: $userId, reason: 'This signing request is not available to you');
 			}
 
 			$signerId = $this->actorResolver->findSignerForUser(
@@ -194,10 +200,7 @@ class SigningFolderService implements SigningFolderServiceInterface {
 				// Already signed, declined, or never this person's to sign.
 				// A resumed pass lands here for everything the first pass
 				// completed, which is what makes resuming safe.
-				return $this->refusal(
-					requestId: $requestId,
-					reason: 'No signature is pending from you on this document'
-				);
+				return $this->delegatedOrRefused(requestId: $requestId, userId: $userId, reason: 'No signature is pending from you on this document');
 			}
 
 			$this->mandateService->assertMaySign(request: $request, userId: $userId);
@@ -222,6 +225,153 @@ class SigningFolderService implements SigningFolderServiceInterface {
 		}//end try
 
 	}//end signOne()
+
+	/**
+	 * Sign for a signer who delegated to this user, or refuse the document with this reason.
+	 *
+	 * @param string $requestId The signing request.
+	 * @param string $userId    The user asking.
+	 * @param string $reason    The refusal when no delegation reaches the document.
+	 *
+	 * @return array<string, mixed> The per-document result.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function delegatedOrRefused(string $requestId, string $userId, string $reason): array {
+		return $this->signDelegated(requestId: $requestId, userId: $userId)
+			?? $this->refusal(requestId: $requestId, reason: $reason);
+
+	}//end delegatedOrRefused()
+
+	/**
+	 * Sign one document for a signer who delegated to this user, or null when
+	 * no signer who ever delegated to them has a signature pending on it.
+	 *
+	 * A delegation that has ended, has not started or does not cover the
+	 * document's type refuses the signature, naming that delegation.
+	 *
+	 * @param string $requestId The signing request.
+	 * @param string $userId    The delegate asking.
+	 *
+	 * @return array<string, mixed>|null The per-document result, or null.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function signDelegated(string $requestId, string $userId): ?array {
+		if ($this->delegations === null) {
+			return null;
+		}
+
+		foreach ($this->delegations->delegatorsOf(delegate: $userId) as $delegator) {
+			$result = $this->signForDelegator(delegations: $this->delegations, requestId: $requestId, userId: $userId, delegator: $delegator);
+			if ($result !== null) {
+				return $result;
+			}
+		}
+
+		return null;
+
+	}//end signDelegated()
+
+	/**
+	 * Sign one document for one signer who delegated to this user, or null when
+	 * that signer has no signature pending on it.
+	 *
+	 * @param SigningDelegationService $delegations The delegations
+	 * @param string                   $requestId   The signing request.
+	 * @param string                   $userId      The delegate asking.
+	 * @param string                   $delegator   The signer who delegated.
+	 *
+	 * @return array<string, mixed>|null The per-document result, or null.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function signForDelegator(SigningDelegationService $delegations, string $requestId, string $userId, string $delegator): ?array {
+		$request = $this->signingService->getRequest(requestId: $requestId, callerUserId: $delegator);
+		if ($request === null) {
+			return null;
+		}
+
+		$signerId = $this->actorResolver->findSignerForUser(signerIds: (array) ($request['signerIds'] ?? []), userId: $delegator);
+		if ($signerId === null) {
+			return null;
+		}
+
+		$refusal = $delegations->refusal(
+			delegator: $delegator,
+			delegate: $userId,
+			typeReference: $this->mandateService->typeReference($request)
+		);
+		if ($refusal !== null) {
+			return $this->refusal(requestId: $requestId, reason: 'Signing refused: ' . $refusal);
+		}
+
+		$signer = $this->signingService->signOnBehalfOf(requestId: $requestId, signerId: $signerId, delegator: $delegator);
+
+		return [
+			'requestId' => $requestId,
+			'documentName' => (string) ($request['documentName'] ?? ''),
+			'signed' => true,
+			'signerId' => $signerId,
+			'signedAt' => (string) ($signer['signedAt'] ?? ''),
+			'onBehalfOf' => $delegator,
+		];
+
+	}//end signForDelegator()
+
+	/**
+	 * The folder entries of the signers who delegated to this user and whose
+	 * delegation covers today and the document's type.
+	 *
+	 * @param string $userId The delegate asking.
+	 *
+	 * @return list<array<string, mixed>> The entries, each naming `onBehalfOf`.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function delegatedEntries(string $userId): array {
+		if ($this->delegations === null) {
+			return [];
+		}
+
+		$entries = [];
+		foreach ($this->delegations->activeDelegators(delegate: $userId) as $delegator) {
+			$entries = array_merge($entries, $this->coveredEntries(delegations: $this->delegations, delegator: $delegator, userId: $userId));
+		}
+
+		return $entries;
+
+	}//end delegatedEntries()
+
+	/**
+	 * The folder entries of one signer who delegated to this user, for the
+	 * documents whose type the delegation covers.
+	 *
+	 * @param SigningDelegationService $delegations The delegations
+	 * @param string                   $delegator   The signer who delegated.
+	 * @param string                   $userId      The delegate asking.
+	 *
+	 * @return list<array<string, mixed>> The entries, each naming `onBehalfOf`.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function coveredEntries(SigningDelegationService $delegations, string $delegator, string $userId): array {
+		$entries = [];
+		foreach ($this->signingService->listRequests(callerUserId: $delegator) as $request) {
+			$typeReference = $this->mandateService->typeReference($request);
+			if ($delegations->refusal(delegator: $delegator, delegate: $userId, typeReference: $typeReference) !== null) {
+				continue;
+			}
+
+			$entry = $this->entryFor(request: $request, userId: $delegator);
+			if ($entry !== null) {
+				$entries[] = $entry + ['onBehalfOf' => $delegator];
+			}
+		}
+
+		return $entries;
+
+	}//end coveredEntries()
 
 	/**
 	 * A refusal against one document.

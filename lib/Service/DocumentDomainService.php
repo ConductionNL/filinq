@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Exception\DomainLinkRefusedException;
 use OCA\Filinq\Kernel\Contracts\DocumentDomainServiceInterface;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -58,6 +59,7 @@ class DocumentDomainService implements DocumentDomainServiceInterface {
 	 * @param FinalDocumentRepository $repository The document record store.
 	 * @param IUserSession $userSession The current session.
 	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param IntakeAuthorizationGate $targetGate Whether the caller may write the record a link points at.
 	 *
 	 * @return void
 	 */
@@ -65,6 +67,7 @@ class DocumentDomainService implements DocumentDomainServiceInterface {
 		private readonly FinalDocumentRepository $repository,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		private readonly IntakeAuthorizationGate $targetGate,
 	) {
 
 	}//end __construct()
@@ -82,11 +85,14 @@ class DocumentDomainService implements DocumentDomainServiceInterface {
 	 * @return array<string, mixed> The record, with its domains.
 	 *
 	 * @throws RuntimeException When the record does not exist or the domain is incomplete.
+	 * @throws DomainLinkRefusedException When the caller may not write the record the link points at.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
 	 */
 	public function link(string $uuid, array $domain): array {
 		$domain = $this->requireDomain(domain: $domain);
+		$this->requireWritableTarget(domain: $domain);
 		$record = $this->requireRecord(uuid: $uuid);
 
 		$domains = $this->domainsOf(record: $record);
@@ -115,11 +121,14 @@ class DocumentDomainService implements DocumentDomainServiceInterface {
 	 * @return array<string, mixed> The record, which still exists.
 	 *
 	 * @throws RuntimeException When the record does not exist or the domain is incomplete.
+	 * @throws DomainLinkRefusedException When the caller may not write the record the link points at.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
 	 */
 	public function unlink(string $uuid, array $domain): array {
 		$domain = $this->requireDomain(domain: $domain);
+		$this->requireWritableTarget(domain: $domain);
 		$record = $this->requireRecord(uuid: $uuid);
 
 		$remaining = [];
@@ -218,6 +227,30 @@ class DocumentDomainService implements DocumentDomainServiceInterface {
 		return $reference;
 
 	}//end requireDomain()
+
+	/**
+	 * Refuse a link to, or an unlink from, a record the caller may not write.
+	 *
+	 * Runs before anything is read or stored: the caller must have write
+	 * rights on the record's schema and be able to see the record itself, so
+	 * a link cannot put a document on a record by guessing its id.
+	 *
+	 * @param array<string, string> $domain The record, as register, schema and id.
+	 *
+	 * @return void
+	 *
+	 * @throws DomainLinkRefusedException When the caller may not write it.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+	 */
+	private function requireWritableTarget(array $domain): void {
+		if ($this->targetGate->mayFileOnto(register: $domain['register'], schema: $domain['schema'], id: $domain['id']) === true) {
+			return;
+		}
+
+		throw new DomainLinkRefusedException(message: 'You may not change the documents of that record.');
+
+	}//end requireWritableTarget()
 
 	/**
 	 * Read one document record, or refuse.
