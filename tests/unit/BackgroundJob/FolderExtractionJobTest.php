@@ -217,7 +217,7 @@ class FolderExtractionJobTest extends TestCase {
 			);
 
 		$this->mockAnonService->expects($this->exactly(2))
-			->method('anonymizeDocument')
+			->method('anonymizeDocumentAs')
 			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/legacy/path.pdf', 'replacementCount' => 1]);
 		// phpcs:enable CustomSn.Functions.NamedParameters
 
@@ -265,7 +265,7 @@ class FolderExtractionJobTest extends TestCase {
 		);
 		$this->mockAnonService->method('extractAndDetectEntities')
 			->willReturn(['entityCount' => 1, 'entities' => [['type' => 'PERSON', 'value' => 'Alice']]]);
-		$this->mockAnonService->method('anonymizeDocument')
+		$this->mockAnonService->method('anonymizeDocumentAs')
 			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/p.pdf', 'replacementCount' => 1, 'detection' => $detection]);
 
 		$updates = [];
@@ -316,7 +316,7 @@ class FolderExtractionJobTest extends TestCase {
 			);
 
 		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService->method('anonymizeDocument')
+		$this->mockAnonService->method('anonymizeDocumentAs')
 			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/legacy/p.pdf', 'replacementCount' => 1]);
 		// phpcs:enable CustomSn.Functions.NamedParameters
 
@@ -394,7 +394,7 @@ class FolderExtractionJobTest extends TestCase {
 		$this->mockStateService->method('getBatch')->willReturn($batch);
 		$this->mockAnonService->method('extractAndDetectEntities')->willReturn(['entityCount' => 1, 'entities' => []]);
 		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService->method('anonymizeDocument')
+		$this->mockAnonService->method('anonymizeDocumentAs')
 			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/p.pdf', 'replacementCount' => 0]);
 		// phpcs:enable CustomSn.Functions.NamedParameters
 
@@ -452,7 +452,7 @@ class FolderExtractionJobTest extends TestCase {
 			->willReturn(['entityCount' => 2, 'entities' => []]);
 
 		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService->method('anonymizeDocument')
+		$this->mockAnonService->method('anonymizeDocumentAs')
 			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/p.pdf', 'replacementCount' => 0]);
 		// phpcs:enable CustomSn.Functions.NamedParameters
 
@@ -508,7 +508,7 @@ class FolderExtractionJobTest extends TestCase {
 
 		// phpcs:disable CustomSn.Functions.NamedParameters
 		$this->mockAnonService->expects($this->once())
-			->method('anonymizeDocument')
+			->method('anonymizeDocumentAs')
 			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/p.pdf', 'replacementCount' => 0]);
 		// phpcs:enable CustomSn.Functions.NamedParameters
 
@@ -563,7 +563,7 @@ class FolderExtractionJobTest extends TestCase {
 		$targetPath = '/testuser/files/Dossier/anonymised/report.pdf';
 
 		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService->method('anonymizeDocument')
+		$this->mockAnonService->method('anonymizeDocumentAs')
 			->willReturn(
 				[
 					'anonymizedFileId' => $anonFileId,
@@ -639,7 +639,7 @@ class FolderExtractionJobTest extends TestCase {
 		$targetPath = '/testuser/files/Dossier/anonymised/letter.pdf';
 
 		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService->method('anonymizeDocument')
+		$this->mockAnonService->method('anonymizeDocumentAs')
 			->willReturn(
 				[
 					'anonymizedFileId' => $anonFileId,
@@ -709,7 +709,7 @@ class FolderExtractionJobTest extends TestCase {
 		$this->mockAnonService->method('extractAndDetectEntities')
 			->willReturn(['entityCount' => 1, 'entities' => []]);
 
-		$this->mockAnonService->method('anonymizeDocument')
+		$this->mockAnonService->method('anonymizeDocumentAs')
 			->willThrowException(new Exception('Backend unavailable'));
 
 		$updates = [];
