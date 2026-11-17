@@ -23,12 +23,14 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\CaseSystemDeliveredFilesInterface;
+
 /**
  * Reads the written-back case-system deliveries of a list of files in one query.
  *
  * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
  */
-class CaseSystemDeliveredFiles {
+class CaseSystemDeliveredFiles implements CaseSystemDeliveredFilesInterface {
 
 	/**
 	 * The delivery state once the case system holds the document.

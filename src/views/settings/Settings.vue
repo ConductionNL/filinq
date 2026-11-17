@@ -168,6 +168,12 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			:name="t('filinq', 'Woo refusal grounds')"
+			:description="t('filinq', 'Where the Woo refusal grounds used for redaction come from.')">
+			<RefusalGroundsSource />
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			:name="t('filinq', 'Legal basis per entity type')"
 			:description="
 				t(
@@ -740,6 +746,7 @@
 		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
 		<SignerIdentitySettings v-if="isAdmin" />
 		<CaseSystemDeliverySettings v-if="isAdmin" />
+		<BridgeSourcesSettings v-if="isAdmin" />
 
 		<DocumentWebhooksSection v-if="isAdmin" />
 
@@ -915,12 +922,14 @@ import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
+import BridgeSourcesSettings from './BridgeSourcesSettings.vue'
 import CaseSystemDeliverySettings from './CaseSystemDeliverySettings.vue'
 import DetectionProviderSettings from './DetectionProviderSettings.vue'
 import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
+import RefusalGroundsSource from './RefusalGroundsSource.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
 import {
@@ -1035,6 +1044,7 @@ export default {
 	name: 'Settings',
 	components: {
 		DocumentWebhooksSection,
+		RefusalGroundsSource,
 		NcSettingsSection,
 		NcNoteCard,
 		NcSelect,
@@ -1055,6 +1065,7 @@ export default {
 		PageLayoutSettings,
 		SettingSwitchRow,
 		SignerIdentitySettings,
+		BridgeSourcesSettings,
 		CaseSystemDeliverySettings,
 	},
 

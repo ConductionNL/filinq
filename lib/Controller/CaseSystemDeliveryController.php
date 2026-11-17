@@ -25,6 +25,7 @@ namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\BridgeApiInterface;
 use OCA\Filinq\Kernel\Contracts\CaseSystemDeliveryServiceInterface;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
@@ -34,7 +35,9 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
+use Throwable;
 
 /**
  * Lists and declares case-system destinations, lists the waiting and failed
@@ -58,10 +61,12 @@ class CaseSystemDeliveryController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                  $request      The request.
+	 * @param IRequest                           $request      The request.
 	 * @param CaseSystemDeliveryServiceInterface $deliveries   The deliveries.
-	 * @param IUserSession              $userSession  The session.
-	 * @param IGroupManager             $groupManager The admin check.
+	 * @param IUserSession                       $userSession  The session.
+	 * @param IGroupManager                      $groupManager The admin check.
+	 * @param BridgeApiInterface|null            $bridge       The bridge sources, for the panel's source list.
+	 * @param LoggerInterface|null               $logger       Logs a failed source read.
 	 *
 	 * @return void
 	 */
@@ -70,10 +75,36 @@ class CaseSystemDeliveryController extends Controller {
 		private readonly CaseSystemDeliveryServiceInterface $deliveries,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
+		private readonly ?BridgeApiInterface $bridge = null,
+		private readonly ?LoggerInterface $logger = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
+
+	/**
+	 * GET /api/bridge/sources
+	 *
+	 * @return JSONResponse 200 with `results`, every bridge source with its health; 401, 403 or 500.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
+	 */
+	#[AuthorizedAdminSetting(FilinqAdmin::class)]
+	public function sources(): JSONResponse {
+		$refusal = $this->refusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		try {
+			return new JSONResponse(['results' => ($this->bridge?->sources() ?? [])]);
+		} catch (Throwable $e) {
+			$this->logger?->error('[CaseSystemDeliveryController] reading the bridge sources failed', ['exception' => $e->getMessage()]);
+
+			return new JSONResponse(['error' => 'The bridge request failed.'], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+	}//end sources()
 
 	/**
 	 * GET /api/bridge/case-system

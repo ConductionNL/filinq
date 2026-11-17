@@ -294,6 +294,14 @@
         {
             "name": "document-review",
             "description": "The per-document checked mark of the anonymisation review workbench."
+        },
+        {
+            "name": "bridge",
+            "description": "The ZGW document bridge: staged documents from case systems, their dossier pick-up, release and retry, and source badges"
+        },
+        {
+            "name": "grounds",
+            "description": "Reads the Woo refusal grounds the pickers offer, from dossiq or the read-only snapshot"
         }
     ],
     "paths": {
@@ -11029,6 +11037,340 @@
                         }
                     }
                 ]
+            }
+        },
+        "/templates/for-object": {
+            "get": {
+                "operationId": "templates-for-object",
+                "summary": "The templates that apply to one host object, as leaf rows (id, name, format, description)",
+                "description": "The templates that apply to one host object, as leaf rows (id, name, format, description)",
+                "tags": [
+                    "templates"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON response with the results array",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "register",
+                        "in": "query",
+                        "required": true,
+                        "description": "The host object's register slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "schema",
+                        "in": "query",
+                        "required": true,
+                        "description": "The host object's schema slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/grounds": {
+            "get": {
+                "operationId": "grounds-index",
+                "summary": "GET /api/grounds",
+                "description": "The Woo refusal grounds the pickers offer, read from dossiq or, without it, from the read-only snapshot. Read only; any signed-in user.",
+                "tags": [
+                    "grounds"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "source (dossiq or snapshot), version and grounds",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "503": {
+                        "description": "No grounds list can be read"
+                    }
+                }
+            }
+        },
+        "/bridge/sources": {
+            "get": {
+                "operationId": "bridge-sources",
+                "summary": "GET /api/bridge/sources",
+                "description": "GET /api/bridge/sources",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Every bridge source with its health (admin setting).",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bridge/external-documents": {
+            "get": {
+                "operationId": "bridge-external-documents",
+                "summary": "GET /api/bridge/external-documents",
+                "description": "GET /api/bridge/external-documents",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The staged documents the caller may read, optionally of one source.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bridge/badges": {
+            "get": {
+                "operationId": "bridge-badges",
+                "summary": "The source badge of a listing page's files",
+                "description": "The case-system vendor of each listed file that came in through the bridge, in one lookup. Only files the caller can open are answered for.",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`badges`: the vendor per file id.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileIds",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated file ids of the listing page.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/dossiers/{dossierId}/attach": {
+            "post": {
+                "operationId": "bridge-attach",
+                "summary": "POST /api/bridge/dossiers/{dossierId}/attach",
+                "description": "POST /api/bridge/dossiers/{dossierId}/attach",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The documents attached to the dossier.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "dossierId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/external-documents/{id}/release": {
+            "post": {
+                "operationId": "bridge-release",
+                "summary": "POST /api/bridge/external-documents/{id}/release",
+                "description": "POST /api/bridge/external-documents/{id}/release",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The released document.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/external-documents/{id}/retry": {
+            "post": {
+                "operationId": "bridge-retry",
+                "summary": "POST /api/bridge/external-documents/{id}/retry",
+                "description": "POST /api/bridge/external-documents/{id}/retry",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The document queued for write-back again.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/verify/{token}": {
+            "get": {
+                "operationId": "publicVerification-verify",
+                "summary": "Verify a signed document by its verification token",
+                "description": "Public, account-free. Answers the outcome recorded for one signed document: file name, content hash, and per signature the status, level, the signer as asserted and whether content integrity and the signer are covered by the check. An unknown, malformed or revoked token answers 200 with status unknown, in the same shape. Rate-limited and throttled.",
+                "tags": [
+                    "signing"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The verdict, or status unknown",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "description": "The 32-character verification token.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "security": []
             }
         }
     },
