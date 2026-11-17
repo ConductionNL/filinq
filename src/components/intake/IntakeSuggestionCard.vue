@@ -108,6 +108,12 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The editable fields that carry a value.
+		 *
+		 * @return {Array<string>} The field keys to show.
+		 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-person-accepts-or-dismisses-a-registry-suggestion-req-ibr-004
+		 */
 		shownKeys() {
 			return this.editableKeys.filter((key) => typeof this.fields[key] === 'string' && this.fields[key] !== '')
 		},
@@ -116,15 +122,35 @@ export default {
 	methods: {
 		t,
 
+		/**
+		 * Open the correction form, starting from the suggested fields.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-person-accepts-or-dismisses-a-registry-suggestion-req-ibr-004
+		 */
 		startCorrecting() {
 			this.draft = { ...this.fields }
 			this.correcting = true
 		},
 
+		/**
+		 * Set one field of the correction.
+		 *
+		 * @param {string} key The field.
+		 * @param {string} value The value.
+		 * @return {void}
+		 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-person-accepts-or-dismisses-a-registry-suggestion-req-ibr-004
+		 */
 		setDraft(key, value) {
 			this.draft = { ...this.draft, [key]: value }
 		},
 
+		/**
+		 * Emit the accepted fields, corrected or as suggested.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-person-accepts-or-dismisses-a-registry-suggestion-req-ibr-004
+		 */
 		accept() {
 			this.$emit('accept', this.correcting ? { ...this.draft } : { ...this.fields })
 		},

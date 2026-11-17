@@ -154,27 +154,63 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The registry suggestions on the document nobody has decided yet.
+		 *
+		 * @return {Array<object>} The open registry suggestions.
+		 * @spec openspec/changes/intake-base-registry-enrichment/tasks.md#task-3.2
+		 */
 		registrySuggestions() {
 			return openRegistrySuggestions(this.document)
 		},
 
+		/**
+		 * The party suggestions on the document nobody has decided yet.
+		 *
+		 * @return {Array<object>} The open party suggestions.
+		 * @spec openspec/changes/intake-base-registry-enrichment/tasks.md#task-3.3
+		 */
 		partySuggestions() {
 			return openPartySuggestions(this.document)
 		},
 
+		/**
+		 * Why a registry lookup could not run, or an empty string.
+		 *
+		 * @return {string} The lookup note.
+		 * @spec openspec/changes/intake-base-registry-enrichment/tasks.md#task-3.2
+		 */
 		registryNote() {
 			const note = this.document?.registryLookupNote
 			return typeof note === 'string' ? note.trim() : ''
 		},
 
+		/**
+		 * The registry fields a clerk may correct.
+		 *
+		 * @return {Array<string>} The field keys.
+		 * @spec openspec/changes/intake-base-registry-enrichment/tasks.md#task-3.2
+		 */
 		registryKeys() {
 			return REGISTRY_FIELDS
 		},
 
+		/**
+		 * The party fields a clerk may correct.
+		 *
+		 * @return {Array<string>} The field keys.
+		 * @spec openspec/changes/intake-base-registry-enrichment/tasks.md#task-3.3
+		 */
 		partyKeys() {
 			return PARTY_FIELDS
 		},
 
+		/**
+		 * The label of each suggestion field.
+		 *
+		 * @return {object} The labels, by field key.
+		 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-person-accepts-or-dismisses-a-registry-suggestion-req-ibr-004
+		 */
 		fieldLabels() {
 			return {
 				name: t('filinq', 'Name'),
@@ -221,11 +257,25 @@ export default {
 	methods: {
 		t,
 
+		/**
+		 * The card title of a registry suggestion: its source and identifier.
+		 *
+		 * @param {object} suggestion The suggestion.
+		 * @return {string} The title.
+		 * @spec openspec/changes/intake-base-registry-enrichment/tasks.md#task-3.2
+		 */
 		registryTitle(suggestion) {
 			const source = suggestion.source === 'brp' ? t('filinq', 'BRP') : t('filinq', 'KvK')
 			return suggestion.identifier ? `${source}: ${suggestion.identifier}` : source
 		},
 
+		/**
+		 * The card title of a party suggestion: its name, else its email.
+		 *
+		 * @param {object} suggestion The suggestion.
+		 * @return {string} The title.
+		 * @spec openspec/changes/intake-base-registry-enrichment/tasks.md#task-3.3
+		 */
 		partyTitle(suggestion) {
 			return suggestion.party.name || suggestion.party.email || t('filinq', 'Sender')
 		},

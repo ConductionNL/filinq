@@ -26,6 +26,7 @@ export const PARTY_FIELDS = ['name', 'address', 'email', 'telephone']
  *
  * @param {unknown} value The value.
  * @return {object} The object.
+ * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-person-accepts-or-dismisses-a-registry-suggestion-req-ibr-004
  */
 function objectOf(value) {
 	return value && typeof value === 'object' && !Array.isArray(value) ? value : {}
@@ -37,6 +38,7 @@ function objectOf(value) {
  * @param {object} source The object.
  * @param {Array<string>} keys The keys to keep.
  * @return {object} The fields.
+ * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-person-accepts-or-dismisses-a-registry-suggestion-req-ibr-004
  */
 export function pickFields(source, keys) {
 	const fields = {}
@@ -57,6 +59,7 @@ export function pickFields(source, keys) {
  *
  * @param {object|null} document The intake document.
  * @return {Array<{index: number, source: string, identifier: string, fields: object}>} The open suggestions.
+ * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-person-accepts-or-dismisses-a-registry-suggestion-req-ibr-004
  */
 export function openRegistrySuggestions(document) {
 	const suggestions = Array.isArray(document?.registrySuggestion) ? document.registrySuggestion : []
@@ -76,6 +79,7 @@ export function openRegistrySuggestions(document) {
  *
  * @param {object|null} document The intake document.
  * @return {Array<{index: number, party: object, confidence: number|null}>} The open suggestions.
+ * @spec openspec/changes/intake-base-registry-enrichment/tasks.md#task-3.3
  */
 export function openPartySuggestions(document) {
 	const suggestions = Array.isArray(document?.partySuggestion) ? document.partySuggestion : []
