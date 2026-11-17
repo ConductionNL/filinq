@@ -28,6 +28,10 @@ namespace OCA\Filinq\Service\Wizard;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use RuntimeException;
 use Throwable;
 
@@ -71,7 +75,10 @@ class WizardRepository {
 		}
 
 		try {
-			$object = $this->objectResolver->resolve()->find(id: $uuid, register: IntakeRepository::REGISTER, schema: self::SCHEMA);
+			$object = $this->objectResolver->resolve()->find(
+				id: $uuid,
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+			);
 		} catch (Throwable) {
 			return null;
 		}
@@ -162,7 +169,13 @@ class WizardRepository {
 		}
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $arguments['object'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: ($arguments['register'] ?? null), schema: ($arguments['schema'] ?? null)),
+					uuid: $arguments['uuid'] ?? null
+				)
+			);
 		} catch (Throwable $e) {
 			$code = 422;
 			if (in_array($e->getCode(), [401, 403], true) === true) {
@@ -194,7 +207,7 @@ class WizardRepository {
 	 */
 	public function delete(string $uuid): void {
 		try {
-			$this->objectResolver->resolve()->deleteObject(uuid: $uuid);
+			$this->objectResolver->resolve()->deleteObject(new ObjectDeletion(uuid: $uuid));
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The wizard could not be deleted: ' . $e->getMessage(), code: 403, previous: $e);
 		}

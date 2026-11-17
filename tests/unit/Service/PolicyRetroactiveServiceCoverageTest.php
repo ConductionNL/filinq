@@ -28,6 +28,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The retroactive sweep: which in-flight records are loaded, which the rules
@@ -169,6 +170,7 @@ class PolicyRetroactiveServiceCoverageTest extends TestCase {
 			->method('saveObject')
 			->willReturnCallback(
 				function (array $object, ...$rest) use (&$saved, $entity): ObjectEntityInterface {
+					$rest = array_slice(LegacyObjectArgs::positional(method: 'saveObject', args: [$object, ...$rest]), 1);
 					$saved[] = $object;
 					if (($object['uuid'] ?? null) === 'rec-i') {
 						throw new Exception('write refused');
@@ -228,15 +230,15 @@ class PolicyRetroactiveServiceCoverageTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(
-				$this->callback(static fn (array $o): bool => $o['policyMatch'] === 'prohib-2' && isset($o['@self']) === false),
-				$this->anything(),
-				'filinq',
-				'publicationConsent',
-				'rec-x',
-				false,
-				false
-			);
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->callback(static fn (array $o): bool => $o['policyMatch'] === 'prohib-2' && isset($o['@self']) === false),
+					'extend' => $this->anything(),
+					'register' => 'filinq',
+					'schema' => 'publicationConsent',
+					'uuid' => 'rec-x',
+					'_rbac' => false,
+					'_multitenancy' => false,
+				]));
 
 		$resolved = $this->service()->applyProhibitionMutation(
 			$this->prohibition(['@self' => [], 'uuid' => 'prohib-2', 'entityType' => 'OTHER'])

@@ -902,6 +902,92 @@ class TemplateResponse {
 	}//end getThrottleMetadata()
 }//end class
 
+/**
+ * Stub for OCP\AppFramework\Http\Template\PublicTemplateResponse
+ *
+ * The public-page response: a TemplateResponse rendered as `public`, with a
+ * header title and footer switch.
+ *
+ * @category Tests
+ * @package  OCA\Filinq\Tests
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class PublicTemplateResponseStub extends TemplateResponse {
+
+	/**
+	 * Header title.
+	 *
+	 * @var string
+	 */
+	private string $headerTitle = '';
+
+	/**
+	 * Whether the footer shows.
+	 *
+	 * @var boolean
+	 */
+	private bool $footerVisible = true;
+
+	/**
+	 * Constructor.
+	 *
+	 * @param string  $appName      App name.
+	 * @param string  $templateName Template name.
+	 * @param mixed[] $params       Template parameters.
+	 */
+	public function __construct(string $appName, string $templateName, array $params = []) {
+		parent::__construct($appName, $templateName, $params, 'public');
+	}//end __construct()
+
+	/**
+	 * Set the header title.
+	 *
+	 * @param string $title The title.
+	 *
+	 * @return void
+	 */
+	public function setHeaderTitle(string $title): void {
+		$this->headerTitle = $title;
+	}//end setHeaderTitle()
+
+	/**
+	 * Get the header title.
+	 *
+	 * @return string
+	 */
+	public function getHeaderTitle(): string {
+		return $this->headerTitle;
+	}//end getHeaderTitle()
+
+	/**
+	 * Show or hide the footer.
+	 *
+	 * @param boolean $visible Whether it shows.
+	 *
+	 * @return void
+	 */
+	public function setFooterVisible(bool $visible = true): void {
+		$this->footerVisible = $visible;
+	}//end setFooterVisible()
+
+	/**
+	 * Whether the footer shows.
+	 *
+	 * @return boolean
+	 */
+	public function getFooterVisible(): bool {
+		return $this->footerVisible;
+	}//end getFooterVisible()
+}//end class
+
+// The real class lives in OCP\AppFramework\Http\Template; this file keeps one namespace block per section.
+if (class_exists('OCP\\AppFramework\\Http\\Template\\PublicTemplateResponse', false) === false) {
+	class_alias(PublicTemplateResponseStub::class, 'OCP\\AppFramework\\Http\\Template\\PublicTemplateResponse');
+}
+
+
 namespace OCP;
 
 /**

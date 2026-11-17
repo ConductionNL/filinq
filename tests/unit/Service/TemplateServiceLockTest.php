@@ -36,6 +36,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * A live lock held by someone else blocks acquiring and releasing; an expired
@@ -76,7 +77,9 @@ class TemplateServiceLockTest extends TestCase {
 	protected function setUp(): void {
 		$this->objectService = $this->createMock(ObjectService::class);
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object, string $register, string $schema): array {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				TestCase::assertSame('reg-t', $register);
 				TestCase::assertSame('sch-t', $schema);
 				$this->saved[] = $object;

@@ -28,6 +28,7 @@ use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Sanitization records are written as system rows and found by file.
@@ -70,7 +71,15 @@ class SanitizationRecordRepositoryTest extends TestCase {
 		$repository = $this->repository();
 		$this->objects->expects($this->once())
 			->method('saveObject')
-			->with(['fileId' => 7, 'sanitizedFileId' => 8], 'filinq', 'sanitizationRecord', null, false, true, true)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['fileId' => 7, 'sanitizedFileId' => 8],
+					'register' => 'filinq',
+					'schema' => 'sanitizationRecord',
+					'uuid' => null,
+					'_rbac' => false,
+					'_multitenancy' => true,
+					'_unowned' => true,
+				]))
 			->willReturn(['object' => ['fileId' => 7, 'sanitizedFileId' => 8], '@self' => ['id' => 'r-1']]);
 
 		$this->assertSame(

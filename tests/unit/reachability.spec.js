@@ -42,18 +42,20 @@ const RECOGNISED_KINDS = new Set([
 ])
 
 /**
- * The three webpack entry points (webpack.config.js `entry`) that mount a
+ * The webpack entry points (webpack.config.js `entry`) that mount a
  * Filinq Vue app. `main.js` is the manifest-V2 shell (routesFromManifest);
  * `settings.js` / `dashboard.js` are separate Nextcloud mount points
  * (admin settings page, dashboard app widgets) that never go through the
  * manifest router — a view reachable only from one of these two is not an
  * "orphan" in the REQ-DDOSR-002 sense, it just isn't a manifest page.
+ * `verify.js` is the public signature verification page (its own entry,
+ * mounted for anonymous visitors without the signed-in app shell).
  * Keep this list in sync with webpack.config.js `entry` if that ever adds
- * a fourth mount point.
+ * another mount point.
  */
 // `waarmerkVerify.js` mounts the public waarmerk verification page (a guest
 // page outside the shell, document-waarmerk-certification).
-const ROOT_FILES = ['src/main.js', 'src/settings.js', 'src/dashboard.js', 'src/waarmerkVerify.js']
+const ROOT_FILES = ['src/main.js', 'src/settings.js', 'src/dashboard.js', 'src/verify.js', 'src/waarmerkVerify.js']
 
 /**
  * Page-level views the guard must not flag as orphaned, each with a

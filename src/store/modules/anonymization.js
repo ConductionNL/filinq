@@ -36,6 +36,7 @@ import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
  * is done reviewing.
  */
 import { defineStore } from 'pinia'
+import { applyDetectionNotice } from '../../services/detectionProvider.js'
 import { extractDocumentText } from '../../services/fileViewerService.js'
 import { applyOcrFlags } from '../../services/ocr.js'
 import {
@@ -600,8 +601,8 @@ function restoreDecisions(entities, decisions) {
 }
 
 /**
- * Put an extract response's entities, confidentiality label and OCR
- * warning on a queue entry.
+ * Put an extract response's entities, confidentiality label, detection
+ * engine and OCR warning on a queue entry.
  *
  * @param {object} entry Queue entry.
  * @param {object} data Extract endpoint response body.
@@ -616,6 +617,9 @@ function applyExtractResponse(entry, data) {
 	// resolved a matching label (files-confidential-labels).
 	entry.confidentialityLabel = data.confidentialityLabel ?? null
 	entry.confidentialityLevel = data.confidentialityLevel ?? null
+	// Which engine produced the entities, and the warning when the
+	// organisation's language model could not run (llm-entity-detection-provider).
+	applyDetectionNotice(entry, data)
 	// A scan detection could not read is not "nothing to anonymise".
 	const unseen = applyOcrFlags(entry, data)
 	return { found: entities.length, unseen }
