@@ -127,6 +127,7 @@ the rules and fonts behind it, what to do, and a way to check again.
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon, NcModal, NcNoteCard } from '@nextcloud/vue'
 import ReportActionButton from '../components/ReportActionButton.vue'
+import { reportModal } from '../mixins/reportModal.js'
 import {
 	checkConformance,
 	fetchConformance,
@@ -137,20 +138,13 @@ import {
 export default {
 	name: 'ConformanceReportModal',
 	components: { NcLoadingIcon, NcModal, NcNoteCard, ReportActionButton },
-	props: {
-		show: { type: Boolean, default: false },
-		fileId: { type: Number, default: 0 },
-	},
-
+	mixins: [reportModal],
 	emits: ['close'],
 
 	data() {
 		return {
-			loading: false,
-			checking: false,
 			available: true,
 			reports: {},
-			error: '',
 		}
 	},
 
@@ -180,26 +174,7 @@ export default {
 		},
 	},
 
-	watch: {
-		show: {
-			immediate: true,
-			/**
-			 * Load the reports each time the modal opens.
-			 *
-			 * @param {boolean} open Whether it is open.
-			 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.1
-			 */
-			handler(open) {
-				if (open && this.fileId) {
-					this.load()
-				}
-			},
-		},
-	},
-
 	methods: {
-		t,
-
 		/**
 		 * Read the stored reports.
 		 *
@@ -262,18 +237,6 @@ export default {
 		 */
 		advice(report) {
 			return guidanceText(report.guidance)
-		},
-
-		/**
-		 * A date for people.
-		 *
-		 * @param {string} value An ISO date-time.
-		 * @return {string} The local date and time.
-		 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.1
-		 */
-		formatDate(value) {
-			const date = new Date(value)
-			return Number.isNaN(date.getTime()) ? '' : date.toLocaleString()
 		},
 	},
 }

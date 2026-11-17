@@ -152,6 +152,7 @@ verdict and never claims the document is certified.
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon, NcModal, NcNoteCard } from '@nextcloud/vue'
 import ReportActionButton from '../components/ReportActionButton.vue'
+import { reportModal } from '../mixins/reportModal.js'
 import {
 	checkAccessibility,
 	fetchAccessibility,
@@ -165,18 +166,11 @@ import { guidanceText } from '../services/conformance.js'
 export default {
 	name: 'AccessibilityConformanceModal',
 	components: { NcLoadingIcon, NcModal, NcNoteCard, ReportActionButton },
-
-	props: {
-		show: { type: Boolean, default: false },
-		fileId: { type: Number, default: 0 },
-	},
-
+	mixins: [reportModal],
 	emits: ['close'],
 
 	data() {
 		return {
-			loading: false,
-			checking: false,
 			regenerating: false,
 			report: null,
 			conformance: {
@@ -189,7 +183,6 @@ export default {
 			heuristicFindings: [],
 			regenerable: false,
 			regenerated: null,
-			error: '',
 		}
 	},
 
@@ -239,25 +232,7 @@ export default {
 		},
 	},
 
-	watch: {
-		show: {
-			immediate: true,
-			/**
-			 * Load the state each time the modal opens.
-			 *
-			 * @param {boolean} open Whether it is open.
-			 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-persisted-accessibility-conformance-report-is-stored-per-document-and-re-runnable-req-ddpum-002
-			 */
-			handler(open) {
-				if (open && this.fileId) {
-					this.load()
-				}
-			},
-		},
-	},
-
 	methods: {
-		t,
 		stateText,
 		sourceLabel,
 
@@ -323,19 +298,6 @@ export default {
 			} finally {
 				this.regenerating = false
 			}
-		},
-
-		/**
-		 * A date for people.
-		 *
-		 * @param {string} value An ISO date-time.
-		 * @return {string} The local date and time.
-		 *
-		 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-persisted-accessibility-conformance-report-is-stored-per-document-and-re-runnable-req-ddpum-002
-		 */
-		formatDate(value) {
-			const date = new Date(value)
-			return Number.isNaN(date.getTime()) ? '' : date.toLocaleString()
 		},
 	},
 }
