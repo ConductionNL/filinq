@@ -190,6 +190,7 @@ class LegalBasesSummaryActingUserTraceTest extends TestCase {
 			 * @return mixed The answer.
 			 */
 			public function __call(string $name, array $arguments): mixed {
+				$arguments = \OCA\Filinq\Tests\Support\LegacyObjectArgs::flatten(args: $arguments);
 				if (($arguments['object']['configuration']['grondslagen']['lastGeneratedAt'] ?? null) !== null) {
 					$arguments['object']['configuration']['grondslagen']['lastGeneratedAt'] = '<time>';
 				}

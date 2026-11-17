@@ -30,6 +30,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * An acceptance is written as its own row and a failed write stops the
@@ -78,6 +79,7 @@ class DownloadAgreementRepositoryWriteTest extends TestCase {
 		$this->objects->expects($this->once())
 			->method('saveObject')
 			->willReturnCallback(function (...$args) use (&$written): array {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				// Positional: object, register, schema.
 				$written = $args;
 				return ['object' => $args[0] + ['stored' => true]];

@@ -29,6 +29,10 @@ namespace OCA\Filinq\Service\Pseudonymisation;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use RuntimeException;
 use Throwable;
 
@@ -157,10 +161,12 @@ class PseudonymMapRepository {
 		try {
 			$entity = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
-				_rbac: false,
-				_render: false
+				options: new ObjectFindOptions(
+					register: IntakeRepository::REGISTER,
+					schema: self::SCHEMA,
+					render: false
+				),
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The pseudonym map could not be read: ' . $e->getMessage(), code: 0, previous: $e);
@@ -191,9 +197,10 @@ class PseudonymMapRepository {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $row,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid
+				),
 				_rbac: false
 			);
 		} catch (Throwable $e) {
@@ -223,9 +230,10 @@ class PseudonymMapRepository {
 	public function delete(string $uuid): void {
 		try {
 			$deleted = $this->objectResolver->resolve()->deleteObject(
-				uuid: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
+				new ObjectDeletion(
+					uuid: $uuid,
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+				),
 				_rbac: false
 			);
 		} catch (Throwable $e) {

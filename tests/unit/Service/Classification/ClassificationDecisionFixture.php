@@ -50,6 +50,7 @@ use OCP\Files\IRootFolder;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Builds the decision service and keeps its stores inspectable.
@@ -236,7 +237,10 @@ trait ClassificationDecisionFixture {
 			// OpenRegister's ObjectEntity::getObject() puts the uuid first as `id`.
 			return $this->entity(data: ['id' => (string) $id] + $this->documents[$id]);
 		});
-		$objects->method('saveObject')->willReturnCallback(function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null): ObjectEntityInterface {
+		$objects->method('saveObject')->willReturnCallback(function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()): ObjectEntityInterface {
+			$extend = $options->extend ?? [];
+			$register = $options->target->register;
+			$schema = $options->target->schema;
 			if ($register !== 'filinq' || $schema !== 'intakeDocument') {
 				throw new RuntimeException('unexpected target ' . $register . '/' . $schema);
 			}

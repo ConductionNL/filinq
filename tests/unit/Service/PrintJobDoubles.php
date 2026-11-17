@@ -30,6 +30,7 @@ use OCP\Files\NotFoundException;
 use OCP\Files\SimpleFS\InMemoryFile;
 use OCP\Files\SimpleFS\ISimpleFolder;
 use Psr\Container\ContainerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Doubles with the real method names of ObjectService and IAppData, backed by
@@ -74,7 +75,10 @@ trait PrintJobDoubles {
 	protected function printJobRepository(bool $failWrites = false): PrintJobRepository {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null) use ($failWrites) {
+			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions()) use ($failWrites) {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
 				if ($failWrites === true) {
 					throw new \RuntimeException('Schema printJob not found');
 				}
