@@ -3421,7 +3421,9 @@ OC.L10N.register(
         "Redact pages": "Pagina's weglakken",
         "Redact pages or document": "Pagina's of document weglakken",
         "This document has %n page.": ["Dit document heeft %n pagina.","Dit document heeft %n pagina's."],
-        "This document has %n pages.": "Dit document heeft %n pagina's."
+        "This document has %n pages.": "Dit document heeft %n pagina's.",
+        "Image region kept visible: {type}": "Afbeeldingsgebied zichtbaar gelaten: {type}",
+        "Image region to be redacted: {type}": "Afbeeldingsgebied dat wordt weggelakt: {type}"
     },
     "nplurals=2; plural=(n != 1);"
 )

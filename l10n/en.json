@@ -3361,7 +3361,9 @@
             "This document has %n page.",
             "This document has %n pages."
         ],
-        "This document has %n pages.": "This document has %n pages."
+        "This document has %n pages.": "This document has %n pages.",
+        "Image region kept visible: {type}": "Image region kept visible: {type}",
+        "Image region to be redacted: {type}": "Image region to be redacted: {type}"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
