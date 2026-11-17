@@ -132,7 +132,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testTheCreatorMayCancel(): void {
 		$provider = $this->provider();
@@ -156,7 +156,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testNoConfigurationOptionCanPermitAnAdministrativeOverride(): void {
 		$constructor = (new \ReflectionClass(SigningCancellationService::class))->getConstructor();
@@ -198,7 +198,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testAnAdministratorIsRefused(): void {
 		$provider = $this->provider();
@@ -218,7 +218,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testASignerIsRefused(): void {
 		$provider = $this->provider();
@@ -237,7 +237,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testTheProviderIsNotContactedOnRefusal(): void {
 		$provider = $this->provider();
@@ -259,7 +259,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testUnknownAndUnauthorisedAreIndistinguishable(): void {
 		$unknown = null;
@@ -284,7 +284,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testAnUnsupportedProviderSurfacesAsUnsupported(): void {
 		$this->expectException(SigningCancellationNotSupportedException::class);
@@ -299,7 +299,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testAProviderFailureSaysTheRequestIsStillLive(): void {
 		$provider = $this->createMock(SigningProviderInterface::class);
@@ -316,7 +316,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testAlreadyCancelledIsIdempotent(): void {
 		$provider = $this->provider();
@@ -334,7 +334,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testACompletedRequestIsRefusedWithoutContactingTheProvider(): void {
 		$provider = $this->provider();
@@ -356,7 +356,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testAFailedTransitionSaysTheProviderWithdrewIt(): void {
 		$this->transitionFails = true;
@@ -389,7 +389,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testANativeRequestWithoutAProviderSessionIsWithdrawnByItsTransition(): void {
 		$provider = $this->provider();
@@ -408,7 +408,7 @@ class SigningCancellationServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testAnExternalRequestWithoutAReferenceStaysLive(): void {
 		$provider = $this->provider();

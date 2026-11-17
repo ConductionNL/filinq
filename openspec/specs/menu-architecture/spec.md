@@ -1,16 +1,11 @@
-# menu-architecture Specification (delta)
-
----
-status: proposed
----
+# menu-architecture Specification
 
 ## Purpose
-
 Bring Filinq's navigation-manifest assembly into conformance with ADR-044
 (shared `buildManifest` pipeline) and ADR-037 (fragment-based manifest), and
 remove the pre-manifest navigation components it superseded.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Navigation Manifest Assembled via Shared buildManifest
 
@@ -54,8 +49,6 @@ collected via `require.context`, per ADR-037 — the prerequisite for adopting
   `src/manifest.d/*.json` fragment files
 - AND `npm run check:manifest` SHALL still validate the reassembled manifest
   against the canonical `app-manifest.schema.json`
-
-## MODIFIED Requirements
 
 ### Requirement: In-App Navigation Contains No Dead Components
 

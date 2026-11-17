@@ -69,7 +69,7 @@ use Throwable;
  *
  * @link https://filinq.app
  *
- * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+ * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
  */
 class SigningCancellationService implements SigningCancellationServiceInterface {
 
@@ -106,7 +106,7 @@ class SigningCancellationService implements SigningCancellationServiceInterface 
 	 *
 	 * @throws RuntimeException When the actor is not the creator, or the withdrawal fails.
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 *
 	 * The order is fixed: authorise, then the state check, then the provider,
 	 * then the request's own transition. Nothing reaches the provider for an
@@ -219,7 +219,7 @@ class SigningCancellationService implements SigningCancellationServiceInterface 
 	 *
 	 * @throws RuntimeException When the provider refuses or cannot be reached.
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	private function withdrawAtProvider(string $uid, string $requestId, array $request): void {
 		if ((string)($request['externalId'] ?? '') === '' && ($request['provider'] ?? '') === self::NATIVE_PROVIDER) {
