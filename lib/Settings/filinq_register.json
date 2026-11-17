@@ -6190,7 +6190,7 @@
                 "slug": "intakeDefaultRule",
                 "title": "Intake default rule",
                 "description": "Says what metadata an arriving document is stamped with before any classifier looks at it, matched on the channel it came through or on its sender. Nothing arrives unclassified, and every stamped value names the rule that chose it.",
-                "version": "1.0.0",
+                "version": "1.1.0",
                 "summary": "",
                 "icon": "Stamper",
                 "required": [
