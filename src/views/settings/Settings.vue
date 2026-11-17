@@ -169,6 +169,15 @@
 					}}
 				</div>
 			</div>
+
+			<div class="setting-item">
+				<NcTextField
+					:modelValue="settings['woo.default_publisher']"
+					:label="t('filinq', 'Publisher (TOOI identifier)')"
+					:helperText="t('filinq', 'A new publication starts with this publisher.')"
+					data-testid="settings-woo-default-publisher"
+					@update:modelValue="settings['woo.default_publisher'] = $event" />
+			</div>
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -1325,6 +1334,8 @@ export default {
 					)
 						? data.redaction_four_eyes
 						: 'woo'
+					this.settings['woo.default_publisher'] =
+						data['woo.default_publisher'] || ''
 					// Entity types enabled for automatic detection (all-on by default).
 					this.enabledEntityTypes =
 						data['filinq.anonymisation.enabled_entity_types'] || []
@@ -1548,6 +1559,8 @@ export default {
 					this.settings['anonymisation.output_subfolder_name'],
 
 				redaction_four_eyes: this.settings.redaction_four_eyes || 'woo',
+
+				'woo.default_publisher': (this.settings['woo.default_publisher'] || '').trim(),
 
 				// Sent as an object; the backend json-encodes it for storage.
 				'filinq.grondslagen.entity_type_bases': this.entityTypeBases,

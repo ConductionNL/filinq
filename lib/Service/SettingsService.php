@@ -133,7 +133,7 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @return object|null The engine, exposing `transitionAsSystem()`.
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
 	 */
 	public function getTransitionEngine(): ?object {
 		return $this->openRegister->getTransitionEngine();
@@ -384,6 +384,8 @@ class SettingsService implements SettingsServiceInterface {
 			$data['qpdfStatus'] = $this->getQpdfStatus();
 			// Where batch and folder anonymisation put redacted copies.
 			$data[self::SUBFOLDER_KEY] = $this->config->getValueString($this->appName, self::SUBFOLDER_KEY, 'anonymised');
+			// The publisher a new Woo publication starts with (woo-metadata-worklist D3).
+			$data[self::DEFAULT_PUBLISHER_KEY] = $this->config->getValueString($this->appName, self::DEFAULT_PUBLISHER_KEY, '');
 
 			// Data for the grondslag-per-entity-type selector: the curated
 			// entity types and the available `base` records (slug + name).
@@ -467,6 +469,13 @@ class SettingsService implements SettingsServiceInterface {
 	public const FOUR_EYES_DEFAULT = 'woo';
 
 	/**
+	 * The TOOI identifier a new publication's publisher is prefilled with.
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+	 */
+	private const DEFAULT_PUBLISHER_KEY = 'woo.default_publisher';
+
+	/**
 	 * Keys that are permitted to be written via the settings endpoint.
 	 *
 	 * This allowlist prevents any authenticated user (wave-3 C1) from
@@ -505,6 +514,7 @@ class SettingsService implements SettingsServiceInterface {
 		'filinq.confidentiality.prioritise_analysis',
 		self::SUBFOLDER_KEY,
 		self::FOUR_EYES_KEY,
+		self::DEFAULT_PUBLISHER_KEY,
 	];
 
 	/**
