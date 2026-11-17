@@ -19,10 +19,14 @@
  * checkpoints, the honest advice for an imported PDF with no offer to
  * convert it, and the validator finding beside the quick-check ones.
  *
- * Not here: the attach scenario (a PDF attached to a publication in
- * opencatalogi is checked in the background and labelled). It needs the
- * veraPDF binary, background jobs and opencatalogi on the instance, and is
- * left to the live pass.
+ * The attach scenario runs against the instance itself, without route
+ * handlers: the Matterhorn-fail fixture is put under `Open Registers/` (where
+ * OpenRegister keeps the files attached to its objects, opencatalogi's
+ * publications among them), the queued PdfUaAttachCheckJob is run through
+ * occ, and the test reads the stored report (trigger `attach`) and the
+ * file's system tag. occ is reached through FILINQ_E2E_OCC,
+ * FILINQ_E2E_CONTAINER or NEXTCLOUD_CONTAINER (see shared-instance.ts). It
+ * skips, saying why, on an instance without the veraPDF binary.
  */
 
 // @e2e openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#heuristically-tagged-pdf-fails-real-matterhorn-validation
@@ -31,10 +35,15 @@
 // @e2e openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#validator-fail-overrides-a-heuristic-pass-in-the-surfaced-state
 // @e2e openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#an-imported-pdf-is-never-converted
 // @e2e openspec/changes/pdfua-verapdf-matterhorn/specs/document-validation-checks/spec.md#non-conformant-pdf-fires-the-validator-backed-accessibility-finding
+// @e2e openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#a-pdf-attached-to-a-publication-in-opencatalogi-is-checked
 
-import type { Page } from '@playwright/test'
+import type { APIRequestContext, Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
+import { execFileSync } from 'node:child_process'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { occPrefix } from '../shared-instance.ts'
 import {
 	createDavFile,
 	createDavFolder,
@@ -290,4 +299,141 @@ test('the validator finding sits beside the quick-check findings, each labelled'
 	await expect(group.getByTestId('finding-source-heuristic')).toHaveText(
 		'Quick check',
 	)
+})
+
+const REGISTER_ROOT = 'Open Registers'
+const ATTACH_FOLDER = `${REGISTER_ROOT}/${TEST_PREFIX}-publicatie`
+const ATTACH_FILE = 'besluit.pdf'
+const ATTACH_PATH = `${ATTACH_FOLDER}/${ATTACH_FILE}`
+const ATTACH_JOB = 'OCA\\Filinq\\BackgroundJob\\PdfUaAttachCheckJob'
+const VERDICT_TAGS = [
+	'pdfua-conform',
+	'pdfua-niet-conform',
+	'pdfua-niet-gecontroleerd',
+]
+
+/**
+ * Run occ on the instance under test.
+ *
+ * @param args The occ arguments
+ * @return What occ printed
+ */
+function occ(args: string[]): string {
+	const [bin, ...prefix] = occPrefix()
+	// A bare `php occ` runs from the server root, two levels above this app.
+	const cwd = bin === 'php' ? resolve(process.cwd(), '../..') : process.cwd()
+	return execFileSync(bin, [...prefix, ...args], { cwd, encoding: 'utf8' })
+}
+
+/**
+ * Run every queued PDF/UA attach check now, instead of waiting for cron.
+ *
+ * @return How many jobs were run
+ */
+function runAttachChecks(): number {
+	const jobs = JSON.parse(
+		occ(['background-job:list', `--class=${ATTACH_JOB}`, '--output=json']),
+	) as Array<{ id: number | string }>
+	for (const job of jobs) {
+		occ(['background-job:execute', String(job.id), '--force-execute'])
+	}
+	return jobs.length
+}
+
+/**
+ * The system tags on a file, read through WebDAV the way a file list reads them.
+ *
+ * @param req The request context
+ * @param token The CSRF request-token
+ * @param relPath The path under the admin Files root
+ * @return The tag names
+ */
+async function systemTagsOf(
+	req: APIRequestContext,
+	token: string,
+	relPath: string,
+): Promise<string[]> {
+	const res = await req.fetch(`/remote.php/dav/files/admin/${relPath}`, {
+		method: 'PROPFIND',
+		headers: {
+			requesttoken: token,
+			Depth: '0',
+			'Content-Type': 'application/xml',
+		},
+		data: '<?xml version="1.0"?><d:propfind xmlns:d="DAV:" xmlns:nc="http://nextcloud.org/ns"><d:prop><nc:system-tags/></d:prop></d:propfind>',
+	})
+	const xml = await res.text()
+	return [...xml.matchAll(/<nc:system-tag[^>]*>([^<]+)<\/nc:system-tag>/g)].map(
+		(m) => m[1].trim(),
+	)
+}
+
+test.describe('a PDF attached through OpenRegister', () => {
+	test.afterAll(async ({ request }) => {
+		await deleteDavPath(request, '', ATTACH_FOLDER)
+	})
+
+	test('is checked in the background and labelled with its verdict', async ({
+		page,
+	}) => {
+		const token = await harvestToken(page)
+		expect([201, 405]).toContain(
+			await createDavFolder(page.request, token, REGISTER_ROOT),
+		)
+		expect(await createDavFolder(page.request, token, ATTACH_FOLDER)).toBe(201)
+
+		const pdf = readFileSync(
+			resolve(
+				process.cwd(),
+				'tests/sample-documents/pdfua/heuristics-pass-matterhorn-fail.pdf',
+			),
+		)
+		const put = await page.request.put(
+			`/remote.php/dav/files/admin/${ATTACH_PATH}`,
+			{
+				headers: { requesttoken: token, 'Content-Type': 'application/pdf' },
+				data: pdf,
+			},
+		)
+		expect(put.status(), `PUT /${ATTACH_PATH}`).toBeLessThan(300)
+		const fileId =
+			put.headers()['oc-fileid']?.replace(/^0*/, '').match(/^\d+/)?.[0] ?? ''
+		expect(fileId, 'the PUT answers the new file id').not.toBe('')
+
+		const before = await page.request.get(
+			`/index.php/apps/filinq/api/validation/accessibility/${fileId}`,
+			{
+				headers: { requesttoken: token },
+			},
+		)
+		expect(before.status()).toBe(200)
+		const beforeBody = await before.json()
+		test.skip(
+			beforeBody.conformance?.validatorAvailable !== true,
+			'veraPDF is not installed on this instance; the attach check tags such a file pdfua-niet-gecontroleerd, which PdfUaAttachCheckJobTest covers',
+		)
+		// The upload itself only queues: no report exists before the job runs.
+		expect(beforeBody.report).toBeNull()
+
+		expect(
+			runAttachChecks(),
+			'the upload queued an attach check',
+		).toBeGreaterThan(0)
+
+		const after = await page.request.get(
+			`/index.php/apps/filinq/api/validation/accessibility/${fileId}`,
+			{
+				headers: { requesttoken: token },
+			},
+		)
+		const { report } = await after.json()
+		expect(report.trigger).toBe('attach')
+		expect(report.flavour).toBe('ua1')
+		expect(report.compliant).toBe(false)
+
+		const verdicts = (
+			await systemTagsOf(page.request, token, ATTACH_PATH)
+		).filter((t) => VERDICT_TAGS.includes(t))
+		expect(verdicts).toEqual(['pdfua-niet-conform'])
+	})
 })

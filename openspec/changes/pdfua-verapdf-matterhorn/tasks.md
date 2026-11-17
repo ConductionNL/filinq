@@ -30,6 +30,7 @@
 
 - [ ] 5.1 PHPUnit for `validateUa()` parsing/degradation, the two checks, endpoint resolution + dual-report persistence, guidance classification, verdict-hierarchy — 75% coverage on new code (ADR-009)
   - Build round 2: the PHPUnit half is in place (`VeraPdfUaValidationTest`, `PdfUaChecksTest`, `AccessibilityConformanceControllerTest`, `AccessibilityGuidanceTest`, `AccessibilityConformanceStateTest`, and `PdfUaFixturesTest` on the two fixtures). Open: the 75% figure (no coverage driver in the build environment) and the live run on 8080.
+  - Build round 2, c3: coverage measured with pcov over the unit suite (7295 tests, 0 failures): 671 of 712 statements, 94.2%, across the 20 lib files that carry this change's `@spec` tag; lowest `ResolvesOwnFile` 83.3%. The 75% figure is met; the live run below is what keeps this open.
   - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Live-verify on Postgres (8080) with veraPDF installed: validate the heuristic-pass/Matterhorn-fail fixture → non-conformant verdict, findings + card; remove the binary → honest heuristic-floor degradation.
 - [x] 5.2 Playwright spec `tests/e2e/spec-coverage/pdfua-verapdf-matterhorn.spec.ts` for the `@e2e`-referenced scenarios
@@ -71,8 +72,8 @@ service exists. Acceptance lines are plain bullets, so the checkbox cap holds.
   - GIVEN the copy fails THEN the original and its version are unchanged.
   - GIVEN an imported PDF WHEN the route is called THEN 409 with `not-generated-by-filinq`, and the card offers no action.
   - Test: PHPUnit `AccessibleRegenerationServiceTest::testACompliantCopyReplacesTheOriginal`, `::testAFailingCopyIsDiscarded`, `::testAnImportedPdfIsRefused`; the route-reachability gate. One live run with the veraPDF binary, output recorded in the PR body.
-- [ ] 6.5 Strings, docs and e2e. Files: `l10n/en.json`, `l10n/nl.json`, `docs/features/pdfua-verapdf-matterhorn.md` (the three tags, the gate, why imported PDFs are never converted), `tests/e2e/spec-coverage/pdfua-verapdf-matterhorn.spec.ts`.
-  - Strings and docs done; the e2e covers the imported-PDF scenario. Open: the attach scenario, which needs veraPDF, background jobs and opencatalogi on an instance.
+- [x] 6.5 Strings, docs and e2e. Files: `l10n/en.json`, `l10n/nl.json`, `docs/features/pdfua-verapdf-matterhorn.md` (the three tags, the gate, why imported PDFs are never converted), `tests/e2e/spec-coverage/pdfua-verapdf-matterhorn.spec.ts`.
+  - Strings and docs done; the e2e covers the imported-PDF scenario and, since build round 2 c3, the attach scenario: the Matterhorn-fail fixture is put under `Open Registers/`, the queued `PdfUaAttachCheckJob` runs through occ, and the test reads the stored report (trigger `attach`) and the `pdfua-niet-conform` system tag over WebDAV. Linted (eslint, prettier) and listed by Playwright, not run: it needs an instance with veraPDF, and skips with that reason without it.
   - Test: the Playwright spec covers the attach scenario and the imported-PDF scenario.
 
 Verification for section 6 (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
