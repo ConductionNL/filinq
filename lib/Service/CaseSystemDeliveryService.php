@@ -381,6 +381,8 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 * @param string               $format  The output format.
 	 *
 	 * @return array<string, mixed> The context deliver() takes.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private function contextFor(array $options, string $format): array {
 		$userId = (string) ($options['userId'] ?? '');
@@ -410,6 +412,8 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 * @param string               $deliveryId The delivery id.
 	 *
 	 * @return array<string, mixed> The entry as stored.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private function link(array $document, string $deliveryId): array {
 		if ($deliveryId === '' || (string) ($document['caseSystemDeliveryId'] ?? '') === $deliveryId) {
@@ -466,6 +470,8 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 * @param bool                             $byTemplate   Match on the template id, else on the namespace.
 	 *
 	 * @return array<string, mixed>|null The destination.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private static function firstMatch(array $destinations, array $template, bool $byTemplate): ?array {
 		$probe = ['templateId' => '', 'templateNamespace' => (string) ($template['namespace'] ?? '')];
@@ -566,6 +572,8 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 * @param array<string, mixed> $context     The author, creation date and MIME type.
 	 *
 	 * @return array<string, mixed> The metadata.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private static function metadata(array $document, array $destination, array $context): array {
 		$fileName = basename((string) ($document['filePath'] ?? ''));
@@ -592,6 +600,8 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 * @param array<string, mixed> $second The other.
 	 *
 	 * @return bool
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private static function coverSame(array $first, array $second): bool {
 		$template = (string) ($first['templateId'] ?? '');
@@ -609,6 +619,8 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 * Every declared destination.
 	 *
 	 * @return array<int, array<string, mixed>> The destinations.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private function destinations(): array {
 		return $this->rows(schema: self::DESTINATION_SCHEMA, filters: [], limit: self::DESTINATION_LIMIT);
@@ -622,6 +634,8 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 * @param string $destinationId The destination id ('' for a request's own destination).
 	 *
 	 * @return array<string, mixed>|null The delivery.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private function existingDelivery(string $documentId, string $destinationId): ?array {
 		if ($documentId === '') {
@@ -647,6 +661,8 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 * @param int                  $limit   The most rows.
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private function rows(string $schema, array $filters, int $limit): array {
 		$found = $this->objects->resolve()->findAll(
@@ -675,6 +691,8 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 * @param mixed $entry An array or an object entity.
 	 *
 	 * @return array<string, mixed>|null The row.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private static function rowOf(mixed $entry): ?array {
 		$row = $entry;

@@ -3096,7 +3096,7 @@ OC.L10N.register(
         "Destinations": "Bestemmingen",
         "Document type in the case system": "Documenttype in het zaaksysteem",
         "Edit destination": "Bestemming bewerken",
-        "Namespace {namespace}": "Namespace {namespace}",
+        "Namespace {namespace}": "Naamruimte {namespace}",
         "No destinations yet.": "Nog geen bestemmingen.",
         "Nothing is waiting for the case system.": "Er wacht niets op het zaaksysteem.",
         "Save destination": "Bestemming opslaan",
