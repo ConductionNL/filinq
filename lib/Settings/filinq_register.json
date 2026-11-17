@@ -11890,7 +11890,7 @@
                 },
                 "deleted": null,
                 "configuration": {
-                    "objectNameField": "requestedBy",
+                    "objectNameField": "fileName",
                     "objectDescriptionField": "status",
                     "autoPublish": false
                 },
@@ -12533,8 +12533,8 @@
                 },
                 "deleted": null,
                 "configuration": {
-                    "objectNameField": "subject",
-                    "objectDescriptionField": "sender",
+                    "objectNameField": "name",
+                    "objectDescriptionField": "sourceType",
                     "autoPublish": false
                 },
                 "searchable": false,
@@ -12735,8 +12735,8 @@
                 },
                 "deleted": null,
                 "configuration": {
-                    "objectNameField": "subject",
-                    "objectDescriptionField": "sender",
+                    "objectNameField": "title",
+                    "objectDescriptionField": "zaakIdentificatie",
                     "autoPublish": false
                 },
                 "searchable": false,
