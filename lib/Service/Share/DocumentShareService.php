@@ -128,9 +128,7 @@ class DocumentShareService {
 		}
 
 		$label = $this->labelOf(fileId: $fileId);
-		if ($label !== '' && $labelConfirmed === false) {
-			throw new InvalidArgumentException('This document is labelled "' . $label . '". Confirm before sharing it by link.', 409);
-		}
+		$this->requireConfirmation(labels: [$label], confirmed: $labelConfirmed, what: 'This document is');
 
 		$link = $this->links->createLink(fileId: $fileId, uid: $uid, expires: $expires, password: $password, note: trim($note));
 
@@ -325,14 +323,8 @@ class DocumentShareService {
 
 		[$expires, $shortened] = $this->linkTerms(expiresOn: $expiresOn, password: $password);
 
-		$labels   = $this->bundleLabels(fileIds: $fileIds, uid: $uid);
-		$labelled = array_values(array_unique(array_filter($labels, static fn (string $label): bool => $label !== '')));
-		if ($labelled !== [] && $labelConfirmed === false) {
-			throw new InvalidArgumentException(
-				'This bundle holds documents labelled "' . implode('", "', $labelled) . '". Confirm before sharing it by link.',
-				409
-			);
-		}
+		$labels = $this->bundleLabels(fileIds: $fileIds, uid: $uid);
+		$this->requireConfirmation(labels: $labels, confirmed: $labelConfirmed, what: 'This bundle holds documents');
 
 		$built = $this->archives->buildFromFiles(fileIds: $fileIds, folderPath: self::BUNDLE_FOLDER, name: $name);
 		$archiveFileId = (int) $built['archive']['fileId'];
@@ -355,7 +347,7 @@ class DocumentShareService {
 			'sharedAt' => $this->now()->format(DateTimeInterface::ATOM),
 			'expiresAt' => $expires->format('Y-m-d'),
 			'note' => trim($note),
-			'labelConfirmed' => $labelled !== [],
+			'labelConfirmed' => $this->labelled(labels: $labels) !== [],
 			'status' => 'active',
 		];
 
@@ -483,24 +475,9 @@ class DocumentShareService {
 		foreach ($this->store->active() as $record) {
 			$uuid = (string) ($record['uuid'] ?? '');
 			try {
-				$expiresAt = (string) ($record['expiresAt'] ?? '');
-				// Nextcloud lets a link work through its expiry day, so the
-				// record turns expired the day after.
-				if ($expiresAt !== '' && $expiresAt < $today) {
-					$record['status'] = 'expired';
-					$this->discardArchive(record: $record);
-					$this->store->save(record: $record, uuid: $uuid);
-					$counts['expired']++;
-					continue;
-				}
-
-				if ($this->links->exists(shareId: (string) ($record['shareId'] ?? '')) === false) {
-					$record['status'] = 'revoked';
-					$record['revokedBy'] = self::REMOVED_IN_FILES;
-					$record['revokedAt'] = $this->now()->format(DateTimeInterface::ATOM);
-					$this->discardArchive(record: $record);
-					$this->store->save(record: $record, uuid: $uuid);
-					$counts['revoked']++;
+				$closed = $this->closeIfLapsed(record: $record, uuid: $uuid, today: $today);
+				if ($closed !== null) {
+					$counts[$closed]++;
 				}
 			} catch (Throwable $e) {
 				$this->logger->warning('A share record could not be closed', ['uuid' => $uuid, 'exception' => $e->getMessage()]);
@@ -511,6 +488,38 @@ class DocumentShareService {
 		return $counts;
 
 	}//end closeLapsed()
+
+	/**
+	 * Close one active record when its link ran out or was removed in Files.
+	 *
+	 * @param array<string, mixed> $record The active record.
+	 * @param string               $uuid   Its uuid.
+	 * @param string               $today  Today (YYYY-MM-DD).
+	 *
+	 * @return string|null 'expired' or 'revoked' when it was closed, null when the link still works.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.5
+	 */
+	private function closeIfLapsed(array $record, string $uuid, string $today): ?string {
+		$expiresAt = (string) ($record['expiresAt'] ?? '');
+		// Nextcloud lets a link work through its expiry day, so the
+		// record turns expired the day after.
+		if ($expiresAt !== '' && $expiresAt < $today) {
+			$record['status'] = 'expired';
+		} else if ($this->links->exists(shareId: (string) ($record['shareId'] ?? '')) === false) {
+			$record['status']    = 'revoked';
+			$record['revokedBy'] = self::REMOVED_IN_FILES;
+			$record['revokedAt'] = $this->now()->format(DateTimeInterface::ATOM);
+		} else {
+			return null;
+		}
+
+		$this->discardArchive(record: $record);
+		$this->store->save(record: $record, uuid: $uuid);
+
+		return $record['status'];
+
+	}//end closeIfLapsed()
 
 	/**
 	 * Delete a bundle's archive from its sharer's Files.
@@ -545,19 +554,68 @@ class DocumentShareService {
 	private function fileIds(array $fileIds): array {
 		$ids = [];
 		foreach ($fileIds as $raw) {
-			if (is_int($raw) === false && (is_string($raw) === false || ctype_digit($raw) === false)) {
-				continue;
-			}
-
-			$id = (int) $raw;
-			if ($id > 0 && in_array($id, $ids, true) === false) {
-				$ids[] = $id;
+			$id = $this->idOf(raw: $raw);
+			if ($id > 0) {
+				$ids[$id] = $id;
 			}
 		}
 
-		return $ids;
+		return array_values($ids);
 
 	}//end fileIds()
+
+	/**
+	 * One sent file id as a number: an int, or a string of digits; 0 for anything else.
+	 *
+	 * @param mixed $raw The id as sent.
+	 *
+	 * @return int The id, or 0.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 */
+	private function idOf(mixed $raw): int {
+		if (is_int($raw) === true || (is_string($raw) === true && ctype_digit($raw) === true)) {
+			return (int) $raw;
+		}
+
+		return 0;
+
+	}//end idOf()
+
+	/**
+	 * Refuse until the sharer confirmed, when any of the files carries a label.
+	 *
+	 * @param array<int, string> $labels    The files' labels, empty when none.
+	 * @param bool               $confirmed Whether the sharer confirmed.
+	 * @param string             $what      How the refusal starts: what holds the labels.
+	 *
+	 * @return void
+	 *
+	 * @throws InvalidArgumentException When a label needs a confirmation (409).
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.6
+	 */
+	private function requireConfirmation(array $labels, bool $confirmed, string $what): void {
+		$labelled = $this->labelled(labels: $labels);
+		if ($labelled !== [] && $confirmed === false) {
+			throw new InvalidArgumentException($what . ' labelled "' . implode('", "', $labelled) . '". Confirm before sharing it by link.', 409);
+		}
+
+	}//end requireConfirmation()
+
+	/**
+	 * The distinct labels the files carry.
+	 *
+	 * @param array<int, string> $labels The files' labels, empty when none.
+	 *
+	 * @return array<int, string> The distinct non-empty labels.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.6
+	 */
+	private function labelled(array $labels): array {
+		return array_values(array_unique(array_filter($labels, static fn (string $label): bool => $label !== '')));
+
+	}//end labelled()
 
 	/**
 	 * The expiry to use and whether Nextcloud's maximum shortened it.
@@ -572,32 +630,65 @@ class DocumentShareService {
 	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
 	 */
 	private function expiry(string $expiresOn, ?int $maxDays): array {
-		$today = $this->now()->setTime(0, 0);
-		$expiresOn = trim($expiresOn);
-		$expires = $today->modify('+' . self::DEFAULT_DAYS . ' days');
-		if ($expiresOn !== '') {
-			$parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $expiresOn, $today->getTimezone());
-			if ($parsed === false || $parsed->format('Y-m-d') !== $expiresOn) {
-				throw new InvalidArgumentException('A link needs an expiry date (YYYY-MM-DD)', 400);
-			}
-
-			$expires = $parsed;
-		}
-
+		$today   = $this->now()->setTime(0, 0);
+		$expires = $this->askedExpiry(expiresOn: trim($expiresOn), today: $today);
 		if ($expires <= $today) {
 			throw new InvalidArgumentException('The expiry date must lie after today', 400);
 		}
 
-		if ($maxDays !== null && $maxDays > 0) {
-			$latest = $today->modify('+' . $maxDays . ' days');
-			if ($expires > $latest) {
-				return [$latest, true];
-			}
+		$latest = $this->latestExpiry(today: $today, maxDays: $maxDays);
+		if ($latest !== null && $expires > $latest) {
+			return [$latest, true];
 		}
 
 		return [$expires, false];
 
 	}//end expiry()
+
+	/**
+	 * The expiry asked for, or 14 days ahead when none was asked.
+	 *
+	 * @param string            $expiresOn The last day asked for (YYYY-MM-DD), or empty.
+	 * @param DateTimeImmutable $today     Today, at midnight.
+	 *
+	 * @return DateTimeImmutable The day the link stops working.
+	 *
+	 * @throws InvalidArgumentException When the date is not a YYYY-MM-DD date (400).
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 */
+	private function askedExpiry(string $expiresOn, DateTimeImmutable $today): DateTimeImmutable {
+		if ($expiresOn === '') {
+			return $today->modify('+' . self::DEFAULT_DAYS . ' days');
+		}
+
+		$parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $expiresOn, $today->getTimezone());
+		if ($parsed === false || $parsed->format('Y-m-d') !== $expiresOn) {
+			throw new InvalidArgumentException('A link needs an expiry date (YYYY-MM-DD)', 400);
+		}
+
+		return $parsed;
+
+	}//end askedExpiry()
+
+	/**
+	 * The latest expiry Nextcloud allows, or null when it enforces no maximum.
+	 *
+	 * @param DateTimeImmutable $today   Today, at midnight.
+	 * @param int|null          $maxDays Nextcloud's enforced maximum in days.
+	 *
+	 * @return DateTimeImmutable|null The latest day, or null.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 */
+	private function latestExpiry(DateTimeImmutable $today, ?int $maxDays): ?DateTimeImmutable {
+		if ($maxDays === null || $maxDays <= 0) {
+			return null;
+		}
+
+		return $today->modify('+' . $maxDays . ' days');
+
+	}//end latestExpiry()
 
 	/**
 	 * The ids of the chosen files the signed-in user may read, in order.

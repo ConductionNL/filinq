@@ -95,6 +95,23 @@ export function revokeShare(uuid) {
 }
 
 /**
+ * The list query: newest first, and only the user's own links unless the user is an admin.
+ *
+ * @param {object} user `{uid, isAdmin}`.
+ *
+ * @return {object} The query parameters.
+ *
+ * @spec openspec/changes/share-document-links/tasks.md#task-3.3
+ */
+function shareListParams(user) {
+	const params = { _limit: 200, _order: { sharedAt: 'DESC' } }
+	if (user?.isAdmin !== true) {
+		params.sharedBy = user?.uid ?? ''
+	}
+	return params
+}
+
+/**
  * The share records the page lists: the user's own, or everyone's for an admin.
  *
  * @param {object} user `{uid, isAdmin}`.
@@ -104,12 +121,8 @@ export function revokeShare(uuid) {
  * @spec openspec/changes/share-document-links/tasks.md#task-3.3
  */
 export async function listShares(user) {
-	const params = { _limit: 200, _order: { sharedAt: 'DESC' } }
-	if (!user || user.isAdmin !== true) {
-		params.sharedBy = user ? user.uid : ''
-	}
 	const outcome = await answer(
-		axios.get(generateUrl('/apps/openregister/api/objects/filinq/documentShare'), { params }),
+		axios.get(generateUrl('/apps/openregister/api/objects/filinq/documentShare'), { params: shareListParams(user) }),
 	)
 	if (!outcome.ok) {
 		return outcome
@@ -193,6 +206,18 @@ export function shareLabels(preflight) {
 }
 
 /**
+ * The rules the share button waits for, in order; each reads the dialog state.
+ *
+ * @type {Array<function(object): boolean>}
+ */
+const SHARE_RULES = [
+	(state) => Boolean(state.preflight) && Boolean(state.expiresOn),
+	(state) => state.preflight.passwordRequired !== true || Boolean(state.password),
+	(state) => state.fileCount <= 1 || Boolean((state.name || '').trim()),
+	(state) => shareLabels(state.preflight).length === 0 || state.labelConfirmed === true,
+]
+
+/**
  * Whether the share button may be pressed.
  *
  * @param {object} state preflight, expiresOn, password, name, labelConfirmed, fileCount.
@@ -202,19 +227,7 @@ export function shareLabels(preflight) {
  * @spec openspec/changes/share-document-links/tasks.md#task-3.2
  */
 export function canShare(state) {
-	if (!state.preflight || !state.expiresOn) {
-		return false
-	}
-	if (state.preflight.passwordRequired === true && !state.password) {
-		return false
-	}
-	if (state.fileCount > 1 && !(state.name || '').trim()) {
-		return false
-	}
-	if (shareLabels(state.preflight).length > 0 && state.labelConfirmed !== true) {
-		return false
-	}
-	return true
+	return SHARE_RULES.every((rule) => rule(state))
 }
 
 /**
