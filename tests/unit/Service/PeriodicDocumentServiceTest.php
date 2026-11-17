@@ -30,6 +30,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The besluitenlijst makes itself as a stored PDF, last week's list is
@@ -73,6 +74,7 @@ class PeriodicDocumentServiceTest extends TestCase {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
+				$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 				$this->scheduleWrites[] = [($arguments[3] ?? null), ($arguments[0] ?? [])];
 				return ($arguments[0] ?? []);
 			}

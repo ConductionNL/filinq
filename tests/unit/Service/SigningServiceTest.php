@@ -39,6 +39,7 @@ use OCA\Filinq\Service\SigningService;
 use OCA\Filinq\Service\Support\SigningGuards;
 use OCA\Filinq\Service\Support\SigningOutputs;
 use OCA\OpenRegister\Db\AuditTrail;
+use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
@@ -57,6 +58,7 @@ use DateTimeImmutable;
 use OCA\Filinq\Exception\StepUpRequiredException;
 use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Service\SignerAuth\IdentityEvidence;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for SigningService signing request lifecycle
@@ -274,8 +276,9 @@ class SigningServiceTest extends TestCase {
 		$trail = $this->createMock(AuditTrail::class);
 		$trail->method('jsonSerialize')->willReturn([]);
 		$mapper = $this->createMock(AuditTrailMapper::class);
-		$mapper->method('createAuditTrailEntry')->willReturnCallback(
-			function (ObjectEntity $object, string $action, array $context) use ($trail): AuditTrail {
+		$mapper->method('recordObjectEvent')->willReturnCallback(
+			function (ObjectAuditEvent $event) use ($trail): AuditTrail {
+				[$action, $context] = [$event->action, $event->context];
 				$this->persistedAudits[] = [$action, $context];
 				return $trail;
 			}
@@ -2875,7 +2878,9 @@ class SigningServiceTest extends TestCase {
 
 		$saved = [];
 		$this->objectService->method('saveObject')->willReturnCallback(
-			function (array $object, string $register, string $schema) use (&$saved): array {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$saved[] = [$object, $register, $schema];
 				return $object;
 			}

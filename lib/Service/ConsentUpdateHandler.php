@@ -28,6 +28,9 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use Exception;
 use InvalidArgumentException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -110,8 +113,7 @@ class ConsentUpdateHandler {
 			// other users.
 			$object = $objectService->find(
 				id: $consent->id,
-				register: $consent->register,
-				schema: $consent->schema,
+				options: new ObjectFindOptions(register: $consent->register, schema: $consent->schema),
 				_rbac: false
 			);
 
@@ -124,8 +126,7 @@ class ConsentUpdateHandler {
 
 			$savedObject = $objectService->saveObject(
 				object: array_merge($existing, $allowedData),
-				register: $consent->register,
-				schema: $consent->schema,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $consent->register, schema: $consent->schema)),
 				_rbac: false
 			);
 

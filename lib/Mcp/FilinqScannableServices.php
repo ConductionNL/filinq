@@ -20,7 +20,7 @@
  * material and citizen contact data, and it can produce legally binding
  * artefacts, so what is absent matters as much as what is present: nothing
  * under `Service/Signing/`, no `CorrespondenceService::generateBatch()`, and
- * of `SigningService` only `createRequest()` (as `startSigningRequest`) --
+ * of `SigningService` only `startSigningRequest()` --
  * applying, declining, cancelling or verifying a signature is an act with
  * legal effect and stays a human action, while initiating a request is a
  * write Hermiq holds for human approval. A mail-merge over N recipients is a
