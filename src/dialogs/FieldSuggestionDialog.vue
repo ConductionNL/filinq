@@ -114,6 +114,12 @@ export default {
 			}))
 		},
 
+		/**
+		 * The three decisions a clerk can take on a field.
+		 *
+		 * @return {Array<{value: string, label: string}>}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
 		choices() {
 			return [
 				{ value: 'accept', label: t('filinq', 'Accept') },
@@ -122,6 +128,12 @@ export default {
 			]
 		},
 
+		/**
+		 * The line above the fields: which model read the document.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
 		intro() {
 			const provider = this.suggestion.provider || t('filinq', 'the text model')
 			return t('filinq', 'Read by {provider}. Decide each field: nothing is written to the record before you save.', { provider })

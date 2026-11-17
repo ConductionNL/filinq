@@ -98,6 +98,7 @@ export async function saveFieldProfile(profile, id = '') {
  *
  * @param {object} row The object.
  * @return {string}
+ * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
  */
 export function idOf(row) {
 	return String(row?.uuid || row?.id || row?.['@self']?.id || '')

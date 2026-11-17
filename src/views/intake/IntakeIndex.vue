@@ -335,6 +335,12 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the intake list and the field fill status.
+	 *
+	 * @return {void}
+	 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+	 */
 	mounted() {
 		this.load()
 		this.loadFieldFill()
@@ -439,6 +445,12 @@ export default {
 			this.rejectTarget = row
 		},
 
+		/**
+		 * Close every open dialog, the field suggestion dialog included.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
 		closeDialogs() {
 			this.assignTarget = null
 			this.rejectTarget = null

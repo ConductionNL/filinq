@@ -159,6 +159,12 @@ export default {
 			return String(this.form.fields || '').split(',').map((f) => f.trim()).filter(Boolean)
 		},
 
+		/**
+		 * A profile can be saved once it names a register, a schema and at least one field.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
 		canSave() {
 			return this.form.register.trim() !== '' && this.form.schema.trim() !== '' && this.fieldNames.length > 0
 		},
@@ -213,6 +219,13 @@ export default {
 			}
 		},
 
+		/**
+		 * Load a profile into the form.
+		 *
+		 * @param {object} profile The profile.
+		 * @return {void}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
 		edit(profile) {
 			this.error = ''
 			this.editing = idOf(profile)
@@ -225,6 +238,12 @@ export default {
 			}
 		},
 
+		/**
+		 * Empty the form and leave edit mode.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
 		reset() {
 			this.editing = ''
 			this.form = EMPTY()
