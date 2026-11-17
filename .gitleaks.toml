@@ -45,3 +45,16 @@ paths = [
   '''(^|/)tests/unit/Service/LegalBasesSummaryServiceTest\.php$''',
   '''(^|/)tests/unit/Service/SignerAuth/OidcBrokerHarness\.php$''',
 ]
+
+[[allowlists]]
+description = "Unit tests of the verification portal: 0123456789abcdef0123456789abcdef is a made-up verification token; the rule still fires on any other value in these files."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexes = [
+  '''^0123456789abcdef0123456789abcdef$''',
+]
+paths = [
+  '''(^|/)tests/unit/Service/SignedArtifactVerificationQrTest\.php$''',
+  '''(^|/)tests/unit/Service/SigningServiceActingUserTraceTest\.php$''',
+  '''(^|/)tests/unit/Service/golden/signing-service-acting-user\.json$''',
+]

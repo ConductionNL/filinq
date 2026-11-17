@@ -22,6 +22,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\CaseSystemDeliveryController;
+use OCA\Filinq\Service\BridgeApi;
+use OCA\Filinq\Service\BridgeDossierPickUp;
+use OCA\Filinq\Service\BridgeService;
 use OCA\Filinq\Service\CaseSystemDeliveryService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Settings\FilinqAdmin;
@@ -35,9 +38,12 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\UsesClass;
 use PHPUnit\Framework\TestCase;
 use ReflectionMethod;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 #[CoversClass(CaseSystemDeliveryController::class)]
 #[UsesClass(CaseSystemDeliveryService::class)]
+#[UsesClass(BridgeApi::class)]
 class CaseSystemDeliveryControllerTest extends TestCase {
 
 	/**
@@ -65,8 +71,11 @@ class CaseSystemDeliveryControllerTest extends TestCase {
 			$filters = $config['filters'];
 			return array_values(array_filter($rows, static fn (array $row): bool => $row['_schema'] === $filters['schema'] && (isset($filters['deliveryStatus']) === false || $row['deliveryStatus'] === $filters['deliveryStatus'])));
 		});
-		$objects->method('find')->willReturnCallback(static fn (string $id='', string $register='', string $schema=''): ?array => ($deliveries[$id] ?? null));
-		$objects->method('saveObject')->willReturnCallback(function (array $object=[], string $register='', string $schema='', ?string $uuid=null): array {
+		$objects->method('find')->willReturnCallback(static fn (string $id='', ?ObjectFindOptions $options = null): ?array => ($deliveries[$id] ?? null));
+		$objects->method('saveObject')->willReturnCallback(function (array $object=[], ObjectSaveOptions $options = new ObjectSaveOptions()): array {
+			$register = $options->target->register ?? '';
+			$schema = $options->target->schema ?? '';
+			$uuid = $options->uuid;
 			$this->saved[] = ['object' => $object, 'uuid' => $uuid, 'schema' => $schema];
 			return $object + ['id' => $uuid];
 		});
@@ -97,7 +106,7 @@ class CaseSystemDeliveryControllerTest extends TestCase {
 	}//end controller()
 
 	public function testEveryEndpointIsGatedByTheAdminSettingAttribute(): void {
-		foreach (['index', 'saveDestination', 'retry'] as $method) {
+		foreach (['sources', 'index', 'saveDestination', 'retry'] as $method) {
 			$attributes = (new ReflectionMethod(CaseSystemDeliveryController::class, $method))->getAttributes(AuthorizedAdminSetting::class);
 
 			$this->assertCount(1, $attributes, $method);
@@ -105,6 +114,55 @@ class CaseSystemDeliveryControllerTest extends TestCase {
 		}
 
 	}//end testEveryEndpointIsGatedByTheAdminSettingAttribute()
+
+	public function testTheBridgeSourcesAnswerWithTheirHealth(): void {
+		$bridge = $this->createMock(BridgeService::class);
+		$bridge->method('sources')->willReturn([['uuid' => 's-1', 'health' => 'fresh']]);
+
+		$response = $this->panel(bridge: $bridge, admin: true)->sources();
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertSame(['results' => [['uuid' => 's-1', 'health' => 'fresh']]], $response->getData());
+
+	}//end testTheBridgeSourcesAnswerWithTheirHealth()
+
+	public function testTheBridgeSourcesAreRefusedToANonAdmin(): void {
+		$bridge = $this->createMock(BridgeService::class);
+		$bridge->expects($this->never())->method('sources');
+
+		$this->assertSame(403, $this->panel(bridge: $bridge, admin: false)->sources()->getStatus());
+
+	}//end testTheBridgeSourcesAreRefusedToANonAdmin()
+
+	public function testAFailedSourceReadIsA500WithoutDetails(): void {
+		$bridge = $this->createMock(BridgeService::class);
+		$bridge->method('sources')->willThrowException(new \RuntimeException('database gone'));
+
+		$response = $this->panel(bridge: $bridge, admin: true)->sources();
+
+		$this->assertSame(500, $response->getStatus());
+		$this->assertSame(['error' => 'The bridge request failed.'], $response->getData());
+
+	}//end testAFailedSourceReadIsA500WithoutDetails()
+
+	private function panel(BridgeService $bridge, bool $admin): CaseSystemDeliveryController {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('admin');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$groups = $this->createMock(IGroupManager::class);
+		$groups->method('isAdmin')->willReturn($admin);
+
+		return new CaseSystemDeliveryController(
+			request: $this->createMock(IRequest::class),
+			deliveries: new CaseSystemDeliveryService($this->createMock(DocumentObjectServiceResolver::class)),
+			userSession: $session,
+			groupManager: $groups,
+			bridge: new BridgeApi(bridge: $bridge, pickUp: $this->createMock(BridgeDossierPickUp::class)),
+			logger: $this->createMock(\Psr\Log\LoggerInterface::class)
+		);
+
+	}//end panel()
 
 	public function testThePanelListsDestinationsAndOnlyWaitingAndFailedDeliveries(): void {
 		$rows = [

@@ -436,18 +436,28 @@ class PortalContributionProvider {
 	}//end signerSigningRequestsCollection()
 
 	/**
-	 * The sign, decline and accept acts: id, label, endpoint, method and minimum trust.
+	 * The sign, decline, accept and viewDocument acts: id, label, endpoint,
+	 * method, minimum trust and the body fields portaliq forwards.
 	 *
-	 * All three are declared on every row: the collection lists
-	 * `signingRequest` fields and the recipient's role sits on the
+	 * `fields` is the whitelist portaliq rebuilds the forwarded body from:
+	 * the signing dialog sends `consent`, the decline dialog `reason`, and
+	 * viewing the document and accepting send nothing but the row.
+	 * `viewDocument` is a row action too, so portaliq's signing dialog can
+	 * fetch the document of the row being signed and show it before the
+	 * resident signs (portaliq REQ-SGN-004); the portal shows it inside that
+	 * dialog, not as a button.
+	 *
+	 * Sign, decline and accept are declared on every row: the collection
+	 * lists `signingRequest` fields and the recipient's role sits on the
 	 * `signerRecord` it is reached through, so the receiver answers the
 	 * wrong act for a role with 422 (signing-accept-only-recipient D5).
 	 * Accepting needs the same trust as signing, because the acceptance is
 	 * attributed to a named person.
 	 *
-	 * @return array<int, array<string, string>> The three acts.
+	 * @return array<int, array<string, mixed>> The four acts.
 	 *
 	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#3-portal
 	 */
 	private function signingActs(): array {
@@ -458,6 +468,7 @@ class PortalContributionProvider {
 				'endpoint' => self::SIGN_ENDPOINT,
 				'method' => 'POST',
 				'minTrust' => self::SIGNING_MIN_TRUST,
+				'fields' => ['consent'],
 			],
 			[
 				'id' => 'decline',
@@ -465,6 +476,7 @@ class PortalContributionProvider {
 				'endpoint' => self::DECLINE_ENDPOINT,
 				'method' => 'POST',
 				'minTrust' => self::SIGNING_MIN_TRUST,
+				'fields' => ['reason'],
 			],
 			[
 				'id' => 'accept',
@@ -472,6 +484,15 @@ class PortalContributionProvider {
 				'endpoint' => self::ACCEPT_ENDPOINT,
 				'method' => 'POST',
 				'minTrust' => self::SIGNING_MIN_TRUST,
+				'fields' => [],
+			],
+			[
+				'id' => 'viewDocument',
+				'label' => $this->translate(text: 'View document'),
+				'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
+				'method' => 'GET',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+				'fields' => [],
 			],
 		];
 
@@ -487,7 +508,7 @@ class PortalContributionProvider {
 	 * `PortalSigningReceiverController` +
 	 * `Portal\PortalAssertionVerifier`.
 	 *
-	 * `sign`, `decline` and `accept` are endpoint ROW actions in portaliq's
+	 * All four are endpoint ROW actions in portaliq's
 	 * contract (portaliq#804 / #833): `rowField` is the body key the
 	 * portal stamps the proven row's id under, and `scopeClaim` rides
 	 * in the signed X-Portal-Subject assertion. The receiver reads
@@ -504,14 +525,6 @@ class PortalContributionProvider {
 		foreach ($this->signingActs() as $act) {
 			$actions[] = $act + ['rowField' => 'signingRequestId', 'scopeClaim' => 'signerEmail'];
 		}
-
-		$actions[] = [
-			'id' => 'viewDocument',
-			'label' => $this->translate(text: 'View document'),
-			'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
-			'method' => 'GET',
-			'minTrust' => self::SIGNING_MIN_TRUST,
-		];
 
 		return $actions;
 

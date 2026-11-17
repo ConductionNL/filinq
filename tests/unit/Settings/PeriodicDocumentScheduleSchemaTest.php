@@ -29,6 +29,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * `periodicDocument` is hardValidation: a field the schema does not declare
@@ -63,6 +64,7 @@ class PeriodicDocumentScheduleSchemaTest extends TestCase {
 		]]);
 		$objectService->method('saveObject')->willReturnCallback(
 			static function (...$arguments) use (&$written): array {
+				$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 				$written = $arguments[0];
 				return $written;
 			}

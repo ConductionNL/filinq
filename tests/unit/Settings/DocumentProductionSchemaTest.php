@@ -130,7 +130,8 @@ class DocumentProductionSchemaTest extends TestCase {
 		// `generated-document-names-its-template-version` (optional templateVersion).
 		// 1.6.0 since `guided-document-wizard` (optional wizardContext).
 		// 1.7.0 since `generate-store-in-case-system` (optional caseSystemDeliveryId).
-		$this->assertSame('1.7.0', $document['version']);
+		// 1.8.0 since `template-library-leaf` (optional sourceObject).
+		$this->assertSame('1.8.0', $document['version']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],
@@ -161,9 +162,10 @@ class DocumentProductionSchemaTest extends TestCase {
 		// 1.4.0 since filinq-configurable-report-templates, which added `slug`
 		// and `tenantId`; 1.4.1 since both moved inside `properties` (see
 		// SchemaSlugIntegrityTest); 1.5.0 since template-merge-preview added
-		// `mergeFields`. An importer skips an unchanged version, so this pin
-		// moves whenever the schema actually does.
-		$this->assertSame(expected: '1.5.0', actual: $schemas['template']['version']);
+		// `mergeFields`; 1.6.0 since template-library-leaf added `scope`. An
+		// importer skips an unchanged version, so this pin moves whenever the
+		// schema actually does.
+		$this->assertSame(expected: '1.6.0', actual: $schemas['template']['version']);
 
 		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
 			$this->assertArrayHasKey(

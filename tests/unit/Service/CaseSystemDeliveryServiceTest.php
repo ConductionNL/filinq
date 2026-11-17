@@ -31,6 +31,7 @@ use OCP\IUser;
 use OCP\IUserManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 #[CoversClass(CaseSystemDeliveryService::class)]
 class CaseSystemDeliveryServiceTest extends TestCase {
@@ -77,7 +78,10 @@ class CaseSystemDeliveryServiceTest extends TestCase {
 				return true;
 			}));
 		});
-		$objects->method('saveObject')->willReturnCallback(function (array $object=[], string $register='', string $schema='', ?string $uuid=null) use ($failing): array {
+		$objects->method('saveObject')->willReturnCallback(function (array $object=[], ObjectSaveOptions $options = new ObjectSaveOptions()) use ($failing): array {
+			$register = $options->target->register ?? '';
+			$schema = $options->target->schema ?? '';
+			$uuid = $options->uuid;
 			if ($schema === $failing) {
 				throw new Exception('object store unavailable');
 			}

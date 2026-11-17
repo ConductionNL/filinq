@@ -46,21 +46,36 @@
                     "label": "nl:Sign",
                     "endpoint": "/apps/filinq/api/portal/signing/sign",
                     "method": "POST",
-                    "minTrust": "substantial"
+                    "minTrust": "substantial",
+                    "fields": [
+                        "consent"
+                    ]
                 },
                 {
                     "id": "decline",
                     "label": "nl:Decline to sign",
                     "endpoint": "/apps/filinq/api/portal/signing/decline",
                     "method": "POST",
-                    "minTrust": "substantial"
+                    "minTrust": "substantial",
+                    "fields": [
+                        "reason"
+                    ]
                 },
                 {
                     "id": "accept",
                     "label": "nl:Accept",
                     "endpoint": "/apps/filinq/api/portal/signing/accept",
                     "method": "POST",
-                    "minTrust": "substantial"
+                    "minTrust": "substantial",
+                    "fields": []
+                },
+                {
+                    "id": "viewDocument",
+                    "label": "nl:View document",
+                    "endpoint": "/apps/filinq/api/portal/signing/viewDocument",
+                    "method": "GET",
+                    "minTrust": "substantial",
+                    "fields": []
                 }
             ]
         }
@@ -72,6 +87,9 @@
             "endpoint": "/apps/filinq/api/portal/signing/sign",
             "method": "POST",
             "minTrust": "substantial",
+            "fields": [
+                "consent"
+            ],
             "rowField": "signingRequestId",
             "scopeClaim": "signerEmail"
         },
@@ -81,6 +99,9 @@
             "endpoint": "/apps/filinq/api/portal/signing/decline",
             "method": "POST",
             "minTrust": "substantial",
+            "fields": [
+                "reason"
+            ],
             "rowField": "signingRequestId",
             "scopeClaim": "signerEmail"
         },
@@ -90,6 +111,7 @@
             "endpoint": "/apps/filinq/api/portal/signing/accept",
             "method": "POST",
             "minTrust": "substantial",
+            "fields": [],
             "rowField": "signingRequestId",
             "scopeClaim": "signerEmail"
         },
@@ -98,7 +120,10 @@
             "label": "nl:View document",
             "endpoint": "/apps/filinq/api/portal/signing/viewDocument",
             "method": "GET",
-            "minTrust": "substantial"
+            "minTrust": "substantial",
+            "fields": [],
+            "rowField": "signingRequestId",
+            "scopeClaim": "signerEmail"
         }
     ],
     "notifications": []

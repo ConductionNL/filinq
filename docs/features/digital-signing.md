@@ -125,6 +125,11 @@ POST /apps/filinq/api/signing/requests/{id}/decline
 | `signerId` | string | Yes      | UUID of the signer                    |
 | `reason`   | string | Yes      | Reason for declining                  |
 
+Declining goes through the request state machine like every other transition. A request
+that is already `completed`, `cancelled`, `expired` or `declined` cannot be declined: the
+call is refused before any signer or request is changed, and the stored status stays as it
+was.
+
 ---
 
 ### Bulk Sign
@@ -155,13 +160,45 @@ Verifies signature integrity of a signed document file.
 
 ```json
 {
-  "valid": true,
-  "signers": [
-    { "name": "John Doe", "signedAt": "2025-01-16T09:00:00Z", "level": "AES" }
+  "fileId": 1234,
+  "fileName": "contract.pdf",
+  "verdict": "verified",
+  "isValid": true,
+  "signatures": [
+    {
+      "signer": "John Doe",
+      "timestamp": "2025-01-16T09:00:00+00:00",
+      "level": "SES",
+      "method": "native",
+      "status": "verified",
+      "reason": "ok",
+      "checked": "...",
+      "keyId": "...",
+      "means": "This server produced the document and its bytes have not changed since. ...",
+      "valid": true
+    }
   ],
-  "verifiedAt": "2025-01-16T10:00:00Z"
+  "verifiedAt": "2025-01-16T10:00:00+00:00"
 }
 ```
+
+Verification reports one of three states per signature, so tampering and "cannot be
+checked here" are never confused:
+
+| `status`       | `reason` (examples)                                   | Meaning                                                                 |
+|----------------|-------------------------------------------------------|-------------------------------------------------------------------------|
+| `verified`     | `ok`                                                  | This server signed it and neither the document nor the signer fields changed since |
+| `invalid`      | `mac-mismatch`                                        | The document or its signature block changed after signing               |
+| `unverifiable` | `legacy-assertion-v1`, `external-signature-unsupported`, `signing-secret-not-configured` | Nothing could be established; this is not evidence of tampering |
+
+The native signature's MAC covers both the document content and the signature's own fields
+(signer, timestamp, level, method, IP), so rewriting the signer's name in a signed file makes
+it `invalid`. Signatures written before this format (`legacy-assertion-v1`) and PDF signatures
+from other tools (`/Type /Sig`) are reported `unverifiable`, never `valid`.
+
+The document-level `verdict` is `verified` (all verified), `tampered` (all invalid),
+`unverifiable` (none checkable, or no signatures) or `mixed`. `isValid` and each
+signature's `valid` are kept for older clients and are `true` only for `verified`.
 
 ---
 
@@ -177,10 +214,12 @@ Returns the full audit trail for a signing request.
 
 ```json
 [
-  { "event": "created", "userId": "admin", "timestamp": "2025-01-15T10:00:00Z" },
-  { "event": "signed",  "userId": "john",  "timestamp": "2025-01-16T09:00:00Z" }
+  { "action": "docudesk.signing.CREATED", "user": "admin", "created": "2025-01-15T10:00:00+00:00", "changed": { "signRequestId": "..." } },
+  { "action": "docudesk.signing.SIGNED",  "user": "john",  "created": "2025-01-16T09:00:00+00:00", "changed": { "signRequestId": "..." } }
 ]
 ```
+
+Entries are OpenRegister audit-trail rows for this request only, oldest first.
 
 ---
 
@@ -191,13 +230,13 @@ backend signing implementations.
 
 ### Native Provider (`native`)
 
-Signs documents within Nextcloud using a local key pair. No external service is required.
-Suitable for internal workflows and Basic/AES signatures.
+Signs documents within Nextcloud with the instance's signing key. No external service is
+required. It produces only simple electronic signatures (`SES`); it refuses to produce an
+artifact for any other level.
 
 ### ValidSign Provider (`validsign`)
 
-Delegates signing to the ValidSign external service. Suitable for QES/AES signatures
-with legal weight under eIDAS.
+Delegates signing to the ValidSign external service. Supports `SES`, `AdES` and `QES`.
 
 **Required configuration:**
 
@@ -215,13 +254,24 @@ docker exec nextcloud php occ config:app:set filinq filinq_validsign_api_key --v
 
 ---
 
+### Provider and level are checked, never substituted
+
+- Creating a request whose provider does not support the requested level is refused with
+  HTTP 400 before anything is stored (for example a `QES` request on the native provider).
+- Completing a request never falls back to another provider: a request naming an unknown
+  provider fails to complete loudly and stays `in-progress`.
+- Each provider checks the level again when it produces the signed artifact.
+- Downloading the result of a signing session requires a completed session with a produced,
+  marked signed file. Otherwise the download fails; the unsigned original is never served
+  as the signed document.
+
 ## Signature Levels
 
 | Level | Name                                  | Description                                       |
 |-------|---------------------------------------|---------------------------------------------------|
-| `BES` | Basic Electronic Signature            | Simple click-to-sign, no certificate required     |
-| `AES` | Advanced Electronic Signature         | Identity-linked, supports local key pairs         |
-| `QES` | Qualified Electronic Signature        | Legally equivalent to handwritten (eIDAS Art. 25) |
+| `SES` | Simple Electronic Signature           | Click-to-sign; the only level the native provider produces |
+| `AdES` | Advanced Electronic Signature        | Identity-linked; needs an external provider       |
+| `QES` | Qualified Electronic Signature        | Legally equivalent to handwritten (eIDAS Art. 25); needs an external provider |
 
 ---
 
@@ -389,11 +439,20 @@ pending → in-progress → completed
 ## Audit Trail
 
 `SigningAuditService` records every lifecycle event (created, signed, declined, cancelled,
-verified) as an immutable entry in OpenRegister's native audit trail
-(`openregister_audit_trails`). Events are stored with action types of the form
-`filinq.signing.{ACTION}` (e.g. `filinq.signing.SIGNED`). The audit trail is
-hash-chained and natively immutable — update and delete operations are rejected by OR with
-HTTP 405.
+viewed, ...) as an entry in OpenRegister's native audit trail (`openregister_audit_trails`).
+Events are stored with action types of the form `docudesk.signing.{ACTION}` (e.g.
+`docudesk.signing.SIGNED`). The prefix predates the rename to Filinq and is kept on purpose:
+it is the value stored on every existing row, and the trail is read back by it.
+
+Each entry is bound to the real signing-request object (its register, schema and id), so it
+joins that object's hash chain. If the request no longer exists when the event is logged, the
+entry is still written against the request's uuid and a warning is logged; an entry is never
+dropped. The trail of a request is read with a query scoped to that request, not by scanning
+all signing entries.
+
+Immutability is OpenRegister's control: Filinq offers no way to change or remove an entry.
+A live negative test against OpenRegister's audit-trail API (update and delete refused, chain
+intact afterwards) is still open in `openspec/changes/signing-trust-rebuild` task 3.2.
 
 Signing audit events are discoverable via:
 
@@ -405,32 +464,41 @@ GET /api/audit-trails?objectUuid={signRequestId}
 
 | Action type                      | Triggered when                    |
 |----------------------------------|-----------------------------------|
-| `filinq.signing.CREATED`       | Signing request is created        |
-| `filinq.signing.START`         | Signer starts a signing session   |
-| `filinq.signing.SIGNED`        | Signer signs the document         |
-| `filinq.signing.DECLINED`      | Signer declines to sign           |
-| `filinq.signing.CANCELLED`     | Initiator cancels the request     |
-| `filinq.signing.EXPIRED`       | Request expires before completion |
-| `filinq.signing.COMPLETED`     | All signers have signed           |
-| `filinq.signing.VIEWED`        | Signer views the document         |
+| `docudesk.signing.CREATED`     | Signing request is created        |
+| `docudesk.signing.START`       | Signer starts a signing session   |
+| `docudesk.signing.SIGNED`      | Signer signs the document         |
+| `docudesk.signing.DECLINED`    | Signer declines to sign           |
+| `docudesk.signing.CANCELLED`   | Initiator cancels the request     |
+| `docudesk.signing.EXPIRED`     | Request expires before completion |
+| `docudesk.signing.COMPLETED`   | All signers have signed           |
+| `docudesk.signing.VIEWED`      | Signer views the document         |
 
 Each entry's `changed` JSON field carries: `signRequestId`, `actorUserId`,
 `actorDisplayName`, `ipAddress`, `signatureLevel`, `provider`.
 
 ### Archiefwet 1995 retention configuration (required)
 
-> **Administrators MUST configure OR's retention for the signing register to ≥ 3650 days
-> (10 years) to comply with Archiefwet 1995.**
+> **The signing register MUST keep its audit trail for at least 3650 days (10 years) to
+> comply with Archiefwet 1995.**
 
-This is a **deploy-time configuration** in OpenRegister — not enforced by Filinq
-application code. Configure via:
+OpenRegister gives each audit row an expiry taken from the retention of the object the row
+describes. Signing audit rows are bound to the signing request, so their horizon is the
+`signingRequest` schema's retention, read in this order: the schema's archive
+`bewaartermijnOverride`, its archive `defaultBewaartermijn`, then the
+`x-openregister-archival` annotation's `retention.default`. Filinq ships `signingRequest` and
+`signerRecord` with `P10Y`. A schema with no retention at all keeps its rows indefinitely.
 
-- **OR Admin UI**: Navigate to Settings → OpenRegister → Registers → signing register →
-  set retention period to `3650` days or higher.
-- **occ command** (if available in your OR version):
-  ```bash
-  php occ openregister:register:set-retention <registerId> --days 3650
-  ```
+An administrator who changes that retention in OpenRegister can shorten it. Run the deploy
+check after installing or upgrading, and after any retention change:
+
+```bash
+php occ filinq:signing:retention-check
+```
+
+It prints one line per signing schema (`signingRequest`, `signerRecord`) and exits non-zero
+when either keeps its records for less than 3650 days, naming the signing register and
+Archiefwet 1995. A schema that is not configured or cannot be read also fails, because its
+retention has then not been verified.
 
 The legal basis is **Archiefwet 1995**, which requires a minimum 10-year retention period
 for signing audit records relating to official documents. Failure to configure this setting

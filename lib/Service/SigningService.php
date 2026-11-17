@@ -36,6 +36,10 @@ use OCA\Filinq\Service\Signing\SigningAct;
 use OCA\Filinq\Service\Signing\SigningTurn;
 use OCA\Filinq\Service\Support\SigningGuards;
 use OCA\Filinq\Service\Support\SigningOutputs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use RuntimeException;
 
@@ -241,7 +245,11 @@ class SigningService implements SigningServiceInterface {
 		$request = $this->outputs->artifactProducer->delegate(request: $request, signers: $signers);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
-		$savedRequest = $objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false, _unowned: true);
+		$savedRequest = $objectService->saveObject(
+			object: $request,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), actor: new SaveActor(unowned: true)),
+			_rbac: false
+		);
 		$createdRequest = $this->toArray(object: $savedRequest);
 
 		$requestId = $createdRequest['id'] ?? $createdRequest['uuid'] ?? '';
@@ -249,7 +257,11 @@ class SigningService implements SigningServiceInterface {
 			requestId: (string)$requestId,
 			entries: new SignerEntries(entries: $signers, prepared: $prepared)
 		);
-		$objectService->saveObject(object: $createdRequest, register: $register, schema: $schema, _rbac: false);
+		$objectService->saveObject(
+			object: $createdRequest,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+			_rbac: false
+		);
 		$createdRequest['assuranceFloor'] = $this->guards->assuranceGate->floorFor(request: $request);
 
 		$this->outputs->auditService->logEvent(
@@ -370,10 +382,11 @@ class SigningService implements SigningServiceInterface {
 			$created = $this->toArray(
 				object: $objectService->saveObject(
 					object: $signerRecord,
-					register: $signerRegister,
-					schema: $signerSchema,
-					_rbac: false,
-					_unowned: true
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $signerRegister, schema: $signerSchema),
+						actor: new SaveActor(unowned: true)
+					),
+					_rbac: false
 				)
 			);
 			$ids[$index] = (string)($created['id'] ?? $created['uuid'] ?? '');
@@ -419,7 +432,7 @@ class SigningService implements SigningServiceInterface {
 		// request that does exist.
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 
-		$object = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
+		$object = $objectService->find(id: $requestId, options: new ObjectFindOptions(register: $register, schema: $schema), _rbac: false);
 		if ($object === null) {
 			// The same null as for a request that is not the caller's, so no
 			// answer tells "does not exist" from "not yours".
@@ -597,7 +610,11 @@ class SigningService implements SigningServiceInterface {
 
 		$signer = $act->stampSigned(signer: array_merge($signer, $consent['record']), ipAddress: $this->actorResolver->getClientIp());
 		$signer = (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $verifiedActor);
-		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
+		$objectService->saveObject(
+			object: $signer,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $signerRegister, schema: $signerSchema)),
+			_rbac: false
+		);
 
 		$this->logSigned(act: $act, metadata: array_merge($consent['audit'], ['identityEvidence' => $signer['identityEvidence']]));
 		$this->guards->assuranceGate->consume(requestId: $requestId, signerId: $signerId);
@@ -656,7 +673,11 @@ class SigningService implements SigningServiceInterface {
 		$signer['status'] = RecipientRole::ACCEPTED;
 		$signer['acceptedAt'] = $act->now->format(DateTimeInterface::ATOM);
 		$signer['ipAddress'] = $this->actorResolver->getClientIp();
-		$this->settingsService->getObjectService()->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
+		$this->settingsService->getObjectService()->saveObject(
+			object: $signer,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $signerRegister, schema: $signerSchema)),
+			_rbac: false
+		);
 
 		$this->outputs->auditService->logEvent(
 			event: new SigningAuditEvent(
@@ -701,7 +722,13 @@ class SigningService implements SigningServiceInterface {
 				continue;
 			}
 
-			$other = $this->toArray(object: $objectService->find(id: (string)$otherId, register: $signerRegister, schema: $signerSchema, _rbac: false));
+			$other = $this->toArray(
+				object: $objectService->find(
+					id: (string)$otherId,
+					options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema),
+					_rbac: false
+				)
+			);
 			if ((int)($other['order'] ?? 0) < $order && RecipientRole::isDone(recipient: $other) === false) {
 				throw new RuntimeException('It is not your turn yet: an earlier recipient has not responded', 409);
 			}
@@ -807,7 +834,7 @@ class SigningService implements SigningServiceInterface {
 		// Same latent defect as getRequest(): unconfigured, find() returns null
 		// and this reports "not found" for a request that exists.
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
-		$requestObject = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
+		$requestObject = $objectService->find(id: $requestId, options: new ObjectFindOptions(register: $register, schema: $schema), _rbac: false);
 		if ($requestObject === null) {
 			throw new RuntimeException('Signing request not found: ' . $requestId);
 		}
@@ -829,13 +856,21 @@ class SigningService implements SigningServiceInterface {
 
 		$signer['status'] = 'DECLINED';
 		$signer['declineReason'] = $reason;
-		$objectService->saveObject(object: $signer, register: $signerRegister, schema: $signerSchema, _rbac: false);
+		$objectService->saveObject(
+			object: $signer,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $signerRegister, schema: $signerSchema)),
+			_rbac: false
+		);
 
 		$signatureLevel = $request['signatureLevel'] ?? 'SES';
 		$provider = $request['provider'] ?? 'native';
 
 		$request['status'] = 'DECLINED';
-		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
+		$objectService->saveObject(
+			object: $request,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+			_rbac: false
+		);
 
 		// Cross-app delegated-signing contract: a declined request is terminal —
 		// emit SigningConcludedEvent (status=declined) for a delegated request.
@@ -941,7 +976,11 @@ class SigningService implements SigningServiceInterface {
 
 		[$objectService, $register, $schema] = $store;
 		$request['status'] = 'CANCELLED';
-		$objectService->saveObject(object: $request, register: $register, schema: $schema, _rbac: false);
+		$objectService->saveObject(
+			object: $request,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+			_rbac: false
+		);
 	}//end moveToCancelled()
 
 	/**
@@ -1029,12 +1068,16 @@ class SigningService implements SigningServiceInterface {
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 		['allSigned' => $allSigned, 'signers' => $signers] = $this->signerProgress(request: $act->request);
 
-		$freshObj = $objectService->find(id: $requestId, register: $register, schema: $schema, _rbac: false);
+		$freshObj = $objectService->find(id: $requestId, options: new ObjectFindOptions(register: $register, schema: $schema), _rbac: false);
 		$freshRequest = $this->toArray(object: $freshObj);
 
 		if ($allSigned === false) {
 			$freshRequest['status'] = 'IN_PROGRESS';
-			$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false);
+			$objectService->saveObject(
+				object: $freshRequest,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+				_rbac: false
+			);
 			return;
 		}
 
@@ -1051,7 +1094,13 @@ class SigningService implements SigningServiceInterface {
 		// declared `start` edge is taken rather than widening the state machine.
 		if (($freshRequest['status'] ?? '') === 'PENDING') {
 			$freshRequest['status'] = 'IN_PROGRESS';
-			$freshRequest = $this->toArray(object: $objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false));
+			$freshRequest = $this->toArray(
+				object: $objectService->saveObject(
+					object: $freshRequest,
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+					_rbac: false
+				)
+			);
 		}
 
 		// Guardian consent (signer-identity-rails REQ-DDSIR-008/010): no
@@ -1069,20 +1118,41 @@ class SigningService implements SigningServiceInterface {
 		// Accept-only recipients are listed as accepted, never as signers, in
 		// the artifact's evidence and the concluded event (D3). Carried on a
 		// copy, so the stored request does not gain the key.
-		$withRoles = ($freshRequest + ['accepterIds' => RecipientRole::accepterIds(signers: $signers)]);
+		$accepterIds = RecipientRole::accepterIds(signers: $signers);
 
-		$signedDocumentRef = $this->outputs->artifactProducer->produce(request: $withRoles, verifiedActor: $act->verifiedActor, signers: $signers);
+		// The verification token comes first, so the QR code linking to its
+		// public record is part of the bytes that get signed (REQ-DDSVP-005).
+		$verificationToken = $this->outputs->artifactProducer->newVerificationToken();
+		$signedDocumentRef = $this->outputs->artifactProducer->produce(
+			request: ($freshRequest + ['accepterIds' => $accepterIds]),
+			verifiedActor: $act->verifiedActor,
+			signers: $signers,
+			verificationToken: $verificationToken
+		);
 
 		$freshRequest['status'] = 'COMPLETED';
 		$freshRequest['signedDocumentRef'] = $signedDocumentRef;
-		$objectService->saveObject(object: $freshRequest, register: $register, schema: $schema, _rbac: false);
+		$verificationToken = $this->outputs->artifactProducer->recordVerification(
+			request: $freshRequest,
+			signedDocumentRef: $signedDocumentRef,
+			token: $verificationToken
+		);
+		if ($verificationToken !== null) {
+			$freshRequest['verificationToken'] = $verificationToken;
+		}
+
+		$objectService->saveObject(
+			object: $freshRequest,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
+			_rbac: false
+		);
 
 		// Cross-app delegated-signing contract: emit the terminal
 		// SigningConcludedEvent (status=signed) for a delegated request. The
 		// signed reference is the stored artifact (file id + version), never
 		// the unsigned original documentFileId.
 		$this->outputs->emitter->emitIfDelegated(
-			request: (['status' => $freshRequest['status'], 'signedDocumentRef' => $signedDocumentRef] + $withRoles),
+			request: ($freshRequest + ['accepterIds' => $accepterIds]),
 			status: 'signed',
 			signedDocumentRef: $signedDocumentRef
 		);
@@ -1127,7 +1197,11 @@ class SigningService implements SigningServiceInterface {
 		foreach ($earlier as $signerId) {
 			try {
 				$records[$signerId] = $this->toArray(
-					object: $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false)
+					object: $objectService->find(
+						id: $signerId,
+						options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema),
+						_rbac: false
+					)
 				);
 			} catch (\Throwable $e) {
 				$records[$signerId] = ['status' => 'UNREADABLE'];
@@ -1152,7 +1226,11 @@ class SigningService implements SigningServiceInterface {
 		$signers = [];
 
 		foreach (($request['signerIds'] ?? []) as $signerId) {
-			$signerObj = $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false);
+			$signerObj = $objectService->find(
+				id: $signerId,
+				options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema),
+				_rbac: false
+			);
 			$signer = $this->toArray(object: $signerObj);
 			$signers[(string)$signerId] = $signer;
 
@@ -1214,7 +1292,7 @@ class SigningService implements SigningServiceInterface {
 			$signerId = (string)$signerId;
 			try {
 				$record = $this->toArray(
-					object: $objectService->find(id: $signerId, register: $signerRegister, schema: $signerSchema, _rbac: false)
+					object: $objectService->find(id: $signerId, options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema), _rbac: false)
 				);
 			} catch (\Throwable $e) {
 				$record = [];
