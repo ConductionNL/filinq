@@ -25,6 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\HuisstijlWriteGateInterface;
+
 /**
  * Tracks whether the current request is inside the profile sync's own write.
  *
@@ -38,7 +40,7 @@ namespace OCA\Filinq\Service;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class HuisstijlWriteGate {
+class HuisstijlWriteGate implements HuisstijlWriteGateInterface {
 
 	/**
 	 * How many sync writes are in progress.

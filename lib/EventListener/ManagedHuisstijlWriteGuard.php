@@ -20,13 +20,15 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Service\HuisstijlProfileMapper;
-use OCA\Filinq\Service\HuisstijlProfileSync;
-use OCA\Filinq\Service\HuisstijlWriteGate;
+use OCA\Filinq\Kernel\Contracts\HuisstijlWriteGateInterface;
+use OCA\Filinq\Kernel\Contracts\ManagedHuisstijlInterface;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Refuses an update of a managed house style that does not come from the profile sync.
@@ -38,6 +40,8 @@ use Psr\Log\LoggerInterface;
  * managed is refused too: only the sync sets `managedBy`.
  *
  * @template-implements IEventListener<Event>
+ *
+ * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
  */
 class ManagedHuisstijlWriteGuard implements IEventListener {
 
@@ -49,14 +53,16 @@ class ManagedHuisstijlWriteGuard implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param HuisstijlWriteGate $gate Open while the profile sync writes.
-	 * @param HuisstijlProfileMapper $mapper Tells a managed house style apart.
-	 * @param LoggerInterface $logger Structured logger.
+	 * @param HuisstijlWriteGateInterface $gate      Open while the profile sync writes.
+	 * @param ManagedHuisstijlInterface   $managed   Tells a managed house style apart.
+	 * @param LoggerInterface             $logger    Structured logger.
+	 * @param ContainerInterface          $container Resolves OpenRegister's SchemaMapper lazily.
 	 */
 	public function __construct(
-		private readonly HuisstijlWriteGate $gate,
-		private readonly HuisstijlProfileMapper $mapper,
+		private readonly HuisstijlWriteGateInterface $gate,
+		private readonly ManagedHuisstijlInterface $managed,
 		private readonly LoggerInterface $logger,
+		private readonly ContainerInterface $container,
 	) {
 	}//end __construct()
 
@@ -74,39 +80,113 @@ class ManagedHuisstijlWriteGuard implements IEventListener {
 			return;
 		}
 
-		$old = $event->getOldObject();
-		$new = $event->getNewObject();
-		if ($old === null || $new === null) {
+		$objects = $this->objectsOf(event: $event);
+		if ($objects === []) {
 			return;
 		}
 
-		if ($this->isHuisstijl(schema: (string) $old->getSchema()) === false
-			&& $this->isHuisstijl(schema: (string) $new->getSchema()) === false
-		) {
+		// Cheap test first: only an object marked managed costs a schema lookup.
+		if ($this->anyManaged(objects: $objects) === false || $this->anyHuisstijl(objects: $objects) === false) {
 			return;
 		}
 
-		if ($this->mapper->isManaged(huisstijl: $this->dataOf(object: $old)) === false
-			&& $this->mapper->isManaged(huisstijl: $this->dataOf(object: $new)) === false
-		) {
-			return;
-		}
-
-		$this->logger->warning('filinq.huisstijl.managed-update-refused', ['uuid' => (string) $new->getUuid()]);
+		$this->logger->warning('filinq.huisstijl.managed-update-refused', ['uuid' => (string) $objects[0]->getUuid()]);
 		$event->setErrors(['message' => self::MESSAGE, 'property' => 'managedBy']);
 		$event->stopPropagation();
 
 	}//end handle()
 
 	/**
-	 * Whether a schema reference is the house style, matched on the slug the event carries.
+	 * The objects an update carries: the new one first, then the stored one.
+	 *
+	 * @param ObjectUpdatingEvent $event The update.
+	 *
+	 * @return list<\OCA\OpenRegister\Db\ObjectEntity> The objects, or [] when the update has no stored object.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
+	 */
+	private function objectsOf(ObjectUpdatingEvent $event): array {
+		$new = $event->getNewObject();
+		$old = $event->getOldObject();
+		if ($new === null || $old === null) {
+			return [];
+		}
+
+		return [$new, $old];
+
+	}//end objectsOf()
+
+	/**
+	 * Whether any of the objects is marked as managed.
+	 *
+	 * @param list<\OCA\OpenRegister\Db\ObjectEntity> $objects The objects.
+	 *
+	 * @return bool Whether one is managed.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
+	 */
+	private function anyManaged(array $objects): bool {
+		foreach ($objects as $object) {
+			if ($this->managed->isManaged(huisstijl: $this->dataOf(object: $object)) === true) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end anyManaged()
+
+	/**
+	 * Whether any of the objects is of the house style schema.
+	 *
+	 * @param list<\OCA\OpenRegister\Db\ObjectEntity> $objects The objects.
+	 *
+	 * @return bool Whether one is a house style.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
+	 */
+	private function anyHuisstijl(array $objects): bool {
+		foreach ($objects as $object) {
+			if ($this->isHuisstijl(schema: trim((string) $object->getSchema())) === true) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end anyHuisstijl()
+
+	/**
+	 * Whether a schema reference (OpenRegister stores the numeric id; a slug is
+	 * accepted too) is the house style schema. A schema that does not exist is
+	 * not the house style; a lookup that fails otherwise counts as the house
+	 * style, so the write of a managed object is refused rather than let through
+	 * unchecked.
 	 *
 	 * @param string $schema The schema reference.
 	 *
 	 * @return bool Whether it is the house style.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
 	 */
 	private function isHuisstijl(string $schema): bool {
-		return strtolower($schema) === strtolower(HuisstijlProfileSync::SCHEMA);
+		if (strtolower($schema) === ManagedHuisstijlInterface::SCHEMA) {
+			return true;
+		}
+
+		if ($schema === '') {
+			return false;
+		}
+
+		try {
+			$found = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')->find($schema);
+			return strtolower((string) $found->getSlug()) === ManagedHuisstijlInterface::SCHEMA;
+		} catch (DoesNotExistException) {
+			return false;
+		} catch (Throwable $e) {
+			$this->logger->error('filinq.huisstijl.schema-lookup-failed', ['schema' => $schema, 'exception' => $e]);
+			return true;
+		}
 
 	}//end isHuisstijl()
 

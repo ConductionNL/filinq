@@ -27,9 +27,12 @@ use OCA\Filinq\Service\HuisstijlProfileMapper;
 use OCA\Filinq\Service\HuisstijlWriteGate;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use RuntimeException;
 
 /**
  * @covers \OCA\Filinq\EventListener\ManagedHuisstijlWriteGuard
@@ -37,6 +40,60 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Filinq\Service\HuisstijlProfileMapper
  */
 class ManagedHuisstijlWriteGuardTest extends TestCase {
+
+	/**
+	 * The guard, with a SchemaMapper that knows schema 41 as `huisstijl` and 42 as `template`.
+	 *
+	 * @param HuisstijlWriteGate|null $gate The gate, or a fresh one.
+	 * @param bool $lookupFails Whether every schema lookup fails.
+	 *
+	 * @return ManagedHuisstijlWriteGuard The guard.
+	 */
+	private function guard(?HuisstijlWriteGate $gate = null, bool $lookupFails = false): ManagedHuisstijlWriteGuard {
+		$mapper = new class ($lookupFails) {
+			/**
+			 * @param bool $fails Whether every lookup fails.
+			 */
+			public function __construct(private readonly bool $fails) {
+			}
+
+			/**
+			 * @param int|string $id The schema id.
+			 *
+			 * @return object The schema.
+			 */
+			public function find(int|string $id): object {
+				if ($this->fails === true) {
+					throw new RuntimeException('database gone');
+				}
+
+				$slugs = ['41' => 'huisstijl', '42' => 'template'];
+				if (isset($slugs[(string) $id]) === false) {
+					throw new DoesNotExistException('Schema not found');
+				}
+
+				return new class ($slugs[(string) $id]) {
+					/**
+					 * @param string $slug The schema slug.
+					 */
+					public function __construct(private readonly string $slug) {
+					}
+
+					/**
+					 * @return string
+					 */
+					public function getSlug(): string {
+						return $this->slug;
+					}
+				};
+			}
+		};
+
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCA\OpenRegister\Db\SchemaMapper')->willReturn($mapper);
+
+		return new ManagedHuisstijlWriteGuard(($gate ?? new HuisstijlWriteGate()), new HuisstijlProfileMapper(), new NullLogger(), $container);
+	}//end guard()
 
 	/**
 	 * An object of a schema carrying some data.
@@ -66,7 +123,7 @@ class ManagedHuisstijlWriteGuardTest extends TestCase {
 	 */
 	private function update(array $old, array $new, string $schema = 'huisstijl'): ObjectUpdatingEvent {
 		$event = new ObjectUpdatingEvent($this->object($new, $schema), $this->object($old, $schema));
-		(new ManagedHuisstijlWriteGuard(new HuisstijlWriteGate(), new HuisstijlProfileMapper(), new NullLogger()))->handle($event);
+		$this->guard()->handle($event);
 
 		return $event;
 	}//end update()
@@ -106,7 +163,7 @@ class ManagedHuisstijlWriteGuardTest extends TestCase {
 	public function testTheSyncsOwnWriteGoesThrough(): void {
 		$gate = new HuisstijlWriteGate();
 		$event = new ObjectUpdatingEvent($this->object(['managedBy' => 'thematiq', 'logo' => '/new']), $this->object(['managedBy' => 'thematiq', 'logo' => '/old']));
-		$guard = new ManagedHuisstijlWriteGuard($gate, new HuisstijlProfileMapper(), new NullLogger());
+		$guard = $this->guard($gate);
 
 		$gate->during(static fn () => $guard->handle($event));
 
@@ -125,16 +182,49 @@ class ManagedHuisstijlWriteGuardTest extends TestCase {
 		$this->assertTrue($event->isPropagationStopped());
 	}//end testTheSchemaSlugIsMatchedWithoutCase()
 
+	public function testTheStoredSchemaIdIsResolvedToTheHouseStyle(): void {
+		$event = $this->update(['managedBy' => 'thematiq', 'footerHtml' => 'a'], ['managedBy' => 'thematiq', 'footerHtml' => 'b'], '41');
+
+		$this->assertTrue($event->isPropagationStopped());
+		$this->assertSame(ManagedHuisstijlWriteGuard::MESSAGE, $event->getErrors()['message']);
+	}//end testTheStoredSchemaIdIsResolvedToTheHouseStyle()
+
+	public function testAnotherSchemaIdIsLeftAlone(): void {
+		$event = $this->update(['managedBy' => 'thematiq'], ['managedBy' => 'thematiq'], '42');
+
+		$this->assertFalse($event->isPropagationStopped());
+	}//end testAnotherSchemaIdIsLeftAlone()
+
+	public function testAnUnknownSchemaIdIsLeftAlone(): void {
+		$event = $this->update(['managedBy' => 'thematiq'], ['managedBy' => 'thematiq'], '99');
+
+		$this->assertFalse($event->isPropagationStopped());
+	}//end testAnUnknownSchemaIdIsLeftAlone()
+
+	public function testAFailedSchemaLookupRefusesAManagedWrite(): void {
+		$event = new ObjectUpdatingEvent($this->object(['managedBy' => 'thematiq'], '41'), $this->object(['managedBy' => 'thematiq'], '41'));
+		$this->guard(null, true)->handle($event);
+
+		$this->assertTrue($event->isPropagationStopped());
+	}//end testAFailedSchemaLookupRefusesAManagedWrite()
+
+	public function testAHandMadeHouseStyleCostsNoSchemaLookup(): void {
+		$event = new ObjectUpdatingEvent($this->object(['name' => 'b'], '41'), $this->object(['name' => 'a'], '41'));
+		$this->guard(null, true)->handle($event);
+
+		$this->assertFalse($event->isPropagationStopped());
+	}//end testAHandMadeHouseStyleCostsNoSchemaLookup()
+
 	public function testACreateHasNothingToGuard(): void {
 		$event = new ObjectUpdatingEvent($this->object(['managedBy' => 'thematiq']), null);
-		(new ManagedHuisstijlWriteGuard(new HuisstijlWriteGate(), new HuisstijlProfileMapper(), new NullLogger()))->handle($event);
+		$this->guard()->handle($event);
 
 		$this->assertFalse($event->isPropagationStopped());
 	}//end testACreateHasNothingToGuard()
 
 	public function testOtherEventsAreIgnored(): void {
 		$event = new Event();
-		(new ManagedHuisstijlWriteGuard(new HuisstijlWriteGate(), new HuisstijlProfileMapper(), new NullLogger()))->handle($event);
+		$this->guard()->handle($event);
 
 		$this->assertFalse($event->isPropagationStopped());
 	}//end testOtherEventsAreIgnored()

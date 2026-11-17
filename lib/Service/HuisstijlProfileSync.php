@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\ManagedHuisstijlInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
@@ -52,7 +53,7 @@ class HuisstijlProfileSync {
 	 *
 	 * @var string
 	 */
-	public const MANAGED_BY = 'thematiq';
+	public const MANAGED_BY = ManagedHuisstijlInterface::MANAGED_BY;
 
 	/**
 	 * The app that publishes the profile.
@@ -81,7 +82,7 @@ class HuisstijlProfileSync {
 	 *
 	 * @var string
 	 */
-	public const SCHEMA = 'huisstijl';
+	public const SCHEMA = ManagedHuisstijlInterface::SCHEMA;
 
 	/**
 	 * Constructor.

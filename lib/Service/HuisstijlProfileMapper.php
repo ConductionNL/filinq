@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\ManagedHuisstijlInterface;
+
 /**
  * Maps a thematiq profile onto `huisstijl` fields, and a house style onto PDF options.
  *
@@ -33,7 +35,7 @@ namespace OCA\Filinq\Service;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  */
-class HuisstijlProfileMapper {
+class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 
 	/**
 	 * filinq's own font, used for a role the house style gives no family.
@@ -106,7 +108,7 @@ class HuisstijlProfileMapper {
 	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.2
 	 */
 	public function isManaged(array $huisstijl): bool {
-		return ($huisstijl['managedBy'] ?? null) === HuisstijlProfileSync::MANAGED_BY;
+		return ($huisstijl['managedBy'] ?? null) === ManagedHuisstijlInterface::MANAGED_BY;
 
 	}//end isManaged()
 
