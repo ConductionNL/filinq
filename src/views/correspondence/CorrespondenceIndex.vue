@@ -154,12 +154,23 @@ SPDX-License-Identifier: EUPL-1.2
 						}}
 					</NcButton>
 					<NcButton
+						v-if="templateEditable"
+						variant="secondary"
+						:disabled="!canGenerate || opening || store.loading"
+						data-testid="correspondence-open-for-editing"
+						@click="openForEditing">
+						{{ opening ? t('filinq', 'Opening…') : t('filinq', 'Open for editing') }}
+					</NcButton>
+					<NcButton
 						variant="secondary"
 						:disabled="!canGenerate || printing"
 						@click="sendToPrint">
 						{{ t('filinq', 'Send to print') }}
 					</NcButton>
 				</div>
+				<NcNoteCard v-if="openError" type="error" data-testid="correspondence-open-error">
+					{{ openError }}
+				</NcNoteCard>
 			</template>
 
 			<!-- Batch mode -->
@@ -284,6 +295,7 @@ import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import { createDraft, templateEditability } from '../../services/drafts.js'
 import {
 	fetchFormatMatrix,
 	formatOptions,
@@ -311,6 +323,11 @@ export default {
 			printResult: null,
 			formats: [],
 			formatsError: '',
+			// Open for editing (generate-draft-and-attended-edit REQ-GDA-001):
+			// hidden for a template with a plain-language version (REQ-GDA-005).
+			templateEditable: true,
+			opening: false,
+			openError: '',
 		}
 	},
 
@@ -352,8 +369,20 @@ export default {
 		},
 	},
 
+	watch: {
+		/**
+		 * Recheck whether the chosen template may be opened for editing.
+		 *
+		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.3
+		 */
+		'store.templateId': function() {
+			this.checkEditability()
+		},
+	},
+
 	async mounted() {
 		await this.loadFormats()
+		await this.checkEditability()
 	},
 
 	methods: {
@@ -410,6 +439,55 @@ export default {
 			const filename =
 				'brief-' + (this.store.caseReference || 'correspondentie')
 			await this.store.generate(filename)
+		},
+
+		/**
+		 * Whether the chosen template may be opened for editing. A template
+		 * with a plain-language version is generated directly; one that cannot
+		 * be read keeps the action, and the server refuses a plain one.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.3
+		 */
+		async checkEditability() {
+			const templateId = this.store.templateId
+			const { editable } = await templateEditability(templateId)
+			if (templateId === this.store.templateId) {
+				this.templateEditable = editable || !templateId
+			}
+		},
+
+		/**
+		 * Render the letter into a draft and open it in the draft editor.
+		 * Nothing is filed or logged until the clerk finishes it.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.3
+		 */
+		async openForEditing() {
+			this.opening = true
+			this.openError = ''
+			const result = await createDraft({
+				templateId: this.store.templateId,
+				dataRefs: this.store.dataRefs,
+				options: {
+					format: this.store.format,
+					huisstijlId: this.store.huisstijlId || undefined,
+					caseReference: this.store.caseReference || undefined,
+				},
+				origin: 'correspondence',
+			})
+			this.opening = false
+			if (!result.ok) {
+				if (result.status === 409) {
+					this.templateEditable = false
+				}
+				this.openError = result.status === 409
+					? t('filinq', 'This template has a plain-language version. Generate it directly.')
+					: (result.error || t('filinq', 'The letter could not be opened for editing.'))
+				return
+			}
+			this.$router.push({ name: 'DraftEditor', params: { id: String(result.data?.id || '') } })
 		},
 
 		/**
