@@ -219,7 +219,7 @@ export default {
 		 *
 		 * @return {boolean} True for the creator of an open request.
 		 *
-		 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+		 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 		 */
 		canWithdraw() {
 			const request = this.signingStore.signingRequest || {}
@@ -293,7 +293,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+		 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 		 */
 		async withdraw() {
 			this.withdrawError = ''

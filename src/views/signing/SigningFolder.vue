@@ -156,6 +156,8 @@ SPDX-License-Identifier: EUPL-1.2
 			</ul>
 		</section>
 
+		<SigningDelegations />
+
 		<SignerStepUpModal
 			v-if="stepUp"
 			:show="true"
@@ -180,6 +182,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import SignerStepUpModal from '../../modals/SignerStepUpModal.vue'
 import SigningFolderDocumentModal from '../../modals/SigningFolderDocumentModal.vue'
+import SigningDelegations from './SigningDelegations.vue'
 import { stepUpHint, stepUpReturn } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
 
@@ -191,6 +194,7 @@ export default {
 		NcLoadingIcon,
 		NcNoteCard,
 		SignerStepUpModal,
+		SigningDelegations,
 		SigningFolderDocumentModal,
 	},
 

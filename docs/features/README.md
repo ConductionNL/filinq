@@ -109,11 +109,13 @@ Features proposed based on tender analysis and customer requests. Not yet specif
 | Feature | Doc | GEMMA | TEC | Status |
 |---------|-----|-------|-----|--------|
 | [Woo publication pipeline](./woo-publicatie-pipeline.md) | woo-publicatie-pipeline.md | Publicatiecomponent | TEC-DMS-6 | Done |
+| [Woo metadata worklist](./woo-metadata-worklist.md) | woo-metadata-worklist.md | Publicatiecomponent | TEC-DMS-6 | Done |
 | [Woo refusal grounds](./grondslagen.md) | grondslagen.md | Publicatiecomponent | TEC-DMS-6 | Done |
 | [Document Signing](./document-signing.md) | document-signing.md | — | TEC-DMS-4 | Roadmap |
 | [Digital Signing Integration](./digital-signing.md) | digital-signing.md | — | TEC-DMS-4 | Roadmap |
 | [PDF Page Stamping](./pdf-page-stamping.md) | pdf-page-stamping.md | — | — | Implemented |
 | [Signing with LibreSign](./libresign-signing-provider.md) | libresign-signing-provider.md | — | TEC-DMS-4 | Done |
+| [One signing rail for the fleet](./one-signing-rail.md) | one-signing-rail.md | — | TEC-DMS-4 | In progress |
 | [Document Classification](./document-classification.md) | document-classification.md | Documentregistratiecomponent | TEC-DMS-4 | Roadmap |
 | [Document Comparison](./document-comparison.md) | document-comparison.md | Documentbeheercomponent | TEC-DMS-8 | Roadmap |
 | [Document Validation](./document-validation.md) | document-validation.md | Documentregistratiecomponent | TEC-DMS-4 | Roadmap |

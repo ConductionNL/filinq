@@ -65,7 +65,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Portal;
 
+use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
+use OCA\Filinq\Kernel\Contracts\DocumentReleaseServiceInterface;
 use OCP\L10N\IFactory;
+use Throwable;
 
 /**
  * Declares what an external portal subject may see in Filinq.
@@ -185,12 +188,77 @@ class PortalContributionProvider {
 	 * when a contribution is asked for, in the language portaliq sets for
 	 * that call.
 	 *
-	 * @param IFactory|null $l10nFactory Resolves Filinq's translator.
+	 * @param IFactory|null                       $l10nFactory Resolves Filinq's translator.
+	 * @param DocumentReleaseServiceInterface|null          $releases    The documents released to a requester.
+	 * @param DownloadAgreementGateInterface|null $agreements  The download conditions a released document carries.
 	 */
 	public function __construct(
 		private readonly ?IFactory $l10nFactory = null,
+		private readonly ?DocumentReleaseServiceInterface $releases = null,
+		private readonly ?DownloadAgreementGateInterface $agreements = null,
 	) {
 	}//end __construct()
+
+	/**
+	 * The documents of one release, for portaliq's `documents` provider call.
+	 *
+	 * Portaliq calls this only with the id of a `subjectDocuments` row it has
+	 * proven is the person's own, keeps the `file` reference on the server
+	 * and streams the file only for an id this method returned. A withdrawn
+	 * release lists nothing, and without the release service nothing is
+	 * listed at all.
+	 *
+	 * @param string $releaseId The release (a `documentRelease` id).
+	 *
+	 * @return array<int, array<string, mixed>> The entry, or none.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+	 */
+	public function releasedDocuments(string $releaseId): array {
+		if ($this->releases === null) {
+			return [];
+		}
+
+		return $this->releases->portalEntries(releaseId: $releaseId);
+	}//end releasedDocuments()
+
+	/**
+	 * Portaliq's `opened` hook: whether a released document may be streamed now.
+	 *
+	 * A document that carries download conditions is served only once this
+	 * portal subject accepted the version in force; anything that cannot be
+	 * decided (no gate, no subject, an unknown document, a failure) refuses.
+	 *
+	 * @param string               $releaseId  The release.
+	 * @param string               $documentId The listed entry's id.
+	 * @param array<string, mixed> $subject    The session's subject, as portaliq passes it.
+	 *
+	 * @return bool True only when the download may go ahead.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	public function releasedDocumentOpened(string $releaseId, string $documentId, array $subject): bool {
+		$person = trim((string)($subject['subjectRef'] ?? ''));
+		if ($this->releases === null || $this->agreements === null || $person === '') {
+			return false;
+		}
+
+		foreach ($this->releases->portalEntries(releaseId: $releaseId) as $entry) {
+			if ($entry['id'] !== $documentId) {
+				continue;
+			}
+
+			try {
+				$decision = $this->agreements->check(document: (string)$entry['file']['fileId'], person: 'portal:' . $person);
+			} catch (Throwable) {
+				return false;
+			}
+
+			return ($decision['mayDownload'] ?? false) === true;
+		}
+
+		return false;
+	}//end releasedDocumentOpened()
 
 	/**
 	 * The audiences this provider contributes to (contract v2, preferred).
@@ -295,12 +363,53 @@ class PortalContributionProvider {
 						'active',
 					],
 				],
+				$this->subjectDocumentsCollection(),
 			],
 			'actions' => [],
 			'notifications' => [],
 		];
 
 	}//end dataSubjectContribution()
+
+	/**
+	 * The documents released to the requester of a record, one row per document.
+	 *
+	 * Scoped by `documentRelease.contactRef` through the same `contactId`
+	 * claim as the consents, at `substantial` trust because a decision on a
+	 * request is personal. A withdrawn release keeps its row but lists no
+	 * document. Each row's document is served through portaliq's documents
+	 * call (`releasedDocuments`) and its `opened` hook
+	 * (`releasedDocumentOpened`), which refuses a download whose conditions
+	 * the person has not accepted.
+	 *
+	 * @return array<string, mixed> The collection.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+	 */
+	private function subjectDocumentsCollection(): array {
+		return [
+			'id' => 'subjectDocuments',
+			'register' => self::REGISTER_CONSENT,
+			'schema' => 'documentRelease',
+			'scopeField' => 'contactRef',
+			'scopeClaim' => 'contactId',
+			'label' => $this->translate(text: 'My documents'),
+			'listable' => true,
+			'minTrust' => 'substantial',
+			'fields' => [
+				'documentName',
+				'kind',
+				'releasedAt',
+				'withdrawnAt',
+			],
+			'documents' => [
+				'label' => $this->translate(text: 'Documents'),
+				'provider' => 'releasedDocuments',
+				'opened' => 'releasedDocumentOpened',
+			],
+		];
+
+	}//end subjectDocumentsCollection()
 
 	/**
 	 * Manifest for the `signer` audience (an external document signer).
