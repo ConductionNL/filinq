@@ -157,6 +157,12 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			:name="t('filinq', 'Woo refusal grounds')"
+			:description="t('filinq', 'Where the Woo refusal grounds used for redaction come from.')">
+			<RefusalGroundsSource />
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			:name="t('filinq', 'Legal basis per entity type')"
 			:description="
 				t(
@@ -283,6 +289,17 @@
 							'filinq',
 							'Tesseract OCR is not installed. Install tesseract-ocr on the server to enable OCR for scanned documents.',
 						)
+					}}
+				</NcNoteCard>
+			</div>
+
+			<!-- qpdf availability: unlocking a password-protected PDF needs it (REQ-PPR-003) -->
+			<div class="setting-item" data-testid="qpdf-status">
+				<NcNoteCard :type="qpdfStatus.available ? 'success' : 'warning'">
+					{{
+						qpdfStatus.available
+							? t('filinq', 'qpdf is installed: {version}', { version: qpdfStatus.version || 'unknown' })
+							: t('filinq', 'qpdf is not installed. Install qpdf on the server to remove the password of a locked PDF.')
 					}}
 				</NcNoteCard>
 			</div>
@@ -718,6 +735,7 @@
 		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
 		<SignerIdentitySettings v-if="isAdmin" />
 		<CaseSystemDeliverySettings v-if="isAdmin" />
+		<BridgeSourcesSettings v-if="isAdmin" />
 
 		<DocumentWebhooksSection v-if="isAdmin" />
 
@@ -893,12 +911,14 @@ import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
+import BridgeSourcesSettings from './BridgeSourcesSettings.vue'
 import CaseSystemDeliverySettings from './CaseSystemDeliverySettings.vue'
 import DetectionProviderSettings from './DetectionProviderSettings.vue'
 import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
+import RefusalGroundsSource from './RefusalGroundsSource.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
 import {
@@ -914,6 +934,7 @@ import {
 	defaultOcrLanguages,
 	defaultSettings,
 	emptyOcrStatus,
+	emptyQpdfStatus,
 	emptyVeraPdfStatus,
 } from '../../services/settingsDefaults.js'
 import { initialSections } from '../../services/settingsSections.js'
@@ -1012,6 +1033,7 @@ export default {
 	name: 'Settings',
 	components: {
 		DocumentWebhooksSection,
+		RefusalGroundsSource,
 		NcSettingsSection,
 		NcNoteCard,
 		NcSelect,
@@ -1032,6 +1054,7 @@ export default {
 		PageLayoutSettings,
 		SettingSwitchRow,
 		SignerIdentitySettings,
+		BridgeSourcesSettings,
 		CaseSystemDeliverySettings,
 	},
 
@@ -1068,6 +1091,7 @@ export default {
 			confidentialityVocabularyError: null,
 			ocrLanguages: defaultOcrLanguages(),
 			ocrStatus: emptyOcrStatus(),
+			qpdfStatus: emptyQpdfStatus(),
 			veraPdfStatus: emptyVeraPdfStatus(),
 		}
 	},
@@ -1305,6 +1329,7 @@ export default {
 						tesseractAvailable: false,
 						tesseractVersion: null,
 					}
+					this.qpdfStatus = data.qpdfStatus || emptyQpdfStatus()
 
 					// Grondslag-per-entity-type: selectable types, available
 					// bases, and the saved mapping (object keyed by type).

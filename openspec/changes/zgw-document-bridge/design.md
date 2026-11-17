@@ -36,7 +36,7 @@ Djuma, zaaksysteem.nl or a generic ZGW DRC.
 
 **Goals:**
 
-- An OR-backed staging model (`bridge` register) that OpenConnector can sync
+- An OR-backed staging model (two schemas in the `filinq` register) that OpenConnector can sync
   ZGW/StUF documents + metadata into, ≤24h fresh.
 - A processing-status state machine that lets Filinq process staged copies
   and hand redaction results back for write-back — with the zaaksysteem
@@ -86,7 +86,7 @@ sibling app register at HEAD.
 ### D2 — Bridge contract: OpenConnector writes objects, Filinq writes status
 
 Inbound leg: an admin configures, in OpenConnector, one Synchronization per
-source with target = OR register `bridge`, schema `externalDocument` (mapping
+source with target = OR register `filinq`, schema `externalDocument` (mapping
 ZGW `EnkelvoudigInformatieObject` / StUF-ZDS document fields to the properties
 above; the file itself lands in a per-source staging folder via OpenConnector's
 file handling, and the mapping sets `stagedFileRef`). OpenConnector updates
@@ -195,7 +195,7 @@ dossier capability.
 
 | Operation | OR service |
 |---|---|
-| List/read sources + staged docs | `ObjectService::searchObjects()` with `@self.register = bridge` |
+| List/read sources + staged docs | `ObjectService::searchObjects()` with `@self.register = filinq` |
 | Status transitions from Filinq | `ObjectService::saveObject()` — carrying ALL fields forward (PUT semantics; partial updates would null ZGW metadata) |
 | Lifecycle guard | declarative `x-openregister-lifecycle` on `externalDocument` (canonical `initial:` key) |
 | Provenance | OpenConnector SynchronizationContract + OR synced-from tab (consumed, not reimplemented) |
@@ -272,7 +272,7 @@ A second seed `externalDocument` in status `written_back` (with
 - [Slug/property drift between this contract and OpenConnector mappings] →
   the contract table in the spec is the review checklist; register version
   bump + gate 28/30 manifest/register validation on change.
-- [Cross-tenant leakage of staged documents] → `bridge` register objects carry
+- [Cross-tenant leakage of staged documents] → bridge objects in the `filinq` register carry
   standard OR RBAC/organisation scoping; the staging folder inherits NC
   folder ACLs; spec requires read scoping in the listing endpoint.
 

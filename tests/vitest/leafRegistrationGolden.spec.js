@@ -37,6 +37,7 @@ for (const name of [
 	'CnFilinqDocumentIntakeWidget',
 	'CnFilinqDocumentsWidget',
 	'CnFilinqDownloadAllFilesWidget',
+	'CnFilinqGenerateDocumentWidget',
 	'CnFilinqMergeToPdfWidget',
 	'CnFilinqSigningFolderWidget',
 ]) {
@@ -47,6 +48,7 @@ const LEAVES = [
 	['registerDocumentIntakeLeaf', 'documentIntakeLeafDescriptor'],
 	['registerDocumentsLeaf', 'documentsLeafDescriptor'],
 	['registerDownloadAllFilesLeaf', 'downloadAllFilesLeafDescriptor'],
+	['registerGenerateDocumentLeaf', 'generateDocumentLeafDescriptor'],
 	['registerMergeToPdfLeaf', 'mergeToPdfLeafDescriptor'],
 	['registerSigningFolderLeaf', 'signingFolderLeafDescriptor'],
 ]

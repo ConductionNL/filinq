@@ -98,6 +98,8 @@ class SettingsService implements SettingsServiceInterface {
 	 * @param OcrService $ocrService OCR service for Tesseract status
 	 * @param LegalBasisProposalService $legalBasisProposal Grondslag-per-entity-type proposal service
 	 * @param OpenRegisterAvailabilityService $openRegister OpenRegister availability resolver
+	 * @param QpdfDecryptor|null $qpdf The qpdf probe for the admin status line; last and
+	 *                                 nullable so no construction site shifts.
 	 *
 	 * @return void
 	 *
@@ -110,6 +112,7 @@ class SettingsService implements SettingsServiceInterface {
 		private readonly OcrService $ocrService,
 		private readonly LegalBasisProposalService $legalBasisProposal,
 		private readonly OpenRegisterAvailabilityService $openRegister,
+		private readonly ?QpdfDecryptor $qpdf = null,
 	) {
 		$this->appName = 'filinq';
 
@@ -326,6 +329,22 @@ class SettingsService implements SettingsServiceInterface {
 	}//end getOcrStatus()
 
 	/**
+	 * Whether qpdf is installed, for the line beside Tesseract's (REQ-PPR-003).
+	 *
+	 * Without it a password-protected PDF cannot be unlocked, and the page says
+	 * so before a clerk tries.
+	 *
+	 * @return array{available: bool, version: string|null} The qpdf status.
+	 *
+	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+	 */
+	public function getQpdfStatus(): array {
+		$version = $this->qpdf?->version();
+
+		return ['available' => ($version !== null), 'version' => $version];
+	}//end getQpdfStatus()
+
+	/**
 	 * Retrieve all settings
 	 *
 	 * @return array<string, mixed> The current settings configuration
@@ -361,6 +380,7 @@ class SettingsService implements SettingsServiceInterface {
 			);
 			$data = array_merge($data, $this->loadFeatureToggles());
 			$data['ocrStatus'] = $this->getOcrStatus();
+			$data['qpdfStatus'] = $this->getQpdfStatus();
 			// Where batch and folder anonymisation put redacted copies.
 			$data[self::SUBFOLDER_KEY] = $this->config->getValueString($this->appName, self::SUBFOLDER_KEY, 'anonymised');
 			// The publisher a new Woo publication starts with (woo-metadata-worklist D3).

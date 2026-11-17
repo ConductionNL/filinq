@@ -315,6 +315,113 @@
 			"filinq-download-all-files"
 		]
 	},
+	"registerGenerateDocumentLeaf": {
+		"exports": [
+			"GENERATE_INTEGRATION_ID",
+			"GENERATE_SURFACES",
+			"generateDocumentLeafDescriptor",
+			"mount",
+			"registerGenerateDocumentLeaf",
+			"unmount"
+		],
+		"descriptor": {
+			"id": "filinq-generate-document",
+			"label": "Generate document",
+			"icon": "FileDocumentEditOutline",
+			"requiredApp": "filinq",
+			"order": 34,
+			"group": "documents",
+			"surfaces": [
+				"detail-page",
+				"single-entity"
+			],
+			"referenceType": "filinq-generate-document",
+			"renderMode": "mount",
+			"mount": {
+				"fn": "mount",
+				"isExport": true
+			},
+			"unmount": {
+				"fn": "unmount",
+				"isExport": true
+			},
+			"defaultSize": {
+				"w": 4,
+				"h": 4
+			}
+		},
+		"events": [
+			[
+				"createApp",
+				"CnFilinqGenerateDocumentWidget",
+				{
+					"register": "r",
+					"objectId": "o"
+				}
+			],
+			[
+				"mount",
+				0,
+				"a",
+				"function"
+			],
+			[
+				"createApp",
+				"CnFilinqGenerateDocumentWidget",
+				{}
+			],
+			[
+				"mount",
+				1,
+				"b",
+				"function"
+			],
+			[
+				"unmount",
+				0
+			],
+			[
+				"createApp",
+				"CnFilinqGenerateDocumentWidget",
+				{}
+			],
+			[
+				"mount",
+				2,
+				"a",
+				"function"
+			],
+			[
+				"unmount",
+				1
+			]
+		],
+		"freshQueue": [
+			"filinq-generate-document",
+			"filinq-generate-document"
+		],
+		"freshKeys": [
+			"_queue",
+			"register"
+		],
+		"registered": [
+			"filinq-generate-document"
+		],
+		"liveKeys": [
+			"integrations",
+			"keep"
+		],
+		"partial": [
+			"integrations",
+			"x"
+		],
+		"windowQueue": [
+			"filinq-document-intake",
+			"filinq-documents",
+			"filinq-download-all-files",
+			"filinq-generate-document"
+		]
+	},
 	"registerMergeToPdfLeaf": {
 		"exports": [
 			"MERGE_INTEGRATION_ID",
@@ -419,6 +526,7 @@
 			"filinq-document-intake",
 			"filinq-documents",
 			"filinq-download-all-files",
+			"filinq-generate-document",
 			"filinq-merge-to-pdf"
 		]
 	},
@@ -526,6 +634,7 @@
 			"filinq-document-intake",
 			"filinq-documents",
 			"filinq-download-all-files",
+			"filinq-generate-document",
 			"filinq-merge-to-pdf",
 			"filinq-signing-folder"
 		]

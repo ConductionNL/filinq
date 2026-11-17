@@ -28,6 +28,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Asserts that a released document comes back on its date and STAYS on the list
@@ -62,6 +63,7 @@ class DocumentReviewServiceTest extends TestCase {
 		$objectService->method('searchObjectsBySlug')->willReturn($documents);
 		$objectService->method('find')->willReturnCallback(
 			static function (...$arguments) use ($documents): ?array {
+				$arguments = LegacyObjectArgs::positional(method: 'find', args: $arguments);
 				$id = (string)($arguments[0] ?? '');
 				foreach ($documents as $document) {
 					if ((string)($document['uuid'] ?? '') === $id) {
@@ -74,6 +76,7 @@ class DocumentReviewServiceTest extends TestCase {
 		);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
+				$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 				$this->written[] = ($arguments[0] ?? []);
 
 				return ($arguments[0] ?? []);

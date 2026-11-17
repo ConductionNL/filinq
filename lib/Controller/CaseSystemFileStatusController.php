@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
-use OCA\Filinq\Service\CaseSystemDeliveredFiles;
+use OCA\Filinq\Kernel\Contracts\CaseSystemDeliveredFilesInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -49,17 +49,17 @@ class CaseSystemFileStatusController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string                           $appName     The app name.
-	 * @param IRequest                         $request     The request.
-	 * @param CaseSystemDeliveredFiles         $deliveries  Reads the written-back deliveries.
-	 * @param AnonymizeRequestServiceInterface $access      Checks the caller can open each file.
-	 * @param IUserSession                     $userSession The session.
-	 * @param IL10N                            $l10n        Translations.
+	 * @param string                            $appName     The app name.
+	 * @param IRequest                          $request     The request.
+	 * @param CaseSystemDeliveredFilesInterface $deliveries  Reads the written-back deliveries.
+	 * @param AnonymizeRequestServiceInterface  $access      Checks the caller can open each file.
+	 * @param IUserSession                      $userSession The session.
+	 * @param IL10N                             $l10n        Translations.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly CaseSystemDeliveredFiles $deliveries,
+		private readonly CaseSystemDeliveredFilesInterface $deliveries,
 		private readonly AnonymizeRequestServiceInterface $access,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,

@@ -88,6 +88,11 @@ class IntegrationLeafRegistrar {
 
 		$context->registerEventListener(
 			event: self::LEAF_EVENT,
+			listener: RegisterGenerateDocumentLeafListener::class
+		);
+
+		$context->registerEventListener(
+			event: self::LEAF_EVENT,
 			listener: RegisterDownloadAllFilesLeafListener::class
 		);
 
@@ -99,6 +104,12 @@ class IntegrationLeafRegistrar {
 		$context->registerEventListener(
 			event: self::LEAF_EVENT,
 			listener: RegisterDocumentIntakeLeafListener::class
+		);
+
+		// Template-library-leaf REQ-TMPL-14: the templates that apply to a host object.
+		$context->registerEventListener(
+			event: self::LEAF_EVENT,
+			listener: RegisterTemplatesLeafListener::class
 		);
 
 	}//end register()

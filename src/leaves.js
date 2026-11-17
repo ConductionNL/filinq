@@ -28,6 +28,7 @@ import { loadTranslations } from '@nextcloud/l10n'
 import { registerDocumentIntakeLeaf } from './integrations/registerDocumentIntakeLeaf.js'
 import { registerDocumentsLeaf } from './integrations/registerDocumentsLeaf.js'
 import { registerDownloadAllFilesLeaf } from './integrations/registerDownloadAllFilesLeaf.js'
+import { registerGenerateDocumentLeaf } from './integrations/registerGenerateDocumentLeaf.js'
 import { registerMergeToPdfLeaf } from './integrations/registerMergeToPdfLeaf.js'
 import { registerSigningFolderLeaf } from './integrations/registerSigningFolderLeaf.js'
 
@@ -41,6 +42,7 @@ import { registerSigningFolderLeaf } from './integrations/registerSigningFolderL
 // lands, which is the lesser failure and a visible one.
 registerDocumentsLeaf()
 registerMergeToPdfLeaf()
+registerGenerateDocumentLeaf()
 registerDownloadAllFilesLeaf()
 registerSigningFolderLeaf()
 registerDocumentIntakeLeaf()

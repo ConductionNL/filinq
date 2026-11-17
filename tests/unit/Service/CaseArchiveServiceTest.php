@@ -40,6 +40,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use ZipArchive;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Asserts that nothing is dropped silently: a file over the ceiling and a file
@@ -122,6 +123,7 @@ class CaseArchiveServiceTest extends TestCase {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
+				$arguments = LegacyObjectArgs::flatten(args: $arguments);
 				if ($this->refuseJobWrite === true) {
 					throw new RuntimeException('Forbidden: create on archiveJob');
 				}
