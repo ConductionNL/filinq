@@ -758,6 +758,7 @@
 
 		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
 		<SignerIdentitySettings v-if="isAdmin" />
+		<SigningSourcesSettings v-if="isAdmin" />
 		<CaseSystemDeliverySettings v-if="isAdmin" />
 		<BridgeSourcesSettings v-if="isAdmin" />
 
@@ -945,6 +946,7 @@ import PageLayoutSettings from './PageLayoutSettings.vue'
 import RefusalGroundsSource from './RefusalGroundsSource.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
+import SigningSourcesSettings from './SigningSourcesSettings.vue'
 import {
 	backendStateFromSettings,
 	emptyBackendState,
@@ -1078,6 +1080,7 @@ export default {
 		PageLayoutSettings,
 		SettingSwitchRow,
 		SignerIdentitySettings,
+		SigningSourcesSettings,
 		BridgeSourcesSettings,
 		CaseSystemDeliverySettings,
 	},

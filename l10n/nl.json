@@ -3290,6 +3290,13 @@
             "{verified} van %n handtekeningen gecontroleerd"
         ],
         "{verified} of %n signatures verified": "{verified} van %n handtekeningen gecontroleerd",
+        "Signed noun": "Ondertekend onderwerp",
+        "What the request signs, read from the record type the requesting app supplied (for example beschikking or minutes), so two apps' requests read apart on the record.": "Wat het verzoek ondertekent, gelezen uit het recordtype dat de aanvragende app meegaf (bijvoorbeeld beschikking of notulen), zodat verzoeken van twee apps op het record uit elkaar te houden zijn.",
+        "Apps that request signatures": "Apps die om handtekeningen vragen",
+        "Other apps ask filinq for signatures through one shared rail. These apps have raised signing requests here.": "Andere apps vragen filinq om handtekeningen via één gedeelde route. Deze apps hebben hier ondertekeningsverzoeken gedaan.",
+        "The signing requests could not be counted.": "De ondertekeningsverzoeken konden niet worden geteld.",
+        "No app has raised a signing request yet.": "Nog geen app heeft een ondertekeningsverzoek gedaan.",
+        "Only the first requests were counted; there are more.": "Alleen de eerste verzoeken zijn geteld; er zijn er meer.",
         "Woo refusal grounds": "Woo-weigeringsgronden",
         "Where the Woo refusal grounds used for redaction come from.": "Waar de Woo-weigeringsgronden voor het lakken vandaan komen.",
         "The Woo refusal grounds cannot be read.": "De Woo-weigeringsgronden kunnen niet worden gelezen.",

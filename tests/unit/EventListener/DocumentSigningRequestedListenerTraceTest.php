@@ -83,6 +83,7 @@ class DocumentSigningRequestedListenerTraceTest extends TestCase {
 					'subjectSchema' => 'invoice',
 					'subjectId' => 'inv-42',
 					'subjectLabel' => 'Invoice 42',
+					'subjectNoun' => 'invoice',
 					'externalReference' => 'ext-42',
 					'correlationId' => 'corr-42',
 				]
