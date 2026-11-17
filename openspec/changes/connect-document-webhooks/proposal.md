@@ -101,3 +101,7 @@ for delegating apps; this change adds an outward event beside it.
   description and category, so its own webhook page and filinq's section
   read one list. Until that lands filinq's events fire in-process and reach
   no webhook.
+  Built as ConductionNL/openregister#10558
+  (https://github.com/ConductionNL/openregister/pull/10558):
+  `OCA\OpenRegister\Event\AppWebhookEvents::declare()`, which filinq
+  calls for its four events from `ObjectEventRegistrar::boot()`.

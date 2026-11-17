@@ -39,6 +39,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use ReflectionMethod;
 use Stringable;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Every request, outcome and save answer through logCorrespondence(),
@@ -109,6 +110,7 @@ class CorrespondenceLogGoldenTest extends TestCase {
 		$saved = [];
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(function (...$args) use (&$saved, $answer) {
+			$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 			$entry = $args['object'] ?? $args[0];
 			$saved[] = ['generatedAt is ISO 8601' => preg_match('/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d[+-]\d\d:\d\d$/', (string)($entry['generatedAt'] ?? '')) === 1] + array_diff_key($entry, ['generatedAt' => true]) + ['rest' => array_slice($args, 1)];
 			if ($answer === 'fails') {

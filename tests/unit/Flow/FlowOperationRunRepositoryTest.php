@@ -23,6 +23,8 @@ namespace OCA\Filinq\Tests\Unit\Flow;
 
 use OCA\Filinq\Flow\FlowOperationRunRepository;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -84,7 +86,12 @@ class FlowOperationRunRepositoryTest extends TestCase {
 	 */
 	public function testANewRunIsCreatedWithoutRbac(): void {
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['operation' => 'ocr', 'status' => 'queued'], 'filinq', 'flowOperationRun', null, false, false)
+			->with(
+				['operation' => 'ocr', 'status' => 'queued'],
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'flowOperationRun')),
+				false,
+				false
+			)
 			->willReturn(['id' => 'run-1', 'operation' => 'ocr', 'status' => 'queued']);
 
 		$stored = $this->repository()->save(['operation' => 'ocr', 'status' => 'queued']);
@@ -101,7 +108,12 @@ class FlowOperationRunRepositoryTest extends TestCase {
 	 */
 	public function testAnExistingRunIsUpdatedInPlace(): void {
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['status' => 'running'], 'filinq', 'flowOperationRun', 'run-1', false, false)
+			->with(
+				['status' => 'running'],
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'flowOperationRun'), uuid: 'run-1'),
+				false,
+				false
+			)
 			->willReturn(null);
 
 		$stored = $this->repository()->save(['uuid' => 'run-1', 'status' => 'running']);

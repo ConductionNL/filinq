@@ -32,6 +32,8 @@ namespace OCA\Filinq\Flow;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use RuntimeException;
 use Throwable;
 
@@ -86,20 +88,21 @@ class FlowOperationRunRepository {
 	public function save(array $run): array {
 		$uuid = (string) ($run['uuid'] ?? '');
 		unset($run['uuid']);
-
-		$arguments = [
-			'object' => $run,
-			'register' => IntakeRepository::REGISTER,
-			'schema' => self::SCHEMA,
-			'_rbac' => false,
-			'_multitenancy' => false,
-		];
+		$targetUuid = null;
 		if ($uuid !== '') {
-			$arguments['uuid'] = $uuid;
+			$targetUuid = $uuid;
 		}
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $run,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
+					uuid: $targetUuid
+				),
+				_rbac: false,
+				_multitenancy: false
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
 				message: 'Could not store the Flow operation run: ' . $e->getMessage(),

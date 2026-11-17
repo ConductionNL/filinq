@@ -21,6 +21,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
+use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
+use OCA\Filinq\Service\Grounds\RefusalGroundLabels;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCA\Filinq\Service\LegalBasisCatalog;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
@@ -36,6 +39,8 @@ use RuntimeException;
  * rows, and degrades to nothing when OpenRegister is absent or fails.
  *
  * @covers \OCA\Filinq\Service\LegalBasisCatalog
+ * @uses   \OCA\Filinq\Service\Grounds\RefusalGroundLabels
+ * @uses   \OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap
  */
 class LegalBasisCatalogTest extends TestCase {
 
@@ -205,4 +210,45 @@ class LegalBasisCatalogTest extends TestCase {
 		$this->assertSame([], $this->catalogOver($this->objectServiceReturning(3))->getAvailableBases());
 
 	}//end testANonIterableResultYieldsNoBases()
+
+	/**
+	 * With the grounds reader, the Woo grounds are offered by code from the
+	 * resolver; a Woo `base` record is not offered, a tenant's own basis is.
+	 *
+	 * @return void
+	 */
+	public function testWooGroundsComeFromTheResolverAndTenantBasesStay(): void {
+		$objectService = $this->objectServiceReturning(
+			[
+				'results' => [
+					['@self' => ['slug' => 'art-5-1-2-e'], 'name' => 'Persoonlijke levenssfeer (oud)'],
+					['@self' => ['slug' => 'eigen-grond'], 'name' => 'Eigen grond', 'description' => 'Lokaal.'],
+				],
+			]
+		);
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('getInstalledApps')->willReturn(['files', 'openregister']);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objectService);
+		$grounds = $this->createMock(RefusalGroundsResolver::class);
+		$grounds->method('list')->willReturn(
+			['source' => 'dossiq', 'version' => '2026-10-09', 'grounds' => [['code' => '5.1.2.e', 'label' => 'Persoonlijke levenssfeer', 'description' => 'Privacy.']]]
+		);
+
+		$catalog = new LegalBasisCatalog(
+			$appManager,
+			$container,
+			$this->logger,
+			new RefusalGroundLabels($grounds, new RefusalGroundsLegacyMap(), $this->logger)
+		);
+
+		$this->assertSame(
+			[
+				['slug' => '5.1.2.e', 'name' => 'Persoonlijke levenssfeer', 'description' => 'Privacy.'],
+				['slug' => 'eigen-grond', 'name' => 'Eigen grond', 'description' => 'Lokaal.'],
+			],
+			$catalog->getAvailableBases()
+		);
+
+	}//end testWooGroundsComeFromTheResolverAndTenantBasesStay()
 }//end class
