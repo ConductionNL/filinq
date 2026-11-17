@@ -38,6 +38,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Updating, deleting, listing and adding/removing terms of a dictionary, over
@@ -121,6 +122,7 @@ class CustomDictionaryServiceMaintenanceTest extends TestCase {
 		);
 		$objectService->method('find')->willReturnCallback(
 			function (...$args): ?array {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				if ($args[2] === CustomDictionaryService::SCHEMA_TERM) {
 					foreach ($this->terms as $term) {
 						if ($term['id'] === $args[0]) {
@@ -136,6 +138,7 @@ class CustomDictionaryServiceMaintenanceTest extends TestCase {
 		);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$args): array {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$this->saved[] = [$args[2], $args[0], ($args[3] ?? null)];
 
 				return $args[0] + ['id' => ($args[3] ?? 'new-id')];
@@ -143,6 +146,7 @@ class CustomDictionaryServiceMaintenanceTest extends TestCase {
 		);
 		$objectService->method('deleteObject')->willReturnCallback(
 			function (...$args): bool {
+				$args = LegacyObjectArgs::positional(method: 'deleteObject', args: $args);
 				$this->deleted[] = $args[2] . ':' . $args[0];
 
 				return true;

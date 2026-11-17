@@ -167,6 +167,20 @@ class DossierFileServiceTest extends TestCase {
 	}//end testTheFolderReferenceIsReadFromTheSelfBlock()
 
 	/**
+	 * A dossier's folder is found through the folder reference of its context.
+	 *
+	 * @return void
+	 */
+	public function testTheFolderOfADossierComesFromItsContext(): void {
+		$folder = $this->createMock(Folder::class);
+		$this->repository->expects(self::once())->method('loadDossierContext')->with('dossier-21')->willReturn(['folderRef' => 77]);
+		$this->repository->expects(self::once())->method('resolveDossierFolder')->with(77)->willReturn($folder);
+
+		$this->assertSame($folder, $this->service->folderOfDossier(dossierUuid: 'dossier-21'));
+
+	}//end testTheFolderOfADossierComesFromItsContext()
+
+	/**
 	 * A payload without one asks the OBJECT, which is where an entity loaded
 	 * straight from OpenRegister carries it.
 	 *

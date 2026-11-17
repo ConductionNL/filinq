@@ -35,6 +35,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests that a version becomes final with its facts recorded, and that a final
@@ -86,6 +87,7 @@ class FinalDocumentServiceTest extends TestCase {
 
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
+				$arguments = LegacyObjectArgs::flatten(args: $arguments);
 				$object = ($arguments['object'] ?? ($arguments[0] ?? []));
 				$this->written[] = $object;
 

@@ -39,6 +39,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for CustomDictionaryService's organisation gate and import parsing.
@@ -228,10 +229,12 @@ class CustomDictionaryServiceTest extends TestCase {
 		$objectService->method('searchObjectsBySlug')->willReturn([]);
 		$objectService->expects($this->once())
 			->method('saveObject')
-			->with($this->callback(static function (array $data): bool {
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->callback(static function (array $data): bool {
 				return ($data['matchMode'] ?? null) === 'caseInsensitive'
 					&& ($data['active'] ?? null) === true;
-			}))
+			}),
+				]))
 			->willReturnCallback(
 				static fn (array $object): array => array_merge(
 					$object,
