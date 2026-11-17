@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\FieldFill;
 
 use OCA\Filinq\Exception\FieldFillRefused;
+use OCA\Filinq\Kernel\Contracts\SchemaFieldFillServiceInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentTextSource;
 use OCA\Filinq\Service\Extraction\AiPrompt;
@@ -50,7 +51,7 @@ use Throwable;
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The service joins the file, the model, the profile and the record.
  */
-class SchemaFieldFillService {
+class SchemaFieldFillService implements SchemaFieldFillServiceInterface {
 
 	/**
 	 * The schema slug of a suggestion.

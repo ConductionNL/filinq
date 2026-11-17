@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\FieldFill;
 
 use OCA\Filinq\Exception\FieldFillRefused;
+use OCA\Filinq\Kernel\Contracts\FieldFillProfileServiceInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
@@ -43,7 +44,7 @@ use Throwable;
  *
  * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
  */
-class FieldFillProfileService {
+class FieldFillProfileService implements FieldFillProfileServiceInterface {
 
 	/**
 	 * The schema slug of a profile.

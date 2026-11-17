@@ -26,8 +26,8 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\FieldFillRefused;
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Service\FieldFill\FieldFillProfileService;
-use OCA\Filinq\Service\FieldFill\SchemaFieldFillService;
+use OCA\Filinq\Kernel\Contracts\FieldFillProfileServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SchemaFieldFillServiceInterface;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -57,19 +57,19 @@ class FieldFillController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                $request     The request.
-	 * @param SchemaFieldFillService  $fieldFill   The suggestions.
-	 * @param FieldFillProfileService $profiles    The declared profiles.
-	 * @param IUserSession            $userSession The session user.
-	 * @param IL10N                   $l10n        Translations.
-	 * @param LoggerInterface         $logger      Logger for diagnostics.
+	 * @param IRequest                         $request     The request.
+	 * @param SchemaFieldFillServiceInterface  $fieldFill   The suggestions.
+	 * @param FieldFillProfileServiceInterface $profiles    The declared profiles.
+	 * @param IUserSession                     $userSession The session user.
+	 * @param IL10N                            $l10n        Translations.
+	 * @param LoggerInterface                  $logger      Logger for diagnostics.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly SchemaFieldFillService $fieldFill,
-		private readonly FieldFillProfileService $profiles,
+		private readonly SchemaFieldFillServiceInterface $fieldFill,
+		private readonly FieldFillProfileServiceInterface $profiles,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
