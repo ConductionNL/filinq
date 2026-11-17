@@ -130,22 +130,75 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 		}
 
 		$options = [];
-		$fonts = $huisstijl['fonts'] ?? null;
-		if (is_array($fonts) === true) {
-			$options['fonts'] = [
-				'heading' => $this->pdfFont(font: ($fonts['heading'] ?? null)),
-				'body' => $this->pdfFont(font: ($fonts['body'] ?? null)),
-			];
+		$fonts = $this->pdfFonts(fonts: ($huisstijl['fonts'] ?? null));
+		if ($fonts !== null) {
+			$options['fonts'] = $fonts;
 		}
 
-		$cover = $huisstijl['coverImage'] ?? null;
-		if (($template['coverPage'] ?? false) === true && is_string($cover) === true && $cover !== '') {
+		$cover = $this->coverOf(template: $template, huisstijl: $huisstijl);
+		if ($cover !== null) {
 			$options['coverImage'] = $cover;
 		}
 
 		return $options;
 
 	}//end pdfAssets()
+
+	/**
+	 * The heading and body PDF fonts of a house style's fonts, or null without fonts.
+	 *
+	 * @param mixed $fonts The house style's `fonts`.
+	 *
+	 * @return array{heading: array{family: string, url: string|null}, body: array{family: string, url: string|null}}|null The fonts.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 */
+	private function pdfFonts(mixed $fonts): ?array {
+		if (is_array($fonts) === false) {
+			return null;
+		}
+
+		return [
+			'heading' => $this->pdfFont(font: ($fonts['heading'] ?? null)),
+			'body' => $this->pdfFont(font: ($fonts['body'] ?? null)),
+		];
+
+	}//end pdfFonts()
+
+	/**
+	 * The cover image a template asks for, when the house style has one.
+	 *
+	 * @param array<string, mixed> $template The template.
+	 * @param array<string, mixed> $huisstijl The house style.
+	 *
+	 * @return string|null The cover image, or null.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 */
+	private function coverOf(array $template, array $huisstijl): ?string {
+		if (($template['coverPage'] ?? false) !== true) {
+			return null;
+		}
+
+		return $this->filled(value: ($huisstijl['coverImage'] ?? null));
+
+	}//end coverOf()
+
+	/**
+	 * A value as it is when it is a non-empty string, else null.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return string|null The string, untrimmed.
+	 */
+	private function filled(mixed $value): ?string {
+		if (is_string($value) === false || $value === '') {
+			return null;
+		}
+
+		return $value;
+
+	}//end filled()
 
 	/**
 	 * One font role for the PDF: its family, else filinq's own, and its file URL.
@@ -160,15 +213,12 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 			return $resolved;
 		}
 
-		$family = ($font['family'] ?? null);
-		if (is_string($family) === true && trim($family) !== '') {
-			$resolved['family'] = trim($family);
+		$family = $this->stringOrNull(value: ($font['family'] ?? null));
+		if ($family !== null) {
+			$resolved['family'] = $family;
 		}
 
-		$url = ($font['url'] ?? null);
-		if (is_string($url) === true && $url !== '') {
-			$resolved['url'] = $url;
-		}
+		$resolved['url'] = $this->filled(value: ($font['url'] ?? null));
 
 		return $resolved;
 
@@ -226,15 +276,9 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 			$parts[] = '<p>' . $this->escape(text: $line) . '</p>';
 		}
 
-		$anchors = [];
-		foreach ($links as $link) {
-			if ($link !== '') {
-				$anchors[] = '<a href="' . $this->escape(text: $link) . '">' . $this->escape(text: $link) . '</a>';
-			}
-		}
-
-		if ($anchors !== []) {
-			$parts[] = '<p>' . implode(' | ', $anchors) . '</p>';
+		$linkLine = $this->linkLine(links: $links);
+		if ($linkLine !== null) {
+			$parts[] = $linkLine;
 		}
 
 		if ($parts === []) {
@@ -244,6 +288,29 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 		return '<div class="huisstijl-footer">' . implode('', $parts) . '</div>';
 
 	}//end footerHtml()
+
+	/**
+	 * The footer paragraph of the links, or null when there are none.
+	 *
+	 * @param array<int, string> $links The links.
+	 *
+	 * @return string|null The paragraph.
+	 */
+	private function linkLine(array $links): ?string {
+		$anchors = [];
+		foreach ($links as $link) {
+			if ($link !== '') {
+				$anchors[] = '<a href="' . $this->escape(text: $link) . '">' . $this->escape(text: $link) . '</a>';
+			}
+		}
+
+		if ($anchors === []) {
+			return null;
+		}
+
+		return '<p>' . implode(' | ', $anchors) . '</p>';
+
+	}//end linkLine()
 
 	/**
 	 * Escape text for HTML and for Twig.

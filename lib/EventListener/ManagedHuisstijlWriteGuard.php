@@ -81,9 +81,6 @@ class ManagedHuisstijlWriteGuard implements IEventListener {
 		}
 
 		$objects = $this->objectsOf(event: $event);
-		if ($objects === []) {
-			return;
-		}
 
 		// Cheap test first: only an object marked managed costs a schema lookup.
 		if ($this->anyManaged(objects: $objects) === false || $this->anyHuisstijl(objects: $objects) === false) {

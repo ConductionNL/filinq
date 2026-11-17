@@ -130,17 +130,7 @@ class HuisstijlProfileSync {
 				return null;
 			}
 
-			$mapped = $this->mapper->mapProfile(profile: $profile);
-			if ($mapped['tokenSetId'] === '') {
-				return null;
-			}
-
-			$existing = $this->findManaged(tokenSetId: $mapped['tokenSetId']);
-			if ($existing !== null && ($existing['profileHash'] ?? null) === $mapped['profileHash']) {
-				return $existing;
-			}
-
-			return $this->store(huisstijl: $mapped, uuid: $this->uuidOf(row: ($existing ?? [])));
+			return $this->syncProfile(profile: $profile);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				message: 'Failed to sync the house style from thematiq: ' . $e->getMessage(),
@@ -150,6 +140,30 @@ class HuisstijlProfileSync {
 		}//end try
 
 	}//end syncFor()
+
+	/**
+	 * Upsert the managed house style of one profile, unless it is unchanged.
+	 *
+	 * @param array<string, mixed> $profile The thematiq profile.
+	 *
+	 * @return array<string, mixed>|null The managed house style, or null without a token set.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-1.2
+	 */
+	private function syncProfile(array $profile): ?array {
+		$mapped = $this->mapper->mapProfile(profile: $profile);
+		if ($mapped['tokenSetId'] === '') {
+			return null;
+		}
+
+		$existing = $this->findManaged(tokenSetId: $mapped['tokenSetId']);
+		if ($existing !== null && ($existing['profileHash'] ?? null) === $mapped['profileHash']) {
+			return $existing;
+		}
+
+		return $this->store(huisstijl: $mapped, uuid: $this->uuidOf(row: ($existing ?? [])));
+
+	}//end syncProfile()
 
 	/**
 	 * Thematiq's profile service, or null when thematiq is not there.
@@ -167,13 +181,25 @@ class HuisstijlProfileSync {
 			return null;
 		}
 
+		return $this->asProfileService(service: $service);
+
+	}//end profileService()
+
+	/**
+	 * The service when it can read a profile, else null.
+	 *
+	 * @param mixed $service The resolved service.
+	 *
+	 * @return object|null The profile service.
+	 */
+	private function asProfileService(mixed $service): ?object {
 		if (is_object($service) === false || method_exists($service, 'forUser') === false) {
 			return null;
 		}
 
 		return $service;
 
-	}//end profileService()
+	}//end asProfileService()
 
 	/**
 	 * The signed-in user's id, or null.
@@ -210,6 +236,19 @@ class HuisstijlProfileSync {
 			return null;
 		}
 
+		return $this->managedRow(rows: $rows, tokenSetId: $tokenSetId);
+
+	}//end findManaged()
+
+	/**
+	 * The first row that is the managed house style of a token set.
+	 *
+	 * @param array<int|string, mixed> $rows The rows found.
+	 * @param string $tokenSetId The token set.
+	 *
+	 * @return array<string, mixed>|null The row's data, or null.
+	 */
+	private function managedRow(array $rows, string $tokenSetId): ?array {
 		foreach ($rows as $row) {
 			$data = $this->rowData(row: $row);
 			if ($this->mapper->isManaged(huisstijl: $data) === true && ($data['tokenSetId'] ?? null) === $tokenSetId) {
@@ -219,7 +258,7 @@ class HuisstijlProfileSync {
 
 		return null;
 
-	}//end findManaged()
+	}//end managedRow()
 
 	/**
 	 * Write the managed house style through the gate.
@@ -267,11 +306,15 @@ class HuisstijlProfileSync {
 			return $row;
 		}
 
-		if (is_object($row) === true && method_exists($row, 'jsonSerialize') === true) {
+		if (is_object($row) === false) {
+			return [];
+		}
+
+		if (method_exists($row, 'jsonSerialize') === true) {
 			return $this->arrayOf(value: $row->jsonSerialize());
 		}
 
-		if (is_object($row) === true && method_exists($row, 'getObject') === true) {
+		if (method_exists($row, 'getObject') === true) {
 			return $this->arrayOf(value: $row->getObject());
 		}
 

@@ -310,32 +310,59 @@ class PdfService implements PdfServiceInterface {
 	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	public function applyHouseStyle(string $html, array $options): string {
-		$prefix = '';
-		$fonts  = ($options['fonts'] ?? null);
-		if (is_array($fonts) === true) {
-			$css     = '';
-			$targets = ['body' => 'body', 'heading' => 'h1, h2, h3, h4, h5, h6'];
-			foreach ($targets as $role => $selector) {
-				$family = $this->cssFontFamily(font: ($fonts[$role] ?? null));
-				if ($family !== null) {
-					$css .= $selector . ' { font-family: "' . $family . '", dejavusans, sans-serif; }';
-				}
-			}
-
-			if ($css !== '') {
-				$prefix .= '<style>' . $css . '</style>';
-			}
-		}
-
-		$cover = ($options['coverImage'] ?? null);
-		if (is_string($cover) === true && trim($cover) !== '') {
-			$prefix .= '<div class="filinq-cover" style="page-break-after: always; text-align: center;">'
-				. '<img src="' . htmlspecialchars(trim($cover), ENT_QUOTES | ENT_HTML5) . '" alt="" style="max-width: 100%;" />'
-				. '</div>';
-		}
+		$prefix = $this->fontStyle(fonts: ($options['fonts'] ?? null)) . $this->coverBlock(cover: ($options['coverImage'] ?? null));
 
 		return $prefix . $html;
 	}//end applyHouseStyle()
+
+	/**
+	 * The style block that sets the body and heading fonts, or '' without fonts.
+	 *
+	 * @param mixed $fonts The `fonts` option.
+	 *
+	 * @return string The style block.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 */
+	private function fontStyle(mixed $fonts): string {
+		if (is_array($fonts) === false) {
+			return '';
+		}
+
+		$css     = '';
+		$targets = ['body' => 'body', 'heading' => 'h1, h2, h3, h4, h5, h6'];
+		foreach ($targets as $role => $selector) {
+			$family = $this->cssFontFamily(font: ($fonts[$role] ?? null));
+			if ($family !== null) {
+				$css .= $selector . ' { font-family: "' . $family . '", dejavusans, sans-serif; }';
+			}
+		}
+
+		if ($css === '') {
+			return '';
+		}
+
+		return '<style>' . $css . '</style>';
+	}//end fontStyle()
+
+	/**
+	 * The cover page block, or '' without a cover image.
+	 *
+	 * @param mixed $cover The `coverImage` option.
+	 *
+	 * @return string The cover page block.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 */
+	private function coverBlock(mixed $cover): string {
+		if (is_string($cover) === false || trim($cover) === '') {
+			return '';
+		}
+
+		return '<div class="filinq-cover" style="page-break-after: always; text-align: center;">'
+			. '<img src="' . htmlspecialchars(trim($cover), ENT_QUOTES | ENT_HTML5) . '" alt="" style="max-width: 100%;" />'
+			. '</div>';
+	}//end coverBlock()
 
 	/**
 	 * A font family that is safe inside a quoted CSS value, or null.
