@@ -25,6 +25,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Session status, cancellation and persistence edges of the native provider.
@@ -172,15 +173,15 @@ class NativeSigningProviderSessionTest extends TestCase {
 	 */
 	public function testCancelStoresTheCancelledSessionUnderItsUuid(): void {
 		$this->rows(rows: [['externalId' => 'native-3', 'status' => 'pending', 'uuid' => 'or-uuid']]);
-		$this->objects->expects($this->once())->method('saveObject')->with(
-			['externalId' => 'native-3', 'status' => 'cancelled', 'uuid' => 'or-uuid', 'id' => 'or-uuid'],
-			'filinq',
-			'signingSession',
-			null,
-			false,
-			true,
-			true
-		);
+		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['externalId' => 'native-3', 'status' => 'cancelled', 'uuid' => 'or-uuid', 'id' => 'or-uuid'],
+				'register' => 'filinq',
+				'schema' => 'signingSession',
+				'uuid' => null,
+				'_rbac' => false,
+				'_multitenancy' => true,
+				'_unowned' => true,
+			]));
 
 		$this->provider()->cancelSigning(externalId: 'native-3');
 	}//end testCancelStoresTheCancelledSessionUnderItsUuid()
@@ -192,9 +193,9 @@ class NativeSigningProviderSessionTest extends TestCase {
 	 */
 	public function testCancelKeepsAnIdOnlyRow(): void {
 		$this->rows(rows: [['externalId' => 'native-4', 'id' => 77]]);
-		$this->objects->expects($this->once())->method('saveObject')->with(
-			$this->callback(static fn (array $s): bool => $s['id'] === '77' && $s['status'] === 'cancelled')
-		);
+		$this->objects->expects($this->once())->method('saveObject')->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => $this->callback(static fn (array $s): bool => $s['id'] === '77' && $s['status'] === 'cancelled'),
+			]));
 
 		$this->provider()->cancelSigning(externalId: 'native-4');
 	}//end testCancelKeepsAnIdOnlyRow()

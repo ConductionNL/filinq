@@ -21,6 +21,7 @@ use OCA\Filinq\Mcp\FilinqScannableServices;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\FileEntityStatsService;
 use OCA\Filinq\Service\FileListingService;
+use OCA\Filinq\Service\FileRecordReferences;
 use OCA\Filinq\Service\FileUploadService;
 use OCA\Filinq\Service\Ocr\OcrResultRepository;
 use OCA\Filinq\Service\Ocr\OcrRunService;
@@ -58,7 +59,12 @@ class McpGenerationToolsTest extends TestCase {
 		return $attributes[0]->newInstance();
 	}
 
-	private function statusService(FileEntityStatsService $stats, RedactionOutputGuardInterface $guard): FileListingService {
+	private function statusService(FileEntityStatsService $stats, RedactionOutputGuardInterface $guard, ?FileRecordReferences $records = null): FileListingService {
+		if ($records === null) {
+			$records = $this->createMock(FileRecordReferences::class);
+			$records->method('forFile')->willReturn(['validationStatus' => null, 'generationRecords' => [], 'signingRecords' => []]);
+		}
+
 		return new FileListingService(
 			$this->logger,
 			$this->createMock(FileUploadService::class),
@@ -66,7 +72,8 @@ class McpGenerationToolsTest extends TestCase {
 			$this->createMock(OcrResultRepository::class),
 			$this->createMock(OcrRunService::class),
 			$this->files,
-			$guard
+			$guard,
+			$records
 		);
 	}
 
@@ -186,10 +193,47 @@ class McpGenerationToolsTest extends TestCase {
 				'ocrAvailable' => false,
 				'ocrProcessed' => false,
 				'ocrConfidence' => null,
+				'validationStatus' => null,
+				'generationRecords' => [],
+				'signingRecords' => [],
 			],
 			$status
 		);
 		$this->assertStringNotContainsString('de-vries', json_encode($status));
+	}
+
+	public function testTheStatusCarriesTheValidationVerdictAndTheRecordReferences(): void {
+		$file = $this->createMock(File::class);
+		$file->method('getId')->willReturn(9);
+		$file->method('getMimeType')->willReturn('application/pdf');
+		$this->files->method('node')->with(9)->willReturn($file);
+		$stats = $this->createMock(FileEntityStatsService::class);
+		$stats->method('getEntityStats')->willReturn(['entityCount' => 0, 'anonymizedCount' => 0, 'status' => 'not_processed']);
+		$records = $this->createMock(FileRecordReferences::class);
+		$records->expects($this->once())->method('forFile')->with(9)->willReturn(
+			[
+				'validationStatus' => 'warnings',
+				'generationRecords' => [['id' => 'gen-1', 'status' => 'completed']],
+				'signingRecords' => [['id' => 'sig-1', 'status' => 'PENDING']],
+			]
+		);
+
+		$status = $this->statusService($stats, $this->createMock(RedactionOutputGuardInterface::class), $records)->getFileStatus(9);
+
+		$this->assertSame('warnings', $status['validationStatus']);
+		$this->assertSame([['id' => 'gen-1', 'status' => 'completed']], $status['generationRecords']);
+		$this->assertSame([['id' => 'sig-1', 'status' => 'PENDING']], $status['signingRecords']);
+		$this->assertSame(['fileId' => 9, 'status' => 'not_processed'], ['fileId' => $status['fileId'], 'status' => $status['status']]);
+	}
+
+	public function testAnUnreadableFileReadsNoRecords(): void {
+		$this->files->method('node')->willReturn(null);
+		$records = $this->createMock(FileRecordReferences::class);
+		$records->expects($this->never())->method('forFile');
+
+		$status = $this->statusService($this->createMock(FileEntityStatsService::class), $this->createMock(RedactionOutputGuardInterface::class), $records)->getFileStatus(41);
+
+		$this->assertSame(['fileId' => 41, 'status' => 'not_found'], $status);
 	}
 
 	public function testACheckedDocumentReportsItsMarkAndAnUnreadableMarkReadsUnchecked(): void {

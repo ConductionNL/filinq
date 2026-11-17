@@ -27,6 +27,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Pseudonym maps are matched to their link or source by the repository itself,
@@ -160,7 +161,14 @@ class PseudonymMapRepositoryTest extends TestCase {
 	public function testReadCiphertextReturnsTheMappings(): void {
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('map-1', 'filinq', 'pseudonymMap', false, true, false)
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'map-1',
+					'register' => 'filinq',
+					'schema' => 'pseudonymMap',
+					'_rbac' => false,
+					'_multitenancy' => true,
+					'_render' => false,
+				]))
 			->willReturn(['uuid' => 'map-1', 'mappings' => 'cipher']);
 
 		$this->assertSame('cipher', $this->repository->readCiphertext('map-1'));
@@ -200,7 +208,13 @@ class PseudonymMapRepositoryTest extends TestCase {
 	public function testSaveReturnsTheStoredUuid(): void {
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['keyId' => 'k'], 'filinq', 'pseudonymMap', 'map-1', false)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['keyId' => 'k'],
+					'register' => 'filinq',
+					'schema' => 'pseudonymMap',
+					'uuid' => 'map-1',
+					'_rbac' => false,
+				]))
 			->willReturn(['@self' => ['id' => 'map-1'], 'keyId' => 'k']);
 
 		$this->assertSame('map-1', $this->repository->save(['uuid' => 'x', 'keyId' => 'k'], 'map-1'));
@@ -237,7 +251,12 @@ class PseudonymMapRepositoryTest extends TestCase {
 	public function testDelete(): void {
 		$this->objectService->expects($this->exactly(3))
 			->method('deleteObject')
-			->with($this->anything(), 'filinq', 'pseudonymMap', false)
+			->with(...LegacyObjectArgs::with(method: 'deleteObject', expected: [
+					'uuid' => $this->anything(),
+					'register' => 'filinq',
+					'schema' => 'pseudonymMap',
+					'_rbac' => false,
+				]))
 			->willReturnOnConsecutiveCalls(true, false, $this->throwException(new Exception('locked')));
 
 		$this->repository->delete('map-1');
