@@ -52,6 +52,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for FinancialExtractionService.
@@ -292,7 +293,9 @@ TEXT;
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->willReturnCallback(function ($object, $register, $schema) {
+			->willReturnCallback(function ($object, ObjectSaveOptions $options = new ObjectSaveOptions()) {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->assertSame('filinq', $register);
 				$this->assertSame('financialExtraction', $schema);
 				$this->assertSame('supplier-invoice', $object['docType']);

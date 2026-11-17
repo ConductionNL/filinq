@@ -32,6 +32,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Asserts that the NAW block is OFFERED and never filed, that the confidence
@@ -98,6 +99,7 @@ class PartySuggestionServiceTest extends TestCase {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
+				$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 				$this->written[] = ($arguments[0] ?? []);
 				$this->writtenTo[] = (string)($arguments[2] ?? '');
 

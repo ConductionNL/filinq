@@ -28,6 +28,8 @@ use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Publication records, their log, redacted copies and platform publications,
@@ -75,7 +77,11 @@ class PublicationStoreTest extends TestCase {
 		$entity->method('jsonSerialize')->willReturn(['object' => ['title' => 'Besluit', '@self' => ['x' => 1]], '@self' => ['id' => 'rec-1']]);
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('rec-1', 'filinq', 'publicationRecord')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'rec-1',
+					'register' => 'filinq',
+					'schema' => 'publicationRecord',
+				]))
 			->willReturn($entity);
 
 		$this->assertSame(['title' => 'Besluit', 'uuid' => 'rec-1'], $this->store->findRecord('rec-1'));
@@ -160,7 +166,11 @@ class PublicationStoreTest extends TestCase {
 	public function testSaveRecordStripsFrameworkFields(): void {
 		$this->objectService->expects($this->exactly(2))
 			->method('saveObject')
-			->willReturnCallback(static function (array $object, string $register, string $schema, ?string $uuid, bool $_rbac, bool $_multitenancy, bool $_unowned): array {
+			->willReturnCallback(static function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
+				$_unowned = $options->actor->unowned;
 				TestCase::assertSame(['title' => 'Besluit'], $object);
 				TestCase::assertSame('filinq', $register);
 				TestCase::assertSame('publicationRecord', $schema);
@@ -203,11 +213,20 @@ class PublicationStoreTest extends TestCase {
 	public function testPlatformPublicationUpdateMergesOverTheStoredOne(): void {
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('pub-1', 'publication', 'publication')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'pub-1',
+					'register' => 'publication',
+					'schema' => 'publication',
+				]))
 			->willReturn(['uuid' => 'pub-1', 'title' => 'Oud', 'status' => 'concept']);
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['title' => 'Nieuw', 'status' => 'concept'], 'publication', 'publication', 'pub-1')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['title' => 'Nieuw', 'status' => 'concept'],
+					'register' => 'publication',
+					'schema' => 'publication',
+					'uuid' => 'pub-1',
+				]))
 			->willReturnArgument(0);
 
 		$this->assertSame(

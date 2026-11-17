@@ -26,6 +26,9 @@ namespace OCA\Filinq\Service\BulkSigning;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use RuntimeException;
 use Throwable;
 
@@ -84,7 +87,13 @@ class BulkSigningBatchRepository {
 		}
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $arguments['object'],
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: ($arguments['register'] ?? null), schema: ($arguments['schema'] ?? null)),
+					uuid: $arguments['uuid'] ?? null
+				)
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'Could not store the bulk send: ' . $e->getMessage(), code: 0, previous: $e);
 		}
@@ -115,7 +124,10 @@ class BulkSigningBatchRepository {
 		}
 
 		try {
-			$object = $this->objectResolver->resolve()->find(id: $uuid, register: IntakeRepository::REGISTER, schema: self::SCHEMA);
+			$object = $this->objectResolver->resolve()->find(
+				id: $uuid,
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The bulk send could not be read: ' . $e->getMessage(), code: 0, previous: $e);
 		}

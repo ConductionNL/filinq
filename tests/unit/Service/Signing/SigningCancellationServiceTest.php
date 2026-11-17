@@ -146,6 +146,51 @@ class SigningCancellationServiceTest extends TestCase {
 	}//end testTheCreatorMayCancel()
 
 	/**
+	 * REQ: no configuration option can permit an administrative override.
+	 *
+	 * The rule reads no setting at all: none of the service's collaborators is a
+	 * configuration source, and nothing under lib/ names a cancellation override,
+	 * so there is no switch an administrator could turn to withdraw another
+	 * person's request. Adding one fails this test on purpose: an escape hatch
+	 * for an absent creator is a separate change with its own authorisation case.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 */
+	public function testNoConfigurationOptionCanPermitAnAdministrativeOverride(): void {
+		$constructor = (new \ReflectionClass(SigningCancellationService::class))->getConstructor();
+		$this->assertNotNull($constructor);
+
+		$configSources = ['OCP\\IAppConfig', 'OCP\\IConfig', 'OCA\\Filinq\\Service\\SettingsService'];
+		foreach ($constructor->getParameters() as $parameter) {
+			$type = (string)$parameter->getType();
+			$this->assertNotContains(ltrim($type, '?'), $configSources, 'the creator rule must not read a setting: ' . $parameter->getName());
+		}
+
+		$named = [];
+		$files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(dirname(__DIR__, 4) . '/lib', \FilesystemIterator::SKIP_DOTS));
+		foreach ($files as $file) {
+			if ($file->getExtension() !== 'php') {
+				continue;
+			}
+
+			$code = (string)file_get_contents($file->getPathname());
+			if (preg_match('/[\'"][a-z_.-]*(cancel[a-z_.-]*(override|admin)|(override|admin)[a-z_.-]*cancel)[a-z_.-]*[\'"]/i', $code, $match) === 1) {
+				$named[] = $file->getFilename() . ': ' . $match[0];
+			}
+		}
+
+		$this->assertSame([], $named, 'a setting or key that would let an administrator cancel exists');
+
+		// And the rule holds for an administrator whatever the instance says.
+		$provider = $this->provider();
+		$provider->expects($this->never())->method('cancelSigning');
+		$this->expectException(SigningCancellationRefusedException::class);
+		$this->service($this->request(), $provider)->cancel(uid: 'admin', requestId: 'req-1');
+	}//end testNoConfigurationOptionCanPermitAnAdministrativeOverride()
+
+	/**
 	 * REQ: an app administrator is refused.
 	 *
 	 * Administering an application is not being a party to an agreement between a

@@ -30,6 +30,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -409,8 +413,7 @@ class FinalDocumentRepository {
 			// would have answered null for every record that exists.
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: self::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -447,11 +450,12 @@ class FinalDocumentRepository {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $record,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $uuid,
-				_rbac: false,
-				_unowned: true
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid,
+					actor: new SaveActor(unowned: true)
+				),
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(
