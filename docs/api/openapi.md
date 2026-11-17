@@ -24,10 +24,10 @@ Every endpoint is served under `/index.php/apps/filinq/api/v1/`. The older unver
 
 ## Authentication
 
-Filinq uses Nextcloud's own authentication. For a script or another system, create an **app password** in Nextcloud under *Personal settings → Security → Devices & sessions*, and send it with the user name as HTTP basic authentication:
+Filinq uses Nextcloud's own authentication. For a script or another system, create an **app password** in Nextcloud under *Personal settings → Security → Devices & sessions*, and send it with the user name as HTTP basic authentication. Keep both in environment variables rather than in the script:
 
 ```bash
-curl -u 'alice:<app password>' \
+curl -u "$NC_USER:$NC_APP_PASSWORD" \
   -H 'OCS-APIRequest: true' \
   https://cloud.example.com/index.php/apps/filinq/api/v1/templates
 ```
