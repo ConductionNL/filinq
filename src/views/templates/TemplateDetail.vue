@@ -122,102 +122,29 @@
 					class="template-detail__field" />
 			</div>
 
-			<!-- WYSIWYG toolbar -->
-			<div class="template-detail__toolbar">
-				<button
-					type="button"
-					:title="t('filinq', 'Bold')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execFormat('bold')">
-					<strong>B</strong>
-				</button>
-				<button
-					type="button"
-					:title="t('filinq', 'Italic')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execFormat('italic')">
-					<em>I</em>
-				</button>
-				<button
-					type="button"
-					:title="t('filinq', 'Underline')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execFormat('underline')">
-					<u>U</u>
-				</button>
-				<span class="template-detail__toolbar-sep" />
-				<button
-					type="button"
-					:title="t('filinq', 'Heading 1')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execBlock('h1')">
-					H1
-				</button>
-				<button
-					type="button"
-					:title="t('filinq', 'Heading 2')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execBlock('h2')">
-					H2
-				</button>
-				<span class="template-detail__toolbar-sep" />
-				<button
-					type="button"
-					:title="t('filinq', 'Unordered list')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execFormat('insertUnorderedList')">
-					&#8226;&#8212;
-				</button>
-				<button
-					type="button"
-					:title="t('filinq', 'Ordered list')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execFormat('insertOrderedList')">
-					1&#8212;
-				</button>
-				<span class="template-detail__toolbar-sep" />
-				<button
-					type="button"
-					:title="t('filinq', 'Insert merge field')"
-					class="template-detail__toolbar-btn"
-					@click="showMergeDialog = true">
-					{{ t('filinq', '{ }') }}
-				</button>
-				<button
-					type="button"
-					:title="t('filinq', 'Insert conditional section')"
-					class="template-detail__toolbar-btn"
-					@click="showConditionalDialog = true">
-					{{ t('filinq', 'if…') }}
-				</button>
-			</div>
-
-			<!-- Content-editable WYSIWYG area -->
-			<div
-				ref="editor"
-				class="template-detail__content-editor"
-				contenteditable="true"
-				:aria-label="t('filinq', 'Template content')"
-				@input="syncFromEditor"
-				v-html="safeEditorHtml" />
-
-			<!-- Raw HTML toggle -->
-			<div class="template-detail__raw-toggle">
-				<button
-					type="button"
-					class="template-detail__raw-btn"
-					@click="showRaw = !showRaw">
-					{{
-						showRaw ? t('filinq', 'Hide HTML') : t('filinq', 'Edit HTML')
-					}}
-				</button>
-			</div>
-			<textarea
-				v-if="showRaw"
-				:value="form.content"
-				class="template-detail__raw-area"
-				:aria-label="t('filinq', 'Raw HTML')"
-				@input="syncFromRaw" />
+			<!-- The shared editing surface (generate-draft-and-attended-edit D7);
+			     merge field and condition are this page's own buttons. -->
+			<HtmlDocumentEditor
+				ref="htmlEditor"
+				v-model="form.content"
+				:aria-label="t('filinq', 'Template content')">
+				<template #toolbarExtra>
+					<button
+						type="button"
+						:title="t('filinq', 'Insert merge field')"
+						:aria-label="t('filinq', 'Insert merge field')"
+						@click="showMergeDialog = true">
+						{{ t('filinq', '{ }') }}
+					</button>
+					<button
+						type="button"
+						:title="t('filinq', 'Insert conditional section')"
+						:aria-label="t('filinq', 'Insert conditional section')"
+						@click="showConditionalDialog = true">
+						{{ t('filinq', 'if…') }}
+					</button>
+				</template>
+			</HtmlDocumentEditor>
 		</div>
 
 		<!-- PREVIEW TAB -->
@@ -333,6 +260,7 @@
 import { CnConfirmDialog } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import HtmlDocumentEditor from '../../components/HtmlDocumentEditor.vue'
 import TemplateLintChecklist from '../../components/TemplateLintChecklist.vue'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
 import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
@@ -377,6 +305,7 @@ export default {
 		NcLoadingIcon,
 		NcTextField,
 		ConditionalSectionDialog,
+		HtmlDocumentEditor,
 		MergeFieldDialog,
 		CnConfirmDialog,
 		TemplateLintChecklist,
@@ -398,9 +327,6 @@ export default {
 				orientation: 'P',
 			},
 
-			// WYSIWYG
-			editorHtml: '',
-			showRaw: false,
 			// Preview
 			previewLoading: false,
 			previewHtml: '',
@@ -438,15 +364,6 @@ export default {
 				'Restore to version {n}? The current state will be saved as a new version first.',
 				{ n },
 			)
-		},
-
-		/**
-		 * The stored template HTML, sanitised before it is mounted in the editor.
-		 *
-		 * @return {string}
-		 */
-		safeEditorHtml() {
-			return sanitizeHtml(this.editorHtml)
 		},
 
 		/**
@@ -506,7 +423,6 @@ export default {
 		if (!this.isNew) {
 			const tmpl = this.templateStore.templateItem
 			Object.assign(this.form, templateFormFields(tmpl))
-			this.editorHtml = tmpl.content || ''
 			this.lockOwner = tmpl.lockedBy || null
 
 			await this.acquireTemplateLock(tmpl.id)
@@ -608,50 +524,6 @@ export default {
 		},
 
 		/**
-		 * Apply an inline formatting command in the WYSIWYG editor.
-		 *
-		 * @param cmd
-		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
-		 */
-		execFormat(cmd) {
-			document.execCommand(cmd, false, null)
-			this.syncFromEditor()
-		},
-
-		/**
-		 * Apply a block-level format (heading) in the WYSIWYG editor.
-		 *
-		 * @param tag
-		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
-		 */
-		execBlock(tag) {
-			document.execCommand('formatBlock', false, tag)
-			this.syncFromEditor()
-		},
-
-		/**
-		 * Sync the form content from the WYSIWYG editor's HTML.
-		 *
-		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
-		 */
-		syncFromEditor() {
-			if (this.$refs.editor) {
-				this.form.content = this.$refs.editor.innerHTML
-			}
-		},
-
-		/**
-		 * Sync the form content from the raw HTML textarea.
-		 *
-		 * @param event
-		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
-		 */
-		syncFromRaw(event) {
-			this.form.content = event.target.value
-			this.editorHtml = event.target.value
-		},
-
-		/**
 		 * Render a live preview of the current template content with sample data.
 		 *
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
@@ -733,7 +605,6 @@ export default {
 			)
 			if (result) {
 				this.form.content = result.content || ''
-				this.editorHtml = result.content || ''
 				this.activeTab = 'edit'
 			}
 		},
@@ -803,7 +674,7 @@ export default {
 		insertMergeField(fieldName) {
 			const token = `{{ ${fieldName} }}`
 			document.execCommand('insertText', false, token)
-			this.syncFromEditor()
+			this.$refs.htmlEditor?.sync()
 		},
 
 		/**
@@ -823,7 +694,7 @@ export default {
 					: ''
 			const html = `<div ${opAttr}${valAttr}>{{ ${field} }}</div>`
 			document.execCommand('insertHTML', false, html)
-			this.syncFromEditor()
+			this.$refs.htmlEditor?.sync()
 		},
 	},
 }
@@ -900,79 +771,6 @@ export default {
 
 .template-detail__field {
 	width: 100%;
-}
-
-.template-detail__toolbar {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 4px;
-	padding: 6px 8px;
-	background: var(--color-background-dark);
-	border: 1px solid var(--color-border);
-	border-bottom: none;
-	border-radius: 4px 4px 0 0;
-}
-
-.template-detail__toolbar-btn {
-	background: var(--color-main-background);
-	border: 1px solid var(--color-border);
-	border-radius: 4px;
-	padding: 2px 8px;
-	cursor: pointer;
-	min-width: 30px;
-}
-
-.template-detail__toolbar-btn:hover {
-	background: var(--color-background-hover);
-}
-
-.template-detail__toolbar-sep {
-	width: 1px;
-	background: var(--color-border);
-	margin: 0 4px;
-}
-
-.template-detail__content-editor {
-	min-height: 300px;
-	max-height: 500px;
-	overflow-y: auto;
-	border: 1px solid var(--color-border);
-	border-radius: 0 0 4px 4px;
-	padding: 12px;
-	background: var(--color-main-background);
-	font-family: inherit;
-	outline: none;
-	line-height: 1.5;
-}
-
-.template-detail__content-editor:focus {
-	border-color: var(--color-primary);
-}
-
-.template-detail__raw-toggle {
-	margin-top: 8px;
-}
-
-.template-detail__raw-btn {
-	background: none;
-	border: none;
-	color: var(--color-primary);
-	cursor: pointer;
-	text-decoration: underline;
-	font-size: 13px;
-	padding: 0;
-}
-
-.template-detail__raw-area {
-	width: 100%;
-	height: 200px;
-	font-family: monospace;
-	font-size: 13px;
-	margin-top: 8px;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: 4px;
-	box-sizing: border-box;
 }
 
 .template-detail__preview-header {
