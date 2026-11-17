@@ -1146,12 +1146,6 @@ export default {
 		},
 
 		/**
-		 * The choices for the default output format of anonymised documents.
-		 *
-		 * @return {Array<{value: string, label: string}>} Radio options, in display order.
-		 * @spec openspec/specs/admin-settings/spec.md
-		 */
-		/**
 		 * The four-eyes choices (REQ-SET-12), the default first.
 		 *
 		 * @return {Array<{value: string, label: string}>} The radio options.
@@ -1165,6 +1159,12 @@ export default {
 			]
 		},
 
+		/**
+		 * The choices for the default output format of anonymised documents.
+		 *
+		 * @return {Array<{value: string, label: string}>} Radio options, in display order.
+		 * @spec openspec/specs/admin-settings/spec.md
+		 */
 		outputFormatOptions() {
 			return [
 				{

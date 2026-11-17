@@ -942,12 +942,6 @@ export default {
 		},
 
 		/**
-		 * Why the open file cannot be anonymised yet, or empty.
-		 *
-		 * @return {string}
-		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
-		 */
-		/**
 		 * Why a colleague has to anonymise the open file, or '' (REQ-RWB-09).
 		 * A single file from this sidebar is not a Woo run, so only `always`
 		 * asks for four eyes up front; a refusal the server sent is kept.
@@ -965,6 +959,7 @@ export default {
 
 		/**
 		 * @return {boolean} True when the signed-in person may not anonymise the open file.
+		 * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
 		 */
 		colleagueRequired() {
 			return this.fourEyesReason !== ''
@@ -972,11 +967,18 @@ export default {
 
 		/**
 		 * @return {string} The sentence the review card shows, or ''.
+		 * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
 		 */
 		colleagueHintText() {
 			return colleagueHint(this.fourEyesReason, t)
 		},
 
+		/**
+		 * Why the open file cannot be anonymised yet, or empty.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
 		reviewMessage() {
 			if (this.entry?.reviewError) {
 				return this.entry.reviewError

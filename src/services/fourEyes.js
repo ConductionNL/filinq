@@ -27,6 +27,7 @@ export const FOUR_EYES_REASONS = [SAME_PERSON, ANONYMISER_UNKNOWN]
  * @param {string} mode The stored `redaction_four_eyes` value.
  * @param {boolean} wooRun Whether the run is a Woo case (a dossier run, or flagged by a case system).
  * @return {boolean} True when the checker may not anonymise.
+ * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
  */
 export function fourEyesApplies(mode, wooRun) {
 	if (mode === 'always') {
@@ -45,6 +46,7 @@ export function fourEyesApplies(mode, wooRun) {
  * @param {object|null} entry The queue entry, with `reviewMark` and any `fourEyes` refusal.
  * @param {{mode: string, wooRun: boolean, uid: string}} context The setting, the run and who is signed in.
  * @return {string} `same_person`, `anonymiser_unknown` or ''.
+ * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
  */
 export function colleagueReason(entry, { mode, wooRun = false, uid = '' }) {
 	if (entry && FOUR_EYES_REASONS.includes(entry.fourEyes)) {
@@ -65,6 +67,7 @@ export function colleagueReason(entry, { mode, wooRun = false, uid = '' }) {
  * @param {string} reason The reason.
  * @param {(app: string, text: string) => string} t The translator.
  * @return {string} The sentence, or '' without a reason.
+ * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
  */
 export function colleagueHint(reason, t) {
 	if (reason === SAME_PERSON) {
