@@ -87,6 +87,8 @@ class PortalReleasedDocumentsTest extends TestCase {
 		$this->assertSame(expected: ['documentName', 'kind', 'releasedAt', 'withdrawnAt'], actual: $documents['fields']);
 		$this->assertSame(expected: 'releasedDocuments', actual: $documents['documents']['provider']);
 		$this->assertSame(expected: 'releasedDocumentOpened', actual: $documents['documents']['opened']);
+		$this->assertSame(expected: 'releasedDocumentAgreement', actual: $documents['documents']['agreement']);
+		$this->assertSame(expected: 'acceptReleasedDocumentAgreement', actual: $documents['documents']['accept']);
 		$this->assertArrayNotHasKey(key: 'contactRef', array: array_flip($documents['fields']), message: 'The scope key is never projected.');
 
 	}//end testTheRequesterDocumentsCollectionIsScopedToTheirContact()
@@ -171,4 +173,77 @@ class PortalReleasedDocumentsTest extends TestCase {
 		$this->assertTrue(condition: $provider->releasedDocumentOpened(releaseId: 'rel-1', documentId: 'rel-1', subject: ['subjectRef' => 'subject-accepted']));
 
 	}//end testAnAllowedOpeningIsWrittenIntoTheTrail()
+
+	/**
+	 * The portal reads the terms in force for the subject and records the
+	 * subject's acceptance of the version shown, after which the document opens.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	public function testASubjectReadsAndAcceptsTheTerms(): void {
+		$accepted = [];
+		$agreements = $this->createMock(DownloadAgreementGateInterface::class);
+		$agreements->method('check')->willReturnCallback(
+			static function (string $document, string $person) use (&$accepted): array {
+				if (in_array($document . '|' . $person . '|3', $accepted, true) === true) {
+					return ['mayDownload' => true, 'gated' => true];
+				}
+
+				return ['mayDownload' => false, 'gated' => true, 'agreement' => ['version' => '3', 'text' => 'Terms']];
+			}
+		);
+		$agreements->expects($this->once())->method('accept')
+			->with('4711', 'portal:subject-1', '3')
+			->willReturnCallback(
+				static function (string $document, string $person, string $version) use (&$accepted): array {
+					$accepted[] = $document . '|' . $person . '|' . $version;
+
+					return ['mayDownload' => true];
+				}
+			);
+		$provider = new PortalContributionProvider(releases: $this->releases(), agreements: $agreements);
+		$subject = ['subjectRef' => 'subject-1'];
+
+		$terms = $provider->releasedDocumentAgreement(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject);
+		$this->assertFalse(condition: $terms['mayDownload']);
+		$this->assertSame(expected: '3', actual: $terms['agreement']['version']);
+		$this->assertFalse(condition: $provider->releasedDocumentOpened(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject));
+
+		$this->assertSame(expected: ['mayDownload' => true], actual: $provider->acceptReleasedDocumentAgreement(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject, version: ' 3 '));
+		$this->assertTrue(condition: $provider->releasedDocumentOpened(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject));
+
+	}//end testASubjectReadsAndAcceptsTheTerms()
+
+	/**
+	 * Terms that cannot be decided are not known, and nothing is accepted
+	 * for an unlisted document, a missing subject, an empty version or a failing gate.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	public function testAnUndecidableAgreementIsNeitherShownNorAccepted(): void {
+		$never = $this->createMock(DownloadAgreementGateInterface::class);
+		$never->expects($this->never())->method('accept');
+		$never->expects($this->never())->method('check');
+		$failing = $this->createMock(DownloadAgreementGateInterface::class);
+		$failing->method('check')->willThrowException(new RuntimeException('down'));
+		$failing->method('accept')->willThrowException(new RuntimeException('down'));
+		$subject = ['subjectRef' => 'subject-1'];
+		$guarded = new PortalContributionProvider(releases: $this->releases(), agreements: $never);
+		$broken = new PortalContributionProvider(releases: $this->releases(), agreements: $failing);
+		$unknown = ['mayDownload' => false, 'reason' => DownloadAgreementGateInterface::NOT_KNOWN];
+		$unrecorded = ['mayDownload' => false, 'reason' => DownloadAgreementGateInterface::NOT_RECORDED];
+
+		$this->assertSame(expected: $unknown, actual: $guarded->releasedDocumentAgreement(releaseId: 'rel-1', documentId: 'other', subject: $subject));
+		$this->assertSame(expected: $unknown, actual: $guarded->releasedDocumentAgreement(releaseId: 'rel-1', documentId: 'rel-1', subject: []));
+		$this->assertSame(expected: $unknown, actual: (new PortalContributionProvider(releases: $this->releases()))->releasedDocumentAgreement(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject));
+		$this->assertSame(expected: $unknown, actual: $broken->releasedDocumentAgreement(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject));
+		$this->assertSame(expected: $unrecorded, actual: $guarded->acceptReleasedDocumentAgreement(releaseId: 'rel-2', documentId: 'rel-1', subject: $subject, version: '3'));
+		$this->assertSame(expected: $unrecorded, actual: $guarded->acceptReleasedDocumentAgreement(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject, version: ' '));
+		$this->assertSame(expected: $unrecorded, actual: $broken->acceptReleasedDocumentAgreement(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject, version: '3'));
+
+	}//end testAnUndecidableAgreementIsNeitherShownNorAccepted()
 }//end class

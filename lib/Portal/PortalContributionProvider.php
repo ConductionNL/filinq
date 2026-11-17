@@ -263,6 +263,94 @@ class PortalContributionProvider {
 	}//end releasedDocumentOpened()
 
 	/**
+	 * Portaliq's `agreement` hook: the download terms a released document carries for this subject.
+	 *
+	 * Answers what `releasedDocumentOpened()` decides on, so the portal can
+	 * show the terms in force before it asks for the document: `mayDownload`
+	 * and, when the subject has not accepted the current version, the
+	 * agreement to show. Anything that cannot be decided answers not known,
+	 * which the portal shows as unavailable rather than as free to download.
+	 *
+	 * @param string               $releaseId  The release.
+	 * @param string               $documentId The listed entry's id.
+	 * @param array<string, mixed> $subject    The session's subject, as portaliq passes it.
+	 *
+	 * @return array<string, mixed> `mayDownload`, the agreement or a `reason`.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	public function releasedDocumentAgreement(string $releaseId, string $documentId, array $subject): array {
+		$target = $this->agreementTarget(releaseId: $releaseId, documentId: $documentId, subject: $subject);
+		if ($target === null) {
+			return ['mayDownload' => false, 'reason' => DownloadAgreementGateInterface::NOT_KNOWN];
+		}
+
+		try {
+			return $this->agreements->check(document: $target['document'], person: $target['person']);
+		} catch (Throwable) {
+			return ['mayDownload' => false, 'reason' => DownloadAgreementGateInterface::NOT_KNOWN];
+		}
+
+	}//end releasedDocumentAgreement()
+
+	/**
+	 * Portaliq's `accept` hook: record this subject's acceptance of the terms they were shown.
+	 *
+	 * The acceptance is recorded for `portal:<subjectRef>`, the person
+	 * `releasedDocumentOpened()` checks, and only for a document of a release
+	 * portaliq listed for this subject. The version is the one the subject was
+	 * shown; an older one does not open the document (the gate answers that
+	 * the version moved on).
+	 *
+	 * @param string               $releaseId  The release.
+	 * @param string               $documentId The listed entry's id.
+	 * @param array<string, mixed> $subject    The session's subject, as portaliq passes it.
+	 * @param string               $version    The agreement version that was shown.
+	 *
+	 * @return array<string, mixed> `mayDownload`, and why not when it is false.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	public function acceptReleasedDocumentAgreement(string $releaseId, string $documentId, array $subject, string $version): array {
+		$target = $this->agreementTarget(releaseId: $releaseId, documentId: $documentId, subject: $subject);
+		if ($target === null || trim($version) === '') {
+			return ['mayDownload' => false, 'reason' => DownloadAgreementGateInterface::NOT_RECORDED];
+		}
+
+		try {
+			return $this->agreements->accept(document: $target['document'], person: $target['person'], version: trim($version));
+		} catch (Throwable) {
+			return ['mayDownload' => false, 'reason' => DownloadAgreementGateInterface::NOT_RECORDED];
+		}
+
+	}//end acceptReleasedDocumentAgreement()
+
+	/**
+	 * The file and the agreement person of a listed released document, or null.
+	 *
+	 * @param string               $releaseId  The release.
+	 * @param string               $documentId The listed entry's id.
+	 * @param array<string, mixed> $subject    The session's subject.
+	 *
+	 * @return array{document: string, person: string}|null Null without a gate, a subject or a matching entry.
+	 */
+	private function agreementTarget(string $releaseId, string $documentId, array $subject): ?array {
+		$person = trim((string)($subject['subjectRef'] ?? ''));
+		if ($this->releases === null || $this->agreements === null || $person === '') {
+			return null;
+		}
+
+		foreach ($this->releases->portalEntries(releaseId: $releaseId) as $entry) {
+			if ($entry['id'] === $documentId) {
+				return ['document' => (string)$entry['file']['fileId'], 'person' => 'portal:' . $person];
+			}
+		}
+
+		return null;
+
+	}//end agreementTarget()
+
+	/**
 	 * The audiences this provider contributes to (contract v2, preferred).
 	 *
 	 * The registry probes for this method first. Filinq serves WOO-affected
@@ -408,6 +496,8 @@ class PortalContributionProvider {
 				'label' => $this->translate(text: 'Documents'),
 				'provider' => 'releasedDocuments',
 				'opened' => 'releasedDocumentOpened',
+				'agreement' => 'releasedDocumentAgreement',
+				'accept' => 'acceptReleasedDocumentAgreement',
 			],
 		];
 
