@@ -29,7 +29,6 @@ use Exception;
 use OCA\Filinq\Exception\OfficeSourceRefusedException;
 use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
-use OCA\Filinq\Service\Conversion\LibreOfficeHeadlessBackend;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCP\IAppConfig;
 use Throwable;
@@ -73,24 +72,16 @@ class OfficeTemplateService {
 	/**
 	 * Constructor.
 	 *
-	 * @param OfficeSourceGuard             $guard      Checks the uploaded file.
-	 * @param MergeTagReader                $reader     Reads the tags and the text.
-	 * @param MergeTagClassifier            $classifier Checks the tags against the schema.
-	 * @param OfficeSourceStore             $store      Stores the source file.
-	 * @param LibreOfficeHeadlessBackend    $libreOffice Converts an ODT to DOCX.
-	 * @param TemplateServiceInterface      $templates  Creates the template object.
-	 * @param OpenRegisterResolverInterface $resolver   Checks the namespace.
-	 * @param SchemaMapper                  $schemas    Reads the bound schema's properties.
-	 * @param IAppConfig                    $config     The template limits.
+	 * @param OfficeSourceTools             $tools     Checks, reads, stores and converts the uploaded file.
+	 * @param TemplateServiceInterface      $templates Creates the template object.
+	 * @param OpenRegisterResolverInterface $resolver  Checks the namespace.
+	 * @param SchemaMapper                  $schemas   Reads the bound schema's properties.
+	 * @param IAppConfig                    $config    The template limits.
 	 *
 	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function __construct(
-		private readonly OfficeSourceGuard $guard,
-		private readonly MergeTagReader $reader,
-		private readonly MergeTagClassifier $classifier,
-		private readonly OfficeSourceStore $store,
-		private readonly LibreOfficeHeadlessBackend $libreOffice,
+		private readonly OfficeSourceTools $tools,
 		private readonly TemplateServiceInterface $templates,
 		private readonly OpenRegisterResolverInterface $resolver,
 		private readonly SchemaMapper $schemas,
@@ -241,15 +232,15 @@ class OfficeTemplateService {
 	 * @throws OfficeSourceRefusedException When the file or its tags are refused (422).
 	 */
 	private function checkedSource(string $fileName, string $bytes, string $boundSchema): array {
-		$kind = $this->guard->inspect(fileName: $fileName, bytes: $bytes, maxBytes: $this->maxBytes());
+		$kind = $this->tools->guard->inspect(fileName: $fileName, bytes: $bytes, maxBytes: $this->maxBytes());
 		$docx = $bytes;
 		if ($kind === 'odt') {
-			$docx = $this->libreOffice->convertDocument(bytes: $bytes, fromExtension: 'odt', toExtension: 'docx');
+			$docx = $this->tools->libreOffice->convertDocument(bytes: $bytes, fromExtension: 'odt', toExtension: 'docx');
 		}
 
-		$tags = $this->reader->tags(docx: $docx);
+		$tags = $this->tools->reader->tags(docx: $docx);
 		$report = $this->tagReport(tags: $tags, boundSchema: $boundSchema);
-		if ($this->classifier->blocks(report: $report) === true) {
+		if ($this->tools->classifier->blocks(report: $report) === true) {
 			throw new OfficeSourceRefusedException(
 				message: 'The file has merge tags the schema does not know: '.implode(', ', $report['unknown']).'.',
 				reason: OfficeSourceRefusedException::REASON_UNKNOWN_TAGS,
@@ -269,10 +260,10 @@ class OfficeTemplateService {
 	 * @return array<string, mixed> templateType, sourceFileId, contentHash, mergeFields, tagReport and content.
 	 */
 	private function storedSource(array $source, string $bytes): array {
-		$stored = $this->store->store(bytes: $source['docx'], extension: 'docx');
+		$stored = $this->tools->store->store(bytes: $source['docx'], extension: 'docx');
 		if ($source['kind'] === 'odt') {
 			// The original is kept beside the DOCX it became, under the same name.
-			$this->store->store(bytes: $bytes, extension: 'odt', name: $stored['contentHash']);
+			$this->tools->store->store(bytes: $bytes, extension: 'odt', name: $stored['contentHash']);
 		}
 
 		return [
@@ -281,7 +272,7 @@ class OfficeTemplateService {
 			'contentHash' => $stored['contentHash'],
 			'mergeFields' => array_map(static fn (string $tag): array => ['path' => $tag], $source['tags']),
 			'tagReport' => $source['report'],
-			'content' => $this->reader->text(docx: $source['docx']),
+			'content' => $this->tools->reader->text(docx: $source['docx']),
 		];
 	}//end storedSource()
 
@@ -296,11 +287,11 @@ class OfficeTemplateService {
 	private function tagReport(array $tags, string $boundSchema): array {
 		$severity = $this->config->getValueString(self::APP_ID, self::SEVERITY_KEY, MergeTagClassifier::SEVERITY_WARNING);
 		if ($boundSchema === '') {
-			return $this->classifier->report(tags: $tags, properties: null, severity: $severity);
+			return $this->tools->classifier->report(tags: $tags, properties: null, severity: $severity);
 		}
 
 		$properties = $this->schemaProperties(slug: $boundSchema);
-		$report = $this->classifier->report(tags: $tags, properties: $properties, severity: $severity);
+		$report = $this->tools->classifier->report(tags: $tags, properties: $properties, severity: $severity);
 		if ($properties === null) {
 			$report['notice'] = 'Not validated: the schema "'.$boundSchema.'" was not found.';
 		}

@@ -39,6 +39,7 @@ require_once __DIR__.'/OfficeFixtures.php';
 /**
  * @covers \OCA\Filinq\Service\OfficeTemplate\OfficeTemplateRenderer
  * @uses   \OCA\Filinq\Service\OfficeTemplate\OfficeTemplateFiller
+ * @uses   \OCA\Filinq\Service\OfficeTemplate\OfficeFillRun
  * @uses   \OCA\Filinq\Service\OfficeTemplate\MergeTagReader
  */
 class OfficeTemplateRendererTest extends TestCase {

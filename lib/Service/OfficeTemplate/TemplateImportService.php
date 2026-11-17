@@ -33,7 +33,6 @@ use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
 use OCA\Filinq\Kernel\JobQueueInterface;
 use OCP\Files\File;
 use OCP\Files\Folder;
-use OCP\Files\IRootFolder;
 use Throwable;
 use ZipArchive;
 
@@ -90,9 +89,8 @@ class TemplateImportService {
 	 * @param TemplatesRegisterObjects      $objects   The templates register.
 	 * @param OfficeTemplateService         $templates Creates office templates from files.
 	 * @param TextFragmentService           $fragments Creates text fragments.
-	 * @param OfficeSourceStore             $store     Stores the uploaded archive.
+	 * @param TemplateImportFiles           $files     Stores the uploaded archive and reads a Files folder.
 	 * @param JobQueueInterface             $jobs      Queues the import.
-	 * @param IRootFolder                   $rootFolder Reads a Files folder.
 	 * @param OpenRegisterResolverInterface $resolver  Checks the namespace.
 	 *
 	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
@@ -101,9 +99,8 @@ class TemplateImportService {
 		private readonly TemplatesRegisterObjects $objects,
 		private readonly OfficeTemplateService $templates,
 		private readonly TextFragmentService $fragments,
-		private readonly OfficeSourceStore $store,
+		private readonly TemplateImportFiles $files,
 		private readonly JobQueueInterface $jobs,
-		private readonly IRootFolder $rootFolder,
 		private readonly OpenRegisterResolverInterface $resolver,
 	) {
 	}//end __construct()
@@ -147,7 +144,7 @@ class TemplateImportService {
 
 		if ($archive !== null) {
 			$job['totalFiles'] = count($this->zipNames(bytes: $archive));
-			$job['archiveFileId'] = $this->store->store(bytes: $archive, extension: 'zip')['fileId'];
+			$job['archiveFileId'] = $this->files->store->store(bytes: $archive, extension: 'zip')['fileId'];
 		} else {
 			$path = trim((string) ($fields['path'] ?? ''));
 			if ($path === '') {
@@ -341,7 +338,7 @@ class TemplateImportService {
 	 */
 	private function entries(array $job): array {
 		if (empty($job['archiveFileId']) === false) {
-			$bytes = $this->store->read(fileId: (int) $job['archiveFileId']);
+			$bytes = $this->files->store->read(fileId: (int) $job['archiveFileId']);
 			if ($bytes === null) {
 				throw new Exception(message: 'the stored archive is gone');
 			}
@@ -463,7 +460,7 @@ class TemplateImportService {
 	 */
 	private function userFolder(string $userId, string $path): Folder {
 		try {
-			$node = $this->rootFolder->getUserFolder($userId)->get($path);
+			$node = $this->files->rootFolder->getUserFolder($userId)->get($path);
 		} catch (Throwable) {
 			$node = null;
 		}

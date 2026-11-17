@@ -29,6 +29,7 @@ use OCA\Filinq\Exception\OfficeSourceRefusedException;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Service\DataResolverService;
 use OCA\Filinq\Service\OfficeTemplate\OfficeSourceStore;
+use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateReading;
 use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateRenderer;
 use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateService;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -42,6 +43,7 @@ use Psr\Log\LoggerInterface;
 /**
  * @covers \OCA\Filinq\Controller\OfficeTemplatesController
  * @uses   \OCA\Filinq\Controller\TemplateRequestHandler
+ * @uses   \OCA\Filinq\Service\OfficeTemplate\OfficeTemplateReading
  * @uses   \OCA\Filinq\Exception\OfficeSourceRefusedException
  */
 class OfficeTemplatesControllerTest extends TestCase {
@@ -102,10 +104,7 @@ class OfficeTemplatesControllerTest extends TestCase {
 			$this->service,
 			new TemplateRequestHandler($this->createMock(LoggerInterface::class)),
 			$this->session,
-			$this->templates,
-			$this->renderer,
-			$this->store,
-			$this->data
+			new OfficeTemplateReading(templates: $this->templates, renderer: $this->renderer, store: $this->store, data: $this->data)
 		);
 	}//end controller()
 
@@ -194,10 +193,7 @@ class OfficeTemplatesControllerTest extends TestCase {
 			$this->service,
 			new TemplateRequestHandler($this->createMock(LoggerInterface::class)),
 			$session,
-			$this->templates,
-			$this->renderer,
-			$this->store,
-			$this->data
+			new OfficeTemplateReading(templates: $this->templates, renderer: $this->renderer, store: $this->store, data: $this->data)
 		);
 
 		$this->assertSame(401, $controller->create()->getStatus());

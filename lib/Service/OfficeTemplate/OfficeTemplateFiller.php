@@ -73,36 +73,25 @@ class OfficeTemplateFiller {
 	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
 	 */
 	public function fill(string $docx, array $data, array $fragments=[], array $fieldMap=[]): array {
-		$path = (string) tempnam(sys_get_temp_dir(), 'filinq-fill-');
-		file_put_contents($path, $docx);
-		try {
-			$processor = new TemplateProcessor($path);
-		} catch (Throwable) {
-			unlink($path);
-			throw new Exception(message: 'The template source could not be read as a DOCX document.', code: 422);
-		}
-
-		unlink($path);
-		$run = ['warnings' => [], 'fragments' => []];
-		$run = $this->fillFragments(processor: $processor, data: $data, fragments: $fragments, fieldMap: $fieldMap, run: $run);
-		$this->fillBlocks(processor: $processor, data: $data, fieldMap: $fieldMap);
-		$this->fillRows(processor: $processor, data: $data, fieldMap: $fieldMap);
-		foreach ($this->variables(processor: $processor) as $tag) {
-			$value = $this->lookup(data: $data, path: $this->aliased(tag: $tag, fieldMap: $fieldMap));
+		$run = new OfficeFillRun(processor: $this->open(docx: $docx), data: $data, fragments: $fragments, fieldMap: $fieldMap);
+		$this->fillFragments(run: $run);
+		$this->fillBlocks(run: $run);
+		$this->fillRows(run: $run);
+		foreach ($this->variables(processor: $run->processor) as $tag) {
+			$value = $this->lookup(data: $data, path: $run->aliased(tag: $tag));
 			if ($value === null) {
-				$run['warnings'][] = 'No value for merge tag "'.$tag.'"; it is left empty.';
+				$run->warnings[] = 'No value for merge tag "'.$tag.'"; it is left empty.';
 				$value = '';
 			}
 
-			$processor->setValue($tag, $this->escape(value: $value));
+			$run->processor->setValue($tag, $this->escape(value: $value));
 		}
 
-		$out = (string) tempnam(sys_get_temp_dir(), 'filinq-filled-');
-		$processor->saveAs($out);
-		$bytes = (string) file_get_contents($out);
-		unlink($out);
-
-		return ['docx' => $bytes, 'warnings' => array_values(array_unique($run['warnings'])), 'fragments' => $run['fragments']];
+		return [
+			'docx'      => $this->bytes(processor: $run->processor),
+			'warnings'  => array_values(array_unique($run->warnings)),
+			'fragments' => $run->fragmentsUsed,
+		];
 	}//end fill()
 
 	/**
@@ -126,45 +115,6 @@ class OfficeTemplateFiller {
 	}//end fragmentSlugs()
 
 	/**
-	 * Fill a fragment's own merge tags from the data, one level deep.
-	 *
-	 * A fragment reference inside a fragment is not expanded: it is removed
-	 * and named in the warnings, so fragments cannot loop.
-	 *
-	 * @param string               $text     The fragment text.
-	 * @param array<string, mixed> $data     The data context.
-	 * @param array<string, mixed> $fieldMap Tag => data path aliases.
-	 *
-	 * @return array{text: string, warnings: array<int, string>}
-	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
-	 */
-	public function fillFragmentText(string $text, array $data, array $fieldMap=[]): array {
-		$warnings = [];
-		$filled = (string) preg_replace_callback(
-			'/\$\{([^{}]+)\}/',
-			function (array $match) use ($data, $fieldMap, &$warnings): string {
-				$tag = trim($match[1]);
-				if (str_starts_with($tag, self::FRAGMENT_PREFIX) === true) {
-					$warnings[] = 'A text fragment cannot contain another fragment ("'.$tag.'"); it is left out.';
-					return '';
-				}
-
-				$value = $this->lookup(data: $data, path: $this->aliased(tag: $tag, fieldMap: $fieldMap));
-				if ($value === null) {
-					$warnings[] = 'No value for merge tag "'.$tag.'"; it is left empty.';
-					return '';
-				}
-
-				return $value;
-			},
-			$text
-		);
-
-		return ['text' => $filled, 'warnings' => $warnings];
-	}//end fillFragmentText()
-
-	/**
 	 * The value at a dotted path as text, or null when there is none.
 	 *
 	 * A list of scalars reads as a comma-separated list; a yes/no reads as
@@ -179,10 +129,6 @@ class OfficeTemplateFiller {
 	 */
 	public function lookup(array $data, string $path): ?string {
 		$value = $this->raw(data: $data, path: $path);
-		if ($value === null) {
-			return null;
-		}
-
 		if (is_bool($value) === true) {
 			return ['nee', 'ja'][(int) $value];
 		}
@@ -191,47 +137,125 @@ class OfficeTemplateFiller {
 			return (string) $value;
 		}
 
-		if (is_array($value) === true && array_is_list($value) === true) {
-			$items = array_filter($value, static fn (mixed $item): bool => is_scalar($item));
-			if (count($items) === count($value)) {
-				return implode(', ', array_map('strval', $items));
-			}
+		return $this->scalarList(value: $value);
+	}//end lookup()
+
+	/**
+	 * A list of scalars as comma-separated text, else null.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return string|null
+	 */
+	private function scalarList(mixed $value): ?string {
+		if (is_array($value) === false || array_is_list($value) === false) {
+			return null;
 		}
 
-		return null;
-	}//end lookup()
+		$items = array_filter($value, static fn (mixed $item): bool => is_scalar($item));
+		if (count($items) !== count($value)) {
+			return null;
+		}
+
+		return implode(', ', array_map('strval', $items));
+	}//end scalarList()
+
+	/**
+	 * Read a DOCX into a template processor.
+	 *
+	 * @param string $docx The DOCX.
+	 *
+	 * @return TemplateProcessor
+	 *
+	 * @throws Exception When the DOCX cannot be read (422).
+	 */
+	private function open(string $docx): TemplateProcessor {
+		$path = (string) tempnam(sys_get_temp_dir(), 'filinq-fill-');
+		file_put_contents($path, $docx);
+		try {
+			return new TemplateProcessor($path);
+		} catch (Throwable) {
+			throw new Exception(message: 'The template source could not be read as a DOCX document.', code: 422);
+		} finally {
+			unlink($path);
+		}
+	}//end open()
+
+	/**
+	 * The filled document's bytes.
+	 *
+	 * @param TemplateProcessor $processor The document.
+	 *
+	 * @return string
+	 */
+	private function bytes(TemplateProcessor $processor): string {
+		$out = (string) tempnam(sys_get_temp_dir(), 'filinq-filled-');
+		$processor->saveAs($out);
+		$bytes = (string) file_get_contents($out);
+		unlink($out);
+
+		return $bytes;
+	}//end bytes()
+
+	/**
+	 * Fill a fragment's own merge tags from the data, one level deep.
+	 *
+	 * A fragment reference inside a fragment is not expanded: it is removed
+	 * and named in the warnings, so fragments cannot loop.
+	 *
+	 * @param string        $text The fragment text.
+	 * @param OfficeFillRun $run  The fill.
+	 *
+	 * @return string The filled text; its warnings go to the run.
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 */
+	private function fillFragmentText(string $text, OfficeFillRun $run): string {
+		return (string) preg_replace_callback(
+			'/\$\{([^{}]+)\}/',
+			function (array $match) use ($run): string {
+				$tag = trim($match[1]);
+				if (str_starts_with($tag, self::FRAGMENT_PREFIX) === true) {
+					$run->warnings[] = 'A text fragment cannot contain another fragment ("'.$tag.'"); it is left out.';
+					return '';
+				}
+
+				$value = $this->lookup(data: $run->data, path: $run->aliased(tag: $tag));
+				if ($value === null) {
+					$run->warnings[] = 'No value for merge tag "'.$tag.'"; it is left empty.';
+					return '';
+				}
+
+				return $value;
+			},
+			$text
+		);
+	}//end fillFragmentText()
 
 	/**
 	 * Replace every fragment reference by its filled text or a marker.
 	 *
-	 * @param TemplateProcessor     $processor The document.
-	 * @param array<string, mixed>  $data      The data context.
-	 * @param array<string, string> $fragments The fragment texts by slug.
-	 * @param array<string, mixed>  $fieldMap  Tag => data path aliases.
-	 * @param array<string, mixed>  $run       The warnings and fragments so far.
+	 * @param OfficeFillRun $run The fill.
 	 *
-	 * @return array<string, mixed> The warnings and fragments.
+	 * @return void
 	 */
-	private function fillFragments(TemplateProcessor $processor, array $data, array $fragments, array $fieldMap, array $run): array {
-		foreach ($this->variables(processor: $processor) as $tag) {
+	private function fillFragments(OfficeFillRun $run): void {
+		foreach ($this->variables(processor: $run->processor) as $tag) {
 			if (str_starts_with($tag, self::FRAGMENT_PREFIX) === false) {
 				continue;
 			}
 
 			$slug = trim(substr($tag, strlen(self::FRAGMENT_PREFIX)));
-			if (isset($fragments[$slug]) === false) {
-				$run['warnings'][] = 'Text fragment "'.$slug.'" does not exist; a marker is shown in its place.';
-				$processor->setValue($tag, $this->escape(value: sprintf(self::MISSING_FRAGMENT, $slug)));
-				continue;
+			$text = sprintf(self::MISSING_FRAGMENT, $slug);
+			if (isset($run->fragments[$slug]) === false) {
+				$run->warnings[] = 'Text fragment "'.$slug.'" does not exist; a marker is shown in its place.';
+			} else {
+				$text = $this->fillFragmentText(text: $run->fragments[$slug], run: $run);
+				$run->fragmentsUsed[] = $slug;
 			}
 
-			$filled = $this->fillFragmentText(text: $fragments[$slug], data: $data, fieldMap: $fieldMap);
-			$run['warnings'] = array_merge($run['warnings'], $filled['warnings']);
-			$run['fragments'][] = $slug;
-			$processor->setValue($tag, $this->escape(value: $filled['text']));
+			$run->processor->setValue($tag, $this->escape(value: $text));
 		}
-
-		return $run;
 	}//end fillFragments()
 
 	/**
@@ -241,33 +265,130 @@ class OfficeTemplateFiller {
 	 * removes it. Inside a block a tag reads from the item first, with or
 	 * without the block's or item's first name segment, then from the data.
 	 *
-	 * @param TemplateProcessor    $processor The document.
-	 * @param array<string, mixed> $data      The data context.
-	 * @param array<string, mixed> $fieldMap  Tag => data path aliases.
+	 * @param OfficeFillRun $run The fill.
 	 *
 	 * @return void
 	 */
-	private function fillBlocks(TemplateProcessor $processor, array $data, array $fieldMap): void {
-		$raw = $processor->getVariables();
+	private function fillBlocks(OfficeFillRun $run): void {
+		$raw = $run->processor->getVariables();
+		// The tags as they stand before any block is cloned.
+		$run->documentTags = array_values(array_unique($raw));
 		foreach (array_unique($raw) as $name) {
-			if (str_starts_with($name, '/') === true || in_array('/'.$name, $raw, true) === false) {
-				continue;
+			if (str_starts_with($name, '/') === false && in_array('/'.$name, $raw, true) === true) {
+				$this->fillBlock(run: $run, name: $name);
 			}
-
-			$value = $this->raw(data: $data, path: $this->aliased(tag: $name, fieldMap: $fieldMap));
-			if (is_array($value) === false || $value === [] || array_is_list($value) === false) {
-				$processor->cloneBlock($name, (int) ($value !== null && $value !== false && $value !== [] && $value !== ''), true);
-				continue;
-			}
-
-			$replacements = [];
-			foreach ($value as $item) {
-				$replacements[] = $this->itemValues(tags: $raw, name: $name, item: $item, data: $data);
-			}
-
-			$processor->cloneBlock($name, count($replacements), true, false, $replacements);
 		}
 	}//end fillBlocks()
+
+	/**
+	 * Repeat one block once per item of its list, or keep it once or not.
+	 *
+	 * @param OfficeFillRun $run  The fill.
+	 * @param string        $name The block's name.
+	 *
+	 * @return void
+	 */
+	private function fillBlock(OfficeFillRun $run, string $name): void {
+		$value = $this->raw(data: $run->data, path: $run->aliased(tag: $name));
+		if (is_array($value) === false || $value === [] || array_is_list($value) === false) {
+			// Not a list: the block is kept once when the value is present.
+			$run->processor->cloneBlock($name, (int) (in_array($value, [null, false, [], ''], true) === false), true);
+			return;
+		}
+
+		$tags = $this->blockTags(tags: $run->documentTags, name: $name);
+		$replacements = [];
+		foreach ($value as $item) {
+			$values = [];
+			foreach ($tags as $tag) {
+				$values[$tag] = $this->itemValue(item: $item, paths: $this->itemPaths(tag: $tag, name: $name)) ?? $this->lookup(data: $run->data, path: $tag);
+			}
+
+			$replacements[] = $this->blockValues(values: $values);
+		}
+
+		$run->processor->cloneBlock($name, count($replacements), true, false, $replacements);
+	}//end fillBlock()
+
+	/**
+	 * The tags a block item can fill: no block markers, no fragments.
+	 *
+	 * @param array<int, string> $tags The document's tags.
+	 * @param string             $name The block's name.
+	 *
+	 * @return array<int, string>
+	 */
+	private function blockTags(array $tags, string $name): array {
+		return array_values(
+			array_filter(
+				$tags,
+				static fn (string $tag): bool => $tag !== $name
+					&& str_starts_with($tag, '/') === false
+					&& str_starts_with($tag, self::FRAGMENT_PREFIX) === false
+			)
+		);
+	}//end blockTags()
+
+	/**
+	 * The values of one block item, escaped, without the tags that have none.
+	 *
+	 * Cloned blocks are written without PhpWord's own escaping.
+	 *
+	 * @param array<string, string|null> $values Tag => value.
+	 *
+	 * @return array<string, string>
+	 */
+	private function blockValues(array $values): array {
+		return array_map(
+			static fn (string $value): string => htmlspecialchars($value, ENT_QUOTES | ENT_XML1, 'UTF-8'),
+			array_filter($values, static fn (?string $value): bool => $value !== null)
+		);
+	}//end blockValues()
+
+	/**
+	 * The paths a tag is tried at inside a block item: as is, without the
+	 * block's name, and without its own first segment.
+	 *
+	 * @param string $tag  The tag.
+	 * @param string $name The block's name.
+	 *
+	 * @return array<int, string>
+	 */
+	private function itemPaths(string $tag, string $name): array {
+		$paths = [$tag];
+		if (str_starts_with($tag, $name.'.') === true) {
+			$paths[] = substr($tag, strlen($name) + 1);
+		}
+
+		if (str_contains($tag, '.') === true) {
+			$paths[] = substr($tag, (int) strpos($tag, '.') + 1);
+		}
+
+		return $paths;
+	}//end itemPaths()
+
+	/**
+	 * A value read from one block item at the first path that has one, or null.
+	 *
+	 * @param mixed              $item  The item.
+	 * @param array<int, string> $paths The paths to try, in order.
+	 *
+	 * @return string|null
+	 */
+	private function itemValue(mixed $item, array $paths): ?string {
+		if (is_array($item) === false) {
+			return null;
+		}
+
+		foreach ($paths as $path) {
+			$value = $this->lookup(data: $item, path: $path);
+			if ($value !== null) {
+				return $value;
+			}
+		}
+
+		return null;
+	}//end itemValue()
 
 	/**
 	 * Repeat a table row once per item of the list its tags read from.
@@ -276,98 +397,94 @@ class OfficeTemplateFiller {
 	 * repeats that row for each item. A row outside a table is filled once,
 	 * with the values joined, and named in no warning.
 	 *
-	 * @param TemplateProcessor    $processor The document.
-	 * @param array<string, mixed> $data      The data context.
-	 * @param array<string, mixed> $fieldMap  Tag => data path aliases.
+	 * @param OfficeFillRun $run The fill.
 	 *
 	 * @return void
 	 */
-	private function fillRows(TemplateProcessor $processor, array $data, array $fieldMap): void {
+	private function fillRows(OfficeFillRun $run): void {
+		foreach ($this->rowGroups(run: $run) as $prefix => $tags) {
+			$items = array_values((array) $this->raw(data: $run->data, path: $prefix));
+			if ($this->cloneRows(processor: $run->processor, first: (string) array_key_first($tags), count: count($items)) === false) {
+				continue;
+			}
+
+			foreach ($items as $index => $item) {
+				foreach ($tags as $tag => $rest) {
+					$value = $this->lookup(data: (array) $item, path: $rest) ?? '';
+					$run->processor->setValue($tag.'#'.($index + 1), $this->escape(value: $value));
+				}
+			}
+		}
+	}//end fillRows()
+
+	/**
+	 * The row tags grouped by the list of records they read from.
+	 *
+	 * @param OfficeFillRun $run The fill.
+	 *
+	 * @return array<string, array<string, string>> List path => tag => path inside an item.
+	 */
+	private function rowGroups(OfficeFillRun $run): array {
 		$groups = [];
-		foreach ($this->variables(processor: $processor) as $tag) {
-			$path = $this->aliased(tag: $tag, fieldMap: $fieldMap);
+		foreach ($this->variables(processor: $run->processor) as $tag) {
+			$path = $run->aliased(tag: $tag);
 			$dot = strpos($path, '.');
 			if ($dot === false) {
 				continue;
 			}
 
-			$list = $this->raw(data: $data, path: substr($path, 0, $dot));
-			if (is_array($list) === true && array_is_list($list) === true && $this->isListOfRecords(list: $list) === true) {
+			if ($this->isListOfRecords(list: $this->raw(data: $run->data, path: substr($path, 0, $dot))) === true) {
 				$groups[substr($path, 0, $dot)][$tag] = substr($path, $dot + 1);
 			}
 		}
 
-		foreach ($groups as $prefix => $tags) {
-			$items = (array) $this->raw(data: $data, path: $prefix);
-			$first = (string) array_key_first($tags);
-			try {
-				if ($items === []) {
-					$processor->deleteRow($first);
-					continue;
-				}
-
-				$processor->cloneRow($first, count($items));
-			} catch (Throwable) {
-				// Not in a table: the scalar pass fills it as a joined list.
-				continue;
-			}
-
-			foreach (array_values($items) as $index => $item) {
-				foreach ($tags as $tag => $rest) {
-					$value = $this->lookup(data: (array) $item, path: $rest) ?? '';
-					$processor->setValue($tag.'#'.($index + 1), $this->escape(value: $value));
-				}
-			}
-		}//end foreach
-	}//end fillRows()
+		return $groups;
+	}//end rowGroups()
 
 	/**
-	 * The values of one block item, for every tag the document has.
+	 * Clone a table row to a count, or delete it for none.
 	 *
-	 * @param array<int, string>   $tags The document's tags.
-	 * @param string               $name The block's name.
-	 * @param mixed                $item The item.
-	 * @param array<string, mixed> $data The data context.
+	 * @param TemplateProcessor $processor The document.
+	 * @param string            $first     A tag in the row.
+	 * @param int               $count     The number of rows.
 	 *
-	 * @return array<string, string>
+	 * @return bool True when rows are to be filled; false when the row is gone
+	 *              or not in a table (the scalar pass then fills it joined).
 	 */
-	private function itemValues(array $tags, string $name, mixed $item, array $data): array {
-		$values = [];
-		foreach (array_unique($tags) as $tag) {
-			if ($tag === $name || str_starts_with($tag, '/') === true || str_starts_with($tag, self::FRAGMENT_PREFIX) === true) {
-				continue;
+	private function cloneRows(TemplateProcessor $processor, string $first, int $count): bool {
+		try {
+			if ($count === 0) {
+				$processor->deleteRow($first);
+				return false;
 			}
 
-			$value = null;
-			if (is_array($item) === true) {
-				$value = $this->lookup(data: $item, path: $tag);
-				if ($value === null && str_starts_with($tag, $name.'.') === true) {
-					$value = $this->lookup(data: $item, path: substr($tag, strlen($name) + 1));
-				}
+			$processor->cloneRow($first, $count);
+		} catch (Throwable) {
+			return false;
+		}
 
-				if ($value === null && str_contains($tag, '.') === true) {
-					$value = $this->lookup(data: $item, path: substr($tag, (int) strpos($tag, '.') + 1));
-				}
-			}
-
-			$value ??= $this->lookup(data: $data, path: $tag);
-			if ($value !== null) {
-				// Cloned blocks are written without PhpWord's own escaping.
-				$values[$tag] = htmlspecialchars($value, ENT_QUOTES | ENT_XML1, 'UTF-8');
-			}
-		}//end foreach
-
-		return $values;
-	}//end itemValues()
+		return true;
+	}//end cloneRows()
 
 	/**
-	 * Whether a list holds records (associative arrays).
+	 * Whether a value is a list that holds records (associative arrays).
+	 *
+	 * @param mixed $list The value.
+	 *
+	 * @return bool
+	 */
+	private function isListOfRecords(mixed $list): bool {
+		return is_array($list) === true && array_is_list($list) === true && $this->allRecords(list: $list) === true;
+	}//end isListOfRecords()
+
+	/**
+	 * Whether every item of a list is a record (an associative array).
 	 *
 	 * @param array<int, mixed> $list The list.
 	 *
 	 * @return bool
 	 */
-	private function isListOfRecords(array $list): bool {
+	private function allRecords(array $list): bool {
 		foreach ($list as $item) {
 			if (is_array($item) === false || ($item !== [] && array_is_list($item) === true)) {
 				return false;
@@ -375,7 +492,7 @@ class OfficeTemplateFiller {
 		}
 
 		return true;
-	}//end isListOfRecords()
+	}//end allRecords()
 
 	/**
 	 * The document's field tags still to fill: no block closings, no fragments.
@@ -427,23 +544,6 @@ class OfficeTemplateFiller {
 
 		return $current;
 	}//end raw()
-
-	/**
-	 * The data path a tag reads, after the template's field mapping.
-	 *
-	 * @param string               $tag      The tag.
-	 * @param array<string, mixed> $fieldMap Tag => data path aliases.
-	 *
-	 * @return string
-	 */
-	private function aliased(string $tag, array $fieldMap): string {
-		$alias = $fieldMap[$tag] ?? null;
-		if (is_string($alias) === true && trim($alias) !== '') {
-			return trim($alias);
-		}
-
-		return $tag;
-	}//end aliased()
 
 	/**
 	 * A value made safe for the document XML.

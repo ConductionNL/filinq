@@ -28,6 +28,7 @@ use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
 use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Service\OfficeTemplate\OfficeSourceStore;
 use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateService;
+use OCA\Filinq\Service\OfficeTemplate\TemplateImportFiles;
 use OCA\Filinq\Service\OfficeTemplate\TemplateImportService;
 use OCA\Filinq\Service\OfficeTemplate\TemplatesRegisterObjects;
 use OCA\Filinq\Service\OfficeTemplate\TextFragmentService;
@@ -41,6 +42,7 @@ require_once __DIR__.'/OfficeFixtures.php';
 
 /**
  * @covers \OCA\Filinq\Service\OfficeTemplate\TemplateImportService
+ * @uses   \OCA\Filinq\Service\OfficeTemplate\TemplateImportFiles
  * @uses   \OCA\Filinq\Exception\OfficeSourceRefusedException
  */
 class TemplateImportServiceTest extends TestCase {
@@ -257,9 +259,8 @@ class TemplateImportServiceTest extends TestCase {
 			objects: $this->objects,
 			templates: $this->templates,
 			fragments: $this->fragments,
-			store: $this->store,
+			files: new TemplateImportFiles(store: $this->store, rootFolder: $this->root),
 			jobs: $this->jobs,
-			rootFolder: $this->root,
 			resolver: $this->createMock(OpenRegisterResolverInterface::class)
 		);
 	}//end service()

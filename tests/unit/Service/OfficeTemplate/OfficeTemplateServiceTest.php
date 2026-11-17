@@ -31,6 +31,7 @@ use OCA\Filinq\Service\OfficeTemplate\MergeTagClassifier;
 use OCA\Filinq\Service\OfficeTemplate\MergeTagReader;
 use OCA\Filinq\Service\OfficeTemplate\OfficeSourceGuard;
 use OCA\Filinq\Service\OfficeTemplate\OfficeSourceStore;
+use OCA\Filinq\Service\OfficeTemplate\OfficeSourceTools;
 use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateService;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCP\IAppConfig;
@@ -43,6 +44,7 @@ require_once __DIR__.'/OfficeFixtures.php';
 /**
  * @covers \OCA\Filinq\Service\OfficeTemplate\OfficeTemplateService
  * @uses   \OCA\Filinq\Service\OfficeTemplate\OfficeSourceGuard
+ * @uses   \OCA\Filinq\Service\OfficeTemplate\OfficeSourceTools
  * @uses   \OCA\Filinq\Service\OfficeTemplate\MergeTagReader
  * @uses   \OCA\Filinq\Service\OfficeTemplate\MergeTagClassifier
  * @uses   \OCA\Filinq\Exception\OfficeSourceRefusedException
@@ -85,11 +87,13 @@ class OfficeTemplateServiceTest extends TestCase {
 			fn (string $app, string $key, string $default): string => ($app === 'filinq' ? ($this->settings[$key] ?? $default) : $default)
 		);
 		$this->service = new OfficeTemplateService(
-			new OfficeSourceGuard(),
-			new MergeTagReader(),
-			new MergeTagClassifier(),
-			$this->store,
-			$this->libreOffice,
+			new OfficeSourceTools(
+				guard: new OfficeSourceGuard(),
+				reader: new MergeTagReader(),
+				classifier: new MergeTagClassifier(),
+				store: $this->store,
+				libreOffice: $this->libreOffice
+			),
 			$this->templates,
 			$this->resolver,
 			$this->schemas,

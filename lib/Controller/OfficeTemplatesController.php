@@ -27,10 +27,7 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\OfficeSourceRefusedException;
-use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
-use OCA\Filinq\Service\DataResolverService;
-use OCA\Filinq\Service\OfficeTemplate\OfficeSourceStore;
-use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateRenderer;
+use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateReading;
 use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -61,10 +58,7 @@ class OfficeTemplatesController extends Controller {
 	 * @param OfficeTemplateService  $officeTemplates Creates office templates.
 	 * @param TemplateRequestHandler $requestHandler Shapes error responses.
 	 * @param IUserSession           $userSession    The signed-in user.
-	 * @param TemplateServiceInterface $templates   Reads templates with the caller's access.
-	 * @param OfficeTemplateRenderer $renderer       Fills and converts office templates.
-	 * @param OfficeSourceStore      $store          The stored sources.
-	 * @param DataResolverService    $data           Resolves preview data references.
+	 * @param OfficeTemplateReading  $reading        Reads, renders and serves a template's office source.
 	 *
 	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
 	 */
@@ -74,10 +68,7 @@ class OfficeTemplatesController extends Controller {
 		private readonly OfficeTemplateService $officeTemplates,
 		private readonly TemplateRequestHandler $requestHandler,
 		private readonly IUserSession $userSession,
-		private readonly TemplateServiceInterface $templates,
-		private readonly OfficeTemplateRenderer $renderer,
-		private readonly OfficeSourceStore $store,
-		private readonly DataResolverService $data,
+		private readonly OfficeTemplateReading $reading,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -186,7 +177,7 @@ class OfficeTemplatesController extends Controller {
 
 		try {
 			$template = $this->officeTemplate(id: $id);
-			$bytes = $this->store->read(fileId: (int) ($template['sourceFileId'] ?? 0));
+			$bytes = $this->reading->store->read(fileId: (int) ($template['sourceFileId'] ?? 0));
 			if ($bytes === null) {
 				return new JSONResponse(data: ['error' => 'The source file of this office template is not stored.'], statusCode: Http::STATUS_NOT_FOUND);
 			}
@@ -227,12 +218,12 @@ class OfficeTemplatesController extends Controller {
 			$data = [];
 			$warnings = [];
 			if ($dataRefs !== [] || $adHocData !== []) {
-				$resolution = $this->data->resolve(dataRefs: $dataRefs, listRefs: [], adHocData: $adHocData);
+				$resolution = $this->reading->data->resolve(dataRefs: $dataRefs, listRefs: [], adHocData: $adHocData);
 				$data = $resolution['data'];
 				$warnings = $resolution['warnings'];
 			}
 
-			$rendered = $this->renderer->render(template: $template, data: $data, format: 'pdf');
+			$rendered = $this->reading->renderer->render(template: $template, data: $data, format: 'pdf');
 			$name = $this->fileName(name: (string) ($template['name'] ?? 'template'), extension: 'pdf');
 			$response = new DataDownloadResponse($rendered['content'], $name, 'application/pdf');
 			// Shown in the browser's PDF viewer, not saved.
@@ -280,8 +271,8 @@ class OfficeTemplatesController extends Controller {
 	 * @throws Exception With code 404 when it is unknown, 409 when it is a Twig template.
 	 */
 	private function officeTemplate(string $id): array {
-		$template = $this->templates->getTemplate(id: $id);
-		if ($this->renderer->isOffice(template: $template) === false) {
+		$template = $this->reading->templates->getTemplate(id: $id);
+		if ($this->reading->renderer->isOffice(template: $template) === false) {
 			throw new Exception(message: 'This is not an office template', code: 409);
 		}
 
