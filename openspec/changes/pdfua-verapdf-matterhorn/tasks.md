@@ -6,7 +6,8 @@
 ## 1. Register & seed data
 
 - [x] 1.1 Add the `accessibilityConformanceReport` schema (`fileId`, `flavour`, `compliant`, `failedCheckCount`, `failedChecks` clause/test/checkpoint references, `validatorVersion`, `validatedAt`, `trigger`) to `lib/Settings/filinq_register.json` — additive, union-merge only; references only, never document content (REQ-DDPUM-002)
-- [ ] 1.2 Seed two `tests/sample-documents/` fixtures (generated, no personal data): one genuinely PDF/UA-1-conformant tagged PDF; one that passes the wave-1 heuristics but fails Matterhorn checkpoints (untagged content + figure without alt) — the "heuristics ≠ conformance" fixture
+- [x] 1.2 Seed two `tests/sample-documents/` fixtures (generated, no personal data): one genuinely PDF/UA-1-conformant tagged PDF; one that passes the wave-1 heuristics but fails Matterhorn checkpoints (untagged content + figure without alt) — the "heuristics ≠ conformance" fixture
+  - Built: `tests/sample-documents/pdfua/pdfua1-conformant.pdf` (LibreOffice Writer PDF/UA export, embedded DejaVu Sans) and `heuristics-pass-matterhorn-fail.pdf` (hand-built: a paragraph outside the tags, a Figure without /Alt, a font not embedded). veraPDF 1.28.2 `--flavour ua1`: PASS, and FAIL on 7.21.4.1-1, 7.3-1, 7.1-3; its JSON reports are recorded under `tests/fixtures/verapdf/pdfua1-recorded-*.json` for the stand-in. Test: `tests/unit/Service/Validation/PdfUaFixturesTest.php`.
 
 ## 2. Shared backend (verapdf-validation)
 
