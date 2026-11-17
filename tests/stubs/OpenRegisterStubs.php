@@ -1273,6 +1273,18 @@ class EntityRelationMapper {
 	}//end findByFileId()
 
 	/**
+	 * One page of the ids of the files that hold detected entities, ascending.
+	 *
+	 * @param int $afterFileId Only files with an id above this one.
+	 * @param int $limit       The page size.
+	 *
+	 * @return int[]
+	 */
+	public function findFileIdsWithEntities(int $afterFileId=0, int $limit=500): array {
+		return [];
+	}//end findFileIdsWithEntities()
+
+	/**
 	 * Find a single relation by id.
 	 *
 	 * @param int $id Relation id.

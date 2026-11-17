@@ -29,6 +29,20 @@
 					@click="openWizard">
 					{{ t('filinq', 'Generate with wizard') }}
 				</NcButton>
+				<span
+					v-if="isDraft"
+					class="template-detail__draft"
+					data-testid="template-draft-badge">
+					{{ t('filinq', 'Draft') }}
+				</span>
+				<NcButton
+					v-if="isDraft"
+					variant="secondary"
+					data-testid="template-publish"
+					:disabled="saving || (lockOwner && !isLockMine)"
+					@click="publishTemplate">
+					{{ t('filinq', 'Publish') }}
+				</NcButton>
 				<NcButton variant="secondary" :disabled="saving" @click="handleBack">
 					{{ t('filinq', 'Cancel') }}
 				</NcButton>
@@ -470,6 +484,16 @@ export default {
 			return useTemplateStore()
 		},
 
+		/**
+		 * Whether the template is on a draft version users are not offered.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-4.2
+		 */
+		isDraft() {
+			return !this.isNew && this.templateStore.templateItem?.status === 'draft'
+		},
+
 		isNew() {
 			return this.templateStore.templateItem === null
 		},
@@ -791,6 +815,23 @@ export default {
 		},
 
 		/**
+		 * Publish the version the template is on, so users may generate from it.
+		 *
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-4.2
+		 */
+		async publishTemplate() {
+			this.saving = true
+			try {
+				const published = await this.templateStore.publishTemplate(this.templateStore.templateItem.id)
+				if (published) {
+					this.templateStore.templateItem = { ...this.templateStore.templateItem, ...published }
+				}
+			} finally {
+				this.saving = false
+			}
+		},
+
+		/**
 		 * Insert a merge-field token at the cursor in the editor.
 		 *
 		 * @param fieldName
@@ -853,6 +894,14 @@ export default {
 
 .template-detail__lock-warning {
 	color: var(--color-warning);
+	font-size: 13px;
+}
+
+.template-detail__draft {
+	color: var(--color-text-maxcontrast);
+	border: 1px solid var(--color-border-dark);
+	border-radius: var(--border-radius-pill);
+	padding: 2px 8px;
 	font-size: 13px;
 }
 

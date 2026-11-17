@@ -170,10 +170,12 @@ class DocumentProductionSchemaTest extends TestCase {
 		// SchemaSlugIntegrityTest); 1.5.0 since template-merge-preview added
 		// `mergeFields`; 1.6.0 since template-library-leaf added `scope` and,
 		// separately, office-template-authoring added `templateType`, the office
-		// source and the tag report; 1.7.0 once both are on one schema. An
+		// source and the tag report; 1.7.0 once both are on one schema, and
+		// separately since specify-capability-rows added `status` and
+		// `publishedVersion`; 1.8.0 once both 1.7.0 lines are on one schema. An
 		// importer skips an unchanged version, so this pin moves whenever the
 		// schema actually does.
-		$this->assertSame(expected: '1.7.0', actual: $schemas['template']['version']);
+		$this->assertSame(expected: '1.8.0', actual: $schemas['template']['version']);
 
 		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
 			$this->assertArrayHasKey(
@@ -181,6 +183,11 @@ class DocumentProductionSchemaTest extends TestCase {
 				$declaration['properties'],
 				$part . ' is missing from the plain-language declaration.'
 			);
+		}
+
+		// specify-capability-rows adds `status` and `publishedVersion` (1.7.0).
+		foreach (['status', 'publishedVersion'] as $field) {
+			$this->assertArrayHasKey(key: $field, array: $schemas['template']['properties']);
 		}
 
 		// The source is a CLOSED set. A third value would be a plain rendition

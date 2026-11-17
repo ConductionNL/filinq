@@ -146,6 +146,7 @@ class DocumentServiceOfficeTemplateTest extends TestCase {
 	public function testAnOfficeTemplateRendersThroughTheOfficeRenderer(): void {
 		$template = ['id' => 't-1', 'name' => 'Beschikking', 'templateType' => 'office', 'sourceFileId' => 5, 'version' => 3, 'content' => 'tekst'];
 		$this->templates->method('getTemplate')->willReturn($template);
+		$this->templates->method('getPublishedTemplate')->willReturn($template);
 		$this->twig->expects($this->never())->method('renderTemplate');
 		$this->office->expects($this->once())->method('render')
 			->with($template, ['aanvrager' => ['naam' => 'Jan']], 'pdf', $this->arrayHasKey('huisstijlId'))
@@ -176,6 +177,7 @@ class DocumentServiceOfficeTemplateTest extends TestCase {
 	 */
 	public function testATwigTemplateHasItsFragmentsResolvedFirst(): void {
 		$this->templates->method('getTemplate')->willReturn(['id' => 't-2', 'name' => 'Brief', 'namespace' => 'filinq', 'content' => '${fragment:groet}']);
+		$this->templates->method('getPublishedTemplate')->willReturn(['id' => 't-2', 'name' => 'Brief', 'namespace' => 'filinq', 'content' => '${fragment:groet}']);
 		$this->office->expects($this->never())->method('render');
 		$this->office->expects($this->once())->method('resolveTwigFragments')->with('${fragment:groet}', 'filinq')
 			->willReturn(['content' => 'Groet {{ aanvrager.naam }}', 'warnings' => ['w'], 'fragments' => ['groet']]);
@@ -198,6 +200,7 @@ class DocumentServiceOfficeTemplateTest extends TestCase {
 	 */
 	public function testATwigTemplateWithoutFragmentsRecordsNoType(): void {
 		$this->templates->method('getTemplate')->willReturn(['id' => 't-3', 'name' => 'Brief', 'content' => '{{ x }}']);
+		$this->templates->method('getPublishedTemplate')->willReturn(['id' => 't-3', 'name' => 'Brief', 'content' => '{{ x }}']);
 		$this->office->method('resolveTwigFragments')->willReturn(['content' => '{{ x }}', 'warnings' => [], 'fragments' => []]);
 		$this->twig->method('renderTemplate')->willReturn('x');
 
@@ -214,6 +217,7 @@ class DocumentServiceOfficeTemplateTest extends TestCase {
 	 */
 	public function testAnOfficePreviewShowsTheFilledText(): void {
 		$this->templates->method('getTemplate')->willReturn(['id' => 't-1', 'templateType' => 'office', 'sourceFileId' => 5]);
+		$this->templates->method('getPublishedTemplate')->willReturn(['id' => 't-1', 'templateType' => 'office', 'sourceFileId' => 5]);
 		$this->office->expects($this->once())->method('fill')
 			->willReturn(['docx' => 'x', 'html' => '<p>Jan</p>', 'warnings' => ['gap'], 'fragments' => []]);
 		$this->twig->expects($this->never())->method('renderTemplate');

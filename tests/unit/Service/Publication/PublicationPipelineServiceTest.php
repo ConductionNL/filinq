@@ -774,4 +774,34 @@ class PublicationPipelineServiceTest extends TestCase {
 		$this->assertTrue($result->isValid(), $message);
 
 	}//end assertValid()
+
+	/**
+	 * A destroyed source takes its handed-off publication offline, with the
+	 * destruction as the logged reason; a publication that never left stays.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-a-publication-goes-offline-when-its-source-document-is-destroyed-req-scr-009
+	 */
+	public function testADestroyedSourceWithdrawsItsPublication(): void {
+		$pipeline = $this->pipeline();
+		$published = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+		$draft = $pipeline->create(documentFileRef: '77', subjectType: 'document', dossierRef: '', actor: 'anna');
+
+		$this->assertSame([], $pipeline->withdrawDestroyedSource(sourceRefs: ['77'], detail: '(object d-77)'));
+		$this->assertSame([], $pipeline->withdrawDestroyedSource(sourceRefs: ['', 'unknown'], detail: ''));
+
+		$withdrawn = $pipeline->withdrawDestroyedSource(sourceRefs: ['obj-1', '42'], detail: '(object obj-1)');
+
+		$this->assertCount(1, $withdrawn);
+		$this->assertSame($published['uuid'], $withdrawn[0]['uuid']);
+		$this->assertSame('depublished', $withdrawn[0]['status']);
+		$this->assertSame('Source document destroyed (object obj-1)', $withdrawn[0]['depublicationReason']);
+		$this->assertSame('2026-09-29T12:00:00+00:00', $this->rows['publication'][$published['endpointPublicationRef']]['depublicationDate']);
+		$log = array_values(array_filter($this->rows['publicationLogEntry'], static fn (array $e): bool => $e['action'] === 'depublication_requested'));
+		$this->assertSame('Source document destroyed (object obj-1)', $log[0]['details']);
+		$this->assertSame('system', $log[0]['actor']);
+		$this->assertSame('draft', $this->rows['publicationRecord'][$draft['uuid']]['status']);
+
+	}//end testADestroyedSourceWithdrawsItsPublication()
 }//end class
