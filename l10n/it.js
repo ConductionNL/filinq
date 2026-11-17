@@ -1,6 +1,9 @@
 OC.L10N.register(
     "filinq",
     {
+        "A new publication starts with this publisher.": "Una nuova pubblicazione inizia con questo editore.",
+        "Metadata incomplete": "Metadati incompleti",
+        "Set metadata": "Imposta metadati",
         "Withdraw request": "Ritira richiesta",
         "Withdraw this signing request?": "Ritirare questa richiesta di firma?",
         "Every signatory loses access, and nobody can sign it any more. This cannot be undone.": "Tutti i firmatari perdono l'accesso e nessuno potrà più firmarla. L'operazione non può essere annullata.",
