@@ -122,6 +122,7 @@ class SigningService implements SigningServiceInterface {
 		'subjectSchema',
 		'subjectId',
 		'subjectLabel',
+		'subjectNoun',
 		'externalReference',
 		'correlationId',
 	];
