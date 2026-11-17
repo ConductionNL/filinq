@@ -14,7 +14,9 @@ status: in-progress
 @e2e exclude Backend data-model spec for the dossier-domain schemas: register/schema import and idempotent upsert, strict property validation, the seeded Woo Art. 5 grondslagen vocabulary and slug→UUID resolution. No browser surface — the dossier UI is specified separately in the dossier-management-ui change. Covered by PHPUnit tests/unit/Settings/DossierRegisterConfigTest.php and tests/unit/Controller/DossierControllerTest.php.
 
 Defines the `dossier` and `base` schemas that Filinq contributes to OpenRegister, carried by the consolidated `filinq` register: a `dossier` schema for folder-level anonymisation metadata (name, description, legal bases, and review date) and a `base` schema that encodes the Dutch Woo Art. 5 grondslagen vocabulary, seeded with the six canonical exception grounds. The register is installed and upserted idempotently via the existing configuration-import path on app install and upgrade. This gives folder-based anonymisation work a structured, queryable record of which legal grounds apply and when a dossier was last reviewed.
+
 ## Requirements
+
 ### Requirement: Dossier register exists in Filinq's register configuration
 
 The system SHALL define the `dossier` and `base` schemas in `lib/Settings/filinq_register.json` under `components.schemas`, listed in the `schemas` array of the single `filinq` register declared under `components.registers`. (The former `consent`, `signing`, `templates`, `document`, `dossier` and `docudesk` registers were consolidated into that one register; `filinq` is now the only register slug this app declares.) The register SHALL be applied to OpenRegister on app install/upgrade via the existing `ConfigurationService::importFromApp()` path — no new loader code is required.
@@ -126,3 +128,26 @@ The `filinq` register SHALL ship with 3–5 seed dossier objects covering the mu
 - **WHEN** the caller inspects the seed dossier set
 - **THEN** at least one seed has `bases: []` and `checkedOn: null`
 
+### Requirement: Grondslagen Summary Endpoint Is Reachable
+
+The `POST api/anonymization/dossier/{dossierId}/grondslagen-pdf` route SHALL
+resolve to a controller method that exists on `DossierController`. The route
+entry in `appinfo/routes.php` MUST name the controller's actual public method
+(`generateGrondslagenSummary`), not a stale or renamed method name.
+
+#### Scenario: The route resolves without a ReflectionException
+
+- GIVEN Filinq is installed with the `dossier` register configured
+- AND a valid dossier UUID exists
+- WHEN a client sends `POST /apps/filinq/api/anonymization/dossier/{dossierId}/grondslagen-pdf`
+- THEN the request SHALL reach `DossierController::generateGrondslagenSummary()`
+- AND the response SHALL be the generated file's metadata (or a handled error
+  payload), never a router-level `ReflectionException` / HTTP 500
+
+#### Scenario: Frontend regeneration action succeeds end-to-end
+
+- GIVEN a user viewing `FolderAnonymizationView.vue` with "Append a
+  grondslagen-summary page" enabled
+- WHEN the user triggers the regeneration action
+- THEN the underlying HTTP call SHALL succeed (not 500) and the dossier's
+  `configuration.grondslagen.{fileId, lastGeneratedAt}` SHALL be updated

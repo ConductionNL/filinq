@@ -27,7 +27,7 @@ All tasks are `[filinq]`. Estimates: S = half-day.
 
 ### R-2. Regression coverage across the HTTP boundary (S)
 
-- [ ] R-2.1 Add (or extend) a Newman/Postman case under `tests/integration/`
+- [x] R-2.1 Add (or extend) a Newman/Postman case under `tests/integration/`
   that POSTs `api/anonymization/dossier/{dossierId}/grondslagen-pdf` against a
   running instance and asserts a non-500 response, per ADR-008 + ADR-029
   Invariant 3. This closes the gap that let the mismatch ship silently behind
@@ -39,7 +39,9 @@ All tasks are `[filinq]`. Estimates: S = half-day.
     Writing it showed the controller answered 500 for an unknown or unreadable
     dossier too, so a broken route and a refused dossier looked the same;
     `DossierController` now answers 403 for both (tests/unit/Controller/DossierControllerTest.php).
-    (not run: needs a running instance with this branch; CI's Newman job runs the collection)
+    Run 2026-11-17 against a throwaway NC 34.0.6 + openregister main: the case answers 403 with a JSON body,
+    never a 500 (19/19 assertions of the collection). Its content-type check now accepts
+    `application/problem+json`, which `ApiContractMiddleware` answers on purpose.
 - [x] R-2.2 Confirm `tests/unit/Controller/DossierControllerTest.php` still
   passes unchanged (it already calls `generateGrondslagenSummary()` directly
   and needs no edits).

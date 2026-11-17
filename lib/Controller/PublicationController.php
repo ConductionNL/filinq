@@ -23,6 +23,7 @@ use OCA\Filinq\Controller\Support\PublicationFlow;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\OpenCatalogiPlatformInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationAccessInterface;
+use OCA\Filinq\Service\Publication\DiwooMissingFields;
 use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -83,10 +84,17 @@ class PublicationController extends Controller {
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
 		$uid = $this->uid();
+		$onlyIncomplete = filter_var($this->request->getParam('incomplete', false), FILTER_VALIDATE_BOOLEAN);
+		$missing = new DiwooMissingFields();
 		$results = [];
 		foreach ($this->flow->store->listRecords() as $record) {
-			if ($this->access->maySee(uid: $uid, fileId: (string) ($record['documentFileRef'] ?? '')) === true) {
-				$results[] = $this->flow->pipeline->sync(record: $record);
+			if ($this->access->maySee(uid: $uid, fileId: (string) ($record['documentFileRef'] ?? '')) === false) {
+				continue;
+			}
+
+			$record = $missing->annotate(record: $this->flow->pipeline->sync(record: $record));
+			if ($onlyIncomplete === false || $record[DiwooMissingFields::FIELD] !== []) {
+				$results[] = $record;
 			}
 		}
 
@@ -149,7 +157,7 @@ class PublicationController extends Controller {
 			return $this->forbidden();
 		}
 
-		$record = $this->flow->pipeline->sync(record: $record);
+		$record = (new DiwooMissingFields())->annotate(record: $this->flow->pipeline->sync(record: $record));
 		$record['log'] = $this->flow->store->logFor(recordUuid: $id);
 		$record['platformAvailable'] = $this->platform->available();
 
@@ -198,6 +206,47 @@ class PublicationController extends Controller {
 		return $this->run(step: fn (): array => $this->flow->pipeline->updateMetadata(record: $record, metadata: $metadata, actor: $this->uid()));
 
 	}//end metadata()
+
+	/**
+	 * Set one metadata value on a selection of records.
+	 *
+	 * Every record is checked on its own: one the caller may not act on is
+	 * reported as skipped, never changed.
+	 *
+	 * @return JSONResponse `{updated, skipped}`
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 */
+	#[NoAdminRequired]
+	public function bulkMetadata(): JSONResponse {
+		$ids = $this->request->getParam('ids', []);
+		$values = $this->request->getParam('values', []);
+		if (is_array($ids) === false || $ids === [] || is_array($values) === false) {
+			return new JSONResponse(['error' => 'Select at least one publication and name the values to set'], Http::STATUS_BAD_REQUEST);
+		}
+
+		$records = [];
+		$refused = [];
+		foreach (array_unique(array_map('strval', $ids)) as $id) {
+			$record = $this->authorised(id: $id);
+			if ($record === null) {
+				$refused[] = ['uuid' => $id, 'reason' => 'not found'];
+				continue;
+			}
+
+			$records[] = $record;
+		}
+
+		return $this->run(
+			step: function () use ($records, $values, $refused): array {
+				$outcome = $this->flow->pipeline->updateMetadataMany(records: $records, values: $values, actor: $this->uid());
+				$outcome['skipped'] = array_merge($refused, $outcome['skipped']);
+
+				return $outcome;
+			}
+		);
+
+	}//end bulkMetadata()
 
 	/**
 	 * Hand the publication to OpenCatalogi.
