@@ -46,6 +46,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use UnexpectedValueException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for GenerateDocumentNode.
@@ -288,7 +289,12 @@ class GenerateDocumentNodeTest extends TestCase {
 		);
 		$this->objects->expects($this->once())
 			->method('patchObject')
-			->with('obj-1', ['besluit' => 'Toegekend'], '5', '7');
+			->with(...LegacyObjectArgs::with(method: 'patchObject', expected: [
+					'objectId' => 'obj-1',
+					'data' => ['besluit' => 'Toegekend'],
+					'register' => '5',
+					'schema' => '7',
+				]));
 
 		$out = $this->node->execute(new FlowNodeCall(
 			items: [['json' => ['@self' => ['id' => 'obj-1', 'register' => '5', 'schema' => '7']]]],

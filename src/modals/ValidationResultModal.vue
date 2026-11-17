@@ -19,7 +19,8 @@ SPDX-License-Identifier: EUPL-1.2
 				v-else
 				:status="status"
 				:findings="findings"
-				@ocr="$emit('ocr', $event)" />
+				@ocr="$emit('ocr', $event)"
+				@removePassword="$emit('removePassword', $event)" />
 		</div>
 	</NcModal>
 </template>

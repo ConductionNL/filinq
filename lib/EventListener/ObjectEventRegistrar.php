@@ -112,6 +112,12 @@ class ObjectEventRegistrar {
 			\OCA\OpenRegister\Event\ObjectUpdatingEvent::class,
 			DocumentRegistrationWriteGuard::class
 		);
+		// Grondslagen-read-from-dossiq: a new Woo ground on `base` is refused;
+		// the Woo grounds come from dossiq's list.
+		$context->registerEventListener(
+			'OCA\\OpenRegister\\Event\\ObjectCreatingEvent',
+			BaseRefusalGroundGuard::class
+		);
 		// A contract saved without a notice deadline gets end date minus
 		// notice period, however it is saved (contract-lifecycle-management).
 		foreach (['ObjectCreatingEvent', 'ObjectUpdatingEvent'] as $preWrite) {

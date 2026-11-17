@@ -26,6 +26,7 @@ use OCA\Filinq\Controller\DocumentController;
 use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\DocumentService;
+use OCA\Filinq\Service\GenerationSourceObject;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -942,5 +943,85 @@ class DocumentControllerTest extends TestCase {
 		$this->assertSame(expected: ['error' => 'template gone'], actual: $result->getData());
 
 	}//end testGenerateBulkFailureKeepsItsHttpCode()
+
+	/**
+	 * A source object is handed to GenerationSourceObject, and generateDocument() gets its options and entry fields.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/template-library-leaf/tasks.md#task-2.3
+	 */
+	public function testGenerateFilesTheDocumentOnItsSourceObject(): void {
+		$host = ['register' => 'dossiq', 'schema' => 'case', 'id' => 'c-1'];
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], [$host]],
+				['options', [], ['output' => ['mode' => 'files'], 'sourceObject' => $host]],
+				['filename', 'document', 'brief'],
+			]);
+		$sourceObject = $this->createMock(GenerationSourceObject::class);
+		$sourceObject->expects($this->once())->method('apply')
+			->with([$host], ['output' => ['mode' => 'files'], 'sourceObject' => $host], 'test-user')
+			->willReturn(['options' => ['output' => ['mode' => 'files', 'targetPath' => 'Zaken/c-1']], 'recordFields' => ['sourceObject' => $host]]);
+		$this->documentSvc->expects($this->once())->method('generateDocument')
+			->with(
+				'tmpl-1',
+				[$host],
+				['output' => ['mode' => 'files', 'targetPath' => 'Zaken/c-1'], 'userId' => 'test-user', 'filename' => 'brief'],
+				['sourceObject' => $host]
+			)
+			->willReturn(['content' => '', 'format' => 'pdf', 'metadata' => [], 'warnings' => [], 'output' => ['mode' => 'files', 'fileId' => 9, 'path' => '/test-user/files/Zaken/c-1/brief.pdf', 'name' => 'brief.pdf', 'size' => 3]]);
+		$controller = new DocumentController(
+			'filinq',
+			$this->request,
+			$this->documentSvc,
+			$this->userSession,
+			new ControllerFeedback(l10n: $this->l10n, logger: $this->logger),
+			null,
+			$sourceObject
+		);
+
+		$result = $controller->generate();
+
+		$this->assertSame(200, $result->getStatus());
+		$this->assertSame(9, $result->getData()['fileId']);
+
+	}//end testGenerateFilesTheDocumentOnItsSourceObject()
+
+	/**
+	 * A source object outside the data references answers 400 and generates nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/template-library-leaf/tasks.md#task-2.3
+	 */
+	public function testGenerateRefusesASourceObjectItDoesNotRender(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], []],
+				['options', [], ['sourceObject' => ['register' => 'r', 'schema' => 's', 'id' => 'x']]],
+				['filename', 'document', 'document'],
+			]);
+		$sourceObject = $this->createMock(GenerationSourceObject::class);
+		$sourceObject->method('apply')->willThrowException(new \Exception('options.sourceObject must be one of the dataRefs', 400));
+		$this->documentSvc->expects($this->never())->method('generateDocument');
+		$controller = new DocumentController(
+			'filinq',
+			$this->request,
+			$this->documentSvc,
+			$this->userSession,
+			new ControllerFeedback(l10n: $this->l10n, logger: $this->logger),
+			null,
+			$sourceObject
+		);
+
+		$result = $controller->generate();
+
+		$this->assertSame(400, $result->getStatus());
+		$this->assertSame(['error' => 'options.sourceObject must be one of the dataRefs'], $result->getData());
+
+	}//end testGenerateRefusesASourceObjectItDoesNotRender()
 
 }//end class
