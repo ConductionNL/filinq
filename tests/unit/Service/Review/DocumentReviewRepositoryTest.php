@@ -176,4 +176,21 @@ class DocumentReviewRepositoryTest extends TestCase {
 		$this->expectExceptionMessage('The review mark could not be removed: gone');
 		$repository->delete(uuid: 'u-1');
 	}//end testDelete()
+
+	/**
+	 * An uncheck deletes with OpenRegister RBAC on, so the schema decides who may remove a mark.
+	 *
+	 * @return void
+	 */
+	public function testDeleteAsCallerKeepsRbacOn(): void {
+		$repository = $this->repository();
+		$this->objects->expects($this->once())->method('deleteObject')
+			->with(
+				$this->callback(callback: static fn (ObjectDeletion $deletion): bool => $deletion->uuid === 'u-1'),
+				true
+			)
+			->willReturn(true);
+
+		$repository->deleteAsCaller(uuid: 'u-1');
+	}//end testDeleteAsCallerKeepsRbacOn()
 }//end class

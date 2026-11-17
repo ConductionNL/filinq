@@ -55,6 +55,13 @@ trait BuildsInMemoryReviewGate {
 	protected array $gateMarks = [];
 
 	/**
+	 * How many marks were saved, so each saved mark gets its own uuid.
+	 *
+	 * @var int
+	 */
+	protected int $gateMarkSaves = 0;
+
+	/**
 	 * The current rendition per source file id.
 	 *
 	 * @var array<int, array<string, mixed>>
@@ -141,11 +148,20 @@ trait BuildsInMemoryReviewGate {
 		$repository->method('findFor')->willReturnCallback(fn (int $fileId): ?array => ($this->gateMarks[$fileId] ?? null));
 		$repository->method('save')->willReturnCallback(
 			function (array $mark): array {
-				$this->gateMarks[(int) $mark['fileId']] = $mark + ['uuid' => 'mark-' . $mark['fileId']];
+				$this->gateMarks[(int) $mark['fileId']] = $mark + ['uuid' => 'mark-' . $mark['fileId'] . '-' . (++$this->gateMarkSaves)];
 				return $this->gateMarks[(int) $mark['fileId']];
 			}
 		);
 		$repository->method('delete')->willReturnCallback(
+			function (string $uuid): void {
+				foreach ($this->gateMarks as $fileId => $mark) {
+					if ($mark['uuid'] === $uuid) {
+						unset($this->gateMarks[$fileId]);
+					}
+				}
+			}
+		);
+		$repository->method('deleteAsCaller')->willReturnCallback(
 			function (string $uuid): void {
 				foreach ($this->gateMarks as $fileId => $mark) {
 					if ($mark['uuid'] === $uuid) {

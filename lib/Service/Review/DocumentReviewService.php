@@ -283,10 +283,15 @@ class DocumentReviewService {
 			$mark['note'] = $note;
 		}
 
-		// A re-check replaces the earlier mark by removing it and creating a new
-		// one: the schema lets a woo officer create a mark but not update one.
-		$this->uncheck(fileId: $fileId);
+		// A re-check replaces the earlier mark by creating a new one and then
+		// removing the old: the schema lets a woo officer create a mark but not
+		// update or delete one. The save runs under the caller's rights first,
+		// so a caller who may not mark a document removes nothing.
+		$earlier = $this->repository->findFor(fileId: $fileId);
 		$this->repository->save(mark: $mark);
+		if ((string)($earlier['uuid'] ?? '') !== '') {
+			$this->repository->delete(uuid: (string)$earlier['uuid']);
+		}
 
 		return $this->status(fileId: $fileId);
 
@@ -386,7 +391,7 @@ class DocumentReviewService {
 	}//end assertCheckable()
 
 	/**
-	 * Remove a file's mark; a file without one is left as it is.
+	 * Remove a file's mark as the calling user; a file without one is left as it is.
 	 *
 	 * @param int $fileId The Nextcloud file id.
 	 *
@@ -400,7 +405,8 @@ class DocumentReviewService {
 			return false;
 		}
 
-		$this->repository->delete(uuid: (string)$existing['uuid']);
+		// As the caller: the schema's delete rule decides who may remove a mark.
+		$this->repository->deleteAsCaller(uuid: (string)$existing['uuid']);
 		return true;
 
 	}//end uncheck()

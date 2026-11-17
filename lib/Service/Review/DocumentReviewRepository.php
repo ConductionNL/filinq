@@ -167,7 +167,8 @@ class DocumentReviewRepository {
 	}//end save()
 
 	/**
-	 * Delete one mark.
+	 * Delete one mark with the app's own authority: for replacing a mark the
+	 * caller has just replaced by saving a new one under its own rights.
 	 *
 	 * @param string $uuid The mark's uuid.
 	 *
@@ -178,21 +179,73 @@ class DocumentReviewRepository {
 	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.3
 	 */
 	public function delete(string $uuid): void {
+		$deletion = new ObjectDeletion(
+			uuid: $uuid,
+			target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+		);
 		try {
-			$deleted = $this->objectResolver->resolve()->deleteObject(
-				deletion: new ObjectDeletion(
-					uuid: $uuid,
-					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
-				),
-				_rbac: false
-			);
+			$deleted = $this->objectResolver->resolve()->deleteObject(deletion: $deletion, _rbac: false);
 		} catch (Throwable $e) {
-			throw new RuntimeException(message: 'The review mark could not be removed: '.$e->getMessage(), code: 0, previous: $e);
+			throw $this->removalFailed(exception: $e);
 		}
 
+		$this->assertRemoved(deleted: $deleted, uuid: $uuid);
+
+	}//end delete()
+
+	/**
+	 * Delete one mark as the calling user, so the `documentReview` schema's
+	 * delete rule decides who may remove it.
+	 *
+	 * @param string $uuid The mark's uuid.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When OpenRegister refuses the delete.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.3
+	 */
+	public function deleteAsCaller(string $uuid): void {
+		$deletion = new ObjectDeletion(
+			uuid: $uuid,
+			target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+		);
+		try {
+			$deleted = $this->objectResolver->resolve()->deleteObject(deletion: $deletion, _rbac: true);
+		} catch (Throwable $e) {
+			throw $this->removalFailed(exception: $e);
+		}
+
+		$this->assertRemoved(deleted: $deleted, uuid: $uuid);
+
+	}//end deleteAsCaller()
+
+	/**
+	 * The error a failed delete is reported as.
+	 *
+	 * @param Throwable $exception What OpenRegister threw.
+	 *
+	 * @return RuntimeException The error.
+	 */
+	private function removalFailed(Throwable $exception): RuntimeException {
+		return new RuntimeException(message: 'The review mark could not be removed: '.$exception->getMessage(), code: 0, previous: $exception);
+
+	}//end removalFailed()
+
+	/**
+	 * Refuse a delete OpenRegister answered with false.
+	 *
+	 * @param mixed  $deleted What OpenRegister answered.
+	 * @param string $uuid    The mark's uuid.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When it did not remove the mark.
+	 */
+	private function assertRemoved(mixed $deleted, string $uuid): void {
 		if ($deleted === false) {
 			throw new RuntimeException(message: 'OpenRegister did not remove the review mark '.$uuid.'.');
 		}
 
-	}//end delete()
+	}//end assertRemoved()
 }//end class

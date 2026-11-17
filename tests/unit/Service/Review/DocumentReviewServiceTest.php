@@ -98,6 +98,20 @@ class DocumentReviewServiceTest extends TestCase {
 	private array $deleted = [];
 
 	/**
+	 * Uuids the repository was asked to delete as the calling user, in order.
+	 *
+	 * @var list<string>
+	 */
+	private array $deletedAsCaller = [];
+
+	/**
+	 * Whether the repository refuses a save, as OpenRegister does for a caller without create rights.
+	 *
+	 * @var bool
+	 */
+	private bool $refuseSave = false;
+
+	/**
 	 * The configured gate mode.
 	 *
 	 * @var string
@@ -156,6 +170,10 @@ class DocumentReviewServiceTest extends TestCase {
 		$repository->method('findFor')->willReturnCallback(fn (int $fileId): ?array => ($this->marks[$fileId] ?? null));
 		$repository->method('save')->willReturnCallback(
 			function (array $mark): array {
+				if ($this->refuseSave === true) {
+					throw new \RuntimeException('refused');
+				}
+
 				$this->saved[] = $mark;
 				$this->marks[(int)$mark['fileId']] = $mark + ['uuid' => 'm-'.count($this->saved)];
 				return $this->marks[(int)$mark['fileId']];
@@ -164,6 +182,16 @@ class DocumentReviewServiceTest extends TestCase {
 		$repository->method('delete')->willReturnCallback(
 			function (string $uuid): void {
 				$this->deleted[] = $uuid;
+				foreach ($this->marks as $fileId => $mark) {
+					if ($mark['uuid'] === $uuid) {
+						unset($this->marks[$fileId]);
+					}
+				}
+			}
+		);
+		$repository->method('deleteAsCaller')->willReturnCallback(
+			function (string $uuid): void {
+				$this->deletedAsCaller[] = $uuid;
 				foreach ($this->marks as $fileId => $mark) {
 					if ($mark['uuid'] === $uuid) {
 						unset($this->marks[$fileId]);
@@ -385,7 +413,7 @@ class DocumentReviewServiceTest extends TestCase {
 	}//end testUnreadableRelationsFailClosed()
 
 	/**
-	 * A re-check removes the earlier mark before creating the new one.
+	 * A re-check creates the new mark, then removes the earlier one.
 	 *
 	 * @return void
 	 */
@@ -400,6 +428,27 @@ class DocumentReviewServiceTest extends TestCase {
 	}//end testARecheckReplacesTheEarlierMark()
 
 	/**
+	 * A check the caller may not make (the save is refused) leaves the earlier mark in place.
+	 *
+	 * @return void
+	 */
+	public function testARefusedRecheckRemovesNothing(): void {
+		$service = $this->service();
+		$service->check(fileId: 10, userId: 'officer');
+		$this->refuseSave = true;
+
+		try {
+			$service->check(fileId: 10, userId: 'someone');
+			$this->fail('a refused save must throw');
+		} catch (\RuntimeException $e) {
+			$this->assertSame('refused', $e->getMessage());
+		}
+
+		$this->assertSame([], $this->deleted);
+		$this->assertSame('officer', $this->marks[10]['checkedBy']);
+	}//end testARefusedRecheckRemovesNothing()
+
+	/**
 	 * Unchecking removes an existing mark and reports whether there was one.
 	 *
 	 * @return void
@@ -410,7 +459,8 @@ class DocumentReviewServiceTest extends TestCase {
 		$service->check(fileId: 10, userId: 'u');
 
 		$this->assertTrue($service->uncheck(fileId: 10));
-		$this->assertSame(['m-1'], $this->deleted);
+		$this->assertSame(['m-1'], $this->deletedAsCaller, 'an uncheck deletes under the caller\'s rights');
+		$this->assertSame([], $this->deleted);
 		$status = $service->status(fileId: 10);
 		$this->assertFalse($status['checked']);
 		$this->assertFalse($status['stale']);
