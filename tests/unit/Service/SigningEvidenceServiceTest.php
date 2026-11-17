@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Exception\WaarmerkRefusedException;
+use OCA\Filinq\Kernel\SealedArtifact;
 use OCA\Filinq\Service\OpenRegisterResolver;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\ReadableFileResolver;
@@ -25,7 +26,6 @@ use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningEvidenceService;
 use OCA\Filinq\Service\SigningService;
-use OCA\Filinq\Service\Waarmerk\SealedArtifact;
 use OCA\Filinq\Service\Waarmerk\SealedFileWriter;
 use OCA\Filinq\Service\WaarmerkService;
 use OCA\OpenRegister\Service\ObjectService;
@@ -38,7 +38,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @covers \OCA\Filinq\Service\SigningEvidenceService
  * @uses   \OCA\Filinq\Service\ReadsStoredObjectRows
- * @uses   \OCA\Filinq\Service\Waarmerk\SealedArtifact
+ * @uses   \OCA\Filinq\Kernel\SealedArtifact
  * @uses   \OCA\Filinq\Service\Waarmerk\SealedFileWriter
  * @uses   \OCA\Filinq\Exception\WaarmerkRefusedException
  */

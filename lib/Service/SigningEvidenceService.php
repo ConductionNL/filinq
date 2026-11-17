@@ -22,7 +22,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\WaarmerkRefusedException;
-use OCA\Filinq\Service\Waarmerk\SealedArtifact;
+use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningEvidenceServiceInterface;
+use OCA\Filinq\Kernel\SealedArtifact;
 use OCA\Filinq\Service\Waarmerk\SealedFileWriter;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\Files\File;
@@ -46,7 +48,7 @@ use Throwable;
  *
  * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-completed-signing-transaction-yields-one-sealed-evidence-document-req-ddwmk-006
  */
-class SigningEvidenceService {
+class SigningEvidenceService implements SigningEvidenceServiceInterface {
 	use ReadsStoredObjectRows;
 
 	public const TERMINAL = ['COMPLETED', 'DECLINED', 'CANCELLED', 'EXPIRED'];
@@ -61,7 +63,7 @@ class SigningEvidenceService {
 	 * @param SettingsService $settings OpenRegister's ObjectService.
 	 * @param OpenRegisterResolver $bindings The signerRecord binding.
 	 * @param ReadableFileResolver $files The caller's access to the document.
-	 * @param PdfService $pdfService Renders the evidence document.
+	 * @param PdfServiceInterface $pdfService Renders the evidence document.
 	 * @param WaarmerkService $waarmerk Seals it.
 	 * @param SealedFileWriter $writer Writes a copy next to the document.
 	 *
@@ -73,7 +75,7 @@ class SigningEvidenceService {
 		private readonly SettingsService $settings,
 		private readonly OpenRegisterResolver $bindings,
 		private readonly ReadableFileResolver $files,
-		private readonly PdfService $pdfService,
+		private readonly PdfServiceInterface $pdfService,
 		private readonly WaarmerkService $waarmerk,
 		private readonly SealedFileWriter $writer,
 	) {
@@ -222,7 +224,7 @@ class SigningEvidenceService {
 			options: ['pdfa' => true, 'title' => 'Bewijsdocument ondertekening']
 		);
 
-		$name = SealedFileWriter::siblingName(sourceName: (string) ($request['documentName'] ?? 'document'), suffix: 'bewijsdocument');
+		$name = SealedArtifact::siblingName(sourceName: (string) ($request['documentName'] ?? 'document'), suffix: 'bewijsdocument');
 		$artifact = $this->waarmerk->prepare(pdf: $pdf, documentName: $name, userId: $userId, sealType: 'signing-evidence');
 
 		return ['artifact' => $artifact, 'name' => $name, 'document' => $document];

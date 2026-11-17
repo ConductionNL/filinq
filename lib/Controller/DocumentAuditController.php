@@ -23,8 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Kernel\Contracts\ReadableFileResolverInterface;
 use OCA\Filinq\Service\Audit\DocumentActionAudit;
-use OCA\Filinq\Service\ReadableFileResolver;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -41,10 +41,10 @@ class DocumentAuditController extends Controller {
 	/**
 	 * Constructor.
 	 *
-	 * @param string               $appName App name.
-	 * @param IRequest             $request Request object.
-	 * @param DocumentActionAudit  $audit   The document trail.
-	 * @param ReadableFileResolver $files   The file behind an id, as the reader may read it.
+	 * @param string                        $appName App name.
+	 * @param IRequest                      $request Request object.
+	 * @param DocumentActionAudit           $audit   The document trail.
+	 * @param ReadableFileResolverInterface $files   The file behind an id, as the reader may read it.
 	 *
 	 * @return void
 	 */
@@ -52,7 +52,7 @@ class DocumentAuditController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly DocumentActionAudit $audit,
-		private readonly ReadableFileResolver $files,
+		private readonly ReadableFileResolverInterface $files,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 

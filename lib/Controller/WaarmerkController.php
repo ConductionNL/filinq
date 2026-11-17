@@ -22,10 +22,11 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\WaarmerkRefusedException;
-use OCA\Filinq\Service\ProcessingCertificateService;
-use OCA\Filinq\Service\ReadableFileResolver;
-use OCA\Filinq\Service\Waarmerk\SealedFileWriter;
-use OCA\Filinq\Service\WaarmerkService;
+use OCA\Filinq\Kernel\Contracts\ProcessingCertificateServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ReadableFileResolverInterface;
+use OCA\Filinq\Kernel\Contracts\SealedFileWriterInterface;
+use OCA\Filinq\Kernel\Contracts\WaarmerkServiceInterface;
+use OCA\Filinq\Kernel\SealedArtifact;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -62,10 +63,10 @@ class WaarmerkController extends Controller {
 	 *
 	 * @param string $appName The app id.
 	 * @param IRequest $request The request.
-	 * @param WaarmerkService $waarmerk Seals and revokes.
-	 * @param ProcessingCertificateService $certificates Certifies anonymisation runs.
-	 * @param ReadableFileResolver $files The caller's file access.
-	 * @param SealedFileWriter $writer Writes the sealed file and its record.
+	 * @param WaarmerkServiceInterface $waarmerk Seals and revokes.
+	 * @param ProcessingCertificateServiceInterface $certificates Certifies anonymisation runs.
+	 * @param ReadableFileResolverInterface $files The caller's file access.
+	 * @param SealedFileWriterInterface $writer Writes the sealed file and its record.
 	 * @param IUserSession $userSession The caller.
 	 * @param IGroupManager $groupManager Admin check.
 	 * @param LoggerInterface $logger Logs failures.
@@ -75,10 +76,10 @@ class WaarmerkController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly WaarmerkService $waarmerk,
-		private readonly ProcessingCertificateService $certificates,
-		private readonly ReadableFileResolver $files,
-		private readonly SealedFileWriter $writer,
+		private readonly WaarmerkServiceInterface $waarmerk,
+		private readonly ProcessingCertificateServiceInterface $certificates,
+		private readonly ReadableFileResolverInterface $files,
+		private readonly SealedFileWriterInterface $writer,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,
@@ -170,7 +171,7 @@ class WaarmerkController extends Controller {
 					throw new WaarmerkRefusedException(message: 'The file has no folder to write the sealed copy into', status: 422);
 				}
 
-				$name = SealedFileWriter::siblingName(sourceName: $node->getName(), suffix: 'gewaarmerkt');
+				$name = SealedArtifact::siblingName(sourceName: $node->getName(), suffix: 'gewaarmerkt');
 				$artifact = $this->waarmerk->prepare(pdf: $node->getContent(), documentName: $name, userId: $uid);
 
 				return new JSONResponse(

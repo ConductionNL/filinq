@@ -86,6 +86,8 @@ export default {
 		 * The heading for the seal's status.
 		 *
 		 * @return {string} The heading.
+		 *
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
 		 */
 		statusTitle() {
 			if (this.page.status === 'active') {
@@ -101,6 +103,8 @@ export default {
 		 * The heading for the check result.
 		 *
 		 * @return {string} The heading.
+		 *
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
 		 */
 		resultTitle() {
 			return {
@@ -115,6 +119,8 @@ export default {
 		 * The explanation for the check result.
 		 *
 		 * @return {string} The text.
+		 *
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
 		 */
 		resultText() {
 			return {

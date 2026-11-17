@@ -22,7 +22,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\WaarmerkRefusedException;
-use OCA\Filinq\Service\SigningEvidenceService;
+use OCA\Filinq\Kernel\Contracts\SigningEvidenceServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -59,7 +59,7 @@ class SigningEvidenceController extends Controller {
 	 *
 	 * @param string $appName The app id.
 	 * @param IRequest $request The request.
-	 * @param SigningEvidenceService $evidence Builds the evidence document.
+	 * @param SigningEvidenceServiceInterface $evidence Builds the evidence document.
 	 * @param IUserSession $userSession The caller.
 	 * @param IGroupManager $groupManager Admin check.
 	 * @param LoggerInterface $logger Logs failures.
@@ -69,7 +69,7 @@ class SigningEvidenceController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly SigningEvidenceService $evidence,
+		private readonly SigningEvidenceServiceInterface $evidence,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,

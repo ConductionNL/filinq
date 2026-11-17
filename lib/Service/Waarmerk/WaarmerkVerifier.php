@@ -20,7 +20,9 @@
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Waarmerk;
+
 use DateTimeInterface;
+use OCA\Filinq\Kernel\Contracts\WaarmerkVerifierInterface;
 use OCA\Filinq\Service\WaarmerkService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Throwable;
@@ -43,15 +45,7 @@ use Throwable;
  *
  * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-waarmerk-is-publicly-verifiable-fail-closed-req-ddwmk-004
  */
-class WaarmerkVerifier {
-
-	public const VALID = 'valid';
-
-	public const HASH_MISMATCH = 'hash-mismatch';
-
-	public const REVOKED = 'revoked';
-
-	public const UNKNOWN = 'unknown';
+class WaarmerkVerifier implements WaarmerkVerifierInterface {
 
 	/**
 	 * Constructor.

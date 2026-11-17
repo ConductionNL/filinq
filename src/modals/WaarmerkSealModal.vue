@@ -89,6 +89,8 @@ export default {
 		 * The modal title.
 		 *
 		 * @return {string}
+		 *
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
 		 */
 		title() {
 			return this.mode === 'certificate'
@@ -100,6 +102,8 @@ export default {
 		 * What will happen.
 		 *
 		 * @return {string}
+		 *
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
 		 */
 		explanation() {
 			return this.mode === 'certificate'
@@ -137,6 +141,8 @@ export default {
 		 * Close and reset.
 		 *
 		 * @return {void}
+		 *
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
 		 */
 		close() {
 			this.result = null

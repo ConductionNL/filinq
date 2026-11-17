@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Waarmerk;
 
 use OCA\Filinq\Exception\WaarmerkRefusedException;
+use OCA\Filinq\Kernel\Contracts\WaarmerkCmsInterface;
 
 /**
  * Signs and verifies the sha256 of a sealed artifact as detached CMS.
@@ -38,7 +39,7 @@ use OCA\Filinq\Exception\WaarmerkRefusedException;
  *
  * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
  */
-class WaarmerkCms {
+class WaarmerkCms implements WaarmerkCmsInterface {
 
 	private const SIGN_FLAGS = (OPENSSL_CMS_DETACHED | OPENSSL_CMS_BINARY);
 

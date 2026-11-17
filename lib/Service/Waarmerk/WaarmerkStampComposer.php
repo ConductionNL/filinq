@@ -23,7 +23,7 @@ namespace OCA\Filinq\Service\Waarmerk;
 
 use Com\Tecnick\Barcode\Barcode;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
-use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
 use setasign\Fpdi\Fpdi;
 use Throwable;
 
@@ -49,12 +49,12 @@ class WaarmerkStampComposer {
 	/**
 	 * Constructor.
 	 *
-	 * @param PdfService $pdfService Renders Twig to PDF.
+	 * @param PdfServiceInterface $pdfService Renders Twig to PDF.
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly PdfService $pdfService,
+		private readonly PdfServiceInterface $pdfService,
 	) {
 
 	}//end __construct()

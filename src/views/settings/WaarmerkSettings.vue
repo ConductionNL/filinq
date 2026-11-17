@@ -158,6 +158,8 @@ export default {
 		 * The PEM placeholder.
 		 *
 		 * @return {string} The first line of a PEM certificate.
+		 *
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
 		 */
 		pemPlaceholder() {
 			return '-----BEGIN CERTIFICATE-----'
@@ -176,6 +178,8 @@ export default {
 		 *
 		 * @param {string} suffix An optional sub path.
 		 * @return {string} The URL.
+		 *
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
 		 */
 		url(suffix = '') {
 			return generateUrl('/apps/filinq/api/waarmerk/settings' + suffix)
@@ -201,6 +205,8 @@ export default {
 		 * Load the summary.
 		 *
 		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
 		 */
 		async load() {
 			try {

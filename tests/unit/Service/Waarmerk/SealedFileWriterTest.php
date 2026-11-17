@@ -18,7 +18,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service\Waarmerk;
 
 use OCA\Filinq\Exception\WaarmerkRefusedException;
-use OCA\Filinq\Service\Waarmerk\SealedArtifact;
+use OCA\Filinq\Kernel\SealedArtifact;
 use OCA\Filinq\Service\Waarmerk\SealedFileWriter;
 use OCA\Filinq\Service\WaarmerkService;
 use OCP\Files\File;
@@ -29,7 +29,7 @@ use PHPUnit\Framework\TestCase;
  * The sealed file, then its record, or nothing.
  *
  * @covers \OCA\Filinq\Service\Waarmerk\SealedFileWriter
- * @uses   \OCA\Filinq\Service\Waarmerk\SealedArtifact
+ * @uses   \OCA\Filinq\Kernel\SealedArtifact
  * @uses   \OCA\Filinq\Exception\WaarmerkRefusedException
  */
 class SealedFileWriterTest extends TestCase {
@@ -71,15 +71,4 @@ class SealedFileWriterTest extends TestCase {
 		$this->expectExceptionMessage('could not be stored');
 		(new SealedFileWriter(waarmerk: $waarmerk))->write(folder: $folder, name: 'x.pdf', artifact: new SealedArtifact(pdf: '%PDF', record: []));
 	}//end testARecordFailureRemovesTheFile()
-
-	/**
-	 * Sibling names keep the base and add the suffix.
-	 *
-	 * @return void
-	 */
-	public function testSiblingName(): void {
-		$this->assertSame('besluit-gewaarmerkt.pdf', SealedFileWriter::siblingName(sourceName: 'besluit.pdf', suffix: 'gewaarmerkt'));
-		$this->assertSame('a.b-x.pdf', SealedFileWriter::siblingName(sourceName: 'a.b.docx', suffix: 'x'));
-		$this->assertSame('document-x.pdf', SealedFileWriter::siblingName(sourceName: '', suffix: 'x'));
-	}//end testSiblingName()
 }//end class

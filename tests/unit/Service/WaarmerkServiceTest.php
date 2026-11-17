@@ -19,7 +19,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use DateTime;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
-use OCA\Filinq\Service\Waarmerk\SealedArtifact;
+use OCA\Filinq\Kernel\SealedArtifact;
 use OCA\Filinq\Service\Waarmerk\WaarmerkCertificate;
 use OCA\Filinq\Service\Waarmerk\WaarmerkCms;
 use OCA\Filinq\Service\Waarmerk\WaarmerkKeyResolver;
@@ -40,7 +40,7 @@ use Psr\Log\LoggerInterface;
  *
  * @covers \OCA\Filinq\Service\WaarmerkService
  * @covers \OCA\Filinq\Service\Waarmerk\WaarmerkVerifier
- * @uses   \OCA\Filinq\Service\Waarmerk\SealedArtifact
+ * @uses   \OCA\Filinq\Kernel\SealedArtifact
  * @uses   \OCA\Filinq\Service\Waarmerk\WaarmerkCertificate
  * @uses   \OCA\Filinq\Service\Waarmerk\WaarmerkCms
  * @uses   \OCA\Filinq\Exception\WaarmerkRefusedException

@@ -22,6 +22,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\WaarmerkRefusedException;
+use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ProcessingCertificateServiceInterface;
+use OCA\Filinq\Kernel\SealedArtifact;
 use OCA\Filinq\Service\Waarmerk\SealedFileWriter;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\Files\Folder;
@@ -44,7 +47,7 @@ use Throwable;
  *
  * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-anonymization-runs-can-be-certified-with-a-sealed-processing-certificate-req-ddwmk-003
  */
-class ProcessingCertificateService {
+class ProcessingCertificateService implements ProcessingCertificateServiceInterface {
 	use ReadsStoredObjectRows;
 
 	private const TEMPLATE = __DIR__ . '/../Resources/templates/waarmerk/processing_certificate.twig';
@@ -65,7 +68,7 @@ class ProcessingCertificateService {
 	 * @param DocumentObjectServiceResolver $objectResolver Reads the anonymizationLink.
 	 * @param ReadableFileResolver $files The caller's access to the anonymised file.
 	 * @param AnonymiserBackendStateClient $backends The configured detection backend.
-	 * @param PdfService $pdfService Renders the certificate.
+	 * @param PdfServiceInterface $pdfService Renders the certificate.
 	 * @param WaarmerkService $waarmerk Seals it.
 	 * @param SealedFileWriter $writer Writes and records it.
 	 *
@@ -75,7 +78,7 @@ class ProcessingCertificateService {
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly ReadableFileResolver $files,
 		private readonly AnonymiserBackendStateClient $backends,
-		private readonly PdfService $pdfService,
+		private readonly PdfServiceInterface $pdfService,
 		private readonly WaarmerkService $waarmerk,
 		private readonly SealedFileWriter $writer,
 	) {
@@ -103,7 +106,7 @@ class ProcessingCertificateService {
 		}
 
 		$certificate = $this->certificateData(link: $link);
-		$name = SealedFileWriter::siblingName(sourceName: (string) ($link['anonymizedFileName'] ?? $node->getName()), suffix: 'anonimisatiecertificaat');
+		$name = SealedArtifact::siblingName(sourceName: (string) ($link['anonymizedFileName'] ?? $node->getName()), suffix: 'anonimisatiecertificaat');
 		$pdf = $this->pdfService->renderPdf(
 			templateContent: (string) file_get_contents(self::TEMPLATE),
 			data: ['certificate' => $certificate],

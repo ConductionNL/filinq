@@ -20,6 +20,9 @@
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Waarmerk;
+
+use OCA\Filinq\Kernel\Contracts\SealedFileWriterInterface;
+use OCA\Filinq\Kernel\SealedArtifact;
 use OCA\Filinq\Service\WaarmerkService;
 use OCP\Files\Folder;
 use Throwable;
@@ -38,7 +41,7 @@ use Throwable;
  *
  * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
  */
-class SealedFileWriter {
+class SealedFileWriter implements SealedFileWriterInterface {
 
 	/**
 	 * Constructor.
@@ -83,24 +86,4 @@ class SealedFileWriter {
 		return ['waarmerk' => $record, 'fileId' => (int) $file->getId(), 'fileName' => $file->getName()];
 
 	}//end write()
-
-	/**
-	 * A sibling name: `<base>-<suffix>.pdf`.
-	 *
-	 * @param string $sourceName The source file name.
-	 * @param string $suffix The suffix.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
-	 */
-	public static function siblingName(string $sourceName, string $suffix): string {
-		$base = (string) pathinfo($sourceName, PATHINFO_FILENAME);
-		if ($base === '') {
-			$base = 'document';
-		}
-
-		return $base . '-' . $suffix . '.pdf';
-
-	}//end siblingName()
 }//end class

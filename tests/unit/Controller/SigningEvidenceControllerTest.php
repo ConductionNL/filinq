@@ -20,9 +20,9 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 use OCA\Filinq\Controller\SigningEvidenceController;
 use OCA\Filinq\Controller\WaarmerkSettingsController;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
+use OCA\Filinq\Kernel\SealedArtifact;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\SigningEvidenceService;
-use OCA\Filinq\Service\Waarmerk\SealedArtifact;
 use OCA\Filinq\Service\Waarmerk\WaarmerkCms;
 use OCA\Filinq\Service\Waarmerk\WaarmerkSettings;
 use OCA\Filinq\Service\WaarmerkService;
@@ -39,7 +39,7 @@ use Psr\Log\LoggerInterface;
  *
  * @covers \OCA\Filinq\Controller\SigningEvidenceController
  * @covers \OCA\Filinq\Controller\WaarmerkSettingsController
- * @uses   \OCA\Filinq\Service\Waarmerk\SealedArtifact
+ * @uses   \OCA\Filinq\Kernel\SealedArtifact
  * @uses   \OCA\Filinq\Exception\WaarmerkRefusedException
  */
 class SigningEvidenceControllerTest extends TestCase {

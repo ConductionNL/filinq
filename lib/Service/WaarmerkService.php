@@ -24,7 +24,8 @@ namespace OCA\Filinq\Service;
 
 use DateTimeInterface;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
-use OCA\Filinq\Service\Waarmerk\SealedArtifact;
+use OCA\Filinq\Kernel\Contracts\WaarmerkServiceInterface;
+use OCA\Filinq\Kernel\SealedArtifact;
 use OCA\Filinq\Service\Waarmerk\WaarmerkCms;
 use OCA\Filinq\Service\Waarmerk\WaarmerkKeyResolver;
 use OCA\Filinq\Service\Waarmerk\WaarmerkSettings;
@@ -52,7 +53,7 @@ use Symfony\Component\Uid\Uuid;
  *
  * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
  */
-class WaarmerkService {
+class WaarmerkService implements WaarmerkServiceInterface {
 
 	public const SEAL_TYPES = ['waarmerk', 'processing-certificate', 'signing-evidence'];
 

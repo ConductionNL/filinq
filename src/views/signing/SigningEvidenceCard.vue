@@ -1,6 +1,9 @@
 <!--
   - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
   - SPDX-License-Identifier: EUPL-1.2
+  -
+  - @visual exclude Not a page: a card inside the signing request detail page, shown for a finished request.
+  -	Its behaviour is covered by src/views/signing/SigningEvidenceCard.spec.js.
 -->
 <template>
 	<section class="signing-evidence" aria-labelledby="signing-evidence-title">
@@ -54,6 +57,8 @@ export default {
 		 * Whether the request is in a terminal state.
 		 *
 		 * @return {boolean}
+		 *
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
 		 */
 		finished() {
 			return TERMINAL_SIGNING_STATUSES.includes(this.status)
@@ -63,6 +68,8 @@ export default {
 		 * The evidence download URL.
 		 *
 		 * @return {string}
+		 *
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
 		 */
 		downloadUrl() {
 			return evidenceUrl(this.requestId)

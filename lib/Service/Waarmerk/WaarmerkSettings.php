@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Waarmerk;
 
 use OCA\Filinq\Exception\WaarmerkRefusedException;
+use OCA\Filinq\Kernel\Contracts\WaarmerkSettingsInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
 use OCP\Security\ICrypto;
@@ -43,7 +44,7 @@ use OCP\Security\ICrypto;
  *
  * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-organisation-certificate-is-managed-in-admin-settings-with-credentialref-key-custody-req-ddwmk-001
  */
-class WaarmerkSettings {
+class WaarmerkSettings implements WaarmerkSettingsInterface {
 
 	public const APP = 'filinq';
 

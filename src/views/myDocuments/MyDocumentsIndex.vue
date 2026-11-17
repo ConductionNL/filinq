@@ -580,6 +580,11 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the documents and which of them carry a waarmerk.
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
+	 */
 	mounted() {
 		myDocumentsStore.fetchDocuments()
 		this.loadSealedIds()

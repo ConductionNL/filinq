@@ -80,6 +80,8 @@ export default {
 		 *
 		 * @param {string} mode `seal` or `certificate`.
 		 * @return {void}
+		 *
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
 		 */
 		open(mode) {
 			this.mode = mode

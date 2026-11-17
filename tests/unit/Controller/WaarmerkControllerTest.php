@@ -20,9 +20,9 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 use OCA\Filinq\Controller\WaarmerkController;
 use OCA\Filinq\Controller\WaarmerkVerifyController;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
+use OCA\Filinq\Kernel\SealedArtifact;
 use OCA\Filinq\Service\ProcessingCertificateService;
 use OCA\Filinq\Service\ReadableFileResolver;
-use OCA\Filinq\Service\Waarmerk\SealedArtifact;
 use OCA\Filinq\Service\Waarmerk\SealedFileWriter;
 use OCA\Filinq\Service\Waarmerk\WaarmerkVerifier;
 use OCA\Filinq\Service\WaarmerkService;
@@ -43,7 +43,7 @@ use ReflectionMethod;
  *
  * @covers \OCA\Filinq\Controller\WaarmerkController
  * @covers \OCA\Filinq\Controller\WaarmerkVerifyController
- * @uses   \OCA\Filinq\Service\Waarmerk\SealedArtifact
+ * @uses   \OCA\Filinq\Kernel\SealedArtifact
  * @uses   \OCA\Filinq\Service\Waarmerk\SealedFileWriter
  * @uses   \OCA\Filinq\Exception\WaarmerkRefusedException
  */

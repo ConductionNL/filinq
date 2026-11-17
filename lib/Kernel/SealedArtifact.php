@@ -5,8 +5,8 @@
  *
  * A composed and signed PDF that is not yet recorded.
  *
- * @category  Service
- * @package   OCA\Filinq\Service\Waarmerk
+ * @category  Kernel
+ * @package   OCA\Filinq\Kernel
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -19,13 +19,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Service\Waarmerk;
+namespace OCA\Filinq\Kernel;
 
 /**
  * The sealed bytes and the record fields that go with them.
  *
- * @category Service
- * @package  OCA\Filinq\Service\Waarmerk
+ * @category Kernel
+ * @package  OCA\Filinq\Kernel
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
@@ -48,4 +48,24 @@ class SealedArtifact {
 	) {
 
 	}//end __construct()
+
+	/**
+	 * A sibling name: `<base>-<suffix>.pdf`.
+	 *
+	 * @param string $sourceName The source file name.
+	 * @param string $suffix The suffix.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
+	 */
+	public static function siblingName(string $sourceName, string $suffix): string {
+		$base = (string) pathinfo($sourceName, PATHINFO_FILENAME);
+		if ($base === '') {
+			$base = 'document';
+		}
+
+		return $base . '-' . $suffix . '.pdf';
+
+	}//end siblingName()
 }//end class

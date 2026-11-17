@@ -21,7 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Service\Waarmerk\WaarmerkVerifier;
+use OCA\Filinq\Kernel\Contracts\WaarmerkVerifierInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\Attribute\BruteForceProtection;
@@ -57,7 +57,7 @@ class WaarmerkVerifyController extends Controller {
 	 *
 	 * @param string $appName The app id.
 	 * @param IRequest $request The request.
-	 * @param WaarmerkVerifier $verifier Verifies.
+	 * @param WaarmerkVerifierInterface $verifier Verifies.
 	 * @param IInitialState $initialState Hands the page its facts.
 	 *
 	 * @return void
@@ -65,7 +65,7 @@ class WaarmerkVerifyController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly WaarmerkVerifier $verifier,
+		private readonly WaarmerkVerifierInterface $verifier,
 		private readonly IInitialState $initialState,
 	) {
 		parent::__construct(appName: $appName, request: $request);
@@ -90,7 +90,7 @@ class WaarmerkVerifyController extends Controller {
 		$this->initialState->provideInitialState('waarmerk', array_merge($page, ['code' => $code]));
 
 		$response = new TemplateResponse($this->appName, 'waarmerk-verify', [], TemplateResponse::RENDER_AS_GUEST);
-		if ($page['status'] === WaarmerkVerifier::UNKNOWN) {
+		if ($page['status'] === WaarmerkVerifierInterface::UNKNOWN) {
 			$response->throttle(['action' => self::THROTTLE_ACTION]);
 		}
 
@@ -117,7 +117,7 @@ class WaarmerkVerifyController extends Controller {
 
 		// 200 for every outcome: the status code is no oracle either.
 		$response = new JSONResponse($answer);
-		if ($answer['status'] !== WaarmerkVerifier::VALID) {
+		if ($answer['status'] !== WaarmerkVerifierInterface::VALID) {
 			$response->throttle(['action' => self::THROTTLE_ACTION]);
 		}
 

@@ -22,10 +22,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\WaarmerkRefusedException;
-use OCA\Filinq\Service\PdfService;
-use OCA\Filinq\Service\Waarmerk\WaarmerkCms;
-use OCA\Filinq\Service\Waarmerk\WaarmerkSettings;
-use OCA\Filinq\Service\WaarmerkService;
+use OCA\Filinq\Kernel\Contracts\PdfServiceInterface;
+use OCA\Filinq\Kernel\Contracts\WaarmerkCmsInterface;
+use OCA\Filinq\Kernel\Contracts\WaarmerkServiceInterface;
+use OCA\Filinq\Kernel\Contracts\WaarmerkSettingsInterface;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -56,10 +56,10 @@ class WaarmerkSettingsController extends Controller {
 	 *
 	 * @param string $appName The app id.
 	 * @param IRequest $request The request.
-	 * @param WaarmerkSettings $settings The certificate settings.
-	 * @param WaarmerkService $waarmerk Seals the test document.
-	 * @param WaarmerkCms $cms Checks the test seal.
-	 * @param PdfService $pdfService Renders the test document.
+	 * @param WaarmerkSettingsInterface $settings The certificate settings.
+	 * @param WaarmerkServiceInterface $waarmerk Seals the test document.
+	 * @param WaarmerkCmsInterface $cms Checks the test seal.
+	 * @param PdfServiceInterface $pdfService Renders the test document.
 	 * @param IUserSession $userSession The admin.
 	 *
 	 * @return void
@@ -67,10 +67,10 @@ class WaarmerkSettingsController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly WaarmerkSettings $settings,
-		private readonly WaarmerkService $waarmerk,
-		private readonly WaarmerkCms $cms,
-		private readonly PdfService $pdfService,
+		private readonly WaarmerkSettingsInterface $settings,
+		private readonly WaarmerkServiceInterface $waarmerk,
+		private readonly WaarmerkCmsInterface $cms,
+		private readonly PdfServiceInterface $pdfService,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);
