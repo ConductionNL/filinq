@@ -39,6 +39,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
 use stdClass;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Golden for completed sequence tasks.
@@ -151,8 +152,9 @@ class SigningTaskDecisionGoldenTest extends TestCase {
 
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('find')->willReturnCallback(function (mixed ...$args): stdClass {
+			$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 			$named = [];
-			foreach ((new ReflectionMethod(ObjectService::class, 'find'))->getParameters() as $index => $param) {
+			foreach (LegacyObjectArgs::parameters(ObjectService::class, 'find') as $index => $param) {
 				if (array_key_exists($index, $args) === true) {
 					$named[$param->getName()] = $args[$index];
 				}

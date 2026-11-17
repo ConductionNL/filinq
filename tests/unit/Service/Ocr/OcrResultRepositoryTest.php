@@ -29,6 +29,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * One OCR result per file: found by file id, saved over the earlier one,
@@ -120,7 +121,12 @@ class OcrResultRepositoryTest extends TestCase {
 	public function testSavingOverwritesTheEarlierResultOfTheFile(): void {
 		$this->objects->method('searchObjectsBySlug')->willReturn([['uuid' => 'ocr-9', 'fileId' => 9, 'text' => 'old']]);
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['fileId' => 9, 'text' => 'new'], IntakeRepository::REGISTER, OcrResultRepository::SCHEMA, 'ocr-9')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['fileId' => 9, 'text' => 'new'],
+				'register' => IntakeRepository::REGISTER,
+				'schema' => OcrResultRepository::SCHEMA,
+				'uuid' => 'ocr-9',
+			]))
 			->willReturn(['uuid' => 'ocr-9', 'fileId' => 9, 'text' => 'new']);
 
 		$saved = $this->repository()->saveForFile(result: ['uuid' => 'forged', 'fileId' => 9, 'text' => 'new']);

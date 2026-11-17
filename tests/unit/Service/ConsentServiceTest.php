@@ -42,6 +42,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Unit tests for ConsentService
@@ -825,7 +827,9 @@ class ConsentServiceTest extends TestCase {
 				}
 			);
 			$objectService->method('saveObject')->willReturnCallback(
-				function (array $object, $register, $schema) use (&$writes): object {
+				function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$writes): object {
+					$register = $options->target->register;
+					$schema = $options->target->schema;
 					$writes[] = [$register, $schema];
 					return $this->buildSavedObject(data: $object);
 				}
@@ -871,7 +875,11 @@ class ConsentServiceTest extends TestCase {
 	public function testValidateAndUpdateGatesAStandingConsentAndDelegates(): void {
 		$objectService = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
 		$objectService->expects($this->once())->method('find')
-			->with('c-1', 'reg-1', 'sch-1')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+				'id' => 'c-1',
+				'register' => 'reg-1',
+				'schema' => 'sch-1',
+			]))
 			->willReturn($this->buildSavedObject(data: ['scope' => 'entity', 'consentStatus' => 'granted']));
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
@@ -946,6 +954,7 @@ class ConsentServiceTest extends TestCase {
 		);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments) use (&$saves): object {
+				$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 				$saves[] = $arguments;
 				return $this->buildSavedObject(data: $arguments[0]);
 			}

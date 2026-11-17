@@ -27,6 +27,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 
 /**
  * With a fixed clock: a draft untouched for 31 days goes, one of 29 days stays.
@@ -71,7 +72,10 @@ class DocumentDraftExpiryJobTest extends TestCase {
 			->with(['filters' => ['register' => 'filinq', 'schema' => 'documentDraft']], false)
 			->willReturn([$this->draft('old', 31), $this->draft('recent', 29), ['@self' => ['id' => 'no-expiry']]]);
 		$objects->expects($this->once())->method('deleteObject')
-			->with('old', 'filinq', 'documentDraft', false)
+			->with(
+				$this->callback(static fn (ObjectDeletion $deletion): bool => [$deletion->uuid, $deletion->target->register, $deletion->target->schema] === ['old', 'filinq', 'documentDraft']),
+				false
+			)
 			->willReturn(true);
 
 		$this->assertSame(1, $this->job($objects)->sweep());
@@ -81,8 +85,8 @@ class DocumentDraftExpiryJobTest extends TestCase {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('findAll')->willReturn([$this->draft('a', 40), $this->draft('b', 40)]);
 		$objects->expects($this->exactly(2))->method('deleteObject')
-			->willReturnCallback(static function (string $uuid): bool {
-				if ($uuid === 'a') {
+			->willReturnCallback(static function (ObjectDeletion $deletion): bool {
+				if ($deletion->uuid === 'a') {
 					throw new Exception('locked');
 				}
 

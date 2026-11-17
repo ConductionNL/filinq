@@ -50,6 +50,8 @@ use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Finishing produces, files and logs the stored HTML through the direct path,
@@ -98,7 +100,7 @@ class DocumentServiceGenerateFromHtmlTest extends TestCase {
 	 */
 	private function service(): DocumentService {
 		$wizards = new WizardObjectStore();
-		$wizards->saveObject(object: WizardFixtures::seed(), register: 'filinq', schema: 'wizardDefinition', uuid: 'wizard-1');
+		$wizards->saveObject(object: WizardFixtures::seed(), options: new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'wizardDefinition'), uuid: 'wizard-1'));
 
 		$log = $this->createMock(ObjectService::class);
 		$log->method('saveObject')->willReturnCallback(function (array $object): array {

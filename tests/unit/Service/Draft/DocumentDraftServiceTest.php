@@ -31,6 +31,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Creating renders and saves without filing or logging; finishing files and
@@ -65,8 +66,9 @@ class DocumentDraftServiceTest extends TestCase {
 		$this->objects        = $this->createMock(ObjectService::class);
 		$this->settings       = $this->createMock(SettingsServiceInterface::class);
 		$this->settings->method('getObjectService')->willReturn($this->objects);
-		$this->objects->method('saveObject')->willReturnCallback(function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null): array {
-			$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
+		$this->objects->method('saveObject')->willReturnCallback(function (array $object, ObjectSaveOptions $options): array {
+			$uuid          = $options->uuid;
+			$this->saved[] = ['object' => $object, 'register' => $options->target->register, 'schema' => $options->target->schema, 'uuid' => $uuid];
 			return $object + ['@self' => ['id' => ($uuid ?? 'draft-new')]];
 		});
 	}//end setUp()

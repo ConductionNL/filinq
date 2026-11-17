@@ -27,6 +27,8 @@ use DateTimeInterface;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Service\Draft\DocumentDraftService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -107,9 +109,10 @@ class DocumentDraftExpiryJob extends TimedJob {
 
 			try {
 				$objectService->deleteObject(
-					uuid: $uuid,
-					register: DocumentDraftService::REGISTER,
-					schema: DocumentDraftService::SCHEMA,
+					new ObjectDeletion(
+						uuid: $uuid,
+						target: new ObjectFindTarget(register: DocumentDraftService::REGISTER, schema: DocumentDraftService::SCHEMA)
+					),
 					_rbac: false
 				);
 				$deleted++;

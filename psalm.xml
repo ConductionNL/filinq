@@ -42,6 +42,7 @@
             suppressing every reference to it.
         -->
         <file name="tests/stubs/openregister-flow.stub.php" />
+        <file name="tests/stubs/openregister-integration.stub.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>

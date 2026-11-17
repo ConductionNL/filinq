@@ -29,6 +29,9 @@ use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\AppFramework\Utility\ITimeFactory;
 
 /**
@@ -133,7 +136,8 @@ class DocumentDraftService {
 			'expiresAt' => $this->expiresAt(),
 		] + $this->wizardFields(context: ($options['wizardContext'] ?? null));
 
-		$saved = $this->toArray(result: $this->objectService()->saveObject(object: $draft, register: self::REGISTER, schema: self::SCHEMA));
+		$target = new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA);
+		$saved  = $this->toArray(result: $this->objectService()->saveObject(object: $draft, options: new ObjectSaveOptions(target: $target)));
 
 		return [
 			'id' => $this->idOf(object: $saved),
@@ -201,9 +205,10 @@ class DocumentDraftService {
 				$this->withoutMetadata(draft: $draft),
 				['stage' => 'finished', 'finishedDocumentId' => $recordId, 'expiresAt' => $this->expiresAt()]
 			),
-			register: self::REGISTER,
-			schema: self::SCHEMA,
-			uuid: $draftId
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+				uuid: $draftId
+			)
 		);
 
 		return $result + ['draftId' => $draftId, 'recordId' => $recordId];
@@ -222,7 +227,7 @@ class DocumentDraftService {
 	private function ownDraft(string $draftId, string $userId): array {
 		$notFound = new Exception(message: 'Draft not found', code: 404);
 		try {
-			$found = $this->objectService()->find(id: $draftId, register: self::REGISTER, schema: self::SCHEMA);
+			$found = $this->objectService()->find(id: $draftId, options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA));
 		} catch (Exception $e) {
 			if ($e->getCode() === 503) {
 				throw $e;
