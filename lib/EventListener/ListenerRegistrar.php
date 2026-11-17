@@ -65,6 +65,7 @@ class ListenerRegistrar {
 		(new SigningEventRegistrar())->register(context: $context);
 		(new IntegrationLeafRegistrar())->register(context: $context);
 		(new DocumentGenerationRegistrar())->register(context: $context);
+		(new PdfUaEventRegistrar())->register(context: $context);
 
 		// A document's edits, deletion and shares go into its audit trail
 		// (specify-capability-rows, REQ-SCR-007). Named by string, like the

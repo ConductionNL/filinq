@@ -38,6 +38,20 @@ const PAGES_BEFORE = [
 	['Flows', '/flows'], ['FlowDetail', '/flows/:id'],
 ]
 
+/**
+ * What changes made after the split added, by change, so the split's own
+ * record above stays as it was recorded.
+ */
+const PAGES_ADDED = [
+	// generate-draft-and-attended-edit
+	['Drafts', '/drafts'], ['DraftEditor', '/drafts/:id'],
+]
+
+const MENU_ADDED = [
+	// generate-draft-and-attended-edit
+	['Drafts', 54],
+]
+
 const MENU_BEFORE = [
 	['Dashboard', 10], ['Consent', 20], ['StandingConsents', 22], ['Prohibitions', 24], ['Intake', 26],
 	['ClassificationPending', 27], ['DigitisationProjects', 28], ['ScanChecks', 29], ['Anonymization', 30], ['MyDocuments', 35], ['FolderAnonymization', 40],
@@ -59,12 +73,12 @@ const byId = (pairs) => [...pairs].sort((a, b) => a[0].localeCompare(b[0]))
 describe('the manifest fragments', () => {
 	it('lose no page route of the monolithic manifest and add none', () => {
 		const pages = effectiveManifest().pages.map((p) => [p.id, p.route])
-		expect(byId(pages)).toEqual(byId(PAGES_BEFORE))
+		expect(byId(pages)).toEqual(byId([...PAGES_BEFORE, ...PAGES_ADDED]))
 	})
 
 	it('lose no menu entry and keep each one\'s order', () => {
 		const menu = effectiveManifest().menu.map((m) => [m.id, m.order])
-		expect(byId(menu)).toEqual(byId(MENU_BEFORE))
+		expect(byId(menu)).toEqual(byId([...MENU_BEFORE, ...MENU_ADDED]))
 	})
 
 	it('point every menu route at a page that exists', () => {

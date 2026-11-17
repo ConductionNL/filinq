@@ -5,25 +5,25 @@
 
 ## 1. Register & seed data
 
-- [ ] 1.1 Add the `accessibilityConformanceReport` schema (`fileId`, `flavour`, `compliant`, `failedCheckCount`, `failedChecks` clause/test/checkpoint references, `validatorVersion`, `validatedAt`, `trigger`) to `lib/Settings/filinq_register.json` — additive, union-merge only; references only, never document content (REQ-DDPUM-002)
+- [x] 1.1 Add the `accessibilityConformanceReport` schema (`fileId`, `flavour`, `compliant`, `failedCheckCount`, `failedChecks` clause/test/checkpoint references, `validatorVersion`, `validatedAt`, `trigger`) to `lib/Settings/filinq_register.json` — additive, union-merge only; references only, never document content (REQ-DDPUM-002)
 - [ ] 1.2 Seed two `tests/sample-documents/` fixtures (generated, no personal data): one genuinely PDF/UA-1-conformant tagged PDF; one that passes the wave-1 heuristics but fails Matterhorn checkpoints (untagged content + figure without alt) — the "heuristics ≠ conformance" fixture
 
 ## 2. Shared backend (verapdf-validation)
 
-- [ ] 2.1 Extend `verapdf-validation`'s `VeraPdfService` with `validateUa(File): array` invoking the same probed binary with `--flavour ua1`, parsing the same JSON shape (flavour/compliant/failedChecks/validatorVersion), typed error on timeout/crash/unparseable — NO second binary, probe, config or admin row (REQ-DDPUM-001)
+- [x] 2.1 Extend `verapdf-validation`'s `VeraPdfService` with `validateUa(File): array` invoking the same probed binary with `--flavour ua1`, parsing the same JSON shape (flavour/compliant/failedChecks/validatorVersion), typed error on timeout/crash/unparseable — NO second binary, probe, config or admin row (REQ-DDPUM-001)
   - Hard build dependency on `verapdf-validation`; verify `VeraPdfService` exists at apply time — apply the two together (see design D1 / Open Questions).
 
 ## 3. Backend
 
-- [ ] 3.1 Add `accessibility`-category validator checks to `DocumentValidationService`: `pdfua-conformance-failed`, `accessibility-validator-unavailable` — PDF-only, per-profile opt-in, default `off`, validator-presence-gated, references only; wave-1 heuristic checks untouched (REQ-DDPUM-005)
-- [ ] 3.2 New accessibility conformance endpoint `POST /api/validation/accessibility/{fileId}` — auth attribute, IDOR-safe user-folder resolution (404, no existence disclosure), persists/updates the `accessibilityConformanceReport` distinct from the PDF/A `conformanceReport` (REQ-DDPUM-002)
-- [ ] 3.3 Remediation guidance from failure shape (Filinq-generated → regenerate accessible; imported/mPDF → re-author from accessible source, no retag of imported pages), i18n-keyed; verdict never claims certification (REQ-DDPUM-003)
-- [ ] 3.4 Surface the validator verdict as the authoritative accessibility conformance when available; heuristics remain the labelled floor when absent; heuristic-pass + validator-fail surfaces as fail (REQ-DDPUM-004)
+- [x] 3.1 Add `accessibility`-category validator checks to `DocumentValidationService`: `pdfua-conformance-failed`, `accessibility-validator-unavailable` — PDF-only, per-profile opt-in, default `off`, validator-presence-gated, references only; wave-1 heuristic checks untouched (REQ-DDPUM-005)
+- [x] 3.2 New accessibility conformance endpoint `POST /api/validation/accessibility/{fileId}` — auth attribute, IDOR-safe user-folder resolution (404, no existence disclosure), persists/updates the `accessibilityConformanceReport` distinct from the PDF/A `conformanceReport` (REQ-DDPUM-002)
+- [x] 3.3 Remediation guidance from failure shape (Filinq-generated → regenerate accessible; imported/mPDF → re-author from accessible source, no retag of imported pages), i18n-keyed; verdict never claims certification (REQ-DDPUM-003)
+- [x] 3.4 Surface the validator verdict as the authoritative accessibility conformance when available; heuristics remain the labelled floor when absent; heuristic-pass + validator-fail surfaces as fail (REQ-DDPUM-004)
 
 ## 4. Frontend
 
-- [ ] 4.1 PDF/UA conformance card on document detail (flavour, verdict, failed checkpoints, guidance); validator findings rendered in the existing `accessibility` findings group, source-labelled (REQ-DDPUM-002, REQ-DDPUM-004)
-- [ ] 4.2 Heuristic-vs-validator labelling in the accessibility panel; "not validated" state when the binary is absent (REQ-DDPUM-001, REQ-DDPUM-004)
+- [x] 4.1 PDF/UA conformance card on document detail (flavour, verdict, failed checkpoints, guidance); validator findings rendered in the existing `accessibility` findings group, source-labelled (REQ-DDPUM-002, REQ-DDPUM-004)
+- [x] 4.2 Heuristic-vs-validator labelling in the accessibility panel; "not validated" state when the binary is absent (REQ-DDPUM-001, REQ-DDPUM-004)
 
 ## 5. Quality
 
@@ -47,20 +47,20 @@ Build after sections 1 to 5. Every test named here fails on `development`
 today: no attach listener, attach job, readiness reason or regeneration
 service exists. Acceptance lines are plain bullets, so the checkbox cap holds.
 
-- [ ] 6.1 Attach listener and job (REQ-DDPUM-006). Files: `lib/EventListener/PdfUaAttachListener.php`, `lib/BackgroundJob/PdfUaAttachCheckJob.php`, `lib/AppInfo/Application.php` (register on `NodeCreatedEvent` and `NodeWrittenEvent`), `lib/Service/VeraPdf/ConformanceService.php` (trigger `attach`, a `ua1` run).
+- [x] 6.1 Attach listener and job (REQ-DDPUM-006). Files: `lib/EventListener/PdfUaAttachListener.php`, `lib/BackgroundJob/PdfUaAttachCheckJob.php`, `lib/AppInfo/Application.php` (register on `NodeCreatedEvent` and `NodeWrittenEvent`), `lib/Service/VeraPdf/ConformanceService.php` (trigger `attach`, a `ua1` run).
   - GIVEN a PDF under `Open Registers/` WHEN the real `NodeCreatedEvent` is handled THEN one job is added and `ConformanceService` is not called.
   - GIVEN a PDF elsewhere, or a non-PDF WHEN handled THEN nothing is queued.
   - Test: PHPUnit `PdfUaAttachListenerTest::testTheListenerOnlyQueues`, `::testAFileOutsideOpenRegisterIsIgnored`, constructing the real `OCP\Files\Events\Node\NodeCreatedEvent` (constructor `(Node $node)`).
   - Wiring: a test that boots `Application::register()` with a registration context double and asserts the listener is registered for both events. A listener with a green suite and no registration is the defect this line prevents.
-- [ ] 6.2 Verdict tags (REQ-DDPUM-006). Files: `lib/BackgroundJob/PdfUaAttachCheckJob.php`, `lib/Service/VeraPdf/PdfUaVerdictTagger.php` (through `ISystemTagManager` and `ISystemTagObjectMapper`, object type `files`).
+- [x] 6.2 Verdict tags (REQ-DDPUM-006). Files: `lib/BackgroundJob/PdfUaAttachCheckJob.php`, `lib/Service/VeraPdf/PdfUaVerdictTagger.php` (through `ISystemTagManager` and `ISystemTagObjectMapper`, object type `files`).
   - GIVEN a compliant report WHEN the job runs THEN the file carries `pdfua-conform` and neither other tag.
   - GIVEN veraPDF absent, a timeout or unparseable output WHEN the job runs THEN `pdfua-niet-gecontroleerd` and no compliant report.
   - Test: PHPUnit `PdfUaAttachCheckJobTest::testACompliantFileIsTaggedConform`, `::testNoValidatorTagsNotChecked`, `::testTheTagsAreExclusive`. `testNoValidatorTagsNotChecked` must be shown failing on `development` first; paste the line in the PR body.
   - Cross-app: one Playwright step opens the publication in opencatalogi and reads the label in its file list, so the claim "the officer sees it" is tested through the app the officer uses, not through filinq.
-- [ ] 6.3 Readiness reason (REQ-DDPUM-007). Files: `lib/Service/Publication/PublicationReadiness.php`.
+- [x] 6.3 Readiness reason (REQ-DDPUM-007). Files: `lib/Service/Publication/PublicationReadiness.php`.
   - GIVEN a record with a non-compliant or unchecked PDF WHEN evaluated THEN `readinessReasons` names the file; with severity `blocking` THEN `isReady()` is false.
   - Test: PHPUnit `PublicationReadinessTest::testAFailedPdfUaVerdictIsAReason`, `::testABlockingSeverityStopsTheHandOff`, `::testAMissingReportCountsAsNotPassed`.
-- [ ] 6.4 Regenerate as PDF/UA, generated documents only (REQ-DDPUM-008, D5). Files: `lib/Service/VeraPdf/AccessibleRegenerationService.php`, `lib/Controller/ConformanceController.php` (`POST /api/validation/accessibility/{fileId}/regenerate`, IDOR-safe resolution, auth attribute), `appinfo/routes.php`, the conformance card.
+- [x] 6.4 Regenerate as PDF/UA, generated documents only (REQ-DDPUM-008, D5). Files: `lib/Service/VeraPdf/AccessibleRegenerationService.php`, `lib/Controller/ConformanceController.php` (`POST /api/validation/accessibility/{fileId}/regenerate`, IDOR-safe resolution, auth attribute), `appinfo/routes.php`, the conformance card.
   - GIVEN a generated PDF WHEN regenerated and the copy passes `ua1` THEN a new file version is stored and tagged `pdfua-conform`.
   - GIVEN the copy fails THEN the original and its version are unchanged.
   - GIVEN an imported PDF WHEN the route is called THEN 409 with `not-generated-by-filinq`, and the card offers no action.
