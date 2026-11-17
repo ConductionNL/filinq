@@ -76,6 +76,16 @@ export function guidanceText(key) {
 				'filinq',
 				'The fonts sit in pages imported whole, and Filinq cannot embed fonts in those afterwards. Convert again from the original file (for example the Word document), or expect an e-depot to reject this PDF.',
 			)
+		case 'regenerateAccessible':
+			return t(
+				'filinq',
+				'Filinq made this document. Generate it again in Filinq with the accessible output option.',
+			)
+		case 'reauthorFromSource':
+			return t(
+				'filinq',
+				'Filinq does not retag imported pages. Create the document again from an accessible source, for example the original Word document with headings and alternative texts.',
+			)
 		case 'ruleReferences':
 			return t(
 				'filinq',

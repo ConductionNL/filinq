@@ -68,6 +68,7 @@ class ValidationProfileResolver {
 		DocumentValidationService::CHECK_PDF_LANGUAGE_MISSING,
 		DocumentValidationService::CHECK_PDF_TITLE_MISSING,
 		DocumentValidationService::CHECK_PDFUA_IDENTIFIER_MISSING,
+		DocumentValidationService::CHECK_PDFUA_CONFORMANCE,
 	];
 
 	/**
@@ -77,6 +78,7 @@ class ValidationProfileResolver {
 	private const ARCHIVAL_CHECKS = [
 		DocumentValidationService::CHECK_PDFA_CONFORMANCE,
 		DocumentValidationService::CHECK_PDFA_FONTS,
+		DocumentValidationService::CHECK_PDFUA_CONFORMANCE,
 	];
 
 	/**
