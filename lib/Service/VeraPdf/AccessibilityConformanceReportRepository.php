@@ -6,6 +6,7 @@
  * @category Service
  * @package  OCA\Filinq\Service\VeraPdf
  * @author   Conduction B.V. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  * @spec     openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-persisted-accessibility-conformance-report-is-stored-per-document-and-re-runnable-req-ddpum-002

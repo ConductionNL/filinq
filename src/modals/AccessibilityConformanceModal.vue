@@ -243,6 +243,8 @@ export default {
 		 * Whether a check or a regeneration is running.
 		 *
 		 * @return {boolean} True while one runs.
+		 *
+		 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-persisted-accessibility-conformance-report-is-stored-per-document-and-re-runnable-req-ddpum-002
 		 */
 		busy() {
 			return this.checking || this.regenerating
@@ -340,6 +342,8 @@ export default {
 		 *
 		 * @param {string} value An ISO date-time.
 		 * @return {string} The local date and time.
+		 *
+		 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-persisted-accessibility-conformance-report-is-stored-per-document-and-re-runnable-req-ddpum-002
 		 */
 		formatDate(value) {
 			const date = new Date(value)
