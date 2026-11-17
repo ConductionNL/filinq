@@ -316,6 +316,29 @@ foreach (['Share/IShare', 'Share/IManager'] as $ocpPath) {
 	}
 }
 
+// The real OCP file node events and system tag contracts the PDF/UA attach
+// listener, its job and the verdict tagger use (pdfua-verapdf-matterhorn).
+foreach (
+	[
+		'EventDispatcher/IWebhookCompatibleEvent',
+		'EventDispatcher/JsonSerializer',
+		'Files/Events/Node/AbstractNodeEvent',
+		'Files/Events/Node/NodeCreatedEvent',
+		'Files/Events/Node/NodeWrittenEvent',
+		'SystemTag/ISystemTag',
+		'SystemTag/ISystemTagManager',
+		'SystemTag/ISystemTagObjectMapper',
+		'SystemTag/TagNotFoundException',
+		'SystemTag/TagAlreadyExistsException',
+	] as $ocpPath
+) {
+	$ocpFile = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpPath . '.php';
+	$ocpName = 'OCP\\' . str_replace('/', '\\', $ocpPath);
+	if (is_file($ocpFile) === true && class_exists($ocpName) === false && interface_exists($ocpName) === false) {
+		require_once $ocpFile;
+	}
+}
+
 // Any other OCP interface (OCP\Mail\IMailer, ...) from the OCP package, which
 // does not classmap-autoload. Only reached for a class no stub above declared.
 spl_autoload_register(static function (string $class): void {

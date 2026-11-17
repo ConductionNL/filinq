@@ -80,6 +80,15 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 					:title="row.readingError || ''" />
 			</template>
 
+			<template #column-acknowledgement="{ row }">
+				<CnStatusBadge
+					v-if="acknowledgementLabel(row.acknowledgement)"
+					:label="acknowledgementLabel(row.acknowledgement)"
+					:colorMap="acknowledgementColorMap"
+					:title="acknowledgementDetail(row.acknowledgement)"
+					data-testid="intake-acknowledgement" />
+			</template>
+
 			<template #column-receivedAt="{ row }">
 				{{ formatDate(row.receivedAt) }}
 			</template>
@@ -110,6 +119,16 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 							<Delete :size="20" />
 						</template>
 						{{ t('filinq', 'Reject') }}
+					</NcActionButton>
+					<NcActionButton
+						v-if="stampedCopyUrl(row)"
+						closeAfterClick
+						data-testid="intake-open-stamped-copy"
+						@click="openStampedCopy(row)">
+						<template #icon>
+							<FileDocumentOutline :size="20" />
+						</template>
+						{{ t('filinq', 'Open stamped copy') }}
 					</NcActionButton>
 				</NcActions>
 			</template>
@@ -142,6 +161,8 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 		<SeparatorSheetsDialog
 			v-if="separatorsOpen"
 			@close="separatorsOpen = false" />
+
+		<IntakeRoutingDeclaration />
 	</div>
 </template>
 
@@ -151,12 +172,20 @@ import { translate as t } from '@nextcloud/l10n'
 import { NcActionButton, NcActions, NcButton, NcNoteCard } from '@nextcloud/vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
+import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import LockOpenVariant from 'vue-material-design-icons/LockOpenVariant.vue'
+import IntakeRoutingDeclaration from '../../components/intake/IntakeRoutingDeclaration.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
 import SeparatorSheetsDialog from '../../dialogs/SeparatorSheetsDialog.vue'
 import PdfPasswordModal from '../../modals/PdfPasswordModal.vue'
+import {
+	acknowledgementColorMap,
+	acknowledgementDetail,
+	acknowledgementLabel,
+	stampedCopyUrl,
+} from '../../services/intakeAcknowledgement.js'
 import {
 	reachWarning,
 	readingColorMap,
@@ -179,9 +208,11 @@ export default {
 		NcButton,
 		Delete,
 		DotsHorizontal,
+		FileDocumentOutline,
 		FinalDocumentReasonDialog,
 		FolderOutline,
 		IntakeAssignDialog,
+		IntakeRoutingDeclaration,
 		SeparatorSheetsDialog,
 		PdfPasswordModal,
 		LockOpenVariant,
@@ -204,6 +235,7 @@ export default {
 			notificationReach: null,
 			separatorsOpen: false,
 			readingColorMap: readingColorMap(),
+			acknowledgementColorMap: acknowledgementColorMap(),
 			channelColorMap: {
 				[t('filinq', 'Scan')]: 'primary',
 				[t('filinq', 'Mail')]: 'warning',
@@ -243,10 +275,12 @@ export default {
 		},
 
 		/**
-		 * The inbox columns, with the reading state of an arriving scan.
+		 * The inbox columns, with the reading state of an arriving scan and
+		 * whether the sender was told it arrived.
 		 *
 		 * @return {Array<object>} The columns.
 		 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-2.2
+		 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-the-worklist-shows-both-outcomes-req-ias-004
 		 */
 		tableColumns() {
 			const columns = [
@@ -259,6 +293,7 @@ export default {
 					sortable: true,
 				},
 				{ key: 'readingState', label: t('filinq', 'Text') },
+				{ key: 'acknowledgement', label: t('filinq', 'Acknowledged') },
 			]
 			if (this.mode === 'detached') {
 				columns.push({ key: 'detachReason', label: t('filinq', 'Reason') })
@@ -315,6 +350,27 @@ export default {
 		},
 
 		readingLabel,
+
+		acknowledgementLabel,
+
+		acknowledgementDetail,
+
+		stampedCopyUrl,
+
+		/**
+		 * Open the copy with the received stamp in a new tab. The arrived file
+		 * stays as it arrived.
+		 *
+		 * @param {object} row The intake document.
+		 * @return {void}
+		 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-the-worklist-shows-both-outcomes-req-ias-004
+		 */
+		openStampedCopy(row) {
+			const url = stampedCopyUrl(row)
+			if (url) {
+				window.open(url, '_blank', 'noopener')
+			}
+		},
 
 		channelLabel(channel) {
 			const labels = {

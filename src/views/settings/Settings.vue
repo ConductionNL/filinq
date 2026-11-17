@@ -122,6 +122,30 @@
 			</div>
 
 			<div class="setting-item">
+				<div class="setting-label">
+					{{ t('filinq', 'Four eyes when anonymising') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					v-for="option in fourEyesOptions"
+					:key="option.value"
+					:modelValue="settings.redaction_four_eyes"
+					:value="option.value"
+					name="redaction_four_eyes"
+					type="radio"
+					@update:modelValue="settings.redaction_four_eyes = $event">
+					{{ option.label }}
+				</NcCheckboxRadioSwitch>
+				<div class="setting-description">
+					{{
+						t(
+							'filinq',
+							'Whether the person who checked the findings of a document may also anonymise it. With four eyes a colleague must anonymise it. A Woo case is a dossier run, or a document a case system flags as one.',
+						)
+					}}
+				</div>
+			</div>
+
+			<div class="setting-item">
 				<NcTextField
 					:modelValue="settings['anonymisation.output_subfolder_name']"
 					:label="t('filinq', 'Subfolder for anonymised copies')"
@@ -144,6 +168,15 @@
 						)
 					}}
 				</div>
+			</div>
+
+			<div class="setting-item">
+				<NcTextField
+					:modelValue="settings['woo.default_publisher']"
+					:label="t('filinq', 'Publisher (TOOI identifier)')"
+					:helperText="t('filinq', 'A new publication starts with this publisher.')"
+					data-testid="settings-woo-default-publisher"
+					@update:modelValue="settings['woo.default_publisher'] = $event" />
 			</div>
 		</NcSettingsSection>
 
@@ -725,6 +758,7 @@
 
 		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
 		<SignerIdentitySettings v-if="isAdmin" />
+		<SigningSourcesSettings v-if="isAdmin" />
 		<CaseSystemDeliverySettings v-if="isAdmin" />
 		<!-- Finality rules (finish-half-built-capabilities 3.2): the caller of POST /api/document-finality-rules -->
 		<DocumentFinalityRuleSettings v-if="isAdmin" />
@@ -915,6 +949,7 @@ import PageLayoutSettings from './PageLayoutSettings.vue'
 import RefusalGroundsSource from './RefusalGroundsSource.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
+import SigningSourcesSettings from './SigningSourcesSettings.vue'
 import {
 	backendStateFromSettings,
 	emptyBackendState,
@@ -1048,6 +1083,7 @@ export default {
 		PageLayoutSettings,
 		SettingSwitchRow,
 		SignerIdentitySettings,
+		SigningSourcesSettings,
 		BridgeSourcesSettings,
 		CaseSystemDeliverySettings,
 		DocumentFinalityRuleSettings,
@@ -1111,6 +1147,20 @@ export default {
 					.map((c) => (c === ' ' ? '␣' : c))
 					.join(' '),
 			})
+		},
+
+		/**
+		 * The four-eyes choices (REQ-SET-12), the default first.
+		 *
+		 * @return {Array<{value: string, label: string}>} The radio options.
+		 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-4
+		 */
+		fourEyesOptions() {
+			return [
+				{ value: 'woo', label: t('filinq', 'Only for Woo cases') },
+				{ value: 'always', label: t('filinq', 'Always') },
+				{ value: 'off', label: t('filinq', 'Off') },
+			]
 		},
 
 		/**
@@ -1286,6 +1336,13 @@ export default {
 						?? 'pdf-only'
 					this.settings['anonymisation.output_subfolder_name'] =
 						data['anonymisation.output_subfolder_name'] || 'anonymised'
+					this.settings.redaction_four_eyes = ['woo', 'always', 'off'].includes(
+						data.redaction_four_eyes,
+					)
+						? data.redaction_four_eyes
+						: 'woo'
+					this.settings['woo.default_publisher'] =
+						data['woo.default_publisher'] || ''
 					// Entity types enabled for automatic detection (all-on by default).
 					this.enabledEntityTypes =
 						data['filinq.anonymisation.enabled_entity_types'] || []
@@ -1507,6 +1564,10 @@ export default {
 
 				'anonymisation.output_subfolder_name':
 					this.settings['anonymisation.output_subfolder_name'],
+
+				redaction_four_eyes: this.settings.redaction_four_eyes || 'woo',
+
+				'woo.default_publisher': (this.settings['woo.default_publisher'] || '').trim(),
 
 				// Sent as an object; the backend json-encodes it for storage.
 				'filinq.grondslagen.entity_type_bases': this.entityTypeBases,

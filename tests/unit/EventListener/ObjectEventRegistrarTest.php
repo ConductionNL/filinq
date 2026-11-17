@@ -72,7 +72,7 @@ class ObjectEventRegistrarTest extends TestCase {
 	public function testRegisterWiresEveryListener(): void {
 		$registered = [];
 		$context = $this->createMock(IRegistrationContext::class);
-		$context->expects(self::exactly(10))->method('registerEventListener')->willReturnCallback(
+		$context->expects(self::exactly(13))->method('registerEventListener')->willReturnCallback(
 			static function (string $event, string $listener) use (&$registered): void {
 				$registered[] = [$event, $listener];
 			}
@@ -86,11 +86,14 @@ class ObjectEventRegistrarTest extends TestCase {
 				[ObjectCreatedEvent::class, FilinqEventListener::class],
 				[ObjectUpdatedEvent::class, FilinqEventListener::class],
 				['OCA\OpenRegister\Event\ObjectUpdatingEvent', DocumentRegistrationWriteGuard::class],
+				['OCA\OpenRegister\Event\ObjectUpdatingEvent', 'OCA\Filinq\EventListener\ManagedHuisstijlWriteGuard'],
 				['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\Filinq\EventListener\BaseRefusalGroundGuard'],
 				['OCA\OpenRegister\Event\ObjectCreatingEvent', 'OCA\Filinq\EventListener\ContractNoticeDeadlineListener'],
 				['OCA\OpenRegister\Event\ObjectUpdatingEvent', 'OCA\Filinq\EventListener\ContractNoticeDeadlineListener'],
+				[ObjectCreatedEvent::class, 'OCA\Filinq\EventListener\IntakeArrivalFollowUpListener'],
 				[ObjectDeletedEvent::class, FilinqEventListener::class],
 				[ObjectDeletedEvent::class, 'OCA\Filinq\EventListener\PseudonymMapLinkDeletedListener'],
+				[ObjectDeletedEvent::class, 'OCA\Filinq\EventListener\PublicationSourceDestroyedListener'],
 				['OCA\OpenRegister\Event\EntityRelationDecisionUpdatedEvent', 'OCA\Filinq\EventListener\EntityRelationDecisionListener'],
 			],
 			$registered
