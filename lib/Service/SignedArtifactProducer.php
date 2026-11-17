@@ -46,8 +46,11 @@ use OCA\Filinq\Service\Signing\LibreSignProvider;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
+use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -70,6 +73,11 @@ class SignedArtifactProducer {
 	 * @param IRequest $request HTTP request (client IP for the evidence context).
 	 * @param IRootFolder $rootFolder Root folder (reads the document, stores the signed version).
 	 * @param FinalDocumentService $finalDocuments The final-document guard.
+	 * @param SignatureVerificationLinkService|null $verificationLinks Mints the public verification record.
+	 * @param LoggerInterface|null $logger Logger for a verification record that could not be minted.
+	 * @param VerificationQrStamp|null $qrStamp Draws the verification QR code on the document before it is signed.
+	 * @param IURLGenerator|null $urlGenerator Builds the absolute verification link the QR code encodes.
+	 * @param IL10N|null $l10n Translates the caption beside the QR code.
 	 *
 	 * @return void
 	 */
@@ -79,9 +87,29 @@ class SignedArtifactProducer {
 		private readonly IRequest $request,
 		private readonly IRootFolder $rootFolder,
 		private readonly FinalDocumentService $finalDocuments,
+		private readonly ?SignatureVerificationLinkService $verificationLinks = null,
+		private readonly ?LoggerInterface $logger = null,
+		private readonly ?VerificationQrStamp $qrStamp = null,
+		private readonly ?IURLGenerator $urlGenerator = null,
+		private readonly ?IL10N $l10n = null,
 	) {
 
 	}//end __construct()
+
+	/**
+	 * A token for the public verification record, taken before signing.
+	 *
+	 * Taking it first lets the QR code that links to the record go into the
+	 * document before it is signed, so it is part of the signed bytes and the
+	 * record's content hash, and adding it breaks no signature.
+	 *
+	 * @return string|null The token, or null when verification records are not available.
+	 *
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 */
+	public function newVerificationToken(): ?string {
+		return $this->verificationLinks?->newToken();
+	}//end newVerificationToken()
 
 	/**
 	 * Produce the signed artifact and store it as a new file version.
@@ -94,6 +122,8 @@ class SignedArtifactProducer {
 	 *                                                 REQ-DDPSS-004).
 	 * @param array<string, array<string, mixed>> $signers The request's signer records, keyed by id
 	 *                                                     (names for placed fields).
+	 * @param string|null $verificationToken The token from newVerificationToken(); when given, a PDF
+	 *                                       gets the QR code to its public verification page before signing.
 	 *
 	 * @return string The stored signed-artifact reference (file id + version).
 	 *
@@ -104,8 +134,9 @@ class SignedArtifactProducer {
 	 * @spec openspec/specs/document-signing/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
 	 */
-	public function produce(array $request, ?array $verifiedActor = null, array $signers = []): string {
+	public function produce(array $request, ?array $verifiedActor = null, array $signers = [], ?string $verificationToken = null): string {
 		$fileId = (int)($request['documentFileId'] ?? 0);
 		if ($fileId <= 0) {
 			throw new RuntimeException('Cannot produce a signed artifact: the request has no document file id');
@@ -140,6 +171,10 @@ class SignedArtifactProducer {
 		$context = $this->buildContext(request: $request, verifiedActor: $verifiedActor);
 		$context += $this->placementContext(request: $request, signers: $signers);
 
+		if ($verificationToken !== null && $providerName !== LibreSignProvider::IDENTIFIER) {
+			$originalContent = $this->withVerificationQr(content: $originalContent, token: $verificationToken, fileId: $fileId);
+		}
+
 		$signedBytes = $provider->produceSignedArtifact(documentContent: $originalContent, context: $context);
 
 		// Writing new content to the existing file creates a new Nextcloud file
@@ -155,6 +190,80 @@ class SignedArtifactProducer {
 		// original file id.
 		return $fileId . ':signed:' . substr(hash('sha256', $signedBytes), 0, 16);
 	}//end produce()
+
+	/**
+	 * Mint the public verification record for a request's stored signed artifact.
+	 *
+	 * Reads the signed version back as the initiator, so the record's content
+	 * hash and signature outcome are those of the bytes actually stored. The
+	 * signature itself is already complete: a record that cannot be minted is
+	 * logged and leaves the request without a verification token, it does not
+	 * undo the signing.
+	 *
+	 * @param array<string, mixed> $request The completing signing-request array.
+	 * @param string $signedDocumentRef The reference produce() returned.
+	 * @param string|null $token The token produce() stamped as a QR code; a new one when null.
+	 *
+	 * @return string|null The verification token, or null when none was minted.
+	 *
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 */
+	public function recordVerification(array $request, string $signedDocumentRef, ?string $token = null): ?string {
+		if ($this->verificationLinks === null) {
+			return null;
+		}
+
+		try {
+			$file = $this->resolveDocumentFile(fileId: (int)($request['documentFileId'] ?? 0), request: $request);
+			$record = $this->verificationLinks->mint(
+				signedBytes: $file->getContent(),
+				fileRef: $signedDocumentRef,
+				fileName: $file->getName(),
+				token: $token
+			);
+		} catch (\Throwable $e) {
+			$this->logger?->warning(
+				'SignedArtifactProducer: the signature verification record could not be minted',
+				['signedDocumentRef' => $signedDocumentRef, 'error' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		return (string)$record['token'];
+
+	}//end recordVerification()
+
+	/**
+	 * The document with the QR code to its verification page, or unchanged.
+	 *
+	 * A document that is not an unencrypted PDF, or a stamp that fails, is
+	 * signed as it is: the QR code is a convenience on top of a signature
+	 * that must not fail because of it. The record is minted either way.
+	 *
+	 * @param string $content The document bytes about to be signed.
+	 * @param string $token   The verification token.
+	 * @param int    $fileId  The document's file id, for the log line.
+	 *
+	 * @return string The bytes to sign.
+	 */
+	private function withVerificationQr(string $content, string $token, int $fileId): string {
+		if ($this->qrStamp === null || $this->urlGenerator === null || $this->qrStamp->canStamp(content: $content) === false) {
+			return $content;
+		}
+
+		$url = $this->urlGenerator->linkToRouteAbsolute('filinq.publicVerification.page', ['token' => $token]);
+		$caption = ($this->l10n?->t('Verify this document') ?? 'Verify this document');
+
+		try {
+			return $this->qrStamp->stamp(pdf: $content, url: $url, caption: $caption);
+		} catch (\Throwable $e) {
+			$this->logger?->warning(
+				'SignedArtifactProducer: the verification QR code could not be stamped; signing without it',
+				['fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+			return $content;
+		}
+	}//end withVerificationQr()
 
 	/**
 	 * Hand a new request to a provider that runs the signer flow itself.

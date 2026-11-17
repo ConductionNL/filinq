@@ -29,6 +29,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * The intake inbox is read by slug with filters, guards empty keys, treats a
@@ -189,7 +191,9 @@ class IntakeRepositoryTest extends TestCase {
 	 */
 	public function testFindByUuid(): void {
 		$this->objectService->method('find')->willReturnCallback(
-			static function (string $id, string $register, string $schema): ?array {
+			static function (string $id, ?ObjectFindOptions $options = null): ?array {
+				$register = $options?->register;
+				$schema = $options?->schema;
 				TestCase::assertSame('filinq', $register);
 				TestCase::assertSame('intakeDocument', $schema);
 				if ($id === 'boom') {
@@ -217,7 +221,12 @@ class IntakeRepositoryTest extends TestCase {
 	public function testSaveKeepsTheUuidOutOfThePayload(): void {
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(['title' => 'Brief'], 'filinq', 'intakeDocument', 'u-1')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['title' => 'Brief'],
+					'register' => 'filinq',
+					'schema' => 'intakeDocument',
+					'uuid' => 'u-1',
+				]))
 			->willReturn(['title' => 'Brief']);
 
 		$this->assertSame(
