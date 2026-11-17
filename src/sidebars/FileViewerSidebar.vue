@@ -424,12 +424,13 @@ const documentRecordId = computed(() =>
 				:busy="!!entry.reviewing"
 				:disabled="includedCount === 0 || isAnonymising"
 				:error="reviewMessage"
+				:colleagueHint="colleagueHintText"
 				@confirm="onMarkChecked" />
 			<NcButton
 				v-if="reanonReviewActive"
 				wide
 				variant="primary"
-				:disabled="includedCount === 0 || isAnonymising || !entryChecked"
+				:disabled="includedCount === 0 || isAnonymising || !entryChecked || colleagueRequired"
 				@click="onAnonymise">
 				<template v-if="isAnonymising" #icon>
 					<NcLoadingIcon :size="20" />
@@ -505,6 +506,7 @@ const documentRecordId = computed(() =>
 				:busy="!!entry.reviewing"
 				:disabled="includedCount === 0 || isAnonymising"
 				:error="reviewMessage"
+				:colleagueHint="colleagueHintText"
 				@confirm="onMarkChecked" />
 			<router-link
 				class="review-workbench-link"
@@ -518,7 +520,7 @@ const documentRecordId = computed(() =>
 			</router-link>
 			<NcButton
 				variant="primary"
-				:disabled="includedCount === 0 || isAnonymising || !entryChecked"
+				:disabled="includedCount === 0 || isAnonymising || !entryChecked || colleagueRequired"
 				@click="onAnonymise">
 				<template v-if="isAnonymising" #icon>
 					<NcLoadingIcon :size="20" />
@@ -608,6 +610,7 @@ const documentRecordId = computed(() =>
 </template>
 
 <script>
+import { getCurrentUser } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
 import {
 	NcAppSidebar,
@@ -632,11 +635,13 @@ import ProhibitionBlockedDialog from '../dialogs/ProhibitionBlockedDialog.vue'
 import RestoreOriginalDialog from '../dialogs/RestoreOriginalDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
+import { colleagueHint, colleagueReason } from '../services/fourEyes.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 import { accessibilityNote } from '../services/redactionAccessibility.js'
 import { reportRows } from '../services/sanitization.js'
 import { encodedWebdavDownloadUrl } from '../services/storagePathUrls.js'
 import { entryIsChecked } from '../store/modules/anonymization.js'
+import { useSettingsStore } from '../store/modules/settings.js'
 
 export default {
 	name: 'FileViewerSidebar',
@@ -944,6 +949,38 @@ export default {
 		 */
 		entryChecked() {
 			return entryIsChecked(this.entry)
+		},
+
+		/**
+		 * Why a colleague has to anonymise the open file, or '' (REQ-RWB-09).
+		 * A single file from this sidebar is not a Woo run, so only `always`
+		 * asks for four eyes up front; a refusal the server sent is kept.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-5
+		 */
+		fourEyesReason() {
+			return colleagueReason(this.entry, {
+				mode: useSettingsStore().getConfig?.redaction_four_eyes || 'woo',
+				wooRun: false,
+				uid: getCurrentUser()?.uid || '',
+			})
+		},
+
+		/**
+		 * @return {boolean} True when the signed-in person may not anonymise the open file.
+		 * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
+		 */
+		colleagueRequired() {
+			return this.fourEyesReason !== ''
+		},
+
+		/**
+		 * @return {string} The sentence the review card shows, or ''.
+		 * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
+		 */
+		colleagueHintText() {
+			return colleagueHint(this.fourEyesReason, t)
 		},
 
 		/**

@@ -24,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\AnonymizeOptions;
 use OCA\Filinq\Service\BatchAnonymizeService;
@@ -448,7 +449,7 @@ class BatchAnonymizeServiceTest extends TestCase {
 		);
 		$this->assertCount(3, $calls);
 		$this->assertSame(
-			[3, [['text' => 'Jan']], 'preserve', [['text' => 'Gemeente']], [], '', 'document', null],
+			[3, [['text' => 'Jan']], 'preserve', [['text' => 'Gemeente']], [], 'anna', 'document', null],
 			$calls[0]
 		);
 		$this->assertSame('anonymizing', $stored[0][1]['status']);
@@ -512,4 +513,55 @@ class BatchAnonymizeServiceTest extends TestCase {
 		$this->assertSame(['fileId' => 7, 'status' => 'prohibitionViolation', 'prohibitedEntries' => $violation], $stored[1]['files'][0]);
 
 	}//end testAProhibitionViolationSkipsEveryExtractedFile()
+
+	/**
+	 * A dossier run by Fenna writes the document Daan checked and reports the one
+	 * Fenna checked herself with reason same_person (REQ-RWB-09).
+	 *
+	 * The batch hands its starter to every run as the acting user; the refusal
+	 * itself comes from the review gate behind the anonymisation service.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-3
+	 */
+	public function testTheStarterIsTheActingUserAndTheirOwnCheckIsReported(): void {
+		$this->mockStateService->method('getBatch')->willReturn(
+			[
+				'batchId' => 'batch-4',
+				'userId' => 'fenna',
+				'status' => 'review',
+				'files' => [
+					['fileId' => 1, 'status' => 'extracted'],
+					['fileId' => 2, 'status' => 'extracted'],
+				],
+			]
+		);
+		$this->mockAnonService->method('checkUnredactedProhibitions')->willReturn([]);
+		$actors = [];
+		$this->mockAnonService->method('anonymizeDocument')->willReturnCallback(
+			function (int $fileId, array $entities, ?AnonymizeOptions $options = null) use (&$actors): array {
+				$run = $options->runFor(fileId: $fileId, entities: $entities);
+				$actors[$fileId] = [$run->userId(), $run->isWooRun()];
+				if ($fileId === 1) {
+					throw new RedactionNotReviewedException(
+						reason: 'same_person',
+						message: 'You checked the findings of this document yourself.'
+					);
+				}
+
+				return ['replacementCount' => 1, 'anonymizedFileId' => 21, 'anonymizedFilePath' => '/d/b.pdf'];
+			}
+		);
+
+		$result = $this->service->anonymizeBatch(batchId: 'batch-4', entities: [['text' => 'Jan']]);
+
+		$this->assertSame([1 => ['fenna', true], 2 => ['fenna', true]], $actors);
+		$this->assertSame(1, $result['processedFiles']);
+		$this->assertSame(
+			[['fileId' => 1, 'reason' => 'You checked the findings of this document yourself.', 'refusal' => 'same_person']],
+			$result['skippedFiles']
+		);
+
+	}//end testTheStarterIsTheActingUserAndTheirOwnCheckIsReported()
 }//end class
