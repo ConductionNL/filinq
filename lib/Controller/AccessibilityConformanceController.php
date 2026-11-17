@@ -42,6 +42,7 @@ use Throwable;
  * Runs the PDF/UA-1 check on a file in the caller's own folder and stores the report.
  */
 class AccessibilityConformanceController extends Controller {
+	use ResolvesOwnFile;
 
 	/**
 	 * Constructor.
@@ -85,13 +86,9 @@ class AccessibilityConformanceController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function check(int $fileId): JSONResponse {
-		$file = $this->ownFile(fileId: $fileId);
-		if ($file === null) {
-			return new JSONResponse(['error' => $this->l10n->t('File not found')], Http::STATUS_NOT_FOUND);
-		}
-
-		if ($file->getMimetype() !== 'application/pdf') {
-			return new JSONResponse(['error' => $this->l10n->t('Only a PDF can be checked against the PDF/UA standard.')], Http::STATUS_BAD_REQUEST);
+		$file = $this->ownPdf(fileId: $fileId);
+		if ($file instanceof JSONResponse) {
+			return $file;
 		}
 
 		try {
@@ -106,13 +103,11 @@ class AccessibilityConformanceController extends Controller {
 				Http::STATUS_SERVICE_UNAVAILABLE
 			);
 		} catch (Throwable $e) {
-			$this->logger->error(
-				message: '[AccessibilityConformanceController] the report could not be stored',
-				context: ['fileId' => $fileId, 'error' => $e->getMessage()]
-			);
-			return new JSONResponse(
-				['error' => $this->l10n->t('The check ran, but its report could not be stored. Try again later.')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
+			return $this->stepFailed(
+				log: '[AccessibilityConformanceController] the report could not be stored',
+				fileId: $fileId,
+				e: $e,
+				message: $this->l10n->t('The check ran, but its report could not be stored. Try again later.')
 			);
 		}
 
@@ -136,25 +131,19 @@ class AccessibilityConformanceController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function show(int $fileId): JSONResponse {
-		$file = $this->ownFile(fileId: $fileId);
-		if ($file === null) {
-			return new JSONResponse(['error' => $this->l10n->t('File not found')], Http::STATUS_NOT_FOUND);
-		}
-
-		if ($file->getMimetype() !== 'application/pdf') {
-			return new JSONResponse(['error' => $this->l10n->t('Only a PDF can be checked against the PDF/UA standard.')], Http::STATUS_BAD_REQUEST);
+		$file = $this->ownPdf(fileId: $fileId);
+		if ($file instanceof JSONResponse) {
+			return $file;
 		}
 
 		try {
 			$report = $this->accessibility->reportFor(fileId: $fileId);
 		} catch (Throwable $e) {
-			$this->logger->error(
-				message: '[AccessibilityConformanceController] the report could not be read',
-				context: ['fileId' => $fileId, 'error' => $e->getMessage()]
-			);
-			return new JSONResponse(
-				['error' => $this->l10n->t('The accessibility report could not be read. Try again later.')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
+			return $this->stepFailed(
+				log: '[AccessibilityConformanceController] the report could not be read',
+				fileId: $fileId,
+				e: $e,
+				message: $this->l10n->t('The accessibility report could not be read. Try again later.')
 			);
 		}
 
@@ -191,13 +180,9 @@ class AccessibilityConformanceController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function regenerate(int $fileId): JSONResponse {
-		$file = $this->ownFile(fileId: $fileId);
-		if ($file === null) {
-			return new JSONResponse(['error' => $this->l10n->t('File not found')], Http::STATUS_NOT_FOUND);
-		}
-
-		if ($file->getMimetype() !== 'application/pdf') {
-			return new JSONResponse(['error' => $this->l10n->t('Only a PDF can be checked against the PDF/UA standard.')], Http::STATUS_BAD_REQUEST);
+		$file = $this->ownPdf(fileId: $fileId);
+		if ($file instanceof JSONResponse) {
+			return $file;
 		}
 
 		if ($file->isUpdateable() === false) {
@@ -230,13 +215,11 @@ class AccessibilityConformanceController extends Controller {
 				Http::STATUS_SERVICE_UNAVAILABLE
 			);
 		} catch (Throwable $e) {
-			$this->logger->error(
-				message: '[AccessibilityConformanceController] the accessible copy could not be made',
-				context: ['fileId' => $fileId, 'error' => $e->getMessage()]
-			);
-			return new JSONResponse(
-				['error' => $this->l10n->t('The document could not be made accessible. Try again later.')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
+			return $this->stepFailed(
+				log: '[AccessibilityConformanceController] the accessible copy could not be made',
+				fileId: $fileId,
+				e: $e,
+				message: $this->l10n->t('The document could not be made accessible. Try again later.')
 			);
 		}//end try
 
@@ -263,32 +246,27 @@ class AccessibilityConformanceController extends Controller {
 	}//end heuristicFindings()
 
 	/**
-	 * The file with this id in the caller's own folder.
+	 * The PDF with this id in the caller's own folder, or the answer when there is none.
 	 *
 	 * @param int $fileId The file id.
 	 *
-	 * @return File|null The file, or null when there is no caller or no such file for them.
+	 * @return File|JSONResponse The PDF; 404 for a file the caller cannot open, 400 for one that is not a PDF.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-persisted-accessibility-conformance-report-is-stored-per-document-and-re-runnable-req-ddpum-002
 	 */
-	private function ownFile(int $fileId): ?File {
-		$user = $this->userSession->getUser();
-		if ($user === null || $fileId <= 0) {
-			return null;
+	private function ownPdf(int $fileId): File|JSONResponse {
+		$file = $this->ownFile(fileId: $fileId);
+		if ($file === null) {
+			return new JSONResponse(['error' => $this->l10n->t('File not found')], Http::STATUS_NOT_FOUND);
 		}
 
-		try {
-			$nodes = $this->rootFolder->getUserFolder($user->getUID())->getById($fileId);
-		} catch (Throwable) {
-			return null;
+		if ($file->getMimetype() !== 'application/pdf') {
+			return new JSONResponse(['error' => $this->l10n->t('Only a PDF can be checked against the PDF/UA standard.')], Http::STATUS_BAD_REQUEST);
 		}
 
-		$node = ($nodes[0] ?? null);
-		if ($node instanceof File) {
-			return $node;
-		}
+		return $file;
 
-		return null;
-
-	}//end ownFile()
+	}//end ownPdf()
 
 	/**
 	 * Why no verdict came, for the person who asked. Never a verdict itself.

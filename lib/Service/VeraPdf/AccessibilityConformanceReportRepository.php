@@ -20,12 +20,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\VeraPdf;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
-use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
-use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\KeepsRowsPerFile;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
 use RuntimeException;
-use Throwable;
 
 /**
  * One accessibilityConformanceReport per file, apart from the PDF/A
@@ -33,6 +30,7 @@ use Throwable;
  */
 class AccessibilityConformanceReportRepository {
 	use ReadsStoredObjectRows;
+	use KeepsRowsPerFile;
 
 	public const SCHEMA = 'accessibilityConformanceReport';
 
@@ -61,25 +59,7 @@ class AccessibilityConformanceReportRepository {
 	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-persisted-accessibility-conformance-report-is-stored-per-document-and-re-runnable-req-ddpum-002
 	 */
 	public function findForFile(int $fileId): ?array {
-		try {
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
-				filters: ['fileId' => $fileId]
-			);
-		} catch (Throwable $e) {
-			throw new RuntimeException(message: 'The accessibility conformance report could not be read: ' . $e->getMessage(), code: 0, previous: $e);
-		}
-
-		foreach ((array) $results as $result) {
-			$row = $this->storedFields(row: $result);
-			// The filter is the search's; the match is ours.
-			if ((int) ($row['fileId'] ?? 0) === $fileId) {
-				return $row;
-			}
-		}
-
-		return null;
+		return ($this->rowsForFile(schema: self::SCHEMA, fileId: $fileId, failure: 'The accessibility conformance report could not be read: ')[0] ?? null);
 
 	}//end findForFile()
 
@@ -95,26 +75,12 @@ class AccessibilityConformanceReportRepository {
 	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-persisted-accessibility-conformance-report-is-stored-per-document-and-re-runnable-req-ddpum-002
 	 */
 	public function save(array $report): array {
-		unset($report['uuid']);
-		$uuid     = null;
-		$existing = $this->findForFile(fileId: (int) $report['fileId']);
-		if ($existing !== null && ($existing['uuid'] ?? '') !== '') {
-			$uuid = (string) $existing['uuid'];
-		}
-
-		try {
-			$stored = $this->objectResolver->resolve()->saveObject(
-				object: $report,
-				options: new ObjectSaveOptions(
-					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
-					uuid: $uuid
-				)
-			);
-		} catch (Throwable $e) {
-			throw new RuntimeException(message: 'Could not store the accessibility conformance report: ' . $e->getMessage(), code: 0, previous: $e);
-		}
-
-		return $this->storedFields(row: $stored);
+		return $this->saveRowForFile(
+			schema: self::SCHEMA,
+			row: $report,
+			existing: $this->findForFile(fileId: (int) $report['fileId']),
+			failure: 'Could not store the accessibility conformance report: '
+		);
 
 	}//end save()
 }//end class
