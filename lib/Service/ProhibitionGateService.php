@@ -69,7 +69,7 @@ class ProhibitionGateService {
 	 *
 	 * @var string
 	 */
-	private const HIGH_CONFIDENCE_THRESHOLD_KEY = 'prohibition.high_confidence_threshold';
+	private const HIGH_CONFIDENCE_THRESHOLD_KEY = 'filinq.prohibition.high_confidence_threshold';
 
 	/**
 	 * App config key controlling the gate's fail-mode for backend errors.
