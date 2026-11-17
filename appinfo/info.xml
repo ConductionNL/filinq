@@ -33,7 +33,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
-    <version>0.2.8-unstable.20261117101607</version>
+    <version>0.2.8-unstable.20261117123000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Filinq</namespace>
@@ -108,6 +108,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
         <job>OCA\Filinq\BackgroundJob\PeriodicDocumentJob</job>
         <job>OCA\Filinq\BackgroundJob\LibreSignCompletionJob</job>
         <job>OCA\Filinq\BackgroundJob\EmailIngestionJob</job>
+        <job>OCA\Filinq\BackgroundJob\DocumentDraftExpiryJob</job>
     </background-jobs>
     <!--
         info.xsd fixes the order of these elements: background-jobs, repair-steps,

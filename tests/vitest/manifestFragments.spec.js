@@ -32,15 +32,29 @@ const PAGES_BEFORE = [
 	['StandingConsents', '/policy/standing-consents'], ['Reports', '/reports'], ['SigningReport', '/reports/signing'],
 	['AnonymizationReport', '/reports/anonymization'], ['ProducedDocumentsReport', '/reports/documents'],
 	['PersonalDataReport', '/reports/personal-data'],
-	['Intake', '/intake'], ['ClassificationPending', '/classification'], ['FeaturesRoadmap', '/features-roadmap'],
+	['Intake', '/intake'], ['IntakeRules', '/intake/rules'], ['ClassificationPending', '/classification'], ['FeaturesRoadmap', '/features-roadmap'],
 	['Flows', '/flows'], ['FlowDetail', '/flows/:id'], ['OrganisationSettings', '/organisation-settings'],
+]
+
+/**
+ * What changes made after the split added, by change, so the split's own
+ * record above stays as it was recorded.
+ */
+const PAGES_ADDED = [
+	// generate-draft-and-attended-edit
+	['Drafts', '/drafts'], ['DraftEditor', '/drafts/:id'],
+]
+
+const MENU_ADDED = [
+	// generate-draft-and-attended-edit
+	['Drafts', 54],
 ]
 
 const MENU_BEFORE = [
 	['Dashboard', 10], ['Consent', 20], ['StandingConsents', 22], ['Prohibitions', 24], ['Intake', 26],
 	['ClassificationPending', 27], ['Anonymization', 30], ['MyDocuments', 35], ['FolderAnonymization', 40],
 	['Dossiers', 45], ['Contracts', 46], ['ContractPipeline', 47], ['Templates', 50], ['Correspondence', 55],
-	['Publications', 57], ['PrintJobs', 56], ['LegalHolds', 58], ['SubjectErasures', 59], ['EmailIngestion', 94],
+	['Publications', 57], ['PrintJobs', 56], ['LegalHolds', 58], ['SubjectErasures', 59], ['IntakeRules', 93], ['EmailIngestion', 94],
 	['EntitySearch', 59], ['SigningRequests', 60], ['SigningFolder', 65], ['BulkSigningBatches', 66],
 	['SigningEnvelopes', 67], ['CustomDictionary', 70], ['Documentation', 90], ['StoreMenu', 92],
 	['ReportsMenu', 95], ['FeaturesRoadmapMenu', 100], ['FlowsMenu', 96], ['OrganisationSettings', 97],
@@ -57,12 +71,12 @@ const byId = (pairs) => [...pairs].sort((a, b) => a[0].localeCompare(b[0]))
 describe('the manifest fragments', () => {
 	it('lose no page route of the monolithic manifest and add none', () => {
 		const pages = effectiveManifest().pages.map((p) => [p.id, p.route])
-		expect(byId(pages)).toEqual(byId(PAGES_BEFORE))
+		expect(byId(pages)).toEqual(byId([...PAGES_BEFORE, ...PAGES_ADDED]))
 	})
 
 	it('lose no menu entry and keep each one\'s order', () => {
 		const menu = effectiveManifest().menu.map((m) => [m.id, m.order])
-		expect(byId(menu)).toEqual(byId(MENU_BEFORE))
+		expect(byId(menu)).toEqual(byId([...MENU_BEFORE, ...MENU_ADDED]))
 	})
 
 	it('point every menu route at a page that exists', () => {
