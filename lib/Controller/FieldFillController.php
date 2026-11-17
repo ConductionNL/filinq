@@ -116,6 +116,10 @@ class FieldFillController extends Controller {
 	 * @return JSONResponse The decided suggestion, or the refusal.
 	 *
 	 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+	 *
+	 * @no-admin-idor-exempt FieldSuggestionDecisions::readSuggestion() refuses with 403 unless the
+	 * session user asked for the suggestion or is an administrator, and writes the record under the
+	 * user's own OpenRegister rights.
 	 */
 	#[NoAdminRequired]
 	public function decide(string $id): JSONResponse {
