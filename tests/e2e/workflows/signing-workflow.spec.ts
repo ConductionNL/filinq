@@ -325,9 +325,9 @@ test('Create signing request → appears PENDING in the list → sign → status
 		.catch(() => {})
 })
 
-// @e2e openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#the-creator-may-cancel
-// @e2e openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#a-cancelled-request-refuses-a-subsequent-signature
-// @e2e openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#cancelling-an-already-cancelled-request-is-not-an-error
+// @e2e openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#the-creator-may-cancel
+// @e2e openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#a-cancelled-request-refuses-a-subsequent-signature
+// @e2e openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#cancelling-an-already-cancelled-request-is-not-an-error
 test('Cancel a native signing request → it reads CANCELLED and refuses a signature', async ({
 	page,
 }) => {
@@ -365,8 +365,8 @@ test('Cancel a native signing request → it reads CANCELLED and refuses a signa
 		headers: jsonHeaders(token),
 		data: { signerId },
 	})
-	expect(signRes.status(), 'a cancelled request refuses a signature').toBeGreaterThanOrEqual(400)
-	expect(signRes.status(), 'the refusal is not a server error').toBeLessThan(500)
+	expect(signRes.status(), 'a cancelled request refuses a signature').toBe(409)
+	expect((await signRes.json()).error, 'the refusal says the request was withdrawn').toMatch(/withdrawn/i)
 
 	const still = await req.get(`${API}/signing/requests/${id}`, { headers: jsonHeaders(token) })
 	expect(String((await still.json()).status).toUpperCase(), 'the refused signature changed nothing').toBe('CANCELLED')
