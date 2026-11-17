@@ -527,6 +527,7 @@
         "double SigningConclusionEmitter",
         "double SigningRequestValidator",
         null,
+        null,
         {
             "built OCA\\Filinq\\Service\\Signing\\FieldValueChecker": [
                 "built Closure"
@@ -545,6 +546,7 @@
         "double SigningAssuranceGate",
         "double SigningAuditService",
         "double SigningConclusionEmitter",
+        "double SigningDelegationService",
         "double SigningMandateService",
         "double SigningRequestValidator",
         {

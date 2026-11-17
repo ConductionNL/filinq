@@ -1588,7 +1588,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
 	 */
 	public function testCancelRequestUsesTheDeclaredLifecycleTransition(): void {
 		$engine = new class {
@@ -1627,7 +1627,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
 	 */
 	public function testARefusedTransitionRecordsNoCancellation(): void {
 		$engine = new class {
@@ -2923,6 +2923,24 @@ class SigningServiceTest extends TestCase {
 		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
 
 	}//end testSignRefusesARequestThatIsNotSignable()
+
+	/**
+	 * sign() refuses a cancelled request as withdrawn, with a 409, before any write.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
+	 */
+	public function testSignRefusesACancelledRequestAsWithdrawn(): void {
+		$this->stubFindById(rows: ['req-001' => ['id' => 'req-001', 'status' => 'CANCELLED'], 'signer-001' => ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING']]);
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		$this->expectException(exception: \OCA\Filinq\Exception\SigningRequestWithdrawnException::class);
+		$this->expectExceptionCode(code: 409);
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+	}//end testSignRefusesACancelledRequestAsWithdrawn()
 
 	/**
 	 * sign() refuses a signer that already responded, before any write.

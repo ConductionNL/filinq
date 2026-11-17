@@ -294,6 +294,9 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			variant="error"
 			@confirm="executeBulkDelete"
 			@close="cancelBulkDelete" />
+
+		<WaitingForMeList />
+		<DueForReviewList />
 	</div>
 </template>
 
@@ -321,6 +324,8 @@ import DdIcon from '../../components/DdIcon.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
+import DueForReviewList from '../../components/myDocuments/DueForReviewList.vue'
+import WaitingForMeList from '../../components/myDocuments/WaitingForMeList.vue'
 import PdfPasswordModal from '../../modals/PdfPasswordModal.vue'
 import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
@@ -357,6 +362,8 @@ function loadPersistedViewMode() {
 export default {
 	name: 'MyDocumentsIndex',
 	components: {
+		DueForReviewList,
+		WaitingForMeList,
 		DdIndexPage,
 		CnStatusBadge,
 		NcActions,

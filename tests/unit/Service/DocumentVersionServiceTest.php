@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
 use OCA\Filinq\Exception\ComparisonException;
 use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Service\DocumentVersionService;
@@ -106,14 +107,15 @@ class DocumentVersionServiceTest extends TestCase {
 	 *
 	 * @return DocumentVersionService
 	 */
-	private function buildService(): DocumentVersionService {
+	private function buildService(?DocumentActionAudit $audit = null): DocumentVersionService {
 		return new DocumentVersionService(
 			logger: $this->logger,
 			rootFolder: $this->rootFolder,
 			userSession: $this->userSession,
 			appManager: $this->appManager,
 			container: $this->container,
-			finalDocuments: $this->finalDocuments
+			finalDocuments: $this->finalDocuments,
+			audit: $audit
 		);
 
 	}//end buildService()
@@ -318,8 +320,12 @@ class DocumentVersionServiceTest extends TestCase {
 		$this->finalDocuments->expects($this->once())->method('assertWritable')
 			->willThrowException(new DocumentFinalException(message: 'This document is final.'));
 
+		// A refused restore wrote no version, so nothing enters the trail.
+		$audit = $this->createMock(DocumentActionAudit::class);
+		$audit->expects($this->never())->method('record');
+
 		$this->expectException(DocumentFinalException::class);
-		$this->buildService()->restoreVersion(fileId: 42, versionTimestamp: 1000);
+		$this->buildService(audit: $audit)->restoreVersion(fileId: 42, versionTimestamp: 1000);
 
 	}//end testRestoreOfFinalFileIsRefusedForWriter()
 
@@ -372,7 +378,11 @@ class DocumentVersionServiceTest extends TestCase {
 		};
 		$this->container->method('get')->willReturn($versionManager);
 
-		$this->buildService()->restoreVersion(fileId: 42, versionTimestamp: 1000);
+		// The restore is a new current version: the trail says so, once (REQ-SCR-007).
+		$audit = $this->createMock(DocumentActionAudit::class);
+		$audit->expects($this->once())->method('record')->with(42, 'versioned', ['restoredFrom' => 1000])->willReturn(true);
+
+		$this->buildService(audit: $audit)->restoreVersion(fileId: 42, versionTimestamp: 1000);
 
 		$this->assertTrue($versionManager->rolled, 'rollback() must be invoked for a writer.');
 

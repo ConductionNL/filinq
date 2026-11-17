@@ -27,6 +27,7 @@ use OCA\Filinq\Exception\RegisterNotConfiguredException;
 use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
 use OCA\Filinq\Exception\SigningCancellationRefusedException;
 use OCA\Filinq\Exception\SigningFieldsRefusedException;
+use OCA\Filinq\Exception\SigningRequestWithdrawnException;
 use OCA\Filinq\Exception\StepUpRequiredException;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCP\AppFramework\Controller;
@@ -204,7 +205,7 @@ class SigningController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function cancelRequest(string $id): JSONResponse {
 		try {
@@ -274,6 +275,8 @@ class SigningController extends Controller {
 
 			$result = $this->services->signing->sign(requestId: $id, signerId: $signerId, fields: $fields);
 			return new JSONResponse($result);
+		} catch (SigningRequestWithdrawnException $e) {
+			return new JSONResponse(data: ['error' => $this->l10n->t('The signing request was withdrawn.')], statusCode: $e->getCode());
 		} catch (Exception $e) {
 			return $this->errorResponse(message: 'Failed to sign document', exception: $e);
 		}
