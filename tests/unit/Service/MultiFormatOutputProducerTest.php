@@ -77,7 +77,7 @@ class MultiFormatOutputProducerTest extends TestCase {
 		}
 
 		$templates = $this->createMock(TemplateService::class);
-		$templates->method('getTemplate')->willReturn($template);
+		$templates->method($this->matchesRegularExpression('/^get(Published)?Template$/'))->willReturn($template);
 
 		$resolver = $this->getMockBuilder(DataResolverService::class)->disableOriginalConstructor()->onlyMethods(['resolve'])->getMock();
 		$resolver->method('resolve')->willReturn(['data' => ['naam' => 'Jansen'], 'warnings' => [], 'errors' => []]);

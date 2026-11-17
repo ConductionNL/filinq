@@ -119,7 +119,7 @@ class FilinqFlowNodeListener implements IEventListener {
 	 *
 	 * @return string The class to build.
 	 *
-	 * @spec openspec/changes/generate-document-runs-directly-on-an-object/specs/flow-document-generation/spec.md#requirement-the-generate-document-step-can-be-run-directly-on-one-object
+	 * @spec openspec/changes/archive/2026-11-17-generate-document-runs-directly-on-an-object/specs/flow-document-generation/spec.md#requirement-the-generate-document-step-can-be-run-directly-on-one-object
 	 */
 	private function classToRegister(string $nodeClass): string {
 		if ($nodeClass === GenerateDocumentNode::class && $this->directInvocationAvailable() === true) {
@@ -136,7 +136,7 @@ class FilinqFlowNodeListener implements IEventListener {
 	 *
 	 * @return bool True when the interface exists.
 	 *
-	 * @spec openspec/changes/generate-document-runs-directly-on-an-object/specs/flow-document-generation/spec.md#requirement-the-generate-document-step-can-be-run-directly-on-one-object
+	 * @spec openspec/changes/archive/2026-11-17-generate-document-runs-directly-on-an-object/specs/flow-document-generation/spec.md#requirement-the-generate-document-step-can-be-run-directly-on-one-object
 	 */
 	protected function directInvocationAvailable(): bool {
 		return interface_exists('OCA\\OpenRegister\\Service\\Flow\\IFlowDirectlyInvokable');

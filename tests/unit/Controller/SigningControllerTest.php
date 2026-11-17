@@ -222,6 +222,23 @@ class SigningControllerTest extends TestCase {
 
 	}//end testAnOrdinaryRefusalCarriesNoHint()
 
+	/**
+	 * A signature on a withdrawn request answers 409 and says it was withdrawn.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
+	 */
+	public function testAWithdrawnRequestAnswers409AndSaysSo(): void {
+		$this->signingService->method('sign')->willThrowException(new \OCA\Filinq\Exception\SigningRequestWithdrawnException());
+
+		$response = $this->controller->sign('req-1');
+
+		$this->assertSame(409, $response->getStatus());
+		$this->assertSame('The signing request was withdrawn.', $response->getData()['error'] ?? null);
+
+	}//end testAWithdrawnRequestAnswers409AndSaysSo()
+
 
 	/**
 	 * A controller whose request names another user, over the given verifier and session user.
