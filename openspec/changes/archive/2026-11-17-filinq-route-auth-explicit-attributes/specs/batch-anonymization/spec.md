@@ -11,7 +11,7 @@ explicit Nextcloud auth attribute, per ADR-005 / ADR-016, so authorization
 posture is grep-able and mechanically verifiable rather than relying on the
 framework's implicit admin-only default.
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: WOO Profile Update Endpoint Declares An Explicit Auth Attribute
 

@@ -44,7 +44,8 @@ Acceptance criteria:
 ## 4. Verify
 
 - [x] Unit tests for each requirement, including the provider contract test and the enumeration guard (`SigningCancellationServiceTest`, the per-provider cancel tests in `ValidSignProviderTest`, `LibreSignProviderTest` and `NativeSigningProviderSessionTest`, `SigningServiceTest` for the lifecycle move, `src/views/signing/SigningRequestDetail.withdraw.spec.js`)
-- [ ] Playwright E2E: cancel a native signing request, then confirm the signing link refuses a signature
+- [x] Playwright E2E: cancel a native signing request, then confirm the signing link refuses a signature
+  - `tests/e2e/workflows/signing-workflow.spec.ts` "Cancel a native signing request": cancel answers 200 and the request reads CANCELLED, a signature is refused with 409 saying the request was withdrawn, the status is unchanged afterwards, and a second cancel answers 200 with `alreadyCancelled`. Passed 2026-11-17 on a throwaway NC 34.0.6 + openregister main. The run found two defects, fixed with unit tests: a native request has no provider reference, so every cancel answered 500; and a signature on a withdrawn request answered a generic 500.
 - [x] Re-run gate-57 and confirm `cancelSigning` is no longer orphaned on either provider (2026-11-14: not listed; the gate's two remaining findings are `WooProfileService::saveProfileFor`/`removeProfileFor`, outside this change)
 
 Acceptance criteria:

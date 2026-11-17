@@ -14,7 +14,7 @@ All tasks are `[filinq]`. Estimates: S = half-day.
 
 ### A-2. Apply the explicit attribute (S)
 
-- [ ] A-2.1 If operator-level: add `@NoAdminRequired` and `@NoCSRFRequired`
+- [x] A-2.1 Not applied, by design: A-1.1 decided admin-only, so A-2.2 below is the one branch taken (`updateProfiles()` carries `#[AuthorizedAdminSetting(FilinqAdmin::class)]`, checked 2026-11-17). If operator-level: add `@NoAdminRequired` and `@NoCSRFRequired`
   docblock tags to `BatchAnonymizationController::updateProfiles()`
   (`lib/Controller/BatchAnonymizationController.php:574`), matching the
   pattern already on `getProfiles()` two methods above it.
