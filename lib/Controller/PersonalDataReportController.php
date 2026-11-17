@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Service\ReadsCurrentUserId;
-use OCA\Filinq\Service\Reports\PersonalDataReport;
+use OCA\Filinq\Kernel\Contracts\PersonalDataReportInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -45,7 +45,7 @@ class PersonalDataReportController extends Controller {
 	 *
 	 * @param string             $appName     App name.
 	 * @param IRequest           $request     Request object.
-	 * @param PersonalDataReport $report      The report.
+	 * @param PersonalDataReportInterface $report      The report.
 	 * @param IUserSession       $userSession The person at the keyboard.
 	 *
 	 * @return void
@@ -53,7 +53,7 @@ class PersonalDataReportController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly PersonalDataReport $report,
+		private readonly PersonalDataReportInterface $report,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);

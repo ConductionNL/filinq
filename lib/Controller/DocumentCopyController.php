@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Exception\DomainLinkRefusedException;
-use OCA\Filinq\Service\DocumentCopyService;
+use OCA\Filinq\Kernel\Contracts\DocumentCopyServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -51,7 +51,7 @@ class DocumentCopyController extends Controller {
 	 *
 	 * @param string              $appName     The app name.
 	 * @param IRequest            $request     The request.
-	 * @param DocumentCopyService $copies      Copies the document.
+	 * @param DocumentCopyServiceInterface $copies      Copies the document.
 	 * @param IUserSession        $userSession The current session.
 	 *
 	 * @return void
@@ -59,7 +59,7 @@ class DocumentCopyController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly DocumentCopyService $copies,
+		private readonly DocumentCopyServiceInterface $copies,
 		private readonly IUserSession $userSession,
 	) {
 		parent::__construct(appName: $appName, request: $request);

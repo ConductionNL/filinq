@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\WaitingWorkServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentReviewServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
@@ -39,7 +40,7 @@ use Throwable;
  *
  * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
  */
-class WaitingWorkService {
+class WaitingWorkService implements WaitingWorkServiceInterface {
 
 	/**
 	 * A signature or an acceptance waits in the signing folder.

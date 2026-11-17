@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\DocumentReleaseServiceInterface;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\DomainLinkRefusedException;
@@ -53,7 +54,7 @@ use Throwable;
  *
  * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
  */
-class DocumentReleaseService {
+class DocumentReleaseService implements DocumentReleaseServiceInterface {
 	use ReadsCurrentUserId;
 	use ReadsStoredObjectRows;
 

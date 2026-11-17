@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Signing;
 
+use OCA\Filinq\Kernel\Contracts\SigningDelegationServiceInterface;
 use DateTimeImmutable;
 use InvalidArgumentException;
 use JsonException;
@@ -46,7 +47,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
  */
-class SigningDelegationService {
+class SigningDelegationService implements SigningDelegationServiceInterface {
 
 	/**
 	 * App config key holding the delegations, as a JSON list.

@@ -28,7 +28,7 @@ use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningMandateServiceInterface;
 use OCA\Filinq\Service\ReadsCurrentUserId;
-use OCA\Filinq\Service\Signing\SigningDelegationService;
+use OCA\Filinq\Kernel\Contracts\SigningDelegationServiceInterface;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -63,7 +63,7 @@ class SigningFolderController extends Controller {
 	 * @param IUserSession $userSession User session.
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N $l10n Localisation.
-	 * @param SigningDelegationService|null $delegations Delegated signing authority (REQ-SCR-003).
+	 * @param SigningDelegationServiceInterface|null $delegations Delegated signing authority (REQ-SCR-003).
 	 *
 	 * @return void
 	 */
@@ -74,7 +74,7 @@ class SigningFolderController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
-		private readonly ?SigningDelegationService $delegations = null,
+		private readonly ?SigningDelegationServiceInterface $delegations = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 

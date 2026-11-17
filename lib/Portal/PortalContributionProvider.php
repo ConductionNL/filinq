@@ -66,7 +66,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Portal;
 
 use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
-use OCA\Filinq\Service\DocumentReleaseService;
+use OCA\Filinq\Kernel\Contracts\DocumentReleaseServiceInterface;
 use OCP\L10N\IFactory;
 use Throwable;
 
@@ -179,12 +179,12 @@ class PortalContributionProvider {
 	 * that call.
 	 *
 	 * @param IFactory|null                       $l10nFactory Resolves Filinq's translator.
-	 * @param DocumentReleaseService|null          $releases    The documents released to a requester.
+	 * @param DocumentReleaseServiceInterface|null          $releases    The documents released to a requester.
 	 * @param DownloadAgreementGateInterface|null $agreements  The download conditions a released document carries.
 	 */
 	public function __construct(
 		private readonly ?IFactory $l10nFactory = null,
-		private readonly ?DocumentReleaseService $releases = null,
+		private readonly ?DocumentReleaseServiceInterface $releases = null,
 		private readonly ?DownloadAgreementGateInterface $agreements = null,
 	) {
 	}//end __construct()

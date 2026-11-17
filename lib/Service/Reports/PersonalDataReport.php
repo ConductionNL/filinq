@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Reports;
 
+use OCA\Filinq\Kernel\Contracts\PersonalDataReportInterface;
 use OCA\Filinq\Service\FileEntityStatsService;
 use OCA\Filinq\Service\ReadableFileResolver;
 use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
@@ -45,7 +46,7 @@ use Throwable;
  *
  * @spec openspec/changes/specify-capability-rows/specs/management-reports/spec.md#requirement-the-personal-data-report-lists-which-documents-hold-personal-data-req-scr-010
  */
-class PersonalDataReport {
+class PersonalDataReport implements PersonalDataReportInterface {
 
 	/**
 	 * How many file ids are read from OpenRegister per page.
