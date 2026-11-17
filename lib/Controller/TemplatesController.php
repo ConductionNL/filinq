@@ -386,4 +386,33 @@ class TemplatesController extends Controller {
 		}
 
 	}//end unlock()
+
+	/**
+	 * Publish the version a template is on, so users may generate from it
+	 *
+	 * @param string $id The template UUID
+	 *
+	 * @return JSONResponse JSON response with the published template
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 *
+	 * @no-admin-idor-exempt the publish is a save on the template, which OpenRegister refuses unless
+	 * the user is in the group the template schema grants update to.
+	 */
+	public function publish(string $id): JSONResponse {
+		try {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
+				return $this->notAuthenticated(message: 'Not authenticated');
+			}
+
+			$result = $this->templateService->publishTemplate(id: $id);
+			return new JSONResponse(data: $result);
+		} catch (Exception $e) {
+			return $this->requestHandler->buildErrorResponse($e, 'Failed to publish template: ');
+		}
+
+	}//end publish()
 }//end class

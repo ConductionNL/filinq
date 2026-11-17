@@ -85,6 +85,14 @@ class DocumentSigningRequestedListener implements IEventListener {
 			return;
 		}
 
+		// A request another app raised must say what it signs (REQ-DDSRC-003).
+		// A request raised inside filinq names no source app and is not asked.
+		$missing = $event->getProvenance()->missingSubjectFields();
+		if ($missing !== []) {
+			$this->refuse(event: $event, missing: $missing);
+			return;
+		}
+
 		try {
 			$created = $this->signingService->createRequest($this->buildRequestData(event: $event));
 			$requestId = (string)($created['id'] ?? $created['uuid'] ?? '');
@@ -125,6 +133,31 @@ class DocumentSigningRequestedListener implements IEventListener {
 	}//end markHandled()
 
 	/**
+	 * Refuse a delegated request that cannot say what it signs: no signing
+	 * request is created, and the refusal names every missing subject field.
+	 *
+	 * @param DocumentSigningRequestedEvent $event   The event.
+	 * @param array<int, string>            $missing The missing field names.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
+	 */
+	private function refuse(DocumentSigningRequestedEvent $event, array $missing): void {
+		$refusal = sprintf(
+			'Filinq refused the signing request from %s: it does not say what it signs (missing: %s).',
+			$event->getSourceApp(),
+			implode(', ', $missing)
+		);
+		$event->setRefusal($refusal);
+		$this->logger->warning(
+			'Filinq: refused an unattributed DocumentSigningRequestedEvent',
+			$this->provenanceOf(event: $event) + ['missing' => $missing]
+		);
+
+	}//end refuse()
+
+	/**
 	 * The consumer and subject a log line names.
 	 *
 	 * @param DocumentSigningRequestedEvent $event The request event
@@ -161,6 +194,7 @@ class DocumentSigningRequestedListener implements IEventListener {
 			'subjectSchema' => $event->getSubjectSchema(),
 			'subjectId' => $event->getSubjectId(),
 			'subjectLabel' => $event->getSubjectLabel(),
+			'subjectNoun' => $event->getSubjectNoun(),
 			'externalReference' => $event->getExternalReference(),
 			'correlationId' => $event->getCorrelationId(),
 		];

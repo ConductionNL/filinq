@@ -34,6 +34,7 @@ use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\OpenCatalogiPublicationMap;
 use OCA\Filinq\Exception\PublicationNotReadyException;
+use OCA\Filinq\Service\Publication\DiwooMissingFields;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationReadiness;
 use OCA\Filinq\Service\Publication\PublicationStore;
@@ -114,6 +115,13 @@ class PublicationPipelineServiceTest extends TestCase {
 	 * @var string
 	 */
 	private string $accessibilityGate = 'warn';
+
+	/**
+	 * The admin's default publisher; '' when none is set.
+	 *
+	 * @var string
+	 */
+	private string $defaultPublisher = '';
 
 	/**
 	 * The pipeline over the in-memory world.
@@ -217,7 +225,11 @@ class PublicationPipelineServiceTest extends TestCase {
 
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
-			fn (string $app, string $key, string $default = ''): string => $key === RedactionAccessibilityService::CFG_GATE ? $this->accessibilityGate : $default
+			fn (string $app, string $key, string $default = ''): string => match ($key) {
+				RedactionAccessibilityService::CFG_GATE => $this->accessibilityGate,
+				PublicationPipelineService::CFG_DEFAULT_PUBLISHER => $this->defaultPublisher,
+				default => $default,
+			}
 		);
 
 		$clock = $this->createMock(ITimeFactory::class);
@@ -228,7 +240,8 @@ class PublicationPipelineServiceTest extends TestCase {
 			readiness: new PublicationReadiness(consents: $consentService, consentConfig: $consentConfig, policies: $policies, marks: $marks, store: $store, accessibility: new RedactionAccessibilityService($appConfig)),
 			map: new OpenCatalogiPublicationMap(),
 			platform: new OpenCatalogiPlatform(appManager: $apps, container: $container, rootFolder: $root),
-			clock: $clock
+			clock: $clock,
+			config: $appConfig
 		);
 
 	}//end pipeline()
@@ -453,6 +466,95 @@ class PublicationPipelineServiceTest extends TestCase {
 	}//end testTheCategoryComesFromOpenCatalogisList()
 
 	/**
+	 * One value on three records: the two queued ones change and each gets its
+	 * own log entry with the coordinator's name; the published one is skipped.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 */
+	public function testABulkValueReachesEveryQueuedRecordAndSkipsAHandedOffOne(): void {
+		$pipeline = $this->pipeline();
+		$first = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$second = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$published = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$published['status'] = 'published';
+		$logBefore = count($this->rows['publicationLogEntry'] ?? []);
+
+		$outcome = $pipeline->updateMetadataMany(
+			records: [$first, $second, $published],
+			values: ['publisher' => ' https://identifier.overheid.nl/tooi/id/gemeente/gm0363 '],
+			actor: 'woo-coordinator'
+		);
+
+		$this->assertSame([(string) $first['uuid'], (string) $second['uuid']], array_column($outcome['updated'], 'uuid'));
+		$this->assertSame([['uuid' => (string) $published['uuid'], 'reason' => 'already handed off']], $outcome['skipped']);
+		$this->assertSame('https://identifier.overheid.nl/tooi/id/gemeente/gm0363', $this->rows['publicationRecord'][$first['uuid']]['publisher']);
+		$this->assertArrayNotHasKey('publisher', $this->rows['publicationRecord'][$published['uuid']]);
+
+		$entries = array_slice(array_values($this->rows['publicationLogEntry']), $logBefore);
+		$this->assertSame(['metadata_assembled', 'metadata_assembled'], array_column($entries, 'action'));
+		$this->assertSame(['woo-coordinator', 'woo-coordinator'], array_column($entries, 'actor'));
+		$this->assertSame([(string) $first['uuid'], (string) $second['uuid']], array_column($entries, 'publicationRecordRef'));
+
+	}//end testABulkValueReachesEveryQueuedRecordAndSkipsAHandedOffOne()
+
+	/**
+	 * A bulk change is checked before any record is touched: an unknown
+	 * category, a field that is not bulk-settable or a blank value changes nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 */
+	public function testABulkChangeIsRefusedWholeBeforeAnyRecordChanges(): void {
+		$pipeline = $this->pipeline();
+		$record = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$saves = count($this->saves);
+
+		foreach (
+			[
+				[['wooCategory' => 'besluiten'], 'Unknown Woo information category: besluiten'],
+				[['officieleTitel' => 'Nieuw'], 'This field cannot be set on a selection: officieleTitel'],
+				[['documentsoort' => '  '], 'A value for documentsoort is required'],
+				[[], 'Name at least one field to set'],
+			] as [$values, $message]
+		) {
+			try {
+				$pipeline->updateMetadataMany(records: [$record], values: $values, actor: 'anna');
+				$this->fail('refused: ' . $message);
+			} catch (InvalidArgumentException $e) {
+				$this->assertSame($message, $e->getMessage());
+				$this->assertSame(400, $e->getCode());
+			}
+		}
+
+		$this->assertCount($saves, $this->saves, 'a refused bulk change writes nothing');
+
+	}//end testABulkChangeIsRefusedWholeBeforeAnyRecordChanges()
+
+	/**
+	 * A new record starts with the admin's default publisher, and without one
+	 * when none is set.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-new-records-start-with-the-organisations-publisher-req-wmw-003
+	 */
+	public function testANewRecordStartsWithTheDefaultPublisher(): void {
+		$pipeline = $this->pipeline();
+		$without = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$this->assertArrayNotHasKey('publisher', $this->rows['publicationRecord'][$without['uuid']]);
+
+		$this->defaultPublisher = ' https://identifier.overheid.nl/tooi/id/gemeente/gm0363 ';
+		$with = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+
+		$this->assertSame('https://identifier.overheid.nl/tooi/id/gemeente/gm0363', $with['publisher']);
+		$this->assertNotContains('publisher', (new DiwooMissingFields())->of(record: $with));
+
+	}//end testANewRecordStartsWithTheDefaultPublisher()
+
+	/**
 	 * The hand-off files the publication under OpenCatalogi's code for its category.
 	 *
 	 * @return void
@@ -672,4 +774,34 @@ class PublicationPipelineServiceTest extends TestCase {
 		$this->assertTrue($result->isValid(), $message);
 
 	}//end assertValid()
+
+	/**
+	 * A destroyed source takes its handed-off publication offline, with the
+	 * destruction as the logged reason; a publication that never left stays.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-a-publication-goes-offline-when-its-source-document-is-destroyed-req-scr-009
+	 */
+	public function testADestroyedSourceWithdrawsItsPublication(): void {
+		$pipeline = $this->pipeline();
+		$published = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+		$draft = $pipeline->create(documentFileRef: '77', subjectType: 'document', dossierRef: '', actor: 'anna');
+
+		$this->assertSame([], $pipeline->withdrawDestroyedSource(sourceRefs: ['77'], detail: '(object d-77)'));
+		$this->assertSame([], $pipeline->withdrawDestroyedSource(sourceRefs: ['', 'unknown'], detail: ''));
+
+		$withdrawn = $pipeline->withdrawDestroyedSource(sourceRefs: ['obj-1', '42'], detail: '(object obj-1)');
+
+		$this->assertCount(1, $withdrawn);
+		$this->assertSame($published['uuid'], $withdrawn[0]['uuid']);
+		$this->assertSame('depublished', $withdrawn[0]['status']);
+		$this->assertSame('Source document destroyed (object obj-1)', $withdrawn[0]['depublicationReason']);
+		$this->assertSame('2026-09-29T12:00:00+00:00', $this->rows['publication'][$published['endpointPublicationRef']]['depublicationDate']);
+		$log = array_values(array_filter($this->rows['publicationLogEntry'], static fn (array $e): bool => $e['action'] === 'depublication_requested'));
+		$this->assertSame('Source document destroyed (object obj-1)', $log[0]['details']);
+		$this->assertSame('system', $log[0]['actor']);
+		$this->assertSame('draft', $this->rows['publicationRecord'][$draft['uuid']]['status']);
+
+	}//end testADestroyedSourceWithdrawsItsPublication()
 }//end class

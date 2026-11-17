@@ -244,7 +244,7 @@ class NativeSigningProvider implements SigningProviderInterface {
 	 *
 	 * @throws RuntimeException If the session is not found, or is already completed.
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function cancelSigning(string $externalId): void {
 		$session = $this->loadSessionByExternalId(externalId: $externalId);
