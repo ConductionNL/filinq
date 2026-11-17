@@ -3290,7 +3290,9 @@ OC.L10N.register(
         "Redact pages": "Redact pages",
         "Redact pages or document": "Redact pages or document",
         "This document has %n page.": ["This document has %n page.","This document has %n pages."],
-        "This document has %n pages.": "This document has %n pages."
+        "This document has %n pages.": "This document has %n pages.",
+        "Image region kept visible: {type}": "Image region kept visible: {type}",
+        "Image region to be redacted: {type}": "Image region to be redacted: {type}"
     },
     "nplurals=2; plural=(n != 1);"
 )

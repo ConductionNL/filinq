@@ -678,7 +678,7 @@ import ScopeRedactionDialog from '../dialogs/ScopeRedactionDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 import { colleagueHint, colleagueReason } from '../services/fourEyes.js'
-import { fetchScope, imageRedactionWarning, scopeLabel } from '../services/imageRedaction.js'
+import { fetchScope, imageRedactionWarning, regionOverlays, scopeLabel } from '../services/imageRedaction.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 import { accessibilityNote } from '../services/redactionAccessibility.js'
 import { reportRows } from '../services/sanitization.js'
@@ -1357,6 +1357,21 @@ export default {
 		},
 
 		/**
+		 * The image-region overlays of the review, from the same entity rows
+		 * as the table, so an overlay always shows its row's decision. Only
+		 * for the review step, like the highlights.
+		 *
+		 * @return {Array<object>} Overlays from `regionOverlays()`.
+		 * @spec openspec/changes/image-redaction/tasks.md#task-4.1
+		 */
+		regionList() {
+			if (!this.entry || this.entry.viewMode === 'anonymized') {
+				return []
+			}
+			return regionOverlays(this.entry.entities || [])
+		},
+
+		/**
 		 * Whether the user may edit the detected entities. Mirrors the
 		 * shared viewer state set by the upload modal and the header switch.
 		 * Read through a computed (not a template store-path) so the toggle
@@ -1567,6 +1582,21 @@ export default {
 		highlightList: {
 			handler(list) {
 				fileViewerStore.setHighlightEntities(list)
+			},
+
+			deep: true,
+			immediate: true,
+		},
+
+		/**
+		 * Push the image-region overlays to the viewer whenever a decision or
+		 * the entity list changes.
+		 *
+		 * @param {Array<object>} list Overlays to draw.
+		 */
+		regionList: {
+			handler(list) {
+				fileViewerStore.setImageRegions(list)
 			},
 
 			deep: true,

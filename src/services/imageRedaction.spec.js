@@ -13,6 +13,8 @@ import {
 	imageExtractionWarning,
 	imageRedactionWarning,
 	isImageEntity,
+	regionLabel,
+	regionOverlays,
 	scopeLabel,
 } from './imageRedaction.js'
 
@@ -120,5 +122,64 @@ describe('decideScope', () => {
 		axios.get.mockResolvedValueOnce({ data: { decisions: [], pageCount: 4, pageScopesAvailable: false } })
 
 		expect(await fetchScope(7)).toEqual({ decisions: [], pageCount: 4, pageScopesAvailable: false })
+	})
+})
+
+// @spec openspec/changes/image-redaction/tasks.md#task-4.1
+describe('regionOverlays', () => {
+	const box = (extra = {}) => ({ page: 2, x: 0.1, y: 0.2, w: 0.3, h: 0.05, ...extra })
+
+	it('turns every box of an image-origin row into an overlay tied to the row index', () => {
+		const entities = [
+			{ type: 'PERSON', value: 'Jansen' },
+			{ type: 'BSN', value: '123', origin: 'image', boxes: [box(), box({ page: 3 })] },
+		]
+		expect(regionOverlays(entities)).toEqual([
+			{ index: 1, page: 2, x: 0.1, y: 0.2, w: 0.3, h: 0.05, type: 'BSN', state: 'redact' },
+			{ index: 1, page: 3, x: 0.1, y: 0.2, w: 0.3, h: 0.05, type: 'BSN', state: 'redact' },
+		])
+	})
+
+	it('mirrors a rejected row as a region kept visible', () => {
+		const entities = [{ type: 'SIGNATURE', origin: 'image', boxes: [box()], _decisionSkip: true }]
+		expect(regionOverlays(entities)[0].state).toBe('keep')
+	})
+
+	it('ignores text-origin rows even when they carry boxes', () => {
+		expect(regionOverlays([{ type: 'PERSON', boxes: [box()] }])).toEqual([])
+	})
+
+	it('leaves out a box it cannot place, without dropping the other boxes', () => {
+		const entities = [{
+			type: 'BSN',
+			origin: 'image',
+			boxes: [box({ page: null }), box({ page: 0 }), box({ x: 'a' }), box({ w: 0 }), null, box()],
+		}]
+		const overlays = regionOverlays(entities)
+		expect(overlays).toHaveLength(1)
+		expect(overlays[0].page).toBe(2)
+	})
+
+	it('clamps a box to the page', () => {
+		const [overlay] = regionOverlays([{ type: 'BSN', origin: 'image', boxes: [box({ x: 0.9, y: -0.5, w: 0.5, h: 2 })] }])
+		expect(overlay).toMatchObject({ x: 0.9, y: 0, h: 1 })
+		expect(overlay.w).toBeCloseTo(0.1)
+	})
+
+	it('answers an empty list for anything but a list', () => {
+		expect(regionOverlays(null)).toEqual([])
+		expect(regionOverlays({})).toEqual([])
+	})
+})
+
+// @spec openspec/changes/image-redaction/tasks.md#task-4.1
+describe('regionLabel', () => {
+	it('names the type and whether the region is redacted or kept', () => {
+		expect(regionLabel({ type: 'BSN', state: 'redact' })).toBe('Image region to be redacted: BSN')
+		expect(regionLabel({ type: 'SIGNATURE', state: 'keep' })).toBe('Image region kept visible: SIGNATURE')
+	})
+
+	it('falls back to an unknown type', () => {
+		expect(regionLabel({ type: '', state: 'redact' })).toBe('Image region to be redacted: Unknown')
 	})
 })

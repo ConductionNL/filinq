@@ -24,7 +24,7 @@
 
 ## 4. Frontend
 
-- [ ] 4.1 Review-workbench region overlays bound to the shared entity decision model (rows carry `origin: "image"` + boxes; overlay state mirrors table decisions; table stays source of truth) (REQ-DDIMR-005)
+- [x] 4.1 Review-workbench region overlays bound to the shared entity decision model (rows carry `origin: "image"` + boxes; overlay state mirrors table decisions; table stays source of truth) (REQ-DDIMR-005)
 - [ ] 4.2 `SIGNATURE` entity-type label/badge, signature-detection-unavailable notice, image-not-scanned and pending-redaction warnings; burned-region count in listings (REQ-DDIMR-002, REQ-DDIMR-003, REQ-DDIMR-006)
 
 ## 5. Quality

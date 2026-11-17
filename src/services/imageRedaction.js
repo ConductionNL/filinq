@@ -201,3 +201,94 @@ export async function decideScope(fileId, decision, commit = false) {
 		}
 	}
 }
+
+/**
+ * A number clamped to the normalised [0..1] range, or null when it is not a number.
+ *
+ * @param {number|string|null} value The value.
+ * @return {number|null} The clamped number.
+ */
+function unit(value) {
+	const number = Number(value)
+	if (value === null || value === '' || Number.isFinite(number) === false) {
+		return null
+	}
+	return Math.min(1, Math.max(0, number))
+}
+
+/**
+ * One normalised box as an overlay rectangle, or null when it cannot be placed.
+ *
+ * A box without a page or with no area is left out: the entity row stays in
+ * the table, which is the source of truth, so a missed overlay hides nothing.
+ *
+ * @param {object} box `{ page, x, y, w, h }`, normalised to [0..1].
+ * @return {{page: number, x: number, y: number, w: number, h: number}|null} The rectangle.
+ */
+function placeBox(box) {
+	if (!box || typeof box !== 'object') {
+		return null
+	}
+	const page = Number(box.page)
+	const x = unit(box.x)
+	const y = unit(box.y)
+	const w = unit(box.w)
+	const h = unit(box.h)
+	if (Number.isInteger(page) === false || page < 1 || [x, y, w, h].includes(null)) {
+		return null
+	}
+	const width = Math.min(w, 1 - x)
+	const height = Math.min(h, 1 - y)
+	if (width <= 0 || height <= 0) {
+		return null
+	}
+	return { page, x, y, w: width, h: height }
+}
+
+/**
+ * The region overlays of the image-origin entity rows.
+ *
+ * Each overlay mirrors its row's decision: a row the reviewer rejected
+ * (`_decisionSkip`) is kept visible and its region is not burned; every other
+ * row is redacted. The row's index in the entity list ties the overlay to the
+ * table row, so there is one decision and no second state.
+ *
+ * @param {Array<object>} entities The entity rows of the review.
+ * @return {Array<{index: number, page: number, x: number, y: number, w: number, h: number, type: string, state: string}>} The overlays.
+ * @spec openspec/changes/image-redaction/tasks.md#task-4.1
+ */
+export function regionOverlays(entities) {
+	if (!Array.isArray(entities)) {
+		return []
+	}
+	const overlays = []
+	entities.forEach((entity, index) => {
+		if (!isImageEntity(entity) || !Array.isArray(entity.boxes)) {
+			return
+		}
+		const state = entity._decisionSkip === true ? 'keep' : 'redact'
+		const type = String(entity.type || '')
+		for (const box of entity.boxes) {
+			const placed = placeBox(box)
+			if (placed !== null) {
+				overlays.push({ index, ...placed, type, state })
+			}
+		}
+	})
+	return overlays
+}
+
+/**
+ * The accessible label of one region overlay.
+ *
+ * @param {{type: string, state: string}} overlay The overlay.
+ * @return {string} The label.
+ * @spec openspec/changes/image-redaction/tasks.md#task-4.1
+ */
+export function regionLabel(overlay) {
+	const type = overlay?.type || t('filinq', 'Unknown')
+	if (overlay?.state === 'keep') {
+		return t('filinq', 'Image region kept visible: {type}', { type })
+	}
+	return t('filinq', 'Image region to be redacted: {type}', { type })
+}
