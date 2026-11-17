@@ -5,22 +5,22 @@
 
 ## 1. Schemas + register wiring
 
-- [ ] 1.1 Add the `document` schema to `lib/Settings/filinq_register.json` under `components.schemas` (REQ-DREG-D01)
+- [x] 1.1 Add the `document` schema to `lib/Settings/filinq_register.json` under `components.schemas` (REQ-DREG-D01)
   - Field contracts exactly per design.md D1; `hardValidation: true`; `x-openregister-lifecycle` on `status` with the five-state machine; `x-openregister-archival` default retention; `configuration.objectNameField: "title"`; `relatedCases` uses `$ref: "case"` + `x-external-register: "procest"`.
   - Drift-pin: verify every lifecycle/archival key against OpenRegister HEAD, not against this spec snapshot.
 
-- [ ] 1.2 Add the `documentType` schema to `filinq_register.json` under `components.schemas` (REQ-DREG-D02)
+- [x] 1.2 Add the `documentType` schema to `filinq_register.json` under `components.schemas` (REQ-DREG-D02)
   - Field contracts exactly per design.md D2; `hardValidation: true`; `identifier` unique.
 
-- [ ] 1.3 Add both slugs (`document`, `documentType`) to the `document` register's `schemas` array and bump `info.version` (REQ-DREG-D05)
+- [x] 1.3 Add both slugs (`document`, `documentType`) to the `document` register's `schemas` array and bump `info.version` (REQ-DREG-D05)
   - The version bump drives idempotent re-import via `SettingsInitializer::initialize()` → `ConfigurationService::importFromApp()`.
 
 ## 2. Seed data (ADR-016)
 
-- [ ] 2.1 Seed the canonical `documentType` starter set under `components.objects` (REQ-DREG-D03)
+- [x] 2.1 Seed the canonical `documentType` starter set under `components.objects` (REQ-DREG-D03)
   - `brief`, `besluit`, `rapport`, `factuur`, `contract`, `notulen`, `beleidsstuk` (minimum); each with realistic `retentionPeriod` + placeholder `selectielijstCategory`.
 
-- [ ] 2.2 Seed 3–5 realistic `document` objects referencing the seeded types (REQ-DREG-D03)
+- [x] 2.2 Seed 3–5 realistic `document` objects referencing the seeded types (REQ-DREG-D03)
   - Distinct `status`, `confidentiality`, and `documentType` values; at least one with a `relatedCases`/`relatedObjects` reference.
 
 - [ ] 2.3 APPLY-BLOCKER — replace every `TODO-*` `selectielijstCategory` placeholder with a real VNG selectielijst category before apply/done (REQ-DREG-D04)
