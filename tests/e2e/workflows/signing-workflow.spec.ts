@@ -325,6 +325,57 @@ test('Create signing request → appears PENDING in the list → sign → status
 		.catch(() => {})
 })
 
+// @e2e openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#the-creator-may-cancel
+// @e2e openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#a-cancelled-request-refuses-a-subsequent-signature
+// @e2e openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#cancelling-an-already-cancelled-request-is-not-an-error
+test('Cancel a native signing request → it reads CANCELLED and refuses a signature', async ({
+	page,
+}) => {
+	await go(page, SigningRequestForm)
+	const token = await harvestToken(page)
+	const req = page.request
+
+	const file = await createDavFile(req, token, `${TEST_PREFIX}-cancel.txt`, 'Withdrawn before signing.')
+	expect(file.status, 'WebDAV file create').toBeLessThan(300)
+
+	const cr = await req.post(`${API}/signing/requests`, {
+		headers: jsonHeaders(token),
+		data: {
+			documentName: `${TEST_PREFIX}-cancel.pdf`,
+			documentFileId: file.fileId,
+			signatureLevel: 'SES',
+			signingMode: 'sequential',
+			signers: [{ userId: 'admin', displayName: 'Admin', email: 'admin@example.com', order: 0 }],
+		},
+	})
+	expect(cr.status(), `create signing request (body: ${await cr.text().catch(() => '')})`).toBeLessThan(300)
+	const created = await cr.json()
+	const id = created.id ?? created.uuid
+	const signerId = (created.signerIds ?? [])[0]
+	expect(signerId, 'created request must expose the signer record id').toBeTruthy()
+
+	const cancelled = await req.delete(`${API}/signing/requests/${id}`, { headers: jsonHeaders(token) })
+	expect(cancelled.status(), `cancel (body: ${await cancelled.text().catch(() => '')})`).toBe(200)
+	expect((await cancelled.json()).status).toBe('cancelled')
+
+	const after = await req.get(`${API}/signing/requests/${id}`, { headers: jsonHeaders(token) })
+	expect(String((await after.json()).status).toUpperCase()).toBe('CANCELLED')
+
+	const signRes = await req.post(`${API}/signing/requests/${id}/sign`, {
+		headers: jsonHeaders(token),
+		data: { signerId },
+	})
+	expect(signRes.status(), 'a cancelled request refuses a signature').toBe(409)
+	expect((await signRes.json()).error, 'the refusal says the request was withdrawn').toMatch(/withdrawn/i)
+
+	const still = await req.get(`${API}/signing/requests/${id}`, { headers: jsonHeaders(token) })
+	expect(String((await still.json()).status).toUpperCase(), 'the refused signature changed nothing').toBe('CANCELLED')
+
+	const again = await req.delete(`${API}/signing/requests/${id}`, { headers: jsonHeaders(token) })
+	expect(again.status(), 'cancelling twice is not an error').toBe(200)
+	expect((await again.json()).alreadyCancelled).toBe(true)
+})
+
 // SigningRequestDetail is the `/signing/:id` page component (registered in
 // src/registry.js, routed from src/manifest.json). Its two neighbours under
 // src/views/signing/ are deliberately unregistered and carry an audited

@@ -187,7 +187,8 @@ class DocumentService implements DocumentServiceInterface {
 			$template = $this->sources->templates->getTemplateAtVersion(id: $templateId, version: (int) $options['templateVersion']);
 		}
 
-		$template ??= $this->sources->templates->getTemplate(id: $templateId);
+		// Users generate from the last published version, never from a draft (REQ-SCR-015).
+		$template ??= $this->sources->templates->getPublishedTemplate(id: $templateId);
 
 		if (isset($options['wizardContext']) === true && $this->wizardGate !== null) {
 			// A wizard run: the answers are checked against the stored wizard before

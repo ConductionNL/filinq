@@ -118,6 +118,33 @@
 				}}</a>
 			</p>
 		</form>
+		<form
+			v-if="outcome && outcome.fileId"
+			class="filinq-merge-leaf__form"
+			data-testid="merge-copy-form"
+			@submit.prevent="copyMergedPdf">
+			<p class="filinq-merge-leaf__state">
+				{{ t('filinq', 'Copy to another record') }}
+			</p>
+			<label class="filinq-merge-leaf__field">
+				{{ t('filinq', 'Register') }}
+				<input v-model="copyForm.register" type="text" required>
+			</label>
+			<label class="filinq-merge-leaf__field">
+				{{ t('filinq', 'Record type') }}
+				<input v-model="copyForm.schema" type="text" required>
+			</label>
+			<label class="filinq-merge-leaf__field">
+				{{ t('filinq', 'Record ID') }}
+				<input v-model="copyForm.id" type="text" required>
+			</label>
+			<button type="submit" :disabled="busy">
+				{{ t('filinq', 'Copy') }}
+			</button>
+			<p v-if="copyMessage" role="status" class="filinq-merge-leaf__state">
+				{{ copyMessage }}
+			</p>
+		</form>
 	</div>
 </template>
 
@@ -130,6 +157,7 @@ import {
 	moveInSelection,
 	toggleInSelection,
 } from '../services/mergeSelection.js'
+import { copyToRecord, linkTarget } from './documentDomainLinks.js'
 import { hostObjectLeaf } from './hostObjectLeaf.js'
 
 let instanceCount = 0
@@ -177,6 +205,8 @@ export default {
 			error: false,
 			busy: false,
 			outcome: null,
+			copyForm: { register: '', schema: '', id: '' },
+			copyMessage: '',
 			orderLabelId: 'filinq-merge-order-' + instanceCount,
 		}
 	},
@@ -372,6 +402,7 @@ export default {
 					failed: false,
 					message: t('filinq', 'The PDF is ready.'),
 					link: generateUrl('/f/{fileId}', { fileId: job.resultFileId }),
+					fileId: job.resultFileId,
 				}
 			}
 			const reason =
@@ -381,6 +412,36 @@ export default {
 				message: t('filinq', 'The merge failed: {reason}', { reason }),
 				link: '',
 			}
+		},
+
+		/**
+		 * Copy the finished merge's PDF to the record the form names. The
+		 * server checks read on this record and write on the other one.
+		 *
+		 * @return {Promise<void>} Resolves once the answer is shown.
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+		 */
+		async copyMergedPdf() {
+			const target = linkTarget(this.copyForm)
+			if (target === null || !this.outcome || !this.outcome.fileId) {
+				this.copyMessage = t('filinq', 'Name the register, the record type and the ID of the record.')
+				return
+			}
+			this.busy = true
+			const answer = await copyToRecord(
+				this.outcome.fileId,
+				{ register: this.register, schema: this.schema, id: this.objectId },
+				target,
+				this.requestToken(),
+			)
+			this.busy = false
+			if (answer.ok) {
+				this.copyMessage = t('filinq', 'The PDF is now also on the other record.')
+				return
+			}
+			this.copyMessage = answer.status === 403
+				? t('filinq', 'You may not copy this document to that record.')
+				: t('filinq', 'The document could not be copied.')
 		},
 
 		/**

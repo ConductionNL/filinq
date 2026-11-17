@@ -219,4 +219,26 @@ interface TemplateServiceInterface {
 	 * @spec openspec/specs/template-management/spec.md
 	 */
 	public function releaseLock(string $id, string $userId): array;
+
+	/**
+	 * Publish the version the template is on, so users may generate from it.
+	 *
+	 * @param string $id The template UUID
+	 *
+	 * @return array The published template
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 */
+	public function publishTemplate(string $id): array;
+
+	/**
+	 * Get the template at its last published version.
+	 *
+	 * @param string $id The template UUID
+	 *
+	 * @return array The template users generate from
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 */
+	public function getPublishedTemplate(string $id): array;
 }//end interface
