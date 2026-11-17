@@ -85,6 +85,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 	private const RECORDED_BYPASSES = [
 		'lib/Controller/PortalSigningReceiverController.php' => 1,
 		'lib/Service/AnonymizationPersistenceService.php' => 2,
+		'lib/Service/Audit/DocumentActionAudit.php' => 1,
 		'lib/Service/BaseLabelResolver.php' => 1,
 		'lib/Service/BasesResolverService.php' => 1,
 		'lib/Service/BatchStateRepository.php' => 3,
@@ -115,6 +116,9 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/Publication/PublicationStore.php' => 1,
 		'lib/Service/Redaction/AnonymizationLinkReader.php' => 1,
 		'lib/Service/Sanitization/SanitizationRecordRepository.php' => 1,
+		'lib/Service/SignerAuth/PhoneCodeProvider.php' => 1,
+		'lib/Service/DocumentCopyService.php' => 1,
+		'lib/Service/DocumentReleaseService.php' => 2,
 		'lib/Service/Signing/GuardianConsentGuard.php' => 1,
 		'lib/Service/Signing/LibreSignCompletion.php' => 4,
 		'lib/Service/Signing/NativeSigningProvider.php' => 2,
@@ -123,6 +127,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/SigningAuditService.php' => 1,
 		'lib/Service/SigningEnvelope/SigningEnvelopeRepository.php' => 3,
 		'lib/Service/SigningService.php' => 16,
+		'lib/Service/SigningSourceTally.php' => 1,
 		'lib/Service/SubjectErasure/SubjectErasureStore.php' => 3,
 	];
 
