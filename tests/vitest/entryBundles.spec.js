@@ -52,6 +52,7 @@ vi.mock('../../src/views/widgets/FileEntitiesDashboardWidget.vue', () => ({ defa
 vi.mock('../../src/components/compare/DocumentCompare.vue', () => ({ default: { name: 'DocumentCompare' } }))
 vi.mock('../../src/integrations/registerDocumentsLeaf.js', () => ({ registerDocumentsLeaf: recorder('documents') }))
 vi.mock('../../src/integrations/registerMergeToPdfLeaf.js', () => ({ registerMergeToPdfLeaf: recorder('mergeToPdf') }))
+vi.mock('../../src/integrations/registerGenerateDocumentLeaf.js', () => ({ registerGenerateDocumentLeaf: recorder('generateDocument') }))
 vi.mock('../../src/integrations/registerDownloadAllFilesLeaf.js', () => ({ registerDownloadAllFilesLeaf: recorder('downloadAllFiles') }))
 vi.mock('../../src/integrations/registerSigningFolderLeaf.js', () => ({ registerSigningFolderLeaf: recorder('signingFolder') }))
 vi.mock('../../src/integrations/registerDocumentIntakeLeaf.js', () => ({ registerDocumentIntakeLeaf: recorder('documentIntake') }))
@@ -80,8 +81,8 @@ afterEach(() => {
 describe('the leaves bundle', () => {
 	it('registers every leaf before it asks for the translations', async () => {
 		await import('../../src/leaves.js')
-		expect(rec.calls.map((c) => c[0])).toEqual(['documents', 'mergeToPdf', 'downloadAllFiles', 'signingFolder', 'documentIntake', 'loadTranslations'])
-		expect(rec.calls[5][1]).toBe('filinq')
+		expect(rec.calls.map((c) => c[0])).toEqual(['documents', 'mergeToPdf', 'generateDocument', 'downloadAllFiles', 'signingFolder', 'documentIntake', 'loadTranslations'])
+		expect(rec.calls[6][1]).toBe('filinq')
 	})
 
 	it('swallows a missing catalogue instead of leaving an unhandled rejection', async () => {

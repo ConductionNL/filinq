@@ -31,6 +31,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Asserts that a document has domains rather than copies, and that unlinking
@@ -65,6 +66,7 @@ class DocumentDomainServiceTest extends TestCase {
 		$objectService->method('searchObjectsBySlug')->willReturn($rows);
 		$objectService->method('find')->willReturnCallback(
 			static function (...$arguments) use ($rows): ?array {
+				$arguments = LegacyObjectArgs::positional(method: 'find', args: $arguments);
 				$id = (string)($arguments[0] ?? '');
 				foreach ($rows as $row) {
 					if ((string)($row['uuid'] ?? '') === $id) {
@@ -77,6 +79,7 @@ class DocumentDomainServiceTest extends TestCase {
 		);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
+				$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 				$object = ($arguments[0] ?? []);
 				$this->written[] = $object;
 
