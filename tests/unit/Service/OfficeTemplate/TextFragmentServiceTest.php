@@ -27,6 +27,8 @@ use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
 use OCA\Filinq\Service\OfficeTemplate\TemplatesRegisterObjects;
 use OCA\Filinq\Service\OfficeTemplate\TextFragmentService;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -78,9 +80,11 @@ class TextFragmentServiceTest extends TestCase {
 		$this->objects->expects($this->once())->method('saveObject')
 			->with(
 				['name' => 'Ondertekening', 'slug' => 'ondertekening', 'content' => 'Hoogachtend', 'namespace' => 'filinq'],
-				'templates',
-				'textFragment',
-				null
+				$this->callback(
+					static fn (ObjectSaveOptions $options): bool => $options->target->register === 'templates'
+						&& $options->target->schema === 'textFragment'
+						&& $options->uuid === null
+				)
 			)
 			->willReturn(['id' => 'f-1', 'slug' => 'ondertekening']);
 
@@ -140,9 +144,11 @@ class TextFragmentServiceTest extends TestCase {
 		$this->objects->expects($this->once())->method('saveObject')
 			->with(
 				['name' => 'Oud', 'slug' => 'kop', 'content' => 'Nieuwe tekst', 'namespace' => 'filinq', 'category' => 'koppen'],
-				'templates',
-				'textFragment',
-				'f-1'
+				$this->callback(
+					static fn (ObjectSaveOptions $options): bool => $options->target->register === 'templates'
+						&& $options->target->schema === 'textFragment'
+						&& $options->uuid === 'f-1'
+				)
 			)
 			->willReturn(['id' => 'f-1']);
 
@@ -191,7 +197,13 @@ class TextFragmentServiceTest extends TestCase {
 	 */
 	public function testAKnownFragmentIsDeleted(): void {
 		$this->objects->method('find')->willReturn(['id' => 'f-1']);
-		$this->objects->expects($this->once())->method('deleteObject')->with('f-1', 'templates', 'textFragment');
+		$this->objects->expects($this->once())->method('deleteObject')->with(
+			$this->callback(
+				static fn (ObjectDeletion $deletion): bool => $deletion->uuid === 'f-1'
+					&& $deletion->target->register === 'templates'
+					&& $deletion->target->schema === 'textFragment'
+			)
+		);
 
 		$this->service()->delete(id: 'f-1');
 	}//end testAKnownFragmentIsDeleted()

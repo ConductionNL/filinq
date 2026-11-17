@@ -230,9 +230,15 @@
 				"confidentialityLabel": "Secret",
 				"confidentialityLevel": 3,
 				"ocrWarning": null,
-				"hasFile": false
+				"hasFile": false,
+				"detectionProvider": null,
+				"detectionFellBack": false,
+				"detectionWarning": null
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -287,9 +293,15 @@
 				"confidentialityLabel": null,
 				"confidentialityLevel": null,
 				"ocrWarning": null,
-				"hasFile": false
+				"hasFile": false,
+				"detectionProvider": null,
+				"detectionFellBack": false,
+				"detectionWarning": null
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -344,9 +356,15 @@
 				"confidentialityLabel": null,
 				"confidentialityLevel": null,
 				"ocrWarning": "This document is a scan. OCR read its text, but entity detection could not check it yet. Review it by hand before you publish.",
-				"hasFile": false
+				"hasFile": false,
+				"detectionProvider": null,
+				"detectionFellBack": false,
+				"detectionWarning": null
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -401,9 +419,15 @@
 				"confidentialityLabel": null,
 				"confidentialityLevel": null,
 				"ocrWarning": "This document is a scan and OCR is switched off, so it was not checked for personal data.",
-				"hasFile": false
+				"hasFile": false,
+				"detectionProvider": null,
+				"detectionFellBack": false,
+				"detectionWarning": null
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -492,9 +516,15 @@
 				"confidentialityLabel": null,
 				"confidentialityLevel": 0,
 				"ocrWarning": null,
-				"hasFile": false
+				"hasFile": false,
+				"detectionProvider": null,
+				"detectionFellBack": false,
+				"detectionWarning": null
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -549,9 +579,15 @@
 				"confidentialityLabel": null,
 				"confidentialityLevel": null,
 				"ocrWarning": null,
-				"hasFile": false
+				"hasFile": false,
+				"detectionProvider": null,
+				"detectionFellBack": false,
+				"detectionWarning": null
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[

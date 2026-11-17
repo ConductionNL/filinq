@@ -28,6 +28,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * How a contract is read and written through OpenRegister.
@@ -70,7 +71,11 @@ class ContractRepositoryTest extends TestCase {
 		$repository = $this->repository();
 		$this->objects->expects($this->once())
 			->method('find')
-			->with('c-1', 'filinq', 'documentContract')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'c-1',
+					'register' => 'filinq',
+					'schema' => 'documentContract',
+				]))
 			->willReturn(['@self' => ['id' => 'c-1', 'schema' => 'documentContract'], 'title' => 'Lease', 'status' => 'draft']);
 
 		$this->assertSame(expected: ['title' => 'Lease', 'status' => 'draft', 'uuid' => 'c-1'], actual: $repository->find(uuid: 'c-1'));
@@ -103,7 +108,12 @@ class ContractRepositoryTest extends TestCase {
 		$repository = $this->repository();
 		$this->objects->expects($this->once())
 			->method('saveObject')
-			->with(['title' => 'Lease'], 'filinq', 'documentContract', 'c-2')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['title' => 'Lease'],
+					'register' => 'filinq',
+					'schema' => 'documentContract',
+					'uuid' => 'c-2',
+				]))
 			->willReturn(['object' => ['title' => 'Lease'], '@self' => ['id' => 'c-2']]);
 
 		$this->assertSame(
@@ -121,7 +131,12 @@ class ContractRepositoryTest extends TestCase {
 		$repository = $this->repository();
 		$this->objects->expects($this->exactly(count: 2))
 			->method('saveObject')
-			->with(['title' => 'New'], 'filinq', 'documentContract', $this->identicalTo(value: null))
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['title' => 'New'],
+					'register' => 'filinq',
+					'schema' => 'documentContract',
+					'uuid' => $this->identicalTo(value: null),
+				]))
 			->willReturn(['title' => 'New', 'uuid' => 'gen-1']);
 
 		$this->assertSame(expected: ['title' => 'New', 'uuid' => 'gen-1'], actual: $repository->save(contract: ['title' => 'New']));

@@ -31,7 +31,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCA\Filinq\Service\Support\DossierSummaryParts;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -122,7 +125,12 @@ class DossierSummaryDataService {
 			$userSession,
 			$logger
 		);
-		$this->labelResolver = new BaseLabelResolver($this->repository, $logger);
+		$this->labelResolver = new BaseLabelResolver(
+			$this->repository,
+			$logger,
+			new RefusalGroundsResolver(appManager: $appManager, container: $container, logger: $logger),
+			new RefusalGroundsLegacyMap()
+		);
 		$this->ranker        = new DossierPlaceholderRanker($this->repository, $logger);
 		$this->collector     = new DossierEntityCollector($this->repository, $this->labelResolver, $this->ranker, $logger);
 
@@ -191,8 +199,7 @@ class DossierSummaryDataService {
 
 		$dossier = $objectService->find(
 			id: $dossierId,
-			register: 'filinq',
-			schema: 'dossier'
+			options: new ObjectFindOptions(register: 'filinq', schema: 'dossier')
 		);
 
 		if ($dossier === null) {

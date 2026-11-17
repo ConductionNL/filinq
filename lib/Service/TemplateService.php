@@ -33,6 +33,10 @@ use DateTime;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IAppConfig;
 use OCP\IUserSession;
 use RuntimeException;
@@ -45,6 +49,9 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) listForObject() put the class at the threshold
+ *   with a one-line delegate; the scope matching it delegates to lives in TemplateScope.
  */
 class TemplateService implements TemplateServiceInterface {
 
@@ -184,8 +191,7 @@ class TemplateService implements TemplateServiceInterface {
 		try {
 			$result = $objectService->find(
 				id: $id,
-				register: $config['register'],
-				schema: $config['schema']
+				options: new ObjectFindOptions(register: $config['register'], schema: $config['schema'])
 			);
 		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 			throw new Exception(message: 'Template not found', code: 404);
@@ -313,8 +319,7 @@ class TemplateService implements TemplateServiceInterface {
 
 		$result = $objectService->saveObject(
 			object: $data,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']))
 		);
 
 		if (is_object($result) === true
@@ -372,8 +377,7 @@ class TemplateService implements TemplateServiceInterface {
 
 		$result = $objectService->saveObject(
 			object: $merged,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']))
 		);
 
 		// Snapshot the previous state only once the save has gone through, so
@@ -422,8 +426,7 @@ class TemplateService implements TemplateServiceInterface {
 
 		$result = $objectService->saveObject(
 			object: $merged,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']))
 		);
 
 		if (is_object($result) === true
@@ -455,9 +458,10 @@ class TemplateService implements TemplateServiceInterface {
 
 		try {
 			$objectService->deleteObject(
-				uuid: $id,
-				register: $config['register'],
-				schema: $config['schema']
+				new ObjectDeletion(
+					uuid: $id,
+					target: new ObjectFindTarget(register: $config['register'], schema: $config['schema'])
+				)
 			);
 		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 			throw new Exception(message: 'Template not found', code: 404);
@@ -486,6 +490,31 @@ class TemplateService implements TemplateServiceInterface {
 
 		return $result['results'];
 	}//end getTemplatesByNamespace()
+
+	/**
+	 * The templates that apply to an object of this register and schema.
+	 *
+	 * A template applies when its `scope` is empty, or holds the
+	 * `{register, schema}` pair. Scope entries match on slugs, which each app
+	 * keeps frozen, so a scope written today still matches tomorrow.
+	 *
+	 * @param string $register The host object's register slug.
+	 * @param string $schema   The host object's schema slug.
+	 * @param int    $limit    How many templates to consider at most.
+	 *
+	 * @return list<array<string, mixed>> The applicable templates, in listing order.
+	 *
+	 * @throws Exception If listing fails
+	 *
+	 * @spec openspec/changes/template-library-leaf/specs/template-management/spec.md#requirement-template-scope-per-register-and-schema-req-tmpl-13
+	 */
+	public function listForObject(string $register, string $schema, int $limit=100): array {
+		return (new TemplateScope())->applicable(
+			page: $this->getTemplates(filters: [], limit: $limit, offset: 0),
+			register: $register,
+			schema: $schema
+		);
+	}//end listForObject()
 
 	/**
 	 * Duplicate a template
@@ -528,8 +557,7 @@ class TemplateService implements TemplateServiceInterface {
 
 		$result = $objectService->saveObject(
 			object: $duplicateData,
-			register: $config['register'],
-			schema: $config['schema']
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $config['register'], schema: $config['schema']))
 		);
 
 		if (is_object($result) === true

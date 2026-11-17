@@ -131,11 +131,13 @@ class DocumentProductionSchemaTest extends TestCase {
 		// 1.6.0 since `guided-document-wizard` (optional wizardContext).
 		// 1.7.0 since `generate-store-in-case-system` (optional caseSystemDeliveryId) and,
 		// separately, `office-template-authoring` (optional templateType and fragments);
-		// 1.8.0 once both are on one schema.
-		$this->assertSame('1.8.0', $document['version']);
+		// 1.8.0 since `template-library-leaf` (optional sourceObject) and, separately,
+		// once both 1.7.0 lines were on one schema; 1.9.0 once both 1.8.0 lines are.
+		$this->assertSame('1.9.0', $document['version']);
 		$this->assertSame(['twig', 'office'], $document['properties']['templateType']['enum']);
 		$this->assertSame('array', $document['properties']['fragments']['type']);
 		$this->assertArrayHasKey('caseSystemDeliveryId', $document['properties']);
+		$this->assertArrayHasKey('sourceObject', $document['properties']);
 		$this->assertArrayHasKey(
 			'documentDueForReview',
 			$document['x-openregister-notifications'],
@@ -166,11 +168,12 @@ class DocumentProductionSchemaTest extends TestCase {
 		// 1.4.0 since filinq-configurable-report-templates, which added `slug`
 		// and `tenantId`; 1.4.1 since both moved inside `properties` (see
 		// SchemaSlugIntegrityTest); 1.5.0 since template-merge-preview added
-		// `mergeFields`; 1.6.0 since office-template-authoring added
-		// `templateType`, the office source and the tag report. An importer
-		// skips an unchanged version, so this pin moves whenever the schema
-		// actually does.
-		$this->assertSame(expected: '1.6.0', actual: $schemas['template']['version']);
+		// `mergeFields`; 1.6.0 since template-library-leaf added `scope` and,
+		// separately, office-template-authoring added `templateType`, the office
+		// source and the tag report; 1.7.0 once both are on one schema. An
+		// importer skips an unchanged version, so this pin moves whenever the
+		// schema actually does.
+		$this->assertSame(expected: '1.7.0', actual: $schemas['template']['version']);
 
 		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
 			$this->assertArrayHasKey(

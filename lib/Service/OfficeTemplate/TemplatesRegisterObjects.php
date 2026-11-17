@@ -27,6 +27,10 @@ namespace OCA\Filinq\Service\OfficeTemplate;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
 use OCA\Filinq\Service\Support\OpenRegisterAccess;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use RuntimeException;
 use Throwable;
 
@@ -110,7 +114,7 @@ class TemplatesRegisterObjects {
 	 */
 	public function get(string $schema, string $id): array {
 		try {
-			$row = $this->objectService()->find(id: $id, register: $this->register(), schema: $schema);
+			$row = $this->objectService()->find(id: $id, options: new ObjectFindOptions(register: $this->register(), schema: $schema));
 		} catch (RuntimeException $e) {
 			throw $e;
 		} catch (Throwable) {
@@ -138,7 +142,10 @@ class TemplatesRegisterObjects {
 	 */
 	public function save(string $schema, array $data, ?string $id=null): array {
 		return $this->toArray(
-			value: $this->objectService()->saveObject(object: $data, register: $this->register(), schema: $schema, uuid: $id)
+			value: $this->objectService()->saveObject(
+				object: $data,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $this->register(), schema: $schema), uuid: $id)
+			)
 		);
 	}//end save()
 
@@ -156,7 +163,9 @@ class TemplatesRegisterObjects {
 	 */
 	public function delete(string $schema, string $id): void {
 		$this->get(schema: $schema, id: $id);
-		$this->objectService()->deleteObject(uuid: $id, register: $this->register(), schema: $schema);
+		$this->objectService()->deleteObject(
+			new ObjectDeletion(uuid: $id, target: new ObjectFindTarget(register: $this->register(), schema: $schema))
+		);
 	}//end delete()
 
 	/**

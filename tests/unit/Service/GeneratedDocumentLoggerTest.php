@@ -28,6 +28,7 @@ use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The audit entry, field by field, and what log() answers.
@@ -55,7 +56,9 @@ class GeneratedDocumentLoggerTest extends TestCase {
 	private function documentLogger(mixed $answer, ?LoggerInterface $logger = null): GeneratedDocumentLogger {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('saveObject')->willReturnCallback(
-			function (array $object, string $register, string $schema) use ($answer): mixed {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use ($answer): mixed {
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$this->saves[] = [$object, $register, $schema];
 				if ($answer instanceof Exception) {
 					throw $answer;

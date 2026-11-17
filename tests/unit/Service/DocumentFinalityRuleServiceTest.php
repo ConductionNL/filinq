@@ -29,6 +29,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Asserts that a consuming app's declaration freezes the right documents on the
@@ -242,6 +243,7 @@ class DocumentFinalityRuleServiceTest extends TestCase {
 		$objectService->method('searchObjectsBySlug')->willReturn([$this->declaration()]);
 		$objectService->method('saveObject')->willReturnCallback(
 			static function (...$arguments) use (&$saved): array {
+				$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 				$saved[] = $arguments;
 				return $arguments[0];
 			}

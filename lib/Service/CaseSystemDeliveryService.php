@@ -27,6 +27,10 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\CaseSystemDeliveryServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IUserManager;
 use RuntimeException;
 use Throwable;
@@ -48,7 +52,7 @@ use Throwable;
  *
  * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
  */
-class CaseSystemDeliveryService {
+class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 
 	/**
 	 * The register the bridge lands in.
@@ -313,9 +317,10 @@ class CaseSystemDeliveryService {
 
 		$saved = $this->objects->resolve()->saveObject(
 			object: $destination,
-			register: self::REGISTER,
-			schema: self::DESTINATION_SCHEMA,
-			uuid: $uuid
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::DESTINATION_SCHEMA),
+				uuid: $uuid
+			)
 		);
 
 		return (self::rowOf(entry: $saved) ?? ($destination + ['id' => $id]));
@@ -337,7 +342,11 @@ class CaseSystemDeliveryService {
 		$row = null;
 		if ($id !== '') {
 			$row = self::rowOf(
-				entry: $this->objects->resolve()->find(id: $id, register: self::REGISTER, schema: self::DELIVERY_SCHEMA, _rbac: false)
+				entry: $this->objects->resolve()->find(
+					id: $id,
+					options: new ObjectFindOptions(register: self::REGISTER, schema: self::DELIVERY_SCHEMA),
+					_rbac: false
+				)
 			);
 		}
 
@@ -355,9 +364,10 @@ class CaseSystemDeliveryService {
 
 		$saved = $this->objects->resolve()->saveObject(
 			object: $fields,
-			register: self::REGISTER,
-			schema: self::DELIVERY_SCHEMA,
-			uuid: (string) ($row['id'] ?? $id)
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::DELIVERY_SCHEMA),
+				uuid: (string) ($row['id'] ?? $id)
+			)
 		);
 
 		return (self::rowOf(entry: $saved) ?? ($fields + ['id' => $id]));
@@ -413,9 +423,10 @@ class CaseSystemDeliveryService {
 
 		$saved = $this->objects->resolve()->saveObject(
 			object: $fields,
-			register: self::REGISTER,
-			schema: self::DOCUMENT_SCHEMA,
-			uuid: $documentId
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: self::REGISTER, schema: self::DOCUMENT_SCHEMA),
+				uuid: $documentId
+			)
 		);
 
 		return (self::rowOf(entry: $saved) ?? ($fields + ['id' => $documentId]));
@@ -540,8 +551,7 @@ class CaseSystemDeliveryService {
 
 		$saved = $this->objects->resolve()->saveObject(
 			object: $delivery,
-			register: self::REGISTER,
-			schema: self::DELIVERY_SCHEMA
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: self::DELIVERY_SCHEMA))
 		);
 
 		return (self::rowOf(entry: $saved) ?? $delivery);
