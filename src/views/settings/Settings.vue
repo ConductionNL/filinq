@@ -145,6 +145,15 @@
 					}}
 				</div>
 			</div>
+
+			<div class="setting-item">
+				<NcTextField
+					:modelValue="settings['woo.default_publisher']"
+					:label="t('filinq', 'Publisher (TOOI identifier)')"
+					:helperText="t('filinq', 'A new publication starts with this publisher.')"
+					data-testid="settings-woo-default-publisher"
+					@update:modelValue="settings['woo.default_publisher'] = $event" />
+			</div>
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -725,6 +734,7 @@
 
 		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
 		<SignerIdentitySettings v-if="isAdmin" />
+		<SigningSourcesSettings v-if="isAdmin" />
 		<CaseSystemDeliverySettings v-if="isAdmin" />
 		<BridgeSourcesSettings v-if="isAdmin" />
 
@@ -912,6 +922,7 @@ import PageLayoutSettings from './PageLayoutSettings.vue'
 import RefusalGroundsSource from './RefusalGroundsSource.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
+import SigningSourcesSettings from './SigningSourcesSettings.vue'
 import {
 	backendStateFromSettings,
 	emptyBackendState,
@@ -1045,6 +1056,7 @@ export default {
 		PageLayoutSettings,
 		SettingSwitchRow,
 		SignerIdentitySettings,
+		SigningSourcesSettings,
 		BridgeSourcesSettings,
 		CaseSystemDeliverySettings,
 	},
@@ -1282,6 +1294,8 @@ export default {
 						?? 'pdf-only'
 					this.settings['anonymisation.output_subfolder_name'] =
 						data['anonymisation.output_subfolder_name'] || 'anonymised'
+					this.settings['woo.default_publisher'] =
+						data['woo.default_publisher'] || ''
 					// Entity types enabled for automatic detection (all-on by default).
 					this.enabledEntityTypes =
 						data['filinq.anonymisation.enabled_entity_types'] || []
@@ -1503,6 +1517,8 @@ export default {
 
 				'anonymisation.output_subfolder_name':
 					this.settings['anonymisation.output_subfolder_name'],
+
+				'woo.default_publisher': (this.settings['woo.default_publisher'] || '').trim(),
 
 				// Sent as an object; the backend json-encodes it for storage.
 				'filinq.grondslagen.entity_type_bases': this.entityTypeBases,

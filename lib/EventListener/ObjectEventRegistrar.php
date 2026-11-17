@@ -144,6 +144,13 @@ class ObjectEventRegistrar {
 			'OCA\Filinq\EventListener\PseudonymMapLinkDeletedListener'
 		);
 
+		// A publication goes offline when OpenRegister destroys its source
+		// (specify-capability-rows, REQ-SCR-009).
+		$context->registerEventListener(
+			ObjectDeletedEvent::class,
+			'OCA\Filinq\EventListener\PublicationSourceDestroyedListener'
+		);
+
 		// REGISTERED BY STRING, NOT BY `::class`. `EntityRelationDecisionUpdatedEvent`
 		// belongs to OpenRegister, which is an OPTIONAL peer — a `use` plus
 		// `::class` would resolve the class at registration time and make this
