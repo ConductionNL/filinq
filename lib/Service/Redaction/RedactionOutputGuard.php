@@ -37,6 +37,9 @@ use OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface;
 
 /**
  * Refuses a redacted write until somebody has checked this detection run.
+ *
+ * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+ * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md
  */
 class RedactionOutputGuard implements RedactionOutputGuardInterface {
 
@@ -46,6 +49,7 @@ class RedactionOutputGuard implements RedactionOutputGuardInterface {
 	 * @param RedactionReviewGate            $gate     The decision.
 	 * @param RedactionReviewMarkRepository  $marks    Where the marks are kept.
 	 * @param DetectionRunIdentity           $runs     Names one detection run.
+	 * @param FourEyesPolicy                 $fourEyes Whether the checker may also anonymise.
 	 *
 	 * @return void
 	 */
@@ -53,6 +57,7 @@ class RedactionOutputGuard implements RedactionOutputGuardInterface {
 		private readonly RedactionReviewGate $gate,
 		private readonly RedactionReviewMarkRepository $marks,
 		private readonly DetectionRunIdentity $runs,
+		private readonly FourEyesPolicy $fourEyes,
 	) {
 
 	}//end __construct()
@@ -63,19 +68,33 @@ class RedactionOutputGuard implements RedactionOutputGuardInterface {
 	 * @param int                              $fileId   The document about to be written.
 	 * @param array<int, array<string, mixed>> $entities The entities this run found.
 	 * @param string                           $etag     The file's etag, when known.
+	 * @param string                           $actor    Who is anonymising, '' when unknown.
+	 * @param bool                             $wooRun   Whether the run is a Woo run.
 	 *
 	 * @return void
 	 *
-	 * @throws RedactionNotReviewedException When nobody has checked this run.
+	 * @throws RedactionNotReviewedException When nobody has checked this run, or under four eyes the
+	 *                                       checker is the one anonymising or the anonymiser is unknown.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
 	 */
-	public function assertMayWrite(int $fileId, array $entities, string $etag = ''): void {
+	public function assertMayWrite(
+		int $fileId,
+		array $entities,
+		string $etag = '',
+		string $actor = '',
+		bool $wooRun = false,
+	): void {
 		$document = (string)$fileId;
 		$runId = $this->runs->of(fileId: $fileId, entities: $entities, etag: $etag);
 		$mark = $this->marks->findFor(document: $document);
 
 		$refusal = $this->gate->refuse(mark: $mark, detectionRunId: $runId);
+		if ($refusal === null && $mark !== null && $this->fourEyes->appliesTo(wooRun: $wooRun) === true) {
+			$refusal = $this->gate->refuseFourEyes(mark: $mark, actor: $actor);
+		}
+
 		if ($refusal === null) {
 			return;
 		}
@@ -164,7 +183,8 @@ class RedactionOutputGuard implements RedactionOutputGuardInterface {
 	 * A batch asks once rather than per document, so the operator gets one
 	 * list of what is holding the run up instead of a refusal per file.
 	 *
-	 * @param array<int, array<string, mixed>> $documents Each with `fileId` and `entities`.
+	 * @param array<int, array<string, mixed>> $documents Each with `fileId` and `entities`, and the run's `actor`
+	 *                                                   and `wooRun` for the four-eyes rule.
 	 *
 	 * @return array<string, mixed> `allowed` file ids and `refused` entries.
 	 *
@@ -185,7 +205,9 @@ class RedactionOutputGuard implements RedactionOutputGuardInterface {
 				$this->assertMayWrite(
 					fileId: $fileId,
 					entities: $entities,
-					etag: (string)($document['etag'] ?? '')
+					etag: (string)($document['etag'] ?? ''),
+					actor: (string)($document['actor'] ?? ''),
+					wooRun: (($document['wooRun'] ?? false) === true)
 				);
 				$allowed[] = $fileId;
 			} catch (RedactionNotReviewedException $e) {

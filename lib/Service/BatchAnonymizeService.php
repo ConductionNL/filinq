@@ -29,6 +29,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 
@@ -233,7 +234,11 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 */
 	private function anonymizeEntry(BatchAnonymizeRun $run, int|string $index): void {
 		$fileId = $run->batch['files'][$index]['fileId'];
-		$outcome = $this->anonymizeBatchFile(entry: $run->batch['files'][$index], request: $run->request);
+		$outcome = $this->anonymizeBatchFile(
+			entry: $run->batch['files'][$index],
+			request: $run->request,
+			userId: (string)($run->batch['userId'] ?? '')
+		);
 		if ($outcome['error'] === null) {
 			$outcome['entry'] = $this->applyOutputLayout(
 				entry: $outcome['entry'],
@@ -248,7 +253,12 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 			return;
 		}
 
-		$run->skipped[] = ['fileId' => $fileId, 'reason' => $outcome['error']];
+		$skipped = ['fileId' => $fileId, 'reason' => $outcome['error']];
+		if (isset($outcome['entry']['refusal']) === true) {
+			$skipped['refusal'] = $outcome['entry']['refusal'];
+		}
+
+		$run->skipped[] = $skipped;
 
 	}//end anonymizeEntry()
 
@@ -288,21 +298,31 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 * @param BatchAnonymizeRequest $request The entities and per-batch options; `appendBasisSummary`
 	 *                                       selects which AnonymizationService entry point is used,
 	 *                                       the rest are forwarded verbatim.
+	 * @param string $userId Who started the batch, passed on as the acting user.
 	 *
 	 * @return array{entry: array<string, mixed>, error: string|null} The updated entry plus the
 	 *                                                                failure reason, or null when
 	 *                                                                the file was anonymized.
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-3
 	 */
-	private function anonymizeBatchFile(array $entry, BatchAnonymizeRequest $request): array {
+	private function anonymizeBatchFile(array $entry, BatchAnonymizeRequest $request, string $userId): array {
 		try {
-			$result = $this->anonymizeOneFile(fileId: (int)$entry['fileId'], request: $request);
+			$result = $this->anonymizeOneFile(fileId: (int)$entry['fileId'], request: $request, userId: $userId);
 
 			return [
 				'entry' => $this->applyAnonymizedResult(entry: $entry, result: $result),
 				'error' => null,
 			];
+		} catch (RedactionNotReviewedException $e) {
+			// The review gate refused this document (not checked, checked an
+			// older run, or under four eyes checked by the batch's starter).
+			// The machine reason travels with it so a screen can say which.
+			$entry['status'] = 'error';
+			$entry['error'] = $e->getMessage();
+			$entry['refusal'] = $e->getReason();
+			return ['entry' => $entry, 'error' => $e->getMessage()];
 		} catch (ConversionFailedException $e) {
 			// PDF conversion exhausted the cascade for this file — mark this
 			// file as error, attach the attempts surface for the batch caller
@@ -330,17 +350,19 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 *
 	 * @param int $fileId The Nextcloud file id to anonymize.
 	 * @param BatchAnonymizeRequest $request The entities and per-batch options.
+	 * @param string $userId Who started the batch: the acting user the four-eyes rule compares.
 	 *
 	 * @return array<string, mixed> The AnonymizationService result payload.
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 	 */
-	private function anonymizeOneFile(int $fileId, BatchAnonymizeRequest $request): array {
+	private function anonymizeOneFile(int $fileId, BatchAnonymizeRequest $request, string $userId = ''): array {
 		$callOptions = $request->callOptions;
 		$options = (new AnonymizeOptions())
 			->withConsents(unredactedEntities: $callOptions['unredactedEntities'], overrides: [])
 			->withOutputFormat(outputFormat: $callOptions['outputFormat'])
-			->withScope(scope: $callOptions['scope'], dossierKey: null);
+			->withScope(scope: $callOptions['scope'], dossierKey: null)
+			->withUserId(userId: $userId);
 		if ($callOptions['appendBasisSummary'] === true) {
 			return $this->anonService->anonymizeDocumentWithBasisSummary(fileId: $fileId, entities: $request->entities, options: $options);
 		}

@@ -42,14 +42,17 @@ interface RedactionOutputGuardInterface {
 	 * @param int                              $fileId   The document about to be written.
 	 * @param array<int, array<string, mixed>> $entities The entities this run found.
 	 * @param string                           $etag     The file's etag, when known.
+	 * @param string                           $actor    Who is anonymising, '' when unknown.
+	 * @param bool                             $wooRun   Whether the run is a Woo run.
 	 *
 	 * @return void
 	 *
-	 * @throws RedactionNotReviewedException When nobody has checked this run.
+	 * @throws RedactionNotReviewedException When nobody has checked this run, or under four eyes the
+	 *                                       checker is the one anonymising or the anonymiser is unknown.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 */
-	public function assertMayWrite(int $fileId, array $entities, string $etag = ''): void;
+	public function assertMayWrite(int $fileId, array $entities, string $etag = '', string $actor = '', bool $wooRun = false): void;
 
 	/**
 	 * Record that a person checked this run, and say which run that was.
