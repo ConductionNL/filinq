@@ -46,9 +46,6 @@ use RuntimeException;
 class PublicationPipelineService implements PublicationPipelineServiceInterface {
 
 	/**
-	 * The Woo metadata an operator may set.
-	 */
-	/**
 	 * The admin setting holding the organisation's default publisher (a TOOI URI).
 	 *
 	 * @var string
@@ -69,6 +66,9 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 */
 	public const PAST_HANDOFF = ['handed_off', 'published', 'depublication_requested', 'depublished'];
 
+	/**
+	 * The Woo metadata an operator may set.
+	 */
 	public const METADATA = [
 		'wooCategory',
 		'documentsoort',
