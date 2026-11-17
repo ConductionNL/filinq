@@ -58,7 +58,6 @@ use OCA\Filinq\Kernel\Contracts\DataResolverServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DemoDataServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DetectionProviderConfigInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentComparisonServiceInterface;
-use OCA\Filinq\Kernel\Contracts\DocumentCopyServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentDomainServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentMergeServiceInterface;
@@ -280,7 +279,6 @@ final class ContractBindings {
 		DemoDataServiceInterface::class                => DemoDataService::class,
 		DetectionProviderConfigInterface::class        => DetectionProviderConfig::class,
 		DocumentComparisonServiceInterface::class      => DocumentComparisonService::class,
-		DocumentCopyServiceInterface::class            => DocumentCopyService::class,
 		DocumentDomainServiceInterface::class          => DocumentDomainService::class,
 		DocumentFinalityRuleServiceInterface::class    => DocumentFinalityRuleService::class,
 		DocumentMergeServiceInterface::class           => DocumentMergeService::class,

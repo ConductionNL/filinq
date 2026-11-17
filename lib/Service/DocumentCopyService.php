@@ -26,7 +26,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
-use OCA\Filinq\Kernel\Contracts\DocumentCopyServiceInterface;
 use OCA\Filinq\Exception\DomainLinkRefusedException;
 use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
@@ -54,7 +53,7 @@ use Throwable;
  *
  * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
  */
-class DocumentCopyService implements DocumentCopyServiceInterface {
+class DocumentCopyService {
 	use ReadsCurrentUserId;
 
 	/**
