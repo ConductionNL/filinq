@@ -30,6 +30,8 @@ use OCA\Filinq\Service\FieldFill\SchemaFieldFillService;
 use OCA\Filinq\Service\FieldFill\TextPassage;
 use OCA\Filinq\Service\LocalTextAi;
 use OCA\Filinq\Service\OcrService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -113,12 +115,14 @@ class SchemaFieldFillServiceTest extends TestCase {
 	 */
 	private function service(bool $admin = false): SchemaFieldFillService {
 		$objects = $this->createMock(ObjectService::class);
-		$objects->method('find')->willReturnCallback(function (string $id = '', string $register = '', string $schema = '') {
-			$this->finds[] = ['id' => $id, 'register' => $register, 'schema' => $schema];
+		$objects->method('find')->willReturnCallback(function (string $id = '', ?ObjectFindOptions $options = null) {
+			$this->finds[] = ['id' => $id, 'register' => (string)($options?->register ?? ''), 'schema' => (string)($options?->schema ?? '')];
 			return ($this->records[$id] ?? null);
 		});
-		$objects->method('saveObject')->willReturnCallback(function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null) {
-			$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
+		$objects->method('saveObject')->willReturnCallback(function (array $object = [], ?ObjectSaveOptions $options = null) {
+			$schema = (string)($options?->target->schema ?? '');
+			$uuid   = $options?->uuid;
+			$this->saved[] = ['object' => $object, 'register' => (string)($options?->target->register ?? ''), 'schema' => $schema, 'uuid' => $uuid];
 			if ($this->refuseRecordWrite === true && $schema === 'subsidieaanvraag') {
 				throw new RuntimeException('Permission denied', 403);
 			}

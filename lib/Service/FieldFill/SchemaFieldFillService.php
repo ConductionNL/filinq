@@ -30,6 +30,8 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentTextSource;
 use OCA\Filinq\Service\Extraction\AiPrompt;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Filinq\Service\LocalTextAi;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -232,8 +234,9 @@ class SchemaFieldFillService {
 
 		$saved = $this->decisions->row(object: $this->objectResolver->resolve()->saveObject(
 			object: $suggestion,
-			register: IntakeRepository::REGISTER,
-			schema: self::SCHEMA
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA)
+			)
 		));
 
 		$stored = array_merge($suggestion, $saved);

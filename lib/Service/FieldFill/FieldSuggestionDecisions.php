@@ -32,6 +32,9 @@ use DateTimeInterface;
 use OCA\Filinq\Exception\FieldFillRefused;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\IGroupManager;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -125,9 +128,10 @@ class FieldSuggestionDecisions {
 		unset($object['uuid'], $object['@self'], $object['id']);
 		$this->objectResolver->resolve()->saveObject(
 			object: $object,
-			register: IntakeRepository::REGISTER,
-			schema: SchemaFieldFillService::SCHEMA,
-			uuid: $id
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: SchemaFieldFillService::SCHEMA),
+				uuid: $id
+			)
 		);
 
 		return $suggestion;
@@ -147,7 +151,10 @@ class FieldSuggestionDecisions {
 	 */
 	private function readSuggestion(string $id, string $userId): array {
 		try {
-			$found = $this->objectResolver->resolve()->find(id: $id, register: IntakeRepository::REGISTER, schema: SchemaFieldFillService::SCHEMA);
+			$found = $this->objectResolver->resolve()->find(
+				id: $id,
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: SchemaFieldFillService::SCHEMA)
+			);
 		} catch (Throwable $e) {
 			$found = null;
 		}
@@ -257,9 +264,10 @@ class FieldSuggestionDecisions {
 			// RBAC and multitenancy stay on: the write is the clerk's, with the clerk's rights (design D4).
 			$this->objectResolver->resolve()->saveObject(
 				object: array_merge($record, $updates),
-				register: $register,
-				schema: $schema,
-				uuid: $objectId
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $register, schema: $schema),
+					uuid: $objectId
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->info(
@@ -291,7 +299,10 @@ class FieldSuggestionDecisions {
 		}
 
 		try {
-			$found = $this->objectResolver->resolve()->find(id: $objectId, register: $register, schema: $schema);
+			$found = $this->objectResolver->resolve()->find(
+				id: $objectId,
+				options: new ObjectFindOptions(register: $register, schema: $schema)
+			);
 		} catch (Throwable $e) {
 			$found = null;
 		}

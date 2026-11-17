@@ -23,6 +23,7 @@ namespace OCA\Filinq\Tests\Unit\Service\FieldFill;
 use OCA\Filinq\Exception\FieldFillRefused;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\FieldFill\FieldFillProfileService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -58,8 +59,9 @@ class FieldFillProfileServiceTest extends TestCase {
 	 */
 	private function service(mixed $rows = [], bool $noSchema = false): FieldFillProfileService {
 		$objects = $this->createMock(ObjectService::class);
-		$objects->method('saveObject')->willReturnCallback(function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null): array {
-			$this->saved[] = ['object' => $object, 'register' => $register, 'schema' => $schema, 'uuid' => $uuid];
+		$objects->method('saveObject')->willReturnCallback(function (array $object = [], ?ObjectSaveOptions $options = null): array {
+			$uuid = $options?->uuid;
+			$this->saved[] = ['object' => $object, 'register' => (string)($options?->target->register ?? ''), 'schema' => (string)($options?->target->schema ?? ''), 'uuid' => $uuid];
 			return ['@self' => ['id' => ($uuid ?? 'p-1')], 'object' => $object];
 		});
 		$objects->method('searchObjectsBySlug')->willReturnCallback(function (string $registerSlug, string $schemaSlug, array $filters = []) use ($rows): array {

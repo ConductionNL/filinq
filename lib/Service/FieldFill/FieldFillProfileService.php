@@ -26,6 +26,8 @@ namespace OCA\Filinq\Service\FieldFill;
 use OCA\Filinq\Exception\FieldFillRefused;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -128,12 +130,17 @@ class FieldFillProfileService {
 
 		$this->refuseFields(fields: $clean['fields'], properties: $this->properties(schema: $clean['schema']));
 
-		$arguments = ['object' => $clean, 'register' => IntakeRepository::REGISTER, 'schema' => self::SCHEMA];
-		if ($uuid !== null && $uuid !== '') {
-			$arguments['uuid'] = $uuid;
+		if ($uuid === '') {
+			$uuid = null;
 		}
 
-		$saved = $this->objectResolver->resolve()->saveObject(...$arguments);
+		$saved = $this->objectResolver->resolve()->saveObject(
+			object: $clean,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
+				uuid: $uuid
+			)
+		);
 		$row   = $this->normalise(row: $saved);
 
 		return ($row ?? $clean);
