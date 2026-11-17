@@ -19,6 +19,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\VeraPdf;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
 use RuntimeException;
@@ -93,18 +95,20 @@ class AccessibilityConformanceReportRepository {
 	 */
 	public function save(array $report): array {
 		unset($report['uuid']);
-		$arguments = [
-			'object' => $report,
-			'register' => IntakeRepository::REGISTER,
-			'schema' => self::SCHEMA,
-		];
+		$uuid     = null;
 		$existing = $this->findForFile(fileId: (int) $report['fileId']);
 		if ($existing !== null && ($existing['uuid'] ?? '') !== '') {
-			$arguments['uuid'] = $existing['uuid'];
+			$uuid = (string) $existing['uuid'];
 		}
 
 		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
+			$stored = $this->objectResolver->resolve()->saveObject(
+				object: $report,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid
+				)
+			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'Could not store the accessibility conformance report: ' . $e->getMessage(), code: 0, previous: $e);
 		}

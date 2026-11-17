@@ -22,6 +22,7 @@ use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\VeraPdf\AccessibilityConformanceReportRepository;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -91,7 +92,14 @@ class AccessibilityConformanceReportRepositoryTest extends TestCase {
 	public function testANewReportIsCreatedWithoutAUuid(): void {
 		$this->objects->method('searchObjectsBySlug')->willReturn([]);
 		$this->objects->expects($this->once())->method('saveObject')
-			->with(['fileId' => 7, 'compliant' => false], IntakeRepository::REGISTER, AccessibilityConformanceReportRepository::SCHEMA)
+			->with(
+				['fileId' => 7, 'compliant' => false],
+				$this->callback(
+					callback: static fn (ObjectSaveOptions $options): bool => $options->target->register === IntakeRepository::REGISTER
+						&& $options->target->schema === AccessibilityConformanceReportRepository::SCHEMA
+						&& $options->uuid === null
+				)
+			)
 			->willReturn($this->row('new', ['fileId' => 7, 'compliant' => false]));
 
 		$this->assertSame(7, $this->repository->save(report: ['uuid' => 'ignored', 'fileId' => 7, 'compliant' => false])['fileId']);

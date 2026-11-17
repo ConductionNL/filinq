@@ -33,6 +33,8 @@ use OCA\Filinq\Service\VeraPdf\AccessibleRegenerationService;
 use OCA\Filinq\Service\VeraPdf\ConformanceGuidance;
 use OCA\Filinq\Service\VeraPdf\PdfUaVerdictTagger;
 use OCA\Filinq\Tests\Unit\Service\SubjectErasure\SubjectErasureDoubles;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\Files\File;
 use OCP\SystemTag\ISystemTag;
 use OCP\SystemTag\ISystemTagManager;
@@ -112,8 +114,7 @@ class AccessibleRegenerationServiceTest extends TestCase {
 				'status' => 'generated',
 				'fileId' => 812,
 			],
-			register: 'filinq',
-			schema: 'generatedDocument'
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'generatedDocument'))
 		);
 
 	}//end generated()
