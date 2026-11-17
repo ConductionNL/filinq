@@ -132,7 +132,7 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @return object|null The engine, exposing `transitionAsSystem()`.
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
 	 */
 	public function getTransitionEngine(): ?object {
 		return $this->openRegister->getTransitionEngine();

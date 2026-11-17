@@ -103,4 +103,36 @@ class SchemaSlugIntegrityTest extends TestCase {
 		$this->assertArrayNotHasKey('tenantId', $template, 'tenantId sits among the schema keys, not the properties.');
 
 	}//end testTheTemplateDeclaresSlugAndTenantAsProperties()
+
+	/**
+	 * Every configured name and description field is a property of its schema.
+	 *
+	 * OpenRegister refuses a schema whose `objectNameField` or
+	 * `objectDescriptionField` names no property, and the import carries on
+	 * without it: the register is created, the schema and its seed objects are not.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/filinq-configurable-report-templates/specs/template-management/spec.md#requirement-template-slug-resolution-req-tmpl-13
+	 */
+	public function testEveryConfiguredDisplayFieldIsAProperty(): void {
+		$schemas = $this->descriptor()['components']['schemas'];
+
+		foreach ($schemas as $key => $schema) {
+			$configuration = ($schema['configuration'] ?? []);
+			foreach (['objectNameField', 'objectDescriptionField'] as $field) {
+				$value = ($configuration[$field] ?? '');
+				if ($value === '') {
+					continue;
+				}
+
+				$this->assertArrayHasKey(
+					explode('.', $value)[0],
+					$schema['properties'] ?? [],
+					'schema ' . $key . ' names ' . $field . ' "' . $value . '", which is not one of its properties.'
+				);
+			}
+		}
+
+	}//end testEveryConfiguredDisplayFieldIsAProperty()
 }//end class
