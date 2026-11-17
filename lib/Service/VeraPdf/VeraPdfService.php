@@ -52,6 +52,11 @@ class VeraPdfService {
 	 */
 	public const DEFAULT_FLAVOUR = '3b';
 
+	/**
+	 * The PDF/UA-1 flavour veraPDF validates the Matterhorn Protocol under.
+	 */
+	public const UA_FLAVOUR = 'ua1';
+
 	private const APP_ID = 'filinq';
 
 	/**
@@ -139,9 +144,54 @@ class VeraPdfService {
 			throw new VeraPdfException(reason: VeraPdfException::REASON_FAILED, message: 'The document could not be read.', previous: $e);
 		}
 
+		if ($flavour === self::UA_FLAVOUR) {
+			return $this->validateUaBytes(bytes: $bytes);
+		}
+
 		return $this->validateBytes(bytes: $bytes, flavour: $flavour);
 
 	}//end validate()
+
+	/**
+	 * Validate a stored file against PDF/UA-1 (the Matterhorn Protocol), with
+	 * the same binary, configuration and probe as the PDF/A checks.
+	 *
+	 * @param File $file The PDF.
+	 *
+	 * @return array<string, mixed> The verdict, flavour `ua1`, with elapsedMs.
+	 *
+	 * @throws VeraPdfException When no verdict could be had.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-pdfua-1-conformance-is-validated-through-the-shared-verapdf-backend-req-ddpum-001
+	 */
+	public function validateUa(File $file): array {
+		return $this->validate(file: $file, flavour: self::UA_FLAVOUR);
+
+	}//end validateUa()
+
+	/**
+	 * Validate PDF bytes against PDF/UA-1.
+	 *
+	 * A report for any other profile is refused rather than passed off as a
+	 * PDF/UA verdict.
+	 *
+	 * @param string $bytes The PDF.
+	 *
+	 * @return array<string, mixed> The verdict, flavour `ua1`, with elapsedMs.
+	 *
+	 * @throws VeraPdfException When no PDF/UA verdict could be had.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-pdfua-1-conformance-is-validated-through-the-shared-verapdf-backend-req-ddpum-001
+	 */
+	public function validateUaBytes(string $bytes): array {
+		$verdict = $this->validateBytes(bytes: $bytes, flavour: self::UA_FLAVOUR);
+		if (($verdict['flavour'] ?? '') !== self::UA_FLAVOUR) {
+			throw new VeraPdfException(reason: VeraPdfException::REASON_FAILED, message: 'veraPDF did not report a PDF/UA-1 verdict.');
+		}
+
+		return $verdict;
+
+	}//end validateUaBytes()
 
 	/**
 	 * Validate PDF bytes, such as a conversion's output before it is stored.

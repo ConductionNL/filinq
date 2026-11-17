@@ -26,6 +26,7 @@ use OCA\Filinq\EventListener\DocumentSigningRequestedListener;
 use OCA\Filinq\EventListener\DossierCheckedOnListener;
 use OCA\Filinq\EventListener\IntegrationLeafRegistrar;
 use OCA\Filinq\EventListener\ListenerRegistrar;
+use OCA\Filinq\EventListener\PdfUaAttachListener;
 use OCA\Filinq\EventListener\SigningTaskListener;
 use OCA\Filinq\Flow\FilinqFlowNodeListener;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
@@ -92,7 +93,7 @@ class ListenerRegistrarTest extends TestCase {
 
 		(new ListenerRegistrar())->register($context);
 
-		self::assertCount(30, $registered);
+		self::assertCount(33, $registered);
 		self::assertSame(['OCA\Filinq\Event\IntakeDocumentReceivedEvent', 'OCA\Filinq\EventListener\IntakeDocumentReceivedListener'], $registered[0]);
 		self::assertSame(
 			[
@@ -101,11 +102,11 @@ class ListenerRegistrarTest extends TestCase {
 				['OCA\OpenRegister\Event\TaskSequenceCompletedEvent', SigningTaskListener::class],
 				[DocumentSigningRequestedEvent::class, DocumentSigningRequestedListener::class],
 			],
-			array_slice($registered, 11, 4)
+			array_slice($registered, 12, 4)
 		);
 		self::assertSame(
 			array_fill(0, 7, IntegrationLeafRegistrar::LEAF_EVENT),
-			array_column(array_slice($registered, 15, 7), 0)
+			array_column(array_slice($registered, 16, 7), 0)
 		);
 		self::assertSame(
 			[
@@ -115,7 +116,14 @@ class ListenerRegistrarTest extends TestCase {
 				[RegisterOperationsEvent::class, RegisterFlowOperationsListener::class],
 				[LoadSettingsScriptsEvent::class, RegisterFlowOperationsListener::class],
 			],
-			array_slice($registered, 22, 5)
+			array_slice($registered, 23, 5)
+		);
+		self::assertSame(
+			[
+				['OCP\Files\Events\Node\NodeCreatedEvent', PdfUaAttachListener::class],
+				['OCP\Files\Events\Node\NodeWrittenEvent', PdfUaAttachListener::class],
+			],
+			array_slice($registered, 28, 2)
 		);
 		self::assertSame(
 			[
@@ -123,7 +131,7 @@ class ListenerRegistrarTest extends TestCase {
 				['OCP\Files\Events\Node\BeforeNodeDeletedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
 				['OCP\Share\Events\ShareCreatedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
 			],
-			array_slice($registered, 27)
+			array_slice($registered, 30)
 		);
 	}//end testRegisterDelegatesToEveryAreaInOrder()
 

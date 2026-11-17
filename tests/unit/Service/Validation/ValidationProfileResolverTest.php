@@ -46,6 +46,8 @@ class ValidationProfileResolverTest extends TestCase {
 		'pdf-language-missing' => 'warning',
 		'pdf-title-missing' => 'warning',
 		'pdfua-identifier-missing' => 'warning',
+		// Validator-backed (veraPDF ua1): off until an admin switches it on.
+		'pdfua-conformance-failed' => 'off',
 	];
 
 	/**
