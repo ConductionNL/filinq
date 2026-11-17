@@ -45,6 +45,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The real gate, occurrences and log over in-memory OpenRegister, files and
@@ -366,7 +367,10 @@ class EntitySearchServiceTest extends TestCase {
 	private function objectService(): ObjectService {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null, bool $_rbac = true) {
+			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true) {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
 				if ($this->logFails === true) {
 					throw new RuntimeException('database is locked');
 				}

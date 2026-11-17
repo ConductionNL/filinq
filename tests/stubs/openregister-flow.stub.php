@@ -105,6 +105,20 @@ interface IFlowNode {
 }//end interface
 
 /**
+ * A flow node in main's call form: execute() takes one FlowNodeCall.
+ */
+interface ICallFlowNode extends IFlowNode {
+	/**
+	 * Run the node.
+	 *
+	 * @param FlowNodeCall $call The items, the step config and the run context.
+	 *
+	 * @return array<int, array<string, mixed>> The resulting items.
+	 */
+	public function execute(FlowNodeCall $call): array;
+}
+
+/**
  * One call of a node (mirrors lib/Service/Flow/FlowNodeCall.php, openregister #9090).
  */
 final class FlowNodeCall {

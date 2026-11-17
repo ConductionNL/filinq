@@ -37,6 +37,7 @@ use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * IntakeOcrJob.
@@ -183,7 +184,10 @@ class IntakeOcrJobTest extends TestCase {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('find')->willReturn($stored);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions()): array {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$uuid = $options->uuid;
 				$this->saved[] = $object;
 
 				return $object + ['uuid' => $uuid];

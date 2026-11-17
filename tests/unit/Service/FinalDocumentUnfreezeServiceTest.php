@@ -34,6 +34,7 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Asserts that unfreezing needs the named right and a reason, that both are
@@ -93,6 +94,7 @@ class FinalDocumentUnfreezeServiceTest extends TestCase {
 		$objectService->method('searchObjectsBySlug')->willReturn($rows);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
+				$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 				$object = ($arguments[0] ?? []);
 				$this->written[] = $object;
 

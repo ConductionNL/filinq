@@ -72,6 +72,10 @@ $extra = [
         ['name' => 'version#restore', 'url' => 'api/documents/{fileId}/versions/{versionTimestamp}/restore', 'verb' => 'POST'],
 
         // Final document routes (final-documents-frozen).
+        // intake-pdf-password-removal: unlock a password-protected PDF into a copy beside it.
+        ['name' => 'pdfPassword#remove', 'url' => 'api/documents/{fileId}/remove-password', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        // ...and the same for a waiting intake document, which then names the copy (REQ-PPR-004).
+        ['name' => 'pdfPassword#removeForIntake', 'url' => 'api/intake/documents/{uuid}/remove-password', 'verb' => 'POST'],
         ['name' => 'finalDocument#show', 'url' => 'api/documents/{fileId}/final', 'verb' => 'GET'],
         ['name' => 'finalDocument#finalise', 'url' => 'api/documents/{fileId}/final', 'verb' => 'POST'],
         ['name' => 'finalDocument#correct', 'url' => 'api/documents/{fileId}/final/correction', 'verb' => 'POST'],
@@ -191,6 +195,8 @@ $extra = [
         // (custom-dictionary-recognition).
         ['name' => 'customDictionary#index', 'url' => 'api/custom-dictionaries', 'verb' => 'GET'],
         ['name' => 'customDictionaryCapabilities#show', 'url' => 'api/custom-dictionaries/capabilities', 'verb' => 'GET'],
+        // Office suite WOPI availability (office-suite-portability).
+        ['name' => 'officeCapabilities#show', 'url' => 'api/office/capabilities', 'verb' => 'GET'],
         ['name' => 'customDictionary#create', 'url' => 'api/custom-dictionaries', 'verb' => 'POST'],
         ['name' => 'customDictionary#show', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'GET'],
         ['name' => 'customDictionary#update', 'url' => 'api/custom-dictionaries/{id}', 'verb' => 'PUT'],
@@ -312,6 +318,8 @@ $extra = [
 
         // Template routes.
         ['name' => 'templates#index', 'url' => 'api/templates', 'verb' => 'GET'],
+        // template-library-leaf 2.2: the templates that apply to one host object, for the generate-document leaf. Before api/templates/{id}.
+        ['name' => 'templates#forObject', 'url' => 'api/templates/for-object', 'verb' => 'GET'],
         ['name' => 'templates#create', 'url' => 'api/templates', 'verb' => 'POST'],
         ['name' => 'templatePreview#preview', 'url' => 'api/templates/preview', 'verb' => 'POST'],
         ['name' => 'templates#show', 'url' => 'api/templates/{id}', 'verb' => 'GET'],
@@ -334,6 +342,10 @@ $extra = [
         ['name' => 'signing#decline', 'url' => 'api/signing/requests/{id}/decline', 'verb' => 'POST'],
         ['name' => 'signing#bulkSign', 'url' => 'api/signing/bulk', 'verb' => 'POST'],
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
+        // Public, account-free signature verification by token (signature-verification-portal REQ-DDSVP-001/004).
+        ['name' => 'publicVerification#verify', 'url' => 'api/verify/{token}', 'verb' => 'GET'],
+        // The page a QR stamp points at; it reads the verdict from the route above (REQ-DDSVP-001).
+        ['name' => 'publicVerification#page', 'url' => 'verify/{token}', 'verb' => 'GET'],
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
         // Bulk send (bulk-signing-field-builder REQ-DDBSF-002): upload + report, confirm, progress, cancel.
         ['name' => 'bulkSigning#index', 'url' => 'api/signing/batches', 'verb' => 'GET'],
@@ -359,12 +371,25 @@ $extra = [
         // one-signing-rail-for-the-fleet REQ-DDSRC-004: which apps raise signing requests, admin only.
         ['name' => 'signingSourcesSettings#index', 'url' => 'api/settings/signing-sources', 'verb' => 'GET'],
 
+        // Woo refusal grounds for the pickers, read through the one resolver
+        // (grondslagen-read-from-dossiq REQ-GRD-002). Read only.
+        ['name' => 'grounds#index', 'url' => 'api/grounds', 'verb' => 'GET'],
+
         // Detection provider (llm-entity-detection-provider): per-organisation
         // provider choice and the local hermiq agentflow. Admin only: the
         // attribute and an in-method guard both refuse anyone else.
         ['name' => 'detectionProviderSettings#index', 'url' => 'api/detection-provider/settings', 'verb' => 'GET'],
         ['name' => 'detectionProviderSettings#update', 'url' => 'api/detection-provider/settings', 'verb' => 'PUT'],
         ['name' => 'detectionProviderSettings#test', 'url' => 'api/detection-provider/test', 'verb' => 'POST'],
+
+        // Case-system deliveries (generate-store-in-case-system REQ-GSC-003):
+        // the admin bridge panel's destinations and open deliveries, and the
+        // retry that puts a failed delivery back in the queue. Admin only: the
+        // attribute and an in-method guard both refuse anyone else.
+        ['name' => 'caseSystemDelivery#index', 'url' => 'api/bridge/case-system', 'verb' => 'GET'],
+        ['name' => 'caseSystemDelivery#saveDestination', 'url' => 'api/bridge/destinations', 'verb' => 'POST'],
+        ['name' => 'caseSystemDelivery#retry', 'url' => 'api/bridge/deliveries/{id}/retry', 'verb' => 'POST'],
+        ['name' => 'caseSystemFileStatus#index', 'url' => 'api/bridge/case-system/files', 'verb' => 'GET'],
 
         // Signing folder routes (signing-folder-across-cases): everything
         // pending for one signer across every record, and the pass that signs
@@ -412,6 +437,14 @@ $extra = [
         // resolves to a class that does not exist and 500s.
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
         ['name' => 'preferences#setPreference', 'url' => '/api/preferences/{key}', 'verb' => 'PUT'],
+        // zgw-document-bridge 2.4: sources (admin), staged documents, dossier pick-up, release and retry.
+        ['name' => 'caseSystemDelivery#sources', 'url' => '/api/bridge/sources', 'verb' => 'GET'],
+        ['name' => 'bridge#externalDocuments', 'url' => '/api/bridge/external-documents', 'verb' => 'GET'],
+        // zgw-document-bridge 3.2: the source badge of a listing page's files, in one lookup.
+        ['name' => 'bridge#badges', 'url' => '/api/bridge/badges', 'verb' => 'GET'],
+        ['name' => 'bridge#attach', 'url' => '/api/bridge/dossiers/{dossierId}/attach', 'verb' => 'POST'],
+        ['name' => 'bridge#release', 'url' => '/api/bridge/external-documents/{id}/release', 'verb' => 'POST'],
+        ['name' => 'bridge#retry', 'url' => '/api/bridge/external-documents/{id}/retry', 'verb' => 'POST'],
 ];
 
 // Preferred path: the OpenRegister AppHost owns the canonical route table.

@@ -515,6 +515,94 @@ class SigningVerificationServiceTest extends TestCase {
 	}//end testATamperedDocumentSaysWhatThatMeans()
 
 	/**
+	 * A rewritten signer field is never kept as a verified identity (signature-verification-portal REQ-DDSVP-002).
+	 *
+	 * The summary a verification record stores comes from summarise(): the
+	 * forged signer is kept only as asserted, with neither guarantee set, and
+	 * the public verdict built from that record says `tampered`.
+	 *
+	 * @return void
+	 */
+	public function testRewrittenSignerNotVerifiedIdentity(): void {
+		$secret = 'e2e-verification-secret';
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = '') use ($secret): string {
+				return $key === 'signing_verification_secret' ? $secret : $default;
+			}
+		);
+
+		[$signed, $assertion] = $this->buildV2SignedArtifact(secret: $secret);
+		$assertion['signer'] = 'Mallory (attacker)';
+		$forged = (string)preg_replace(
+			'/\/DocuDesk-Signature\([^)]*\)/',
+			'/DocuDesk-Signature(' . base64_encode((string)json_encode($assertion)) . ')',
+			$signed
+		);
+
+		$summary = $this->service->summarise(pdfContent: $forged);
+
+		$this->assertSame(
+			[[
+				'status' => 'invalid',
+				'level' => 'SES',
+				'method' => 'native',
+				'signerAsserted' => 'Mallory (attacker)',
+				'signedAt' => '2026-07-23T12:00:00+00:00',
+				'integrityVerified' => false,
+				'identityBound' => false,
+			]],
+			$summary
+		);
+
+		$verdict = $this->service->verifyByRecord(record: ['signatures' => $summary, 'revoked' => false]);
+		$this->assertSame('tampered', $verdict['status']);
+		$this->assertFalse($verdict['signatures'][0]['identityBound']);
+
+	}//end testRewrittenSignerNotVerifiedIdentity()
+
+	/**
+	 * A genuine v2 signature is summarised with both guarantees, because its MAC covers the signer fields.
+	 *
+	 * @return void
+	 */
+	public function testAGenuineSignatureIsSummarisedAsBound(): void {
+		$secret = 'e2e-verification-secret';
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default = '') use ($secret): string {
+				return $key === 'signing_verification_secret' ? $secret : $default;
+			}
+		);
+
+		[$signed] = $this->buildV2SignedArtifact(secret: $secret);
+
+		$summary = $this->service->summarise(pdfContent: $signed);
+
+		$this->assertSame('verified', $summary[0]['status']);
+		$this->assertSame('Alice', $summary[0]['signerAsserted']);
+		$this->assertTrue($summary[0]['integrityVerified']);
+		$this->assertTrue($summary[0]['identityBound']);
+		$this->assertArrayNotHasKey('ip', $summary[0], 'the public summary carries no client address');
+		$this->assertArrayNotHasKey('keyId', $summary[0], 'the public summary names no key');
+
+	}//end testAGenuineSignatureIsSummarisedAsBound()
+
+	/**
+	 * An external `/Type /Sig` signature is summarised as unverifiable, with neither guarantee.
+	 *
+	 * @return void
+	 */
+	public function testAnExternalSignatureIsSummarisedUnverifiable(): void {
+		$summary = $this->service->summarise(pdfContent: "%PDF-1.7\n1 0 obj\n<< /Type /Sig /Filter /Adobe.PPKLite >>\nendobj\n");
+
+		$this->assertCount(1, $summary);
+		$this->assertSame('unverifiable', $summary[0]['status']);
+		$this->assertSame('external', $summary[0]['method']);
+		$this->assertFalse($summary[0]['integrityVerified']);
+		$this->assertFalse($summary[0]['identityBound']);
+
+	}//end testAnExternalSignatureIsSummarisedUnverifiable()
+
+	/**
 	 * Run extractSignatures() over a document.
 	 *
 	 * @param string $signed The signed bytes.

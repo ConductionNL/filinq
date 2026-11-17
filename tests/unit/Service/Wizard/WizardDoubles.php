@@ -28,6 +28,9 @@ use OCA\OpenRegister\Service\ObjectService;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * In-memory wizardDefinition store with the register's validation.
@@ -77,13 +80,14 @@ class WizardObjectStore extends ObjectService {
 	 */
 	public function find(
 		string $id = '',
-		string $register = '',
-		string $schema = '',
+		?ObjectFindOptions $options = null,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $_render = true,
-		bool $_audit = true,
+		bool $_multitenancy = true
 	) {
+		$register = $options?->register ?? '';
+		$schema = $options?->schema ?? '';
+		$_render = $options?->render ?? true;
+		$_audit = $options?->audit ?? true;
 		if (isset($this->rows[$id]) === false) {
 			return null;
 		}
@@ -106,14 +110,15 @@ class WizardObjectStore extends ObjectService {
 	 */
 	public function saveObject(
 		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $_unowned = false,
-		?string $_owner = null,
+		bool $_multitenancy = true
 	) {
+		$register = $options->target->register ?? '';
+		$schema = $options->target->schema ?? '';
+		$uuid = $options->uuid;
+		$_unowned = $options->actor->unowned ?? false;
+		$_owner = $options->actor->owner;
 		if ($register !== 'filinq' || $schema !== 'wizardDefinition') {
 			throw new RuntimeException('unexpected target ' . $register . '/' . $schema);
 		}
@@ -173,12 +178,14 @@ class WizardObjectStore extends ObjectService {
 	 * @return bool True.
 	 */
 	public function deleteObject(
-		string $uuid = '',
-		string $register = '',
-		string $schema = '',
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_retentionSweep = false
 	) {
+		$uuid = $deletion->uuid ?? '';
+		$register = $deletion->target->register ?? '';
+		$schema = $deletion->target->schema ?? '';
 		unset($this->rows[$uuid]);
 		$this->deleted[] = $uuid;
 
