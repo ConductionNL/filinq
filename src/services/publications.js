@@ -15,11 +15,29 @@ const base = () => generateUrl('/apps/filinq/api/publications')
 /**
  * The publications the caller can see.
  *
+ * @param {object} [options] `{ incomplete: true }` lists only records with missing Woo metadata
  * @return {Promise<{results: object[], platformAvailable: boolean}>}
  * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
  */
-export async function listPublications() {
-	return (await axios.get(base())).data
+export async function listPublications(options = {}) {
+	if (options.incomplete !== true) {
+		return (await axios.get(base())).data
+	}
+
+	return (await axios.get(base(), { params: { incomplete: 1 } })).data
+}
+
+/**
+ * Set one metadata value on a selection of publications. Each record is
+ * checked on its own; one past hand-off or not the caller's is skipped.
+ *
+ * @param {string[]} ids The records
+ * @param {object} values One field and its value
+ * @return {Promise<{updated: object[], skipped: Array<{uuid: string, reason: string}>}>}
+ * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+ */
+export async function setMetadataMany(ids, values) {
+	return (await axios.put(base() + '/metadata', { ids, values })).data
 }
 
 /**
@@ -75,4 +93,37 @@ export async function publicationStep(id, step, body = {}) {
  */
 export async function listCategories() {
 	return (await axios.get(base() + '/categories')).data.results || []
+}
+
+/**
+ * Ask for the published copy of a publication. The server answers 409 with the
+ * download agreement to accept first when one is in force.
+ *
+ * @param {string} id The publication.
+ * @return {Promise<{blob: Blob|null, agreement: object|null}>} The file, or the agreement to show.
+ * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+ */
+export async function downloadPublication(id) {
+	const response = await axios.get(`${base()}/${id}/download`, {
+		responseType: 'blob',
+		validateStatus: (status) => status === 200 || status === 409,
+	})
+	if (response.status === 409) {
+		const decision = JSON.parse(await response.data.text())
+		return { blob: null, agreement: decision }
+	}
+	return { blob: response.data, agreement: null }
+}
+
+/**
+ * Record that the caller accepts the download agreement of one document.
+ *
+ * @param {string} document The document the agreement is on.
+ * @param {string} version The version of the terms the caller read.
+ * @return {Promise<object>} The decision.
+ * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+ */
+export async function acceptDownloadAgreement(document, version) {
+	const response = await axios.post(generateUrl('/apps/filinq/api/redaction/agreement/accept'), { document, version })
+	return response.data
 }
