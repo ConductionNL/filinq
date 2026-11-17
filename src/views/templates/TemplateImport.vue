@@ -127,6 +127,11 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * report.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		report() {
 			return (this.job && this.job.report) || []
 		},
@@ -138,10 +143,20 @@ export default {
 
 	methods: {
 		t,
+		/**
+		 * pick.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		pick(event) {
 			this.file = (event.target.files && event.target.files[0]) || null
 		},
 
+		/**
+		 * resultLabel.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		resultLabel(row) {
 			if (row.status === 'failed') {
 				return t('filinq', 'Failed: {reason}', { reason: row.reason || '' })
@@ -152,6 +167,11 @@ export default {
 			return row.kind === 'fragment' ? t('filinq', 'Text fragment') : t('filinq', 'Template')
 		},
 
+		/**
+		 * start.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		async start() {
 			this.error = ''
 			this.mapping = null
@@ -169,6 +189,11 @@ export default {
 			this.poll()
 		},
 
+		/**
+		 * poll.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		async poll() {
 			const result = await fetchImport(this.job.id)
 			if (result.ok) {
@@ -184,6 +209,11 @@ export default {
 			this.timer = setTimeout(() => this.poll(), POLL_MS)
 		},
 
+		/**
+		 * openMapping.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		openMapping(row) {
 			this.mapping = {
 				file: row.file,
@@ -191,6 +221,11 @@ export default {
 			}
 		},
 
+		/**
+		 * mappingSaved.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		mappingSaved(template) {
 			const row = this.report.find((line) => line.id === template.id)
 			if (row) {
@@ -199,6 +234,11 @@ export default {
 			this.mapping = null
 		},
 
+		/**
+		 * created.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		created(result) {
 			this.showUpload = false
 			const id = result && result.template && result.template.id

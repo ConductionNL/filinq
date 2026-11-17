@@ -65,6 +65,11 @@ export default {
 
 	methods: {
 		t,
+		/**
+		 * pick.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		pick(event) {
 			this.file = (event.target.files && event.target.files[0]) || null
 			if (this.file && this.fields.name === '') {
@@ -72,6 +77,11 @@ export default {
 			}
 		},
 
+		/**
+		 * submit.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		async submit() {
 			this.saving = true
 			this.error = ''

@@ -96,14 +96,29 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * report.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		report() {
 			return this.template.tagReport || {}
 		},
 
+		/**
+		 * unknown.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		unknown() {
 			return this.report.unknown || []
 		},
 
+		/**
+		 * tags.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		tags() {
 			if (Array.isArray(this.report.tags) && this.report.tags.length > 0) {
 				return this.report.tags
@@ -111,10 +126,20 @@ export default {
 			return (this.template.mergeFields || []).map((field) => ({ tag: field.path, status: 'unvalidated' }))
 		},
 
+		/**
+		 * sourceUrl.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		sourceUrl() {
 			return sourceUrl(this.template.id)
 		},
 
+		/**
+		 * previewUrl.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		previewUrl() {
 			return previewUrl(this.template.id)
 		},
@@ -123,6 +148,11 @@ export default {
 	methods: {
 		t,
 		n,
+		/**
+		 * statusLabel.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		statusLabel(status) {
 			return {
 				known: t('filinq', 'Known field'),
@@ -132,10 +162,20 @@ export default {
 			}[status] || status
 		},
 
+		/**
+		 * pick.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		pick(event) {
 			this.file = (event.target.files && event.target.files[0]) || null
 		},
 
+		/**
+		 * upload.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		async upload() {
 			this.uploading = true
 			this.uploadError = ''

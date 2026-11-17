@@ -74,6 +74,11 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * template.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		template(next) {
 			this.rows = unknownTags(next)
 		},
@@ -81,6 +86,11 @@ export default {
 
 	methods: {
 		t,
+		/**
+		 * save.
+		 *
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
 		async save() {
 			this.saving = true
 			this.error = ''
