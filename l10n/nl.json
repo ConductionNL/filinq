@@ -3465,7 +3465,23 @@
         "Retention period as an ISO 8601 duration, such as `P7Y`.": "Bewaartermijn als ISO 8601-duur, zoals `P7Y`.",
         "Reference to the selectielijst category (Archiefwet 1995) that applies to this type.": "Verwijzing naar de selectielijstcategorie (Archiefwet 1995) die voor dit type geldt.",
         "Default confidentiality designation for documents of this type.": "Standaard vertrouwelijkheidaanduiding voor documenten van dit type.",
-        "Whether the type can still be chosen for new documents.": "Of het type nog voor nieuwe documenten gekozen kan worden."
+        "Whether the type can still be chosen for new documents.": "Of het type nog voor nieuwe documenten gekozen kan worden.",
+        "Name the recipient: register, schema and id.": "Noem de ontvanger: register, schema en id.",
+        "The recipient was not found or you may not read it.": "De ontvanger is niet gevonden of u mag deze niet inzien.",
+        "This recipient has no email address.": "Deze ontvanger heeft geen e-mailadres.",
+        "This instance has no mail server, so letters cannot be sent by email.": "Deze omgeving heeft geen mailserver, dus brieven kunnen niet per e-mail worden verstuurd.",
+        "The letter was not sent: the mail server did not accept it.": "De brief is niet verstuurd: de mailserver heeft hem niet aangenomen.",
+        "Send by email": "Versturen per e-mail",
+        "Sent to {address}": "Verstuurd naar {address}",
+        "Send the letter by email": "De brief per e-mail versturen",
+        "Looking up the recipient…": "De ontvanger wordt opgezocht…",
+        "Attach the letter as PDF": "De brief als pdf bijvoegen",
+        "Send": "Versturen",
+        "The recipient could not be looked up.": "De ontvanger kon niet worden opgezocht.",
+        "Sent to": "Verstuurd naar",
+        "When the letter was sent by email (ISO 8601).": "Wanneer de brief per e-mail is verstuurd (ISO 8601).",
+        "The email address the letter was sent to.": "Het e-mailadres waarnaar de brief is verstuurd.",
+        "Nextcloud user ID of the officer who sent the letter.": "Nextcloud-gebruikers-ID van de medewerker die de brief heeft verstuurd."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
