@@ -13,7 +13,7 @@
 
 - [x] 3.1 Pass `listRefs` from `lib/Service/CorrespondenceService.php` generate() and from the preview in `src/views/templates/TemplateDetail.vue` (row gen-lists, REQ-DDLR-001). Verify: PHPUnit that a template table is filled from two related records.
 - [x] 3.2 Give `POST /api/document-finality-rules` a caller: a rule section on the admin settings, or the dossiq case type configuration calling it (row wk-final-rule, REQ-FDF-04). Verify: Playwright declares a rule and a status change makes the document final.
-      Built as the admin settings section `src/views/settings/DocumentFinalityRuleSettings.vue` (jest: `DocumentFinalityRuleSettings.spec.js`). The Playwright check (declare a rule, a status change makes the document final) needs a live instance and was not run.
+      Built as the admin settings section `src/views/settings/DocumentFinalityRuleSettings.vue` (jest: `DocumentFinalityRuleSettings.spec.js`). The Playwright check (declare a rule, a status change makes the document final) is `tests/e2e/workflows/finality-rule-settings.spec.ts`; it needs a live instance and has not been run.
 
 ## 4. Signing
 
