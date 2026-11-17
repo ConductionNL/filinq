@@ -1,5 +1,8 @@
 {
     "translations": {
+        "A new publication starts with this publisher.": "Eine neue Veröffentlichung beginnt mit diesem Herausgeber.",
+        "Metadata incomplete": "Metadaten unvollständig",
+        "Set metadata": "Metadaten festlegen",
         "Withdraw request": "Anfrage zurückziehen",
         "Withdraw this signing request?": "Diese Signaturanfrage zurückziehen?",
         "Every signatory loses access, and nobody can sign it any more. This cannot be undone.": "Alle Unterzeichnenden verlieren den Zugriff, und niemand kann sie mehr unterschreiben. Das kann nicht rückgängig gemacht werden.",
