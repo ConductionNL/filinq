@@ -21,7 +21,7 @@ namespace OCA\Filinq\Service\Audit;
 
 use InvalidArgumentException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\Filinq\Kernel\Contracts\FinalDocumentRepositoryInterface;
+use OCA\Filinq\Service\FinalDocumentRepository;
 use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
@@ -67,7 +67,7 @@ class DocumentActionAudit {
 	/**
 	 * Constructor.
 	 *
-	 * @param FinalDocumentRepositoryInterface       $documents      The document records.
+	 * @param FinalDocumentRepository       $documents      The document records.
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
 	 * @param AuditTrailMapper              $auditTrail     OpenRegister's audit trail.
 	 * @param LoggerInterface               $logger         Logger.
@@ -75,7 +75,7 @@ class DocumentActionAudit {
 	 * @return void
 	 */
 	public function __construct(
-		private readonly FinalDocumentRepositoryInterface $documents,
+		private readonly FinalDocumentRepository $documents,
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly AuditTrailMapper $auditTrail,
 		private readonly LoggerInterface $logger,
@@ -112,7 +112,7 @@ class DocumentActionAudit {
 		try {
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				options: new ObjectFindOptions(register: FinalDocumentRepositoryInterface::REGISTER, schema: FinalDocumentRepositoryInterface::SCHEMA),
+				options: new ObjectFindOptions(register: FinalDocumentRepository::REGISTER, schema: FinalDocumentRepository::SCHEMA),
 				_rbac: false
 			);
 			if (($object instanceof ObjectEntity) === false) {
