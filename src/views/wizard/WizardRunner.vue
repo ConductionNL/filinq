@@ -7,7 +7,9 @@ navigation that keeps the answers, and the skip logic applied on every
 answer. A register object question picks from OpenRegister through the
 shared object store. The review step lists every question that was asked;
 Generate document sends one request to api/documents/generate, which checks
-the answers again. Started from a register object (?register, ?schema,
+the answers again. Open for editing renders the document into a draft to
+edit first, and Save and finish later keeps the answers and the step on a
+draft to continue from Drafts (generate-draft-and-attended-edit). Started from a register object (?register, ?schema,
 ?objectId) the wizard prefills what it can as suggestions to review.
 
 @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-2
@@ -142,6 +144,13 @@ the answers again. Started from a register object (?register, ?schema,
 						data-testid="wizard-next">
 						{{ t('filinq', 'Next') }}
 					</NcButton>
+					<NcButton
+						variant="tertiary"
+						:disabled="savingLater"
+						data-testid="wizard-save-later"
+						@click="saveForLater">
+						{{ t('filinq', 'Save and finish later') }}
+					</NcButton>
 				</div>
 			</form>
 
@@ -204,6 +213,20 @@ the answers again. Started from a register object (?register, ?schema,
 								: t('filinq', 'Generate document')
 						}}
 					</NcButton>
+					<NcButton
+						variant="secondary"
+						:disabled="openingDraft || generating || missing.length > 0"
+						data-testid="wizard-open-for-editing"
+						@click="openForEditing">
+						{{ openingDraft ? t('filinq', 'Opening…') : t('filinq', 'Open for editing') }}
+					</NcButton>
+					<NcButton
+						variant="tertiary"
+						:disabled="savingLater"
+						data-testid="wizard-save-later"
+						@click="saveForLater">
+						{{ t('filinq', 'Save and finish later') }}
+					</NcButton>
 				</div>
 			</div>
 		</template>
@@ -225,12 +248,20 @@ import {
 } from '@nextcloud/vue'
 import pinia from '../../pinia.js'
 import {
+	createDraft,
+	discardDraft,
+	draftId,
+	loadDraft,
+	saveWizardDraft,
+} from '../../services/drafts.js'
+import {
 	generateWithWizard,
 	isAnswered,
 	loadTemplateWizard,
 	missingKeys,
 	overridingKeys,
 	prefillWizard,
+	translateAnswers,
 	visibleKeys,
 } from '../../services/wizard.js'
 import { useObjectStore } from '../../store/store.js'
@@ -261,6 +292,10 @@ export default {
 			serverErrors: {},
 			pickerOptions: [],
 			pickerLoading: false,
+			// The run's draft (generate-draft-and-attended-edit REQ-GDA-003).
+			draft: null,
+			savingLater: false,
+			openingDraft: false,
 		}
 	},
 
@@ -412,8 +447,112 @@ export default {
 				return
 			}
 			this.wizard = result.data.wizard
-			if (this.wizard) {
-				await this.applyPrefill()
+			if (!this.wizard) {
+				return
+			}
+			if (this.$route?.query?.draft) {
+				await this.resumeDraft(String(this.$route.query.draft))
+				return
+			}
+			await this.applyPrefill()
+		},
+
+		/**
+		 * Continue a run saved to finish later: its answers, step and format.
+		 * A draft that is gone, not the user's or no longer being answered
+		 * starts the wizard afresh.
+		 *
+		 * @param {string} id The draft.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.4
+		 */
+		async resumeDraft(id) {
+			const result = await loadDraft(id)
+			if (!result.ok || result.data?.stage !== 'answering') {
+				showError(t('filinq', 'The saved answers could not be found. The wizard starts again.'))
+				return
+			}
+			this.draft = result.data
+			const saved = result.data.wizardAnswers
+			this.answers = saved && typeof saved === 'object' && !Array.isArray(saved) ? { ...saved } : {}
+			this.step = Math.max(0, Math.min(Number(result.data.wizardStep) || 0, this.steps.length))
+			if (result.data.format) {
+				this.format = String(result.data.format)
+			}
+		},
+
+		/**
+		 * Save the answers so far and this step, to finish later from Drafts.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.4
+		 */
+		async saveForLater() {
+			this.savingLater = true
+			const result = await saveWizardDraft({
+				draft: this.draft,
+				templateId: this.templateId,
+				templateName: this.wizard?.name || '',
+				wizard: this.wizard,
+				answers: this.answers,
+				step: this.step,
+				format: this.format,
+			})
+			this.savingLater = false
+			if (!result.ok) {
+				showError(t('filinq', 'The answers could not be saved.'))
+				return
+			}
+			this.draft = { ...(this.draft || {}), ...(result.data || {}) }
+			showSuccess(t('filinq', 'Saved. Continue from Drafts.'))
+			this.$router.push({ name: 'Drafts' })
+		},
+
+		/**
+		 * Render the document from the answers into a draft to edit before it
+		 * is stored. Finishing it later passes the answers to the wizard's
+		 * own checks. The run's saved answers make way for the draft.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.4
+		 */
+		async openForEditing() {
+			this.openingDraft = true
+			const payload = translateAnswers(this.wizard, this.answers)
+			const result = await createDraft({
+				templateId: this.templateId,
+				dataRefs: payload.dataRefs,
+				options: {
+					format: this.format,
+					adHocData: payload.adHocData,
+					wizardContext: { ...payload.wizardContext, step: this.step },
+				},
+				origin: 'wizard',
+			})
+			this.openingDraft = false
+			if (!result.ok) {
+				showError(
+					result.status === 409
+						? t('filinq', 'This template has a plain-language version. Generate it directly.')
+						: t('filinq', 'The document could not be opened for editing.'),
+				)
+				return
+			}
+			await this.dropSavedRun()
+			this.$router.push({ name: 'DraftEditor', params: { id: String(result.data?.id || '') } })
+		},
+
+		/**
+		 * Remove the run's saved answers once the run went on without them.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.4
+		 */
+		async dropSavedRun() {
+			const id = draftId(this.draft)
+			if (id) {
+				await discardDraft(id)
+				this.draft = null
 			}
 		},
 
@@ -572,6 +711,7 @@ export default {
 			link.click()
 			URL.revokeObjectURL(url)
 			showSuccess(t('filinq', 'The document is generated.'))
+			await this.dropSavedRun()
 		},
 
 		/**

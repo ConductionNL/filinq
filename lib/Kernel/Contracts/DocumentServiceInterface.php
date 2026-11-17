@@ -113,6 +113,29 @@ interface DocumentServiceInterface {
 	): array;
 
 	/**
+	 * Produce, file and log a document from HTML that was already rendered, without rendering it again.
+	 *
+	 * @param string $templateId The template the HTML was rendered from.
+	 * @param string $html The rendered (and edited, sanitised) HTML.
+	 * @param array $dataRefs The data references the HTML was rendered with.
+	 * @param array $options The generation options.
+	 * @param array $recordFields Extra fields for the generatedDocument record.
+	 * @param bool $log Whether to write the generatedDocument record.
+	 *
+	 * @return array<string, mixed> The generation result.
+	 *
+	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 */
+	public function generateFromHtml(
+		string $templateId,
+		string $html,
+		array $dataRefs = [],
+		array $options = [],
+		array $recordFields = [],
+		bool $log = true,
+	): array;
+
+	/**
 	 * Generate an HTML preview of a template without producing final output.
 	 *
 	 * Resolves data and renders the Twig template but returns plain HTML
