@@ -104,6 +104,14 @@ class DocumentReviewService {
 	private const RELATION_MAPPER = 'OCA\OpenRegister\Db\EntityRelationMapper';
 
 	/**
+	 * The decisions of a file whose relations could not be read: nothing extracted, and no
+	 * fingerprint, so no mark holds.
+	 *
+	 * @var array{count: int, manual: int, fingerprint: null, uncertain: int, undecidedUncertain: list<never>}
+	 */
+	private const NO_DECISIONS = ['count' => 0, 'manual' => 0, 'fingerprint' => null, 'uncertain' => 0, 'undecidedUncertain' => []];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param DocumentReviewRepository   $repository The `documentReview` store.
@@ -163,29 +171,48 @@ class DocumentReviewService {
 	 */
 	public function status(int $fileId): array {
 		$thresholds = $this->thresholds->read();
-		$decisions = $this->decisions(fileId: $fileId, certainFrom: $thresholds['certainFrom']);
+		$decisions = ($this->decisions(fileId: $fileId, certainFrom: $thresholds['certainFrom']) ?? self::NO_DECISIONS);
 		$review = $this->repository->findFor(fileId: $fileId);
 		$rendition = $this->renditions->findFor(sourceFileId: $fileId);
-		$holds = ($review !== null
-			&& $decisions !== null
-			&& hash_equals((string)($review['decisionFingerprint'] ?? ''), $decisions['fingerprint']) === true
-			&& $this->sameRendition(review: $review, rendition: $rendition) === true);
+		$holds = $this->markHolds(review: $review, decisions: $decisions, rendition: $rendition);
 
 		return [
 			'fileId' => $fileId,
 			'checked' => $holds,
 			'stale' => ($review !== null && $holds === false),
-			'extracted' => ($decisions !== null && $decisions['count'] > 0),
-			'entityCount' => ($decisions['count'] ?? 0),
-			'manualEntityCount' => ($decisions['manual'] ?? 0),
+			'extracted' => ($decisions['count'] > 0),
+			'entityCount' => $decisions['count'],
+			'manualEntityCount' => $decisions['manual'],
 			'review' => $review,
 			'rendition' => $rendition,
 			'thresholds' => $thresholds,
-			'uncertainCount' => ($decisions['uncertain'] ?? 0),
-			'undecidedUncertain' => ($decisions['undecidedUncertain'] ?? []),
+			'uncertainCount' => $decisions['uncertain'],
+			'undecidedUncertain' => $decisions['undecidedUncertain'],
 		];
 
 	}//end status()
+
+	/**
+	 * Whether a mark still holds: it exists, its fingerprint matches the decisions and it was
+	 * made on the current rendition. Decisions that could not be read never hold a mark.
+	 *
+	 * @param array<string, mixed>|null $review    The mark.
+	 * @param array<string, mixed>      $decisions The decisions, as {@see decisions}, or NO_DECISIONS.
+	 * @param array<string, mixed>|null $rendition The current rendition.
+	 *
+	 * @return bool True when the mark holds.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 */
+	private function markHolds(array|null $review, array $decisions, array|null $rendition): bool {
+		if ($review === null || $decisions['fingerprint'] === null) {
+			return false;
+		}
+
+		return hash_equals((string)($review['decisionFingerprint'] ?? ''), $decisions['fingerprint']) === true
+			&& $this->sameRendition(review: $review, rendition: $rendition) === true;
+
+	}//end markHolds()
 
 	/**
 	 * Whether a mark was made on the rendition that is current now.
@@ -285,7 +312,34 @@ class DocumentReviewService {
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The confirmation is the reviewer's own yes or no.
 	 */
-	private function assertCheckable(?array $rendition, ?array $decisions, bool $byEye, array $decided): void {
+	private function assertCheckable(array|null $rendition, array|null $decisions, bool $byEye, array $decided): void {
+		$unreadable = $this->assertReadable(rendition: $rendition, byEye: $byEye);
+		if ($decisions === null || ($decisions['count'] === 0 && $unreadable === false)) {
+			throw new DocumentReviewRefusedException(
+				reason: 'not_extracted',
+				message: 'This document has no extracted findings yet; run detection before marking it reviewed.'
+			);
+		}
+
+		$this->assertUncertainDecided(undecidedUncertain: $decisions['undecidedUncertain'], decided: $decided);
+
+	}//end assertCheckable()
+
+	/**
+	 * Refuse a check of a rendition detection could not read, unless the reviewer read it by eye.
+	 *
+	 * @param array<string, mixed>|null $rendition The current rendition.
+	 * @param bool                      $byEye     The by-eye confirmation.
+	 *
+	 * @return bool True when the rendition has no text layer (and the reviewer read it by eye).
+	 *
+	 * @throws DocumentReviewRefusedException When it has no text layer and the confirmation is missing.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.2
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The confirmation is the reviewer's own yes or no.
+	 */
+	private function assertReadable(array|null $rendition, bool $byEye): bool {
 		$unreadable = (($rendition['textLayer'] ?? '') === self::LAYER_NONE);
 		if ($unreadable === true && $byEye === false) {
 			throw new DocumentReviewRefusedException(
@@ -294,19 +348,30 @@ class DocumentReviewService {
 			);
 		}
 
-		if ($decisions === null || ($decisions['count'] === 0 && $unreadable === false)) {
-			throw new DocumentReviewRefusedException(
-				reason: 'not_extracted',
-				message: 'This document has no extracted findings yet; run detection before marking it reviewed.'
-			);
-		}
+		return $unreadable;
 
-		// An uncertain finding counts as decided when OpenRegister holds a decision
-		// for it, or when the reviewer included or skipped it in the workbench.
+	}//end assertReadable()
+
+	/**
+	 * Refuse a check while an uncertain finding is undecided.
+	 *
+	 * An uncertain finding counts as decided when OpenRegister holds a decision
+	 * for it, or when the reviewer included or skipped it in the workbench.
+	 *
+	 * @param list<array{relationId: int, entityId: int, confidence: float}> $undecidedUncertain The findings without a stored decision.
+	 * @param array<int|string>                                                $decided            The relation ids the reviewer decided in the workbench.
+	 *
+	 * @return void
+	 *
+	 * @throws DocumentReviewRefusedException When one is still undecided.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+	 */
+	private function assertUncertainDecided(array $undecidedUncertain, array $decided): void {
 		$decidedIds = array_map('intval', $decided);
 		$undecided = array_values(
 			array_filter(
-				$decisions['undecidedUncertain'],
+				$undecidedUncertain,
 				static fn (array $finding): bool => in_array($finding['relationId'], $decidedIds, true) === false
 			)
 		);
@@ -454,47 +519,74 @@ class DocumentReviewService {
 			return null;
 		}
 
-		$rows = [];
-		$manual = 0;
-		$uncertain = 0;
-		$undecided = [];
+		$tally = ['rows' => [], 'manual' => 0, 'uncertain' => 0, 'undecided' => []];
 		foreach ((array)$relations as $relation) {
 			$data = $this->rowOf(relation: $relation);
-			if ($data === null) {
-				continue;
+			if ($data !== null) {
+				$tally = $this->tally(tally: $tally, data: $data, certainFrom: $certainFrom);
 			}
+		}
 
-			if ((string)($data['detectionMethod'] ?? '') === self::METHOD_MANUAL) {
-				$manual++;
-			}
-
-			$rows[] = $this->decisionOf(data: $data);
-			if ($this->thresholds->isUncertain(relation: $data, certainFrom: $certainFrom) === false) {
-				continue;
-			}
-
-			$uncertain++;
-			if ((string)($data['decision'] ?? $data['decisionUuid'] ?? '') === '') {
-				$undecided[] = [
-					'relationId' => (int)($data['id'] ?? $data['relation_id'] ?? 0),
-					'entityId' => (int)($data['entityId'] ?? $data['entity_id'] ?? 0),
-					'confidence' => (float)($data['confidence'] ?? 0.0),
-				];
-			}
-		}//end foreach
-
+		$rows = $tally['rows'];
+		$undecided = $tally['undecided'];
 		usort($rows, static fn (array $a, array $b): int => $a[0] <=> $b[0]);
 		usort($undecided, static fn (array $a, array $b): int => $a['relationId'] <=> $b['relationId']);
 
 		return [
 			'count' => count($rows),
-			'manual' => $manual,
+			'manual' => $tally['manual'],
 			'fingerprint' => hash('sha256', (string)json_encode($rows)),
-			'uncertain' => $uncertain,
+			'uncertain' => $tally['uncertain'],
 			'undecidedUncertain' => $undecided,
 		];
 
 	}//end decisions()
+
+	/**
+	 * Count one relation into the running tally of a file's decisions.
+	 *
+	 * @param array{rows: list<array<int, mixed>>, manual: int, uncertain: int, undecided: list<array<string, mixed>>} $tally       The tally so far.
+	 * @param array<string, mixed>                                                                                    $data        The relation's fields.
+	 * @param float                                                                                                   $certainFrom A detected finding below it is uncertain.
+	 *
+	 * @return array{rows: list<array<int, mixed>>, manual: int, uncertain: int, undecided: list<array<string, mixed>>} The tally with the relation counted.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
+	 */
+	private function tally(array $tally, array $data, float $certainFrom): array {
+		if ((string)($data['detectionMethod'] ?? '') === self::METHOD_MANUAL) {
+			$tally['manual']++;
+		}
+
+		$tally['rows'][] = $this->decisionOf(data: $data);
+		if ($this->thresholds->isUncertain(relation: $data, certainFrom: $certainFrom) === false) {
+			return $tally;
+		}
+
+		$tally['uncertain']++;
+		if ((string)($data['decision'] ?? $data['decisionUuid'] ?? '') === '') {
+			$tally['undecided'][] = $this->undecidedOf(data: $data);
+		}
+
+		return $tally;
+
+	}//end tally()
+
+	/**
+	 * An uncertain finding without a decision, as the check refusal lists it.
+	 *
+	 * @param array<string, mixed> $data The relation's fields.
+	 *
+	 * @return array{relationId: int, entityId: int, confidence: float} The finding.
+	 */
+	private function undecidedOf(array $data): array {
+		return [
+			'relationId' => (int)($data['id'] ?? $data['relation_id'] ?? 0),
+			'entityId' => (int)($data['entityId'] ?? $data['entity_id'] ?? 0),
+			'confidence' => (float)($data['confidence'] ?? 0.0),
+		];
+
+	}//end undecidedOf()
 
 	/**
 	 * A relation as an array, or null when it has no array shape.

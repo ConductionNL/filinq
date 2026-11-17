@@ -74,12 +74,7 @@ class AnonymisationRunRecords {
 	 */
 	public function record(array $resultInfo, array $context): array {
 		// On the bytes actually written, like the verdict: the summary page is already on.
-		if ($this->accessibility !== null && array_key_exists('structureReport', $context) === true) {
-			$resultInfo['structurePreservation'] = $this->accessibility->assessOutput(
-				report: $context['structureReport'],
-				output: $context['anonymisedNode']
-			);
-		}
+		$resultInfo = $this->withStructurePreservation(resultInfo: $resultInfo, context: $context);
 
 		// 🔴 ON THE BYTES THAT WERE ACTUALLY WRITTEN. The grondslagen summary
 		// appends a page after the redaction, so the caller runs this after it:
@@ -128,6 +123,26 @@ class AnonymisationRunRecords {
 		);
 
 	}//end record()
+
+	/**
+	 * The result with the structure-preservation assessment of the written output, when there is a report to assess.
+	 *
+	 * @param array<string, mixed> $resultInfo The result so far.
+	 * @param array<string, mixed> $context    The run's context.
+	 *
+	 * @return array<string, mixed> The result.
+	 */
+	private function withStructurePreservation(array $resultInfo, array $context): array {
+		if ($this->accessibility !== null && array_key_exists('structureReport', $context) === true) {
+			$resultInfo['structurePreservation'] = $this->accessibility->assessOutput(
+				report: $context['structureReport'],
+				output: $context['anonymisedNode']
+			);
+		}
+
+		return $resultInfo;
+
+	}//end withStructurePreservation()
 
 	/**
 	 * Whether the run asks OpenRegister to keep the tag structure.

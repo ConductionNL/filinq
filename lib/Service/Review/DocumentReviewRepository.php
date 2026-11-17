@@ -93,25 +93,43 @@ class DocumentReviewRepository {
 			return null;
 		}
 
-		if (is_array($results) === false || $results === []) {
-			return null;
-		}
+		return $this->latestOf(results: (is_array($results) === true ? $results : []), fileId: $fileId);
 
+	}//end findFor()
+
+	/**
+	 * The most recent mark of one file among search results, or null when none is for it.
+	 *
+	 * @param array<int, mixed> $results The search results.
+	 * @param int               $fileId  The Nextcloud file id.
+	 *
+	 * @return array<string, mixed>|null The latest mark's fields.
+	 */
+	private function latestOf(array $results, int $fileId): array|null {
 		$latest = null;
 		foreach ($results as $row) {
 			$fields = $this->storedFields(row: $row);
-			if ((int)($fields['fileId'] ?? 0) !== $fileId) {
-				continue;
-			}
-
-			if ($latest === null || (string)($fields['checkedOn'] ?? '') > (string)($latest['checkedOn'] ?? '')) {
+			if ((int)($fields['fileId'] ?? 0) === $fileId && $this->isLater(fields: $fields, than: $latest) === true) {
 				$latest = $fields;
 			}
 		}
 
 		return $latest;
 
-	}//end findFor()
+	}//end latestOf()
+
+	/**
+	 * Whether a mark was checked later than another, or the other is absent.
+	 *
+	 * @param array<string, mixed>      $fields The mark.
+	 * @param array<string, mixed>|null $than   The mark so far.
+	 *
+	 * @return bool True when it is later.
+	 */
+	private function isLater(array $fields, array|null $than): bool {
+		return $than === null || (string)($fields['checkedOn'] ?? '') > (string)($than['checkedOn'] ?? '');
+
+	}//end isLater()
 
 	/**
 	 * Write a new mark, with OpenRegister RBAC on.

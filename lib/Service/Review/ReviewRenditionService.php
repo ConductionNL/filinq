@@ -283,13 +283,9 @@ class ReviewRenditionService {
 	 *
 	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.1
 	 */
-	public function detectOnRendition(int $sourceFileId, ?array $rendition, object $textExtractor, ?array $entityTypes): bool {
-		$renditionId = (int) ($rendition['fileId'] ?? 0);
-		if (($rendition['kind'] ?? '') !== self::KIND_CONVERTED
-			|| $renditionId <= 0
-			|| $renditionId === $sourceFileId
-			|| method_exists($textExtractor, self::INGEST_METHOD) === false
-		) {
+	public function detectOnRendition(int $sourceFileId, array|null $rendition, object $textExtractor, array|null $entityTypes): bool {
+		$renditionId = $this->convertedRenditionId(sourceFileId: $sourceFileId, rendition: $rendition, textExtractor: $textExtractor);
+		if ($renditionId === 0) {
 			return false;
 		}
 
@@ -313,6 +309,29 @@ class ReviewRenditionService {
 		return true;
 
 	}//end detectOnRendition()
+
+	/**
+	 * The file id of a converted rendition detection can run on, or 0 when there is none.
+	 *
+	 * @param int                       $sourceFileId  The source document's file id.
+	 * @param array<string, mixed>|null $rendition     The rendition.
+	 * @param object                    $textExtractor OpenRegister's TextExtractionService.
+	 *
+	 * @return int The rendition's file id, or 0.
+	 */
+	private function convertedRenditionId(int $sourceFileId, array|null $rendition, object $textExtractor): int {
+		$renditionId = (int) ($rendition['fileId'] ?? 0);
+		if (($rendition['kind'] ?? '') !== self::KIND_CONVERTED
+			|| $renditionId <= 0
+			|| $renditionId === $sourceFileId
+			|| method_exists($textExtractor, self::INGEST_METHOD) === false
+		) {
+			return 0;
+		}
+
+		return $renditionId;
+
+	}//end convertedRenditionId()
 
 	/**
 	 * The rendition of a scan or an image: an OCR text layer, or none.
@@ -403,22 +422,34 @@ class ReviewRenditionService {
 	 *
 	 * @return File|null The rendition's file, or null when it has to be made again.
 	 */
-	private function stillCurrent(File $source, ?array $previous): ?File {
+	private function stillCurrent(File $source, array|null $previous): File|null {
 		if ($previous === null || ($previous['kind'] ?? '') !== self::KIND_CONVERTED) {
 			return null;
 		}
 
 		$file = $this->rootFolder->getFirstNodeById((int) ($previous['fileId'] ?? 0));
-		if (($file instanceof File) === false
-			|| $file->getMTime() < $source->getMTime()
-			|| hash_equals((string) ($previous['sha256'] ?? ''), hash('sha256', (string) $file->getContent())) === false
-		) {
+		if (($file instanceof File) === false || $this->isUnchanged(file: $file, source: $source, previous: $previous) === false) {
 			return null;
 		}
 
 		return $file;
 
 	}//end stillCurrent()
+
+	/**
+	 * Whether a stored rendition's file is not older than its source and still has the stored hash.
+	 *
+	 * @param File                 $file     The rendition's file.
+	 * @param File                 $source   The source.
+	 * @param array<string, mixed> $previous The stored rendition.
+	 *
+	 * @return bool True when it can be reused.
+	 */
+	private function isUnchanged(File $file, File $source, array $previous): bool {
+		return $file->getMTime() >= $source->getMTime()
+			&& hash_equals((string) ($previous['sha256'] ?? ''), hash('sha256', (string) $file->getContent())) === true;
+
+	}//end isUnchanged()
 
 	/**
 	 * The rendition file's name, so the workbench can open it next to its source.

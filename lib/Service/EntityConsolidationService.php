@@ -274,7 +274,7 @@ class EntityConsolidationService implements EntityConsolidationServiceInterface 
 	 *
 	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.1
 	 */
-	private function computeStandingConsentMatch(array $entity, ?array $prohibitionMatch): ?array {
+	private function computeStandingConsentMatch(array $entity, array|null $prohibitionMatch): array|null {
 		if ($prohibitionMatch !== null) {
 			return null;
 		}
