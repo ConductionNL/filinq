@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Ocr;
 
+use OCA\Filinq\Service\Editing\DocumentGuard;
 use OCA\Filinq\Service\Ocr\OcrRunService;
 use OCA\Filinq\Service\Ocr\OcrTextLayerService;
 use OCA\Filinq\Service\Ocr\SearchablePdfWriter;
@@ -92,6 +93,29 @@ class OcrTextLayerServiceTest extends TestCase {
 	}//end writer()
 
 	/**
+	 * A guard that answers the given refusal from one of its checks, or none.
+	 *
+	 * @param string|null $check   finalRefusal, signatureRefusal or anonymisationRefusal; null refuses nothing.
+	 * @param bool        $asked   Whether the guard may be asked at all.
+	 *
+	 * @return DocumentGuard&MockObject
+	 */
+	private function guard(?string $check=null, bool $asked=true): DocumentGuard {
+		$guard = $this->createMock(DocumentGuard::class);
+		foreach (['finalRefusal', 'signatureRefusal', 'anonymisationRefusal'] as $method) {
+			if ($asked === false) {
+				$guard->expects($this->never())->method($method);
+				continue;
+			}
+
+			$guard->method($method)->willReturn($method === $check ? 'This document is protected.' : null);
+		}
+
+		return $guard;
+
+	}//end guard()
+
+	/**
 	 * A scanned PDF gets the searchable PDF as its new content, which keeps the old one as a version.
 	 *
 	 * @return void
@@ -100,7 +124,7 @@ class OcrTextLayerServiceTest extends TestCase {
 		$file = $this->file(mimeType: 'application/pdf', name: 'bezwaar.pdf');
 		$file->expects($this->once())->method('putContent')->with('%PDF-1.3 searchable');
 
-		$service = new OcrTextLayerService(writer: $this->writer(result: ['bytes' => '%PDF-1.3 searchable', 'words' => 3], copied: $copied), logger: new NullLogger());
+		$service = new OcrTextLayerService(writer: $this->writer(result: ['bytes' => '%PDF-1.3 searchable', 'words' => 3], copied: $copied), guard: $this->guard(), logger: new NullLogger());
 
 		$this->assertSame(OcrTextLayerService::WRITTEN, $service->apply(file: $file, languages: 'nld+eng', dpi: 300));
 		$this->assertSame([['%PDF-1.4 scanned', 'nld+eng', 300]], $copied);
@@ -119,7 +143,7 @@ class OcrTextLayerServiceTest extends TestCase {
 		$file = $this->file(mimeType: 'image/jpeg', name: 'brief.jpg', folder: $folder);
 		$file->expects($this->never())->method('putContent');
 
-		$service = new OcrTextLayerService(writer: $this->writer(result: ['bytes' => '%PDF-1.3 photo', 'words' => 1], copied: $copied), logger: new NullLogger());
+		$service = new OcrTextLayerService(writer: $this->writer(result: ['bytes' => '%PDF-1.3 photo', 'words' => 1], copied: $copied), guard: $this->guard(), logger: new NullLogger());
 
 		$this->assertSame(OcrTextLayerService::COPY_CREATED, $service->apply(file: $file, languages: 'nld', dpi: 200));
 		$this->assertSame('image/jpeg', $copied[0][1]);
@@ -128,12 +152,46 @@ class OcrTextLayerServiceTest extends TestCase {
 	}//end testAPhotographedPageGetsACopyBesideIt()
 
 	/**
+	 * A final, signed or anonymised PDF keeps its bytes: rewriting it would break its frozen checksum or signature.
+	 *
+	 * @return void
+	 */
+	public function testAProtectedPdfIsNotRewritten(): void {
+		foreach (['finalRefusal', 'signatureRefusal', 'anonymisationRefusal'] as $check) {
+			$file = $this->file(mimeType: 'application/pdf', name: 'besluit.pdf');
+			$file->expects($this->never())->method('putContent');
+			$service = new OcrTextLayerService(writer: $this->writer(result: ['bytes' => '%PDF-1.3 searchable', 'words' => 3], copied: $copied), guard: $this->guard(check: $check), logger: new NullLogger());
+
+			$this->assertSame(OcrTextLayerService::SKIP_PROTECTED, $service->apply(file: $file, languages: 'nld', dpi: 300), $check);
+			$this->assertSame([], $copied, $check . ': nothing is built for a PDF that is not rewritten');
+		}
+
+	}//end testAProtectedPdfIsNotRewritten()
+
+	/**
+	 * An image is never rewritten, only given a new file beside it, so the guard is not asked.
+	 *
+	 * @return void
+	 */
+	public function testAnImageIsNotGuarded(): void {
+		$folder = $this->createMock(Folder::class);
+		$folder->method('getNonExistingName')->willReturn('scan.pdf');
+		$folder->expects($this->once())->method('newFile')->with('scan.pdf', '%PDF-1.3 photo');
+		$file = $this->file(mimeType: 'image/png', name: 'scan.png', folder: $folder);
+
+		$service = new OcrTextLayerService(writer: $this->writer(result: ['bytes' => '%PDF-1.3 photo', 'words' => 1]), guard: $this->guard(asked: false), logger: new NullLogger());
+
+		$this->assertSame(OcrTextLayerService::COPY_CREATED, $service->apply(file: $file, languages: 'nld', dpi: 300));
+
+	}//end testAnImageIsNotGuarded()
+
+	/**
 	 * Nothing is written to a file the person may not change, of a type no page is built from, or without words.
 	 *
 	 * @return void
 	 */
 	public function testNothingIsWrittenWhenItCannotOrNeedNot(): void {
-		$service = new OcrTextLayerService(writer: $this->writer(result: ['bytes' => '%PDF', 'words' => 0], copied: $copied), logger: new NullLogger());
+		$service = new OcrTextLayerService(writer: $this->writer(result: ['bytes' => '%PDF', 'words' => 0], copied: $copied), guard: $this->guard(), logger: new NullLogger());
 
 		$readOnly = $this->file(mimeType: 'application/pdf', name: 'a.pdf', writable: false);
 		$readOnly->expects($this->never())->method('putContent');
@@ -157,12 +215,12 @@ class OcrTextLayerServiceTest extends TestCase {
 	public function testAFailureIsReportedNotThrown(): void {
 		$before = glob(sys_get_temp_dir() . '/filinq_textlayer_*');
 
-		$broken = new OcrTextLayerService(writer: $this->writer(result: new RuntimeException('xref stream')), logger: new NullLogger());
+		$broken = new OcrTextLayerService(writer: $this->writer(result: new RuntimeException('xref stream')), guard: $this->guard(), logger: new NullLogger());
 		$this->assertSame(OcrTextLayerService::SKIP_FAILED, $broken->apply(file: $this->file(mimeType: 'application/pdf', name: 'a.pdf'), languages: 'nld', dpi: 300));
 
 		$locked = $this->file(mimeType: 'application/pdf', name: 'a.pdf');
 		$locked->method('putContent')->willThrowException(new NotPermittedException('locked'));
-		$service = new OcrTextLayerService(writer: $this->writer(result: ['bytes' => '%PDF', 'words' => 2]), logger: new NullLogger());
+		$service = new OcrTextLayerService(writer: $this->writer(result: ['bytes' => '%PDF', 'words' => 2]), guard: $this->guard(), logger: new NullLogger());
 		$this->assertSame(OcrTextLayerService::SKIP_FAILED, $service->apply(file: $locked, languages: 'nld', dpi: 300));
 
 		$this->assertSame($before, glob(sys_get_temp_dir() . '/filinq_textlayer_*'));

@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Ocr;
 
+use OCA\Filinq\Service\Editing\DocumentGuard;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -57,6 +58,11 @@ class OcrTextLayerService {
 	public const SKIP_NOT_WRITABLE = 'not_writable';
 
 	/**
+	 * The PDF is final, under signature or the source of an anonymised copy, so it is not rewritten.
+	 */
+	public const SKIP_PROTECTED = 'protected';
+
+	/**
 	 * No word with a box was read, so there is nothing to lay over the page.
 	 */
 	public const SKIP_NO_WORDS = 'no_words';
@@ -70,10 +76,12 @@ class OcrTextLayerService {
 	 * Constructor.
 	 *
 	 * @param SearchablePdfWriter $writer Builds the searchable PDF.
+	 * @param DocumentGuard       $guard  Refuses a rewrite of a final, signed or anonymised PDF, as it refuses an edit.
 	 * @param LoggerInterface     $logger The logger.
 	 */
 	public function __construct(
 		private readonly SearchablePdfWriter $writer,
+		private readonly DocumentGuard $guard,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -89,6 +97,7 @@ class OcrTextLayerService {
 	 * @return string WRITTEN, COPY_CREATED or one of the SKIP_* reasons.
 	 *
 	 * @spec openspec/changes/finish-half-built-capabilities/specs/ocr-document-scanning/spec.md
+	 * @spec openspec/changes/finish-half-built-capabilities/specs/ocr-document-scanning/spec.md#scenario-a-final-or-signed-pdf-keeps-its-bytes
 	 */
 	public function apply(File $file, string $languages, int $dpi): string {
 		$mimeType = $file->getMimeType();
@@ -99,6 +108,10 @@ class OcrTextLayerService {
 
 		if ($this->mayStore(file: $file, isPdf: $isPdf) === false) {
 			return self::SKIP_NOT_WRITABLE;
+		}
+
+		if ($isPdf === true && $this->isProtected(file: $file) === true) {
+			return self::SKIP_PROTECTED;
 		}
 
 		$temp = sys_get_temp_dir() . '/filinq_textlayer_' . bin2hex(random_bytes(6));
@@ -141,6 +154,29 @@ class OcrTextLayerService {
 		}
 
 	}//end mayStore()
+
+	/**
+	 * Whether a PDF may not be rewritten in place: it is final (its frozen checksum
+	 * would stop matching), under signature, or the source of an anonymised copy.
+	 * The same refusals an edit session gets; an image is never rewritten, only
+	 * given a new file beside it, so it needs none of them.
+	 *
+	 * @param File $file The PDF.
+	 *
+	 * @return bool
+	 */
+	private function isProtected(File $file): bool {
+		$refusal = ($this->guard->finalRefusal(file: $file)
+			?? $this->guard->signatureRefusal(file: $file)
+			?? $this->guard->anonymisationRefusal(file: $file));
+		if ($refusal === null) {
+			return false;
+		}
+
+		$this->logger->info('The OCR text layer was not written: ' . $refusal, ['fileId' => $file->getId()]);
+		return true;
+
+	}//end isProtected()
 
 	/**
 	 * The searchable PDF of a PDF or an image.
