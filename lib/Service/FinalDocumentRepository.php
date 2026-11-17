@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\FinalDocumentRepositoryInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -51,45 +52,7 @@ use Throwable;
  *
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
  */
-class FinalDocumentRepository {
-
-	/**
-	 * The OpenRegister register holding Filinq's schemas.
-	 *
-	 * `filinq`, not `document`: this app declares one register since the
-	 * consolidation in descriptor v8.0.0.
-	 *
-	 * @var string
-	 */
-	public const REGISTER = 'filinq';
-
-	/**
-	 * The schema holding the finalisation records.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA = 'documentVersion';
-
-	/**
-	 * The schema holding the dossiers.
-	 *
-	 * @var string
-	 */
-	public const DOSSIER_SCHEMA = 'dossier';
-
-	/**
-	 * The final state. Terminal: there is no transition out of it.
-	 *
-	 * @var string
-	 */
-	public const STATUS_FINAL = 'final';
-
-	/**
-	 * The draft state. Everything is draft until somebody makes it final.
-	 *
-	 * @var string
-	 */
-	public const STATUS_DRAFT = 'draft';
+class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 
 	/**
 	 * Constructor.

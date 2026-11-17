@@ -28,6 +28,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
 use OCA\Filinq\Exception\ComparisonException;
 use OCA\Filinq\Kernel\Contracts\DocumentVersionServiceInterface;
 use OCP\App\IAppManager;
@@ -68,6 +69,7 @@ class DocumentVersionService implements DocumentVersionServiceInterface {
 	 * @param IAppManager $appManager App manager (files_versions availability).
 	 * @param ContainerInterface $container DI container for lazy IVersionManager resolution.
 	 * @param FinalDocumentService $finalDocuments The final-document guard.
+	 * @param DocumentActionAudit|null $audit Writes a restore into the document's trail; null writes nothing.
 	 *
 	 * @return void
 	 */
@@ -78,6 +80,7 @@ class DocumentVersionService implements DocumentVersionServiceInterface {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly FinalDocumentService $finalDocuments,
+		private readonly ?DocumentActionAudit $audit = null,
 	) {
 
 	}//end __construct()
@@ -217,6 +220,9 @@ class DocumentVersionService implements DocumentVersionServiceInterface {
 			foreach ($versionManager->getVersionsForFile($user, $file) as $version) {
 				if ((int)$version->getTimestamp() === $versionTimestamp) {
 					$versionManager->rollback($version);
+					// Restoring writes a new current version: the document's
+					// trail records it (specify-capability-rows REQ-SCR-007).
+					$this->audit?->record(fileId: $fileId, action: 'versioned', context: ['restoredFrom' => $versionTimestamp]);
 					return;
 				}
 			}
