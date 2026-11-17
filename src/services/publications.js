@@ -94,3 +94,36 @@ export async function publicationStep(id, step, body = {}) {
 export async function listCategories() {
 	return (await axios.get(base() + '/categories')).data.results || []
 }
+
+/**
+ * Ask for the published copy of a publication. The server answers 409 with the
+ * download agreement to accept first when one is in force.
+ *
+ * @param {string} id The publication.
+ * @return {Promise<{blob: Blob|null, agreement: object|null}>} The file, or the agreement to show.
+ * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+ */
+export async function downloadPublication(id) {
+	const response = await axios.get(`${base()}/${id}/download`, {
+		responseType: 'blob',
+		validateStatus: (status) => status === 200 || status === 409,
+	})
+	if (response.status === 409) {
+		const decision = JSON.parse(await response.data.text())
+		return { blob: null, agreement: decision }
+	}
+	return { blob: response.data, agreement: null }
+}
+
+/**
+ * Record that the caller accepts the download agreement of one document.
+ *
+ * @param {string} document The document the agreement is on.
+ * @param {string} version The version of the terms the caller read.
+ * @return {Promise<object>} The decision.
+ * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+ */
+export async function acceptDownloadAgreement(document, version) {
+	const response = await axios.post(generateUrl('/apps/filinq/api/redaction/agreement/accept'), { document, version })
+	return response.data
+}

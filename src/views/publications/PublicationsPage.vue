@@ -270,6 +270,22 @@ SPDX-License-Identifier: EUPL-1.2
 				</NcButton>
 			</section>
 
+			<section v-if="downloadAllowed" data-testid="publication-download">
+				<h3>{{ t('filinq', 'Download') }}</h3>
+				<template v-if="pendingAgreement">
+					<p>{{ pendingAgreement.message }}</p>
+					<blockquote class="publication-agreement">
+						{{ pendingAgreement.agreement && pendingAgreement.agreement.text }}
+					</blockquote>
+					<NcButton variant="primary" :disabled="busy" @click="acceptAndDownload">
+						{{ t('filinq', 'Accept and download') }}
+					</NcButton>
+				</template>
+				<NcButton v-else :disabled="busy" @click="download">
+					{{ t('filinq', 'Download the published copy') }}
+				</NcButton>
+			</section>
+
 			<section v-if="withdrawAllowed">
 				<h3>{{ t('filinq', 'Withdraw') }}</h3>
 				<label for="publication-withdraw-reason">{{
@@ -344,6 +360,8 @@ import {
 	readinessChecks,
 } from '../../services/publicationRecord.js'
 import {
+	acceptDownloadAgreement,
+	downloadPublication,
 	getPublication,
 	listCategories,
 	listPublications,
@@ -384,6 +402,7 @@ export default {
 			withdrawReason: '',
 			destruction: { date: '', source: '' },
 			sanitized: null,
+			pendingAgreement: null,
 			onlyIncomplete: false,
 			selected: [],
 			bulkOpen: false,
@@ -458,6 +477,16 @@ export default {
 		 */
 		withdrawAllowed() {
 			return canWithdraw(this.record || {})
+		},
+
+		/**
+		 * Whether the record has a published copy to download.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+		 */
+		downloadAllowed() {
+			return ['handed_off', 'published'].includes(this.record?.status) && Boolean(this.record?.redactedFileRef)
 		},
 	},
 
@@ -654,6 +683,51 @@ export default {
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 		 */
+		/**
+		 * Download the published copy, or show the agreement to accept first.
+		 *
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+		 */
+		async download() {
+			this.busy = true
+			this.error = ''
+			try {
+				const { blob, agreement } = await downloadPublication(this.record.uuid)
+				this.pendingAgreement = agreement
+				if (blob) {
+					const url = URL.createObjectURL(blob)
+					const link = document.createElement('a')
+					link.href = url
+					link.download = this.record.officieleTitel || this.record.uuid
+					link.click()
+					URL.revokeObjectURL(url)
+				}
+			} catch {
+				this.error = t('filinq', 'The published copy could not be downloaded')
+			} finally {
+				this.busy = false
+			}
+		},
+
+		/**
+		 * Accept the agreement shown, then download.
+		 *
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+		 */
+		async acceptAndDownload() {
+			const pending = this.pendingAgreement
+			this.busy = true
+			try {
+				await acceptDownloadAgreement(pending.document, pending.agreement?.version ?? '')
+			} catch {
+				this.error = t('filinq', 'The agreement could not be recorded')
+				this.busy = false
+				return
+			}
+			this.busy = false
+			await this.download()
+		},
+
 		async step(name, body = {}) {
 			this.busy = true
 			this.error = ''
@@ -675,6 +749,12 @@ export default {
 </script>
 
 <style scoped>
+.publication-agreement {
+	border-inline-start: 3px solid var(--color-border-dark);
+	padding-inline-start: 12px;
+	white-space: pre-wrap;
+}
+
 .publications {
 	max-width: 1000px;
 	padding: 24px;

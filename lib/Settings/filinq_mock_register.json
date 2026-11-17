@@ -7983,6 +7983,57 @@
             {
                 "@self": {
                     "register": "filinq",
+                    "schema": "documentRelease",
+                    "slug": "documentrelease-documentrelease-1-1"
+                },
+                "document": "00000000-0000-4000-8000-000000000001",
+                "documentName": "Besluit op uw verzoek.pdf",
+                "kind": "decision",
+                "fileId": 101,
+                "recordRegister": "zaken",
+                "recordSchema": "zaak",
+                "recordId": "zaak-1",
+                "contactRef": "contact-0001",
+                "releasedBy": "admin",
+                "releasedAt": "2026-03-01T09:00:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "documentRelease",
+                    "slug": "documentrelease-documentrelease-1-2"
+                },
+                "document": "00000000-0000-4000-8000-000000000002",
+                "documentName": "Inventarislijst.pdf",
+                "kind": "document",
+                "fileId": 102,
+                "recordRegister": "zaken",
+                "recordSchema": "zaak",
+                "recordId": "zaak-2",
+                "contactRef": "contact-0001",
+                "releasedBy": "admin",
+                "releasedAt": "2026-03-01T09:00:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "documentRelease",
+                    "slug": "documentrelease-documentrelease-1-3"
+                },
+                "document": "00000000-0000-4000-8000-000000000003",
+                "documentName": "Advies aan de aanvrager.pdf",
+                "kind": "document",
+                "fileId": 103,
+                "recordRegister": "zaken",
+                "recordSchema": "zaak",
+                "recordId": "zaak-3",
+                "contactRef": "contact-0002",
+                "releasedBy": "admin",
+                "releasedAt": "2026-03-01T09:00:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
                     "schema": "documentShare",
                     "slug": "demostad-share-expired"
                 },
