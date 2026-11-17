@@ -156,7 +156,7 @@ export const useSigningStore = defineStore('signing', {
 		 *
 		 * @param {string} requestId The request id.
 		 * @return {Promise<boolean>} True when the request was withdrawn.
-		 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+		 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 		 */
 		async cancelRequest(requestId) {
 			this.loading = true

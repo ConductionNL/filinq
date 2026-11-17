@@ -126,7 +126,7 @@ test.describe('entity search', () => {
 		await api(page, sent)
 		await open(page)
 		await page.getByLabel('Value to look for').fill('de vries')
-		await page.getByRole('button', { name: 'Search' }).click()
+		await page.getByRole('button', { name: 'Search', exact: true }).click()
 		await expect(page.getByTestId('entity-search-results')).toContainText(
 			'Jan de Vries',
 		)
@@ -146,7 +146,7 @@ test.describe('entity search', () => {
 		await open(page)
 		await page.getByLabel('Type').click()
 		await page.getByRole('option', { name: 'IBAN' }).click()
-		await page.getByRole('button', { name: 'Search' }).click()
+		await page.getByRole('button', { name: 'Search', exact: true }).click()
 		await expect(page.getByTestId('entity-search-results')).toContainText(
 			'NL91ABNA0417164300',
 		)
@@ -163,7 +163,7 @@ test.describe('entity search', () => {
 		await api(page, sent)
 		await open(page)
 		await page.getByLabel('Value to look for').fill('vries')
-		await page.getByRole('button', { name: 'Search' }).click()
+		await page.getByRole('button', { name: 'Search', exact: true }).click()
 		await page.getByText('Jan de Vries').click()
 		const documents = page.getByTestId('entity-search-documents')
 		await expect(documents).toContainText('aanvraag.pdf')
@@ -181,7 +181,7 @@ test.describe('entity search', () => {
 			0,
 		)
 		await page.getByLabel('Value to look for').fill('vries')
-		await page.getByRole('button', { name: 'Search' }).click()
+		await page.getByRole('button', { name: 'Search', exact: true }).click()
 		await expect(
 			page.getByText('You are not allowed to use the entity search.'),
 		).toBeVisible()
