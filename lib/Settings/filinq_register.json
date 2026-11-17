@@ -12993,17 +12993,20 @@
                                         "pageRange",
                                         "document"
                                     ],
-                                    "title": "Scope"
+                                    "title": "Scope",
+                                    "description": "page, pageRange or document."
                                 },
                                 "fromPage": {
                                     "type": "integer",
                                     "minimum": 1,
-                                    "title": "From page"
+                                    "title": "From page",
+                                    "description": "The first page, 1-based; absent for document."
                                 },
                                 "toPage": {
                                     "type": "integer",
                                     "minimum": 1,
-                                    "title": "To page"
+                                    "title": "To page",
+                                    "description": "The last page, inclusive; equal to fromPage for page, absent for document."
                                 },
                                 "bases": {
                                     "type": "array",
@@ -13011,16 +13014,19 @@
                                     "items": {
                                         "type": "string"
                                     },
-                                    "title": "Grounds"
+                                    "title": "Grounds",
+                                    "description": "The grounds; at least one."
                                 },
                                 "decidedBy": {
                                     "type": "string",
-                                    "title": "Decided by"
+                                    "title": "Decided by",
+                                    "description": "The user who made the decision."
                                 },
                                 "decidedAt": {
                                     "type": "string",
                                     "format": "date-time",
-                                    "title": "Decided at"
+                                    "title": "Decided at",
+                                    "description": "When the decision was made."
                                 }
                             }
                         }

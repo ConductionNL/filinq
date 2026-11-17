@@ -60,13 +60,12 @@
 
 				<NcSelect
 					v-model="bases"
-					:options="basesOptions"
-					label="label"
-					:reduce="(o) => o.value"
-					:multiple="true"
+					data-testid="scope-bases"
+					multiple
 					:inputLabel="t('filinq', 'Legal bases')"
-					:placeholder="t('filinq', 'Pick grondslagen…')"
-					data-testid="scope-bases" />
+					:options="basesOptions"
+					:reduce="(o) => o.value"
+					label="label" />
 
 				<NcNoteCard v-if="scope === 'document'" type="info">
 					{{
@@ -109,15 +108,7 @@
 
 <script>
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
-import {
-	NcButton,
-	NcCheckboxRadioSwitch,
-	NcDialog,
-	NcLoadingIcon,
-	NcNoteCard,
-	NcSelect,
-	NcTextField,
-} from '@nextcloud/vue'
+import { NcButton, NcCheckboxRadioSwitch, NcDialog, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField } from '@nextcloud/vue'
 import { decideScope } from '../services/imageRedaction.js'
 
 /**
@@ -132,15 +123,7 @@ import { decideScope } from '../services/imageRedaction.js'
  */
 export default {
 	name: 'ScopeRedactionDialog',
-	components: {
-		NcButton,
-		NcCheckboxRadioSwitch,
-		NcDialog,
-		NcLoadingIcon,
-		NcNoteCard,
-		NcSelect,
-		NcTextField,
-	},
+	components: { NcButton, NcCheckboxRadioSwitch, NcDialog, NcLoadingIcon, NcNoteCard, NcSelect, NcTextField },
 
 	props: {
 		/** The document. */
@@ -170,14 +153,7 @@ export default {
 
 	emits: ['close', 'decided'],
 	data() {
-		return {
-			scope: 'pageRange',
-			fromPage: '1',
-			toPage: '1',
-			bases: [],
-			busy: false,
-			error: '',
-		}
+		return { scope: 'pageRange', fromPage: '1', toPage: '1', bases: [], error: '', busy: false }
 	},
 
 	computed: {
@@ -185,6 +161,7 @@ export default {
 		 * Whether the decision is complete enough to send.
 		 *
 		 * @return {boolean} True with at least one ground and, for pages, a start.
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
 		 */
 		canSave() {
 			if (this.bases.length === 0) {
@@ -195,8 +172,8 @@ export default {
 	},
 
 	methods: {
-		t,
 		n,
+		t,
 		/**
 		 * Store and commit the decision.
 		 *
@@ -204,19 +181,16 @@ export default {
 		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
 		 */
 		async onSave() {
-			this.busy = true
 			this.error = ''
-			const answer = await decideScope(
-				this.fileId,
-				{ scope: this.scope, fromPage: this.fromPage, toPage: this.toPage, bases: this.bases },
-				true,
-			)
+			this.busy = true
+			const decision = { scope: this.scope, fromPage: this.fromPage, toPage: this.toPage, bases: this.bases }
+			const answer = await decideScope(this.fileId, decision, true)
 			this.busy = false
-			if (!answer.ok) {
+			if (answer.ok) {
+				this.$emit('decided', answer)
+			} else {
 				this.error = answer.error
-				return
 			}
-			this.$emit('decided', answer)
 		},
 	},
 }

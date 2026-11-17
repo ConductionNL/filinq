@@ -22,7 +22,6 @@ namespace OCA\Filinq\Service\Review;
 
 use DateTimeImmutable;
 use DateTimeInterface;
-use OCA\Filinq\Exception\ScopeDecisionRefusedException;
 use OCP\Files\File;
 
 /**
@@ -84,17 +83,73 @@ class ScopeRedactionService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ScopeDecisionStore $store Where decisions and their outcome are kept.
-	 * @param ImageSeamGateway   $seam  OpenRegister's image seam.
+	 * @param ScopeDecisionStore  $store Where decisions and their outcome are kept.
+	 * @param ImageSeamGateway    $seam  OpenRegister's image seam.
+	 * @param DocumentPageCounter $pages The document's page count.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly ScopeDecisionStore $store,
 		private readonly ImageSeamGateway $seam,
+		private readonly DocumentPageCounter $pages = new DocumentPageCounter(),
 	) {
 
 	}//end __construct()
+
+	/**
+	 * The document's decisions, its page count and whether page scopes can be committed.
+	 *
+	 * @param File $file The document.
+	 *
+	 * @return array{decisions: list<array<string, mixed>>, pageCount: int, pageScopesAvailable: bool} The state.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+	 */
+	public function state(File $file): array {
+		return [
+			'decisions' => $this->store->decisionsFor(fileId: (int) $file->getId()),
+			'pageCount' => $this->pages->count(file: $file),
+			'pageScopesAvailable' => $this->seam->available(),
+		];
+
+	}//end state()
+
+	/**
+	 * Store a decision on a document, counting its pages.
+	 *
+	 * @param File                 $file   The document.
+	 * @param array<string, mixed> $input  The decision as entered.
+	 * @param string               $userId Who decided.
+	 *
+	 * @return array<string, mixed> The stored decision.
+	 *
+	 * @throws ScopeDecisionRefusedException When the decision does not fit; nothing is stored.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-6.1
+	 */
+	public function decide(File $file, array $input, string $userId): array {
+		return $this->record(fileId: (int) $file->getId(), input: $input, pageCount: $this->pages->count(file: $file), userId: $userId);
+
+	}//end decide()
+
+	/**
+	 * Commit a decision on a document, counting its pages.
+	 *
+	 * @param File                 $file   The document.
+	 * @param array<string, mixed> $input  The decision.
+	 * @param string               $userId Who commits.
+	 *
+	 * @return array{scope: string, withheld: bool, outputFileId: int|null, burnedPages: list<int>} The outcome.
+	 *
+	 * @throws ScopeDecisionRefusedException When the decision does not fit or the seam is absent; nothing is written.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-6.2
+	 */
+	public function commitOn(File $file, array $input, string $userId): array {
+		return $this->commit(file: $file, input: $input, pageCount: $this->pages->count(file: $file), userId: $userId);
+
+	}//end commitOn()
 
 	/**
 	 * Validate and normalise a decision.

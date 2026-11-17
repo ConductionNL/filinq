@@ -1517,8 +1517,10 @@ export default {
 		 * `currentFileId` computed rather than `fileViewerStore.currentFile`
 		 * directly: the store is a `<script setup>` import, so it is NOT a
 		 * `this`-property and a string-path watch on it never fires.
+		 * It also reads the file's scope decisions, so their rows show.
 		 *
 		 * @param {number|null} fileId New file id (null when viewer closed).
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
 		 */
 		currentFileId: {
 			handler(fileId) {

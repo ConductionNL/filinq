@@ -38,7 +38,7 @@ use Psr\Log\NullLogger;
 /**
  * @covers \OCA\Filinq\Controller\ScopeRedactionController
  * @uses   \OCA\Filinq\Service\Review\ScopeRedactionService
- * @uses   \OCA\Filinq\Exception\ScopeDecisionRefusedException
+ * @uses   \OCA\Filinq\Service\Review\ScopeDecisionRefusedException
  */
 class ScopeRedactionControllerTest extends TestCase {
 
@@ -93,10 +93,7 @@ class ScopeRedactionControllerTest extends TestCase {
 			$request,
 			$session,
 			$root,
-			new ScopeRedactionService(store: $this->store, seam: $this->seam),
-			$this->store,
-			$pages,
-			$this->seam,
+			new ScopeRedactionService(store: $this->store, seam: $this->seam, pages: $pages),
 			new NullLogger()
 		);
 

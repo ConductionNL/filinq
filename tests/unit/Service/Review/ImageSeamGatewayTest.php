@@ -20,7 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Review;
 
-use OCA\Filinq\Exception\ScopeDecisionRefusedException;
+use OCA\Filinq\Service\Review\ScopeDecisionRefusedException;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\Filinq\Service\Review\ImageSeamGateway;
 use OCA\OpenRegister\Service\File\ImageDetection;
@@ -34,7 +34,7 @@ require_once __DIR__ . '/../../../stubs/OpenRegisterImageSeamStubs.php';
 
 /**
  * @covers \OCA\Filinq\Service\Review\ImageSeamGateway
- * @uses   \OCA\Filinq\Exception\ScopeDecisionRefusedException
+ * @uses   \OCA\Filinq\Service\Review\ScopeDecisionRefusedException
  */
 class ImageSeamGatewayTest extends TestCase {
 

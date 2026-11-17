@@ -20,11 +20,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Exception\ScopeDecisionRefusedException;
+use InvalidArgumentException;
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Service\Review\DocumentPageCounter;
-use OCA\Filinq\Service\Review\ImageSeamGateway;
-use OCA\Filinq\Service\Review\ScopeDecisionStore;
 use OCA\Filinq\Service\Review\ScopeRedactionService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -60,10 +57,7 @@ class ScopeRedactionController extends Controller {
 	 * @param IRequest              $request     The request.
 	 * @param IUserSession          $userSession The signed-in user.
 	 * @param IRootFolder           $rootFolder  The file tree.
-	 * @param ScopeRedactionService $scopes      Validates and commits decisions.
-	 * @param ScopeDecisionStore    $store       The stored decisions.
-	 * @param DocumentPageCounter   $pages       The document's page count.
-	 * @param ImageSeamGateway      $seam        Whether OpenRegister's image seam is there.
+	 * @param ScopeRedactionService $scopes      Reads, validates and commits decisions.
 	 * @param LoggerInterface       $logger      Logger for failures.
 	 *
 	 * @return void
@@ -73,9 +67,6 @@ class ScopeRedactionController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly IRootFolder $rootFolder,
 		private readonly ScopeRedactionService $scopes,
-		private readonly ScopeDecisionStore $store,
-		private readonly DocumentPageCounter $pages,
-		private readonly ImageSeamGateway $seam,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
@@ -99,13 +90,7 @@ class ScopeRedactionController extends Controller {
 			return $this->notFound();
 		}
 
-		return $this->answer(
-			action: fn (): array => [
-				'decisions' => $this->store->decisionsFor(fileId: $fileId),
-				'pageCount' => $this->pages->count(file: $file),
-				'pageScopesAvailable' => $this->seam->available(),
-			]
-		);
+		return $this->answer(action: fn (): array => $this->scopes->state(file: $file));
 
 	}//end show()
 
@@ -127,12 +112,7 @@ class ScopeRedactionController extends Controller {
 		}
 
 		return $this->answer(
-			action: fn (): array => $this->scopes->record(
-				fileId: $fileId,
-				input: $this->decisionInput(),
-				pageCount: $this->pages->count(file: $file),
-				userId: $this->userId()
-			),
+			action: fn (): array => $this->scopes->decide(file: $file, input: $this->decisionInput(), userId: $this->userId()),
 			status: Http::STATUS_CREATED
 		);
 
@@ -156,12 +136,7 @@ class ScopeRedactionController extends Controller {
 		}
 
 		return $this->answer(
-			action: fn (): array => $this->scopes->commit(
-				file: $file,
-				input: $this->decisionInput(),
-				pageCount: $this->pages->count(file: $file),
-				userId: $this->userId()
-			)
+			action: fn (): array => $this->scopes->commitOn(file: $file, input: $this->decisionInput(), userId: $this->userId())
 		);
 
 	}//end commit()
@@ -215,7 +190,8 @@ class ScopeRedactionController extends Controller {
 	private function answer(callable $action, int $status = Http::STATUS_OK): JSONResponse {
 		try {
 			return new JSONResponse(data: $action(), statusCode: $status);
-		} catch (ScopeDecisionRefusedException $e) {
+		} catch (InvalidArgumentException $e) {
+			// A refused decision (ScopeDecisionRefusedException): nothing was written.
 			return new JSONResponse(data: ['error' => $e->getMessage()], statusCode: Http::STATUS_BAD_REQUEST);
 		} catch (Throwable $e) {
 			$this->logger->error(message: '[ScopeRedactionController] ' . $e->getMessage(), context: ['exception' => $e]);

@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Review;
 
-use OCA\Filinq\Exception\ScopeDecisionRefusedException;
+use OCA\Filinq\Service\Review\ScopeDecisionRefusedException;
 use OCA\Filinq\Service\Review\ImageSeamGateway;
 use OCA\Filinq\Service\Review\ScopeDecisionStore;
 use OCA\Filinq\Service\Review\ScopeRedactionService;
@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @covers \OCA\Filinq\Service\Review\ScopeRedactionService
- * @covers \OCA\Filinq\Exception\ScopeDecisionRefusedException
+ * @covers \OCA\Filinq\Service\Review\ScopeDecisionRefusedException
  */
 class ScopeRedactionServiceTest extends TestCase {
 

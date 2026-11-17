@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category  Exception
- * @package   OCA\Filinq\Exception
+ * @package   OCA\Filinq\Service\Review
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -18,7 +18,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Exception;
+namespace OCA\Filinq\Service\Review;
 
 use InvalidArgumentException;
 

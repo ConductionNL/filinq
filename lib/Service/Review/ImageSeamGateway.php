@@ -20,7 +20,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Review;
 
-use OCA\Filinq\Exception\ScopeDecisionRefusedException;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCP\Files\File;
 use Throwable;
