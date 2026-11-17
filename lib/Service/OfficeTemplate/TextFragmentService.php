@@ -82,7 +82,7 @@ class TextFragmentService {
 	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	public function list(array $filters=[], int $limit=20, int $offset=0): array {
-		return $this->objects->search(schema: self::SCHEMA, filters: $filters, limit: $limit, offset: $offset);
+		return $this->objects->search(schema: self::SCHEMA, query: $filters + ['_limit' => $limit, '_offset' => $offset]);
 	}//end list()
 
 	/**
@@ -195,7 +195,7 @@ class TextFragmentService {
 	 */
 	public function findBySlug(string $namespace, string $slug): ?array {
 		try {
-			$page = $this->objects->search(schema: self::SCHEMA, filters: ['namespace' => $namespace, 'slug' => $slug], limit: 5);
+			$page = $this->objects->search(schema: self::SCHEMA, query: ['namespace' => $namespace, 'slug' => $slug, '_limit' => 5]);
 		} catch (Throwable) {
 			return null;
 		}

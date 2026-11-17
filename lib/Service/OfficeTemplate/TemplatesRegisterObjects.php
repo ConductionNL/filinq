@@ -73,20 +73,18 @@ class TemplatesRegisterObjects {
 	/**
 	 * A page of objects.
 	 *
-	 * @param string               $schema  The schema slug.
-	 * @param array<string, mixed> $filters Field filters.
-	 * @param int                  $limit   The page size.
-	 * @param int                  $offset  The offset.
+	 * @param string               $schema The schema slug.
+	 * @param array<string, mixed> $query  Field filters, with `_limit` (default 20) and `_offset` (default 0).
 	 *
 	 * @return array{results: array<int, array<string, mixed>>, total: int}
 	 *
 	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
 	 */
-	public function search(string $schema, array $filters=[], int $limit=20, int $offset=0): array {
+	public function search(string $schema, array $query=[]): array {
 		$service = $this->objectService();
 		$register = $this->register();
 		$query = $service->buildSearchQuery(
-			requestParams: $filters + ['_limit' => $limit, '_offset' => $offset],
+			requestParams: $query + ['_limit' => 20, '_offset' => 0],
 			register: $register,
 			schema: $schema
 		);

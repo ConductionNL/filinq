@@ -404,7 +404,7 @@ class OfficeTemplateFiller {
 	private function fillRows(OfficeFillRun $run): void {
 		foreach ($this->rowGroups(run: $run) as $prefix => $tags) {
 			$items = array_values((array) $this->raw(data: $run->data, path: $prefix));
-			if ($this->cloneRows(processor: $run->processor, first: (string) array_key_first($tags), count: count($items)) === false) {
+			if ($this->cloneRows(processor: $run->processor, row: ['first' => (string) array_key_first($tags), 'count' => count($items)]) === false) {
 				continue;
 			}
 
@@ -444,21 +444,20 @@ class OfficeTemplateFiller {
 	/**
 	 * Clone a table row to a count, or delete it for none.
 	 *
-	 * @param TemplateProcessor $processor The document.
-	 * @param string            $first     A tag in the row.
-	 * @param int               $count     The number of rows.
+	 * @param TemplateProcessor              $processor The document.
+	 * @param array{first: string, count: int} $row      A tag in the row and the number of rows.
 	 *
 	 * @return bool True when rows are to be filled; false when the row is gone
 	 *              or not in a table (the scalar pass then fills it joined).
 	 */
-	private function cloneRows(TemplateProcessor $processor, string $first, int $count): bool {
+	private function cloneRows(TemplateProcessor $processor, array $row): bool {
 		try {
-			if ($count === 0) {
-				$processor->deleteRow($first);
+			if ($row['count'] === 0) {
+				$processor->deleteRow($row['first']);
 				return false;
 			}
 
-			$processor->cloneRow($first, $count);
+			$processor->cloneRow($row['first'], $row['count']);
 		} catch (Throwable) {
 			return false;
 		}

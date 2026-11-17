@@ -115,7 +115,7 @@ class OfficeTemplateService {
 
 		$this->resolver->validateNamespace(namespace: (string) $data['namespace']);
 
-		$source = $this->checkedSource(fileName: $fileName, bytes: $bytes, boundSchema: trim((string) ($data['boundSchema'] ?? '')));
+		$source = $this->checkedSource(upload: ['fileName' => $fileName, 'bytes' => $bytes], boundSchema: trim((string) ($data['boundSchema'] ?? '')));
 		$data = array_merge($data, $this->storedSource(source: $source, bytes: $bytes));
 		if ($data['content'] === '') {
 			$data['content'] = (string) $data['name'];
@@ -153,7 +153,7 @@ class OfficeTemplateService {
 			throw new Exception(message: 'Only an office template takes a new source file', code: 409);
 		}
 
-		$source = $this->checkedSource(fileName: $fileName, bytes: $bytes, boundSchema: trim((string) ($template['boundSchema'] ?? '')));
+		$source = $this->checkedSource(upload: ['fileName' => $fileName, 'bytes' => $bytes], boundSchema: trim((string) ($template['boundSchema'] ?? '')));
 		$data = $this->storedSource(source: $source, bytes: $bytes);
 		if ($data['content'] === '') {
 			$data['content'] = (string) ($template['name'] ?? $fileName);
@@ -223,19 +223,18 @@ class OfficeTemplateService {
 	/**
 	 * Check an uploaded file and its tags, storing nothing.
 	 *
-	 * @param string $fileName    The uploaded file's name.
-	 * @param string $bytes       The uploaded file's content.
-	 * @param string $boundSchema The bound schema's slug, or ''.
+	 * @param array{fileName: string, bytes: string} $upload      The uploaded file's name and content.
+	 * @param string                                 $boundSchema The bound schema's slug, or ''.
 	 *
 	 * @return array{kind: string, docx: string, tags: array<int, string>, report: array<string, mixed>}
 	 *
 	 * @throws OfficeSourceRefusedException When the file or its tags are refused (422).
 	 */
-	private function checkedSource(string $fileName, string $bytes, string $boundSchema): array {
-		$kind = $this->tools->guard->inspect(fileName: $fileName, bytes: $bytes, maxBytes: $this->maxBytes());
-		$docx = $bytes;
+	private function checkedSource(array $upload, string $boundSchema): array {
+		$kind = $this->tools->guard->inspect(fileName: $upload['fileName'], bytes: $upload['bytes'], maxBytes: $this->maxBytes());
+		$docx = $upload['bytes'];
 		if ($kind === 'odt') {
-			$docx = $this->tools->libreOffice->convertDocument(bytes: $bytes, fromExtension: 'odt', toExtension: 'docx');
+			$docx = $this->tools->libreOffice->convertDocument(bytes: $upload['bytes'], fromExtension: 'odt', toExtension: 'docx');
 		}
 
 		$tags = $this->tools->reader->tags(docx: $docx);

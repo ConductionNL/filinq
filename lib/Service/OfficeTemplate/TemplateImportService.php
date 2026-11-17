@@ -135,31 +135,60 @@ class TemplateImportService {
 			'namespace' => $namespace,
 			'report' => [],
 		];
-		foreach (['boundRegister', 'boundSchema'] as $binding) {
-			$value = trim((string) ($fields[$binding] ?? ''));
-			if ($value !== '') {
-				$job[$binding] = $value;
-			}
-		}
-
-		if ($archive !== null) {
-			$job['totalFiles'] = count($this->zipNames(bytes: $archive));
-			$job['archiveFileId'] = $this->files->store->store(bytes: $archive, extension: 'zip')['fileId'];
-		} else {
-			$path = trim((string) ($fields['path'] ?? ''));
-			if ($path === '') {
-				throw new Exception(message: 'A ZIP file or a folder path is required', code: 400);
-			}
-
-			$job['sourcePath'] = $path;
-			$job['totalFiles'] = count($this->folderFiles(folder: $this->userFolder(userId: $userId, path: $path)));
-		}
-
+		$folder = ['path' => ($fields['path'] ?? null), 'userId' => $userId];
+		$job = array_merge($job, $this->bindings(source: $fields), $this->source(archive: $archive, folder: $folder));
 		$saved = $this->objects->save(schema: self::SCHEMA, data: $job);
 		$this->jobs->add(job: JobQueueInterface::TEMPLATE_IMPORT, argument: ['jobId' => (string) ($saved['id'] ?? ''), 'userId' => $userId]);
 
 		return $saved;
 	}//end start()
+
+	/**
+	 * The register and schema bindings a source gives, trimmed, without empty ones.
+	 *
+	 * @param array<string, mixed> $source The fields or the job.
+	 *
+	 * @return array<string, string>
+	 */
+	private function bindings(array $source): array {
+		$bindings = [];
+		foreach (['boundRegister', 'boundSchema'] as $binding) {
+			$value = trim((string) ($source[$binding] ?? ''));
+			if ($value !== '') {
+				$bindings[$binding] = $value;
+			}
+		}
+
+		return $bindings;
+	}//end bindings()
+
+	/**
+	 * Where an import reads from, and how many files it holds.
+	 *
+	 * @param string|null          $archive The uploaded ZIP's bytes, or null for a folder.
+	 * @param array<string, mixed> $folder  The folder's `path` in the Files of `userId`.
+	 *
+	 * @return array<string, mixed> `totalFiles` with `archiveFileId` or `sourcePath`.
+	 *
+	 * @throws Exception With code 400 when neither a ZIP nor a folder is given.
+	 */
+	private function source(?string $archive, array $folder): array {
+		if ($archive !== null) {
+			return [
+				'totalFiles' => count($this->zipNames(bytes: $archive)),
+				'archiveFileId' => $this->files->store->store(bytes: $archive, extension: 'zip')['fileId'],
+			];
+		}
+
+		$path = trim((string) ($folder['path'] ?? ''));
+		if ($path === '') {
+			throw new Exception(message: 'A ZIP file or a folder path is required', code: 400);
+		}
+
+		$files = $this->folderFiles(folder: $this->userFolder(userId: (string) $folder['userId'], path: $path));
+
+		return ['sourcePath' => $path, 'totalFiles' => count($files)];
+	}//end source()
 
 	/**
 	 * One import job.
@@ -209,7 +238,7 @@ class TemplateImportService {
 		$job['totalFiles'] = count($entries);
 		$count = 0;
 		foreach ($entries as $name => $read) {
-			$row = $this->importOne(job: $job, name: $name, read: $read);
+			$row = $this->importOne(job: $job, entry: ['read' => $read] + $this->entry(name: $name));
 			$job['report'][] = $row;
 			$job[$row['status']]++;
 			$count++;
@@ -227,73 +256,98 @@ class TemplateImportService {
 	/**
 	 * Import one file and describe the outcome.
 	 *
-	 * @param array<string, mixed> $job  The job.
-	 * @param string               $name The file's path in the import.
-	 * @param callable             $read Returns the file's bytes.
+	 * @param array<string, mixed> $job   The job.
+	 * @param array<string, mixed> $entry The entry (see entry()), with `read` returning its bytes.
 	 *
 	 * @return array<string, mixed> The report row.
 	 */
-	private function importOne(array $job, string $name, callable $read): array {
-		$parts = explode('/', trim($name, '/'));
-		$fileName = (string) array_pop($parts);
-		$extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-		$title = trim((string) pathinfo($fileName, PATHINFO_FILENAME));
-		$isFragment = in_array(self::FRAGMENTS_FOLDER, array_map('strtolower', $parts), true) === true
-			&& in_array($extension, self::FRAGMENT_EXTENSIONS, true) === true;
-
-		if ($isFragment === false && in_array($extension, self::TEMPLATE_EXTENSIONS, true) === false) {
+	private function importOne(array $job, array $entry): array {
+		$name = $entry['name'];
+		if ($entry['kind'] === null) {
 			return ['file' => $name, 'status' => 'skipped', 'reason' => 'Not a template (DOCX, ODT) or a fragment (in a fragments folder).'];
 		}
 
 		try {
-			$bytes = (string) $read();
-			if ($isFragment === true) {
-				return $this->importFragment(job: $job, name: $name, title: $title, bytes: $bytes, extension: $extension);
+			$bytes = (string) ($entry['read'])();
+			if ($entry['kind'] === 'fragment') {
+				return $this->importFragment(job: $job, entry: ['bytes' => $bytes] + $entry);
 			}
 
-			$fields = ['name' => $title, 'namespace' => $job['namespace']];
-			foreach (['boundRegister', 'boundSchema'] as $binding) {
-				if (empty($job[$binding]) === false) {
-					$fields[$binding] = $job[$binding];
-				}
-			}
-
-			if ($parts !== []) {
-				$fields['category'] = $parts[0];
-			}
-
-			$created = $this->templates->create(fields: $fields, fileName: $fileName, bytes: $bytes);
-			$report = $created['tagReport'];
-
-			return [
-				'file' => $name,
-				'status' => 'imported',
-				'kind' => 'template',
-				'id' => (string) ($created['template']['id'] ?? ''),
-				'tags' => count((array) ($created['template']['mergeFields'] ?? [])),
-				'unknownTags' => count((array) ($report['unknown'] ?? [])),
-				'unknown' => array_values((array) ($report['unknown'] ?? [])),
-				'converted' => $created['converted'],
-			];
+			return $this->importTemplate(job: $job, entry: ['bytes' => $bytes] + $entry);
 		} catch (Throwable $e) {
 			return ['file' => $name, 'status' => 'failed', 'reason' => $e->getMessage()];
-		}//end try
+		}
 	}//end importOne()
+
+	/**
+	 * What an entry's path makes it: a template, a fragment or neither.
+	 *
+	 * @param string $name The entry's path.
+	 *
+	 * @return array{name: string, fileName: string, extension: string, title: string, folders: array<int, string>, kind: string|null}
+	 */
+	private function entry(string $name): array {
+		$folders = explode('/', trim($name, '/'));
+		$fileName = (string) array_pop($folders);
+		$extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+		$kind = null;
+		if (in_array($extension, self::TEMPLATE_EXTENSIONS, true) === true) {
+			$kind = 'template';
+		}
+
+		if (in_array(self::FRAGMENTS_FOLDER, array_map('strtolower', $folders), true) === true
+			&& in_array($extension, self::FRAGMENT_EXTENSIONS, true) === true
+		) {
+			$kind = 'fragment';
+		}
+
+		$title = trim((string) pathinfo($fileName, PATHINFO_FILENAME));
+
+		return ['name' => $name, 'fileName' => $fileName, 'extension' => $extension, 'title' => $title, 'folders' => $folders, 'kind' => $kind];
+	}//end entry()
+
+	/**
+	 * Create one template from an entry, in the first folder's category.
+	 *
+	 * @param array<string, mixed> $job   The job.
+	 * @param array<string, mixed> $entry The entry, with its `bytes`.
+	 *
+	 * @return array<string, mixed> The report row.
+	 *
+	 * @throws Exception When the template is refused.
+	 */
+	private function importTemplate(array $job, array $entry): array {
+		$fields = array_merge(['name' => $entry['title'], 'namespace' => $job['namespace']], $this->bindings(source: $job));
+		if ($entry['folders'] !== []) {
+			$fields['category'] = $entry['folders'][0];
+		}
+
+		$created = $this->templates->create(fields: $fields, fileName: $entry['fileName'], bytes: (string) $entry['bytes']);
+		$unknown = array_values((array) ($created['tagReport']['unknown'] ?? []));
+
+		return [
+			'file' => $entry['name'],
+			'status' => 'imported',
+			'kind' => 'template',
+			'id' => (string) ($created['template']['id'] ?? ''),
+			'tags' => count((array) ($created['template']['mergeFields'] ?? [])),
+			'unknownTags' => count($unknown),
+			'unknown' => $unknown,
+			'converted' => $created['converted'],
+		];
+	}//end importTemplate()
 
 	/**
 	 * Import one text fragment.
 	 *
-	 * @param array<string, mixed> $job       The job.
-	 * @param string               $name      The file's path in the import.
-	 * @param string               $title     The file's name without extension.
-	 * @param string               $bytes     The file's content.
-	 * @param string               $extension The file's extension.
+	 * @param array<string, mixed> $job   The job.
+	 * @param array<string, mixed> $entry The entry: its path, title, extension and `bytes`.
 	 *
 	 * @return array<string, mixed> The report row.
 	 */
-	private function importFragment(array $job, string $name, string $title, string $bytes, string $extension): array {
-		$text = $bytes;
-		if ($extension !== 'txt') {
+	private function importFragment(array $job, array $entry): array {
+		$text = (string) $entry['bytes'];
+		if ($entry['extension'] !== 'txt') {
 			// HTML fragments keep their line breaks and lose their markup.
 			$text = (string) preg_replace('#<\s*(br|/p|/div|/li)[^>]*>#i', "\n", $text);
 			$text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -301,11 +355,11 @@ class TemplateImportService {
 
 		$text = trim(str_replace(["\r\n", "\r"], "\n", $text));
 		$fragment = $this->fragments->create(
-			data: ['name' => $title, 'slug' => $this->slug(title: $title), 'content' => $text, 'namespace' => $job['namespace']]
+			data: ['name' => $entry['title'], 'slug' => $this->slug(title: $entry['title']), 'content' => $text, 'namespace' => $job['namespace']]
 		);
 
 		return [
-			'file' => $name,
+			'file' => $entry['name'],
 			'status' => 'imported',
 			'kind' => 'fragment',
 			'id' => (string) ($fragment['id'] ?? ''),
@@ -365,36 +419,15 @@ class TemplateImportService {
 	 * @throws Exception With code 400 when it is not a ZIP.
 	 */
 	private function zipEntries(string $bytes): array {
-		$path = (string) tempnam(sys_get_temp_dir(), 'filinq-import-');
-		file_put_contents($path, $bytes);
-		$zip = new ZipArchive();
-		if ($zip->open($path, ZipArchive::RDONLY) !== true) {
-			unlink($path);
-			throw new Exception(message: 'The file is not a ZIP archive.', code: 400);
-		}
-
+		[$zip, $path] = $this->openZip(bytes: $bytes);
 		$entries = [];
 		for ($index = 0; $index < $zip->numFiles; $index++) {
 			$stat = $zip->statIndex($index);
 			$name = (string) ($stat['name'] ?? '');
-			if ($this->isSystemEntry(name: $name) === true) {
-				continue;
+			if ($this->isSystemEntry(name: $name) === false) {
+				$entries[$name] = $this->zipReader(zip: $zip, stat: $stat);
 			}
-
-			$size = (int) ($stat['size'] ?? 0);
-			$content = null;
-			if ($size <= self::MAX_ENTRY_BYTES) {
-				$content = $zip->getFromIndex($index);
-			}
-
-			$entries[$name] = static function () use ($content, $size): string {
-				if ($content === null || $content === false) {
-					throw new Exception(message: 'The file is too large to import ('.$size.' bytes).');
-				}
-
-				return $content;
-			};
-		}//end for
+		}
 
 		$zip->close();
 		unlink($path);
@@ -403,15 +436,40 @@ class TemplateImportService {
 	}//end zipEntries()
 
 	/**
-	 * The names of a ZIP's importable entries.
+	 * A reader for one ZIP entry; an entry over the size limit is not read
+	 * and its reader refuses.
 	 *
-	 * @param string $bytes The ZIP.
+	 * @param ZipArchive           $zip  The open archive.
+	 * @param array<string, mixed> $stat The entry's statIndex().
 	 *
-	 * @return array<int, string>
-	 *
-	 * @throws Exception With code 400 when it is not a ZIP.
+	 * @return callable(): string
 	 */
-	private function zipNames(string $bytes): array {
+	private function zipReader(ZipArchive $zip, array $stat): callable {
+		$size = (int) ($stat['size'] ?? 0);
+		$content = null;
+		if ($size <= self::MAX_ENTRY_BYTES) {
+			$content = $zip->getFromIndex((int) ($stat['index'] ?? 0));
+		}
+
+		return static function () use ($content, $size): string {
+			if ($content === null || $content === false) {
+				throw new Exception(message: 'The file is too large to import ('.$size.' bytes).');
+			}
+
+			return $content;
+		};
+	}//end zipReader()
+
+	/**
+	 * Open ZIP bytes through a temporary file.
+	 *
+	 * @param string $bytes The archive.
+	 *
+	 * @return array{0: ZipArchive, 1: string} The archive and the temporary path to unlink after closing.
+	 *
+	 * @throws Exception With code 400 when the bytes are not a ZIP archive.
+	 */
+	private function openZip(string $bytes): array {
 		$path = (string) tempnam(sys_get_temp_dir(), 'filinq-import-');
 		file_put_contents($path, $bytes);
 		$zip = new ZipArchive();
@@ -420,6 +478,20 @@ class TemplateImportService {
 			throw new Exception(message: 'The file is not a ZIP archive.', code: 400);
 		}
 
+		return [$zip, $path];
+	}//end openZip()
+
+	/**
+	 * The names of the importable entries of ZIP bytes.
+	 *
+	 * @param string $bytes The archive.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @throws Exception With code 400 when the bytes are not a ZIP archive.
+	 */
+	private function zipNames(string $bytes): array {
+		[$zip, $path] = $this->openZip(bytes: $bytes);
 		$names = [];
 		for ($index = 0; $index < $zip->numFiles; $index++) {
 			$name = (string) $zip->getNameIndex($index);
