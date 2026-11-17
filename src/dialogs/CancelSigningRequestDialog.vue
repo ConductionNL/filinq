@@ -5,7 +5,7 @@ SPDX-License-Identifier: EUPL-1.2
 Confirms withdrawing a signing request. Withdrawing ends it for every
 signatory and cannot be undone, so it is never one click.
 
-@spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+@spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 -->
 
 <template>

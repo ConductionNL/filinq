@@ -183,7 +183,7 @@ class ValidSignProviderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testCancelSigningRefusesRatherThanClaimingSuccess(): void {
 		$this->expectException(SigningCancellationNotSupportedException::class);
@@ -201,7 +201,7 @@ class ValidSignProviderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function testTheRefusalNamesTheRemedy(): void {
 		try {

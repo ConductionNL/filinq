@@ -82,6 +82,22 @@ interface PublicationPipelineServiceInterface {
 	public function updateMetadata(array $record, array $metadata, string $actor): array;
 
 	/**
+	 * Set one value on many records, each with its own log entry; a record
+	 * past handoff is skipped and reported.
+	 *
+	 * @param array<int, array<string, mixed>> $records The selected records
+	 * @param array<string, mixed>             $values  `wooCategory`, `documentsoort` and/or `publisher`
+	 * @param string                           $actor   Who sets them
+	 *
+	 * @return array{updated: array<int, array<string, mixed>>, skipped: array<int, array{uuid: string, reason: string}>} The outcome.
+	 *
+	 * @throws InvalidArgumentException When a field may not be bulk-set, a value is blank, or the category is unknown.
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 */
+	public function updateMetadataMany(array $records, array $values, string $actor): array;
+
+	/**
 	 * Hand a ready publication to the platform with its redacted copy.
 	 *
 	 * @param array<string, mixed> $record The record
@@ -139,4 +155,16 @@ interface PublicationPipelineServiceInterface {
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.4
 	 */
 	public function sync(array $record): array;
+
+	/**
+	 * Withdraw every handed-off publication whose document or dossier was destroyed.
+	 *
+	 * @param list<string> $sourceRefs The destroyed object's uuid and file ids
+	 * @param string       $detail     What was destroyed, for the reason
+	 *
+	 * @return list<array<string, mixed>> The withdrawn records.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-a-publication-goes-offline-when-its-source-document-is-destroyed-req-scr-009
+	 */
+	public function withdrawDestroyedSource(array $sourceRefs, string $detail): array;
 }//end interface
