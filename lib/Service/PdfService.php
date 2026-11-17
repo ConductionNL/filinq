@@ -293,6 +293,101 @@ class PdfService implements PdfServiceInterface {
 	}//end buildCropMarksHtml()
 
 	/**
+	 * Apply a house style's fonts and cover page to the HTML.
+	 *
+	 * `fonts` (`{heading, body}`, each `{family}`) sets the font families
+	 * the headings and the body text ask for, with filinq's own font after
+	 * them, so a family the PDF engine does not have falls back to it rather
+	 * than to nothing. `coverImage` puts the image on a page of its own
+	 * before the content. Both come from `HuisstijlProfileMapper::pdfAssets()`;
+	 * without them the HTML is returned unchanged.
+	 *
+	 * @param string               $html    The rendered HTML.
+	 * @param array<string, mixed> $options The PDF options.
+	 *
+	 * @return string The HTML with the house style applied.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 */
+	public function applyHouseStyle(string $html, array $options): string {
+		$prefix = $this->fontStyle(fonts: ($options['fonts'] ?? null)) . $this->coverBlock(cover: ($options['coverImage'] ?? null));
+
+		return $prefix . $html;
+	}//end applyHouseStyle()
+
+	/**
+	 * The style block that sets the body and heading fonts, or '' without fonts.
+	 *
+	 * @param mixed $fonts The `fonts` option.
+	 *
+	 * @return string The style block.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 */
+	private function fontStyle(mixed $fonts): string {
+		if (is_array($fonts) === false) {
+			return '';
+		}
+
+		$css     = '';
+		$targets = ['body' => 'body', 'heading' => 'h1, h2, h3, h4, h5, h6'];
+		foreach ($targets as $role => $selector) {
+			$family = $this->cssFontFamily(font: ($fonts[$role] ?? null));
+			if ($family !== null) {
+				$css .= $selector . ' { font-family: "' . $family . '", dejavusans, sans-serif; }';
+			}
+		}
+
+		if ($css === '') {
+			return '';
+		}
+
+		return '<style>' . $css . '</style>';
+	}//end fontStyle()
+
+	/**
+	 * The cover page block, or '' without a cover image.
+	 *
+	 * @param mixed $cover The `coverImage` option.
+	 *
+	 * @return string The cover page block.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 */
+	private function coverBlock(mixed $cover): string {
+		if (is_string($cover) === false || trim($cover) === '') {
+			return '';
+		}
+
+		return '<div class="filinq-cover" style="page-break-after: always; text-align: center;">'
+			. '<img src="' . htmlspecialchars(trim($cover), ENT_QUOTES | ENT_HTML5) . '" alt="" style="max-width: 100%;" />'
+			. '</div>';
+	}//end coverBlock()
+
+	/**
+	 * A font family that is safe inside a quoted CSS value, or null.
+	 *
+	 * Only letters, digits, spaces, hyphens and underscores are kept, so a
+	 * family name can never close the declaration it sits in.
+	 *
+	 * @param mixed $font The font role, `{family, url}`.
+	 *
+	 * @return string|null The family, or null when there is none.
+	 */
+	private function cssFontFamily(mixed $font): ?string {
+		if (is_array($font) === false || is_string($font['family'] ?? null) === false) {
+			return null;
+		}
+
+		$family = trim((string) preg_replace('/[^\p{L}\p{N} _-]/u', '', $font['family']));
+		if ($family === '') {
+			return null;
+		}
+
+		return $family;
+	}//end cssFontFamily()
+
+	/**
 	 * Ensure the mPDF temp directory exists and is writable
 	 *
 	 * @param string $tempDir The temp directory path
@@ -584,6 +679,7 @@ class PdfService implements PdfServiceInterface {
 	 * @spec openspec/specs/pdf-generation/spec.md
 	 */
 	private function generatePdf(string $html, array $options): string {
+		$html = $this->applyHouseStyle(html: $html, options: $options);
 		if (($options['accessible'] ?? false) === true) {
 			return $this->accessiblePdf(html: $html, options: $options);
 		}
