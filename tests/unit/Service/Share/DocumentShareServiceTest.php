@@ -175,6 +175,15 @@ class DocumentShareServiceTest extends TestCase {
 		return new DocumentShareService($this->links, $this->store, $this->files, $this->labels, $session, $this->groups, $clock, $this->createMock(LoggerInterface::class), $this->archives, $this->archiveFiles);
 	}
 
+	/**
+	 * Let the user read exactly these files.
+	 */
+	private function readable(int ...$fileIds): void {
+		$this->files->method('node')->willReturnCallback(
+			fn (int $fileId): ?File => (in_array($fileId, $fileIds, true) ? $this->createMock(File::class) : null)
+		);
+	}
+
 	private function document(): void {
 		$file = $this->createMock(File::class);
 		$file->method('getName')->willReturn('besluit-2026-114.pdf');
@@ -405,6 +414,7 @@ class DocumentShareServiceTest extends TestCase {
 	}
 
 	public function testSeveralDocumentsLeaveAsOneArchiveThroughOneLink(): void {
+		$this->readable(7, 8);
 		$this->labels->method('getLabelForFile')->willReturnCallback(
 			static fn (int $fileId): ?ConfidentialityLabel => ($fileId === 8 ? new ConfidentialityLabel('Confidential', 3) : null)
 		);
@@ -450,6 +460,7 @@ class DocumentShareServiceTest extends TestCase {
 	}
 
 	public function testABundleNeedsANameAndAConfirmationForItsLabels(): void {
+		$this->readable(7, 8);
 		$this->labels->method('getLabelForFile')->willReturnCallback(
 			static fn (int $fileId): ?ConfidentialityLabel => new ConfidentialityLabel($fileId === 7 ? 'Confidential' : 'Secret', 3)
 		);
@@ -507,6 +518,7 @@ class DocumentShareServiceTest extends TestCase {
 	}
 
 	public function testThePreflightNamesTheRulesTheLabelsAndWhatTheBundleHolds(): void {
+		$this->readable(7, 8);
 		$this->links->policy = ['maxDays' => 7, 'passwordRequired' => true];
 		$this->labels->method('getLabelForFile')->willReturnCallback(
 			static fn (int $fileId): ?ConfidentialityLabel => ($fileId === 8 ? new ConfidentialityLabel('Confidential', 3) : null)
@@ -522,6 +534,31 @@ class DocumentShareServiceTest extends TestCase {
 			[$preflight['maxDays'], $preflight['passwordRequired'], $preflight['defaultExpiresAt'], $preflight['labels'], $preflight['bundle']['exceedsCeiling']]
 		);
 		$this->assertNull($this->service()->preflight([8])['bundle'], 'one document is no bundle');
+	}
+
+	public function testNoLabelIsReadForAFileTheUserCannotOpen(): void {
+		$this->readable(7);
+		$read = [];
+		$this->labels->method('getLabelForFile')->willReturnCallback(
+			static function (int $fileId) use (&$read): ?ConfidentialityLabel {
+				$read[] = $fileId;
+				return new ConfidentialityLabel('Secret', 3);
+			}
+		);
+		$this->archives->method('ceiling')->willReturn(1000);
+		$this->archives->method('preflightFiles')->willReturn(['files' => 1, 'bytes' => 1, 'ceilingBytes' => 1000, 'exceedsCeiling' => false, 'included' => [], 'excluded' => []]);
+		$this->archives->expects($this->never())->method('buildFromFiles');
+
+		$this->assertSame([['fileId' => 7, 'label' => 'Secret']], $this->service()->preflight([7, 8])['labels']);
+
+		try {
+			$this->service()->share([7, 8], 'Bundel', '', null, '', false);
+			$this->fail('The readable labelled document still needs a confirmation');
+		} catch (InvalidArgumentException $e) {
+			$this->assertSame([409, 'This bundle holds documents labelled "Secret". Confirm before sharing it by link.'], [$e->getCode(), $e->getMessage()]);
+		}
+
+		$this->assertSame([7, 7], $read, 'the label of file 8, which the user cannot open, is never read');
 	}
 
 	public function testTakingABundleBackDeletesItsArchive(): void {

@@ -275,7 +275,7 @@ class DocumentShareService {
 		[$expires] = $this->expiry(expiresOn: '', maxDays: $policy['maxDays']);
 
 		$labels = [];
-		foreach ($ids as $fileId) {
+		foreach ($this->readableIds(fileIds: $ids) as $fileId) {
 			$label = $this->labelOf(fileId: $fileId);
 			if ($label !== '') {
 				$labels[] = ['fileId' => $fileId, 'label' => $label];
@@ -334,7 +334,7 @@ class DocumentShareService {
 		}
 
 		$labels = [];
-		foreach ($fileIds as $fileId) {
+		foreach ($this->readableIds(fileIds: $fileIds) as $fileId) {
 			$labels[$fileId] = $this->labelOf(fileId: $fileId);
 		}
 
@@ -535,6 +535,31 @@ class DocumentShareService {
 		return [$expires, false];
 
 	}//end expiry()
+
+	/**
+	 * The ids of the chosen files the signed-in user may read, in order.
+	 *
+	 * Labels are read only for these, so nothing about a file the user
+	 * cannot open is looked up.
+	 *
+	 * @param array<int, int|string> $fileIds The chosen files.
+	 *
+	 * @return array<int, int> The readable ones.
+	 *
+	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 */
+	private function readableIds(array $fileIds): array {
+		$readable = [];
+		foreach ($fileIds as $fileId) {
+			$fileId = (int) $fileId;
+			if ($this->files->node(fileId: $fileId) instanceof File) {
+				$readable[] = $fileId;
+			}
+		}
+
+		return $readable;
+
+	}//end readableIds()
 
 	/**
 	 * The file's confidentiality label, or an empty string when it has none.
