@@ -92,6 +92,7 @@ use OCA\Filinq\Kernel\Contracts\FormatMatrixServiceInterface;
 use OCA\Filinq\Kernel\Contracts\GenerationRequestServiceInterface;
 use OCA\Filinq\Kernel\Contracts\GenerationSourceObjectInterface;
 use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
+use OCA\Filinq\Kernel\Contracts\HuisstijlWriteGateInterface;
 use OCA\Filinq\Kernel\Contracts\InboundClassificationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
@@ -106,6 +107,7 @@ use OCA\Filinq\Kernel\Contracts\LegalHoldCaseServiceInterface;
 use OCA\Filinq\Kernel\Contracts\LegalHoldNotificationsInterface;
 use OCA\Filinq\Kernel\Contracts\LibreSignCompletionInterface;
 use OCA\Filinq\Kernel\Contracts\LlmDetectionProviderInterface;
+use OCA\Filinq\Kernel\Contracts\ManagedHuisstijlInterface;
 use OCA\Filinq\Kernel\Contracts\MergeJobRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
@@ -326,6 +328,7 @@ final class ContractBindings {
 		GenerationRequestServiceInterface::class       => DocumentGenerationRequestService::class,
 		GenerationSourceObjectInterface::class         => GenerationSourceObject::class,
 		GlAccountSuggestionServiceInterface::class     => GlAccountSuggestionService::class,
+		HuisstijlWriteGateInterface::class             => HuisstijlWriteGate::class,
 		InboundClassificationServiceInterface::class   => InboundClassificationService::class,
 		IntakeDetachmentServiceInterface::class        => IntakeDetachmentService::class,
 		IntakeNotificationReachInterface::class        => IntakeNotificationReach::class,
@@ -340,6 +343,7 @@ final class ContractBindings {
 		LegalHoldNotificationsInterface::class         => LegalHoldNotifications::class,
 		LibreSignCompletionInterface::class            => LibreSignCompletion::class,
 		LlmDetectionProviderInterface::class           => LlmDetectionProvider::class,
+		ManagedHuisstijlInterface::class               => HuisstijlProfileMapper::class,
 		MergeJobRepositoryInterface::class             => MergeJobRepository::class,
 		MetadataServiceInterface::class                => MetadataService::class,
 		MultiFormatOutputProducerInterface::class      => MultiFormatOutputProducer::class,
