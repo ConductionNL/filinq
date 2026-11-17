@@ -39,6 +39,7 @@ test.describe('multi-format-output', () => {
 			data: {
 				name: 'e2e multi-format',
 				content: '<h1>Besluit</h1><p>{{ naam }}</p>',
+				namespace: 'filinq',
 			},
 			headers: HEADERS,
 		})

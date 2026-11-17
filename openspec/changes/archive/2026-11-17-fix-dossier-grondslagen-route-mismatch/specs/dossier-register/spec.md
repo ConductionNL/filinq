@@ -10,7 +10,7 @@ Correct the route-to-controller-method binding for the per-dossier grondslagen
 summary regeneration endpoint so it is actually reachable over HTTP, per
 ADR-029 (route-reachability gate).
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: Grondslagen Summary Endpoint Is Reachable
 

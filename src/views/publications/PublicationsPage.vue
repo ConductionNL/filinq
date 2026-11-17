@@ -33,6 +33,39 @@ SPDX-License-Identifier: EUPL-1.2
 					)
 				}}
 			</p>
+			<div class="publications__worklist">
+				<label class="publications__filter">
+					<input
+						v-model="onlyIncomplete"
+						type="checkbox"
+						data-testid="publications-incomplete"
+						@change="load">
+					{{ t('filinq', 'Metadata incomplete') }}
+				</label>
+				<NcButton
+					:disabled="selected.length === 0 || busy"
+					data-testid="publications-set-metadata"
+					@click="bulkOpen = true">
+					{{ t('filinq', 'Set metadata') }}
+				</NcButton>
+			</div>
+			<PublicationBulkMetadataDialog
+				v-if="bulkOpen"
+				:categories="categories"
+				:busy="busy"
+				@cancel="bulkOpen = false"
+				@confirm="setMetadata" />
+			<NcNoteCard v-if="bulkResult" type="info" data-testid="publications-bulk-result">
+				<p>{{ t('filinq', 'Updated') }}: {{ bulkResult.updated.length }}</p>
+				<p v-if="bulkResult.skipped.length">
+					{{ t('filinq', 'Skipped') }}: {{ bulkResult.skipped.length }}
+				</p>
+				<ul v-if="bulkResult.skipped.length">
+					<li v-for="skip in bulkResult.skipped" :key="skip.uuid">
+						{{ titleOf(skip.uuid) }}: {{ skip.reason }}
+					</li>
+				</ul>
+			</NcNoteCard>
 			<NcLoadingIcon v-if="loading" :size="32" />
 			<NcEmptyContent
 				v-else-if="records.length === 0"
@@ -40,6 +73,13 @@ SPDX-License-Identifier: EUPL-1.2
 			<table v-else class="publications__table">
 				<thead>
 					<tr>
+						<th scope="col">
+							<input
+								type="checkbox"
+								:aria-label="t('filinq', 'Select all')"
+								:checked="allSelected"
+								@change="toggleAll($event.target.checked)">
+						</th>
 						<th scope="col">
 							{{ t('filinq', 'Official title') }}
 						</th>
@@ -56,6 +96,13 @@ SPDX-License-Identifier: EUPL-1.2
 				</thead>
 				<tbody>
 					<tr v-for="row in records" :key="row.uuid">
+						<td>
+							<input
+								v-model="selected"
+								type="checkbox"
+								:value="row.uuid"
+								:aria-label="t('filinq', 'Select')">
+						</td>
 						<td>
 							<router-link
 								:to="{
@@ -288,6 +335,7 @@ import {
 	NcNoteCard,
 	NcTextField,
 } from '@nextcloud/vue'
+import PublicationBulkMetadataDialog from '../../dialogs/PublicationBulkMetadataDialog.vue'
 import {
 	canHandOff,
 	canWithdraw,
@@ -300,6 +348,7 @@ import {
 	listCategories,
 	listPublications,
 	publicationStep,
+	setMetadataMany,
 } from '../../services/publications.js'
 import {
 	accessibilityLost,
@@ -319,7 +368,7 @@ const FIELDS = [
 
 export default {
 	name: 'PublicationsPage',
-	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcTextField },
+	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcTextField, PublicationBulkMetadataDialog },
 
 	data() {
 		return {
@@ -335,10 +384,24 @@ export default {
 			withdrawReason: '',
 			destruction: { date: '', source: '' },
 			sanitized: null,
+			onlyIncomplete: false,
+			selected: [],
+			bulkOpen: false,
+			bulkResult: null,
 		}
 	},
 
 	computed: {
+		/**
+		 * Whether every listed record is selected.
+		 *
+		 * @return {boolean} True when there are records and all are selected.
+		 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+		 */
+		allSelected() {
+			return this.records.length > 0 && this.selected.length === this.records.length
+		},
+
 		/**
 		 * The publication in the route, or empty for the list.
 		 *
@@ -446,7 +509,55 @@ export default {
 		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
 		 */
 		missingOf(row) {
-			return missingMetadata(row)
+			// The server's `diwooMissing` names every mandatory DiWoo field;
+			// the local check covers a record read without it.
+			return Array.isArray(row.diwooMissing) ? row.diwooMissing : missingMetadata(row)
+		},
+
+		/**
+		 * Select every listed record, or none.
+		 *
+		 * @param {boolean} on Whether to select them
+		 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+		 */
+		toggleAll(on) {
+			this.selected = on ? this.records.map((row) => row.uuid) : []
+		},
+
+		/**
+		 * The title a record is listed under, for the skipped list.
+		 *
+		 * @param {string} uuid The record
+		 * @return {string} Its title, or the uuid when it is not listed.
+		 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+		 */
+		titleOf(uuid) {
+			const row = this.records.find((r) => r.uuid === uuid)
+			return (row && row.officieleTitel) || uuid
+		},
+
+		/**
+		 * Set the chosen value on the selection, then list again so completed
+		 * records leave the incomplete filter.
+		 *
+		 * @param {object} values One field and its value
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+		 */
+		async setMetadata(values) {
+			this.busy = true
+			this.error = ''
+			try {
+				const outcome = await setMetadataMany(this.selected, values)
+				this.bulkResult = { updated: outcome.updated || [], skipped: outcome.skipped || [] }
+				this.bulkOpen = false
+				this.selected = []
+				await this.load()
+			} catch (e) {
+				this.error = (e && e.response && e.response.data && e.response.data.error) || t('filinq', 'Could not load the publications.')
+			} finally {
+				this.busy = false
+			}
 		},
 
 		/**
@@ -475,9 +586,13 @@ export default {
 					this.show(await getPublication(this.id))
 					this.categories = await listCategories()
 				} else {
-					const data = await listPublications()
+					const data = await listPublications({ incomplete: this.onlyIncomplete })
 					this.records = data.results || []
 					this.platformAvailable = data.platformAvailable !== false
+					this.selected = this.selected.filter((uuid) => this.records.some((row) => row.uuid === uuid))
+					if (this.categories.length === 0) {
+						this.categories = await listCategories().catch(() => [])
+					}
 				}
 			} catch {
 				this.error = t('filinq', 'Could not load the publications.')
@@ -567,6 +682,20 @@ export default {
 
 .publications section {
 	margin-top: 24px;
+}
+
+.publications__worklist {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	margin-block: 8px;
+}
+
+.publications__filter {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
 }
 
 .publications__muted {
