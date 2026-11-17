@@ -134,7 +134,7 @@ abstract class SignerAuthProviderContractTestCase extends TestCase {
 	}//end testTheAssuranceLevelsStayOnTheEidasScale()
 
 	/**
-	 * Initiation answers a redirect over https, or nothing to do.
+	 * Initiation answers a redirect over https, a code to enter, or nothing to do.
 	 *
 	 * @return void
 	 */
@@ -143,7 +143,7 @@ abstract class SignerAuthProviderContractTestCase extends TestCase {
 		$challenge = $provider->initiateAuthentication($this->context());
 
 		$this->assertSame($provider->getIdentifier(), $challenge->provider);
-		$this->assertContains($challenge->type, [AuthChallenge::TYPE_REDIRECT, AuthChallenge::TYPE_NONE]);
+		$this->assertContains($challenge->type, [AuthChallenge::TYPE_REDIRECT, AuthChallenge::TYPE_NONE, AuthChallenge::TYPE_CODE]);
 		if ($challenge->type === AuthChallenge::TYPE_REDIRECT) {
 			$this->assertStringStartsWith('https://', $challenge->url);
 		}
