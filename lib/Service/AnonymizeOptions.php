@@ -69,6 +69,13 @@ final class AnonymizeOptions {
 	private string $scope = 'document';
 
 	/**
+	 * Whether the caller says this run belongs to a Woo case (REQ-RWB-09).
+	 *
+	 * @var bool
+	 */
+	private bool $wooCase = false;
+
+	/**
 	 * Stable folder id of the dossier, null to let OpenRegister use the parent folder.
 	 *
 	 * @var string|null
@@ -161,6 +168,21 @@ final class AnonymizeOptions {
 	}//end withScope()
 
 	/**
+	 * Mark the run as part of a Woo case, so the four-eyes rule in `woo` mode applies.
+	 *
+	 * @param bool $wooCase Whether the caller says the document is in a Woo case.
+	 *
+	 * @return self A changed copy.
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 */
+	public function withWooCase(bool $wooCase): self {
+		$copy = clone $this;
+		$copy->wooCase = $wooCase;
+		return $copy;
+	}//end withWooCase()
+
+	/**
 	 * A copy that keeps an encrypted key, so the placeholders can be turned back into names later.
 	 *
 	 * @return self
@@ -207,6 +229,7 @@ final class AnonymizeOptions {
 			'dossierKey' => $this->dossierKey,
 			'reversible' => $this->reversible,
 			'userId' => $this->userId,
+			'wooCase' => $this->wooCase,
 		];
 		// Only when asked, so a run without the flag carries exactly the options it always did.
 		if ($this->sanitize === true) {

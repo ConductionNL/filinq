@@ -38,6 +38,8 @@ class AnonymizeOptionsTest extends TestCase {
 		'dossierKey' => null,
 		'reversible' => false,
 		'userId' => '',
+
+		'wooCase' => false,
 	];
 
 	/**
@@ -81,6 +83,7 @@ class AnonymizeOptionsTest extends TestCase {
 				'dossierKey' => 'folder-3',
 				'reversible' => true,
 				'userId' => 'noor',
+				'wooCase' => false,
 				'sanitize' => true,
 			],
 			$run->options
