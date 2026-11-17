@@ -37,6 +37,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use stdClass;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Characterization of the terminal-task handling.
@@ -69,7 +70,9 @@ class SigningTaskListenerTerminalTraceTest extends TestCase {
 		$this->translator = $this->createMock(SignerEventTranslator::class);
 		$this->objects = $this->createMock(ObjectService::class);
 		$this->objects->method('find')->willReturnCallback(
-			function (string $id = '', string $register = '', string $schema = '', bool $_rbac = true): ?stdClass {
+			function (string $id = '', ?ObjectFindOptions $options = null, bool $_rbac = true): ?stdClass {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
 				$this->lookups[] = ['id' => $id, 'register' => $register, 'schema' => $schema, 'rbac' => $_rbac];
 				if ($id === self::OWNED && $register === 'filinq' && $schema === 'signingRequest' && $_rbac === false) {
 					return new stdClass();

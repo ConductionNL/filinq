@@ -36,6 +36,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * An assigned intake file moves into the folder of its record when that record
@@ -140,7 +141,11 @@ class IntakeFilePlacementTest extends TestCase {
 	private function recordIs(mixed $record): void {
 		$this->objectService->expects($this->once())
 			->method('find')
-			->with('case-1', 'filinq', 'case')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'case-1',
+					'register' => 'filinq',
+					'schema' => 'case',
+				]))
 			->willReturn($record);
 
 	}//end recordIs()
