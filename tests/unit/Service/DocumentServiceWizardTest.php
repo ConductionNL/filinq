@@ -100,7 +100,7 @@ class DocumentServiceWizardTest extends TestCase {
 		$wizardResolver->method('resolve')->willReturn($this->wizards);
 
 		$templates = $this->createMock(TemplateService::class);
-		$templates->method('getTemplate')->willReturn(['name' => 'Beschikking parkeervergunning', 'content' => '<p>{{ besluit.uitkomst }}</p>', 'version' => 4]);
+		$templates->method($this->matchesRegularExpression('/^get(Published)?Template$/'))->willReturn(['name' => 'Beschikking parkeervergunning', 'content' => '<p>{{ besluit.uitkomst }}</p>', 'version' => 4]);
 		$resolver = $this->createMock(DataResolverService::class);
 		$resolver->method('resolve')->willReturnCallback(function (array $dataRefs, array $listRefs = [], array $adHocData = []): array {
 			$this->adHoc[] = $adHocData;

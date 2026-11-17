@@ -152,6 +152,28 @@ class DownloadAgreementGateTest extends TestCase {
 	}//end testANewVersionAsksAgain()
 
 	/**
+	 * With a language the new-version message still names both versions: they
+	 * reach IL10N::t() as its parameters, which Nextcloud formats with exactly
+	 * the parameters given and refuses a `%s` it was not handed.
+	 *
+	 * @return void
+	 */
+	public function testANewVersionNamesBothVersionsInTheReadersLanguage(): void {
+		$l10n = $this->createMock(\OCP\IL10N::class);
+		$l10n->method('t')->willReturnCallback(
+			static fn (string $text, array $parameters = []): string => vsprintf($text, $parameters)
+		);
+		$this->store->method('forDocument')->willReturn(self::TERMS);
+		$this->store->method('acceptanceOf')->willReturn(
+			['acceptedBy' => 'sem', 'acceptedVersion' => '1', 'acceptedAt' => '2026-08-01T10:00:00+00:00']
+		);
+
+		$decision = (new DownloadAgreementGate(agreements: $this->store, l10n: $l10n))->check(document: 'doc-1', person: 'sem');
+
+		$this->assertStringContainsString('version 1 and these are version 2', $decision['message']);
+	}//end testANewVersionNamesBothVersionsInTheReadersLanguage()
+
+	/**
 	 * Accepting records who, when and which version, before anything is served.
 	 *
 	 * @return void
