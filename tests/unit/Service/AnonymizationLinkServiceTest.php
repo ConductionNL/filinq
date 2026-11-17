@@ -28,6 +28,7 @@ use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for the idempotent source↔anonymised file-link UPSERT.
@@ -140,7 +141,10 @@ class AnonymizationLinkServiceTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function saveObject(array $object = [], string $register = '', string $schema = '', bool $_rbac = true, bool $_unowned = false): mixed {
+			public function saveObject(array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$_unowned = $options->actor->unowned ?? false;
 				$this->saveCalled = true;
 				$this->captured = $object;
 				if ($this->saveThrows === true) {

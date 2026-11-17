@@ -87,6 +87,14 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'compare.js'),
 		filename: appId + '-compare.js',
 	},
+	// The public signature verification page (signature-verification-portal
+	// REQ-DDSVP-001), for a visitor with no account: `main` is the signed-in
+	// shell, which an anonymous visitor cannot load. templates/verify.php
+	// loads the shared chunks before it.
+	verify: {
+		import: path.join(__dirname, 'src', 'verify.js'),
+		filename: appId + '-verify.js',
+	},
 }
 
 // Use local source when available (monorepo dev), otherwise fall back to npm package.

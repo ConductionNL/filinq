@@ -48,6 +48,14 @@ SPDX-License-Identifier: EUPL-1.2
 						@click="$emit('ocr', finding)">
 						{{ t('filinq', 'Run OCR') }}
 					</a>
+					<a
+						v-if="finding.checkId === 'pdf-encrypted'"
+						class="validation-findings__ocr"
+						href="#"
+						data-testid="finding-remove-password"
+						@click.prevent="$emit('removePassword', finding)">
+						{{ t('filinq', 'Remove password') }}
+					</a>
 				</li>
 			</ul>
 		</section>

@@ -28,6 +28,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Invalid intervals and dates, unreadable registers and failed writes: what the
@@ -226,13 +227,13 @@ class DocumentReviewServiceEdgeTest extends TestCase {
 		$this->objectService->method('find')->willReturn(['uuid' => 'doc-1', 'reviewDate' => '2026-01-01T00:00:00+00:00']);
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(
-				$this->callback(static fn (array $object): bool => isset($object['uuid']) === false
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->callback(static fn (array $object): bool => isset($object['uuid']) === false
 					&& $object['reviewDate'] === '2026-01-01T00:00:00+00:00'),
-				'filinq',
-				'generatedDocument',
-				'doc-1'
-			);
+					'register' => 'filinq',
+					'schema' => 'generatedDocument',
+					'uuid' => 'doc-1',
+				]));
 
 		$document = $this->service->markReviewed('doc-1');
 
