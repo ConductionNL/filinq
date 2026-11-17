@@ -26,6 +26,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Kernel\Contracts\PrintJobRepositoryInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use RuntimeException;
 use Throwable;
 
@@ -78,11 +82,12 @@ class PrintJobRepository implements PrintJobRepositoryInterface {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $job,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $uuid,
-				_rbac: false,
-				_unowned: true
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid,
+					actor: new SaveActor(unowned: true)
+				),
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(
@@ -120,8 +125,7 @@ class PrintJobRepository implements PrintJobRepositoryInterface {
 		try {
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: IntakeRepository::REGISTER,
-				schema: self::SCHEMA,
+				options: new ObjectFindOptions(register: IntakeRepository::REGISTER, schema: self::SCHEMA),
 				_rbac: false
 			);
 		} catch (Throwable $e) {

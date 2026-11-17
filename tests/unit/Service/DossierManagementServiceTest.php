@@ -37,6 +37,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Unit tests for DossierManagementService.
@@ -194,7 +196,9 @@ final class DossierManagementServiceTest extends TestCase {
 			 *
 			 * @return object|null The object.
 			 */
-			public function find(string $id, string $register = '', string $schema = ''): ?object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
 				foreach ($this->test->objectsForTest() as $object) {
 					if (($object->jsonSerialize()['@self']['id'] ?? '') === $id) {
 						return $object;
@@ -235,7 +239,9 @@ final class DossierManagementServiceTest extends TestCase {
 			 *
 			 * @return object The saved object.
 			 */
-			public function saveObject(array $object, string $register = '', string $schema = ''): object {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): object {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
 				if ($this->test->saveRefusal !== '') {
 					throw new RuntimeException($this->test->saveRefusal);
 				}

@@ -67,7 +67,7 @@ nothing SHALL be shown as "unknown ground" with the code.
 A repair step SHALL map every stored Woo `base` slug (dossier `bases[]`,
 entity relation bases, publication prohibition and consent `bases`, and
 `filinq.grondslagen.entity_type_bases`) to a dossiq code through
-`lib/Settings/woo-grounds-legacy-map.json`, which records for each of filinq's
+`lib/Settings/refusal-grounds-legacy-map.json`, which records for each of filinq's
 19 slugs either one code or `unmapped`. It SHALL rewrite only one-to-one
 mappings, SHALL report every reference it left with the object and the slug,
 SHALL be idempotent, and SHALL NOT delete a `base` object. After the repair the
@@ -78,13 +78,13 @@ refused on the `base` schema.
 - GIVEN a dossier with `bases: ["art-5-1-2-e"]` and the map giving `5.1.2.e`
 - WHEN the repair runs
 - THEN the dossier holds `bases: ["5.1.2.e"]`, and a second run changes nothing
-- @e2e exclude a repair step; covered by PHPUnit `RepointWooGroundsTest::testAOneToOneSlugIsRewritten`
+- @e2e exclude a repair step; covered by PHPUnit `RepointRefusalGroundsTest::testAOneToOneSlugIsRewritten`
 
 #### Scenario: an unmapped slug is reported, not guessed
 - GIVEN an entity relation citing a slug the map marks `unmapped`
 - WHEN the repair runs
 - THEN the reference is unchanged and the report names the object and the slug
-- @e2e exclude a repair step; covered by PHPUnit `RepointWooGroundsTest::testAnUnmappedSlugIsReported`
+- @e2e exclude a repair step; covered by PHPUnit `RepointRefusalGroundsTest::testAnUnmappedSlugIsReported`
 
 ### Requirement: The snapshot is read-only and the admin says where the list lives (REQ-GRD-004)
 

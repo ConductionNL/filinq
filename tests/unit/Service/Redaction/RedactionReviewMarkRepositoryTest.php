@@ -30,6 +30,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Reading the latest mark by slug, failing closed, and recording a mark.
@@ -164,7 +165,11 @@ class RedactionReviewMarkRepositoryTest extends TestCase {
 		$mark       = ['document' => 'doc-1', 'checkedBy' => 'alice', 'checkedAt' => '2026-10-03T10:00:00+00:00'];
 		$this->objects->expects($this->once())
 			->method('saveObject')
-			->with($mark, 'filinq', 'redactionReviewMark')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $mark,
+					'register' => 'filinq',
+					'schema' => 'redactionReviewMark',
+				]))
 			->willReturn(['object' => $mark, '@self' => ['id' => 'm-9']]);
 
 		$this->assertSame(expected: $mark + ['uuid' => 'm-9'], actual: $repository->save(mark: $mark));
