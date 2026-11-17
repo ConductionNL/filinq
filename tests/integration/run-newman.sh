@@ -88,6 +88,17 @@ for COLLECTION in "${COLLECTIONS[@]}"; do
       --reporters cli \
       --color on \
       "$@" || FAILED=1
+  elif [ "$(basename "${COLLECTION}")" = "document-webhooks.postman_collection.json" ]; then
+    # Base URL and receiver from the environment, never a default instance.
+    "${NEWMAN[@]}" run "${COLLECTION}" \
+      --env-var "baseUrl=${BASE_URL%/}/index.php" \
+      --env-var "receiverUrl=${WEBHOOK_RECEIVER_URL:-}" \
+      --env-var "username=${ADMIN_USER}" \
+      --env-var "password=${ADMIN_PASS}" \
+      --ignore-redirects \
+      --reporters cli \
+      --color on \
+      "$@" || FAILED=1
   else
     "${NEWMAN[@]}" run "${COLLECTION}" \
       --env-var "username=${ADMIN_USER}" \
