@@ -64,16 +64,32 @@ class IntegrityScanServiceTest extends TestCase {
 
 		$root = $this->createMock(IRootFolder::class);
 		$root->method('getFirstNodeById')->willReturnCallback(
-			fn (int $id) => (in_array($id, $existing, true) === true ? $this->createMock(File::class) : null)
+			fn (int $id) => (in_array($id, $existing, true) === true ? $this->fileWithId(id: $id) : null)
 		);
 
 		$this->final = $this->createMock(FinalDocumentService::class);
 		$this->final->method('isFinal')->willReturnCallback(static fn (array $record): bool => ($record['status'] ?? '') === 'final');
-		$this->final->method('verifyChecksum')->willReturnCallback(
-			static fn (int $fileId): array => ['final' => true, 'matches' => in_array($fileId, $changed, true) === false]
+		// The scan reads storage itself: the session-bound verifyChecksum()
+		// finds nothing without a user, as in the nightly job and occ.
+		$this->final->expects($this->never())->method('verifyChecksum');
+		$this->final->method('checksumOf')->willReturnCallback(
+			static fn (File $file): string => (in_array($file->getId(), $changed, true) === true ? 'altered' : 'sum-' . $file->getId())
 		);
 
 		return new IntegrityScanService($resolver, $root, $this->final, $this->createMock(LoggerInterface::class));
+	}
+
+	/**
+	 * A file on storage with this id.
+	 *
+	 * @param int $id The file id.
+	 *
+	 * @return File&MockObject
+	 */
+	private function fileWithId(int $id): File&MockObject {
+		$file = $this->createMock(File::class);
+		$file->method('getId')->willReturn($id);
+		return $file;
 	}
 
 	public function testEachKindIsFoundAndNamesItsRecord(): void {
@@ -81,7 +97,7 @@ class IntegrityScanServiceTest extends TestCase {
 			[
 				'dossier' => [['uuid' => 'd-1', 'name' => 'Lindelaan 12', 'documents' => ['11', '12', '']]],
 				'documentVersion' => [
-					['uuid' => 'v-1', 'status' => 'final', 'fileId' => 21, 'documentName' => 'besluit.pdf'],
+					['uuid' => 'v-1', 'status' => 'final', 'fileId' => 21, 'fileChecksum' => 'sum-21', 'documentName' => 'besluit.pdf'],
 					['uuid' => 'v-2', 'status' => 'draft', 'fileId' => 99],
 				],
 				'anonymizationLink' => [
@@ -108,7 +124,7 @@ class IntegrityScanServiceTest extends TestCase {
 
 	public function testACleanCollectionIsStoredWithZeroCounts(): void {
 		$run = $this->scan(
-			['dossier' => [['uuid' => 'd-1', 'documents' => [11]]], 'documentVersion' => [['uuid' => 'v-1', 'status' => 'final', 'fileId' => 21]]],
+			['dossier' => [['uuid' => 'd-1', 'documents' => [11]]], 'documentVersion' => [['uuid' => 'v-1', 'status' => 'final', 'fileId' => 21, 'fileChecksum' => 'sum-21']]],
 			existing: [11, 21]
 		)->run('nightly');
 
@@ -163,10 +179,33 @@ class IntegrityScanServiceTest extends TestCase {
 		$root->method('getFirstNodeById')->willReturn($this->createMock(File::class));
 		$broken = $this->createMock(FinalDocumentService::class);
 		$broken->method('isFinal')->willReturn(true);
-		$broken->method('verifyChecksum')->willThrowException(new RuntimeException('storage offline'));
+		$broken->method('checksumOf')->willThrowException(new RuntimeException('storage offline'));
 
 		$run = (new IntegrityScanService($resolver, $root, $broken, $this->createMock(LoggerInterface::class)))->run('nightly');
 
 		$this->assertSame(1, $run['changed']);
+	}
+
+	public function testAnEarlierVersionIsNotComparedWithTheFileItsSuccessorNowHolds(): void {
+		$run = $this->scan(
+			[
+				'documentVersion' => [
+					['uuid' => 'v-1', 'status' => 'final', 'fileId' => 21, 'fileChecksum' => 'sum-old', 'versionLabel' => '1.0'],
+					['uuid' => 'v-2', 'status' => 'final', 'fileId' => 21, 'fileChecksum' => 'sum-21'],
+				],
+			],
+			existing: [21]
+		)->run('nightly');
+
+		$this->assertSame([0, 0, 2], [$run['missing'], $run['changed'], $run['checked']]);
+	}
+
+	public function testAFinalRecordWithoutAChecksumCannotBeVouchedFor(): void {
+		$run = $this->scan(
+			['documentVersion' => [['uuid' => 'v-1', 'status' => 'final', 'fileId' => 21]]],
+			existing: [21]
+		)->run('nightly');
+
+		$this->assertSame([['kind' => 'changed', 'schema' => 'documentVersion', 'record' => 'v-1', 'name' => '', 'fileId' => 21]], $run['findings']);
 	}
 }

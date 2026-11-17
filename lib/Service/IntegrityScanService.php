@@ -33,6 +33,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -65,7 +66,7 @@ class IntegrityScanService {
 	 *
 	 * @param DocumentObjectServiceResolver $objects        Resolver for OpenRegister's ObjectService.
 	 * @param IRootFolder                   $rootFolder     Resolves file ids across all storage.
-	 * @param FinalDocumentService          $finalDocuments Compares a final document with its frozen checksum.
+	 * @param FinalDocumentService          $finalDocuments Tells a final record and reads a file's checksum.
 	 * @param LoggerInterface               $logger         Records what could not be read.
 	 *
 	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
@@ -183,7 +184,7 @@ class IntegrityScanService {
 				continue;
 			}
 
-			if ($this->matchesChecksum(fileId: $fileId) === false) {
+			if ($this->matchesChecksum(version: $version, fileId: $fileId) === false) {
 				$findings[] = $this->finding(kind: 'changed', schema: 'documentVersion', record: $version, fileId: $fileId);
 			}
 		}
@@ -223,15 +224,33 @@ class IntegrityScanService {
 	 * Whether a final document's file still matches its frozen checksum. A
 	 * check that throws counts as a mismatch: it cannot vouch for the file.
 	 *
-	 * @param int $fileId The file id.
+	 * The file is read from storage directly and compared with the checksum
+	 * on the version record the scan already holds. The scan runs nightly and
+	 * from occ without a session user and an administrator's run must reach
+	 * every user's files, so it cannot go through the acting user's folder.
+	 * An earlier version (one with a version label) is not compared: the
+	 * file id now holds its successor's bytes.
+	 *
+	 * @param array<string, mixed> $version The finalisation record.
+	 * @param int                  $fileId  The file id.
 	 *
 	 * @return bool
 	 *
 	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
-	private function matchesChecksum(int $fileId): bool {
+	private function matchesChecksum(array $version, int $fileId): bool {
+		if ((string)($version['versionLabel'] ?? '') !== '') {
+			return true;
+		}
+
 		try {
-			return ($this->finalDocuments->verifyChecksum(fileId: $fileId)['matches'] ?? false) === true;
+			$file = $this->rootFolder->getFirstNodeById($fileId);
+			if (($file instanceof File) === false) {
+				return false;
+			}
+
+			$recorded = (string)($version['fileChecksum'] ?? '');
+			return $recorded !== '' && hash_equals($recorded, $this->finalDocuments->checksumOf(file: $file)) === true;
 		} catch (Throwable $e) {
 			$this->logger->warning('[IntegrityScan] the checksum could not be compared', ['fileId' => $fileId, 'error' => $e->getMessage()]);
 			return false;
