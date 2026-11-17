@@ -33,6 +33,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Merge jobs are stored in the filinq/mergeJob schema, read back with their
@@ -85,7 +86,11 @@ class MergeJobRepositoryTest extends TestCase {
 	public function testCreateStoresWithoutAUuid(): void {
 		$this->objects->expects($this->once())
 			->method('saveObject')
-			->with(['status' => 'queued', 'inputs' => [1, 2]], 'filinq', 'mergeJob')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['status' => 'queued', 'inputs' => [1, 2]],
+					'register' => 'filinq',
+					'schema' => 'mergeJob',
+				]))
 			->willReturn(['uuid' => 'new-1', 'object' => ['status' => 'queued', 'inputs' => [1, 2]]]);
 
 		$job = $this->repository->create(job: ['status' => 'queued', 'inputs' => [1, 2], 'uuid' => 'forged']);
@@ -101,7 +106,12 @@ class MergeJobRepositoryTest extends TestCase {
 	public function testSaveUpdatesTheNamedJob(): void {
 		$this->objects->expects($this->once())
 			->method('saveObject')
-			->with(['status' => 'done'], 'filinq', 'mergeJob', 'job-7')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['status' => 'done'],
+					'register' => 'filinq',
+					'schema' => 'mergeJob',
+					'uuid' => 'job-7',
+				]))
 			->willReturn(['status' => 'done']);
 
 		$job = $this->repository->save(job: ['status' => 'done'], uuid: 'job-7');
@@ -117,7 +127,11 @@ class MergeJobRepositoryTest extends TestCase {
 	public function testSaveWithoutAUuidCreates(): void {
 		$this->objects->expects($this->once())
 			->method('saveObject')
-			->with(['status' => 'queued'], 'filinq', 'mergeJob')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['status' => 'queued'],
+					'register' => 'filinq',
+					'schema' => 'mergeJob',
+				]))
 			->willReturn(['@self' => ['id' => 'self-1'], 'status' => 'queued']);
 
 		$job = $this->repository->save(job: ['status' => 'queued'], uuid: '');
@@ -167,7 +181,11 @@ class MergeJobRepositoryTest extends TestCase {
 		};
 		$this->objects->expects($this->once())
 			->method('find')
-			->with('job-1', 'filinq', 'mergeJob')
+			->with(...LegacyObjectArgs::with(method: 'find', expected: [
+					'id' => 'job-1',
+					'register' => 'filinq',
+					'schema' => 'mergeJob',
+				]))
 			->willReturn($entity);
 
 		$this->assertSame(

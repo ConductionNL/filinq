@@ -61,18 +61,10 @@ class TesseractCommand {
 	 * @spec openspec/specs/ocr-document-scanning/spec.md
 	 */
 	public function isAvailable(): bool {
-		try {
-			$output = [];
-			$returnCode = 0;
-			exec('tesseract --version 2>&1', $output, $returnCode);
-			return $returnCode === 0;
-		} catch (Exception $e) {
-			$this->logger->debug(
-				'Tesseract availability check failed',
-				['exception' => $e->getMessage()]
-			);
-			return false;
-		}//end try
+		$output = [];
+		$returnCode = 0;
+		exec('tesseract --version 2>&1', $output, $returnCode);
+		return $returnCode === 0;
 
 	}//end isAvailable()
 

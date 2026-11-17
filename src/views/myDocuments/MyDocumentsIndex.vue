@@ -73,6 +73,13 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							:title="t('filinq', 'The case system holds this document')">
 							{{ t('filinq', 'In the case system') }}
 						</span>
+						<span
+							v-if="sourceBadges[String(row.fileId)]"
+							class="my-documents-case-system-badge"
+							data-testid="my-documents-source-badge"
+							:title="t('filinq', 'The master record of this document is in the case system')">
+							{{ sourceBadgeLabel(sourceBadges[String(row.fileId)]) }}
+						</span>
 					</div>
 				</template>
 
@@ -257,7 +264,13 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			:status="validation.status"
 			:findings="validation.findings"
 			@close="validation.show = false"
-			@ocr="onOcrRequested" />
+			@ocr="onOcrRequested"
+			@removePassword="openPasswordDialog" />
+		<PdfPasswordModal
+			:show="unlock.show"
+			:fileId="validation.fileId"
+			@close="unlock.show = false"
+			@unlocked="onUnlocked" />
 
 		<!--
 			Delete confirmation, single row and bulk. Replaces window.confirm():
@@ -308,10 +321,12 @@ import DdIcon from '../../components/DdIcon.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
+import PdfPasswordModal from '../../modals/PdfPasswordModal.vue'
 import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import { ocrRun } from '../../mixins/ocrRun.js'
+import { fetchSourceBadges, sourceBadgeLabel } from '../../services/bridge.js'
 import { fetchCaseSystemFiles } from '../../services/caseSystemFiles.js'
 import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { fetchReviewMarks } from '../../services/reviewMark.js'
@@ -351,6 +366,7 @@ export default {
 		DdDocumentCard,
 		DdIcon,
 		FileViewerPage,
+		PdfPasswordModal,
 		ValidationResultModal,
 		SanitizationReportModal,
 		BroomIcon,
@@ -397,6 +413,9 @@ export default {
 				fileId: null,
 			},
 
+			// The password dialog opened from a locked PDF's finding.
+			unlock: { show: false },
+
 			kindColorMap: {
 				[t('filinq', 'Concept')]: 'warning',
 				[t('filinq', 'Anonymized')]: 'success',
@@ -412,6 +431,7 @@ export default {
 			// The latest review mark per file id on this page.
 			reviewMarks: {},
 			caseSystemFiles: {},
+			sourceBadges: {},
 			ocrRunning: {},
 		}
 	},
@@ -517,6 +537,7 @@ export default {
 				this.loadOcrStatus(rows)
 				this.loadReviewMarks(rows)
 				this.loadCaseSystemFiles(rows)
+				this.loadSourceBadges(rows)
 			},
 		},
 	},
@@ -953,6 +974,33 @@ export default {
 		},
 
 		/**
+		 * Open the password dialog for the locked PDF of the validation result.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 */
+		openPasswordDialog() {
+			this.unlock.show = true
+		},
+
+		/**
+		 * A locked PDF was unlocked into a copy: show the copy's own findings and
+		 * reload the list so the copy appears beside the original.
+		 *
+		 * @param {object} copy The copy: fileId, name, validationStatus, validationFindings.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 */
+		async onUnlocked(copy) {
+			this.validation.fileId = copy.fileId
+			this.validation.status = copy.validationStatus || ''
+			this.validation.findings = copy.validationFindings || []
+			this.validation.show = true
+			showSuccess(t('filinq', 'Unlocked copy saved as {name}', { name: copy.name || '' }))
+			await myDocumentsStore.fetchDocuments()
+		},
+
+		/**
 		 * Handle an OCR cross-link from a text-layer-missing finding.
 		 *
 		 * @return {void}
@@ -1081,6 +1129,30 @@ export default {
 			try {
 				const delivered = await fetchCaseSystemFiles(ids)
 				this.caseSystemFiles = { ...this.caseSystemFiles, ...delivered }
+			} catch {
+				// No answer: no badge. The list itself still shows.
+			}
+		},
+
+		sourceBadgeLabel,
+
+		/**
+		 * The case-system source of the files on the page, in one request
+		 * (zgw-document-bridge REQ-DDZGW-009).
+		 *
+		 * @param {Array<object>} rows The rows on the page.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/zgw-document-bridge/tasks.md#3-2
+		 */
+		async loadSourceBadges(rows) {
+			const ids = (rows || [])
+				.filter((row) => !row.isFolder && row.fileId)
+				.map((row) => row.fileId)
+			if (ids.length === 0) {
+				return
+			}
+			try {
+				this.sourceBadges = { ...this.sourceBadges, ...(await fetchSourceBadges(ids)) }
 			} catch {
 				// No answer: no badge. The list itself still shows.
 			}

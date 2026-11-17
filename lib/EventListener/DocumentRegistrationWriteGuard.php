@@ -25,7 +25,9 @@ namespace OCA\Filinq\EventListener;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Refuses an update that changes a registration number already issued.
@@ -73,10 +75,12 @@ class DocumentRegistrationWriteGuard implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param LoggerInterface $logger Structured logger.
+	 * @param LoggerInterface    $logger    Structured logger.
+	 * @param ContainerInterface $container Resolves OpenRegister's SchemaMapper lazily.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
+		private readonly ContainerInterface $container,
 	) {
 	}//end __construct()
 
@@ -114,10 +118,6 @@ class DocumentRegistrationWriteGuard implements IEventListener {
 			return null;
 		}
 
-		if ($this->concernsRegistration(new: $event->getNewObject(), old: $old) === false) {
-			return null;
-		}
-
 		$was = $this->numberOf(object: $old);
 		if ($was === '') {
 			// Nothing was issued yet, so the first number may still land. This
@@ -127,6 +127,11 @@ class DocumentRegistrationWriteGuard implements IEventListener {
 		}
 
 		if ($was === $this->numberOf(object: $event->getNewObject())) {
+			return null;
+		}
+
+		// Checked last: it can cost a schema lookup, so only a moved number pays it.
+		if ($this->concernsRegistration(new: $event->getNewObject(), old: $old) === false) {
 			return null;
 		}
 
@@ -142,8 +147,13 @@ class DocumentRegistrationWriteGuard implements IEventListener {
 	 * @return bool Whether the guard applies.
 	 */
 	private function concernsRegistration(object $new, object $old): bool {
-		return $this->isRegistration(schema: (string)$new->getSchema())
-			|| $this->isRegistration(schema: (string)$old->getSchema());
+		$newSchema = (string)$new->getSchema();
+		$oldSchema = (string)$old->getSchema();
+		if ($this->isRegistration(schema: $newSchema) === true) {
+			return true;
+		}
+
+		return $oldSchema !== $newSchema && $this->isRegistration(schema: $oldSchema);
 	}//end concernsRegistration()
 
 	/**
@@ -179,17 +189,47 @@ class DocumentRegistrationWriteGuard implements IEventListener {
 	/**
 	 * Whether this is a post-register entry.
 	 *
-	 * 🔑 MATCHED ON THE SLUG, WHICH IS WHAT THE EVENT CARRIES. The schema id is
-	 * numeric and differs per instance, so comparing against one would make the
-	 * guard silently inert everywhere but the instance it was written on.
+	 * 🔑 THE EVENT CARRIES THE SCHEMA ID, NOT THE SLUG. OpenRegister's save and
+	 * load paths set `schema` to the numeric id, and that id differs per
+	 * instance, so an id is resolved to its slug before comparing. A slug is
+	 * still accepted as is.
 	 *
 	 * @param string $schema The schema reference on the object.
 	 *
 	 * @return bool Whether the guard applies.
 	 */
 	private function isRegistration(string $schema): bool {
-		return (strtolower($schema) === strtolower(self::SCHEMA));
+		if (strtolower($schema) === strtolower(self::SCHEMA)) {
+			return true;
+		}
+
+		if ($schema === '') {
+			return false;
+		}
+
+		return strtolower($this->slugOf(schema: $schema)) === strtolower(self::SCHEMA);
 	}//end isRegistration()
+
+	/**
+	 * The slug of a schema reference, or '' when it cannot be resolved.
+	 *
+	 * @param string $schema The schema id or slug.
+	 *
+	 * @return string The slug.
+	 */
+	private function slugOf(string $schema): string {
+		try {
+			$found = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')
+				->find(id: $schema, _rbac: false, _multitenancy: false);
+			return (string)$found->getSlug();
+		} catch (Throwable $failure) {
+			$this->logger->warning(
+				'filinq.post-register.schema-unresolved',
+				['schema' => $schema, 'error' => $failure->getMessage()]
+			);
+			return '';
+		}
+	}//end slugOf()
 
 	/**
 	 * The registration number an object carries, or ''.
