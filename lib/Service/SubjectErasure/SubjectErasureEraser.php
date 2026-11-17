@@ -22,6 +22,7 @@ namespace OCA\Filinq\Service\SubjectErasure;
 
 use DateTimeInterface;
 use OCA\Filinq\Service\FinalDocumentRepository;
+use OCA\OpenRegister\Kernel\Contracts\Value\WordReplacementRequest;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\Files\File;
 use Psr\Container\ContainerInterface;
@@ -183,10 +184,12 @@ class SubjectErasureEraser {
 			$extension = strtolower(pathinfo($file->getName(), PATHINFO_EXTENSION));
 			$outputName = $parent->getNonExistingName('.filinq-erasure-' . bin2hex(random_bytes(6)) . '.' . $extension);
 			$copy = $this->container->get(self::PROCESSOR)->replaceWords(
-				$file,
-				array_fill_keys($values, self::MARK),
-				$outputName,
-				true
+				new WordReplacementRequest(
+					node: $file,
+					replacements: array_fill_keys($values, self::MARK),
+					outputName: $outputName,
+					strict: true
+				)
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException('The document could not be rewritten without the person: ' . $e->getMessage(), 0, $e);
