@@ -70,6 +70,16 @@
 					{{ t('filinq', 'PDF/A report') }}
 				</NcButton>
 				<NcButton
+					v-if="pdfaOffered"
+					variant="secondary"
+					data-testid="open-pdfua-report"
+					@click="pdfUaOpen = true">
+					<template #icon>
+						<FileCheckOutline :size="18" />
+					</template>
+					{{ t('filinq', 'PDF/UA report') }}
+				</NcButton>
+				<NcButton
 					v-if="fileViewerStore.currentFile?.fileId"
 					variant="secondary"
 					:disabled="publishing"
@@ -108,6 +118,10 @@
 			:show="conformanceOpen"
 			:fileId="Number(fileViewerStore.currentFile?.fileId || 0)"
 			@close="conformanceOpen = false" />
+		<AccessibilityConformanceModal
+			:show="pdfUaOpen"
+			:fileId="Number(fileViewerStore.currentFile?.fileId || 0)"
+			@close="pdfUaOpen = false" />
 	</div>
 </template>
 
@@ -130,6 +144,7 @@ import OdtViewer from '../../components/viewers/OdtViewer.vue'
 import PdfViewer from '../../components/viewers/PdfViewer.vue'
 import TextViewer from '../../components/viewers/TextViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
+import AccessibilityConformanceModal from '../../modals/AccessibilityConformanceModal.vue'
 import AccessibilityPublishWarningModal from '../../modals/AccessibilityPublishWarningModal.vue'
 import ConformanceReportModal from '../../modals/ConformanceReportModal.vue'
 import { ocrRun } from '../../mixins/ocrRun.js'
@@ -168,6 +183,7 @@ export default {
 		FileAlertOutline,
 		FileCheckOutline,
 		AccessibilityPublishWarningModal,
+		AccessibilityConformanceModal,
 		ConformanceReportModal,
 		DdFileViewerHeader,
 		PdfViewer,
@@ -187,6 +203,7 @@ export default {
 			ocrRunning: false,
 			sourceVendor: '',
 			conformanceOpen: false,
+			pdfUaOpen: false,
 			publishWarning: {
 				show: false,
 				checked: true,
