@@ -36,7 +36,7 @@ class AnonymizeRun {
 	 * @param array<int, array<string, mixed>> $overrides Acknowledged override entries {ruleId, entityId, reason?}
 	 * @param array<string, mixed>             $options   Run options forwarded to the runner (appendBasisSummary,
 	 *                                                    outputFormat, unredactedEntities, scope, dossierKey,
-	 *                                                    reversible, userId)
+	 *                                                    reversible, userId, wooCase)
 	 */
 	public function __construct(
 		public readonly int $fileId,
@@ -56,4 +56,17 @@ class AnonymizeRun {
 	public function userId(): string {
 		return (string)($this->options['userId'] ?? '');
 	}//end userId()
+
+	/**
+	 * Whether this is a Woo run: the caller flagged a Woo case, or it runs with dossier scope.
+	 *
+	 * Filinq dossiers are Woo dossiers, so a dossier-scoped run counts without a flag.
+	 *
+	 * @return bool True for a Woo run.
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 */
+	public function isWooRun(): bool {
+		return ($this->options['wooCase'] ?? false) === true || ($this->options['scope'] ?? '') === 'dossier';
+	}//end isWooRun()
 }//end class
