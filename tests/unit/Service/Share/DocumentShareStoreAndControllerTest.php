@@ -19,6 +19,8 @@ use OCA\Filinq\Controller\DocumentShareController;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Share\DocumentShareService;
 use OCA\Filinq\Service\Share\DocumentShareStore;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
@@ -41,7 +43,16 @@ class DocumentShareStoreAndControllerTest extends TestCase {
 	public function testARecordIsSavedInFilinqsRegisterAsTheSystem(): void {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->expects($this->once())->method('saveObject')
-			->with(['kind' => 'document', 'status' => 'active'], 'filinq', 'documentShare', null, false, true, true)
+			->with(
+				['kind' => 'document', 'status' => 'active'],
+				$this->callback(
+					static fn (ObjectSaveOptions $options): bool => $options->target->register === 'filinq'
+						&& $options->target->schema === 'documentShare'
+						&& $options->uuid === null
+						&& $options->actor->unowned === true
+				),
+				false
+			)
 			->willReturnCallback(static fn (): array => ['kind' => 'document', 'status' => 'active', '@self' => ['id' => 'u-1']]);
 
 		$saved = $this->store($objects)->save(['kind' => 'document', 'status' => 'active', 'uuid' => 'ignored', '@self' => []], '');
@@ -75,8 +86,8 @@ class DocumentShareStoreAndControllerTest extends TestCase {
 	public function testARecordIsFoundOrNot(): void {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('find')->willReturnCallback(
-			static function (string $id): mixed {
-				if ($id === 'u-1') {
+			static function (string $id, ?ObjectFindOptions $options = null): mixed {
+				if ($id === 'u-1' && $options?->register === 'filinq' && $options->schema === 'documentShare') {
 					return ['uuid' => 'u-1', 'status' => 'active'];
 				}
 

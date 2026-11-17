@@ -23,6 +23,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Share;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use RuntimeException;
 use Throwable;
 
@@ -80,11 +84,12 @@ class DocumentShareStore {
 			$stored = $this->normalise(
 				row: $this->objects->resolve()->saveObject(
 					object: $record,
-					register: self::REGISTER,
-					schema: self::SCHEMA,
-					uuid: $uuid,
-					_rbac: false,
-					_unowned: true
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+						uuid: $uuid,
+						actor: new SaveActor(unowned: true)
+					),
+					_rbac: false
 				)
 			);
 		} catch (Throwable $e) {
@@ -114,7 +119,10 @@ class DocumentShareStore {
 		}
 
 		try {
-			$row = $this->objects->resolve()->find(id: $uuid, register: self::REGISTER, schema: self::SCHEMA);
+			$row = $this->objects->resolve()->find(
+				id: $uuid,
+				options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA)
+			);
 		} catch (Throwable) {
 			return null;
 		}
