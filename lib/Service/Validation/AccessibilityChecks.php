@@ -40,6 +40,14 @@ class AccessibilityChecks {
 	public const CATEGORY = 'accessibility';
 
 	/**
+	 * The source label of these findings: presence heuristics, not a
+	 * conformance verdict (the validator's findings say `validator`).
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-validator-verdict-is-the-authoritative-conformance-heuristics-remain-the-floor-req-ddpum-004
+	 */
+	public const SOURCE_HEURISTIC = 'heuristic';
+
+	/**
 	 * The accessibility findings for a file's bytes under a profile.
 	 *
 	 * @param array<string, mixed> $profile The resolved profile.
@@ -86,6 +94,7 @@ class AccessibilityChecks {
 			$findings[] = [
 				'checkId' => $checkId,
 				'category' => self::CATEGORY,
+				'source' => self::SOURCE_HEURISTIC,
 				'severity' => $severity,
 				'message' => $message,
 				'params' => [],
