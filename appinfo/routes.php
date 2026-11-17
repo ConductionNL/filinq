@@ -62,6 +62,10 @@ $extra = [
         ['name' => 'conformance#status', 'url' => 'api/validation/conformance-status', 'verb' => 'GET'],
         ['name' => 'conformance#show', 'url' => 'api/validation/conformance/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\d+']],
         ['name' => 'conformance#check', 'url' => 'api/validation/conformance/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\d+']],
+        // PDF/UA-1 accessibility conformance (veraPDF ua1), stored apart from the PDF/A report.
+        ['name' => 'accessibilityConformance#check', 'url' => 'api/validation/accessibility/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\d+']],
+        ['name' => 'accessibilityConformance#show', 'url' => 'api/validation/accessibility/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\d+']],
+        ['name' => 'accessibilityConformance#regenerate', 'url' => 'api/validation/accessibility/{fileId}/regenerate', 'verb' => 'POST', 'requirements' => ['fileId' => '\d+']],
 
         // Document comparison route.
         ['name' => 'comparison#compare', 'url' => 'api/comparison/compare', 'verb' => 'POST'],

@@ -27,6 +27,8 @@ jest.mock('@nextcloud/dialogs', () => ({
 	showSuccess: () => {},
 }))
 jest.mock('@nextcloud/vue', () => ({}))
+jest.mock('@nextcloud/auth', () => ({ getCurrentUser: () => null }))
+jest.mock('../store/modules/settings.js', () => ({ useSettingsStore: () => ({ getConfig: null }) }))
 jest.mock('jszip', () => ({}))
 jest.mock('../store/store.js', () => ({}))
 jest.mock('../store/modules/anonymization.js', () => ({
