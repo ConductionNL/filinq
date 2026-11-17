@@ -6036,6 +6036,8 @@
                         "title": "Acknowledgement",
                         "properties": {
                             "status": {
+                                "title": "Acknowledgement status",
+                                "description": "Whether the acknowledgement was sent, queued as a letter, refused or failed.",
                                 "type": "string",
                                 "enum": [
                                     "sent",
@@ -6045,14 +6047,20 @@
                                 ]
                             },
                             "address": {
+                                "title": "Sent to",
+                                "description": "The address the acknowledgement went to.",
                                 "type": "string",
                                 "nullable": true
                             },
                             "at": {
+                                "title": "Acknowledged at",
+                                "description": "When the acknowledgement was sent or attempted.",
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "reason": {
+                                "title": "Reason",
+                                "description": "Why the acknowledgement was not sent, when it was not.",
                                 "type": "string",
                                 "nullable": true
                             }

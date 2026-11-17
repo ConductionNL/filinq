@@ -9,7 +9,7 @@
  * manifest's top-level `widgets[]` arrays. Each entry is
  * `{ kind, component }`.
  *
- * Recognised kinds: page, modal, widget, form-field, cell-renderer.
+ * Recognised kinds: page, modal, widget, section, form-field, cell-renderer.
  *
  * Resolution paths at runtime:
  *   - `pages[].type === 'custom'` → CnPageRenderer resolves
@@ -18,6 +18,9 @@
  *   - `pages[].widgets[].widgetKey` (v2 uniform widget array) →
  *     CnWidgetGrid resolves against the `registry` prop and mounts the
  *     matching `kind:"widget"` entry's component.
+ *   - `pages[].config.bodyWidgets[].component` (a detail page's body
+ *     section) → CnDetailPage resolves it against the `registry` prop and
+ *     mounts the `kind:"section"` entry's component.
  *   - Future `kind:"modal"` entries are looked up directly from the
  *     `registry` prop by CnAppRoot.
  *
@@ -117,7 +120,7 @@ export default {
 	PrintJobs: { kind: 'page', component: PrintJobs },
 	LegalHolds: { kind: 'page', component: LegalHolds },
 	ContractDetail: { kind: 'page', component: ContractDetail },
-	BatchOperationDetail: { kind: 'page', component: BatchOperationDetail },
+	BatchOperationDetail: { kind: 'section', component: BatchOperationDetail },
 	ContractPipeline: { kind: 'page', component: ContractPipeline },
 	SubjectErasures: { kind: 'page', component: SubjectErasures },
 	EmailIngestion: { kind: 'page', component: EmailIngestion },

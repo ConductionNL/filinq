@@ -111,10 +111,28 @@
 		{
 			"id": "BatchOperationDetail",
 			"route": "/batch-operations/:id",
-			"type": "custom",
+			"type": "detail",
 			"title": "Batch",
-			"component": "BatchOperationDetail",
-			"_note": "One batch (REQ-DDRAS-003/004/005/007): phase, progress, throughput and throttled flag polled from GET api/anonymization/batch/{id}/status while it runs; cancel and resume behind their own confirmation dialogs (POST .../cancel, .../resume); the QA-sampled files with their review outcome."
+			"config": {
+				"register": "filinq",
+				"schema": "anonymizationBatch",
+				"documentationUrl": "https://filinq.conduction.nl",
+				"bodyWidgets": [
+					{
+						"id": "batch-operation",
+						"component": "BatchOperationDetail",
+						"placement": "before-body",
+						"props": {
+							"objectId": "@objectId"
+						}
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			},
+			"_note": "One batch (REQ-DDRAS-003/004/005/007) as a declarative type:detail page: the anonymizationBatch record's own fields render in the details widget. The live part is a bodyWidgets section (BatchOperationDetail) because it polls GET api/anonymization/batch/{id}/status while the batch runs, carries cancel and resume behind their own confirmation dialogs (POST .../cancel, .../resume) and lists the QA-sampled files with their review outcome; its props carry @objectId."
 		}
 	]
 }

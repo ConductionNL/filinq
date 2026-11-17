@@ -16,6 +16,7 @@ import { generateUrl } from '@nextcloud/router'
  * @param {string} batchId The batch.
  * @param {string} action  status, cancel, resume or report.
  * @return {string}
+ * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
  */
 export function batchUrl(batchId, action) {
 	return generateUrl(`/apps/filinq/api/anonymization/batch/${encodeURIComponent(batchId)}/${action}`)
@@ -41,6 +42,7 @@ export const RUNNING = ['extracting', 'anonymizing', 'cancelling']
  *
  * @param {string} status The batch status.
  * @return {boolean}
+ * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-cooperative-cancellation-req-ddras-004
  */
 export function canCancel(status) {
 	return CANCELLABLE.includes(status)
@@ -51,6 +53,7 @@ export function canCancel(status) {
  *
  * @param {string} status The batch status.
  * @return {boolean}
+ * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
  */
 export function canResume(status) {
 	return RESUMABLE.includes(status)
@@ -61,6 +64,7 @@ export function canResume(status) {
  *
  * @param {Array<object>} files The batch's files.
  * @return {Array<{fileId: number, fileName: string, outcome: string}>}
+ * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-sampling-qa-routed-to-human-review-req-ddras-007
  */
 export function qaSamples(files) {
 	return (files || [])
@@ -77,6 +81,7 @@ export function qaSamples(files) {
  *
  * @param {string} batchId The batch.
  * @return {Promise<object>}
+ * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
  */
 export async function getBatchStatus(batchId) {
 	const { data } = await axios.get(batchUrl(batchId, 'status'))
@@ -88,6 +93,7 @@ export async function getBatchStatus(batchId) {
  *
  * @param {string} batchId The batch.
  * @return {Promise<object>} The new batch status.
+ * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-cooperative-cancellation-req-ddras-004
  */
 export async function cancelBatch(batchId) {
 	const { data } = await axios.post(batchUrl(batchId, 'cancel'))
@@ -99,6 +105,7 @@ export async function cancelBatch(batchId) {
  *
  * @param {string} batchId The batch.
  * @return {Promise<object>} The new batch status and how many files were requeued.
+ * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
  */
 export async function resumeBatch(batchId) {
 	const { data } = await axios.post(batchUrl(batchId, 'resume'))

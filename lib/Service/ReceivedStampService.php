@@ -39,7 +39,7 @@ use Throwable;
 /**
  * Stamps a received copy of an arrived PDF.
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-an-arriving-pdf-may-get-a-stamped-copy-req-ias-003
+ * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-received-stamp-goes-on-a-copy-never-on-what-arrived-req-ias-003
  */
 class ReceivedStampService {
 
@@ -79,7 +79,7 @@ class ReceivedStampService {
 	 *
 	 * @throws RuntimeException When the bytes are not a PDF this service can read.
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-an-arriving-pdf-may-get-a-stamped-copy-req-ias-003
+	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-received-stamp-goes-on-a-copy-never-on-what-arrived-req-ias-003
 	 */
 	public function stamp(string $pdf, string $date, string $number = ''): string {
 		$document = new Fpdi('P', 'pt');
@@ -116,7 +116,7 @@ class ReceivedStampService {
 	 *
 	 * @return int|null The stamped copy's file id.
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-an-arriving-pdf-may-get-a-stamped-copy-req-ias-003
+	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-received-stamp-goes-on-a-copy-never-on-what-arrived-req-ias-003
 	 */
 	public function stampFile(int $fileId, string $date, string $number = ''): ?int {
 		try {
@@ -150,7 +150,7 @@ class ReceivedStampService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-an-arriving-pdf-may-get-a-stamped-copy-req-ias-003
+	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-received-stamp-goes-on-a-copy-never-on-what-arrived-req-ias-003
 	 */
 	public function copyName(string $name): string {
 		$base = preg_replace('/\.pdf$/i', '', $name);

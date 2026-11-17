@@ -18,7 +18,7 @@ their review outcome.
 		</NcNoteCard>
 		<template v-else>
 			<div class="batch-operation__header">
-				<h2>{{ t('filinq', 'Anonymisation batch') }}</h2>
+				<h3>{{ t('filinq', 'Anonymisation batch') }}</h3>
 				<div class="batch-operation__actions">
 					<NcButton
 						v-if="canCancel(batch.batchStatus)"
@@ -117,6 +117,17 @@ export default {
 	name: 'BatchOperationDetail',
 	components: { CancelBatchDialog, NcButton, NcLoadingIcon, NcNoteCard, ResumeBatchDialog },
 
+	props: {
+		/**
+		 * The batch's object id, handed in by the detail page (`@objectId`).
+		 * Falls back to the route's `:id` when mounted without it.
+		 */
+		objectId: {
+			type: String,
+			default: '',
+		},
+	},
+
 	data() {
 		return {
 			batch: null,
@@ -129,14 +140,29 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The batch shown: the detail page's object id, else the route's.
+		 *
+		 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
+		 */
 		batchId() {
-			return String(this.$route.params.id || '')
+			return String(this.objectId || this.$route.params.id || '')
 		},
 
+		/**
+		 * How far the batch is, in percent.
+		 *
+		 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
+		 */
 		percent() {
 			return this.batch.progressPercent ?? this.batch.progress ?? 0
 		},
 
+		/**
+		 * The succeeded, failed and pending file counts.
+		 *
+		 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
+		 */
 		counts() {
 			return {
 				succeeded: this.batch.filesSucceeded ?? 0,
@@ -145,6 +171,11 @@ export default {
 			}
 		},
 
+		/**
+		 * The files picked for the QA sample, with their outcome.
+		 *
+		 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-sampling-qa-routed-to-human-review-req-ddras-007
+		 */
 		samples() {
 			return qaSamples(this.batch?.files)
 		},
@@ -165,6 +196,11 @@ export default {
 		cancelBatch,
 		resumeBatch,
 
+		/**
+		 * Read the batch status, then poll again while it runs.
+		 *
+		 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
+		 */
 		async load() {
 			this.loading = true
 			try {
@@ -177,6 +213,11 @@ export default {
 			this.schedule()
 		},
 
+		/**
+		 * Poll again after POLL_MS while the batch is still running.
+		 *
+		 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
+		 */
 		schedule() {
 			clearTimeout(this.timer)
 			if (this.batch && RUNNING.includes(this.batch.batchStatus)) {
@@ -184,6 +225,13 @@ export default {
 			}
 		},
 
+		/**
+		 * Run cancel or resume, close the dialog and reload the status.
+		 *
+		 * @param {function(string): Promise<object>} action cancelBatch or resumeBatch.
+		 *
+		 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-cooperative-cancellation-req-ddras-004
+		 */
 		async act(action) {
 			this.busy = true
 			this.error = ''
@@ -198,6 +246,14 @@ export default {
 			}
 		},
 
+		/**
+		 * The words for a QA sample's review outcome.
+		 *
+		 * @param {string} outcome confirmed, corrected or pending.
+		 * @return {string}
+		 *
+		 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-sampling-qa-routed-to-human-review-req-ddras-007
+		 */
 		outcomeLabel(outcome) {
 			if (outcome === 'confirmed') {
 				return t('filinq', 'Confirmed')
