@@ -252,13 +252,20 @@ class ScopeDecisionStore {
 
 		$object['@self'] = array_merge($self, ['register' => self::REGISTER, 'schema' => $schema]);
 		$target = new ObjectFindTarget(register: self::REGISTER, schema: $schema);
-		$options = new ObjectSaveOptions(target: $target);
-		if ($system === true) {
-			$options = new ObjectSaveOptions(target: $target, actor: new SaveActor(unowned: true));
-		}
 
 		try {
-			$this->objects()->saveObject(object: $object, options: $options, _rbac: ($system === false));
+			if ($system === true) {
+				// The link is server-only, like every anonymisation link: the
+				// caller reached this file in their own folder first.
+				$this->objects()->saveObject(
+					object: $object,
+					options: new ObjectSaveOptions(target: $target, actor: new SaveActor(unowned: true)),
+					_rbac: false
+				);
+				return;
+			}
+
+			$this->objects()->saveObject(object: $object, options: new ObjectSaveOptions(target: $target));
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The ' . $schema . ' could not be written, so nothing changed: ' . $e->getMessage(), code: 0, previous: $e);
 		}

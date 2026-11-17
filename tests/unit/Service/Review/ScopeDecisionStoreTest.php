@@ -75,7 +75,7 @@ class ScopeDecisionStoreTest extends TestCase {
 				);
 			}
 
-			public function saveObject(array $object, ObjectSaveOptions $options, bool $_rbac = true): array {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true): array {
 				if ($this->test->failSave === true) {
 					throw new RuntimeException('database is down');
 				}

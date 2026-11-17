@@ -44,6 +44,51 @@ if (class_exists(ImageRegion::class) === false) {
 	}
 }
 
+if (class_exists(ImageDetection::class) === false) {
+	/**
+	 * A detection outcome; toArray() keeps openregister main's keys.
+	 */
+	final class ImageDetection {
+
+		/**
+		 * Constructor, as on openregister main.
+		 *
+		 * @param bool                 $detected  Whether the file was detected.
+		 * @param list<ImageRegion>    $regions   The regions.
+		 * @param array<string, mixed> $detectors Each detector's status.
+		 * @param string|null          $reason    Why it was not detected.
+		 */
+		public function __construct(
+			public readonly bool $detected,
+			public readonly array $regions = [],
+			public readonly array $detectors = [],
+			public readonly ?string $reason = null,
+		) {
+		}
+
+		/**
+		 * The outcome as an array.
+		 *
+		 * @return array<string, mixed> The outcome.
+		 */
+		public function toArray(): array {
+			$ran = array_filter($this->detectors, static fn (array $d): bool => ($d['status'] ?? '') === 'ran');
+
+			return [
+				'detected' => $this->detected,
+				'reason' => $this->reason,
+				'regions' => array_map(
+					static fn (ImageRegion $r): array => ['page' => $r->page, 'box' => $r->box, 'entityType' => $r->entityType, 'confidence' => $r->confidence, 'source' => $r->source, 'relationId' => $r->relationId],
+					$this->regions
+				),
+				'detectors' => $this->detectors,
+				'objectDetection' => $ran === [] ? 'not-run' : 'ran',
+				'objectDetectionReason' => $ran === [] ? 'No region detector ran.' : null,
+			];
+		}
+	}
+}
+
 if (class_exists(ImageRedactionService::class) === false) {
 	/**
 	 * The seam; the test sets what a burn answers.
@@ -65,6 +110,42 @@ if (class_exists(ImageRedactionService::class) === false) {
 		 * @var mixed
 		 */
 		public mixed $answer = null;
+
+		/**
+		 * What the next detection answers.
+		 *
+		 * @var ImageDetection|null
+		 */
+		public ?ImageDetection $detection = null;
+
+		/**
+		 * The decided regions.
+		 *
+		 * @var list<ImageRegion>
+		 */
+		public array $decided = [];
+
+		/**
+		 * Detect, as on openregister main.
+		 *
+		 * @param File $file The file.
+		 *
+		 * @return ImageDetection The outcome.
+		 */
+		public function detectImage(File $file): ImageDetection {
+			return $this->detection ?? new ImageDetection(detected: false, reason: 'No OCR words with positions were provided for this file, so it was not detected.');
+		}
+
+		/**
+		 * The decided regions, as on openregister main.
+		 *
+		 * @param File $file The file.
+		 *
+		 * @return list<ImageRegion> The regions.
+		 */
+		public function decidedRegions(File $file): array {
+			return $this->decided;
+		}
 
 		/**
 		 * Burn the regions, as on openregister main.

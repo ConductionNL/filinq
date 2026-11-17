@@ -19,7 +19,7 @@
   - Verification rejects overlay-style output and any output still containing the original image stream.
   - Undecodable embedded XObject flags `imageDetectionSkipped` reason `embedded_images_unsupported` (per-file, not a whole-document skip).
 - [ ] 3.2 Extend `AnonymizationService::extractAndDetectEntities()` with the image-detection leg after the wave-1 OCR fallback; attach `origin`/`boxes` additively; route image entities through proposals/policy-match/risk unchanged (REQ-DDIMR-007)
-- [ ] 3.3 Fail-flagged degradation: `imageDetectionSkipped` reasons on extract, `imageRedactionPending` on anonymise, derived from the OR backend state (`supportsImages`) and seam availability (REQ-DDIMR-002)
+- [x] 3.3 Fail-flagged degradation: `imageDetectionSkipped` reasons on extract, `imageRedactionPending` on anonymise, derived from the OR backend state (`supportsImages`) and seam availability (REQ-DDIMR-002)
 - [ ] 3.4 Burn orchestration in the anonymise commit before the `outputFormat` conversion gate, composing with OR text replacement; burned-region text-layer/chunk redaction; honest `burnedRegionCount` from performed burns only (REQ-DDIMR-004, REQ-DDIMR-006, REQ-DDIMR-008)
 
 ## 4. Frontend

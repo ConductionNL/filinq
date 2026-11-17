@@ -23,6 +23,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Review;
 use OCA\Filinq\Exception\ScopeDecisionRefusedException;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\Filinq\Service\Review\ImageSeamGateway;
+use OCA\OpenRegister\Service\File\ImageDetection;
 use OCA\OpenRegister\Service\File\ImageRedactionService;
 use OCA\OpenRegister\Service\File\ImageRegion;
 use OCP\Files\File;
@@ -142,6 +143,50 @@ class ImageSeamGatewayTest extends TestCase {
 		$gateway->burn(file: $this->file(mime: 'application/pdf'), regions: [], bases: ['5.1.2.e']);
 
 	}//end testWithoutOpenRegisterTheSeamIsAbsent()
+
+	public function testDetectionKeepsTheSeamsOutcome(): void {
+		$this->seam->detection = new ImageDetection(
+			detected: true,
+			regions: [new ImageRegion(page: 4, box: ['x' => 0.61, 'y' => 0.78, 'w' => 0.24, 'h' => 0.09], entityType: 'SIGNATURE', confidence: 0.83, source: 'anonymiq 1.0', relationId: 9)],
+			detectors: ['anonymiq' => ['status' => 'ran', 'reason' => null]]
+		);
+
+		$outcome = $this->gateway()->detect(file: $this->file(mime: 'application/pdf'));
+
+		$this->assertTrue($outcome['detected']);
+		$this->assertSame('ran', $outcome['objectDetection']);
+		$this->assertSame('SIGNATURE', $outcome['regions'][0]['entityType']);
+		$this->assertSame(9, $outcome['regions'][0]['relationId']);
+
+	}//end testDetectionKeepsTheSeamsOutcome()
+
+	public function testAnUndetectableFileSaysWhy(): void {
+		$outcome = $this->gateway()->detect(file: $this->file(mime: 'image/png'));
+
+		$this->assertFalse($outcome['detected']);
+		$this->assertStringStartsWith('No OCR words', (string) $outcome['reason']);
+		$this->assertSame('not-run', $outcome['objectDetection']);
+
+	}//end testAnUndetectableFileSaysWhy()
+
+	public function testDecidedRegionsAreCounted(): void {
+		$box = ['x' => 0.0, 'y' => 0.0, 'w' => 0.1, 'h' => 0.1];
+		$this->seam->decided = [
+			new ImageRegion(page: null, box: $box, entityType: 'PERSON', confidence: 0.9, source: 'ocr-text'),
+			new ImageRegion(page: null, box: $box, entityType: 'BSN', confidence: 0.9, source: 'ocr-text'),
+		];
+
+		$this->assertSame(2, $this->gateway()->decidedRegionCount(file: $this->file(mime: 'image/png')));
+		$this->assertSame(0, $this->gateway(installed: false)->decidedRegionCount(file: $this->file(mime: 'image/png')));
+
+	}//end testDecidedRegionsAreCounted()
+
+	public function testDetectionWithoutTheSeamIsRefused(): void {
+		$this->expectException(ScopeDecisionRefusedException::class);
+
+		$this->gateway(installed: false)->detect(file: $this->file(mime: 'image/png'));
+
+	}//end testDetectionWithoutTheSeamIsRefused()
 
 	public function testWithTheSeamInstalledItIsAvailable(): void {
 		$this->assertTrue($this->gateway()->available());

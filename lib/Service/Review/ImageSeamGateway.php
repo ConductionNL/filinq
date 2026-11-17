@@ -96,6 +96,54 @@ class ImageSeamGateway {
 	}//end available()
 
 	/**
+	 * Detect the regions of an image-bearing file through the seam.
+	 *
+	 * @param File $file The file.
+	 *
+	 * @return array{detected: bool, reason: string|null, regions: list<array<string, mixed>>,
+	 *     detectors: array<string, mixed>, objectDetection: string, objectDetectionReason: string|null} The outcome.
+	 *
+	 * @throws ScopeDecisionRefusedException When the seam is absent.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.3
+	 */
+	public function detect(File $file): array {
+		if ($this->available() === false) {
+			throw new ScopeDecisionRefusedException(message: ScopeRedactionService::NO_SEAM);
+		}
+
+		$outcome = $this->locator->get(className: self::SEAM_CLASS)->detectImage(file: $file)->toArray();
+
+		return [
+			'detected' => ($outcome['detected'] ?? false) === true,
+			'reason' => ($outcome['reason'] ?? null),
+			'regions' => array_values(array_filter((array) ($outcome['regions'] ?? []), 'is_array')),
+			'detectors' => (array) ($outcome['detectors'] ?? []),
+			'objectDetection' => (string) ($outcome['objectDetection'] ?? 'not-run'),
+			'objectDetectionReason' => ($outcome['objectDetectionReason'] ?? null),
+		];
+
+	}//end detect()
+
+	/**
+	 * How many decided regions the seam holds for a file.
+	 *
+	 * @param File $file The file.
+	 *
+	 * @return int The regions not marked skip, 0 without the seam.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.3
+	 */
+	public function decidedRegionCount(File $file): int {
+		if ($this->available() === false) {
+			return 0;
+		}
+
+		return count($this->locator->get(className: self::SEAM_CLASS)->decidedRegions(file: $file));
+
+	}//end decidedRegionCount()
+
+	/**
 	 * Burn the regions through the seam.
 	 *
 	 * For a standalone image the seam's regions carry no page, so page 1 of
