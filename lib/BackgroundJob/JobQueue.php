@@ -50,6 +50,7 @@ class JobQueue implements JobQueueInterface {
 		self::FOLDER_EXTRACTION    => FolderExtractionJob::class,
 		self::INTAKE_OCR           => IntakeOcrJob::class,
 		self::TEMPLATE_IMPORT      => TemplateImportJob::class,
+		self::PDFUA_ATTACH_CHECK   => PdfUaAttachCheckJob::class,
 	];
 
 	/**

@@ -87,6 +87,20 @@ interface DocumentValidationServiceInterface {
 	public const CHECK_PDFUA_IDENTIFIER_MISSING = 'pdfua-identifier-missing';
 
 	/**
+	 * Validator-backed (veraPDF ua1): the PDF does not conform to PDF/UA-1.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/document-validation-checks/spec.md#requirement-the-check-catalogue-must-include-validator-backed-pdfua-accessibility-checks-req-ddpum-005
+	 */
+	public const CHECK_PDFUA_CONFORMANCE = 'pdfua-conformance-failed';
+
+	/**
+	 * A validator-backed accessibility check is on but veraPDF gave no verdict.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/document-validation-checks/spec.md#requirement-the-check-catalogue-must-include-validator-backed-pdfua-accessibility-checks-req-ddpum-005
+	 */
+	public const CHECK_ACCESSIBILITY_UNAVAILABLE = 'accessibility-validator-unavailable';
+
+	/**
 	 * The category of the content and metadata checks.
 	 */
 	public const CATEGORY_DOCUMENT = 'document';
