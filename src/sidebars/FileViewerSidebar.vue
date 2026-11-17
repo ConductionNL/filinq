@@ -305,6 +305,56 @@ const documentRecordId = computed(() =>
 				{{ entry.ocrWarning }}
 			</NcNoteCard>
 
+			<NcNoteCard
+				v-if="entry && entry.imageWarning"
+				type="warning"
+				class="image-warning"
+				data-testid="image-redaction-warning">
+				{{ entry.imageWarning }}
+			</NcNoteCard>
+			<NcNoteCard
+				v-if="entry && imageRedactionPendingNote"
+				type="warning"
+				data-testid="image-redaction-pending">
+				{{ imageRedactionPendingNote }}
+			</NcNoteCard>
+
+			<!-- A page, a range of pages or the whole document in one action
+			     (image-redaction REQ-DDIMR-009): each decision is one row with
+			     its grounds; OpenRegister's image seam burns the pages. -->
+			<div
+				v-if="entry && entry.viewMode !== 'anonymized'"
+				class="scope-redaction"
+				data-testid="scope-redaction">
+				<ul v-if="scopeState.decisions.length" class="scope-redaction__rows">
+					<li
+						v-for="(decision, idx) in scopeState.decisions"
+						:key="'scope-' + idx"
+						data-testid="scope-decision-row">
+						<span class="scope-redaction__label">{{ scopeLabel(decision) }}</span>
+						<span class="scope-redaction__bases">{{ (decision.bases || []).join(', ') }}</span>
+					</li>
+				</ul>
+				<NcButton
+					wide
+					variant="secondary"
+					data-testid="scope-redaction-open"
+					@click="openScopeDialog">
+					<template #icon>
+						<FileHidden :size="20" />
+					</template>
+					{{ t('filinq', 'Redact pages or document') }}
+				</NcButton>
+			</div>
+			<ScopeRedactionDialog
+				v-if="scopeOpen && currentFileId"
+				:fileId="currentFileId"
+				:pageCount="scopeState.pageCount"
+				:pageScopesAvailable="scopeState.pageScopesAvailable"
+				:basesOptions="basesOptions"
+				@decided="onScopeDecided"
+				@close="scopeOpen = false" />
+
 			<div
 				v-if="entry && entry.confidentialityLabel"
 				class="confidentiality-chip-row">
@@ -612,6 +662,7 @@ import {
 } from '@nextcloud/vue'
 import JSZip from 'jszip'
 import Download from 'vue-material-design-icons/Download.vue'
+import FileHidden from 'vue-material-design-icons/FileHidden.vue'
 import KeyVariant from 'vue-material-design-icons/KeyVariant.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
@@ -623,9 +674,11 @@ import DdToggle from '../components/DdToggle.vue'
 import ReviewMarkCard from '../components/ReviewMarkCard.vue'
 import ProhibitionBlockedDialog from '../dialogs/ProhibitionBlockedDialog.vue'
 import RestoreOriginalDialog from '../dialogs/RestoreOriginalDialog.vue'
+import ScopeRedactionDialog from '../dialogs/ScopeRedactionDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 import { colleagueHint, colleagueReason } from '../services/fourEyes.js'
+import { fetchScope, imageRedactionWarning, scopeLabel } from '../services/imageRedaction.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 import { accessibilityNote } from '../services/redactionAccessibility.js'
 import { reportRows } from '../services/sanitization.js'
@@ -648,6 +701,8 @@ export default {
 		DdSearchBar,
 		ProhibitionBlockedDialog,
 		RestoreOriginalDialog,
+		ScopeRedactionDialog,
+		FileHidden,
 		ReviewMarkCard,
 		KeyVariant,
 		Plus,
@@ -689,10 +744,23 @@ export default {
 			anonymiseMode: 'irreversible',
 			pseudonymStatus: null,
 			restoreOpen: false,
+			// Scope redaction (image-redaction REQ-DDIMR-009).
+			scopeOpen: false,
+			scopeState: { decisions: [], pageCount: 0, pageScopesAvailable: false },
 		}
 	},
 
 	computed: {
+		/**
+		 * The warning when the last anonymise left image content unredacted.
+		 *
+		 * @return {string|null} The warning.
+		 * @spec openspec/changes/image-redaction/tasks.md#task-4.2
+		 */
+		imageRedactionPendingNote() {
+			return imageRedactionWarning(this.entry)
+		},
+
 		/**
 		 * Id of the file currently open in the viewer, or null. Watched to
 		 * trigger entity loading — a plain instance computed fires reliably
@@ -1459,6 +1527,7 @@ export default {
 					return
 				}
 				this.loadEntitiesForCurrentFile(file)
+				this.loadScope()
 			},
 
 			immediate: true,
@@ -1510,6 +1579,46 @@ export default {
 	},
 
 	methods: {
+		scopeLabel,
+		/**
+		 * Read the document's scope state and open the dialog.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+		 */
+		async openScopeDialog() {
+			await this.loadScope()
+			this.scopeOpen = true
+		},
+
+		/**
+		 * Read the document's scope decisions, page count and seam state.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+		 */
+		async loadScope() {
+			if (!this.currentFileId) {
+				return
+			}
+			try {
+				this.scopeState = await fetchScope(this.currentFileId)
+			} catch {
+				this.scopeState = { decisions: [], pageCount: 0, pageScopesAvailable: false }
+			}
+		},
+
+		/**
+		 * A decision was stored and committed: show its row and close.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+		 */
+		async onScopeDecided() {
+			this.scopeOpen = false
+			await this.loadScope()
+		},
+
 		entityTypeLabel,
 		/**
 		 * Toggle an entity's inclusion (= skip decision) through the guarded
@@ -2213,5 +2322,29 @@ export default {
 	padding-inline-start: 20px;
 	font-size: 0.85rem;
 	list-style: disc;
+}
+.scope-redaction {
+	display: flex;
+	flex-direction: column;
+	gap: var(--default-grid-baseline, 4px);
+	margin-block: calc(var(--default-grid-baseline, 4px) * 2);
+}
+
+.scope-redaction__rows {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.scope-redaction__rows li {
+	display: flex;
+	justify-content: space-between;
+	gap: calc(var(--default-grid-baseline, 4px) * 2);
+	padding-block: var(--default-grid-baseline, 4px);
+	border-bottom: 1px solid var(--color-border);
+}
+
+.scope-redaction__bases {
+	color: var(--color-text-maxcontrast);
 }
 </style>

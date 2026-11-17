@@ -73,7 +73,7 @@ class ImageRedactionServiceTest extends TestCase {
 
 	public function testABornDigitalPdfHasNoImageLeg(): void {
 		$this->seam->expects($this->never())->method('detect');
-		$rows = [['entityType' => 'PERSON', 'text' => 'Jan', 'relationId' => 7]];
+		$rows = [['type' => 'PERSON', 'value' => 'Jan', 'relationId' => 7]];
 
 		$outcome = $this->images()->afterExtraction(file: $this->file(mime: 'application/pdf'), entities: $rows);
 
@@ -128,16 +128,16 @@ class ImageRedactionServiceTest extends TestCase {
 				'objectDetectionReason' => null,
 			]
 		);
-		$rows = [['entityType' => 'BSN', 'text' => '111222333', 'relationId' => 7, 'included' => true]];
+		$rows = [['type' => 'BSN', 'value' => '111222333', 'relationId' => 7, 'skipAnonymization' => false]];
 
 		$outcome = $this->images()->afterExtraction(file: $this->file(mime: 'application/pdf'), entities: $rows, ocrFields: ['ocr' => ['ran' => true]]);
 
 		$this->assertSame(2, $outcome['fields']['imageRegionCount']);
 		$this->assertSame('image', $outcome['entities'][0]['origin']);
 		$this->assertSame([['page' => 1, 'x' => 0.1, 'y' => 0.2, 'w' => 0.3, 'h' => 0.05]], $outcome['entities'][0]['boxes']);
-		$this->assertSame('111222333', $outcome['entities'][0]['text'], 'The row keeps its own fields.');
+		$this->assertSame('111222333', $outcome['entities'][0]['value'], 'The row keeps its own fields.');
 		$this->assertSame(
-			['entityType' => 'SIGNATURE', 'text' => '', 'confidence' => 0.83, 'relationId' => 9, 'origin' => 'image', 'boxes' => [['page' => 4, 'x' => 0.61, 'y' => 0.78, 'w' => 0.24, 'h' => 0.09]], 'included' => true],
+			['type' => 'SIGNATURE', 'value' => '', 'confidence' => 0.83, 'relationId' => 9, 'bases' => null, 'skipAnonymization' => false, 'origin' => 'image', 'boxes' => [['page' => 4, 'x' => 0.61, 'y' => 0.78, 'w' => 0.24, 'h' => 0.09]]],
 			$outcome['entities'][1]
 		);
 

@@ -75,7 +75,7 @@ class AnonymizationServiceImageLegTest extends TestCase {
 
 		$this->assertArrayNotHasKey('imageDetectionSkipped', $result);
 		$this->assertSame(1, $result['imageRegionCount']);
-		$this->assertSame('SIGNATURE', $result['entities'][0]['entityType']);
+		$this->assertSame('SIGNATURE', $result['entities'][0]['type']);
 		$this->assertSame('image', $result['entities'][0]['origin']);
 
 	}//end testASignatureFoundOnAScanBecomesAReviewRow()

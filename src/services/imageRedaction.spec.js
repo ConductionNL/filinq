@@ -1,0 +1,124 @@
+/**
+ * Tests for the image redaction helpers.
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+import axios from '@nextcloud/axios'
+import {
+	applyImageFlags,
+	decideScope,
+	fetchScope,
+	imageExtractionWarning,
+	imageRedactionWarning,
+	isImageEntity,
+	scopeLabel,
+} from './imageRedaction.js'
+
+jest.mock('@nextcloud/axios', () => ({
+	__esModule: true,
+	default: { get: jest.fn(), post: jest.fn() },
+}))
+jest.mock('@nextcloud/router', () => ({
+	generateUrl: (path) => path,
+}))
+jest.mock('@nextcloud/l10n', () => ({
+	translate: (app, text, vars) => text.replace(/{(\w+)}/g, (m, k) => (vars && k in vars ? String(vars[k]) : m)),
+}))
+
+// @spec openspec/changes/image-redaction/tasks.md#task-4.2
+describe('imageExtractionWarning', () => {
+	it('says images were not checked when there is no image detection', () => {
+		expect(imageExtractionWarning({ imageDetectionSkipped: { reason: 'backend_unavailable' } })).toMatch(/no image detection is available/)
+	})
+
+	it('says images could not be checked for any other reason', () => {
+		expect(imageExtractionWarning({ imageDetectionSkipped: { reason: 'not_detected' } })).toMatch(/could not be checked/)
+	})
+
+	it('says signatures were not looked for when no detector ran', () => {
+		expect(imageExtractionWarning({ objectDetection: 'not-run' })).toMatch(/Signature detection is not available/)
+	})
+
+	it('is silent when the images were looked at', () => {
+		expect(imageExtractionWarning({ objectDetection: 'ran' })).toBeNull()
+		expect(imageExtractionWarning(null)).toBeNull()
+	})
+})
+
+describe('imageRedactionWarning', () => {
+	it('warns when image redaction is pending', () => {
+		expect(imageRedactionWarning({ imageRedactionPending: true })).toMatch(/not redacted/)
+		expect(imageRedactionWarning({ imageRedactionPending: false })).toBeNull()
+	})
+})
+
+describe('applyImageFlags', () => {
+	it('copies the warning and reports unseen image content', () => {
+		const entry = {}
+		expect(applyImageFlags(entry, { imageDetectionSkipped: { reason: 'backend_unavailable' } })).toBe(true)
+		expect(entry.imageWarning).toMatch(/not checked/)
+	})
+
+	it('does not report a document whose images were looked at as unseen', () => {
+		const entry = {}
+		expect(applyImageFlags(entry, { objectDetection: 'not-run' })).toBe(false)
+		expect(entry.imageWarning).toMatch(/Signature/)
+	})
+})
+
+describe('scopeLabel and isImageEntity', () => {
+	it('labels each scope', () => {
+		expect(scopeLabel({ scope: 'document' })).toBe('Whole document withheld')
+		expect(scopeLabel({ scope: 'page', fromPage: 3, toPage: 3 })).toBe('Page 3 redacted')
+		expect(scopeLabel({ scope: 'pageRange', fromPage: 3, toPage: 5 })).toBe('Pages 3 to 5 redacted')
+	})
+
+	it('knows an image row', () => {
+		expect(isImageEntity({ origin: 'image' })).toBe(true)
+		expect(isImageEntity({ origin: 'text' })).toBe(false)
+	})
+})
+
+// @spec openspec/changes/image-redaction/tasks.md#task-6.3
+describe('decideScope', () => {
+	beforeEach(() => {
+		axios.post.mockReset()
+		axios.get.mockReset()
+	})
+
+	it('stores a page range and commits it with the same body', async () => {
+		axios.post.mockResolvedValueOnce({ data: { scope: 'pageRange', fromPage: 3, toPage: 5 } })
+		axios.post.mockResolvedValueOnce({ data: { withheld: false, burnedPages: [3, 4, 5] } })
+
+		const answer = await decideScope(7, { scope: 'pageRange', fromPage: '3', toPage: '5', bases: ['5.1.2.e'] }, true)
+
+		const sent = { scope: 'pageRange', bases: ['5.1.2.e'], fromPage: 3, toPage: 5 }
+		expect(axios.post).toHaveBeenNthCalledWith(1, '/apps/filinq/api/anonymization/scope/7', sent)
+		expect(axios.post).toHaveBeenNthCalledWith(2, '/apps/filinq/api/anonymization/scope/7/commit', sent)
+		expect(answer).toEqual({ ok: true, decision: { scope: 'pageRange', fromPage: 3, toPage: 5 }, outcome: { withheld: false, burnedPages: [3, 4, 5] } })
+	})
+
+	it('sends no pages for a whole document', async () => {
+		axios.post.mockResolvedValueOnce({ data: { scope: 'document' } })
+
+		await decideScope(7, { scope: 'document', fromPage: 2, bases: ['5.1.1.c'] })
+
+		expect(axios.post).toHaveBeenCalledWith('/apps/filinq/api/anonymization/scope/7', { scope: 'document', bases: ['5.1.1.c'] })
+	})
+
+	it('carries the server refusal', async () => {
+		axios.post.mockRejectedValueOnce({ response: { data: { error: 'The document has 4 pages, so pages 3 to 6 cannot be redacted.' } } })
+
+		const answer = await decideScope(7, { scope: 'pageRange', fromPage: 3, toPage: 6, bases: ['5.1.2.e'] })
+
+		expect(answer).toEqual({ ok: false, error: 'The document has 4 pages, so pages 3 to 6 cannot be redacted.' })
+	})
+
+	it('reads the scope state', async () => {
+		axios.get.mockResolvedValueOnce({ data: { decisions: [], pageCount: 4, pageScopesAvailable: false } })
+
+		expect(await fetchScope(7)).toEqual({ decisions: [], pageCount: 4, pageScopesAvailable: false })
+	})
+})

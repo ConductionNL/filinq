@@ -167,14 +167,16 @@ class ImageRedactionService {
 				continue;
 			}
 
+			// The shape EntityDetectionService::normalizeEntities() gives a text finding.
 			$entities[] = [
-				'entityType' => (string) ($region['entityType'] ?? ''),
-				'text' => '',
+				'type' => (string) ($region['entityType'] ?? ''),
+				'value' => '',
 				'confidence' => (float) ($region['confidence'] ?? 0.0),
 				'relationId' => ($region['relationId'] ?? null),
+				'bases' => null,
+				'skipAnonymization' => false,
 				'origin' => 'image',
 				'boxes' => [$box],
-				'included' => true,
 			];
 			if ($relation !== '') {
 				$byRelation[$relation] = (count($entities) - 1);
