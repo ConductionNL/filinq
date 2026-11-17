@@ -137,13 +137,10 @@ class DownloadAgreementGate implements DownloadAgreementGateInterface {
 				'mayDownload' => false,
 				'gated' => true,
 				'reason' => self::VERSION_MOVED_ON,
-				'message' => sprintf(
-					$this->say(
-						message: 'The conditions have changed since you accepted them. You accepted version '
-							.'%s and these are version %s. Read them and accept again.'
-					),
-					$acceptedVersion,
-					$version
+				'message' => $this->say(
+					message: 'The conditions have changed since you accepted them. You accepted version '
+						.'%s and these are version %s. Read them and accept again.',
+					parameters: [$acceptedVersion, $version]
 				),
 				'agreement' => $this->shownTerms(agreement: $agreement),
 			];
@@ -249,18 +246,23 @@ class DownloadAgreementGate implements DownloadAgreementGateInterface {
 	/**
 	 * One message in the reader's language, or in English when there is none.
 	 *
-	 * @param string $message The English source string.
+	 * The parameters go to IL10N::t() itself: Nextcloud formats a translated
+	 * string with exactly the parameters it was given, so a `%s` left for a
+	 * later sprintf() throws instead of rendering.
+	 *
+	 * @param string       $message    The English source string.
+	 * @param list<string> $parameters The values for its `%s` placeholders, in order.
 	 *
 	 * @return string The message.
 	 *
 	 * @spec exclude Localisation helper behind check() and accept().
 	 */
-	private function say(string $message): string {
+	private function say(string $message, array $parameters = []): string {
 		if ($this->l10n === null) {
-			return $message;
+			return vsprintf($message, $parameters);
 		}
 
-		return $this->l10n->t($message);
+		return $this->l10n->t($message, $parameters);
 
 	}//end say()
 

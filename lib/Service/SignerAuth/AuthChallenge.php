@@ -49,6 +49,13 @@ final class AuthChallenge {
 	public const TYPE_NONE = 'none';
 
 	/**
+	 * The signer enters a code they received, such as a phone code.
+	 *
+	 * @var string
+	 */
+	public const TYPE_CODE = 'code';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param string $provider The provider identifier that issued the challenge.

@@ -31,7 +31,7 @@
  */
 
 import { expect, test } from '@playwright/test'
-import { API, harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures.ts'
+import { API, createDavFile, harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures.ts'
 
 /** Where the redaction surface lives. */
 const REDACTION = `${API}/redaction`
@@ -54,8 +54,11 @@ test.describe('what leaves the building', () => {
 		page,
 	}) => {
 		// A caller that never opened the review screen. If the gate lived in
-		// the component, this request would be the way around it.
-		const refused = await page.request.post(`${API}/anonymization/anonymize/1`, {
+		// the component, this request would be the way around it. The file is
+		// real, so the refusal is the gate's and not a missing file's.
+		const file = await createDavFile(page.request, token, `${TEST_PREFIX}-unchecked.txt`, 'Brief aan Fatima El-Amrani.')
+		expect(file.fileId, 'a real file to refuse').not.toBe('')
+		const refused = await page.request.post(`${API}/anonymization/anonymize/${file.fileId}`, {
 			headers: jsonHeaders(token),
 			data: {
 				entities: [

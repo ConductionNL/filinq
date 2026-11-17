@@ -72,7 +72,7 @@ class ObjectEventRegistrarTest extends TestCase {
 	public function testRegisterWiresEveryListener(): void {
 		$registered = [];
 		$context = $this->createMock(IRegistrationContext::class);
-		$context->expects(self::exactly(11))->method('registerEventListener')->willReturnCallback(
+		$context->expects(self::exactly(12))->method('registerEventListener')->willReturnCallback(
 			static function (string $event, string $listener) use (&$registered): void {
 				$registered[] = [$event, $listener];
 			}
@@ -92,6 +92,7 @@ class ObjectEventRegistrarTest extends TestCase {
 				[ObjectCreatedEvent::class, 'OCA\Filinq\EventListener\IntakeArrivalFollowUpListener'],
 				[ObjectDeletedEvent::class, FilinqEventListener::class],
 				[ObjectDeletedEvent::class, 'OCA\Filinq\EventListener\PseudonymMapLinkDeletedListener'],
+				[ObjectDeletedEvent::class, 'OCA\Filinq\EventListener\PublicationSourceDestroyedListener'],
 				['OCA\OpenRegister\Event\EntityRelationDecisionUpdatedEvent', 'OCA\Filinq\EventListener\EntityRelationDecisionListener'],
 			],
 			$registered

@@ -131,13 +131,11 @@ class RedactionReviewGate {
 			// makes sure nothing can.
 			return $this->refusal(
 				reason: self::CHECKED_AN_OLDER_RUN,
-				message: sprintf(
-					$this->say(
-						message: 'This document was checked, but the detection has been run again since. '
-							.'The earlier check was about a different set of findings, so it does not cover '
-							.'this one. Look at the new result and confirm it again.%s'
-					),
-					$this->checkedByClause(mark: $mark)
+				message: $this->say(
+					message: 'This document was checked, but the detection has been run again since. '
+						.'The earlier check was about a different set of findings, so it does not cover '
+						.'this one. Look at the new result and confirm it again.%s',
+					parameters: [$this->checkedByClause(mark: $mark)]
 				)
 			);
 		}
@@ -221,7 +219,7 @@ class RedactionReviewGate {
 			return '';
 		}
 
-		return sprintf($this->say(message: ' The earlier check was by %s on %s.'), $who, $when);
+		return $this->say(message: ' The earlier check was by %s on %s.', parameters: [$who, $when]);
 	}//end checkedByClause()
 
 	/**
@@ -253,15 +251,20 @@ class RedactionReviewGate {
 	/**
 	 * One message in the reader's language, or in English when there is none.
 	 *
-	 * @param string $message The English source string.
+	 * The parameters go to IL10N::t() itself: Nextcloud formats a translated
+	 * string with exactly the parameters it was given, so a `%s` left for a
+	 * later sprintf() throws instead of rendering.
+	 *
+	 * @param string       $message    The English source string.
+	 * @param list<string> $parameters The values for its `%s` placeholders, in order.
 	 *
 	 * @return string The message.
 	 */
-	private function say(string $message): string {
+	private function say(string $message, array $parameters = []): string {
 		if ($this->l10n === null) {
-			return $message;
+			return vsprintf($message, $parameters);
 		}
 
-		return $this->l10n->t($message);
+		return $this->l10n->t($message, $parameters);
 	}//end say()
 }//end class

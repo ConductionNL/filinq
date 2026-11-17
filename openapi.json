@@ -244,6 +244,10 @@
             "description": "Reads and writes the `signer_auth_*` settings, for admins only"
         },
         {
+            "description": "Which apps use the signing rail.",
+            "name": "signing-sources-settings"
+        },
+        {
             "name": "signing",
             "description": "Controller for signing-specific endpoints"
         },
@@ -298,6 +302,18 @@
         {
             "name": "grounds",
             "description": "Reads the Woo refusal grounds the pickers offer, from dossiq or the read-only snapshot"
+        },
+        {
+            "name": "waiting-work",
+            "description": "Lists what waits for the caller: signatures, acceptances, routed intake documents and documents due for review"
+        },
+        {
+            "name": "personal-data-report",
+            "description": "Lists the documents the reader may open that hold personal data, and whether an anonymised copy exists"
+        },
+        {
+            "name": "document-audit",
+            "description": "Reads the audit trail of one document the caller may open"
         }
     ],
     "paths": {
@@ -1420,6 +1436,110 @@
                 }
             }
         },
+        "/documents/waiting": {
+            "get": {
+                "operationId": "waiting-work-index",
+                "summary": "What waits for the caller: signatures and acceptances, routed intake documents, and their documents due for review. Ever",
+                "description": "What waits for the caller: signatures and acceptances, routed intake documents, and their documents due for review. Every item is the caller's own.",
+                "tags": [
+                    "waiting-work"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "What waits for them.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/reports/personal-data": {
+            "get": {
+                "operationId": "personal-data-report-index",
+                "summary": "The documents the caller may read in which detection found personal data, with entity types and counts.",
+                "description": "The documents the caller may read in which detection found personal data, each with its entity types and counts and whether an anonymised copy exists. Never a detected value.",
+                "tags": [
+                    "personal-data-report"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The report: results, total, available, truncated.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/documents/{fileId}/audit": {
+            "get": {
+                "operationId": "document-audit-index",
+                "summary": "The audit trail of a document the caller may read, oldest first.",
+                "description": "The audit trail of a document the caller may read, oldest first, each entry with its action, actor and moment. A file the caller may not read answers 404.",
+                "tags": [
+                    "document-audit"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The entries and their total.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/case-documents/upload-policy": {
             "get": {
                 "operationId": "case-documents-upload-policy",
@@ -1478,6 +1598,9 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
                     }
                 },
                 "parameters": [
@@ -1539,6 +1662,9 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
                     }
                 },
                 "parameters": [
@@ -7122,6 +7248,34 @@
                 }
             }
         },
+        "/publications/active": {
+            "get": {
+                "operationId": "publication-active",
+                "summary": "The publications the caller can see that must be published actively",
+                "description": "The publications the caller can see that must be published actively, each saying whether it is published and what still blocks it.",
+                "tags": [
+                    "publication"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{results: [{record, published, blockers}], categories: string[]}",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/publications/categories": {
             "get": {
                 "operationId": "publication-categories",
@@ -7259,6 +7413,48 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/publications/{id}/download": {
+            "get": {
+                "operationId": "publication-download",
+                "summary": "Download the published copy, once the caller accepted the download agreement in force",
+                "description": "Download the published copy, once the caller accepted the download agreement in force.",
+                "tags": [
+                    "publication"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The file",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
                     }
                 },
                 "parameters": [
@@ -8189,6 +8385,34 @@
                 }
             }
         },
+        "/settings/signing-sources": {
+            "get": {
+                "operationId": "signing-sources-settings-index",
+                "summary": "GET /api/settings/signing-sources",
+                "description": "GET /api/settings/signing-sources",
+                "tags": [
+                    "signing-sources-settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The apps that raised signing requests, each with its count, most requests first.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/setup/action/{actionId}": {
             "post": {
                 "operationId": "setup-run-action",
@@ -8886,6 +9110,111 @@
                         "in": "path",
                         "required": true,
                         "description": "The typeSchema.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/signing/delegations": {
+            "get": {
+                "operationId": "signing-folder-delegations",
+                "summary": "The delegations the caller gave and received",
+                "description": "The delegations the caller gave and received.",
+                "tags": [
+                    "signing-folder"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{given: delegation[], received: delegation[]}",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "signing-folder-declare-delegation",
+                "summary": "Delegate the caller's signing authority to a colleague for a period and document types",
+                "description": "Delegate the caller's signing authority to a colleague for a period and document types.",
+                "tags": [
+                    "signing-folder"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The stored delegation.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/signing/delegations/{id}": {
+            "delete": {
+                "operationId": "signing-folder-withdraw-delegation",
+                "summary": "Withdraw a delegation the caller gave",
+                "description": "Withdraw a delegation the caller gave.",
+                "tags": [
+                    "signing-folder"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{withdrawn: true}",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
                         "schema": {
                             "type": "string"
                         }
@@ -10117,6 +10446,45 @@
                 ]
             }
         },
+        "/templates/{id}/publish": {
+            "post": {
+                "operationId": "templates-publish",
+                "summary": "Publish the version a template is on, so users may generate from it",
+                "description": "Publish the version a template is on, so users may generate from it",
+                "tags": [
+                    "templates"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON response with the published template",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/templates/{id}/versions": {
             "get": {
                 "operationId": "template-versions-versions",
@@ -11053,6 +11421,246 @@
                 }
             }
         },
+        "/case-documents/{uuid}/releases": {
+            "post": {
+                "operationId": "case-documents-release",
+                "summary": "Release one document on a record to the person who requested it",
+                "description": "Release one document on a record to the person who requested it. The caller must be allowed to write the record, and the document must be linked to it.",
+                "tags": [
+                    "case-documents"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The release.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The uuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "register": {
+                                        "type": "string"
+                                    },
+                                    "schema": {
+                                        "type": "string"
+                                    },
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "contactRef": {
+                                        "type": "string"
+                                    },
+                                    "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                            "decision",
+                                            "document"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/document-releases/{releaseId}": {
+            "delete": {
+                "operationId": "document-releases-withdraw",
+                "summary": "Withdraw a release",
+                "description": "Withdraw a release, so the portal no longer lists or serves its document. The caller must be allowed to write the release's record.",
+                "tags": [
+                    "case-documents"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The withdrawn release.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "releaseId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The release id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/case-documents/copy": {
+            "post": {
+                "operationId": "case-documents-copy",
+                "summary": "Copy a document to another record",
+                "description": "Copy one file of a record to another record: a new file with the same name and content in the target record's folder, linked to the target, with an entry in both audit trails. The caller must be able to read the source and write the target; nothing is written otherwise.",
+                "tags": [
+                    "case-documents"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The copy.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "sourceRegister": {
+                                        "type": "string"
+                                    },
+                                    "sourceSchema": {
+                                        "type": "string"
+                                    },
+                                    "sourceId": {
+                                        "type": "string"
+                                    },
+                                    "register": {
+                                        "type": "string"
+                                    },
+                                    "schema": {
+                                        "type": "string"
+                                    },
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "fileId": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/verify/{token}": {
+            "get": {
+                "operationId": "publicVerification-verify",
+                "summary": "Verify a signed document by its verification token",
+                "description": "Public, account-free. Answers the outcome recorded for one signed document: file name, content hash, and per signature the status, level, the signer as asserted and whether content integrity and the signer are covered by the check. An unknown, malformed or revoked token answers 200 with status unknown, in the same shape. Rate-limited and throttled.",
+                "tags": [
+                    "signing"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The verdict, or status unknown",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "description": "The 32-character verification token.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "security": []
+            }
+        },
         "/grounds": {
             "get": {
                 "operationId": "grounds-index",
@@ -11294,49 +11902,6 @@
                         }
                     }
                 ]
-            }
-        },
-        "/verify/{token}": {
-            "get": {
-                "operationId": "publicVerification-verify",
-                "summary": "Verify a signed document by its verification token",
-                "description": "Public, account-free. Answers the outcome recorded for one signed document: file name, content hash, and per signature the status, level, the signer as asserted and whether content integrity and the signer are covered by the check. An unknown, malformed or revoked token answers 200 with status unknown, in the same shape. Rate-limited and throttled.",
-                "tags": [
-                    "signing"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "The verdict, or status unknown",
-                        "headers": {
-                            "API-Version": {
-                                "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "$ref": "#/components/responses/Problem500"
-                    }
-                },
-                "parameters": [
-                    {
-                        "name": "token",
-                        "in": "path",
-                        "required": true,
-                        "description": "The 32-character verification token.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "security": []
             }
         }
     },
