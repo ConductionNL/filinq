@@ -180,25 +180,13 @@ class AccessibilityConformanceController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function regenerate(int $fileId): JSONResponse {
-		$file = $this->ownPdf(fileId: $fileId);
+		$file = $this->regenerablePdf(fileId: $fileId);
 		if ($file instanceof JSONResponse) {
 			return $file;
 		}
 
-		if ($file->isUpdateable() === false) {
-			return new JSONResponse(['error' => $this->l10n->t('You cannot change this file.')], Http::STATUS_FORBIDDEN);
-		}
-
-		if ($this->regeneration === null) {
-			return new JSONResponse(
-				['error' => $this->l10n->t('The document could not be made accessible. Try again later.')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}
-
-		$user = $this->userSession->getUser();
 		try {
-			$result = $this->regeneration->regenerate(file: $file, userId: (string) $user?->getUID());
+			$result = $this->regeneration->regenerate(file: $file, userId: (string) $this->userSession->getUser()?->getUID());
 		} catch (AccessibleRegenerationRefused $e) {
 			return new JSONResponse(
 				[
@@ -226,6 +214,37 @@ class AccessibilityConformanceController extends Controller {
 		return new JSONResponse($result);
 
 	}//end regenerate()
+
+	/**
+	 * The PDF to regenerate, or why it cannot be before anything is tried: the caller cannot
+	 * open or change it, it is not a PDF, or regeneration is not wired.
+	 *
+	 * @param int $fileId The file id.
+	 *
+	 * @return File|JSONResponse The PDF, or the 404, 400, 403 or 500 answer.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-document-filinq-generated-can-be-regenerated-as-pdfua-an-imported-one-cannot-req-ddpum-008
+	 */
+	private function regenerablePdf(int $fileId): File|JSONResponse {
+		$file = $this->ownPdf(fileId: $fileId);
+		if ($file instanceof JSONResponse) {
+			return $file;
+		}
+
+		if ($file->isUpdateable() === false) {
+			return new JSONResponse(['error' => $this->l10n->t('You cannot change this file.')], Http::STATUS_FORBIDDEN);
+		}
+
+		if ($this->regeneration === null) {
+			return new JSONResponse(
+				['error' => $this->l10n->t('The document could not be made accessible. Try again later.')],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}
+
+		return $file;
+
+	}//end regenerablePdf()
 
 	/**
 	 * The heuristic accessibility findings of a file at default severities.

@@ -78,13 +78,8 @@ class PdfUaChecks {
 			return [];
 		}
 
-		if ($this->conformance === null || $this->conformance->isAvailable() === false) {
-			return [$this->unavailable()];
-		}
-
-		try {
-			$report = $this->conformance->checkFile(file: $file, trigger: AccessibilityConformanceService::TRIGGER_VALIDATION);
-		} catch (Throwable) {
+		$report = $this->validatorReport(file: $file);
+		if ($report === null) {
 			return [$this->unavailable()];
 		}
 
@@ -92,6 +87,43 @@ class PdfUaChecks {
 			return [];
 		}
 
+		return [$this->nonConformant(report: $report, severity: $severity)];
+
+	}//end findings()
+
+	/**
+	 * The validator's report on a PDF, or null when the validator is not wired, not installed or gives no verdict.
+	 *
+	 * @param File $file The PDF.
+	 *
+	 * @return array<string, mixed>|null The stored report, or null.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-validator-verdict-is-the-authoritative-conformance-heuristics-remain-the-floor-req-ddpum-004
+	 */
+	private function validatorReport(File $file): ?array {
+		if ($this->conformance === null || $this->conformance->isAvailable() === false) {
+			return null;
+		}
+
+		try {
+			return $this->conformance->checkFile(file: $file, trigger: AccessibilityConformanceService::TRIGGER_VALIDATION);
+		} catch (Throwable) {
+			return null;
+		}
+
+	}//end validatorReport()
+
+	/**
+	 * The finding for a PDF the validator found not conformant, naming its first failing checks.
+	 *
+	 * @param array<string, mixed> $report   The stored accessibility conformance report.
+	 * @param string               $severity The profile's severity for the check.
+	 *
+	 * @return array<string, mixed> The finding, with the report's guidance when it has any.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-validator-verdict-is-the-authoritative-conformance-heuristics-remain-the-floor-req-ddpum-004
+	 */
+	private function nonConformant(array $report, string $severity): array {
 		$checkpoints = array_column(array_slice((array) ($report['failedChecks'] ?? []), 0, self::CHECKS_NAMED), 'checkpoint');
 		$finding = $this->finding(
 			checkId: DocumentValidationService::CHECK_PDFUA_CONFORMANCE,
@@ -108,9 +140,9 @@ class PdfUaChecks {
 			$finding['guidance'] = $guidance;
 		}
 
-		return [$finding];
+		return $finding;
 
-	}//end findings()
+	}//end nonConformant()
 
 	/**
 	 * The "not validated" finding: always a warning, never escalated.

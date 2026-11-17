@@ -89,42 +89,86 @@ class AccessibleRegenerationService {
 			return null;
 		}
 
+		foreach ($this->generationRows(fileId: $fileId) as $row) {
+			$provenance = $this->generatedPdfProvenance(entry: $this->storedFields(row: $row), fileId: $fileId);
+			if ($provenance !== null) {
+				return $provenance;
+			}
+		}
+
+		return null;
+
+	}//end provenanceOf()
+
+	/**
+	 * The stored generation entries the search returns for a file; none when the register cannot be read.
+	 *
+	 * @param int $fileId The file id.
+	 *
+	 * @return array<int|string, mixed> The raw rows.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-document-filinq-generated-can-be-regenerated-as-pdfua-an-imported-one-cannot-req-ddpum-008
+	 */
+	private function generationRows(int $fileId): array {
 		try {
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
+			return (array) $this->objectResolver->resolve()->searchObjectsBySlug(
 				registerSlug: self::REGISTER,
 				schemaSlug: self::SCHEMA,
 				filters: ['fileId' => $fileId]
 			);
 		} catch (Throwable) {
+			return [];
+		}
+
+	}//end generationRows()
+
+	/**
+	 * The provenance in one stored generation entry, when it records a PDF generated for this file from a template.
+	 *
+	 * The search filters by file; the match is ours.
+	 *
+	 * @param array<string, mixed> $entry  The stored generation entry.
+	 * @param int                  $fileId The file id.
+	 *
+	 * @return array{templateId: string, templateVersion: int|null, dataRefs: array<int, mixed>}|null The provenance, or null.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-document-filinq-generated-can-be-regenerated-as-pdfua-an-imported-one-cannot-req-ddpum-008
+	 */
+	private function generatedPdfProvenance(array $entry, int $fileId): ?array {
+		if ($this->isGeneratedPdfOf(entry: $entry, fileId: $fileId) === false) {
 			return null;
 		}
 
-		foreach ((array) $rows as $row) {
-			$entry = $this->storedFields(row: $row);
-			// The filter is the search's; the match is ours.
-			if ((int) ($entry['fileId'] ?? 0) !== $fileId
-				|| ($entry['status'] ?? '') !== 'generated'
-				|| ($entry['format'] ?? '') !== 'pdf'
-				|| trim((string) ($entry['templateId'] ?? '')) === ''
-			) {
-				continue;
-			}
+		$version = null;
+		if (is_numeric($entry['templateVersion'] ?? null) === true) {
+			$version = (int) $entry['templateVersion'];
+		}
 
-			$version = null;
-			if (is_numeric($entry['templateVersion'] ?? null) === true) {
-				$version = (int) $entry['templateVersion'];
-			}
+		return [
+			'templateId' => (string) $entry['templateId'],
+			'templateVersion' => $version,
+			'dataRefs' => array_values((array) ($entry['dataRefs'] ?? [])),
+		];
 
-			return [
-				'templateId' => (string) $entry['templateId'],
-				'templateVersion' => $version,
-				'dataRefs' => array_values((array) ($entry['dataRefs'] ?? [])),
-			];
-		}//end foreach
+	}//end generatedPdfProvenance()
 
-		return null;
+	/**
+	 * Whether a stored generation entry records a PDF generated for this file from a template.
+	 *
+	 * @param array<string, mixed> $entry  The stored generation entry.
+	 * @param int                  $fileId The file id.
+	 *
+	 * @return bool True for a generated PDF of this file with a template.
+	 *
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-a-document-filinq-generated-can-be-regenerated-as-pdfua-an-imported-one-cannot-req-ddpum-008
+	 */
+	private function isGeneratedPdfOf(array $entry, int $fileId): bool {
+		return (int) ($entry['fileId'] ?? 0) === $fileId
+			&& ($entry['status'] ?? '') === 'generated'
+			&& ($entry['format'] ?? '') === 'pdf'
+			&& trim((string) ($entry['templateId'] ?? '')) !== '';
 
-	}//end provenanceOf()
+	}//end isGeneratedPdfOf()
 
 	/**
 	 * Regenerate a generated PDF as PDF/UA and keep the copy only when it passes.
