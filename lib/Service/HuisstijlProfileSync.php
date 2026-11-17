@@ -25,6 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -234,9 +236,10 @@ class HuisstijlProfileSync {
 		$saved = $this->gate->during(
 			write: static fn (): mixed => $objectService->saveObject(
 				object: $huisstijl,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid
+				),
 				_rbac: false,
 				_multitenancy: false
 			)

@@ -29,6 +29,7 @@ use OCA\Filinq\Service\HuisstijlProfileSync;
 use OCA\Filinq\Service\PdfService;
 use OCA\Filinq\Service\Support\PdfRendering;
 use OCA\Filinq\Service\TemplateRenderer;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -87,7 +88,7 @@ class DocumentRenderPipelineHouseStyleTest extends TestCase {
 	public function testANamedHouseStyleWins(): void {
 		$this->sync->expects($this->never())->method('syncFor');
 		$this->objectService->expects($this->once())->method('find')
-			->with('hand-made', 'filinq', 'huisstijl')
+			->with('hand-made', $this->equalTo(new ObjectFindOptions(register: 'filinq', schema: 'huisstijl')))
 			->willReturn(['name' => 'Eigen']);
 
 		$this->assertSame(['name' => 'Eigen'], $this->pipeline($this->sync)->loadHuisstijl('hand-made', 'clerk'));

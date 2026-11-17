@@ -179,7 +179,14 @@ class HuisstijlProfileSyncTest extends TestCase {
 		$this->objectService->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$gateWasOpen, &$written) {
 				$gateWasOpen = (new HuisstijlWriteGate())->isOpen();
-				$written = array_combine(['object', 'register', 'schema', 'uuid', '_rbac', '_multitenancy'], array_slice($args, 0, 6));
+				$written = [
+					'object' => $args[0],
+					'register' => $args[1]->target->register,
+					'schema' => $args[1]->target->schema,
+					'uuid' => $args[1]->uuid,
+					'_rbac' => $args[2],
+					'_multitenancy' => $args[3],
+				];
 
 				return $args[0] + ['@self' => ['id' => 'hs-1']];
 			}
@@ -220,7 +227,7 @@ class HuisstijlProfileSyncTest extends TestCase {
 		$this->objectService->method('searchObjectsBySlug')->willReturn([$old]);
 		$this->objectService->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (...$args) {
-				$this->assertSame('hs-1', $args[3]);
+				$this->assertSame('hs-1', $args[1]->uuid);
 				$this->assertSame('/apps/thematiq/document-style/logo?v=9', $args[0]['logo']);
 
 				return null;
@@ -238,7 +245,7 @@ class HuisstijlProfileSyncTest extends TestCase {
 		$this->objectService->method('searchObjectsBySlug')->willReturn([['name' => 'Eigen', 'tokenSetId' => 'bergen', 'id' => 'own-1']]);
 		$this->objectService->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (...$args) {
-				$this->assertNull($args[3]);
+				$this->assertNull($args[1]->uuid);
 
 				return [];
 			}
