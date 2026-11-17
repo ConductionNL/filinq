@@ -15,11 +15,29 @@ const base = () => generateUrl('/apps/filinq/api/publications')
 /**
  * The publications the caller can see.
  *
+ * @param {object} [options] `{ incomplete: true }` lists only records with missing Woo metadata
  * @return {Promise<{results: object[], platformAvailable: boolean}>}
  * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
  */
-export async function listPublications() {
-	return (await axios.get(base())).data
+export async function listPublications(options = {}) {
+	if (options.incomplete !== true) {
+		return (await axios.get(base())).data
+	}
+
+	return (await axios.get(base(), { params: { incomplete: 1 } })).data
+}
+
+/**
+ * Set one metadata value on a selection of publications. Each record is
+ * checked on its own; one past hand-off or not the caller's is skipped.
+ *
+ * @param {string[]} ids The records
+ * @param {object} values One field and its value
+ * @return {Promise<{updated: object[], skipped: Array<{uuid: string, reason: string}>}>}
+ * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+ */
+export async function setMetadataMany(ids, values) {
+	return (await axios.put(base() + '/metadata', { ids, values })).data
 }
 
 /**

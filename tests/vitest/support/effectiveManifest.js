@@ -8,7 +8,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md#requirement-manifest-assembled-from-adr-037-fragments
+ * @spec openspec/changes/archive/2026-11-17-filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md#requirement-manifest-assembled-from-adr-037-fragments
  */
 
 import { buildManifest } from '@conduction/nextcloud-vue/src/utils/buildManifest.js'
@@ -30,7 +30,7 @@ const json = (file) => JSON.parse(readFileSync(file, 'utf8'))
  * The bundled base manifest.
  *
  * @return {object} `src/manifest.json`.
- * @spec openspec/changes/filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md#requirement-manifest-assembled-from-adr-037-fragments
+ * @spec openspec/changes/archive/2026-11-17-filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md#requirement-manifest-assembled-from-adr-037-fragments
  */
 export function baseManifest() {
 	return json(join(SRC, 'manifest.json'))
@@ -40,7 +40,7 @@ export function baseManifest() {
  * The fragments, sorted by file name as the webpack collector sorts them.
  *
  * @return {Array<{file: string, content: object}>} Each fragment with its file name.
- * @spec openspec/changes/filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md#requirement-manifest-assembled-from-adr-037-fragments
+ * @spec openspec/changes/archive/2026-11-17-filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md#requirement-manifest-assembled-from-adr-037-fragments
  */
 export function manifestFragments() {
 	return readdirSync(join(SRC, 'manifest.d'))
@@ -53,7 +53,7 @@ export function manifestFragments() {
  * The manifest the SPA renders from.
  *
  * @return {object} The built manifest.
- * @spec openspec/changes/filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md#requirement-manifest-assembled-from-adr-037-fragments
+ * @spec openspec/changes/archive/2026-11-17-filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md#requirement-manifest-assembled-from-adr-037-fragments
  */
 export function effectiveManifest() {
 	return buildManifest(
