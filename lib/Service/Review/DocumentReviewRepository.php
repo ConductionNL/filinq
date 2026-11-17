@@ -93,7 +93,11 @@ class DocumentReviewRepository {
 			return null;
 		}
 
-		return $this->latestOf(results: (is_array($results) === true ? $results : []), fileId: $fileId);
+		if (is_array($results) === false) {
+			return null;
+		}
+
+		return $this->latestOf(results: $results, fileId: $fileId);
 
 	}//end findFor()
 

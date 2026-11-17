@@ -107,7 +107,7 @@ class DocumentReviewService {
 	 * The decisions of a file whose relations could not be read: nothing extracted, and no
 	 * fingerprint, so no mark holds.
 	 *
-	 * @var array{count: int, manual: int, fingerprint: null, uncertain: int, undecidedUncertain: list<never>}
+	 * @var array{count: 0, manual: 0, fingerprint: null, uncertain: 0, undecidedUncertain: array{}}
 	 */
 	private const NO_DECISIONS = ['count' => 0, 'manual' => 0, 'fingerprint' => null, 'uncertain' => 0, 'undecidedUncertain' => []];
 
@@ -358,8 +358,8 @@ class DocumentReviewService {
 	 * An uncertain finding counts as decided when OpenRegister holds a decision
 	 * for it, or when the reviewer included or skipped it in the workbench.
 	 *
-	 * @param list<array{relationId: int, entityId: int, confidence: float}> $undecidedUncertain The findings without a stored decision.
-	 * @param array<int|string>                                                $decided            The relation ids the reviewer decided in the workbench.
+	 * @param list<array{relationId: int, entityId: int, confidence: float}> $undecidedUncertain The undecided findings.
+	 * @param array<int|string>                                                $decided            The ids decided in the workbench.
 	 *
 	 * @return void
 	 *
@@ -545,11 +545,11 @@ class DocumentReviewService {
 	/**
 	 * Count one relation into the running tally of a file's decisions.
 	 *
-	 * @param array{rows: list<array<int, mixed>>, manual: int, uncertain: int, undecided: list<array<string, mixed>>} $tally       The tally so far.
-	 * @param array<string, mixed>                                                                                    $data        The relation's fields.
-	 * @param float                                                                                                   $certainFrom A detected finding below it is uncertain.
+	 * @param array{rows: list<array<int, mixed>>, manual: int, uncertain: int, undecided: list<array<string, mixed>>} $tally       The tally.
+	 * @param array<string, mixed> $data        The relation's fields.
+	 * @param float                $certainFrom A detected finding below it is uncertain.
 	 *
-	 * @return array{rows: list<array<int, mixed>>, manual: int, uncertain: int, undecided: list<array<string, mixed>>} The tally with the relation counted.
+	 * @return array{rows: list<array<int, mixed>>, manual: int, uncertain: int, undecided: list<array<string, mixed>>} The new tally.
 	 *
 	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.3
 	 */
