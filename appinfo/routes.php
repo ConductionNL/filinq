@@ -380,6 +380,8 @@ $extra = [
         ['name' => 'signerIdentity#callback', 'url' => 'api/signing/identity/callback', 'verb' => 'GET'],
         ['name' => 'signerIdentitySettings#index', 'url' => 'api/settings/signer-identity', 'verb' => 'GET'],
         ['name' => 'signerIdentitySettings#update', 'url' => 'api/settings/signer-identity', 'verb' => 'PUT'],
+        // one-signing-rail-for-the-fleet REQ-DDSRC-004: which apps raise signing requests, admin only.
+        ['name' => 'signingSourcesSettings#index', 'url' => 'api/settings/signing-sources', 'verb' => 'GET'],
 
         // Woo refusal grounds for the pickers, read through the one resolver
         // (grondslagen-read-from-dossiq REQ-GRD-002). Read only.
