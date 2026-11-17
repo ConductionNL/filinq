@@ -202,6 +202,8 @@ export default {
 		 *
 		 * @param {number} mtime Seconds since the epoch.
 		 * @return {string} The date.
+		 *
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.1
 		 */
 		asDate(mtime) {
 			return new Date(mtime * 1000).toLocaleDateString()

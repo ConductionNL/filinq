@@ -68,6 +68,8 @@ export default {
 		 *
 		 * @param {object} document The document.
 		 * @return {string} The uuid.
+		 *
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.4
 		 */
 		uuidOf(document) {
 			return document.uuid || document.id || document['@self']?.id || ''

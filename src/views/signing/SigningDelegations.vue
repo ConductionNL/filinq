@@ -145,6 +145,8 @@ export default {
 		 * @param {object} delegation The delegation.
 		 * @param {string} person The other party.
 		 * @return {string} The line.
+		 *
+		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-1.1
 		 */
 		describe(delegation, person) {
 			return t('filinq', '{person}, {from} to {until}: {types}', {
