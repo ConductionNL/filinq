@@ -118,7 +118,7 @@ class ReceivedStampService {
 	 *
 	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-an-arriving-pdf-may-get-a-stamped-copy-req-ias-003
 	 */
-	public function stampFile(int $fileId, string $date, string $number = ''): ?int {
+	public function stampFile(int $fileId, string $date, string $number = ''): int|null {
 		try {
 			$arrived = $this->rootFolder->getFirstNodeById($fileId);
 			if (($arrived instanceof File) === false || $arrived->getMimetype() !== 'application/pdf') {

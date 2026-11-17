@@ -78,7 +78,7 @@ class IntakeAcknowledgementService {
 		private readonly IL10N $l10n,
 		private readonly ITimeFactory $time,
 		private readonly LoggerInterface $logger,
-		private readonly ?AnsweringRegistration $registrations = null,
+		private readonly AnsweringRegistration|null $registrations = null,
 	) {
 	}//end __construct()
 
@@ -97,7 +97,7 @@ class IntakeAcknowledgementService {
 	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
 	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-sender-who-refused-contact-is-not-written-to-req-ias-002
 	 */
-	public function acknowledge(array $document, array $rule, ?array $inbound = null): ?array {
+	public function acknowledge(array $document, array $rule, array|null $inbound = null): array|null {
 		$template = trim((string)($rule['acknowledgeWith'] ?? ''));
 		if ($template === '' || ($document['status'] ?? '') !== IntakeRepository::STATUS_RECEIVED) {
 			return null;
@@ -134,7 +134,7 @@ class IntakeAcknowledgementService {
 	 *
 	 * @return array<string, string>
 	 */
-	private static function letterData(array $document, ?array $inbound): array {
+	private static function letterData(array $document, array|null $inbound): array {
 		return [
 			'subject' => (string)($document['subject'] ?? ''),
 			'sender' => (string)($document['sender'] ?? ''),
@@ -164,27 +164,55 @@ class IntakeAcknowledgementService {
 		}
 
 		$rendered = $this->documents->generateDocument(templateId: $template, dataRefs: [], options: $options);
+
+		return [
+			'body' => (string)($rendered['html'] ?? $rendered['content'] ?? ''),
+			'fileId' => self::storedFileId(rendered: $rendered, format: $format),
+			'record' => self::generatedRecord(metadata: ($rendered['metadata'] ?? [])),
+		];
+	}//end render()
+
+	/**
+	 * The file a rendering stored, required for a letter for the outgoing post.
+	 *
+	 * @param array<string, mixed> $rendered What generateDocument answered.
+	 * @param string               $format   html or pdf.
+	 *
+	 * @return int|null The file id, or null when nothing was stored.
+	 *
+	 * @throws \RuntimeException When a letter for the outgoing post was not stored.
+	 */
+	private static function storedFileId(array $rendered, string $format): int|null {
 		$fileId = ($rendered['output']['fileId'] ?? null);
-		if ($format === 'pdf' && (is_int($fileId) === false || $fileId <= 0)) {
+		if (is_int($fileId) === true && $fileId > 0) {
+			return $fileId;
+		}
+
+		if ($format === 'pdf') {
 			throw new \RuntimeException('the letter for the outgoing post was not stored');
 		}
 
 		if (is_int($fileId) === false) {
-			$fileId = null;
+			return null;
 		}
 
-		$metadata = ($rendered['metadata'] ?? []);
-		$record = '';
-		if (is_array($metadata) === true) {
-			$record = (string)($metadata['uuid'] ?? $metadata['id'] ?? ($metadata['@self']['uuid'] ?? ''));
+		return $fileId;
+	}//end storedFileId()
+
+	/**
+	 * The generated document entry a rendering names in its metadata.
+	 *
+	 * @param mixed $metadata The rendering's metadata.
+	 *
+	 * @return string The entry's uuid, or '' when there is none.
+	 */
+	private static function generatedRecord(mixed $metadata): string {
+		if (is_array($metadata) === false) {
+			return '';
 		}
 
-		return [
-			'body' => (string)($rendered['html'] ?? $rendered['content'] ?? ''),
-			'fileId' => $fileId,
-			'record' => $record,
-		];
-	}//end render()
+		return (string)($metadata['uuid'] ?? $metadata['id'] ?? ($metadata['@self']['uuid'] ?? ''));
+	}//end generatedRecord()
 
 	/**
 	 * Register a sent or queued acknowledgement as the outbound answer to the
@@ -197,7 +225,7 @@ class IntakeAcknowledgementService {
 	 *
 	 * @return array<string, mixed> The outcome, with `registration` when one was written.
 	 */
-	private function registerAnswer(array $outcome, ?array $inbound, string $letterRecord): array {
+	private function registerAnswer(array $outcome, array|null $inbound, string $letterRecord): array {
 		$wentOut = in_array($outcome['status'], [self::STATUS_SENT, self::STATUS_QUEUED_AS_LETTER], true);
 		if ($this->registrations === null || $inbound === null || $wentOut === false) {
 			return $outcome;
@@ -247,7 +275,7 @@ class IntakeAcknowledgementService {
 	 *
 	 * @return array<string, mixed> The outcome.
 	 */
-	private function fromSendOutcome(string $outcome, ?string $address): array {
+	private function fromSendOutcome(string $outcome, string|null $address): array {
 		if (in_array($outcome, self::DISPATCHED, true) === true) {
 			return $this->outcome(status: self::STATUS_SENT, details: ['address' => $address]);
 		}

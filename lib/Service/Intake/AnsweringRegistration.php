@@ -76,7 +76,7 @@ class AnsweringRegistration {
 	 *
 	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
 	 */
-	public function inboundFor(string $documentUuid): ?array {
+	public function inboundFor(string $documentUuid): array|null {
 		$uuid = trim($documentUuid);
 		if ($uuid === '') {
 			return null;
@@ -98,7 +98,18 @@ class AnsweringRegistration {
 			return null;
 		}
 
-		foreach ((array)$results as $row) {
+		return self::firstInbound(results: (array)$results);
+	}//end inboundFor()
+
+	/**
+	 * The first inbound entry among the rows a search answered.
+	 *
+	 * @param array<mixed> $results The rows.
+	 *
+	 * @return array<string, mixed>|null The entry with its `uuid`, or null when none is inbound.
+	 */
+	private static function firstInbound(array $results): array|null {
+		foreach ($results as $row) {
 			$entry = (new StoredRecordFields())->read(row: $row);
 			if (($entry['uuid'] ?? '') !== '' && ($entry['direction'] ?? '') === 'inbound') {
 				return $entry;
@@ -106,7 +117,31 @@ class AnsweringRegistration {
 		}
 
 		return null;
-	}//end inboundFor()
+	}//end firstInbound()
+
+	/**
+	 * The outbound entry answering an inbound registration with a letter.
+	 *
+	 * @param array<string, mixed> $inbound    The inbound registration, with its `uuid` and `unit`.
+	 * @param string               $letterUuid The document that went out.
+	 *
+	 * @return array<string, string>|null The entry to save, or null when the inbound one or the letter is missing.
+	 */
+	private function answerEntry(array $inbound, string $letterUuid): array|null {
+		$answers = trim((string)($inbound['uuid'] ?? ''));
+		$unit = trim((string)($inbound['unit'] ?? ''));
+		if ($answers === '' || $unit === '' || trim($letterUuid) === '') {
+			return null;
+		}
+
+		return [
+			'direction' => 'outbound',
+			'registeredAt' => $this->time->getDateTime('now', new \DateTimeZone('UTC'))->format('c'),
+			'unit' => $unit,
+			'document' => trim($letterUuid),
+			'answers' => $answers,
+		];
+	}//end answerEntry()
 
 	/**
 	 * Register the acknowledgement as the outbound answer to an inbound registration.
@@ -119,22 +154,15 @@ class AnsweringRegistration {
 	 *
 	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
 	 */
-	public function registerAnswer(array $inbound, string $letterUuid): ?array {
-		$answers = trim((string)($inbound['uuid'] ?? ''));
-		$unit = trim((string)($inbound['unit'] ?? ''));
-		if ($answers === '' || $unit === '' || trim($letterUuid) === '') {
+	public function registerAnswer(array $inbound, string $letterUuid): array|null {
+		$entry = $this->answerEntry(inbound: $inbound, letterUuid: $letterUuid);
+		if ($entry === null) {
 			return null;
 		}
 
 		try {
 			$saved = $this->objectResolver->resolve()->saveObject(
-				object: [
-					'direction' => 'outbound',
-					'registeredAt' => $this->time->getDateTime('now', new \DateTimeZone('UTC'))->format('c'),
-					'unit' => $unit,
-					'document' => trim($letterUuid),
-					'answers' => $answers,
-				],
+				object: $entry,
 				options: new ObjectSaveOptions(
 					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA)
 				)
@@ -142,16 +170,16 @@ class AnsweringRegistration {
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				message: '[AnsweringRegistration] the acknowledgement could not be registered as outgoing post',
-				context: ['file' => __FILE__, 'line' => __LINE__, 'answers' => $answers, 'error' => $e->getMessage()]
+				context: ['file' => __FILE__, 'line' => __LINE__, 'answers' => $entry['answers'], 'error' => $e->getMessage()]
 			);
 			return null;
 		}
 
-		$entry = (new StoredRecordFields())->read(row: $saved);
-		if (($entry['uuid'] ?? '') === '') {
+		$stored = (new StoredRecordFields())->read(row: $saved);
+		if (($stored['uuid'] ?? '') === '') {
 			return null;
 		}
 
-		return $entry;
+		return $stored;
 	}//end registerAnswer()
 }//end class

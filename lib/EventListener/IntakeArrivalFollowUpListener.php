@@ -60,8 +60,8 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 		private readonly IntakeAcknowledgementService $acknowledgement,
 		private readonly IntakeRepository $repository,
 		private readonly LoggerInterface $logger,
-		private readonly ?ReceivedStampService $stamp = null,
-		private readonly ?AnsweringRegistration $registrations = null,
+		private readonly ReceivedStampService|null $stamp = null,
+		private readonly AnsweringRegistration|null $registrations = null,
 	) {
 	}//end __construct()
 
@@ -75,17 +75,15 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
 	 */
 	public function handle(Event $event): void {
-		if (is_a($event, 'OCA\\OpenRegister\\Event\\ObjectCreatedEvent') === false || method_exists($event, 'getObject') === false) {
+		if (self::isObjectCreated(event: $event) === false) {
 			return;
 		}
 
 		try {
-			$object = $event->getObject();
-			if (is_object($object) === false || $this->isIntakeDocument(schema: (string)$object->getSchema()) === false) {
-				return;
+			$object = $this->intakeObject(event: $event);
+			if ($object !== null) {
+				$this->followUp(uuid: (string)$object->getUuid(), document: (array)$object->getObject());
 			}
-
-			$this->followUp(uuid: (string)$object->getUuid(), document: (array)$object->getObject());
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				message: '[IntakeArrivalFollowUpListener] the arrival follow-up failed; the document is kept as it arrived',
@@ -93,6 +91,37 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 			);
 		}
 	}//end handle()
+
+	/**
+	 * Whether the event is an object creation that carries its object.
+	 *
+	 * @param Event $event The event.
+	 *
+	 * @return bool
+	 */
+	private static function isObjectCreated(Event $event): bool {
+		return is_a($event, 'OCA\\OpenRegister\\Event\\ObjectCreatedEvent') === true && method_exists($event, 'getObject') === true;
+	}//end isObjectCreated()
+
+	/**
+	 * The created object when it is an intake document.
+	 *
+	 * @param Event $event An object creation event.
+	 *
+	 * @return object|null The object, or null when it is not an intake document.
+	 */
+	private function intakeObject(Event $event): object|null {
+		$object = $event->getObject();
+		if (is_object($object) === false) {
+			return null;
+		}
+
+		if ($this->isIntakeDocument(schema: (string)$object->getSchema()) === false) {
+			return null;
+		}
+
+		return $object;
+	}//end intakeObject()
 
 	/**
 	 * Acknowledge under the document's rule and write the outcome.
@@ -110,30 +139,72 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 
 		$inbound = $this->registrations?->inboundFor(documentUuid: $uuid);
 
-		$outcome = [];
-		try {
-			$acknowledgement = $this->acknowledgement->acknowledge(document: ['uuid' => $uuid] + $document, rule: $rule, inbound: $inbound);
-			if ($acknowledgement !== null) {
-				$outcome['acknowledgement'] = $acknowledgement;
-			}
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				message: '[IntakeArrivalFollowUpListener] the acknowledgement failed; the document is kept as it arrived',
-				context: ['uuid' => $uuid, 'error' => $e->getMessage()]
-			);
-		}
-
-		$stamped = $this->stampedCopy(document: $document, rule: $rule, number: (string)($inbound['registrationNumber'] ?? ''));
-		if ($stamped !== null) {
-			$outcome['stampedRendition'] = $stamped;
-		}
-
+		$outcome = $this->acknowledgementOutcome(uuid: $uuid, document: $document, rule: $rule, inbound: $inbound)
+			+ $this->stampOutcome(document: $document, rule: $rule, number: (string)($inbound['registrationNumber'] ?? ''));
 		if ($outcome === []) {
 			return;
 		}
 
 		$this->repository->save(document: array_merge($document, $outcome), uuid: $uuid);
 	}//end followUp()
+
+	/**
+	 * The acknowledgement under the rule, as the fields to write.
+	 *
+	 * @param string                    $uuid     The document's uuid.
+	 * @param array<string, mixed>      $document The document as saved.
+	 * @param array<string, mixed>      $rule     The rule it names.
+	 * @param array<string, mixed>|null $inbound  The inbound registration, or null.
+	 *
+	 * @return array<string, mixed> `acknowledgement` when there is one, else empty.
+	 */
+	private function acknowledgementOutcome(string $uuid, array $document, array $rule, array|null $inbound): array {
+		try {
+			$acknowledgement = $this->acknowledgement->acknowledge(document: ['uuid' => $uuid] + $document, rule: $rule, inbound: $inbound);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				message: '[IntakeArrivalFollowUpListener] the acknowledgement failed; the document is kept as it arrived',
+				context: ['uuid' => $uuid, 'error' => $e->getMessage()]
+			);
+			return [];
+		}
+
+		if ($acknowledgement === null) {
+			return [];
+		}
+
+		return ['acknowledgement' => $acknowledgement];
+	}//end acknowledgementOutcome()
+
+	/**
+	 * The stamped copy, as the fields to write.
+	 *
+	 * @param array<string, mixed> $document The document as saved.
+	 * @param array<string, mixed> $rule     The rule it names.
+	 * @param string               $number   The inbound registration number, or empty.
+	 *
+	 * @return array<string, int> `stampedRendition` when a copy was made, else empty.
+	 */
+	private function stampOutcome(array $document, array $rule, string $number): array {
+		$stamped = $this->stampedCopy(document: $document, rule: $rule, number: $number);
+		if ($stamped === null) {
+			return [];
+		}
+
+		return ['stampedRendition' => $stamped];
+	}//end stampOutcome()
+
+	/**
+	 * Whether the rule asks for a stamped copy and there is a file to stamp.
+	 *
+	 * @param array<string, mixed> $rule   The rule.
+	 * @param mixed                $fileId The document's `file`.
+	 *
+	 * @return bool
+	 */
+	private function wantsStamp(array $rule, mixed $fileId): bool {
+		return $this->stamp !== null && ($rule['stampReceived'] ?? false) === true && is_int($fileId) === true && $fileId > 0;
+	}//end wantsStamp()
 
 	/**
 	 * The stamped copy of the arrived PDF, when the rule asks for one
@@ -149,9 +220,9 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 	 *
 	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-an-arriving-pdf-may-get-a-stamped-copy-req-ias-003
 	 */
-	private function stampedCopy(array $document, array $rule, string $number): ?int {
+	private function stampedCopy(array $document, array $rule, string $number): int|null {
 		$fileId = $document['file'] ?? null;
-		if ($this->stamp === null || ($rule['stampReceived'] ?? false) !== true || is_int($fileId) === false || $fileId <= 0) {
+		if ($this->wantsStamp(rule: $rule, fileId: $fileId) === false) {
 			return null;
 		}
 
