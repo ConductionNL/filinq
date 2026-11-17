@@ -33,7 +33,7 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
 
 **Support:** For support, contact support@conduction.nl. For a Service Level Agreement (SLA), contact sales@conduction.nl.
     ]]></description>
-    <version>0.2.8-unstable.20261116210000</version>
+    <version>0.2.8-unstable.20261117030000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Filinq</namespace>
@@ -211,7 +211,6 @@ Create a [feature request](https://github.com/ConductionNL/filinq/issues/new)
             <step>OCA\Filinq\Repair\ConsolidateRegisters</step>
             <!-- Hands rows of the server-only evidence schemas to the system identity; idempotent, deletes nothing. -->
             <step>OCA\Filinq\Repair\UnownEvidenceRecords</step>
-            <step>OCA\Filinq\Repair\BackfillDefaultOrganisation</step>
             <!-- WRITTEN BUT NEVER REGISTERED until now, so it never ran
                  anywhere. gate-98 (repair-step-registration) found it, and the
                  same step was unregistered in integriq (#1603).

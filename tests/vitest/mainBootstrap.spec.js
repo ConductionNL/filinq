@@ -8,7 +8,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md
+ * @spec openspec/changes/archive/2026-11-17-filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'

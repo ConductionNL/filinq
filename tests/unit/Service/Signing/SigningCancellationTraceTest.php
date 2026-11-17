@@ -37,7 +37,7 @@ use Throwable;
  * @covers \OCA\Filinq\Service\Signing\SigningCancellationService
  * @uses   \OCA\Filinq\Exception\SigningCancellationNotSupportedException
  *
- * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+ * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
  */
 class SigningCancellationTraceTest extends TestCase {
 
