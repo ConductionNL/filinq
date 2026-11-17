@@ -281,49 +281,19 @@ class DossierRegisterConfigTest extends TestCase {
 		$this->assertArrayHasKey('description', $base['properties']);
 	}
 
-	public function testSeedObjectsIncludeAllCanonicalWooArt5Grondslagen(): void {
-		// The merge adopted Robert's canonical grondslagen taxonomy: the Woo
-		// Art. 5 A–S legend (uitzonderingsgronden), which supersedes
-		// development's earlier six ad-hoc bases. The seed slugs follow the
-		// article numbering (art-5-1-1-a … art-5-2-2).
-		$expectedSlugs = [
-			'art-5-1-1-a',
-			'art-5-1-1-b',
-			'art-5-1-1-c',
-			'art-5-1-1-d',
-			'art-5-1-1-e',
-			'art-5-1-2-a',
-			'art-5-1-2-b',
-			'art-5-1-2-c',
-			'art-5-1-2-d',
-			'art-5-1-2-e',
-			'art-5-1-2-f',
-			'art-5-1-2-g',
-			'art-5-1-2-h',
-			'art-5-1-2-i',
-			'art-5-1-4',
-			'art-5-1-5',
-			'art-5-1-6',
-			'art-5-2-1',
-			'art-5-2-2',
-		];
-
-		$baseSeeds = $this->seedObjectsForSchema('base');
-
+	public function testNoWooBaseIsSeeded(): void {
+		// grondslagen-read-from-dossiq retired the 19 Woo Art. 5 `base` seeds
+		// (art-5-1-1-a … art-5-2-2): the Woo grounds come from dossiq's list,
+		// and stored references to the old slugs are re-pointed by the
+		// RepointRefusalGrounds repair. `base` keeps a tenant's own bases only.
 		$foundSlugs = array_map(
 			static fn (array $object): string => (string)($object['@self']['slug'] ?? ''),
-			$baseSeeds
+			$this->seedObjectsForSchema('base')
 		);
 
-		foreach ($expectedSlugs as $slug) {
-			$this->assertContains($slug, $foundSlugs, "Seed base '$slug' MUST be present");
+		foreach ($foundSlugs as $slug) {
+			$this->assertDoesNotMatchRegularExpression('/^(art-5-|5\.\d)/', $slug, "Seed base '$slug' is a Woo ground");
 		}
-
-		$this->assertCount(
-			count($expectedSlugs),
-			$baseSeeds,
-			'The canonical Woo Art. 5 A–S legend must seed exactly ' . count($expectedSlugs) . ' base objects'
-		);
 	}
 
 	public function testFiveOrMoreSeedDossiersExist(): void {

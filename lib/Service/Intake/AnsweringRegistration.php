@@ -23,6 +23,8 @@ namespace OCA\Filinq\Service\Intake;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\StoredRecordFields;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -133,8 +135,9 @@ class AnsweringRegistration {
 					'document' => trim($letterUuid),
 					'answers' => $answers,
 				],
-				register: self::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA)
+				)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

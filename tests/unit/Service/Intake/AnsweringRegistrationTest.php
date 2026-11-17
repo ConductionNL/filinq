@@ -24,6 +24,8 @@ namespace OCA\Filinq\Tests\Unit\Service\Intake;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Intake\AnsweringRegistration;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -117,8 +119,7 @@ class AnsweringRegistrationTest extends TestCase {
 					'document' => 'gen-1',
 					'answers' => 'reg-in',
 				],
-				'filinq',
-				'documentRegistration'
+				new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'documentRegistration'))
 			)
 			->willReturn(['id' => 'reg-out', 'direction' => 'outbound', 'answers' => 'reg-in', 'registrationNumber' => '2026-00043']);
 

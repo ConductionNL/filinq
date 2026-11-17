@@ -104,6 +104,16 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 						</template>
 						{{ t('filinq', 'Assign') }}
 					</NcActionButton>
+					<NcActionButton
+						v-if="mayRemovePassword(row)"
+						closeAfterClick
+						data-testid="intake-remove-password"
+						@click="openUnlock(row)">
+						<template #icon>
+							<LockOpenVariant :size="20" />
+						</template>
+						{{ t('filinq', 'Remove password') }}
+					</NcActionButton>
 					<NcActionButton closeAfterClick @click="openReject(row)">
 						<template #icon>
 							<Delete :size="20" />
@@ -141,6 +151,13 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 			@confirm="reject"
 			@cancel="closeDialogs" />
 
+		<!-- REQ-PPR-004: the document then names the copy and keeps what arrived. -->
+		<PdfPasswordModal
+			:show="unlockTarget !== null"
+			:intakeUuid="unlockTarget ? unlockTarget.uuid : ''"
+			@unlocked="load"
+			@close="unlockTarget = null" />
+
 		<SeparatorSheetsDialog
 			v-if="separatorsOpen"
 			@close="separatorsOpen = false" />
@@ -155,9 +172,11 @@ import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import LockOpenVariant from 'vue-material-design-icons/LockOpenVariant.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
 import SeparatorSheetsDialog from '../../dialogs/SeparatorSheetsDialog.vue'
+import PdfPasswordModal from '../../modals/PdfPasswordModal.vue'
 import {
 	acknowledgementColorMap,
 	acknowledgementDetail,
@@ -175,6 +194,7 @@ import {
 	listDetachedDocuments,
 	rejectIntakeDocument,
 } from '../../services/intakeService.js'
+import { mayRemovePassword } from '../../services/pdfPassword.js'
 
 export default {
 	name: 'IntakeIndex',
@@ -190,6 +210,8 @@ export default {
 		FolderOutline,
 		IntakeAssignDialog,
 		SeparatorSheetsDialog,
+		PdfPasswordModal,
+		LockOpenVariant,
 		NcActionButton,
 		NcActions,
 	},
@@ -203,6 +225,7 @@ export default {
 			saving: false,
 			assignTarget: null,
 			rejectTarget: null,
+			unlockTarget: null,
 			actionError: '',
 			loadError: '',
 			notificationReach: null,
@@ -405,6 +428,19 @@ export default {
 			this.actionError = ''
 			this.rejectTarget = null
 			this.assignTarget = row
+		},
+
+		mayRemovePassword,
+
+		/**
+		 * Ask for the password of a row's locked PDF.
+		 *
+		 * @param {object} row The intake document.
+		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 */
+		openUnlock(row) {
+			this.closeDialogs()
+			this.unlockTarget = row
 		},
 
 		openReject(row) {

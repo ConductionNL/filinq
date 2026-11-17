@@ -29,8 +29,8 @@ model OpenConnector's push leg reacts to, the dossier pick-up hooks, and the UI
 
 ## What Changes
 
-- New `bridge` register in `lib/Settings/filinq_register.json` with two
-  schemas:
+- Two new schemas in the `filinq` register (the app's one register) in
+  `lib/Settings/filinq_register.json`:
   - `bridgeSource` — one object per configured external case-system source
     (display name, source type `zgw-drc`/`stuf-zds`, vendor label, reference to
     the OpenConnector synchronization, sync telemetry, computed health).
@@ -72,7 +72,7 @@ model OpenConnector's push leg reacts to, the dossier pick-up hooks, and the UI
 
 ## Impact
 
-- `lib/Settings/filinq_register.json`: new `bridge` register + 2 schemas +
+- `lib/Settings/filinq_register.json`: 2 new schemas in the `filinq` register +
   seed objects (register version bump).
 - New `lib/Service/BridgeService.php` (staging queries, status transitions,
   health computation) and `lib/Controller/BridgeController.php` with routes
@@ -81,7 +81,7 @@ model OpenConnector's push leg reacts to, the dossier pick-up hooks, and the UI
 - `src/manifest.json` + `src/views/settings/` (bridge status panel),
   MyDocuments/document detail (source badge).
 - Dependency (soft): OpenConnector installed and a synchronization configured
-  per source; without OpenConnector the bridge register is inert and the admin
+  per source; without OpenConnector the bridge schemas are inert and the admin
   panel shows "no sources configured". No dependency added to `info.xml`.
 - No change to OpenConnector code — its synchronization engine is consumed
   as-is; the ZGW/StUF specifics live in OpenConnector source/mapping
