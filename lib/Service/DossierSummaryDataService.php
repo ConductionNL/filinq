@@ -31,6 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCA\Filinq\Service\Support\DossierSummaryParts;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
@@ -123,7 +125,12 @@ class DossierSummaryDataService {
 			$userSession,
 			$logger
 		);
-		$this->labelResolver = new BaseLabelResolver($this->repository, $logger);
+		$this->labelResolver = new BaseLabelResolver(
+			$this->repository,
+			$logger,
+			new RefusalGroundsResolver(appManager: $appManager, container: $container, logger: $logger),
+			new RefusalGroundsLegacyMap()
+		);
 		$this->ranker        = new DossierPlaceholderRanker($this->repository, $logger);
 		$this->collector     = new DossierEntityCollector($this->repository, $this->labelResolver, $this->ranker, $logger);
 

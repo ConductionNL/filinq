@@ -980,10 +980,27 @@ class SigningService implements SigningServiceInterface {
 		// MAC-covered assertion and into the completion payload.
 		$freshRequest = $this->guards->assuranceGate->withResolvedAssurance(request: $freshRequest, signers: $signers);
 
-		$signedDocumentRef = $this->outputs->artifactProducer->produce(request: $freshRequest, verifiedActor: $act->verifiedActor, signers: $signers);
+		// The verification token comes first, so the QR code linking to its
+		// public record is part of the bytes that get signed (REQ-DDSVP-005).
+		$verificationToken = $this->outputs->artifactProducer->newVerificationToken();
+		$signedDocumentRef = $this->outputs->artifactProducer->produce(
+			request: $freshRequest,
+			verifiedActor: $act->verifiedActor,
+			signers: $signers,
+			verificationToken: $verificationToken
+		);
 
 		$freshRequest['status'] = 'COMPLETED';
 		$freshRequest['signedDocumentRef'] = $signedDocumentRef;
+		$verificationToken = $this->outputs->artifactProducer->recordVerification(
+			request: $freshRequest,
+			signedDocumentRef: $signedDocumentRef,
+			token: $verificationToken
+		);
+		if ($verificationToken !== null) {
+			$freshRequest['verificationToken'] = $verificationToken;
+		}
+
 		$objectService->saveObject(
 			object: $freshRequest,
 			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),

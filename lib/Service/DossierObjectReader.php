@@ -31,12 +31,14 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\DossierObjectReaderInterface;
+
 /**
  * Reads the shape of an OpenRegister dossier object.
  *
  * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
  */
-class DossierObjectReader {
+class DossierObjectReader implements DossierObjectReaderInterface {
 
 	/**
 	 * The register every filinq schema lives in.

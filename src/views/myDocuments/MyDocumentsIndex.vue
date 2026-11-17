@@ -73,6 +73,13 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							:title="t('filinq', 'The case system holds this document')">
 							{{ t('filinq', 'In the case system') }}
 						</span>
+						<span
+							v-if="sourceBadges[String(row.fileId)]"
+							class="my-documents-case-system-badge"
+							data-testid="my-documents-source-badge"
+							:title="t('filinq', 'The master record of this document is in the case system')">
+							{{ sourceBadgeLabel(sourceBadges[String(row.fileId)]) }}
+						</span>
 					</div>
 				</template>
 
@@ -319,6 +326,7 @@ import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import { ocrRun } from '../../mixins/ocrRun.js'
+import { fetchSourceBadges, sourceBadgeLabel } from '../../services/bridge.js'
 import { fetchCaseSystemFiles } from '../../services/caseSystemFiles.js'
 import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { fetchReviewMarks } from '../../services/reviewMark.js'
@@ -423,6 +431,7 @@ export default {
 			// The latest review mark per file id on this page.
 			reviewMarks: {},
 			caseSystemFiles: {},
+			sourceBadges: {},
 			ocrRunning: {},
 		}
 	},
@@ -528,6 +537,7 @@ export default {
 				this.loadOcrStatus(rows)
 				this.loadReviewMarks(rows)
 				this.loadCaseSystemFiles(rows)
+				this.loadSourceBadges(rows)
 			},
 		},
 	},
@@ -1119,6 +1129,30 @@ export default {
 			try {
 				const delivered = await fetchCaseSystemFiles(ids)
 				this.caseSystemFiles = { ...this.caseSystemFiles, ...delivered }
+			} catch {
+				// No answer: no badge. The list itself still shows.
+			}
+		},
+
+		sourceBadgeLabel,
+
+		/**
+		 * The case-system source of the files on the page, in one request
+		 * (zgw-document-bridge REQ-DDZGW-009).
+		 *
+		 * @param {Array<object>} rows The rows on the page.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/zgw-document-bridge/tasks.md#3-2
+		 */
+		async loadSourceBadges(rows) {
+			const ids = (rows || [])
+				.filter((row) => !row.isFolder && row.fileId)
+				.map((row) => row.fileId)
+			if (ids.length === 0) {
+				return
+			}
+			try {
+				this.sourceBadges = { ...this.sourceBadges, ...(await fetchSourceBadges(ids)) }
 			} catch {
 				// No answer: no badge. The list itself still shows.
 			}

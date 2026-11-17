@@ -72,6 +72,23 @@ class DossierFileService {
 	}//end __construct()
 
 	/**
+	 * The folder of a dossier, by the dossier object's uuid.
+	 *
+	 * @param string $dossierUuid The dossier object's uuid.
+	 *
+	 * @return Folder The dossier folder.
+	 *
+	 * @throws \Throwable When the dossier or its folder cannot be resolved.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge
+	 */
+	public function folderOfDossier(string $dossierUuid): Folder {
+		$context = $this->repository->loadDossierContext(dossierUuid: $dossierUuid);
+
+		return $this->repository->resolveDossierFolder(folderRef: ($context['folderRef'] ?? null));
+	}//end folderOfDossier()
+
+	/**
 	 * Create the dossier's home folder under the caller's Filinq directory.
 	 *
 	 * @param string $name The dossier name.
