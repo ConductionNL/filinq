@@ -41,6 +41,7 @@ interface JobQueueInterface {
 	public const FOLDER_EXTRACTION    = 'folder-extraction';
 	public const INTAKE_OCR           = 'intake-ocr';
 	public const INTAKE_REGISTRY      = 'intake-registry-enrichment';
+	public const PDFUA_ATTACH_CHECK   = 'pdfua-attach-check';
 
 	/**
 	 * Queue a job.
