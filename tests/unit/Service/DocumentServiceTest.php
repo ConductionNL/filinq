@@ -194,7 +194,7 @@ class DocumentServiceTest extends TestCase {
 			'version' => 2,
 		];
 
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn($template);
 
 		$this->dataResolver->method('resolve')
@@ -240,7 +240,7 @@ class DocumentServiceTest extends TestCase {
 			'content' => '<p>{{ naam }}</p>',
 		];
 
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn($template);
 
 		$this->dataResolver->method('resolve')
@@ -273,7 +273,7 @@ class DocumentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testMergePreviewNamesTheFieldsItFills(): void {
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn([
 				'id' => 'tmpl-1',
 				'name' => 'Uitnodiging',
@@ -313,7 +313,7 @@ class DocumentServiceTest extends TestCase {
 			'version' => 1,
 		];
 
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn($template);
 
 		$listRefs = [
@@ -373,7 +373,7 @@ class DocumentServiceTest extends TestCase {
 			'content' => '{% for c in competitors %}{{ c.name }}{% endfor %}',
 		];
 
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn($template);
 
 		$listRefs = [
@@ -420,7 +420,7 @@ class DocumentServiceTest extends TestCase {
 			'version' => 1,
 		];
 
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn($template);
 
 		$this->dataResolver->method('resolve')
@@ -519,7 +519,7 @@ class DocumentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAsyncBulkComputesPerJobTargetPath(): void {
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn(['id' => 'tmpl-1', 'namespace' => 'procest']);
 
 		$capturedArgument = null;
@@ -550,7 +550,7 @@ class DocumentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAsyncBulkQueuesTheFullArgument(): void {
-		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'namespace' => 'ns']);
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))->willReturn(['id' => 'tmpl-1', 'namespace' => 'ns']);
 
 		$captured = null;
 		$this->jobList->expects($this->once())->method('add')->willReturnCallback(
@@ -586,7 +586,7 @@ class DocumentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAsyncBulkStoresTheQueuedStatus(): void {
-		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'namespace' => 'ns']);
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))->willReturn(['id' => 'tmpl-1', 'namespace' => 'ns']);
 
 		$stored = [];
 		$this->appConfig->method('setValueString')->willReturnCallback(
@@ -637,7 +637,7 @@ class DocumentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testPreviewReportsFailedReferencesAsWarnings(): void {
-		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'content' => '<p>x</p>']);
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))->willReturn(['id' => 'tmpl-1', 'content' => '<p>x</p>']);
 		$this->dataResolver->method('resolve')->willReturn(
 			[
 				'data' => ['a' => 1],
@@ -663,7 +663,7 @@ class DocumentServiceTest extends TestCase {
 		$this->expectException(Exception::class);
 		$this->expectExceptionCode(400);
 
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn(['id' => 'tmpl-1', 'content' => '<p>test</p>']);
 
 		$this->service->generateDocument(
@@ -688,7 +688,7 @@ class DocumentServiceTest extends TestCase {
 			'version' => 3,
 		];
 
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn($template);
 
 		$this->dataResolver->method('resolve')
@@ -732,7 +732,7 @@ class DocumentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGenerationWithoutWizardContextUnchanged(): void {
-		$this->templateSvc->method('getTemplate')->willReturn(['name' => 'Brief', 'content' => '<p>x</p>', 'version' => 1]);
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))->willReturn(['name' => 'Brief', 'content' => '<p>x</p>', 'version' => 1]);
 		$this->dataResolver->method('resolve')->willReturn(['data' => [], 'errors' => [], 'warnings' => []]);
 		$this->renderer->method('renderTemplate')->willReturn('<p>x</p>');
 		$this->pdfService->method('renderPdf')->willReturn('%PDF%');
@@ -782,7 +782,7 @@ class DocumentServiceTest extends TestCase {
 			'version' => 1,
 		];
 
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn($template);
 
 		$callCount = 0;
@@ -835,7 +835,7 @@ class DocumentServiceTest extends TestCase {
 			'version' => 1,
 		];
 
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn($template);
 
 		$this->dataResolver->method('resolve')
@@ -895,7 +895,7 @@ class DocumentServiceTest extends TestCase {
 			'footerHtml' => '<footer>Footer</footer>',
 		];
 
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn($template);
 
 		$this->dataResolver->method('resolve')
@@ -943,7 +943,7 @@ class DocumentServiceTest extends TestCase {
 	 * @return void
 	 */
 	private function stubHappyPathGeneration(): void {
-		$this->templateSvc->method('getTemplate')
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))
 			->willReturn([
 				'id' => 'tmpl-1',
 				'name' => 'Beschikking',
@@ -1381,7 +1381,7 @@ class DocumentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testSyncBulkItemsAndFailedEntryGolden(): void {
-		$this->templateSvc->method('getTemplate')->willReturn(
+		$this->templateSvc->method($this->matchesRegularExpression('/^get(Published)?Template$/'))->willReturn(
 			['id' => 'tmpl-1', 'name' => 'Brief', 'content' => '<p>x</p>', 'format' => 'A4', 'version' => 1, 'namespace' => 'ns']
 		);
 		$this->dataResolver->method('resolve')->willReturnCallback(

@@ -129,6 +129,7 @@ class SigningService implements SigningServiceInterface {
 		'subjectSchema',
 		'subjectId',
 		'subjectLabel',
+		'subjectNoun',
 		'externalReference',
 		'correlationId',
 	];
@@ -611,7 +612,76 @@ class SigningService implements SigningServiceInterface {
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null): array {
+		return $this->signAct(
+			act: [
+				'requestId'     => $requestId,
+				'signerId'      => $signerId,
+				'verifiedActor' => $verifiedActor,
+				'signatureData' => $signatureData,
+				'onBehalfOf'    => null,
+			]
+		);
+	}//end sign()
+
+	/**
+	 * Sign, as a delegate, a document that waits for the signer who delegated to them.
+	 *
+	 * The session user is the delegate. The delegation must cover today and the
+	 * document's type, or the signature is refused naming the delegation, before
+	 * anything is written. The signer record keeps both names: `signedBy` is the
+	 * delegate, `signedOnBehalfOf` the signer; the audit entry is the delegate's.
+	 *
+	 * @param string $requestId The signing request ID
+	 * @param string $signerId  The signer record ID of the signer who delegated
+	 * @param string $delegator The signer who delegated
+	 *
+	 * @return array<string, mixed> The updated signer record
+	 *
+	 * @throws RuntimeException When no delegation covers it, or signing fails
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	public function signOnBehalfOf(string $requestId, string $signerId, string $delegator): array {
+		if (trim($delegator) === '') {
+			throw new RuntimeException('A delegated signature names the signer it is for');
+		}
+
+		return $this->signAct(
+			act: [
+				'requestId'     => $requestId,
+				'signerId'      => $signerId,
+				'verifiedActor' => null,
+				'signatureData' => null,
+				'onBehalfOf'    => $delegator,
+			]
+		);
+	}//end signOnBehalfOf()
+
+	/**
+	 * The signing act behind sign() and signOnBehalfOf().
+	 *
+	 * The act holds the signing request id (`requestId`), the signer record id
+	 * (`signerId`), the verified external actor or null (`verifiedActor`), the
+	 * evidence for `signatureData` or null, and the signer a delegate signs for
+	 * or null (`onBehalfOf`).
+	 *
+	 * @param array<string, mixed> $act The act.
+	 *
+	 * @return array<string, mixed> The updated signer record
+	 *
+	 * @throws RuntimeException If signing fails
+	 */
+	private function signAct(array $act): array {
+		$requestId     = $act['requestId'];
+		$signerId      = $act['signerId'];
+		$verifiedActor = $act['verifiedActor'];
+		$signatureData = $act['signatureData'];
+		$onBehalfOf    = $act['onBehalfOf'];
 		[$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
+
+		// A delegated signature is refused before anything is read unless a
+		// delegation from the signer to this user covers today (REQ-SCR-003).
+		$signerUserId = $this->delegatedSignerUserId(onBehalfOf: $onBehalfOf, actorUserId: $actorUserId);
 
 		$objectService = $this->settingsService->getObjectService();
 
@@ -623,16 +693,19 @@ class SigningService implements SigningServiceInterface {
 			requestId: $requestId,
 			signerId: $signerId,
 			verifiedActor: $verifiedActor,
-			actorUserId: $actorUserId,
+			actorUserId: $signerUserId,
 			action: 'sign'
 		);
 
 		$request = $this->loadSignableRequest(requestId: $requestId);
 
+		$this->assertDelegationCoversType(onBehalfOf: $onBehalfOf, actorUserId: $actorUserId, request: $request);
+
 		// The mandate is declared in Nextcloud groups, which an invited portal
 		// signer is not in; the portal path has its own verified-assertion gate.
+		// A delegate exercises the signer's own authority, so the signer's mandate applies.
 		if ($this->guards->mandateService !== null && $verifiedActor === null) {
-			$this->guards->mandateService->assertMaySign(request: $request, userId: $actorUserId);
+			$this->guards->mandateService->assertMaySign(request: $request, userId: $signerUserId);
 		}
 
 		$act = new SigningAct(
@@ -673,18 +746,93 @@ class SigningService implements SigningServiceInterface {
 
 		$signer = $act->stampSigned(signer: array_merge($signer, $consent['record']), ipAddress: $this->actorResolver->getClientIp());
 		$signer = (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $verifiedActor);
+		$signer    = $this->stampDelegation(signer: $signer, onBehalfOf: $onBehalfOf, actorUserId: $actorUserId);
+		$delegated = array_filter(['signedOnBehalfOf' => $onBehalfOf], static fn ($value): bool => $value !== null);
+
 		$objectService->saveObject(
 			object: $signer,
 			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $signerRegister, schema: $signerSchema)),
 			_rbac: false
 		);
 
-		$this->logSigned(act: $act, metadata: array_merge($consent['audit'], ['identityEvidence' => $signer['identityEvidence']]));
+		$this->logSigned(act: $act, metadata: array_merge($consent['audit'], ['identityEvidence' => $signer['identityEvidence']], $delegated));
 		$this->guards->assuranceGate->consume(requestId: $requestId, signerId: $signerId);
 		$this->updateRequestStatus(act: $act);
 
 		return $signer;
-	}//end sign()
+	}//end signAct()
+
+	/**
+	 * The user whose signing authority a signature exercises.
+	 *
+	 * Without a delegator that is the acting user. With one, delegated signing
+	 * must be available and a delegation from the delegator to the acting user
+	 * must cover today, or the signature is refused (REQ-SCR-003).
+	 *
+	 * @param string|null $onBehalfOf  The signer a delegate signs for, or null
+	 * @param string      $actorUserId The acting user
+	 *
+	 * @return string The signer's user ID
+	 *
+	 * @throws RuntimeException When no delegation covers it
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function delegatedSignerUserId(?string $onBehalfOf, string $actorUserId): string {
+		if ($onBehalfOf === null) {
+			return $actorUserId;
+		}
+
+		if ($this->guards->delegations === null) {
+			throw new RuntimeException('Signing refused: delegated signing is not available');
+		}
+
+		$this->guards->delegations->assertMayActFor(delegator: $onBehalfOf, delegate: $actorUserId, typeReference: null);
+
+		return $onBehalfOf;
+	}//end delegatedSignerUserId()
+
+	/**
+	 * Refuse a delegated signature whose delegation does not cover the request's document type.
+	 *
+	 * @param string|null          $onBehalfOf  The signer a delegate signs for, or null
+	 * @param string               $actorUserId The acting user
+	 * @param array<string, mixed> $request     The signing request
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When no delegation covers the document type
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function assertDelegationCoversType(?string $onBehalfOf, string $actorUserId, array $request): void {
+		if ($onBehalfOf === null || $this->guards->delegations === null) {
+			return;
+		}
+
+		$typeReference = (string) $this->guards->mandateService?->typeReference(request: $request);
+		$this->guards->delegations->assertMayActFor(delegator: $onBehalfOf, delegate: $actorUserId, typeReference: $typeReference);
+	}//end assertDelegationCoversType()
+
+	/**
+	 * Record both names on a delegated signature: `signedBy` is the delegate, `signedOnBehalfOf` the signer.
+	 *
+	 * @param array<string, mixed> $signer      The signer record
+	 * @param string|null          $onBehalfOf  The signer a delegate signs for, or null
+	 * @param string               $actorUserId The acting user (the delegate)
+	 *
+	 * @return array<string, mixed> The signer record, stamped when delegated
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 */
+	private function stampDelegation(array $signer, ?string $onBehalfOf, string $actorUserId): array {
+		if ($onBehalfOf !== null) {
+			$signer['signedBy']         = $actorUserId;
+			$signer['signedOnBehalfOf'] = $onBehalfOf;
+		}
+
+		return $signer;
+	}//end stampDelegation()
 
 	/**
 	 * Load a signing request that can still be signed.
