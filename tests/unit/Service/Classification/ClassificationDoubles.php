@@ -29,6 +29,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Classification;
 use OCA\Filinq\Tests\Unit\Service\Wizard\WizardObjectStore;
 use OCA\OpenRegister\Service\ObjectService;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * In-memory classificationResult and dossier rows.
@@ -63,14 +64,15 @@ class ClassificationObjectStore extends ObjectService {
 	 */
 	public function saveObject(
 		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $_unowned = false,
-		?string $_owner = null,
+		bool $_multitenancy = true
 	) {
+		$register = $options->target->register ?? '';
+		$schema = $options->target->schema ?? '';
+		$uuid = $options->uuid;
+		$_unowned = $options->actor->unowned ?? false;
+		$_owner = $options->actor->owner;
 		if ($register !== 'filinq' || $schema !== 'classificationResult') {
 			throw new RuntimeException('unexpected target ' . $register . '/' . $schema);
 		}

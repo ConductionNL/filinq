@@ -24,7 +24,7 @@ namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Event\DocumentStampRequestedEvent;
 use OCA\Filinq\Exception\PdfStampRefusal;
-use OCA\Filinq\Service\PdfStampService;
+use OCA\Filinq\Kernel\Contracts\PdfStampServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -44,11 +44,11 @@ class DocumentStampRequestedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param PdfStampService $stamps The stamping service.
+	 * @param PdfStampServiceInterface $stamps The stamping service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private readonly PdfStampService $stamps,
+		private readonly PdfStampServiceInterface $stamps,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

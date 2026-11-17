@@ -43,6 +43,9 @@ parameters:
         # keys, config form and taxonomy companions), so the stub is what lets
         # PHPStan check the node against the real interface shape.
         - tests/stubs/openregister-flow.stub.php
+        # OpenRegister's integration provider contract (template-library-leaf):
+        # TemplatesLeafProvider implements it, so the same non-ignorable rule applies.
+        - tests/stubs/openregister-integration.stub.php
 
     ignoreErrors:
         # @template-implements IEventListener<OCA\OpenRegister\Event\*> in listeners:

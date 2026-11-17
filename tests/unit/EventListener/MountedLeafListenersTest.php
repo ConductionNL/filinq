@@ -25,6 +25,7 @@ namespace OCA\Filinq\Tests\Unit\EventListener;
 use OCA\Filinq\EventListener\RegisterDocumentIntakeLeafListener;
 use OCA\Filinq\EventListener\RegisterDocumentsLeafListener;
 use OCA\Filinq\EventListener\RegisterDownloadAllFilesLeafListener;
+use OCA\Filinq\EventListener\RegisterGenerateDocumentLeafListener;
 use OCA\Filinq\EventListener\RegisterMergeToPdfLeafListener;
 use OCA\Filinq\EventListener\RegisterSigningFolderLeafListener;
 use OCA\OpenRegister\Event\RegisterLeafProvidersEvent;
@@ -48,6 +49,7 @@ use RuntimeException;
  * @covers \OCA\Filinq\EventListener\RegisterDocumentIntakeLeafListener
  * @covers \OCA\Filinq\EventListener\RegisterDocumentsLeafListener
  * @covers \OCA\Filinq\EventListener\RegisterDownloadAllFilesLeafListener
+ * @covers \OCA\Filinq\EventListener\RegisterGenerateDocumentLeafListener
  * @covers \OCA\Filinq\EventListener\RegisterMergeToPdfLeafListener
  * @covers \OCA\Filinq\EventListener\RegisterSigningFolderLeafListener
  */
@@ -63,6 +65,7 @@ class MountedLeafListenersTest extends TestCase {
 			'DocumentIntake' => [RegisterDocumentIntakeLeafListener::class, 'filinq-document-intake', 'Documents waiting to be filed', 'InboxArrowDown', 'documents', ['detail-page', 'single-entity']],
 			'Documents' => [RegisterDocumentsLeafListener::class, 'filinq-documents', 'Documents', 'FileDocumentMultipleOutline', 'documents', ['detail-page', 'single-entity']],
 			'DownloadAllFiles' => [RegisterDownloadAllFilesLeafListener::class, 'filinq-download-all-files', 'Download all files', 'FolderZipOutline', 'documents', ['detail-page', 'single-entity']],
+			'GenerateDocument' => [RegisterGenerateDocumentLeafListener::class, 'filinq-generate-document', 'Generate document', 'FileDocumentEditOutline', 'documents', ['detail-page', 'single-entity']],
 			'MergeToPdf' => [RegisterMergeToPdfLeafListener::class, 'filinq-merge-to-pdf', 'Merge to PDF', 'FilePdfBox', 'documents', ['detail-page', 'single-entity']],
 			'SigningFolder' => [RegisterSigningFolderLeafListener::class, 'filinq-signing-folder', 'Waiting for your signature', 'FileSign', 'signing', ['user-dashboard', 'app-dashboard']],
 		];

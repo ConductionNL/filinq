@@ -39,6 +39,9 @@ use OCA\Filinq\Service\Extraction\IbanExtractor;
 use OCA\Filinq\Service\Extraction\KvkExtractor;
 use OCA\Filinq\Service\Extraction\TotalsReconciler;
 use OCA\Filinq\Service\Extraction\VatIdExtractor;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -264,7 +267,10 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		// not.
 		['register' => $register, 'schema' => $schema] = $this->registerResolver->getFinancialExtractionRegisterAndSchema();
 
-		$saved = $objectService->saveObject(object: $payload, register: $register, schema: $schema);
+		$saved = $objectService->saveObject(
+			object: $payload,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
+		);
 		$savedArray = $this->toArray(object: $saved);
 
 		if ($request['callbackEvent'] === true) {
@@ -376,7 +382,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		// unconfigured instance denied corrections for extractions that exist.
 		['register' => $register, 'schema' => $schema] = $this->registerResolver->getFinancialExtractionRegisterAndSchema();
 
-		$object = $objectService->find(id: $id, register: $register, schema: $schema);
+		$object = $objectService->find(id: $id, options: new ObjectFindOptions(register: $register, schema: $schema));
 		if ($object === null) {
 			throw new RuntimeException('Financial extraction not found: ' . $id, 404);
 		}
@@ -400,7 +406,10 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		// `fieldConfidence`, `overallConfidence`) is left untouched.
 		$data['corrections'] = $corrections;
 
-		$saved = $objectService->saveObject(object: $data, register: $register, schema: $schema);
+		$saved = $objectService->saveObject(
+			object: $data,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
+		);
 
 		return $this->toArray(object: $saved);
 	}//end addCorrection()

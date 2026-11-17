@@ -26,8 +26,8 @@ namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Service\Detection\DetectionProviderConfig;
-use OCA\Filinq\Service\Detection\LlmDetectionProvider;
+use OCA\Filinq\Kernel\Contracts\DetectionProviderConfigInterface;
+use OCA\Filinq\Kernel\Contracts\LlmDetectionProviderInterface;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -59,8 +59,8 @@ class DetectionProviderSettingsController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                $request      The request.
-	 * @param DetectionProviderConfig $config       The detection settings.
-	 * @param LlmDetectionProvider    $llmProvider  The LLM provider, for the connectivity test.
+	 * @param DetectionProviderConfigInterface $config       The detection settings.
+	 * @param LlmDetectionProviderInterface    $llmProvider  The LLM provider, for the connectivity test.
 	 * @param IUserSession            $userSession  The session.
 	 * @param IGroupManager           $groupManager The admin check.
 	 *
@@ -68,8 +68,8 @@ class DetectionProviderSettingsController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly DetectionProviderConfig $config,
-		private readonly LlmDetectionProvider $llmProvider,
+		private readonly DetectionProviderConfigInterface $config,
+		private readonly LlmDetectionProviderInterface $llmProvider,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 	) {
