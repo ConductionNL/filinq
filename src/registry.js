@@ -76,6 +76,7 @@ import CustomDictionaryIndex from './views/customDictionary/CustomDictionaryInde
 import DashboardIndex from './views/dashboard/DashboardIndex.vue'
 import DossierDetail from './views/dossier/DossierDetail.vue'
 import DossierIndex from './views/dossier/DossierIndex.vue'
+import DraftEditor from './views/drafts/DraftEditor.vue'
 import EmailIngestion from './views/emailIngestion/EmailIngestion.vue'
 import EntitySearch from './views/entitySearch/EntitySearch.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
@@ -129,6 +130,7 @@ export default {
 	VersionsView: { kind: 'page', component: VersionsView },
 	ComponentGallery: { kind: 'page', component: ComponentGallery },
 	CorrespondenceIndex: { kind: 'page', component: CorrespondenceIndex },
+	DraftEditor: { kind: 'page', component: DraftEditor },
 	ProhibitionIndex: { kind: 'page', component: PolicyRuleIndex },
 	StandingConsentIndex: { kind: 'page', component: PolicyRuleIndex },
 	CustomDictionaryIndex: { kind: 'page', component: CustomDictionaryIndex },

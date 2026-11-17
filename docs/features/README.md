@@ -98,6 +98,7 @@ Features that are specified and actively being developed or reviewed.
 | [Review Workbench](./review-workbench.md) | review-workbench.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
 | [Print Preview](./print-preview.md) | print-preview.md | Outputmanagementcomponent | TEC-DMS-1 | Reviewed |
 | [Letter & Correspondence Generation](./letter-correspondence-generation.md) | letter-correspondence-generation.md | Outputmanagementcomponent | TEC-DMS-1 | Proposed |
+| [Edit a document before it is stored](./generation-drafts.md) | generation-drafts.md | Documentcreatiecomponent | TEC-DMS-1 | In progress |
 | [Document Creation from Templates](./document-creatie-sjablonen.md) | document-creatie-sjablonen.md | Documentcreatiecomponent | TEC-DMS-1 | Proposed |
 | [Register i18n](./register-i18n.md) | register-i18n.md | — | TEC-DMS-1 | Proposed |
 | [GDPR Anonymization](./gdpr-anonymization.md) | gdpr-anonymization.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
