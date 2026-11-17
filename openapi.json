@@ -298,6 +298,18 @@
         {
             "name": "grounds",
             "description": "Reads the Woo refusal grounds the pickers offer, from dossiq or the read-only snapshot"
+        },
+        {
+            "name": "waiting-work",
+            "description": "Lists what waits for the caller: signatures, acceptances, routed intake documents and documents due for review"
+        },
+        {
+            "name": "personal-data-report",
+            "description": "Lists the documents the reader may open that hold personal data, and whether an anonymised copy exists"
+        },
+        {
+            "name": "document-audit",
+            "description": "Reads the audit trail of one document the caller may open"
         }
     ],
     "paths": {
