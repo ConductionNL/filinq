@@ -61,6 +61,8 @@ class PublicationReadiness {
 	 * @param PublicationStore               $store         The redacted copy
 	 * @param RedactionAccessibilityService|null $accessibility Whether the redacted copy kept its accessibility,
 	 *                                                          and what that means for the hand-off
+	 * @param PdfUaReadinessCheck|null      $pdfUa         Which PDFs of the record did not pass PDF/UA,
+	 *                                                     and whether that blocks the hand-off
 	 *
 	 * @return void
 	 */
@@ -71,6 +73,7 @@ class PublicationReadiness {
 		private readonly RedactionReviewMarkRepository $marks,
 		private readonly PublicationStore $store,
 		private readonly ?RedactionAccessibilityService $accessibility = null,
+		private readonly ?PdfUaReadinessCheck $pdfUa = null,
 	) {
 
 	}//end __construct()
@@ -87,6 +90,7 @@ class PublicationReadiness {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
 	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.3
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-publication-readiness-counts-a-pdfua-verdict-that-did-not-pass-req-ddpum-007
 	 */
 	public function evaluate(array $record, DateTimeImmutable $now): array {
 		$fileId = (string) ($record['documentFileRef'] ?? '');
@@ -94,12 +98,13 @@ class PublicationReadiness {
 		[$redacted, $reviewed, $reasons] = $this->reviewState(fileId: $fileId);
 		[$consentClear, $prohibitionsClear, $more] = $this->consentAndProhibitions(fileId: $fileId, now: $now);
 		[$record, $warnings] = $this->withAccessibility(record: $record, redacted: $redacted);
+		[$record, $pdfUaReasons] = $this->withPdfUa(record: $record, fileIds: [$redacted, $fileId]);
 
 		$record['redactedFileRef'] = $redacted;
 		$record['entitiesReviewed'] = $redacted !== '' && $reviewed === true;
 		$record['consentClear'] = $consentClear;
 		$record['prohibitionsClear'] = $prohibitionsClear;
-		$record['readinessReasons'] = array_merge($reasons, $warnings, $more);
+		$record['readinessReasons'] = array_merge($reasons, $warnings, $pdfUaReasons, $more);
 		$record['readinessEvaluatedAt'] = $now->format(DateTimeInterface::ATOM);
 
 		return $record;
@@ -115,6 +120,7 @@ class PublicationReadiness {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.2
 	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.3
+	 * @spec openspec/changes/pdfua-verapdf-matterhorn/specs/pdfua-verapdf-matterhorn/spec.md#requirement-publication-readiness-counts-a-pdfua-verdict-that-did-not-pass-req-ddpum-007
 	 */
 	public function isReady(array $record): bool {
 		$accessible = $this->isAccessible(record: $record);
@@ -122,7 +128,8 @@ class PublicationReadiness {
 		return ($record['entitiesReviewed'] ?? false) === true
 			&& ($record['consentClear'] ?? false) === true
 			&& ($record['prohibitionsClear'] ?? false) === true
-			&& $accessible === true;
+			&& $accessible === true
+			&& PdfUaReadinessCheck::lets(gate: (string) ($record['pdfUaGate'] ?? PdfUaReadinessCheck::GATE_CLEAR)) === true;
 
 	}//end isReady()
 
@@ -207,6 +214,29 @@ class PublicationReadiness {
 		return [$record, []];
 
 	}//end withAccessibility()
+
+	/**
+	 * Record the PDF/UA gate of the record's PDFs and its reasons.
+	 *
+	 * Only asked when the PDF/UA check is available; without it the record
+	 * keeps no `pdfUaGate` and the hand-off is not held on it.
+	 *
+	 * @param array<string, mixed> $record  The publication record
+	 * @param array<int, string>   $fileIds The redacted copy and the document
+	 *
+	 * @return array{0: array<string, mixed>, 1: list<string>} The record and the reasons.
+	 */
+	private function withPdfUa(array $record, array $fileIds): array {
+		if ($this->pdfUa === null) {
+			return [$record, []];
+		}
+
+		$verdict = $this->pdfUa->evaluate(fileIds: $fileIds, documentType: (string) ($record['documentType'] ?? ''));
+		$record['pdfUaGate'] = $verdict['gate'];
+
+		return [$record, $verdict['reasons']];
+
+	}//end withPdfUa()
 
 	/**
 	 * Whether the recorded accessibility state lets the document through.
