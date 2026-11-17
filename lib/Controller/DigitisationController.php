@@ -28,9 +28,9 @@ namespace OCA\Filinq\Controller;
 
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\DigitisationWorklistInterface;
+use OCA\Filinq\Kernel\Contracts\PaperOriginalImportInterface;
 use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
-use OCA\Filinq\Service\DigitisationWorklist;
-use OCA\Filinq\Service\PaperOriginalImport;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -59,8 +59,8 @@ class DigitisationController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                       $request     The request.
-	 * @param DigitisationWorklist           $worklist    Projects, originals and checks.
-	 * @param PaperOriginalImport            $import      The CSV box list import.
+	 * @param DigitisationWorklistInterface  $worklist    Projects, originals and checks.
+	 * @param PaperOriginalImportInterface   $import      The CSV box list import.
 	 * @param SeparatorSheetServiceInterface $sheets      The separator sheets.
 	 * @param IUserSession                   $userSession The current session.
 	 *
@@ -68,8 +68,8 @@ class DigitisationController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly DigitisationWorklist $worklist,
-		private readonly PaperOriginalImport $import,
+		private readonly DigitisationWorklistInterface $worklist,
+		private readonly PaperOriginalImportInterface $import,
 		private readonly SeparatorSheetServiceInterface $sheets,
 		private readonly IUserSession $userSession,
 	) {

@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\PaperOriginalImportInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -39,7 +40,7 @@ use Throwable;
  *
  * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
  */
-class PaperOriginalImport {
+class PaperOriginalImport implements PaperOriginalImportInterface {
 
 	public const REGISTER = 'filinq';
 

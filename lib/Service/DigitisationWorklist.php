@@ -30,6 +30,7 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
+use OCA\Filinq\Kernel\Contracts\DigitisationWorklistInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
@@ -41,7 +42,7 @@ use Throwable;
  *
  * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
  */
-class DigitisationWorklist {
+class DigitisationWorklist implements DigitisationWorklistInterface {
 
 	public const REGISTER = 'filinq';
 

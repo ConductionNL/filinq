@@ -29,8 +29,8 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 use InvalidArgumentException;
 use OCA\Filinq\Controller\DigitisationController;
 use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
-use OCA\Filinq\Service\DigitisationWorklist;
-use OCA\Filinq\Service\PaperOriginalImport;
+use OCA\Filinq\Kernel\Contracts\DigitisationWorklistInterface;
+use OCA\Filinq\Kernel\Contracts\PaperOriginalImportInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
@@ -46,15 +46,15 @@ use RuntimeException;
  */
 class DigitisationControllerTest extends TestCase {
 
-	private DigitisationWorklist&MockObject $worklist;
+	private DigitisationWorklistInterface&MockObject $worklist;
 
-	private PaperOriginalImport&MockObject $import;
+	private PaperOriginalImportInterface&MockObject $import;
 
 	private SeparatorSheetServiceInterface&MockObject $sheets;
 
 	protected function setUp(): void {
-		$this->worklist = $this->createMock(DigitisationWorklist::class);
-		$this->import = $this->createMock(PaperOriginalImport::class);
+		$this->worklist = $this->createMock(DigitisationWorklistInterface::class);
+		$this->import = $this->createMock(PaperOriginalImportInterface::class);
 		$this->sheets = $this->createMock(SeparatorSheetServiceInterface::class);
 	}//end setUp()
 
