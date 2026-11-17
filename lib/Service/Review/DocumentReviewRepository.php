@@ -225,10 +225,18 @@ class DocumentReviewRepository {
 	 *
 	 * @param Throwable $exception What OpenRegister threw.
 	 *
+	 * OpenRegister refuses a delete the schema does not allow with code 403;
+	 * that code is kept, so the caller can answer a refusal as one.
+	 *
 	 * @return RuntimeException The error.
 	 */
 	private function removalFailed(Throwable $exception): RuntimeException {
-		return new RuntimeException(message: 'The review mark could not be removed: '.$exception->getMessage(), code: 0, previous: $exception);
+		$code = 0;
+		if ($exception->getCode() === 403) {
+			$code = 403;
+		}
+
+		return new RuntimeException(message: 'The review mark could not be removed: '.$exception->getMessage(), code: $code, previous: $exception);
 
 	}//end removalFailed()
 

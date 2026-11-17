@@ -3166,6 +3166,7 @@ OC.L10N.register(
         "Undecided: {findings}": "Nog geen besluit: {findings}",
         "Detection could not read the pages of this document. Confirm that you read every page by eye before marking it reviewed.": "De detectie kon de pagina's van dit document niet lezen. Bevestig dat je elke pagina zelf hebt gelezen voordat je het als gecontroleerd markeert.",
         "Decide on every uncertain finding before marking this document reviewed.": "Neem over elke onzekere bevinding een besluit voordat je dit document als gecontroleerd markeert.",
+        "You may not remove the reviewed mark of this document.": "Je mag de markering gecontroleerd van dit document niet verwijderen.",
         "Certain from (review workbench)": "Zeker vanaf (controlewerkbank)",
         "A detected finding below this confidence is shown as uncertain and needs an explicit decision before the document can be marked as reviewed. It cannot be lower than the detection floor set in OpenRegister.": "Een gevonden gegeven onder deze betrouwbaarheid wordt als onzeker getoond en vraagt om een expliciet besluit voordat het document als gecontroleerd kan worden gemarkeerd. De waarde kan niet lager zijn dan de detectiedrempel die in OpenRegister is ingesteld.",
         "Woo refusal grounds": "Woo-weigeringsgronden",

@@ -193,4 +193,32 @@ class DocumentReviewRepositoryTest extends TestCase {
 
 		$repository->deleteAsCaller(uuid: 'u-1');
 	}//end testDeleteAsCallerKeepsRbacOn()
+
+	/**
+	 * A delete OpenRegister refuses with 403 keeps that code; any other failure has code 0.
+	 *
+	 * @return void
+	 */
+	public function testDeleteAsCallerKeepsTheRefusalCode(): void {
+		$repository = $this->repository();
+		$this->objects->method('deleteObject')->willReturnOnConsecutiveCalls(
+			$this->throwException(new \Exception('no permission', 403)),
+			$this->throwException(new \Exception('down', 500))
+		);
+
+		try {
+			$repository->deleteAsCaller(uuid: 'u-1');
+			$this->fail('a refused delete must throw');
+		} catch (RuntimeException $e) {
+			$this->assertSame(403, $e->getCode());
+			$this->assertSame('The review mark could not be removed: no permission', $e->getMessage());
+		}
+
+		try {
+			$repository->deleteAsCaller(uuid: 'u-1');
+			$this->fail('a failed delete must throw');
+		} catch (RuntimeException $e) {
+			$this->assertSame(0, $e->getCode());
+		}
+	}//end testDeleteAsCallerKeepsTheRefusalCode()
 }//end class

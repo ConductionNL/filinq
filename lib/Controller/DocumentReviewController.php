@@ -164,7 +164,8 @@ class DocumentReviewController extends Controller {
 	 *
 	 * @param int $fileId The document.
 	 *
-	 * @return JSONResponse The status after the uncheck, with `removed`.
+	 * @return JSONResponse The status after the uncheck, with `removed`; 403 when the schema
+	 *                      does not let the caller remove the mark.
 	 *
 	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.3
 	 *
@@ -182,6 +183,14 @@ class DocumentReviewController extends Controller {
 			$removed = $this->reviews->uncheck(fileId: $fileId);
 			return new JSONResponse(data: $this->reviews->status(fileId: $fileId) + ['removed' => $removed]);
 		} catch (Throwable $e) {
+			if ($e->getCode() === Http::STATUS_FORBIDDEN) {
+				// The schema's delete rule refused this caller: a refusal, not a failure.
+				return new JSONResponse(
+					data: ['error' => $this->l10n->t('You may not remove the reviewed mark of this document.')],
+					statusCode: Http::STATUS_FORBIDDEN
+				);
+			}
+
 			return $this->failed(message: 'The review mark could not be removed', fileId: $fileId, exception: $e);
 		}
 

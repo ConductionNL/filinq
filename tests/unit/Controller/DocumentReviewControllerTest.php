@@ -165,6 +165,22 @@ class DocumentReviewControllerTest extends TestCase {
 	}//end testUncheck()
 
 	/**
+	 * An uncheck the schema refuses (code 403) is answered 403 with the reason, not as a failure.
+	 *
+	 * @return void
+	 */
+	public function testARefusedUncheckIsForbidden(): void {
+		$this->access->method('verifyFileAccess')->willReturn(null);
+		$this->reviews->method('uncheck')->willThrowException(new RuntimeException('refused', 403));
+		$this->reviews->expects($this->never())->method('status');
+
+		$response = $this->controller->uncheck(fileId: 5);
+
+		$this->assertSame(403, $response->getStatus());
+		$this->assertSame(['error' => 'You may not remove the reviewed mark of this document.'], $response->getData());
+	}//end testARefusedUncheckIsForbidden()
+
+	/**
 	 * A file outside the caller's tree is refused before the service is touched, on every endpoint.
 	 *
 	 * @return void

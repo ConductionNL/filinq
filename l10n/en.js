@@ -3035,6 +3035,7 @@ OC.L10N.register(
         "Undecided: {findings}": "Undecided: {findings}",
         "Detection could not read the pages of this document. Confirm that you read every page by eye before marking it reviewed.": "Detection could not read the pages of this document. Confirm that you read every page by eye before marking it reviewed.",
         "Decide on every uncertain finding before marking this document reviewed.": "Decide on every uncertain finding before marking this document reviewed.",
+        "You may not remove the reviewed mark of this document.": "You may not remove the reviewed mark of this document.",
         "Certain from (review workbench)": "Certain from (review workbench)",
         "A detected finding below this confidence is shown as uncertain and needs an explicit decision before the document can be marked as reviewed. It cannot be lower than the detection floor set in OpenRegister.": "A detected finding below this confidence is shown as uncertain and needs an explicit decision before the document can be marked as reviewed. It cannot be lower than the detection floor set in OpenRegister.",
         "Woo refusal grounds": "Woo refusal grounds",
