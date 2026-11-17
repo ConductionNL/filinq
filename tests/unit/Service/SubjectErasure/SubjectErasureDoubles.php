@@ -45,6 +45,7 @@ use OCA\OpenRegister\Db\AuditTrail;
 use OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent;
 use OCA\OpenRegister\Db\AuditTrailMapper;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\WordReplacementRequest;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -406,15 +407,12 @@ trait SubjectErasureDoubles {
 			/**
 			 * OpenRegister's replaceWords: a rewritten copy beside the file.
 			 *
-			 * @param File                  $node         The file.
-			 * @param array<string, string> $replacements Value => replacement.
-			 * @param string|null           $outputName   The copy's name.
-			 * @param bool                  $strict       Fail closed on residual text (PDF).
+			 * @param WordReplacementRequest $request The file, value => replacement, the copy's name and strict.
 			 *
 			 * @return File The copy.
 			 */
-			public function replaceWords(File $node, array $replacements, ?string $outputName = null, bool $strict = false): File {
-				return $this->test->rewrite(node: $node, replacements: $replacements, outputName: (string) $outputName, strict: $strict);
+			public function replaceWords(WordReplacementRequest $request): File {
+				return $this->test->rewrite(node: $request->node, replacements: $request->replacements, outputName: (string) $request->outputName, strict: $request->strict);
 			}
 		};
 		$versions = new class ($test) {
