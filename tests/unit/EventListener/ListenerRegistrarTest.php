@@ -93,7 +93,7 @@ class ListenerRegistrarTest extends TestCase {
 
 		(new ListenerRegistrar())->register($context);
 
-		self::assertCount(33, $registered);
+		self::assertCount(34, $registered);
 		self::assertSame(['OCA\Filinq\Event\IntakeDocumentReceivedEvent', 'OCA\Filinq\EventListener\IntakeDocumentReceivedListener'], $registered[0]);
 		self::assertSame(
 			[
@@ -102,11 +102,11 @@ class ListenerRegistrarTest extends TestCase {
 				['OCA\OpenRegister\Event\TaskSequenceCompletedEvent', SigningTaskListener::class],
 				[DocumentSigningRequestedEvent::class, DocumentSigningRequestedListener::class],
 			],
-			array_slice($registered, 12, 4)
+			array_slice($registered, 13, 4)
 		);
 		self::assertSame(
 			array_fill(0, 7, IntegrationLeafRegistrar::LEAF_EVENT),
-			array_column(array_slice($registered, 16, 7), 0)
+			array_column(array_slice($registered, 17, 7), 0)
 		);
 		self::assertSame(
 			[
@@ -116,14 +116,14 @@ class ListenerRegistrarTest extends TestCase {
 				[RegisterOperationsEvent::class, RegisterFlowOperationsListener::class],
 				[LoadSettingsScriptsEvent::class, RegisterFlowOperationsListener::class],
 			],
-			array_slice($registered, 23, 5)
+			array_slice($registered, 24, 5)
 		);
 		self::assertSame(
 			[
 				['OCP\Files\Events\Node\NodeCreatedEvent', PdfUaAttachListener::class],
 				['OCP\Files\Events\Node\NodeWrittenEvent', PdfUaAttachListener::class],
 			],
-			array_slice($registered, 28, 2)
+			array_slice($registered, 29, 2)
 		);
 		self::assertSame(
 			[
@@ -131,7 +131,7 @@ class ListenerRegistrarTest extends TestCase {
 				['OCP\Files\Events\Node\BeforeNodeDeletedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
 				['OCP\Share\Events\ShareCreatedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
 			],
-			array_slice($registered, 30)
+			array_slice($registered, 31)
 		);
 	}//end testRegisterDelegatesToEveryAreaInOrder()
 
