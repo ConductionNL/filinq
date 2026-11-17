@@ -22,6 +22,14 @@
 			"order": 27
 		},
 		{
+			"id": "IntakeRules",
+			"label": "Intake rules",
+			"icon": "InboxArrowDown",
+			"route": "IntakeRules",
+			"section": "settings",
+			"order": 93
+		},
+		{
 			"id": "EmailIngestion",
 			"label": "Email ingestion",
 			"icon": "EmailArrowRightOutline",
@@ -31,6 +39,33 @@
 		}
 	],
 	"pages": [
+		{
+			"id": "IntakeRules",
+			"route": "/intake/rules",
+			"type": "index",
+			"title": "Intake rules",
+			"config": {
+				"register": "filinq",
+				"schema": "intakeDefaultRule",
+				"columns": [
+					"name",
+					"channel",
+					"senderPattern",
+					"order",
+					"active",
+					"acknowledgeWith",
+					"stampReceived"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"showTitle": true,
+				"addLabel": "New intake rule",
+				"emptyText": "No intake rules yet"
+			},
+			"_note": "The intake default rules (document-intake-inbox), with the acknowledgement template and the received stamp of intake-acknowledge-and-stamp (REQ-IAS-001). OpenRegister lists the intakeDefaultRule objects directly; create and edit are the object API's own dialog over the schema, so acknowledgeWith and stampReceived are on the form. Only admins may write a rule (the schema's authorization)."
+		},
 		{
 			"id": "EmailIngestion",
 			"route": "/email-ingestion",
