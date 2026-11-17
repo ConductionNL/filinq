@@ -126,35 +126,22 @@ verdict and never claims the document is certified.
 				</NcNoteCard>
 
 				<div class="pdfua-report__actions">
-					<NcButton
+					<ReportActionButton
 						v-if="regenerationOffered"
 						variant="secondary"
 						:disabled="busy"
+						:busy="regenerating"
+						:label="t('filinq', 'Make accessible')"
+						:busyLabel="t('filinq', 'Making accessible…')"
 						data-testid="pdfua-regenerate"
-						@click="regenerate">
-						<template #icon>
-							<NcLoadingIcon v-if="regenerating" :size="18" />
-						</template>
-						{{
-							regenerating
-								? t('filinq', 'Making accessible…')
-								: t('filinq', 'Make accessible')
-						}}
-					</NcButton>
-					<NcButton
-						variant="primary"
+						@click="regenerate" />
+					<ReportActionButton
 						:disabled="!conformance.validatorAvailable || busy"
+						:busy="checking"
+						:label="t('filinq', 'Check against PDF/UA')"
+						:busyLabel="t('filinq', 'Checking…')"
 						data-testid="pdfua-check"
-						@click="check">
-						<template #icon>
-							<NcLoadingIcon v-if="checking" :size="18" />
-						</template>
-						{{
-							checking
-								? t('filinq', 'Checking…')
-								: t('filinq', 'Check against PDF/UA')
-						}}
-					</NcButton>
+						@click="check" />
 				</div>
 			</template>
 		</div>
@@ -163,7 +150,8 @@ verdict and never claims the document is certified.
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcLoadingIcon, NcModal, NcNoteCard } from '@nextcloud/vue'
+import { NcLoadingIcon, NcModal, NcNoteCard } from '@nextcloud/vue'
+import ReportActionButton from '../components/ReportActionButton.vue'
 import {
 	checkAccessibility,
 	fetchAccessibility,
@@ -176,7 +164,7 @@ import { guidanceText } from '../services/conformance.js'
 
 export default {
 	name: 'AccessibilityConformanceModal',
-	components: { NcButton, NcLoadingIcon, NcModal, NcNoteCard },
+	components: { NcLoadingIcon, NcModal, NcNoteCard, ReportActionButton },
 
 	props: {
 		show: { type: Boolean, default: false },

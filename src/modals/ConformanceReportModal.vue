@@ -110,20 +110,13 @@ the rules and fonts behind it, what to do, and a way to check again.
 				</p>
 
 				<div class="conformance-report__actions">
-					<NcButton
-						variant="primary"
+					<ReportActionButton
 						:disabled="!available || checking"
+						:busy="checking"
+						:label="t('filinq', 'Check against PDF/A')"
+						:busyLabel="t('filinq', 'Checking…')"
 						data-testid="conformance-check"
-						@click="check">
-						<template #icon>
-							<NcLoadingIcon v-if="checking" :size="18" />
-						</template>
-						{{
-							checking
-								? t('filinq', 'Checking…')
-								: t('filinq', 'Check against PDF/A')
-						}}
-					</NcButton>
+						@click="check" />
 				</div>
 			</template>
 		</div>
@@ -132,7 +125,8 @@ the rules and fonts behind it, what to do, and a way to check again.
 
 <script>
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcLoadingIcon, NcModal, NcNoteCard } from '@nextcloud/vue'
+import { NcLoadingIcon, NcModal, NcNoteCard } from '@nextcloud/vue'
+import ReportActionButton from '../components/ReportActionButton.vue'
 import {
 	checkConformance,
 	fetchConformance,
@@ -142,7 +136,7 @@ import {
 
 export default {
 	name: 'ConformanceReportModal',
-	components: { NcButton, NcLoadingIcon, NcModal, NcNoteCard },
+	components: { NcLoadingIcon, NcModal, NcNoteCard, ReportActionButton },
 	props: {
 		show: { type: Boolean, default: false },
 		fileId: { type: Number, default: 0 },
