@@ -231,6 +231,12 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function segmentsOf(array $pages, string $mode, array $profile): array {
+		if ($mode === self::MODE_NONE) {
+			// One document per batch: no page is read as a separator, so a
+			// blank or unreadable page stays inside the document.
+			return $this->wholeBatch(pages: $pages);
+		}
+
 		$rule = new SeparatorRule(mode: $mode, inkThreshold: (int)($profile['inkThreshold'] ?? 4096));
 		$segments = [];
 		$current = ['pages' => [], 'firstPage' => 1, 'caseNumber' => ''];
@@ -262,6 +268,24 @@ class ScanBatchService implements ScanBatchServiceInterface {
 
 		return $segments;
 	}//end segmentsOf()
+
+	/**
+	 * The whole batch as one segment, for a profile that does not cut.
+	 *
+	 * @param array<int, string> $pages The batch's pages.
+	 *
+	 * @return array<int, array{pages: array<int, string>, firstPage: int, caseNumber: string}> One segment, or none for an empty batch.
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
+	 */
+	private function wholeBatch(array $pages): array {
+		if ($pages === []) {
+			return [];
+		}
+
+		return [['pages' => array_values($pages), 'firstPage' => 1, 'caseNumber' => '']];
+
+	}//end wholeBatch()
 
 	/**
 	 * What one page is: a separator naming a case, a separator naming none, or
@@ -382,8 +406,8 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 */
 	private function mode(array $profile): string {
 		$mode = (string)($profile['separatorMode'] ?? self::MODE_QR);
-		if ($mode === self::MODE_BLANK) {
-			return self::MODE_BLANK;
+		if ($mode === self::MODE_BLANK || $mode === self::MODE_NONE) {
+			return $mode;
 		}
 
 		return self::MODE_QR;

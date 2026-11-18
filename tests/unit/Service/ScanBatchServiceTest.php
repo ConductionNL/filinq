@@ -522,6 +522,35 @@ class ScanBatchServiceTest extends TestCase {
 	}//end testAnUnknownModeIsReceivedAsQr()
 
 	/**
+	 * A `none` profile stores a batch the schema admits and delivers the whole
+	 * batch as one document, a separator sheet inside it included.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
+	 */
+	public function testANoSplitProfileDeliversTheBatchAsOneDocument(): void {
+		$file = $this->createMock(File::class);
+		$file->method('getId')->willReturn(9);
+		$received = $this->service(texts: [])->receive(file: $file, profile: ['id' => 'balie', 'separatorMode' => 'none']);
+		$this->assertSame('none', $received['separatorMode']);
+		$this->assertValidScanBatch(batch: $this->stored[0]);
+
+		$batch = $this->service(texts: ['blad 1', 'filinq:sep:v1:balie:ZAAK-1', 'blad 3'])->split(
+			batch: $received + ['uuid' => 'batch-9'],
+			profile: ['id' => 'balie', 'separatorMode' => 'none'],
+			file: $this->batchFile(),
+			target: $this->targetFolder()
+		);
+
+		$this->assertSame('split', $batch['status']);
+		$this->assertCount(1, $batch['segments']);
+		$this->assertSame(3, $batch['segments'][0]['pages']);
+		$this->assertValidScanBatch(batch: $batch);
+
+	}//end testANoSplitProfileDeliversTheBatchAsOneDocument()
+
+	/**
 	 * Every batch a split stores, split or failed, is one the schema admits.
 	 *
 	 * @return void
