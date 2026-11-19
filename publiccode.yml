@@ -2,8 +2,8 @@ publiccodeYmlVersion: "0.4"
 
 name: Filinq
 url: "https://github.com/ConductionNL/filinq"
-softwareVersion: "0.0.34"
-releaseDate: "2026-05-26"
+softwareVersion: "0.2.0"
+releaseDate: "2026-09-06"
 developmentStatus: stable
 softwareType: "standalone/other"
 
