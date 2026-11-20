@@ -5,11 +5,19 @@
 module.exports = {
 	transform: {
 		'^.+\\.vue$': '@vue/vue3-jest',
-		'^.+\\.js$': 'babel-jest',
+		// Also matches the ESM-only packages let through by
+		// transformIgnorePatterns below. Their files sit outside this
+		// app's .babelrc scope, so the preset is passed here explicitly.
+		'^.+\\.m?js$': ['babel-jest', { presets: ['@babel/preset-env'] }],
 		'^.+\\.ts$': 'ts-jest',
 		'.+\\.(css|styl|less|sass|scss|png|jpg|ttf|woff|woff2)$':
 			'jest-transform-stub',
 	},
+	// pinia 4 ships as ESM only (dist/pinia.js), and so do several of its
+	// dependencies (nostics, perfect-debounce, … as .mjs). Jest's CJS runtime
+	// needs those transformed like the app's own sources, so node_modules
+	// stays untransformed only for its .js/.cjs files outside pinia.
+	transformIgnorePatterns: ['/node_modules/(?!pinia/).+\\.c?js$'],
 	moduleFileExtensions: ['js', 'json', 'vue', 'ts'],
 	testEnvironment: 'jest-environment-jsdom',
 	setupFiles: ['<rootDir>/tests/jest/setup.js'],
