@@ -159,6 +159,38 @@ class PublicationStoreTest extends TestCase {
 	}//end testNoRedactedCopyWithoutAFile()
 
 	/**
+	 * A withheld document is found by its link's flag, and only a true flag counts.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-6.2
+	 */
+	public function testAWithheldLinkIsFoundByItsFlag(): void {
+		$this->objectService->method('searchObjectsBySlug')
+			->with('filinq', 'anonymizationLink', ['sourceFileId' => '12'])
+			->willReturn([
+				['uuid' => 'a', 'withheld' => 'yes'],
+				['uuid' => 'b', 'withheld' => true, 'withheldBases' => ['5.1.1.c']],
+			]);
+
+		$this->assertSame('b', $this->store->findWithheldLink('12')['uuid']);
+		$this->assertNull($this->store->findRedactedCopy('12'), 'A withheld document has no redacted copy.');
+
+	}//end testAWithheldLinkIsFoundByItsFlag()
+
+	/**
+	 * A document that is not withheld has no withheld link.
+	 *
+	 * @return void
+	 */
+	public function testADocumentIsNotWithheldByDefault(): void {
+		$this->objectService->method('searchObjectsBySlug')->willReturn([['uuid' => 'a', 'anonymizedFileId' => 99]]);
+
+		$this->assertNull($this->store->findWithheldLink('12'));
+
+	}//end testADocumentIsNotWithheldByDefault()
+
+	/**
 	 * Saving strips framework fields, treats an empty uuid as new and fills the uuid back.
 	 *
 	 * @return void

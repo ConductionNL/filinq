@@ -33,6 +33,7 @@ export const ENTITY_TYPES = Object.freeze([
 	'IP_ADDRESS',
 	'LOCATION',
 	'KENTEKEN',
+	'SIGNATURE',
 	'OTHER',
 ])
 
