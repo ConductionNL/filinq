@@ -95,7 +95,7 @@ class OcrRunService implements OcrRunServiceInterface {
 	 * Run OCR on a file and record the result.
 	 *
 	 * @param File $file The file, already resolved and access-checked by the caller.
-	 * @param string $trigger `manual` or `fallback`.
+	 * @param string $trigger `manual`, `fallback` or `flow`.
 	 *
 	 * @return array{processed: bool, reason: string|null, text: string, result: array<string, mixed>|null, textLayer?: string|null}
 	 *         `text` is for the pipeline only; no caller may return it. `textLayer`, on a processed run, is

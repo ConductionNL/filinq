@@ -37,7 +37,7 @@ const PAGES_BEFORE = [
 	['Intake', '/intake'], ['IntakeRules', '/intake/rules'], ['ClassificationPending', '/classification'],
 	['DigitisationProjects', '/digitisation'], ['DigitisationProjectDetail', '/digitisation/:id'], ['ScanChecks', '/scan-checks'],
 	['PaperOriginalDetail', '/paper-originals/:id'], ['FeaturesRoadmap', '/features-roadmap'],
-	['Flows', '/flows'], ['FlowDetail', '/flows/:id'],
+	['Flows', '/flows'], ['FlowDetail', '/flows/:id'], ['FlowRuns', '/flow-runs'],
 	// Added after the split by redaction-at-scale (REQ-DDRAS-003).
 	['BatchOperations', '/batch-operations'], ['BatchOperationDetail', '/batch-operations/:id'],
 ]
@@ -64,7 +64,7 @@ const MENU_BEFORE = [
 	['MailArchiveImport', 28],
 	['EntitySearch', 59], ['SigningRequests', 60], ['SigningFolder', 65], ['BulkSigningBatches', 66],
 	['SigningEnvelopes', 67], ['CustomDictionary', 70], ['Documentation', 90], ['StoreMenu', 92],
-	['ReportsMenu', 95], ['FeaturesRoadmapMenu', 100], ['FlowsMenu', 96],
+	['ReportsMenu', 95], ['FeaturesRoadmapMenu', 100], ['FlowsMenu', 96], ['FlowRunsMenu', 97],
 	// Added after the split by redaction-at-scale (REQ-DDRAS-003).
 	['BatchOperations', 42],
 ]

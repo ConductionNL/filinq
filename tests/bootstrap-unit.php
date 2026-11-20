@@ -138,6 +138,25 @@ if (is_dir($ocpDbExceptionDir) === true) {
 	}
 }
 
+// The Flow engine's public contracts and the file / tag events it dispatches
+// (flow-operations), read from vendor/nextcloud/ocp on first use. Lazy and
+// scoped to these prefixes so nothing NextcloudStubs.php declares is shadowed.
+spl_autoload_register(
+	static function (string $class): void {
+		$prefixes = ['OCP\\WorkflowEngine\\', 'OCP\\Files\\Events\\Node\\', 'OCP\\SystemTag\\MapperEvent', 'OCP\\EventDispatcher\\IWebhookCompatibleEvent'];
+		foreach ($prefixes as $prefix) {
+			if (str_starts_with($class, $prefix) === true) {
+				$path = __DIR__ . '/../vendor/nextcloud/ocp/' . str_replace('\\', '/', $class) . '.php';
+				if (is_file($path) === true) {
+					require_once $path;
+				}
+
+				return;
+			}
+		}
+	}
+);
+
 // Load OCP's public system-tag API (files_confidential label consumption,
 // files-confidential-labels) — same "real file, not classmapped" situation
 // as the EventDispatcher/AppFramework\Db contracts above.
@@ -278,6 +297,7 @@ require_once __DIR__ . '/unit/Service/BuildsAnonymizationService.php';
 require_once __DIR__ . '/unit/Service/ReadsAnonymizeOptions.php';
 require_once __DIR__ . '/unit/Service/DetectionStates.php';
 require_once __DIR__ . '/unit/Service/Ocr/OcrDoubles.php';
+require_once __DIR__ . '/unit/Flow/FlowOperationDoubles.php';
 require_once __DIR__ . '/unit/Service/Pseudonymisation/PseudonymDoubles.php';
 // The real OCP contracts the legal hold notifier implements and uses
 // (e-discovery-legal-hold), so its double cannot drift from Nextcloud's.
