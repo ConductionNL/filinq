@@ -14,3 +14,10 @@ path = ["l10n/**.js", "l10n/**.json"]
 precedence = "aggregate"
 SPDX-FileCopyrightText = "2026 Conduction B.V. <info@conduction.nl>"
 SPDX-License-Identifier = "EUPL-1.2"
+
+# MDTO sidecar fixtures, compared byte for byte with the builder's output.
+[[annotations]]
+path = ["tests/fixtures/mdto/**"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 Conduction B.V. <info@conduction.nl>"
+SPDX-License-Identifier = "EUPL-1.2"

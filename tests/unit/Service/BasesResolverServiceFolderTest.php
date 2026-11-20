@@ -132,12 +132,15 @@ class BasesResolverServiceFolderTest extends TestCase {
 					 * Record and answer a findAll call.
 					 *
 					 * @param array $config The query config.
-					 * @param bool  $_rbac  Whether RBAC applies.
+					 * @param bool  $_rbac         Whether RBAC applies.
+					 * @param bool  $_multitenancy Whether organisation scoping applies.
 					 *
 					 * @return mixed
 					 */
-					public function findAll(array $config = [], bool $_rbac = true): mixed {
-						TestCase::assertFalse($_rbac);
+					public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): mixed {
+						// multi-tenant-hardening D2: a user-request path passes no bypass flag.
+						TestCase::assertTrue($_rbac);
+						TestCase::assertTrue($_multitenancy);
 						TestCase::assertSame('filinq', $config['filters']['register']);
 						TestCase::assertSame('dossier', $config['filters']['schema']);
 						$this->test->recordFolder($config['filters']['folder']);

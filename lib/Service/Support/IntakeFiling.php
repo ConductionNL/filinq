@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Support;
 
 use OCA\Filinq\Service\Intake\IntakeOcrQueue;
+use OCA\Filinq\Service\Intake\RegistryEnrichmentQueue;
 use OCA\Filinq\Service\IntakeFilePlacement;
 
 /**
@@ -44,6 +45,7 @@ final class IntakeFiling {
 	 *
 	 * @param IntakeFilePlacement $placement Places the file in its folder
 	 * @param IntakeOcrQueue      $ocrQueue  Queues the file for text recognition
+	 * @param RegistryEnrichmentQueue|null $registryQueue Queues the base registry lookup of the file's identifiers
 	 *
 	 * @return void
 	 *
@@ -52,6 +54,7 @@ final class IntakeFiling {
 	public function __construct(
 		public readonly IntakeFilePlacement $placement,
 		public readonly IntakeOcrQueue $ocrQueue,
+		public readonly ?RegistryEnrichmentQueue $registryQueue = null,
 	) {
 
 	}//end __construct()

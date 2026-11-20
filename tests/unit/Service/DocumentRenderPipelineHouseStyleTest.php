@@ -67,7 +67,7 @@ class DocumentRenderPipelineHouseStyleTest extends TestCase {
 			$this->createMock(SvgRasterizer::class),
 			null,
 			null,
-			$sync
+			profileSync: $sync
 		);
 	}//end pipeline()
 

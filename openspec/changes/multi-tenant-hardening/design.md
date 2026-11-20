@@ -203,7 +203,7 @@ per schema. Multi-org instances review the log and reassign via OR tooling.
 | Organisation identity, membership, active org, org-admin check | `OrganisationService` (consume only) |
 | Object stamping + read filtering | `ObjectService` with `_rbac`/`_multitenancy` defaults (stop overriding) |
 | `organisationSettings` CRUD | `ObjectService::saveObject()/findAll()` |
-| Legacy backfill | Repair step writing via `ObjectService` under the D2 seam |
+| Legacy backfill | Repair step delegating the write to OR's own organisation adoption (`OrganisationlessRowAdoption`, the tooling behind `occ openregister:adopt-organisationless-rows`), scoped to Filinq's register; `ObjectService` cannot set the organisation from a repair step, which has no session user |
 | Isolation audit of blocked access | OR's audit trail (no app-local audit rows) |
 
 ## Declarative-vs-imperative decision (ADR-031)
@@ -254,8 +254,8 @@ fixtures create two throwaway organisations via OR's API (nil-UUID-named,
 - `organisationSettings` is written only by organisation admins / instance
   admins; a member changing their own org's objection period would weaken a
   WOO legal deadline.
-- The backfill (D6) runs under the seam, is idempotent, and never touches
-  sealed audit rows.
+- The backfill (D6) writes only through OR's own adoption tooling, is
+  idempotent, and never touches sealed audit rows.
 - No secrets, tokens or new public endpoints. New settings surface reuses
   the existing authenticated settings routes plus org-admin guards.
 

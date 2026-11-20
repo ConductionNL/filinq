@@ -13,6 +13,12 @@
 /** The five static field types. Conditional fields are future scope. */
 export const FIELD_TYPES = ['signature', 'initials', 'date', 'text', 'checkbox']
 
+/** The checks a signer-filled text field can carry; the server owns them. */
+export const FIELD_CHECKS = ['iban-nl', 'iban']
+
+/** The longest label the server accepts. */
+export const MAX_LABEL = 200
+
 const SIZES = {
 	signature: [0.3, 0.06],
 	initials: [0.1, 0.04],
@@ -123,7 +129,8 @@ export function dropSignerPlacements(list, signerIndex) {
 }
 
 /**
- * The placements as the request sends them: the seven keys, rounded.
+ * The placements as the request sends them: the seven keys, rounded, and
+ * the settings of a text field.
  *
  * @param {Array<object>} list The placements.
  * @return {Array<object>}
@@ -139,5 +146,66 @@ export function toRequestPlacements(list) {
 		width: round(Math.min(box.width, 1 - round(box.x))),
 		height: round(Math.min(box.height, 1 - round(box.y))),
 		type: box.type,
+		...textSettingsOf(box),
 	}))
+}
+
+/**
+ * The settings a text field sends: a label when one was typed, whether it is
+ * required, and its check when it has one. Other types send none.
+ *
+ * @param {object} box The placement.
+ * @return {object}
+ * @spec openspec/changes/signing-field-validation/tasks.md#task-3.1
+ */
+function textSettingsOf(box) {
+	if (box.type !== 'text') {
+		return {}
+	}
+	const settings = {}
+	const label = typeof box.label === 'string' ? box.label.trim() : ''
+	if (label !== '') {
+		settings.label = label.slice(0, MAX_LABEL)
+	}
+	if (box.required === true) {
+		settings.required = true
+	}
+	if (FIELD_CHECKS.includes(box.validation)) {
+		settings.validation = box.validation
+	}
+	return settings
+}
+
+/**
+ * Change the label, required flag or check of one text field. A check that
+ * is not offered is removed, and a box that is not a text field is left as
+ * it is, since only text fields are filled in by the signer.
+ *
+ * @param {Array<object>} list The placements.
+ * @param {number} index The box.
+ * @param {{label?: string, required?: boolean, validation?: string|null}} settings What changes.
+ * @return {Array<object>} The new list.
+ * @spec openspec/changes/signing-field-validation/tasks.md#task-3.1
+ */
+export function updateTextSettings(list, index, settings) {
+	return list.map((box, i) => {
+		if (i !== index || box.type !== 'text') {
+			return box
+		}
+		const next = { ...box }
+		if ('label' in settings) {
+			next.label = String(settings.label ?? '').slice(0, MAX_LABEL)
+		}
+		if ('required' in settings) {
+			next.required = settings.required === true
+		}
+		if ('validation' in settings) {
+			if (FIELD_CHECKS.includes(settings.validation)) {
+				next.validation = settings.validation
+			} else {
+				delete next.validation
+			}
+		}
+		return next
+	})
 }

@@ -14,7 +14,8 @@ import { baseManifest, effectiveManifest, manifestFragments } from './support/ef
 
 /**
  * Every page route and every menu entry of the monolithic manifest this change
- * split up, as `[id, route]` pairs, recorded before the split.
+ * split up, as `[id, route]` pairs, recorded before the split, plus the pages
+ * added since (IntakeChannels, scan-intake-with-separator-sheets 4.2).
  */
 const PAGES_BEFORE = [
 	['Store', '/store'], ['Dashboard', '/'], ['Consent', '/consent'], ['ConsentDetail', '/consent/:id'],
@@ -25,15 +26,22 @@ const PAGES_BEFORE = [
 	['WizardRunner', '/templates/:id/wizard'], ['Correspondence', '/correspondence'], ['SigningRequests', '/signing'],
 	['BulkSigningBatches', '/signing-batches'], ['SigningEnvelopes', '/signing-envelopes'], ['SigningFolder', '/signing-folder'],
 	['SigningRequestForm', '/signing/new'], ['SigningRequestDetail', '/signing/:id'], ['SignatureVerification', '/signing/verify/:fileId'],
-	['MyDocuments', '/my-documents'], ['Publications', '/publications/:id?'], ['PrintJobs', '/print-jobs'],
-	['LegalHolds', '/legal-holds'], ['SubjectErasures', '/subject-erasures'], ['EmailIngestion', '/email-ingestion'],
+	['MyDocuments', '/my-documents'], ['SharedLinks', '/my-documents/shared-links'], ['Publications', '/publications/:id?'], ['PrintJobs', '/print-jobs'],
+	['LegalHolds', '/legal-holds'], ['SubjectErasures', '/subject-erasures'], ['EmailIngestion', '/email-ingestion'], ['IntakeChannels', '/intake-channels'],
+	['MailArchiveImport', '/mail-archive-import'],
 	['EntitySearch', '/entity-search'], ['PrintPreview', '/print-preview/:templateId?'], ['Comparison', '/comparison'],
 	['Versions', '/versions'], ['ComponentGallery', '/gallery'], ['Prohibitions', '/policy/prohibitions'],
 	['StandingConsents', '/policy/standing-consents'], ['Reports', '/reports'], ['SigningReport', '/reports/signing'],
 	['AnonymizationReport', '/reports/anonymization'], ['ProducedDocumentsReport', '/reports/documents'],
 	['PersonalDataReport', '/reports/personal-data'],
-	['Intake', '/intake'], ['IntakeRules', '/intake/rules'], ['ClassificationPending', '/classification'], ['FeaturesRoadmap', '/features-roadmap'],
-	['Flows', '/flows'], ['FlowDetail', '/flows/:id'],
+	['Intake', '/intake'], ['IntakeRules', '/intake/rules'], ['ClassificationPending', '/classification'],
+	['DigitisationProjects', '/digitisation'], ['DigitisationProjectDetail', '/digitisation/:id'], ['ScanChecks', '/scan-checks'],
+	['PaperOriginalDetail', '/paper-originals/:id'], ['FeaturesRoadmap', '/features-roadmap'],
+	['Flows', '/flows'], ['FlowDetail', '/flows/:id'], ['FlowRuns', '/flow-runs'], ['OrganisationSettings', '/organisation-settings'],
+	// Added after the split by redaction-at-scale (REQ-DDRAS-003).
+	['BatchOperations', '/batch-operations'], ['BatchOperationDetail', '/batch-operations/:id'],
+	// office-template-authoring added these two after the split.
+	['TextFragments', '/text-fragments'], ['TemplateImport', '/templates-import'],
 	// Added after the split: the anonymisation review workbench.
 	['ReviewWorkbench', '/review/:fileId'],
 ]
@@ -54,12 +62,17 @@ const MENU_ADDED = [
 
 const MENU_BEFORE = [
 	['Dashboard', 10], ['Consent', 20], ['StandingConsents', 22], ['Prohibitions', 24], ['Intake', 26],
-	['ClassificationPending', 27], ['Anonymization', 30], ['MyDocuments', 35], ['FolderAnonymization', 40],
+	['ClassificationPending', 27], ['DigitisationProjects', 28], ['ScanChecks', 29], ['Anonymization', 30], ['MyDocuments', 35], ['FolderAnonymization', 40],
 	['Dossiers', 45], ['Contracts', 46], ['ContractPipeline', 47], ['Templates', 50], ['Correspondence', 55],
-	['Publications', 57], ['PrintJobs', 56], ['LegalHolds', 58], ['SubjectErasures', 59], ['IntakeRules', 93], ['EmailIngestion', 94],
+	['Publications', 57], ['PrintJobs', 56], ['LegalHolds', 58], ['SubjectErasures', 59], ['IntakeRules', 93], ['EmailIngestion', 94], ['IntakeChannels', 95],
+	['MailArchiveImport', 28],
 	['EntitySearch', 59], ['SigningRequests', 60], ['SigningFolder', 65], ['BulkSigningBatches', 66],
 	['SigningEnvelopes', 67], ['CustomDictionary', 70], ['Documentation', 90], ['StoreMenu', 92],
-	['ReportsMenu', 95], ['FeaturesRoadmapMenu', 100], ['FlowsMenu', 96],
+	['ReportsMenu', 95], ['FeaturesRoadmapMenu', 100], ['FlowsMenu', 96], ['FlowRunsMenu', 97], ['OrganisationSettings', 97],
+	// Added after the split by redaction-at-scale (REQ-DDRAS-003).
+	['BatchOperations', 42],
+	// office-template-authoring added these two after the split.
+	['TextFragments', 51], ['TemplateImport', 52],
 ]
 
 /**

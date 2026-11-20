@@ -71,6 +71,7 @@ Features that are fully implemented and available in the current release.
 | [Consent Management](./consent-management.md) | consent-management.md | Documentregistratiecomponent | TEC-DMS-7 | Done |
 | [Publication Consent Process](./publication-consent-process.md) | publication-consent-process.md | Documentregistratiecomponent | TEC-DMS-7 | Done |
 | [Metadata Enrichment](./metadata-enrichment.md) | metadata-enrichment.md | Documentregistratiecomponent | TEC-DMS-4, TEC-DMS-9 | Done |
+| [Filling record fields from a document](./model-filled-fields.md) | model-filled-fields.md | Documentregistratiecomponent | TEC-DMS-4 | Done |
 | [Admin Settings](./admin-settings.md) | admin-settings.md | — | TEC-DMS-5 | Done |
 | [Dashboard](./dashboard.md) | dashboard.md | — | TEC-DMS-10 | Done |
 | [Document Register](./document-register.md) | document-register.md | Documentbeheercomponent | TEC-DMS-4 | Done |
@@ -111,11 +112,13 @@ Features proposed based on tender analysis and customer requests. Not yet specif
 | Feature | Doc | GEMMA | TEC | Status |
 |---------|-----|-------|-----|--------|
 | [Woo publication pipeline](./woo-publicatie-pipeline.md) | woo-publicatie-pipeline.md | Publicatiecomponent | TEC-DMS-6 | Done |
+| [Woo decision letter and inventory](./woo-decision-templates.md) | woo-decision-templates.md | Documentcreatiecomponent | — | Implemented |
 | [Woo metadata worklist](./woo-metadata-worklist.md) | woo-metadata-worklist.md | Publicatiecomponent | TEC-DMS-6 | Done |
 | [Woo refusal grounds](./grondslagen.md) | grondslagen.md | Publicatiecomponent | TEC-DMS-6 | Done |
 | [Document Signing](./document-signing.md) | document-signing.md | — | TEC-DMS-4 | Roadmap |
 | [Digital Signing Integration](./digital-signing.md) | digital-signing.md | — | TEC-DMS-4 | Roadmap |
 | [PDF Page Stamping](./pdf-page-stamping.md) | pdf-page-stamping.md | — | — | Implemented |
+| [Sharing documents by link](./share-document-links.md) | share-document-links.md | Documentbeheercomponent | — | Implemented |
 | [Signing with LibreSign](./libresign-signing-provider.md) | libresign-signing-provider.md | — | TEC-DMS-4 | Done |
 | [One signing rail for the fleet](./one-signing-rail.md) | one-signing-rail.md | — | TEC-DMS-4 | In progress |
 | [Document Classification](./document-classification.md) | document-classification.md | Documentregistratiecomponent | TEC-DMS-4 | Roadmap |

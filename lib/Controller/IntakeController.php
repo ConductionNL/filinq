@@ -80,20 +80,32 @@ class IntakeController extends Controller {
 	}//end __construct()
 
 	/**
-	 * List the documents waiting for a clerk.
+	 * List the documents waiting for a clerk, or with mode `overdue` the ones past their deadline.
 	 *
-	 * @return JSONResponse The waiting documents.
+	 * @param string $mode `waiting` (the default) or `overdue`.
+	 *
+	 * @return JSONResponse The documents.
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
 	 */
 	#[NoAdminRequired]
-	public function index(): JSONResponse {
+	public function index(string $mode = 'waiting'): JSONResponse {
 		$unauthenticated = $this->requireUser();
 		if ($unauthenticated !== null) {
 			return $unauthenticated;
 		}
 
 		try {
+			if ($mode === 'overdue') {
+				$overdue = $this->handling->overdue->list();
+
+				return new JSONResponse(
+					data: ['results' => $overdue, 'total' => count($overdue), 'mode' => 'overdue'],
+					statusCode: Http::STATUS_OK
+				);
+			}
+
 			$waiting = $this->handling->intake->listWaiting();
 
 			return new JSONResponse(
@@ -234,6 +246,34 @@ class IntakeController extends Controller {
 	}//end reject()
 
 	/**
+	 * Move a waiting document's handling deadline, with a reason.
+	 *
+	 * @param string $uuid     The intake document.
+	 * @param string $deadline The new deadline (Y-m-d).
+	 * @param string $reason   Why it moved.
+	 *
+	 * @return JSONResponse The document, or the refusal.
+	 *
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+	 */
+	#[NoAdminRequired]
+	public function changeDeadline(string $uuid, string $deadline = '', string $reason = ''): JSONResponse {
+		$unauthenticated = $this->requireUser();
+		if ($unauthenticated !== null) {
+			return $unauthenticated;
+		}
+
+		try {
+			$document = $this->handling->intake->changeDeadline(uuid: $uuid, deadline: $deadline, reason: $reason);
+
+			return new JSONResponse(data: $document, statusCode: Http::STATUS_OK);
+		} catch (Throwable $e) {
+			return $this->failure(error: $e);
+		}
+
+	}//end changeDeadline()
+
+	/**
 	 * List the documents taken back off a record.
 	 *
 	 * @return JSONResponse The worklist.
@@ -340,6 +380,52 @@ class IntakeController extends Controller {
 		}
 
 	}//end decideParty()
+
+	/**
+	 * Accept, correct or dismiss one registry suggestion on an intake document.
+	 *
+	 * @param string $uuid     The intake document.
+	 * @param int    $index    The suggestion's position on the document.
+	 * @param string $decision `accepted` or `dismissed`.
+	 * @param array  $fields   Corrections to name, address or KvK number before accepting.
+	 *
+	 * @return JSONResponse The saved intake document.
+	 *
+	 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-person-accepts-or-dismisses-a-registry-suggestion-req-ibr-004
+	 */
+	#[NoAdminRequired]
+	public function decideRegistry(
+		string $uuid,
+		int $index = -1,
+		string $decision = '',
+		array $fields = [],
+	): JSONResponse {
+		$unauthenticated = $this->requireUser();
+		if ($unauthenticated !== null) {
+			return $unauthenticated;
+		}
+
+		if ($this->handling->registry === null) {
+			return new JSONResponse(
+				data: ['error' => 'Registry suggestions are not available.'],
+				statusCode: Http::STATUS_SERVICE_UNAVAILABLE
+			);
+		}
+
+		try {
+			$document = $this->handling->registry->decide(
+				uuid: $uuid,
+				index: $index,
+				decision: $decision,
+				fields: $fields
+			);
+
+			return new JSONResponse(data: $document, statusCode: Http::STATUS_OK);
+		} catch (Throwable $e) {
+			return $this->failure(error: $e);
+		}
+
+	}//end decideRegistry()
 
 	/**
 	 * Store what a consuming app declares about one of its record types.

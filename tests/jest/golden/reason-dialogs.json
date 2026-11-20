@@ -353,7 +353,22 @@
 				}
 			]
 		},
-		"callsBeforeClick": [],
+		"callsBeforeClick": [
+			[
+				"intakeSuggestions",
+				"openRegistrySuggestions",
+				{
+					"subject": "Brief"
+				}
+			],
+			[
+				"intakeSuggestions",
+				"openPartySuggestions",
+				{
+					"subject": "Brief"
+				}
+			]
+		],
 		"busy": {
 			"view": {
 				"title": "Assign to a record",

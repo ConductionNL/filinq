@@ -95,6 +95,7 @@ class AnonymisationRunRecordsRenditionTest extends TestCase {
 						'fileId' => 11, 'sha256' => 'a1', 'kind' => 'converted', 'backend' => 'libreoffice',
 						'textLayer' => 'native', 'preparedAt' => '2026-11-15T10:00:00+00:00',
 					],
+					'entityTypeCounts' => [],
 				]
 			)
 			->willReturnArgument(2);
@@ -105,7 +106,7 @@ class AnonymisationRunRecordsRenditionTest extends TestCase {
 	}//end testTheLinkGetsTheRendition()
 
 	/**
-	 * Without a rendition the link is written as before.
+	 * Without a rendition the link is written without one.
 	 *
 	 * @return void
 	 */
@@ -113,11 +114,11 @@ class AnonymisationRunRecordsRenditionTest extends TestCase {
 		$records = $this->records();
 		$this->renditions->method('findFor')->willReturn(null);
 		$this->persistence->expects($this->once())->method('recordAnonymizationLink')
-			->with(10, 'source', ['anonymizedFileId' => 99])
+			->with(10, 'source', ['anonymizedFileId' => 99, 'entityTypeCounts' => []])
 			->willReturnArgument(2);
 
 		$this->assertSame(
-			['anonymizedFileId' => 99],
+			['anonymizedFileId' => 99, 'entityTypeCounts' => []],
 			$records->record(resultInfo: ['anonymizedFileId' => 99], context: ['fileId' => 10, 'sourceNode' => 'source', 'anonymisedNode' => null])
 		);
 	}//end testNoRenditionLeavesTheLinkAsItWas()

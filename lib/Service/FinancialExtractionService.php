@@ -29,7 +29,9 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Event\ExtractionVerdictEvent;
 use OCA\Filinq\Event\FinancialExtractionCompletedEvent;
+use OCA\Filinq\Event\UnattendedOutcome;
 use OCA\Filinq\Event\Support\RequestOrigin;
 use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
 use OCA\Filinq\Service\Extraction\AiPrompt;
@@ -38,18 +40,14 @@ use OCA\Filinq\Service\Extraction\DateExtractor;
 use OCA\Filinq\Service\Extraction\IbanExtractor;
 use OCA\Filinq\Service\Extraction\KvkExtractor;
 use OCA\Filinq\Service\Extraction\TotalsReconciler;
+use OCA\Filinq\Service\Extraction\UnattendedVerdict;
 use OCA\Filinq\Service\Extraction\VatIdExtractor;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\Files\File;
 use OCP\Files\IRootFolder;
 use OCP\IUserSession;
-use OCP\TaskProcessing\Task as TaskProcessingTask;
-use OCP\TaskProcessing\TaskTypes\TextToText;
-use OCP\TextProcessing\FreePromptTaskType;
-use OCP\TextProcessing\Task as TextProcessingTask;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -205,6 +203,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	 * @param DateExtractor $dateExtractor Pure date extractor.
 	 * @param AmountExtractor $amountExtractor Pure amount extractor.
 	 * @param TotalsReconciler $totalsReconciler Pure totals reconciler.
+	 * @param UnattendedVerdict|null $unattendedVerdict Judges whether an extraction can be trusted without a person (REQ-ERP-003).
 	 *
 	 * @return void
 	 */
@@ -223,6 +222,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 		private readonly DateExtractor $dateExtractor,
 		private readonly AmountExtractor $amountExtractor,
 		private readonly TotalsReconciler $totalsReconciler,
+		private readonly ?UnattendedVerdict $unattendedVerdict = null,
 	) {
 
 	}//end __construct()
@@ -230,7 +230,8 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	/**
 	 * Run the full extraction pipeline for a request and persist the result.
 	 *
-	 * @param array<string, mixed> $data Request body: `fileId|documentUri`, `docType`, `callbackEvent`.
+	 * @param array<string, mixed> $data Request body: `fileId|documentUri`, `docType`, `callbackEvent`, and
+	 *                                   `capturedFileId` when the receipt came in through the capture route.
 	 * @param string $requestedBy Nextcloud user id that initiated the extraction.
 	 *
 	 * @return array<string, mixed> The persisted `financialExtraction` object.
@@ -244,8 +245,8 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 
 		$textResult = $this->resolveText(fileId: $request['resolvedFileId']);
 
-		$pipeline = $this->runExtraction(text: $textResult['text'], docType: $request['docType']);
-		$pipeline = $this->applyAiEnhancement(text: $textResult['text'], result: $pipeline, requestedBy: $requestedBy);
+		$heuristic = $this->runExtraction(text: $textResult['text'], docType: $request['docType']);
+		$pipeline  = $this->applyAiEnhancement(text: $textResult['text'], result: $heuristic, requestedBy: $requestedBy);
 
 		$payload = [
 			'documentUri' => $request['effectiveDocumentUri'],
@@ -257,6 +258,18 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 			'overallConfidence' => $pipeline['overallConfidence'],
 			'corrections' => [],
 		];
+
+		// The photo a captured receipt was read from (REQ-ERP-001).
+		if (is_numeric($data['capturedFileId'] ?? null) === true && (int)$data['capturedFileId'] > 0) {
+			$payload['capturedFileId'] = (int)$data['capturedFileId'];
+		}
+
+		// The unattended verdict, judged once and stored with the threshold it
+		// used, so it says what held when a consumer acted (REQ-ERP-003).
+		$outcome = $this->unattendedOutcome(heuristic: $heuristic, pipeline: $pipeline);
+		if ($outcome !== null) {
+			$payload = $payload + $outcome->toStored();
+		}
 
 		$objectService = $this->settingsService->getObjectService();
 		// Fails closed when unbound. An administrator sets these in the admin
@@ -275,10 +288,94 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 
 		if ($request['callbackEvent'] === true) {
 			$this->dispatchCompletionEvent(payload: $payload);
+			if ($outcome !== null) {
+				$this->dispatchVerdictEvent(saved: $savedArray, payload: $payload, outcome: $outcome);
+			}
 		}
 
 		return $savedArray;
 	}//end extractFinancial()
+
+	/**
+	 * The unattended verdict of a pipeline result, or null when no verdict service is wired.
+	 *
+	 * @param array<string, mixed> $heuristic The result before the model step.
+	 * @param array<string, mixed> $pipeline  The result after it.
+	 *
+	 * @return UnattendedOutcome|null The verdict.
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 */
+	private function unattendedOutcome(array $heuristic, array $pipeline): ?UnattendedOutcome {
+		if ($this->unattendedVerdict === null) {
+			return null;
+		}
+
+		return $this->unattendedVerdict->judge(
+			result: $pipeline,
+			modelFilled: self::modelFilledFields(heuristic: $heuristic['fields'], final: $pipeline['fields'])
+		);
+	}//end unattendedOutcome()
+
+	/**
+	 * The fields the model filled that the heuristics left empty.
+	 *
+	 * @param array<string, mixed> $heuristic The fields before the model step.
+	 * @param array<string, mixed> $final     The fields after it.
+	 *
+	 * @return list<string> The field names.
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 */
+	public static function modelFilledFields(array $heuristic, array $final): array {
+		$filled = [];
+		foreach ($final as $field => $value) {
+			$before = ($heuristic[$field] ?? null);
+			$empty  = ($before === null || $before === '' || $before === []);
+			if ($empty === true && $value !== null && $value !== '' && $value !== []) {
+				$filled[] = (string)$field;
+			}
+		}
+
+		return $filled;
+	}//end modelFilledFields()
+
+	/**
+	 * Dispatch `nl.conduction.filinq.extraction.verdict` after the completed
+	 * event. A failure is logged and never fails the extraction (REQ-ERP-004).
+	 *
+	 * @param array<string, mixed> $saved   The saved extraction.
+	 * @param array<string, mixed> $payload The persisted payload.
+	 * @param UnattendedOutcome    $outcome The verdict.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-the-verdict-is-sent-as-a-sibling-event-req-erp-004
+	 */
+	private function dispatchVerdictEvent(array $saved, array $payload, UnattendedOutcome $outcome): void {
+		try {
+			$meta = ($saved['@self'] ?? []);
+			if (is_array($meta) === false) {
+				$meta = [];
+			}
+
+			$id = (string)(($meta['id'] ?? null) ?? ($saved['id'] ?? null) ?? ($saved['uuid'] ?? ''));
+			$this->eventDispatcher->dispatchTyped(
+				new ExtractionVerdictEvent(
+					extractionId: $id,
+					documentUri: (string)$payload['documentUri'],
+					sourceApp: (string)$payload['sourceApp'],
+					docType: (string)$payload['docType'],
+					outcome: $outcome,
+				)
+			);
+		} catch (Throwable $e) {
+			$this->logger->error(
+				'Filinq: financial extraction completed but the verdict event could not be dispatched: '.$e->getMessage(),
+				['exception' => $e]
+			);
+		}
+	}//end dispatchVerdictEvent()
 
 	/**
 	 * Validate and normalise the extraction request body: docType, the
@@ -525,7 +622,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 
 		try {
 			$prompt = new AiPrompt(text: $this->buildPrompt(text: $text, fillable: $fillable), requestedBy: $requestedBy);
-			$decoded = json_decode($this->localAi()->stripCodeFences(text: $this->runAiTask(manager: $manager, prompt: $prompt)), associative: true);
+			$decoded = json_decode($this->localAi()->stripCodeFences(text: $this->localAi()->run(manager: $manager, prompt: $prompt)), associative: true);
 			if (is_array($decoded) === false) {
 				return $result;
 			}
@@ -816,51 +913,6 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	}//end lockedFields()
 
 	/**
-	 * Run a single structured-extraction prompt through the resolved local
-	 * AI manager and return its raw text output.
-	 *
-	 * @param array{type: string, manager: object} $manager Resolved AI manager.
-	 * @param AiPrompt $prompt The prompt and the user the task runs for.
-	 *
-	 * @return string Raw model output.
-	 */
-	private function runAiTask(array $manager, AiPrompt $prompt): string {
-		if ($manager['type'] === 'task') {
-			return $this->runTaskProcessingTask(manager: $manager['manager'], prompt: $prompt);
-		}
-
-		$task = new TextProcessingTask(
-			FreePromptTaskType::class,
-			$prompt->text,
-			'filinq',
-			$prompt->userId(),
-		);
-
-		return (string)$manager['manager']->runTask($task);
-	}//end runAiTask()
-
-	/**
-	 * Run the prompt as a TaskProcessing text-to-text task.
-	 *
-	 * @param object $manager The `OCP\TaskProcessing\IManager`.
-	 * @param AiPrompt $prompt The prompt and the user the task runs for.
-	 *
-	 * @return string Raw model output.
-	 */
-	private function runTaskProcessingTask(object $manager, AiPrompt $prompt): string {
-		$task = new TaskProcessingTask(
-			TextToText::ID,
-			['input' => $prompt->text],
-			'filinq',
-			$prompt->userId(),
-		);
-
-		$completed = $manager->runTask($task);
-		$output = $completed->getOutput();
-		return (string)($output['output'] ?? '');
-	}//end runTaskProcessingTask()
-
-	/**
 	 * Build the structured-extraction prompt for the AI enhancement step.
 	 *
 	 * @param string $text Document text (truncated for prompt size).
@@ -913,160 +965,22 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	}//end dispatchCompletionEvent()
 
 	/**
-	 * Resolve document text for a Nextcloud file id: reuse embedded PDF text
-	 * when present, otherwise fall back to OCR via OcrService (REQ-FIN-01).
+	 * Resolve document text for a Nextcloud file id: embedded PDF text when
+	 * present, otherwise OCR (REQ-FIN-01). Delegates to the shared text source.
 	 *
 	 * @param int|null $fileId The Nextcloud file id, or null when unresolvable.
 	 *
 	 * @return array{text: string, ocrConfidence: float}
 	 */
 	private function resolveText(?int $fileId): array {
-		if ($fileId === null || $fileId <= 0) {
-			return ['text' => '', 'ocrConfidence' => 0.0];
-		}
+		return (new DocumentTextSource(
+			rootFolder: $this->rootFolder,
+			userSession: $this->userSession,
+			ocrService: $this->ocrService,
+			logger: $this->logger
+		))->resolveText(fileId: $fileId);
 
-		$file = $this->resolveFile(fileId: $fileId);
-		if ($file === null) {
-			return ['text' => '', 'ocrConfidence' => 0.0];
-		}
-
-		$mimeType = $file->getMimeType();
-		$embedded = '';
-		if ($mimeType === 'application/pdf') {
-			$embedded = $this->extractEmbeddedPdfText(file: $file);
-		}
-
-		if ($this->ocrService->needsOcr(mimeType: $mimeType, existingText: $embedded) === false) {
-			return ['text' => $embedded, 'ocrConfidence' => 1.0];
-		}
-
-		if ($this->ocrService->isTesseractAvailable() === false) {
-			// Graceful degradation: keep whatever embedded text we have.
-			return ['text' => $embedded, 'ocrConfidence' => 0.0];
-		}
-
-		return $this->runOcr(file: $file, embedded: $embedded);
 	}//end resolveText()
-
-	/**
-	 * Stage the file to a temp path and run Tesseract OCR on it. Absent-safe:
-	 * any failure at any stage falls back to the embedded text (possibly
-	 * empty) with zero OCR confidence.
-	 *
-	 * @param File $file The Nextcloud file to OCR.
-	 * @param string $embedded Embedded text already extracted (fallback value).
-	 *
-	 * @return array{text: string, ocrConfidence: float}
-	 */
-	private function runOcr(File $file, string $embedded): array {
-		try {
-			$tempFile = $this->writeToTemp(file: $file);
-		} catch (Throwable $e) {
-			$this->logger->warning('Filinq: financial extraction could not stage file for OCR: ' . $e->getMessage());
-			return ['text' => $embedded, 'ocrConfidence' => 0.0];
-		}
-
-		try {
-			return $this->ocrStagedFile(tempFile: $tempFile, isImage: str_starts_with($file->getMimeType(), 'image/'));
-		} catch (Throwable $e) {
-			$this->logger->warning('Filinq: financial extraction OCR failed: ' . $e->getMessage());
-			return ['text' => $embedded, 'ocrConfidence' => 0.0];
-		} finally {
-			if (file_exists($tempFile) === true) {
-				unlink($tempFile);
-			}
-		}//end try
-
-	}//end runOcr()
-
-	/**
-	 * OCR a staged copy of the file with the configured languages and DPI.
-	 *
-	 * @param string $tempFile Path of the staged copy.
-	 * @param bool $isImage Whether the file is an image rather than a PDF.
-	 *
-	 * @return array{text: string, ocrConfidence: float}
-	 */
-	private function ocrStagedFile(string $tempFile, bool $isImage): array {
-		$languages = $this->ocrService->getOcrLanguages();
-		$dpi = $this->ocrService->getOcrDpi();
-
-		$result = $this->ocrService->extractTextFromPdf(filePath: $tempFile, languages: $languages, dpi: $dpi);
-		if ($isImage === true) {
-			$result = $this->ocrService->extractTextFromImage(filePath: $tempFile, languages: $languages, dpi: $dpi);
-		}
-
-		return [
-			'text' => $result['text'],
-			'ocrConfidence' => ($result['confidence'] / 100),
-		];
-	}//end ocrStagedFile()
-
-	/**
-	 * Extract embedded PDF text via the `pdftotext` CLI (poppler-utils), when
-	 * available. Absent-safe: any failure yields an empty string so the
-	 * caller falls through to OCR.
-	 *
-	 * @param File $file The PDF file.
-	 *
-	 * @return string The embedded text, or '' when unavailable/unextractable.
-	 */
-	private function extractEmbeddedPdfText(File $file): string {
-		try {
-			$tempFile = $this->writeToTemp(file: $file);
-		} catch (Throwable $e) {
-			return '';
-		}
-
-		try {
-			$output = [];
-			$returnCode = 0;
-			exec('pdftotext ' . escapeshellarg($tempFile) . ' - 2>/dev/null', $output, $returnCode);
-			if ($returnCode !== 0) {
-				return '';
-			}
-
-			return trim(implode("\n", $output));
-		} finally {
-			if (file_exists($tempFile) === true) {
-				unlink($tempFile);
-			}
-		}
-
-	}//end extractEmbeddedPdfText()
-
-	/**
-	 * Resolve a Nextcloud file by id, scoped to the current user's folder.
-	 *
-	 * @param int $fileId The Nextcloud file id.
-	 *
-	 * @return File|null The file, or null when not found/not accessible.
-	 */
-	private function resolveFile(int $fileId): ?File {
-		return (new SessionUserFile(rootFolder: $this->rootFolder, userSession: $this->userSession))->find(fileId: $fileId);
-
-	}//end resolveFile()
-
-	/**
-	 * Write a Nextcloud file to a temporary location for processing.
-	 *
-	 * @param File $file The Nextcloud file.
-	 *
-	 * @return string Path to the temporary file.
-	 *
-	 * @throws RuntimeException If writing fails.
-	 */
-	private function writeToTemp(File $file): string {
-		$extension = pathinfo($file->getName(), PATHINFO_EXTENSION);
-		$tempFile = sys_get_temp_dir() . '/filinq_extraction_' . uniqid() . '.' . $extension;
-
-		$content = $file->getContent();
-		if (file_put_contents($tempFile, $content) === false) {
-			throw new RuntimeException('Failed to write file to temporary location');
-		}
-
-		return $tempFile;
-	}//end writeToTemp()
 
 	/**
 	 * The local AI manager access, over this service's container.

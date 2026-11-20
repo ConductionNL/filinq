@@ -33,6 +33,7 @@ namespace OCA\Filinq\Controller;
 use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Controller\Support\CheckedGateReport;
 use OCA\Filinq\Controller\Support\OutputFormatChoice;
+use OCA\Filinq\Controller\Support\SanitizeChoice;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\AnonymizeCall;
@@ -363,9 +364,16 @@ class AnonymizationController extends Controller {
 				return $this->invalidOutputFormatResponse();
 			}
 
+			// Optional `sanitize`: sanitize the delivered artifact; the per-call
+			// value overrides the tenant default, which itself defaults to false.
+			$sanitize = (new SanitizeChoice(appConfig: $this->appConfig))->resolve(params: $params);
+			if ($sanitize === null) {
+				return new JSONResponse(['error' => $this->l10n->t('Invalid sanitize: must be a boolean')], 400);
+			}
+
 			return (new CheckedGateReport())->onto(
 				response: $this->runAnonymize(
-					call: new AnonymizeCall(fileId: $fileId, params: $params, request: $validated['request'], outputFormat: $outputFormat)
+					call: new AnonymizeCall(fileId: $fileId, params: $params, request: $validated['request'], outputFormat: $outputFormat, sanitize: $sanitize)
 				),
 				gate: $checkedGate
 			);

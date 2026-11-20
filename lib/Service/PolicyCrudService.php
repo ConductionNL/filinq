@@ -241,9 +241,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 			new ObjectDeletion(
 				uuid: $uuid,
 				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA_PROHIBITION)
-			),
-			_rbac: false,
-			_multitenancy: false
+			)
 		);
 		$this->matcher?->invalidateCache();
 
@@ -337,9 +335,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 			new ObjectDeletion(
 				uuid: $uuid,
 				target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA_CONSENT)
-			),
-			_rbac: false,
-			_multitenancy: false
+			)
 		);
 		$this->matcher?->invalidateCache();
 
@@ -555,9 +551,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		// numeric register/schema IDs and silently returns nothing otherwise.
 		$results = $objectService->searchObjectsBySlug(
 			registerSlug: $register,
-			schemaSlug: $schema,
-			_rbac: false,
-			_multitenancy: false
+			schemaSlug: $schema
 		);
 
 		if (is_int($results) === true) {
@@ -594,9 +588,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		$objectService = $this->settingsService->getObjectService();
 		$object = $objectService->find(
 			id: $uuid,
-			options: new ObjectFindOptions(register: $register, schema: $schema),
-			_rbac: false,
-			_multitenancy: false
+			options: new ObjectFindOptions(register: $register, schema: $schema)
 		);
 
 		if ($object === null) {
@@ -635,9 +627,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 				options: new ObjectSaveOptions(
 					target: new ObjectFindTarget(register: $register, schema: $schema),
 					uuid: $uuid
-				),
-				_rbac: false,
-				_multitenancy: false
+				)
 			);
 			return $saved->getObject();
 		} catch (Exception $e) {

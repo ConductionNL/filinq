@@ -94,7 +94,7 @@ final class BatchAnonymizeRun {
 	public function summary(string $batchId): array {
 		return [
 			'batchId' => $batchId,
-			'batchStatus' => 'completed',
+			'batchStatus' => (string)($this->batch['status'] ?? 'completed'),
 			'processedFiles' => $this->processed,
 			'skippedFiles' => $this->skipped,
 			'prohibitionSkippedFiles' => $this->prohibitionSkipped,

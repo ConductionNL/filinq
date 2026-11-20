@@ -20,7 +20,7 @@
  * material and citizen contact data, and it can produce legally binding
  * artefacts, so what is absent matters as much as what is present: nothing
  * under `Service/Signing/`, no `CorrespondenceService::generateBatch()`, and
- * of `SigningService` only `createRequest()` (as `startSigningRequest`) --
+ * of `SigningService` only `startSigningRequest()` --
  * applying, declining, cancelling or verifying a signature is an act with
  * legal effect and stays a human action, while initiating a request is a
  * write Hermiq holds for human approval. A mail-merge over N recipients is a
@@ -67,6 +67,8 @@ class FilinqScannableServices implements IMcpScannableServices {
 	 * `getDocumentStatus` and `AnonymizationService` the intake-only
 	 * `anonymizeDocument`; both answer counts and statuses, never entity values.
 	 * `SigningService` carries `startSigningRequest` and nothing else.
+	 * `ConsentDecisionAgent` carries `recordConsentDecision`: one consent
+	 * officer's decision by id, status fields back, never a list or a read.
 	 * Initiating a request is the one way into the signing domain, behind
 	 * Hermiq's approval gate: the signing act itself (sign, decline, bulk sign,
 	 * cancel, verify) is never exposed.

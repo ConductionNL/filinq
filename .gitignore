@@ -28,9 +28,9 @@
 /phpqa/
 # Test/build artifacts
 phpmetrics/
-# Claude Code
-/.claude/
-/CLAUDE.md
+# Claude Code: local state is ignored, the shared commands in .claude/commands/ are committed
+/.claude/*
+!/.claude/commands/
 # Intermediate SBOM files. The merged sbom.cdx.json at the root is committed.
 bom-php.cdx.json
 bom-npm.cdx.json

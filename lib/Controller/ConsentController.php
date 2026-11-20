@@ -30,6 +30,7 @@ namespace OCA\Filinq\Controller;
 use Exception;
 use OCA\Filinq\Exception\PolicyRejectedException;
 use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
+use OCA\Filinq\Service\ConsentOfficers;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -58,7 +59,7 @@ class ConsentController extends Controller {
 	 *
 	 * @var list<string>
 	 */
-	private const OFFICER_GROUPS = ['filinq-woo-officers', 'filinq-policy-admins'];
+	private const OFFICER_GROUPS = ConsentOfficers::GROUPS;
 	/**
 	 * Constructor for ConsentController
 	 *

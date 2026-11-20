@@ -91,6 +91,8 @@ class AnonymisationRunRecords {
 			return $resultInfo;
 		}
 
+		// Per entity TYPE, never a value: what a processing certificate may state.
+		$resultInfo['entityTypeCounts'] = $this->entityTypeCounts(redactedValues: (array) ($context['redactedValues'] ?? []));
 		// The rendition the review ran on, so the link says what was reviewed (REQ-DDARW-012).
 		$rendition = $this->renditionOf(fileId: (int) $context['fileId']);
 		if ($rendition !== null) {
@@ -157,6 +159,31 @@ class AnonymisationRunRecords {
 		return $this->accessibility?->preserveRequested();
 
 	}//end preserveStructure()
+
+	/**
+	 * How many redacted values of each entity type the run had.
+	 *
+	 * @param array<int, mixed> $redactedValues The mapped entities (text, entityType, key).
+	 *
+	 * @return array<string, int> Entity type => count; no value is kept.
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-anonymization-runs-can-be-certified-with-a-sealed-processing-certificate-req-ddwmk-003
+	 */
+	private function entityTypeCounts(array $redactedValues): array {
+		$counts = [];
+		foreach ($redactedValues as $entity) {
+			if (is_array($entity) === false) {
+				continue;
+			}
+
+			$type = strtoupper((string) ($entity['entityType'] ?? 'UNKNOWN'));
+			$counts[$type] = (($counts[$type] ?? 0) + 1);
+		}
+
+		ksort($counts);
+		return $counts;
+
+	}//end entityTypeCounts()
 
 	/**
 	 * The six rendition fields of a source, or null when none was prepared.

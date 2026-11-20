@@ -14,6 +14,7 @@
         "double RedactionOutputGuard",
         null,
         null,
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -27,6 +28,7 @@
         "double DocumentAnonymizeRunner",
         "double EntityDetectionService",
         "double FileEntityStatsService",
+        "double ImageRedactionService",
         "double LoggerInterface",
         "double OcrExtractionFallback",
         "double OpenRegisterServiceLocator",
@@ -72,12 +74,14 @@
         "double LoggerInterface",
         "double ObjectionDeadlineChecker",
         "double PolicyMatchService",
+        null,
         {
             "distinct objects built by the class": 0
         }
     ],
     "ConsentService given": [
         "double ConsentRecordWriter",
+        "double ConsentRequestSender",
         "double ConsentScopeValidator",
         "double ConsentUpdateHandler",
         "double LoggerInterface",
@@ -97,6 +101,7 @@
         "double LoggerInterface",
         "double OpenRegisterServiceLocator",
         "double ReplacementVerificationService",
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -107,6 +112,7 @@
         "double AnonymizationPersistenceService",
         "double EmlAnonymizationService",
         "double EntityDetectionService",
+        "double FinalArtifactSanitizer",
         "double GrondslagenSummaryAttacher",
         "double LoggerInterface",
         "double OpenRegisterServiceLocator",
@@ -126,6 +132,7 @@
         null,
         null,
         null,
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -137,6 +144,7 @@
         "double DocumentRenderPipeline",
         "double DocumentStorageService",
         "double GeneratedDocumentLogger",
+        "double OfficeTemplateRenderer",
         "double PlainLanguageRenditionService",
         "double TemplateMergeFieldService",
         "double TemplateService",
@@ -352,6 +360,7 @@
         "double SettingsService",
         "double TotalsReconciler",
         "double VatIdExtractor",
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -370,6 +379,7 @@
         "double OpenRegisterResolver",
         "double SettingsService",
         "double TotalsReconciler",
+        "double UnattendedVerdict",
         "double VatIdExtractor",
         {
             "distinct objects built by the class": 0
@@ -382,6 +392,7 @@
         "double IUserSession",
         "double JobQueueInterface",
         "double LoggerInterface",
+        null,
         {
             "built OCA\\Filinq\\Service\\FolderFileEnumerator": [
                 "double ConfidentialityLabelService",
@@ -395,6 +406,7 @@
     ],
     "FolderBatchService given": [
         "double AnonymizationService",
+        "double BatchRouting",
         "double BatchStateService",
         "double IRootFolder",
         "double IUserSession",
@@ -472,8 +484,10 @@
         }
     ],
     "IntakeService defaults": [
+        "double ContentHasher",
         "double IUserSession",
         "double IntakeAuthorizationGate",
+        "double IntakeDeadlines",
         "double IntakeDefaultRuleService",
         "double IntakeFilePlacement",
         "double IntakeOcrQueue",
@@ -481,13 +495,16 @@
         "double IntakeRoutingService",
         "double LoggerInterface",
         "double PartySuggestionService",
+        null,
         {
             "distinct objects built by the class": 0
         }
     ],
     "IntakeService given": [
+        "double ContentHasher",
         "double IUserSession",
         "double IntakeAuthorizationGate",
+        "double IntakeDeadlines",
         "double IntakeDefaultRuleService",
         "double IntakeFilePlacement",
         "double IntakeOcrQueue",
@@ -495,6 +512,7 @@
         "double IntakeRoutingService",
         "double LoggerInterface",
         "double PartySuggestionService",
+        "double RegistryEnrichmentQueue",
         {
             "distinct objects built by the class": 0
         }
@@ -531,10 +549,16 @@
         null,
         null,
         {
-            "distinct objects built by the class": 0
+            "built OCA\\Filinq\\Service\\Signing\\FieldValueChecker": [
+                "built Closure"
+            ]
+        },
+        {
+            "distinct objects built by the class": 2
         }
     ],
     "SigningService given": [
+        "double FieldValueChecker",
         "double GuardianConsentGuard",
         "double SettingsService",
         "double SignedArtifactProducer",
