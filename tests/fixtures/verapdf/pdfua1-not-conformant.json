@@ -1,0 +1,120 @@
+{
+  "report": {
+    "buildInformation": {
+      "releaseDetails": [
+        {
+          "id": "core",
+          "version": "1.30.2",
+          "buildDate": 1780483380000
+        },
+        {
+          "id": "validation-model",
+          "version": "1.30.2",
+          "buildDate": 1780483560000
+        },
+        {
+          "id": "apps",
+          "version": "1.30.2",
+          "buildDate": 1780484100000
+        }
+      ]
+    },
+    "jobs": [
+      {
+        "itemDetails": {
+          "name": "/data/pdfa3b-claimed-not-conformant.pdf",
+          "size": 925
+        },
+        "validationResult": [
+          {
+            "details": {
+              "passedRules": 100,
+              "failedRules": 2,
+              "passedChecks": 500,
+              "failedChecks": 5,
+              "ruleSummaries": [
+                {
+                  "ruleStatus": "FAILED",
+                  "specification": "ISO 14289-1:2014",
+                  "clause": "7.1",
+                  "testNumber": 3,
+                  "status": "failed",
+                  "failedChecks": 4,
+                  "description": "Content shall be marked as Artifact or tagged as real content",
+                  "object": "SESimpleContentItem",
+                  "test": "isTaggedContent == true || parentsTags.contains('Artifact') == true",
+                  "checks": [
+                    {
+                      "status": "failed",
+                      "context": "root/document[0]/pages[0]/contentItem[0]",
+                      "errorMessage": "Content is neither marked as Artifact nor tagged as real content"
+                    }
+                  ]
+                },
+                {
+                  "ruleStatus": "FAILED",
+                  "specification": "ISO 14289-1:2014",
+                  "clause": "7.3",
+                  "testNumber": 1,
+                  "status": "failed",
+                  "failedChecks": 1,
+                  "description": "Figure tags shall include an alternative representation or replacement text",
+                  "object": "SEFigure",
+                  "test": "(Alt != null && Alt != '') || ActualText != null",
+                  "checks": [
+                    {
+                      "status": "failed",
+                      "context": "root/document[0]/StructTreeRoot[0]/K[0]/K[1]",
+                      "errorMessage": "Figure structure element neither has an alternate description nor a replacement text"
+                    }
+                  ]
+                }
+              ]
+            },
+            "jobEndStatus": "normal",
+            "profileName": "PDF/UA-1 validation profile",
+            "statement": "PDF file is not compliant with Validation Profile requirements.",
+            "compliant": false
+          }
+        ],
+        "processingTime": {
+          "start": 1790699062270,
+          "finish": 1790699063044,
+          "duration": "00:00:00.774",
+          "difference": 774
+        }
+      }
+    ],
+    "batchSummary": {
+      "duration": {
+        "start": 1790699062056,
+        "finish": 1790699063138,
+        "duration": "00:00:01.082",
+        "difference": 1082
+      },
+      "totalJobs": 1,
+      "outOfMemory": 0,
+      "veraExceptions": 0,
+      "featuresSummary": {
+        "failedJobCount": 0,
+        "totalJobCount": 0,
+        "successfulJobCount": 0
+      },
+      "repairSummary": {
+        "failedJobCount": 0,
+        "totalJobCount": 0,
+        "successfulJobCount": 0
+      },
+      "multiJob": false,
+      "failedEncryptedJobs": 0,
+      "failedParsingJobs": 0,
+      "validationSummary": {
+        "compliantPdfaCount": 0,
+        "failedJobCount": 0,
+        "totalJobCount": 1,
+        "nonCompliantPdfaCount": 1,
+        "successfulJobCount": 1
+      }
+    }
+  }
+}

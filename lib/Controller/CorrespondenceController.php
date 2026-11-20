@@ -27,10 +27,13 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Exception\CorrespondenceSendRefused;
 use OCA\Filinq\Kernel\Contracts\CorrespondenceServiceInterface;
+use OCA\Filinq\Service\CorrespondenceSendService;
 use OCA\Filinq\Service\ReadsCurrentUserId;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -63,6 +66,7 @@ class CorrespondenceController extends Controller {
 	 * @param IUserSession $userSession User session for auth info
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IL10N $l10n The localization service
+	 * @param CorrespondenceSendService $sender Sends a composed letter by email
 	 *
 	 * @return void
 	 */
@@ -73,6 +77,7 @@ class CorrespondenceController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
 		private readonly IL10N $l10n,
+		private readonly CorrespondenceSendService $sender,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -392,6 +397,91 @@ class CorrespondenceController extends Controller {
 		}//end try
 
 	}//end jobStatus()
+
+	/**
+	 * Send one composed letter by email to its recipient
+	 *
+	 * Accepts JSON body with:
+	 * - templateId (string, required): UUID of the template to use
+	 * - dataRefs (array, required): data references, the first being the recipient
+	 * - options (object, optional): huisstijlId, caseReference, recipientType, attachPdf
+	 *
+	 * 201 when the letter went, 502 when the mail server refused it (logged as
+	 * failed), 400/404/422 when it could not be sent at all (nothing logged as sent).
+	 *
+	 * @return JSONResponse What the send did
+	 *
+	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md#requirement-a-composed-letter-can-be-sent-by-email-req-lcs-01
+	 * @spec openspec/changes/letter-email-sending/tasks.md#task-2
+	 */
+	#[NoAdminRequired]
+	public function send(): JSONResponse {
+		return $this->sending(
+			action: function (string $templateId, array $dataRefs, array $options): JSONResponse {
+				$result = $this->sender->send(templateId: $templateId, dataRefs: $dataRefs, options: $options);
+				if ($result['status'] !== 'sent') {
+					$result['error'] = $this->l10n->t('The letter was not sent: the mail server did not accept it.');
+					return new JSONResponse(data: $result, statusCode: Http::STATUS_BAD_GATEWAY);
+				}
+
+				return new JSONResponse(data: $result, statusCode: Http::STATUS_CREATED);
+			}
+		);
+
+	}//end send()
+
+	/**
+	 * The address and subject a letter would be sent with, for the confirm dialog
+	 *
+	 * Same body as {@see send()}; composes and sends nothing.
+	 *
+	 * @return JSONResponse {to, subject}, or the refusal send() would give
+	 *
+	 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+	 */
+	#[NoAdminRequired]
+	public function sendPreview(): JSONResponse {
+		return $this->sending(
+			action: function (string $templateId, array $dataRefs): JSONResponse {
+				return new JSONResponse(data: $this->sender->preview(templateId: $templateId, dataRefs: $dataRefs));
+			}
+		);
+
+	}//end sendPreview()
+
+	/**
+	 * Run a send action for the signed-in user, answering its refusals with their status.
+	 *
+	 * @param callable(string, array, array): JSONResponse $action The send or the preview.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/letter-email-sending/tasks.md#task-2
+	 */
+	private function sending(callable $action): JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+		}
+
+		$params = $this->parseGenerateParams();
+		if ($params instanceof JSONResponse) {
+			return $params;
+		}
+
+		$params['options']['attachPdf'] = filter_var(($params['options']['attachPdf'] ?? false), FILTER_VALIDATE_BOOLEAN);
+
+		try {
+			return $action($params['templateId'], $params['dataRefs'], $params['options']);
+		} catch (CorrespondenceSendRefused $refused) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t($refused->getMessage())],
+				statusCode: $refused->getCode()
+			);
+		} catch (Exception $e) {
+			return $this->handleException(exception: $e);
+		}
+
+	}//end sending()
 
 	/**
 	 * Handle exceptions and return appropriate JSON error responses

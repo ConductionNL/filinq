@@ -27,6 +27,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { effectiveManifest } from '../vitest/support/effectiveManifest.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const REPO_ROOT = path.resolve(__dirname, '../..')
@@ -41,16 +42,18 @@ const RECOGNISED_KINDS = new Set([
 ])
 
 /**
- * The three webpack entry points (webpack.config.js `entry`) that mount a
+ * The webpack entry points (webpack.config.js `entry`) that mount a
  * Filinq Vue app. `main.js` is the manifest-V2 shell (routesFromManifest);
  * `settings.js` / `dashboard.js` are separate Nextcloud mount points
  * (admin settings page, dashboard app widgets) that never go through the
  * manifest router — a view reachable only from one of these two is not an
  * "orphan" in the REQ-DDOSR-002 sense, it just isn't a manifest page.
+ * `verify.js` is the public signature verification page (its own entry,
+ * mounted for anonymous visitors without the signed-in app shell).
  * Keep this list in sync with webpack.config.js `entry` if that ever adds
- * a fourth mount point.
+ * another mount point.
  */
-const ROOT_FILES = ['src/main.js', 'src/settings.js', 'src/dashboard.js']
+const ROOT_FILES = ['src/main.js', 'src/settings.js', 'src/dashboard.js', 'src/verify.js']
 
 /**
  * Page-level views the guard must not flag as orphaned, each with a
@@ -387,9 +390,7 @@ function findShadowedRoutes(manifest) {
 // ---------------------------------------------------------------------------
 
 describe('reachability guard — current repo state', () => {
-	const manifest = JSON.parse(
-		fs.readFileSync(path.join(SRC_DIR, 'manifest.json'), 'utf8'),
-	)
+	const manifest = effectiveManifest()
 	const registryText = fs.readFileSync(path.join(SRC_DIR, 'registry.js'), 'utf8')
 	const registryEntries = parseRegistrySource(registryText, SRC_DIR)
 	const reachableSet = buildReachableSet(ROOT_FILES)

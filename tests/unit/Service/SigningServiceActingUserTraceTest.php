@@ -144,6 +144,8 @@ class SigningServiceActingUserTraceTest extends TestCase {
 				'getFeatureToggles'             => ['signing_request_expiry_days' => 14, 'signing_default_level' => 'AdES', 'signing_provider' => 'native'],
 				'resolveSigningRequestBinding'  => ['register' => 'filinq', 'schema' => 'signingRequest'],
 				'resolveSignerRecordBinding'    => ['register' => 'filinq', 'schema' => 'signerRecord'],
+				// No lifecycle engine: the cancel trace records the save it falls back to.
+				'getTransitionEngine'           => null,
 			]
 		);
 		$owners   = ['s-1' => 'alice', 's-2' => 'mallory'];
@@ -199,7 +201,7 @@ class SigningServiceActingUserTraceTest extends TestCase {
 			),
 			outputs: new SigningOutputs(
 				auditService: $this->recorder(SigningAuditService::class, ['logEvent' => []]),
-				artifactProducer: $this->recorder(SignedArtifactProducer::class, ['initiatorDocument' => $file, 'delegate' => static fn (array $request): array => $request, 'produce' => 'file:11@v2']),
+				artifactProducer: $this->recorder(SignedArtifactProducer::class, ['initiatorDocument' => $file, 'delegate' => static fn (array $request): array => $request, 'newVerificationToken' => '0123456789abcdef0123456789abcdef', 'produce' => 'file:11@v2', 'recordVerification' => '0123456789abcdef0123456789abcdef']),
 				emitter: $this->recorder(SigningConclusionEmitter::class, ['emitIfDelegated' => null])
 			)
 		);

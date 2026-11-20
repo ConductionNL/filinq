@@ -52,6 +52,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use stdClass;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for SigningTaskListener.
@@ -157,7 +158,9 @@ final class SigningTaskListenerTest extends TestCase {
 		$this->settingsService->method('getObjectService')
 			->willReturn($this->objectService);
 		$this->objectService->method('find')->willReturnCallback(
-			function (string $id = '', string $register = '', string $schema = ''): ?stdClass {
+			function (string $id = '', ?ObjectFindOptions $options = null): ?stdClass {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
 				if ($id === self::OWNED_OBJECT && $register === 'filinq' && $schema === 'signingRequest') {
 					return new stdClass();
 				}

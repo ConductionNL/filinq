@@ -39,7 +39,7 @@ generic anonymisation.
 Set the threshold via Nextcloud's app config:
 
 ```bash
-occ config:app:set filinq prohibition.high_confidence_threshold --value 0.90
+occ config:app:set filinq filinq.prohibition.high_confidence_threshold --value 0.90
 ```
 
 ## HTTP 422 Response Body

@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\ProhibitionGateException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -68,7 +69,7 @@ class ProhibitionGateService {
 	 *
 	 * @var string
 	 */
-	private const HIGH_CONFIDENCE_THRESHOLD_KEY = 'prohibition.high_confidence_threshold';
+	private const HIGH_CONFIDENCE_THRESHOLD_KEY = 'filinq.prohibition.high_confidence_threshold';
 
 	/**
 	 * App config key controlling the gate's fail-mode for backend errors.
@@ -700,8 +701,7 @@ class ProhibitionGateService {
 			);
 			$entity = $objectService->find(
 				id: (string)$entityId,
-				register: 'entities',
-				schema: 'entity'
+				options: new ObjectFindOptions(register: 'entities', schema: 'entity')
 			);
 
 			if (is_array($entity) === false) {

@@ -50,6 +50,12 @@ use OCA\Filinq\Service\Wizard\WizardGenerationGate;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) generateFromHtml() has to live here: it shares
+ *   the private produce, file and log steps with generateFromTemplate(), so a finished
+ *   draft and a direct generation cannot drift apart (generate-draft-and-attended-edit D3).
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength) Same reason.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Same reason.
  */
 class DocumentService implements DocumentServiceInterface {
 
@@ -114,6 +120,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @param PlainLanguageRenditionService|null $plainRendition The plain-language counterpart, when a template declares one
 	 * @param WizardGenerationGate|null $wizardGate Checks a wizard run before it renders (options.wizardContext)
 	 * @param TemplateMergeFieldService|null $mergeFields Names the fields a template fills, for the merge preview
+	 * @param CaseSystemDeliveryService|null $caseSystem Records a stored document's delivery to the case system
 	 *
 	 * @return void
 	 */
@@ -124,6 +131,7 @@ class DocumentService implements DocumentServiceInterface {
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 		private readonly ?WizardGenerationGate $wizardGate = null,
 		private readonly ?TemplateMergeFieldService $mergeFields = null,
+		private readonly ?CaseSystemDeliveryService $caseSystem = null,
 	) {
 
 	}//end __construct()
@@ -145,7 +153,9 @@ class DocumentService implements DocumentServiceInterface {
 	 *                       order?, as?}, ...] — each resolves to an array
 	 *                       of objects under the Twig context key 'as'
 	 *                       (default: schema + '_list')
-	 *                       output: {mode?: return|files|both, targetPath?}
+	 *                       output: {mode?: return|files|both, targetPath?, caseSystem?}
+	 *                       — caseSystem names a case-system destination for the
+	 *                       stored document and needs mode files or both
 	 *                       — defaults to mode 'return' (byte-identical to
 	 *                       this method's behaviour before output support
 	 *                       existed)
@@ -183,7 +193,8 @@ class DocumentService implements DocumentServiceInterface {
 			$template = $this->sources->templates->getTemplateAtVersion(id: $templateId, version: (int) $options['templateVersion']);
 		}
 
-		$template ??= $this->sources->templates->getTemplate(id: $templateId);
+		// Users generate from the last published version, never from a draft (REQ-SCR-015).
+		$template ??= $this->sources->templates->getPublishedTemplate(id: $templateId);
 
 		if (isset($options['wizardContext']) === true && $this->wizardGate !== null) {
 			// A wizard run: the answers are checked against the stored wizard before
@@ -244,6 +255,7 @@ class DocumentService implements DocumentServiceInterface {
 		];
 		$this->validateFormat(format: $run['format']);
 		$run['outputMode'] = $this->resolveOutputMode(options: $options);
+		CaseSystemDeliveryService::assertStoredMode(options: $options, mode: $run['outputMode']);
 
 		$resolved = $this->resolveTemplateData(run: $run);
 
@@ -270,10 +282,105 @@ class DocumentService implements DocumentServiceInterface {
 			'warnings' => array_merge($stored['warnings'], $plain['warnings']),
 		];
 		$outcome['metadata'] = $this->logGenerated(run: $run, outcome: $outcome);
+		$outcome = $this->deliverToCaseSystem(run: $run, outcome: $outcome);
 
 		return $this->generationResult(run: $run, outcome: $outcome);
 
 	}//end generateFromTemplate()
+
+	/**
+	 * Produce, file and log a document from HTML that was already rendered.
+	 *
+	 * The tail of {@see generateFromTemplate()} for a draft a clerk edited:
+	 * the HTML is turned into bytes by the same `produceOutput()`, filed by
+	 * the same `storeOutputIfRequested()` and logged by the same logger. It
+	 * is never rendered through Twig again, so braces a clerk typed stay
+	 * text. A wizard draft's `options.wizardContext` runs through the same
+	 * wizard check as a direct generation. Pass `$log` false when the caller
+	 * logs the result in a register of its own (a correspondence draft).
+	 *
+	 * @param string $templateId The template the HTML was rendered from.
+	 * @param string $html The rendered (and edited, sanitised) HTML.
+	 * @param array $dataRefs The data references the HTML was rendered with, for the record.
+	 * @param array $options The same options {@see generateDocument()} takes (format, userId,
+	 *                       filename, output, huisstijlId, templateVersion, wizardContext, caseId).
+	 * @param array $recordFields Extra fields for the generatedDocument record (draftId, editedBy).
+	 * @param bool $log Whether to write the generatedDocument record.
+	 *
+	 * @return array<string, mixed> The same result shape as {@see generateDocument()}.
+	 *
+	 * @throws Exception On an unsupported format or output mode, or a storage failure.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$log` only chooses the register the
+	 *   record goes to; production and filing are the same either way.
+	 *
+	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 */
+	public function generateFromHtml(
+		string $templateId,
+		string $html,
+		array $dataRefs = [],
+		array $options = [],
+		array $recordFields = [],
+		bool $log = true,
+	): array {
+		$run = [
+			'templateId' => $templateId,
+			'dataRefs' => $dataRefs,
+			'options' => $options,
+			'format' => ($options['format'] ?? self::DEFAULT_FORMAT),
+		];
+		$this->validateFormat(format: $run['format']);
+		$run['outputMode'] = $this->resolveOutputMode(options: $options);
+		$run['template'] = $this->templateFor(templateId: $templateId, options: $options);
+
+		if (isset($options['wizardContext']) === true && $this->wizardGate !== null) {
+			$recordFields = array_merge(
+				$recordFields,
+				$this->wizardGate->check(templateId: $templateId, dataRefs: $dataRefs, context: $options['wizardContext'])
+			);
+		}
+
+		$run['recordFields'] = $recordFields;
+
+		$huisstijl  = $this->production->pipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
+		$pdfOptions = $this->production->pipeline->buildPdfOptions(template: $run['template'], huisstijl: $huisstijl, options: $options);
+		$content    = $this->production->pipeline->produceOutput(htmlContent: $html, format: $run['format'], pdfOptions: $pdfOptions);
+		$rendered   = ['html' => $html, 'content' => $content, 'warnings' => $this->production->pipeline->getLastOutputWarnings()];
+		$stored     = $this->storeOutputIfRequested(run: $run, output: $rendered);
+
+		$outcome = [
+			'rendered' => $rendered,
+			'stored' => $stored,
+			'plain' => ['rendition' => null, 'record' => [], 'warnings' => []],
+			'warnings' => $stored['warnings'],
+			'metadata' => [],
+		];
+		if ($log === true) {
+			$outcome['metadata'] = $this->logGenerated(run: $run, outcome: $outcome);
+		}
+
+		return $this->generationResult(run: $run, outcome: $outcome);
+
+	}//end generateFromHtml()
+
+	/**
+	 * The template of a generation: the stored version the options name, else the head.
+	 *
+	 * @param string $templateId The template UUID.
+	 * @param array<string, mixed> $options The generation options (templateVersion).
+	 *
+	 * @return array<string, mixed> The template.
+	 *
+	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 */
+	private function templateFor(string $templateId, array $options): array {
+		if (isset($options['templateVersion']) === true) {
+			return $this->sources->templates->getTemplateAtVersion(id: $templateId, version: (int) $options['templateVersion']);
+		}
+
+		return $this->sources->templates->getTemplate(id: $templateId);
+	}//end templateFor()
 
 	/**
 	 * Resolve the data a generation renders, turning failed references into warnings.
@@ -368,6 +475,36 @@ class DocumentService implements DocumentServiceInterface {
 			]
 		);
 	}//end logGenerated()
+
+	/**
+	 * Hand a stored document to the case system when a destination applies (REQ-GSC-002).
+	 *
+	 * Only a filed document is delivered; recording the delivery never fails
+	 * the generation, it adds a warning instead (design D3, D4).
+	 *
+	 * @param array<string, mixed> $run     The generation run.
+	 * @param array<string, mixed> $outcome The filed documents, the audit entry and the warnings.
+	 *
+	 * @return array<string, mixed> The outcome with the linked audit entry and any delivery warning.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+	 */
+	private function deliverToCaseSystem(array $run, array $outcome): array {
+		if ($this->caseSystem === null || $run['outputMode'] === 'return') {
+			return $outcome;
+		}
+
+		$sent = $this->caseSystem->recordGeneration(
+			template: ['id' => $run['templateId'], 'namespace' => ($run['template']['namespace'] ?? '')],
+			document: $outcome['metadata'],
+			generation: ['stored' => $outcome['stored'], 'options' => $run['options'], 'format' => $run['format']]
+		);
+
+		$outcome['metadata'] = $sent['document'];
+		$outcome['warnings'] = array_merge($outcome['warnings'], $sent['warnings']);
+
+		return $outcome;
+	}//end deliverToCaseSystem()
 
 	/**
 	 * The answer of a generation: the bytes, the audit entry and where the output went.

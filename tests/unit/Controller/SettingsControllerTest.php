@@ -20,9 +20,11 @@
 
 namespace OCA\Filinq\Tests\Unit\Controller;
 
+use OCA\Filinq\BackgroundJob\IntegrityScanJob;
 use OCA\Filinq\Controller\SettingsController;
 use OCA\Filinq\Controller\Support\AppConfiguration;
 use OCA\Filinq\Controller\Support\SettingsBackends;
+use OCA\Filinq\Service\IntegrityScanService;
 use OCA\Filinq\Service\AnonymiserBackendStateClient;
 use OCA\Filinq\Tests\Unit\Service\DetectionStates;
 use OCA\Filinq\Service\SettingsService;
@@ -316,7 +318,7 @@ class SettingsControllerTest extends TestCase {
 			$groupManager,
 			$userSession,
 			new NullLogger(),
-			new SettingsBackends(settings: $settingsService, anonymiser: ($backendClient ?? $this->createMock(AnonymiserBackendStateClient::class)))
+			new SettingsBackends(settings: $settingsService, anonymiser: ($backendClient ?? $this->createMock(AnonymiserBackendStateClient::class)), integrityScan: $this->createMock(IntegrityScanService::class), integrityNotices: $this->createMock(IntegrityScanJob::class))
 		);
 
 	}//end controller()

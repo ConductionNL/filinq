@@ -1,6 +1,7 @@
 [
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "p.pdf",
 			"fileId": 3,
 			"status": "extracted",
@@ -118,7 +119,10 @@
 			"none": {
 				"fileId": 0
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -130,6 +134,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "p.pdf",
 			"fileId": 3,
 			"status": "completed",
@@ -145,7 +150,10 @@
 			"none": {
 				"fileId": 0
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -157,6 +165,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "p.pdf",
 			"fileId": 3,
 			"status": "completed",
@@ -172,7 +181,10 @@
 			"none": {
 				"fileId": 0
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -184,6 +196,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "p.pdf",
 			"fileId": 3,
 			"status": "completed",
@@ -199,7 +212,10 @@
 			"none": {
 				"fileId": 0
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -211,6 +227,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "p.pdf",
 			"fileId": 3,
 			"status": "extracted",
@@ -243,7 +260,10 @@
 			"none": {
 				"fileId": 0
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -255,6 +275,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "p.pdf",
 			"fileId": 3,
 			"status": "completed",
@@ -270,7 +291,10 @@
 			"none": {
 				"fileId": 0
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[

@@ -42,6 +42,9 @@
             }
         },
         {
+            "SettingsService::getTransitionEngine": []
+        },
+        {
             "ObjectService::saveObject": {
                 "object": {
                     "id": "req-1",
@@ -990,6 +993,9 @@
             }
         },
         {
+            "SignedArtifactProducer::newVerificationToken": []
+        },
+        {
             "SignedArtifactProducer::produce": {
                 "request": {
                     "id": "req-1",
@@ -1011,7 +1017,29 @@
                         "userId": "alice",
                         "status": "SIGNED"
                     }
-                }
+                },
+                "verificationToken": "0123456789abcdef0123456789abcdef"
+            }
+        },
+        {
+            "SignedArtifactProducer::recordVerification": {
+                "request": {
+                    "id": "req-1",
+                    "status": "COMPLETED",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit",
+                    "consentBasis": "adult",
+                    "assurance": "low",
+                    "signedDocumentRef": "file:11@v2"
+                },
+                "signedDocumentRef": "file:11@v2",
+                "token": "0123456789abcdef0123456789abcdef"
             }
         },
         {
@@ -1029,7 +1057,8 @@
                     "subjectSchema": "besluit",
                     "consentBasis": "adult",
                     "assurance": "low",
-                    "signedDocumentRef": "file:11@v2"
+                    "signedDocumentRef": "file:11@v2",
+                    "verificationToken": "0123456789abcdef0123456789abcdef"
                 },
                 "register": "filinq",
                 "schema": "signingRequest",
@@ -1051,7 +1080,8 @@
                     "subjectSchema": "besluit",
                     "consentBasis": "adult",
                     "assurance": "low",
-                    "signedDocumentRef": "file:11@v2"
+                    "signedDocumentRef": "file:11@v2",
+                    "verificationToken": "0123456789abcdef0123456789abcdef"
                 },
                 "status": "signed",
                 "signedDocumentRef": "file:11@v2"
@@ -1586,6 +1616,9 @@
             }
         },
         {
+            "SignedArtifactProducer::newVerificationToken": []
+        },
+        {
             "SignedArtifactProducer::produce": {
                 "request": {
                     "id": "req-1",
@@ -1612,7 +1645,29 @@
                         "userId": "alice",
                         "status": "SIGNED"
                     }
-                }
+                },
+                "verificationToken": "0123456789abcdef0123456789abcdef"
+            }
+        },
+        {
+            "SignedArtifactProducer::recordVerification": {
+                "request": {
+                    "id": "req-1",
+                    "status": "COMPLETED",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit",
+                    "consentBasis": "adult",
+                    "assurance": "low",
+                    "signedDocumentRef": "file:11@v2"
+                },
+                "signedDocumentRef": "file:11@v2",
+                "token": "0123456789abcdef0123456789abcdef"
             }
         },
         {
@@ -1630,7 +1685,8 @@
                     "subjectSchema": "besluit",
                     "consentBasis": "adult",
                     "assurance": "low",
-                    "signedDocumentRef": "file:11@v2"
+                    "signedDocumentRef": "file:11@v2",
+                    "verificationToken": "0123456789abcdef0123456789abcdef"
                 },
                 "register": "filinq",
                 "schema": "signingRequest",
@@ -1652,7 +1708,8 @@
                     "subjectSchema": "besluit",
                     "consentBasis": "adult",
                     "assurance": "low",
-                    "signedDocumentRef": "file:11@v2"
+                    "signedDocumentRef": "file:11@v2",
+                    "verificationToken": "0123456789abcdef0123456789abcdef"
                 },
                 "status": "signed",
                 "signedDocumentRef": "file:11@v2"

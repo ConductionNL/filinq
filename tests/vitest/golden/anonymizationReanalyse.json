@@ -1,6 +1,7 @@
 [
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "r.pdf",
 			"fileId": 8,
 			"status": "extracted",
@@ -114,7 +115,10 @@
 			"confidentialityLevel": 3,
 			"ocrWarning": null,
 			"missing": null,
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -128,6 +132,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "r.pdf",
 			"fileId": 8,
 			"status": "completed",
@@ -137,7 +142,10 @@
 			"confidentialityLevel": null,
 			"ocrWarning": null,
 			"missing": null,
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -151,6 +159,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "r.pdf",
 			"fileId": 8,
 			"status": "extracted",
@@ -160,7 +169,10 @@
 			"confidentialityLevel": null,
 			"ocrWarning": "This document is a scan. OCR read its text, but entity detection could not check it yet. Review it by hand before you publish.",
 			"missing": null,
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -174,6 +186,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "r.pdf",
 			"fileId": 8,
 			"status": "extracted",
@@ -183,7 +196,10 @@
 			"confidentialityLevel": null,
 			"ocrWarning": "This document is a scan and OCR is switched off, so it was not checked for personal data.",
 			"missing": null,
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -197,6 +213,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "r.pdf",
 			"fileId": 8,
 			"status": "extracted",
@@ -223,7 +240,10 @@
 			"confidentialityLevel": 0,
 			"ocrWarning": null,
 			"missing": null,
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -237,6 +257,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "r.pdf",
 			"fileId": 8,
 			"status": "completed",
@@ -246,7 +267,10 @@
 			"confidentialityLevel": null,
 			"ocrWarning": null,
 			"missing": null,
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[

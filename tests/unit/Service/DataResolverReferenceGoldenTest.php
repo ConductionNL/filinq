@@ -29,6 +29,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
 use Stringable;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Every reference set through resolve(), compared with JSON recorded from the
@@ -102,7 +103,9 @@ class DataResolverReferenceGoldenTest extends TestCase {
 		];
 		$calls = [];
 		$objectService = $this->createMock(ObjectService::class);
-		$objectService->method('find')->willReturnCallback(function (string $id = '', string $register = '', string $schema = '') use (&$calls, $objects) {
+		$objectService->method('find')->willReturnCallback(function (string $id = '', ?ObjectFindOptions $options = null) use (&$calls, $objects) {
+			$register = $options?->register ?? '';
+			$schema = $options?->schema ?? '';
 			$calls[] = [$id, $register, $schema];
 			if ($id === 'boom') {
 				throw new Exception('register offline');

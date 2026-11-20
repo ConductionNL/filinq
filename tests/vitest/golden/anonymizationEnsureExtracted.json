@@ -1,6 +1,7 @@
 [
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "f.pdf",
 			"status": "extracted",
 			"error": null,
@@ -122,7 +123,10 @@
 			"ocrWarning": null,
 			"same": false,
 			"queued": 1,
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -134,6 +138,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "f.pdf",
 			"status": "completed",
 			"error": null,
@@ -151,7 +156,10 @@
 			"ocrWarning": null,
 			"same": false,
 			"queued": 1,
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -163,6 +171,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "f.pdf",
 			"status": "extracted",
 			"error": null,
@@ -180,7 +189,10 @@
 			"ocrWarning": "This document is a scan. OCR read its text, but entity detection could not check it yet. Review it by hand before you publish.",
 			"same": false,
 			"queued": 1,
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -192,6 +204,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "f.pdf",
 			"status": "extracted",
 			"error": null,
@@ -209,7 +222,10 @@
 			"ocrWarning": "This document is a scan and OCR is switched off, so it was not checked for personal data.",
 			"same": false,
 			"queued": 1,
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -221,6 +237,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "f.pdf",
 			"status": "extracted",
 			"error": null,
@@ -255,7 +272,10 @@
 			"ocrWarning": null,
 			"same": false,
 			"queued": 1,
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -267,6 +287,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "f.pdf",
 			"status": "completed",
 			"error": null,
@@ -284,7 +305,10 @@
 			"ocrWarning": null,
 			"same": false,
 			"queued": 1,
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[

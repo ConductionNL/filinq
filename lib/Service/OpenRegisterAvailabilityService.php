@@ -51,6 +51,11 @@ class OpenRegisterAvailabilityService {
 	public const OPENREGISTER_APP_ID = 'openregister';
 
 	/**
+	 * OpenRegister's lifecycle transition engine, by class name.
+	 */
+	public const TRANSITION_ENGINE = 'OCA\\OpenRegister\\Service\\Lifecycle\\TransitionEngine';
+
+	/**
 	 * Fallback minimum OpenRegister version if the manifest cannot be read.
 	 *
 	 * The canonical source of truth is `openspec/manifest.yaml`
@@ -157,4 +162,34 @@ class OpenRegisterAvailabilityService {
 
 		throw new RuntimeException('OpenRegister service is not available.');
 	}//end getObjectService()
+
+	/**
+	 * OpenRegister's lifecycle transition engine, or null when this OpenRegister has none.
+	 *
+	 * A schema that declares `x-openregister-lifecycle` moves through its named
+	 * transitions (ADR-031). Null when OpenRegister is not installed, or is too
+	 * old to run a transition on an app's behalf, so a caller can fall back to
+	 * the write it made before.
+	 *
+	 * @return object|null The engine, exposing `transitionAsSystem()`.
+	 *
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function getTransitionEngine(): ?object {
+		if (in_array(self::OPENREGISTER_APP_ID, $this->appManager->getInstalledApps(), true) === false) {
+			return null;
+		}
+
+		try {
+			$engine = $this->container->get(self::TRANSITION_ENGINE);
+		} catch (\Throwable $e) {
+			return null;
+		}
+
+		if (is_object($engine) === false || method_exists($engine, 'transitionAsSystem') === false) {
+			return null;
+		}
+
+		return $engine;
+	}//end getTransitionEngine()
 }//end class

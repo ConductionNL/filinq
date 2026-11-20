@@ -1,6 +1,7 @@
 [
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "up.pdf",
 			"status": "extracted",
 			"dossier": "D 1",
@@ -116,6 +117,7 @@
 			"confidentialityLevel": 3,
 			"ocrWarning": null,
 			"plain": {
+				"imageWarning": null,
 				"name": "up.pdf",
 				"status": "extracted",
 				"dossier": null,
@@ -230,9 +232,15 @@
 				"confidentialityLabel": "Secret",
 				"confidentialityLevel": 3,
 				"ocrWarning": null,
-				"hasFile": false
+				"hasFile": false,
+				"detectionProvider": null,
+				"detectionFellBack": false,
+				"detectionWarning": null
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -266,6 +274,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "up.pdf",
 			"status": "completed",
 			"dossier": "D 1",
@@ -277,6 +286,7 @@
 			"confidentialityLevel": null,
 			"ocrWarning": null,
 			"plain": {
+				"imageWarning": null,
 				"name": "up.pdf",
 				"status": "completed",
 				"dossier": null,
@@ -287,9 +297,15 @@
 				"confidentialityLabel": null,
 				"confidentialityLevel": null,
 				"ocrWarning": null,
-				"hasFile": false
+				"hasFile": false,
+				"detectionProvider": null,
+				"detectionFellBack": false,
+				"detectionWarning": null
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -323,6 +339,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "up.pdf",
 			"status": "extracted",
 			"dossier": "D 1",
@@ -334,6 +351,7 @@
 			"confidentialityLevel": null,
 			"ocrWarning": "This document is a scan. OCR read its text, but entity detection could not check it yet. Review it by hand before you publish.",
 			"plain": {
+				"imageWarning": null,
 				"name": "up.pdf",
 				"status": "extracted",
 				"dossier": null,
@@ -344,9 +362,15 @@
 				"confidentialityLabel": null,
 				"confidentialityLevel": null,
 				"ocrWarning": "This document is a scan. OCR read its text, but entity detection could not check it yet. Review it by hand before you publish.",
-				"hasFile": false
+				"hasFile": false,
+				"detectionProvider": null,
+				"detectionFellBack": false,
+				"detectionWarning": null
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -380,6 +404,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "up.pdf",
 			"status": "extracted",
 			"dossier": "D 1",
@@ -391,6 +416,7 @@
 			"confidentialityLevel": null,
 			"ocrWarning": "This document is a scan and OCR is switched off, so it was not checked for personal data.",
 			"plain": {
+				"imageWarning": null,
 				"name": "up.pdf",
 				"status": "extracted",
 				"dossier": null,
@@ -401,9 +427,15 @@
 				"confidentialityLabel": null,
 				"confidentialityLevel": null,
 				"ocrWarning": "This document is a scan and OCR is switched off, so it was not checked for personal data.",
-				"hasFile": false
+				"hasFile": false,
+				"detectionProvider": null,
+				"detectionFellBack": false,
+				"detectionWarning": null
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -437,6 +469,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "up.pdf",
 			"status": "extracted",
 			"dossier": "D 1",
@@ -465,6 +498,7 @@
 			"confidentialityLevel": 0,
 			"ocrWarning": null,
 			"plain": {
+				"imageWarning": null,
 				"name": "up.pdf",
 				"status": "extracted",
 				"dossier": null,
@@ -492,9 +526,15 @@
 				"confidentialityLabel": null,
 				"confidentialityLevel": 0,
 				"ocrWarning": null,
-				"hasFile": false
+				"hasFile": false,
+				"detectionProvider": null,
+				"detectionFellBack": false,
+				"detectionWarning": null
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[
@@ -528,6 +568,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "up.pdf",
 			"status": "completed",
 			"dossier": "D 1",
@@ -539,6 +580,7 @@
 			"confidentialityLevel": null,
 			"ocrWarning": null,
 			"plain": {
+				"imageWarning": null,
 				"name": "up.pdf",
 				"status": "completed",
 				"dossier": null,
@@ -549,9 +591,15 @@
 				"confidentialityLabel": null,
 				"confidentialityLevel": null,
 				"ocrWarning": null,
-				"hasFile": false
+				"hasFile": false,
+				"detectionProvider": null,
+				"detectionFellBack": false,
+				"detectionWarning": null
 			},
-			"hasFile": false
+			"hasFile": false,
+			"detectionProvider": null,
+			"detectionFellBack": false,
+			"detectionWarning": null
 		},
 		"calls": [
 			[

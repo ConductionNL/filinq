@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Filinq",
-        "version": "0.2.8-unstable.20261021160000",
+        "version": "0.2.9-unstable.20261119124150",
         "description": "The JSON API of Filinq, document management for Nextcloud: anonymisation of documents and folders, signing, templates, archiving and retention, legal holds, settings and the setup wizard. The documents' metadata objects are stored in OpenRegister and read and written through its API; this document covers the endpoints Filinq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here; where this app documents them, openapi.standards.json does.",
         "contact": {
             "name": "Conduction B.V.",
@@ -36,6 +36,10 @@
     ],
     "tags": [
         {
+            "name": "accessibility-conformance",
+            "description": "PDF/UA-1 accessibility conformance checks of a PDF, through the shared veraPDF validator"
+        },
+        {
             "name": "anonymiser-warning",
             "description": "Admin endpoints to dismiss or restore the anonymiser backend warning banner"
         },
@@ -48,12 +52,20 @@
             "description": "Controller that wires the batch-anonymization routes to their service layer"
         },
         {
+            "name": "bridge",
+            "description": "The ZGW document bridge: staged documents from case systems, their dossier pick-up, release and retry, and source badges"
+        },
+        {
             "name": "bulk-signing",
             "description": "Every endpoint is for a signed-in user and reaches only the caller's own batches, or every batch for an admin"
         },
         {
             "name": "case-documents",
             "description": "Controller for the files, the domains and the personal documents list"
+        },
+        {
+            "name": "case-system-delivery",
+            "description": "The admin bridge panel: case-system destinations, open deliveries and retries"
         },
         {
             "name": "classification",
@@ -88,8 +100,16 @@
             "description": "Answers whether the caller maintains custom dictionaries"
         },
         {
+            "name": "office-capabilities",
+            "description": "Answers which office suites have a usable WOPI host"
+        },
+        {
             "name": "document",
             "description": "Controller for document generation endpoints"
+        },
+        {
+            "name": "documentDraft",
+            "description": "Controller for document drafts: open a generation for editing, finish it"
         },
         {
             "name": "document-production",
@@ -160,6 +180,10 @@
             "description": "Controller for PDF generation endpoints"
         },
         {
+            "name": "pdf-password",
+            "description": "Remove the password of an encrypted PDF into an unlocked copy, for a user's own file or a waiting intake document"
+        },
+        {
             "name": "pdfa3-conversion",
             "description": "Controller for the PDF/A-3 conversion endpoint"
         },
@@ -228,6 +252,10 @@
             "description": "Reads and writes the `signer_auth_*` settings, for admins only"
         },
         {
+            "description": "Which apps use the signing rail.",
+            "name": "signing-sources-settings"
+        },
+        {
             "name": "signing",
             "description": "Controller for signing-specific endpoints"
         },
@@ -274,6 +302,38 @@
         {
             "name": "wizard",
             "description": "Document wizards of templates"
+        },
+        {
+            "name": "detection-provider-settings",
+            "description": "Reads and writes the per-organisation entity-detection provider settings, for admins only"
+        },
+        {
+            "name": "grounds",
+            "description": "Reads the Woo refusal grounds the pickers offer, from dossiq or the read-only snapshot"
+        },
+        {
+            "name": "waiting-work",
+            "description": "Lists what waits for the caller: signatures, acceptances, routed intake documents and documents due for review"
+        },
+        {
+            "name": "personal-data-report",
+            "description": "Lists the documents the reader may open that hold personal data, and whether an anonymised copy exists"
+        },
+        {
+            "name": "document-audit",
+            "description": "Reads the audit trail of one document the caller may open"
+        },
+        {
+            "name": "mdto",
+            "description": "The status is open to signed-in users and reads the record as them; export and transfer are for filinq-policy-admins and admins (checked in MdtoController)"
+        },
+        {
+            "name": "mail-archive-import",
+            "description": "Importing a mailbox archive in bulk into dossiers and the intake inbox"
+        },
+        {
+            "name": "digitisation",
+            "description": "Digitising a paper archive: per-box progress, separator sheets, box lists and scan checks."
         }
     ],
     "paths": {
@@ -1034,6 +1094,229 @@
                 ]
             }
         },
+        "/anonymization/scope/{fileId}": {
+            "get": {
+                "operationId": "scope-redaction-show",
+                "summary": "The scope decisions of a document",
+                "description": "The page, page-range and whole-document redaction decisions of a document the caller can open, its page count, and whether OpenRegister's image seam is there to commit page scopes. A file the caller cannot open is a 404.",
+                "tags": [
+                    "anonymization"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The document's Nextcloud file id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            },
+            "post": {
+                "operationId": "scope-redaction-decide",
+                "summary": "Decide a page, page range or whole document redaction",
+                "description": "Stores one scope decision with its grounds on the document's review. A page outside the document, a range that runs backwards or a decision without a ground is refused with 400 and nothing is stored.",
+                "tags": [
+                    "anonymization"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Success.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The document's Nextcloud file id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "scope",
+                                    "bases"
+                                ],
+                                "properties": {
+                                    "scope": {
+                                        "type": "string",
+                                        "enum": [
+                                            "page",
+                                            "pageRange",
+                                            "document"
+                                        ]
+                                    },
+                                    "fromPage": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "description": "First page, 1-based; for page and pageRange."
+                                    },
+                                    "toPage": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "description": "Last page, inclusive; for pageRange."
+                                    },
+                                    "bases": {
+                                        "type": "array",
+                                        "minItems": 1,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "The grounds; at least one."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/anonymization/scope/{fileId}/commit": {
+            "post": {
+                "operationId": "scope-redaction-commit",
+                "summary": "Commit a scope decision",
+                "description": "A page or page range is sent to OpenRegister's image seam as one full-page region per page, so OpenRegister burns the pages; a whole document is withheld: no output is written and its anonymisation link records `withheld` with the grounds. Without the image seam a page scope is refused with 400 and nothing is written.",
+                "tags": [
+                    "anonymization"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The document's Nextcloud file id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "scope",
+                                    "bases"
+                                ],
+                                "properties": {
+                                    "scope": {
+                                        "type": "string",
+                                        "enum": [
+                                            "page",
+                                            "pageRange",
+                                            "document"
+                                        ]
+                                    },
+                                    "fromPage": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "description": "First page, 1-based; for page and pageRange."
+                                    },
+                                    "toPage": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "description": "Last page, inclusive; for pageRange."
+                                    },
+                                    "bases": {
+                                        "type": "array",
+                                        "minItems": 1,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "The grounds; at least one."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/anonymization/upload": {
             "post": {
                 "operationId": "anonymization-upload",
@@ -1300,6 +1583,110 @@
                 }
             }
         },
+        "/documents/waiting": {
+            "get": {
+                "operationId": "waiting-work-index",
+                "summary": "What waits for the caller: signatures and acceptances, routed intake documents, and their documents due for review. Ever",
+                "description": "What waits for the caller: signatures and acceptances, routed intake documents, and their documents due for review. Every item is the caller's own.",
+                "tags": [
+                    "waiting-work"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "What waits for them.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/reports/personal-data": {
+            "get": {
+                "operationId": "personal-data-report-index",
+                "summary": "The documents the caller may read in which detection found personal data, with entity types and counts.",
+                "description": "The documents the caller may read in which detection found personal data, each with its entity types and counts and whether an anonymised copy exists. Never a detected value.",
+                "tags": [
+                    "personal-data-report"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The report: results, total, available, truncated.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/documents/{fileId}/audit": {
+            "get": {
+                "operationId": "document-audit-index",
+                "summary": "The audit trail of a document the caller may read, oldest first.",
+                "description": "The audit trail of a document the caller may read, oldest first, each entry with its action, actor and moment. A file the caller may not read answers 404.",
+                "tags": [
+                    "document-audit"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The entries and their total.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/case-documents/upload-policy": {
             "get": {
                 "operationId": "case-documents-upload-policy",
@@ -1358,6 +1745,9 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
                     }
                 },
                 "parameters": [
@@ -1419,6 +1809,9 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
                     }
                 },
                 "parameters": [
@@ -2353,6 +2746,154 @@
                 }
             }
         },
+        "/correspondence/send": {
+            "post": {
+                "operationId": "correspondence-send",
+                "summary": "Send one composed letter by email to its recipient  Accepts JSON body with: - templateId (string, required): UUID of the",
+                "description": "Send one composed letter by email to its recipient  Accepts JSON body with: - templateId (string, required): UUID of the template to use - dataRefs (array, required): data references, the first being the recipient - options (object, optional): huisstijlId, caseReference, recipientType, attachPdf  201 when the letter went, 502 when the mail server refused it (logged as failed), 400/404/422 when it could not be sent at all (nothing logged as sent).",
+                "tags": [
+                    "correspondence"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "What the send did",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "description": "What the send did",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "What the send did",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "What the send did",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/correspondence/send/preview": {
+            "post": {
+                "operationId": "correspondence-send-preview",
+                "summary": "The address and subject a letter would be sent with, for the confirm dialog  Same body as send(); composes and sends not",
+                "description": "The address and subject a letter would be sent with, for the confirm dialog  Same body as send(); composes and sends nothing.",
+                "tags": [
+                    "correspondence"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{to, subject}, or the refusal send() would give",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "description": "{to, subject}, or the refusal send() would give",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "{to, subject}, or the refusal send() would give",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
         "/correspondence/jobs/{jobId}": {
             "get": {
                 "operationId": "correspondence-job-status",
@@ -2478,6 +3019,34 @@
                 "responses": {
                     "200": {
                         "description": "`{ canMaintain: bool }`",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/office/capabilities": {
+            "get": {
+                "operationId": "office-capabilities-show",
+                "summary": "Whether WOPI is usable, overall and per suite",
+                "description": "Whether WOPI is usable, overall and per suite.",
+                "tags": [
+                    "office-capabilities"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{ available: bool, suites: { <name>: { available: bool, configured: bool } } }`",
                         "headers": {
                             "API-Version": {
                                 "$ref": "#/components/headers/API-Version"
@@ -3395,6 +3964,169 @@
                         "in": "path",
                         "required": true,
                         "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/documents/{fileId}/remove-password": {
+            "post": {
+                "operationId": "pdf-password-remove",
+                "summary": "Remove the password of a PDF into a copy beside it",
+                "description": "Unlock a password-protected PDF the caller can open into `<name> (unlocked).pdf` in the same folder, and check the copy. The original stays. The password is used once and never kept.",
+                "tags": [
+                    "pdf-password"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "password"
+                                ],
+                                "properties": {
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "description": "The PDF's password."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The unlocked copy's id and name, and its validation findings.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/intake/documents/{uuid}/remove-password": {
+            "post": {
+                "operationId": "pdf-password-remove-for-intake",
+                "summary": "Remove the password of a waiting intake document's PDF",
+                "description": "Unlock the locked PDF of a waiting intake document into `<name> (unlocked).pdf` beside it and check the copy. The document then names the copy as its `file` and keeps the file that arrived as `lockedOriginal`. Only a caller who may change intake documents can use it. The password is used once and never kept.",
+                "tags": [
+                    "pdf-password"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "password"
+                                ],
+                                "properties": {
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "description": "The PDF's password."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The unlocked copy's id, name and validation findings, and the stored intake document.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The intake document.",
                         "schema": {
                             "type": "string"
                         }
@@ -4475,8 +5207,8 @@
         "/intake/documents": {
             "get": {
                 "operationId": "intake-index",
-                "summary": "List the documents waiting for a clerk",
-                "description": "List the documents waiting for a clerk.",
+                "summary": "List the documents waiting for a clerk, or the overdue ones",
+                "description": "List the documents waiting for a clerk. With `mode=overdue`, list the documents past their handling deadline that their rule does not count as handled yet, the longest overdue first.",
                 "tags": [
                     "intake"
                 ],
@@ -4500,7 +5232,22 @@
                     "401": {
                         "$ref": "#/components/responses/Problem401"
                     }
-                }
+                },
+                "parameters": [
+                    {
+                        "name": "mode",
+                        "in": "query",
+                        "required": false,
+                        "description": "`waiting` (the default) or `overdue`.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "waiting",
+                                "overdue"
+                            ]
+                        }
+                    }
+                ]
             }
         },
         "/intake/documents/detach": {
@@ -4644,6 +5391,67 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
+                                    "reason": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/intake/documents/{uuid}/deadline": {
+            "post": {
+                "operationId": "intake-changeDeadline",
+                "summary": "Move a waiting document's handling deadline, with a reason",
+                "description": "Move a waiting document's handling deadline, with a reason. `deadline` is a date written as YYYY-MM-DD; `reason` is required and stays on the document. A missing reason or a value that is not a date answers 400, a document that left the inbox 409, and a caller who may not write the intake register 403.",
+                "tags": [
+                    "intake"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The document with its new deadline, or the refusal.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The uuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "deadline": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
                                     "reason": {
                                         "type": "string"
                                     }
@@ -6811,6 +7619,34 @@
                 }
             }
         },
+        "/publications/active": {
+            "get": {
+                "operationId": "publication-active",
+                "summary": "The publications the caller can see that must be published actively",
+                "description": "The publications the caller can see that must be published actively, each saying whether it is published and what still blocks it.",
+                "tags": [
+                    "publication"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{results: [{record, published, blockers}], categories: string[]}",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/publications/categories": {
             "get": {
                 "operationId": "publication-categories",
@@ -6835,6 +7671,40 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/publications/metadata": {
+            "put": {
+                "operationId": "publication-bulkMetadata",
+                "summary": "Set one Woo metadata value on a selection",
+                "description": "Set `wooCategory`, `documentsoort` or `publisher` on the selected publication records. Each changed record gets its own log entry; a record already handed off, or one the caller may not act on, is reported under `skipped`.",
+                "tags": [
+                    "publication"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The updated and the skipped records",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
                     }
                 }
             }
@@ -6914,6 +7784,48 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/publications/{id}/download": {
+            "get": {
+                "operationId": "publication-download",
+                "summary": "Download the published copy, once the caller accepted the download agreement in force",
+                "description": "Download the published copy, once the caller accepted the download agreement in force.",
+                "tags": [
+                    "publication"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The file",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
                     }
                 },
                 "parameters": [
@@ -7787,6 +8699,78 @@
                 "x-provided-by": "openregister"
             }
         },
+        "/settings/integrity-scan": {
+            "get": {
+                "operationId": "settings-integrity-scan-last",
+                "summary": "The last stored integrity scan run",
+                "description": "The last stored run of the whole-collection integrity scan: its times, the records checked, the count of missing, changed and orphaned files, and the findings. Administrators only.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`run`: the last run, or null when no scan ran yet.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "settings-integrity-scan-start",
+                "summary": "Start an integrity scan now",
+                "description": "Scans every dossier, final document and anonymisation link now and stores the run. A run with missing or changed files notifies the administrators. Administrators only; a refused caller starts no scan.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`run`: the run just stored.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
         "/settings/signer-identity": {
             "get": {
                 "operationId": "signer-identity-settings-index",
@@ -7840,6 +8824,34 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    }
+                }
+            }
+        },
+        "/settings/signing-sources": {
+            "get": {
+                "operationId": "signing-sources-settings-index",
+                "summary": "GET /api/settings/signing-sources",
+                "description": "GET /api/settings/signing-sources",
+                "tags": [
+                    "signing-sources-settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The apps that raised signing requests, each with its count, most requests first.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -8541,6 +9553,111 @@
                         "in": "path",
                         "required": true,
                         "description": "The typeSchema.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/signing/delegations": {
+            "get": {
+                "operationId": "signing-folder-delegations",
+                "summary": "The delegations the caller gave and received",
+                "description": "The delegations the caller gave and received.",
+                "tags": [
+                    "signing-folder"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{given: delegation[], received: delegation[]}",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "signing-folder-declare-delegation",
+                "summary": "Delegate the caller's signing authority to a colleague for a period and document types",
+                "description": "Delegate the caller's signing authority to a colleague for a period and document types.",
+                "tags": [
+                    "signing-folder"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The stored delegation.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/signing/delegations/{id}": {
+            "delete": {
+                "operationId": "signing-folder-withdraw-delegation",
+                "summary": "Withdraw a delegation the caller gave",
+                "description": "Withdraw a delegation the caller gave.",
+                "tags": [
+                    "signing-folder"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{withdrawn: true}",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
                         "schema": {
                             "type": "string"
                         }
@@ -9381,6 +10498,54 @@
                 }
             }
         },
+        "/templates/for-object": {
+            "get": {
+                "operationId": "templates-for-object",
+                "summary": "The templates that apply to one host object, as leaf rows (id, name, format, description)",
+                "description": "The templates that apply to one host object, as leaf rows (id, name, format, description)",
+                "tags": [
+                    "templates"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON response with the results array",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "register",
+                        "in": "query",
+                        "required": true,
+                        "description": "The host object's register slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "schema",
+                        "in": "query",
+                        "required": true,
+                        "description": "The host object's schema slug",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/templates/preview": {
             "post": {
                 "operationId": "template-preview-preview",
@@ -9724,6 +10889,45 @@
                 ]
             }
         },
+        "/templates/{id}/publish": {
+            "post": {
+                "operationId": "templates-publish",
+                "summary": "Publish the version a template is on, so users may generate from it",
+                "description": "Publish the version a template is on, so users may generate from it",
+                "tags": [
+                    "templates"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON response with the published template",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/templates/{id}/versions": {
             "get": {
                 "operationId": "template-versions-versions",
@@ -9999,6 +11203,160 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/validation/accessibility/{fileId}": {
+            "post": {
+                "operationId": "accessibility_conformance-check",
+                "summary": "Validate a file against PDF/UA-1 and store the report",
+                "description": "Validate a file against PDF/UA-1 (veraPDF ua1, the Matterhorn Protocol) and store the accessibility conformance report, apart from the PDF/A report.",
+                "tags": [
+                    "accessibility-conformance"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{validated: true, report}; 400 for a file that is not a PDF, 404 for one the caller cannot open, 503 with validated:false when veraPDF gives no verdict, 500 when the report cannot be stored.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            },
+            "get": {
+                "operationId": "accessibility_conformance-show",
+                "summary": "The accessibility state of a file",
+                "description": "The stored PDF/UA-1 report of a file, its heuristic accessibility findings, and which of the two is surfaced: the validator's verdict when there is one, else the heuristics labelled as heuristic. Runs no validation.",
+                "tags": [
+                    "accessibility-conformance"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{report, conformance: {source, state, validated, validatorAvailable}, heuristicFindings, regenerable}; 400 for a file that is not a PDF, 404 for one the caller cannot open, 500 when the report cannot be read.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/validation/accessibility/{fileId}/regenerate": {
+            "post": {
+                "operationId": "accessibility_conformance-regenerate",
+                "summary": "Regenerate a generated PDF as PDF/UA",
+                "description": "Render a PDF Filinq generated from a template again through the tagged output path, check the copy against PDF/UA-1, and store it as a new version of the file only when it passes. A PDF Filinq did not generate is refused.",
+                "tags": [
+                    "accessibility-conformance"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{replaced, report}: replaced is false when the copy did not pass and was discarded; 400 for a file that is not a PDF, 403 for one the caller cannot change, 404 for one they cannot open, 409 with reason not-generated-by-filinq, 503 when veraPDF gives no verdict, 500 when the copy cannot be made.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
@@ -10374,6 +11732,1633 @@
                                         "type": "string"
                                     },
                                     "objectId": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/documents/drafts": {
+            "post": {
+                "operationId": "documentDraft-create",
+                "summary": "Render a generation and save it as the session user's draft",
+                "description": "Render a generation and save it as the session user's draft. Request body: templateId (string, required), dataRefs (array), options (object: format, adHocData, listRefs, huisstijlId, output, filename, wizardContext), origin (correspondence | document | wizard). Nothing is filed or logged. Answers 409 for a template with a plain-language version.",
+                "tags": [
+                    "documentDraft"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The draft: id, stage, html, warnings, expiresAt",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/documents/drafts/{id}/finish": {
+            "post": {
+                "operationId": "documentDraft-finish",
+                "summary": "Produce, file and log a draft's edited text and close the draft",
+                "description": "Produce, file and log a draft's edited text and close the draft. The stored HTML is sanitised and never rendered through Twig again. Answers like a direct generation: the document as a download, JSON for HTML or output mode files. 404 for a draft that is not the session user's, 409 for a draft that is not being edited, 422 when a wizard draft's answers do not pass.",
+                "tags": [
+                    "documentDraft"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The finished document, or its stored-file refs",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/detection-provider/settings": {
+            "get": {
+                "operationId": "detection-provider-settings-index",
+                "summary": "GET /api/detection-provider/settings",
+                "description": "GET /api/detection-provider/settings",
+                "tags": [
+                    "detection-provider-settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The detection-provider settings: per-organisation providers, the hermiq endpoint, agentflow and require-local toggle.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "detection-provider-settings-update",
+                "summary": "PUT /api/detection-provider/settings",
+                "description": "PUT /api/detection-provider/settings",
+                "tags": [
+                    "detection-provider-settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The stored settings, or 400 naming the invalid field.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/detection-provider/test": {
+            "post": {
+                "operationId": "detection-provider-settings-test",
+                "summary": "POST /api/detection-provider/test",
+                "description": "POST /api/detection-provider/test",
+                "tags": [
+                    "detection-provider-settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Whether the LLM provider could be called now, and why not.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/bridge/deliveries/{id}/retry": {
+            "post": {
+                "operationId": "case-system-delivery-retry",
+                "summary": "Put a failed case-system delivery back in the queue",
+                "description": "Put a failed case-system delivery back in the queue, on the same object. Admin only.",
+                "tags": [
+                    "case-system-delivery"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The delivery, waiting for the case system again.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The delivery id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/case-system": {
+            "get": {
+                "operationId": "case-system-delivery-index",
+                "summary": "The case-system destinations and the waiting and failed deliveries",
+                "description": "The case-system destinations and the waiting and failed deliveries, for the admin bridge panel. Admin only.",
+                "tags": [
+                    "case-system-delivery"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`destinations` and `deliveries`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/bridge/case-system/files": {
+            "get": {
+                "operationId": "case-system-file-status",
+                "summary": "Which of the listed files are in the case system",
+                "description": "Which of the listed files the caller can open have a written-back case-system delivery. Files the caller cannot open are left out.",
+                "tags": [
+                    "case-system-delivery"
+                ],
+                "parameters": [
+                    {
+                        "name": "fileIds",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma separated file ids, at most 100.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The delivered file ids.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "delivered": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
+            }
+        },
+        "/bridge/destinations": {
+            "post": {
+                "operationId": "case-system-delivery-save-destination",
+                "summary": "Declare or update a case-system destination",
+                "description": "Declare a case-system destination, or update the one named by `id`. A second active destination for the same template or namespace is refused. Admin only.",
+                "tags": [
+                    "case-system-delivery"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The destination as stored.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/case-documents/{uuid}/releases": {
+            "post": {
+                "operationId": "case-documents-release",
+                "summary": "Release one document on a record to the person who requested it",
+                "description": "Release one document on a record to the person who requested it. The caller must be allowed to write the record, and the document must be linked to it.",
+                "tags": [
+                    "case-documents"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The release.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The uuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "register": {
+                                        "type": "string"
+                                    },
+                                    "schema": {
+                                        "type": "string"
+                                    },
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "contactRef": {
+                                        "type": "string"
+                                    },
+                                    "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                            "decision",
+                                            "document"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/document-releases/{releaseId}": {
+            "delete": {
+                "operationId": "document-releases-withdraw",
+                "summary": "Withdraw a release",
+                "description": "Withdraw a release, so the portal no longer lists or serves its document. The caller must be allowed to write the release's record.",
+                "tags": [
+                    "case-documents"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The withdrawn release.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "releaseId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The release id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/case-documents/copy": {
+            "post": {
+                "operationId": "case-documents-copy",
+                "summary": "Copy a document to another record",
+                "description": "Copy one file of a record to another record: a new file with the same name and content in the target record's folder, linked to the target, with an entry in both audit trails. The caller must be able to read the source and write the target; nothing is written otherwise.",
+                "tags": [
+                    "case-documents"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The copy.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "sourceRegister": {
+                                        "type": "string"
+                                    },
+                                    "sourceSchema": {
+                                        "type": "string"
+                                    },
+                                    "sourceId": {
+                                        "type": "string"
+                                    },
+                                    "register": {
+                                        "type": "string"
+                                    },
+                                    "schema": {
+                                        "type": "string"
+                                    },
+                                    "id": {
+                                        "type": "string"
+                                    },
+                                    "fileId": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/verify/{token}": {
+            "get": {
+                "operationId": "publicVerification-verify",
+                "summary": "Verify a signed document by its verification token",
+                "description": "Public, account-free. Answers the outcome recorded for one signed document: file name, content hash, and per signature the status, level, the signer as asserted and whether content integrity and the signer are covered by the check. An unknown, malformed or revoked token answers 200 with status unknown, in the same shape. Rate-limited and throttled.",
+                "tags": [
+                    "signing"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The verdict, or status unknown",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "token",
+                        "in": "path",
+                        "required": true,
+                        "description": "The 32-character verification token.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "security": []
+            }
+        },
+        "/grounds": {
+            "get": {
+                "operationId": "grounds-index",
+                "summary": "GET /api/grounds",
+                "description": "The Woo refusal grounds the pickers offer, read from dossiq or, without it, from the read-only snapshot. Read only; any signed-in user.",
+                "tags": [
+                    "grounds"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "source (dossiq or snapshot), version and grounds",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "503": {
+                        "description": "No grounds list can be read"
+                    }
+                }
+            }
+        },
+        "/bridge/sources": {
+            "get": {
+                "operationId": "bridge-sources",
+                "summary": "GET /api/bridge/sources",
+                "description": "GET /api/bridge/sources",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Every bridge source with its health (admin setting).",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bridge/external-documents": {
+            "get": {
+                "operationId": "bridge-external-documents",
+                "summary": "GET /api/bridge/external-documents",
+                "description": "GET /api/bridge/external-documents",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The staged documents the caller may read, optionally of one source.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bridge/badges": {
+            "get": {
+                "operationId": "bridge-badges",
+                "summary": "The source badge of a listing page's files",
+                "description": "The case-system vendor of each listed file that came in through the bridge, in one lookup. Only files the caller can open are answered for.",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`badges`: the vendor per file id.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileIds",
+                        "in": "query",
+                        "required": false,
+                        "description": "Comma-separated file ids of the listing page.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/dossiers/{dossierId}/attach": {
+            "post": {
+                "operationId": "bridge-attach",
+                "summary": "POST /api/bridge/dossiers/{dossierId}/attach",
+                "description": "POST /api/bridge/dossiers/{dossierId}/attach",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The documents attached to the dossier.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "dossierId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/external-documents/{id}/release": {
+            "post": {
+                "operationId": "bridge-release",
+                "summary": "POST /api/bridge/external-documents/{id}/release",
+                "description": "POST /api/bridge/external-documents/{id}/release",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The released document.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/bridge/external-documents/{id}/retry": {
+            "post": {
+                "operationId": "bridge-retry",
+                "summary": "POST /api/bridge/external-documents/{id}/retry",
+                "description": "POST /api/bridge/external-documents/{id}/retry",
+                "tags": [
+                    "bridge"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The document queued for write-back again.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/mdto/{id}": {
+            "get": {
+                "operationId": "mdto-status",
+                "summary": "A record's MDTO completeness verdict, retention block, supplement and proposals",
+                "description": "A record's MDTO completeness verdict, retention block, supplement and proposals.",
+                "tags": [
+                    "mdto"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The verdict with the missing fields, whether an e-depot transport is configured, and the prefill proposals.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The record UUID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/mdto/{id}/export": {
+            "get": {
+                "operationId": "mdto-export",
+                "summary": "The record's MDTO sidecar for download",
+                "description": "The record's MDTO sidecar for download, as XML or (format=json) its JSON projection.",
+                "tags": [
+                    "mdto"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The sidecar.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The record UUID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "required": false,
+                        "description": "xml (default) or json.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "xml",
+                                "json"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "/mdto/{id}/transfer": {
+            "post": {
+                "operationId": "mdto-transfer",
+                "summary": "Transfer the record to the e-depot through OpenRegister",
+                "description": "Transfer the record to the e-depot through OpenRegister.",
+                "tags": [
+                    "mdto"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transferred, or manual when no e-depot transport is configured.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "422": {
+                        "description": "Blocked: the record is not MDTO-complete; the missing fields are listed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The record UUID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/mail-archive-imports": {
+            "get": {
+                "operationId": "mail-archive-import-index",
+                "summary": "The user's own mail archive imports, newest first",
+                "description": "The user's own mail archive imports, newest first.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{results}.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "mail-archive-import-create",
+                "summary": "Start an import of an MBOX, PST or ZIP file the user can read; the answer lists its folders",
+                "description": "Start an import of an MBOX, PST or ZIP file the user can read; the answer lists its folders.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The import, in mapping or failed.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "fileId": {
+                                        "type": "integer",
+                                        "description": "The archive's Nextcloud file id.",
+                                        "example": 12345
+                                    }
+                                },
+                                "required": [
+                                    "fileId"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mail-archive-imports/settings": {
+            "get": {
+                "operationId": "mail-archive-import-settings",
+                "summary": "The per-run message limit and whether readpst is installed",
+                "description": "The per-run message limit and whether readpst is installed.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{messagesPerRun, readpstInstalled}.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "mail-archive-import-update-settings",
+                "summary": "Store the per-run message limit",
+                "description": "Store the per-run message limit.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The stored settings.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "messagesPerRun": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 2000,
+                                        "description": "Messages one cron run takes; clamped to 1..2000."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mail-archive-imports/{uuid}": {
+            "get": {
+                "operationId": "mail-archive-import-show",
+                "summary": "One of the user's imports, with its progress and failures",
+                "description": "One of the user's imports, with its progress and failures.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The import.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The import.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/mail-archive-imports/{uuid}/start": {
+            "post": {
+                "operationId": "mail-archive-import-start",
+                "summary": "Map the archive's folders to dossiers the user may write to and start importing",
+                "description": "Map the archive's folders to dossiers the user may write to and start importing.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The import, in importing.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The import.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "folderMap": {
+                                        "type": "array",
+                                        "description": "A folder left out or without a dossier goes to the intake inbox.",
+                                        "items": {
+                                            "type": "object",
+                                            "required": [
+                                                "archiveFolder"
+                                            ],
+                                            "properties": {
+                                                "archiveFolder": {
+                                                    "type": "string"
+                                                },
+                                                "dossier": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mail-archive-imports/{uuid}/cancel": {
+            "post": {
+                "operationId": "mail-archive-import-cancel",
+                "summary": "Cancel an import that has not ended; what was filed stays filed",
+                "description": "Cancel an import that has not ended; what was filed stays filed.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The import, in cancelled.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The import.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/digitisation/projects/{id}/boxes": {
+            "get": {
+                "operationId": "digitisation-boxes",
+                "summary": "The project's originals counted per box and state",
+                "description": "The project's originals counted per box and state, read with the caller's own rights.",
+                "tags": [
+                    "digitisation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "One row per box: registered, scanned, checked, rejected and total.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/digitisation/projects/{id}/separators": {
+            "get": {
+                "operationId": "digitisation-separators",
+                "summary": "The separator sheets of one box",
+                "description": "The separator sheets of one box: one page per original, as a PDF.",
+                "tags": [
+                    "digitisation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The sheets.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "box",
+                        "in": "query",
+                        "required": false,
+                        "description": "The box.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/digitisation/projects/{id}/originals/import": {
+            "post": {
+                "operationId": "digitisation-import-originals",
+                "summary": "Import a CSV box list into the project",
+                "description": "Import a CSV box list into the project. Rows that cannot be imported are listed with their line and reason (422).",
+                "tags": [
+                    "digitisation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{imported, failures}.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "description": "{imported, failures, message}: some rows failed.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "csv": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/digitisation/originals/{id}/check": {
+            "post": {
+                "operationId": "digitisation-check",
+                "summary": "Pass or reject the scan of an original",
+                "description": "Pass or reject the scan of an original. A rejection needs a note and sends the original back to registered.",
+                "tags": [
+                    "digitisation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The original as saved.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "result": {
+                                        "type": "string",
+                                        "enum": [
+                                            "passed",
+                                            "rejected"
+                                        ]
+                                    },
+                                    "note": {
                                         "type": "string"
                                     }
                                 }

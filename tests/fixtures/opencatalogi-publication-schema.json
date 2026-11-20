@@ -1,8 +1,5 @@
 {
-    "_source": "ConductionNL/opencatalogi development lib/Settings/publication_register.json, schema publication 0.0.4, read 2026-09-29. Update this copy when OpenCatalogi changes the schema; the drift test then shows what Filinq must follow.",
-    "required": [
-        "title"
-    ],
+    "_source": "ConductionNL/opencatalogi development e05ae03ce: lib/Settings/publication_register.json with its register.d fragments deep-merged in filename order, schema publication 0.0.8, read 2026-11-17. Update this copy when OpenCatalogi changes the schema; the drift test then shows what Filinq must follow.",
     "properties": {
         "title": {
             "type": "string",
@@ -22,6 +19,29 @@
         },
         "themes": {
             "type": "array"
+        },
+        "wooCategory": {
+            "type": "string",
+            "enum": [
+                "infocat001",
+                "infocat002",
+                "infocat003",
+                "infocat004",
+                "infocat005",
+                "infocat006",
+                "infocat007",
+                "infocat008",
+                "infocat009",
+                "infocat010",
+                "infocat011",
+                "infocat012",
+                "infocat013",
+                "infocat014",
+                "infocat015",
+                "infocat016",
+                "infocat017",
+                "infocat018"
+            ]
         },
         "publicationDate": {
             "type": "string",
@@ -64,6 +84,112 @@
                 "published",
                 "archived"
             ]
+        },
+        "plooiStatus": {
+            "type": "string",
+            "enum": [
+                "delivered",
+                "failed"
+            ]
+        },
+        "plooiDeliveredAt": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "plooiIdentifier": {
+            "type": "string"
+        },
+        "plooiReason": {
+            "type": "string"
+        },
+        "edepotTransfer": {
+            "type": "object"
+        },
+        "documentsoort": {
+            "type": "string"
+        },
+        "fileDocumentsoorten": {
+            "type": "object"
+        },
+        "language": {
+            "type": "string"
+        },
+        "creationDate": {
+            "type": "string",
+            "format": "date"
+        },
+        "validFrom": {
+            "type": "string",
+            "format": "date"
+        },
+        "validUntil": {
+            "type": "string",
+            "format": "date"
+        },
+        "plainSummary": {
+            "type": "string",
+            "maxLength": 1500
+        },
+        "plainSummaryLevel": {
+            "type": "string",
+            "enum": [
+                "A2",
+                "B1",
+                "B2"
+            ]
+        },
+        "plainSummaryProvenance": {
+            "type": "object"
+        },
+        "publicUrl": {
+            "type": "string",
+            "format": "uri"
+        },
+        "officerUrl": {
+            "type": "string",
+            "format": "uri"
+        },
+        "completeness": {
+            "type": "string",
+            "enum": [
+                "incomplete",
+                "complete"
+            ]
+        },
+        "completeAt": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "expectedDocuments": {
+            "type": "integer"
+        },
+        "publicationKind": {
+            "type": "string",
+            "enum": [
+                "woo-besluit",
+                "actief"
+            ]
+        },
+        "caseReference": {
+            "type": "string",
+            "maxLength": 255
+        },
+        "period": {
+            "type": "object"
+        },
+        "soortHandeling": {
+            "type": "string",
+            "enum": [
+                "ontvangst",
+                "vaststelling",
+                "ondertekening"
+            ]
+        },
+        "attachmentOrder": {
+            "type": "array"
         }
-    }
+    },
+    "required": [
+        "title"
+    ]
 }

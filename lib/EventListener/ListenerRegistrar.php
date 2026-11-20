@@ -39,6 +39,18 @@ use Psr\Container\ContainerInterface;
  * @spec exclude Container wiring, no functional requirement.
  */
 class ListenerRegistrar {
+
+	/**
+	 * The Nextcloud file events that are document actions.
+	 *
+	 * @var list<string>
+	 */
+	public const DOCUMENT_FILE_EVENTS = [
+		'OCP\Files\Events\Node\NodeWrittenEvent',
+		'OCP\Files\Events\Node\BeforeNodeDeletedEvent',
+		'OCP\Share\Events\ShareCreatedEvent',
+	];
+
 	/**
 	 * Register the listeners. The OpenRegister autoloader prelude must have run.
 	 *
@@ -53,6 +65,14 @@ class ListenerRegistrar {
 		(new SigningEventRegistrar())->register(context: $context);
 		(new IntegrationLeafRegistrar())->register(context: $context);
 		(new DocumentGenerationRegistrar())->register(context: $context);
+		(new PdfUaEventRegistrar())->register(context: $context);
+
+		// A document's edits, deletion and shares go into its audit trail
+		// (specify-capability-rows, REQ-SCR-007). Named by string, like the
+		// optional peers, so this class keeps its coupling.
+		foreach (self::DOCUMENT_FILE_EVENTS as $fileEvent) {
+			$context->registerEventListener($fileEvent, 'OCA\Filinq\EventListener\DocumentFileActionListener');
+		}
 
 	}//end register()
 

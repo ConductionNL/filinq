@@ -35,9 +35,11 @@ use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\DocumentAnonymizeRunner;
 use OCA\Filinq\Service\FileListingService;
 use OCA\Filinq\Service\Redaction\DetectionRunIdentity;
+use OCA\Filinq\Service\Redaction\FourEyesPolicy;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use OCA\Filinq\Service\Redaction\RedactionReviewGate;
 use OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository;
+use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Tests\Unit\Service\BuildsAnonymizationService;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -134,7 +136,8 @@ class AnonymizationControllerReviewGateTest extends TestCase {
 		return new RedactionOutputGuard(
 			gate: new RedactionReviewGate(),
 			marks: $marks,
-			runs: new DetectionRunIdentity()
+			runs: new DetectionRunIdentity(),
+			fourEyes: new FourEyesPolicy(settings: $this->createConfiguredMock(SettingsService::class, ['getFourEyesMode' => 'off']))
 		);
 
 	}//end guardOver()

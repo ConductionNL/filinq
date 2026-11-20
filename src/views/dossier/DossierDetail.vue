@@ -56,6 +56,7 @@
 				<LegalHoldBadge
 					:objectId="dossierId"
 					@held="underLegalHold = $event" />
+				<MdtoPanel :objectId="dossierId" objectType="dossier" />
 				<NcNoteCard v-if="folderWarning" type="warning">
 					{{ folderWarning }}
 				</NcNoteCard>
@@ -88,6 +89,13 @@
 							<FilePdfBox :size="20" />
 						</template>
 						{{ t('filinq', 'Generate legal-bases PDF') }}
+					</NcButton>
+
+					<NcButton
+						v-if="leafSidebarAvailable"
+						variant="tertiary"
+						@click="toggleLeafSidebar">
+						{{ t('filinq', 'Linked apps') }}
 					</NcButton>
 
 					<NcButton variant="secondary" @click="startBatch">
@@ -297,7 +305,9 @@ import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import LegalHoldBadge from '../../components/LegalHoldBadge.vue'
+import MdtoPanel from '../../components/MdtoPanel.vue'
 import WizardEntryActions from '../../components/WizardEntryActions.vue'
+import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { dossierStore } from '../../store/store.js'
 import { dossierStatusColors, dossierStatusLabel } from './dossierStatus.js'
 
@@ -322,6 +332,7 @@ export default {
 		FilePdfBox,
 		FolderAccount,
 		LegalHoldBadge,
+		MdtoPanel,
 		NcActionButton,
 		NcActions,
 		NcButton,
@@ -330,6 +341,9 @@ export default {
 		Plus,
 		WizardEntryActions,
 	},
+
+	// leaf-integrations: the registry's leaves (Files, Deck) for this dossier.
+	mixins: [recordLeafSidebarMixin({ schema: 'dossier', record: (vm) => vm.dossierStore.dossier, title: (dossier) => dossier.name })],
 
 	data() {
 		return {

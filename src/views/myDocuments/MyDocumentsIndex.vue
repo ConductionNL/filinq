@@ -75,6 +75,20 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							<CommentTextOutline :size="16" />
 							{{ row.notesCount }}
 						</span>
+						<span
+							v-if="caseSystemFiles[String(row.fileId)]"
+							class="my-documents-case-system-badge"
+							data-testid="my-documents-case-system-badge"
+							:title="t('filinq', 'The case system holds this document')">
+							{{ t('filinq', 'In the case system') }}
+						</span>
+						<span
+							v-if="sourceBadges[String(row.fileId)]"
+							class="my-documents-case-system-badge"
+							data-testid="my-documents-source-badge"
+							:title="t('filinq', 'The master record of this document is in the case system')">
+							{{ sourceBadgeLabel(sourceBadges[String(row.fileId)]) }}
+						</span>
 					</div>
 				</template>
 
@@ -259,7 +273,13 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			:status="validation.status"
 			:findings="validation.findings"
 			@close="validation.show = false"
-			@ocr="onOcrRequested" />
+			@ocr="onOcrRequested"
+			@removePassword="openPasswordDialog" />
+		<PdfPasswordModal
+			:show="unlock.show"
+			:fileId="validation.fileId"
+			@close="unlock.show = false"
+			@unlocked="onUnlocked" />
 
 		<!--
 			Delete confirmation, single row and bulk. Replaces window.confirm():
@@ -283,6 +303,9 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			variant="error"
 			@confirm="executeBulkDelete"
 			@close="cancelBulkDelete" />
+
+		<WaitingForMeList />
+		<DueForReviewList />
 	</div>
 </template>
 
@@ -311,10 +334,15 @@ import DdIcon from '../../components/DdIcon.vue'
 import DdIndexPage from '../../components/DdIndexPage.vue'
 import DdPageHeader from '../../components/DdPageHeader.vue'
 import DdSearchBar from '../../components/DdSearchBar.vue'
+import DueForReviewList from '../../components/myDocuments/DueForReviewList.vue'
+import WaitingForMeList from '../../components/myDocuments/WaitingForMeList.vue'
+import PdfPasswordModal from '../../modals/PdfPasswordModal.vue'
 import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import { ocrRun } from '../../mixins/ocrRun.js'
+import { fetchSourceBadges, sourceBadgeLabel } from '../../services/bridge.js'
+import { fetchCaseSystemFiles } from '../../services/caseSystemFiles.js'
 import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { fetchReviewMarks } from '../../services/reviewMark.js'
 import { sanitizeFile } from '../../services/sanitization.js'
@@ -345,6 +373,8 @@ export default {
 	name: 'MyDocumentsIndex',
 	components: {
 		CommentTextOutline,
+		DueForReviewList,
+		WaitingForMeList,
 		DdIndexPage,
 		CnStatusBadge,
 		NcActions,
@@ -354,6 +384,7 @@ export default {
 		DdDocumentCard,
 		DdIcon,
 		FileViewerPage,
+		PdfPasswordModal,
 		ValidationResultModal,
 		SanitizationReportModal,
 		BroomIcon,
@@ -400,6 +431,9 @@ export default {
 				fileId: null,
 			},
 
+			// The password dialog opened from a locked PDF's finding.
+			unlock: { show: false },
+
 			kindColorMap: {
 				[t('filinq', 'Concept')]: 'warning',
 				[t('filinq', 'Anonymized')]: 'success',
@@ -414,6 +448,8 @@ export default {
 			ocrResults: {},
 			// The latest review mark per file id on this page.
 			reviewMarks: {},
+			caseSystemFiles: {},
+			sourceBadges: {},
 			ocrRunning: {},
 		}
 	},
@@ -518,6 +554,8 @@ export default {
 			handler(rows) {
 				this.loadOcrStatus(rows)
 				this.loadReviewMarks(rows)
+				this.loadCaseSystemFiles(rows)
+				this.loadSourceBadges(rows)
 			},
 		},
 	},
@@ -954,6 +992,33 @@ export default {
 		},
 
 		/**
+		 * Open the password dialog for the locked PDF of the validation result.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 */
+		openPasswordDialog() {
+			this.unlock.show = true
+		},
+
+		/**
+		 * A locked PDF was unlocked into a copy: show the copy's own findings and
+		 * reload the list so the copy appears beside the original.
+		 *
+		 * @param {object} copy The copy: fileId, name, validationStatus, validationFindings.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 */
+		async onUnlocked(copy) {
+			this.validation.fileId = copy.fileId
+			this.validation.status = copy.validationStatus || ''
+			this.validation.findings = copy.validationFindings || []
+			this.validation.show = true
+			showSuccess(t('filinq', 'Unlocked copy saved as {name}', { name: copy.name || '' }))
+			await myDocumentsStore.fetchDocuments()
+		},
+
+		/**
 		 * Handle an OCR cross-link from a text-layer-missing finding.
 		 *
 		 * @return {void}
@@ -1062,6 +1127,52 @@ export default {
 				this.reviewMarks = { ...this.reviewMarks, ...marks }
 			} catch {
 				// No status read: every row keeps saying "Not checked".
+			}
+		},
+
+		/**
+		 * Read which documents on this page are in the case system, in one request.
+		 *
+		 * @param {Array<object>} rows The rows on the page.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+		 */
+		async loadCaseSystemFiles(rows) {
+			const ids = (rows || [])
+				.filter((row) => !row.isFolder && row.fileId)
+				.map((row) => row.fileId)
+			if (ids.length === 0) {
+				return
+			}
+			try {
+				const delivered = await fetchCaseSystemFiles(ids)
+				this.caseSystemFiles = { ...this.caseSystemFiles, ...delivered }
+			} catch {
+				// No answer: no badge. The list itself still shows.
+			}
+		},
+
+		sourceBadgeLabel,
+
+		/**
+		 * The case-system source of the files on the page, in one request
+		 * (zgw-document-bridge REQ-DDZGW-009).
+		 *
+		 * @param {Array<object>} rows The rows on the page.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/zgw-document-bridge/tasks.md#3-2
+		 */
+		async loadSourceBadges(rows) {
+			const ids = (rows || [])
+				.filter((row) => !row.isFolder && row.fileId)
+				.map((row) => row.fileId)
+			if (ids.length === 0) {
+				return
+			}
+			try {
+				this.sourceBadges = { ...this.sourceBadges, ...(await fetchSourceBadges(ids)) }
+			} catch {
+				// No answer: no badge. The list itself still shows.
 			}
 		},
 
@@ -1200,6 +1311,15 @@ export default {
 	gap: 2px;
 	margin-inline-start: 8px;
 	color: var(--color-text-maxcontrast);
+}
+
+.my-documents-case-system-badge {
+	margin-inline-start: 8px;
+	padding: 0 6px;
+	border-radius: var(--border-radius-pill);
+	border: 1px solid var(--color-success);
+	background: var(--color-main-background);
+	color: var(--color-success-text);
 	font-size: 0.85em;
 }
 

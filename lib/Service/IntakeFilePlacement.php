@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\Files\IRootFolder;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -132,6 +133,23 @@ class IntakeFilePlacement {
 	}//end place()
 
 	/**
+	 * The folder one record owns, relative to the user's files root, for a
+	 * caller that writes a new file there rather than moving one.
+	 *
+	 * @param string $register The register slug.
+	 * @param string $schema The schema slug.
+	 * @param string $id The object id.
+	 *
+	 * @return string|null The folder, or null when the record owns none or cannot be read.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+	 */
+	public function folderFor(string $register, string $schema, string $id): ?string {
+		return $this->folderOf(register: $register, schema: $schema, id: $id);
+
+	}//end folderFor()
+
+	/**
 	 * The folder one record owns, relative to the user's files root.
 	 *
 	 * @param string $register The register slug.
@@ -146,8 +164,7 @@ class IntakeFilePlacement {
 		try {
 			$object = $this->objectResolver->resolve()->find(
 				id: $id,
-				register: $register,
-				schema: $schema
+				options: new ObjectFindOptions(register: $register, schema: $schema)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

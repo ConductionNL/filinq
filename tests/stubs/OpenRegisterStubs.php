@@ -45,13 +45,14 @@ class ObjectService {
 	 */
 	public function find(
 		string $id = '',
-		string $register = '',
-		string $schema = '',
+		?\OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions $options = null,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $_render = true,
-		bool $_audit = true,
+		bool $_multitenancy = true
 	) {
+		$register = $options?->register ?? '';
+		$schema = $options?->schema ?? '';
+		$_render = $options?->render ?? true;
+		$_audit = $options?->audit ?? true;
 		return null;
 	}//end find()
 
@@ -71,14 +72,15 @@ class ObjectService {
 	 */
 	public function saveObject(
 		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		\OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions $options = new \OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $_unowned = false,
-		?string $_owner = null,
+		bool $_multitenancy = true
 	) {
+		$register = $options->target->register ?? '';
+		$schema = $options->target->schema ?? '';
+		$uuid = $options->uuid;
+		$_unowned = $options->actor->unowned ?? false;
+		$_owner = $options->actor->owner;
 		return null;
 	}//end saveObject()
 
@@ -100,14 +102,15 @@ class ObjectService {
 	 * @return mixed
 	 */
 	public function patchObject(
-		string $objectId,
-		array $data,
-		$register = null,
-		$schema = null,
+		\OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch $patch,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		$currentUser = null,
+		bool $_multitenancy = true
 	) {
+		$objectId = $patch->objectId;
+		$data = $patch->data;
+		$register = $patch->target->register;
+		$schema = $patch->target->schema;
+		$currentUser = $patch->currentUser;
 		return null;
 	}//end patchObject()
 
@@ -143,12 +146,14 @@ class ObjectService {
 	 * @return bool
 	 */
 	public function deleteObject(
-		string $uuid = '',
-		string $register = '',
-		string $schema = '',
+		\OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_retentionSweep = false
 	) {
+		$uuid = $deletion->uuid ?? '';
+		$register = $deletion->target->register ?? '';
+		$schema = $deletion->target->schema ?? '';
 		return true;
 	}//end deleteObject()
 
@@ -722,6 +727,24 @@ class Register {
  */
 class Schema {
 	/**
+	 * Get the archive block.
+	 *
+	 * @return array
+	 */
+	public function getArchive(): array {
+		return [];
+	}//end getArchive()
+
+	/**
+	 * Get the configuration.
+	 *
+	 * @return array|null
+	 */
+	public function getConfiguration(): ?array {
+		return null;
+	}//end getConfiguration()
+
+	/**
 	 * Get title
 	 *
 	 * @return string
@@ -1147,32 +1170,20 @@ class AuditTrailMapper {
 	}//end findAll()
 
 	/**
-	 * Create an audit trail entry for a custom action.
+	 * Record a non-CRUD action on one object, with an explicit actor when one is named.
 	 *
-	 * @param ObjectEntity $object The object the entry relates to.
-	 * @param string $action The action type.
-	 * @param array $context Additional context data.
-	 * @param string|null $actorId The acting user, null for the session user.
-	 * @param string|null $actorName The acting user's display name.
-	 * @param string|null $ipAddress The request's address.
+	 * @param \OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent $event The object, action, context and options.
 	 *
 	 * @return AuditTrail
 	 */
-	public function createAuditTrailEntry(
-		ObjectEntity $object,
-		string $action,
-		array $context = [],
-		?string $actorId = null,
-		?string $actorName = null,
-		?string $ipAddress = null,
-	): AuditTrail {
+	public function recordObjectEvent(\OCA\OpenRegister\Db\AuditTrail\ObjectAuditEvent $event): AuditTrail {
 		$trail = new AuditTrail();
-		$trail->setObjectUuid($object->getUuid());
-		$trail->setAction($action);
-		$trail->setChanged($context);
+		$trail->setObjectUuid($event->object->getUuid());
+		$trail->setAction($event->action);
+		$trail->setChanged($event->context);
 		$trail->setCreated(new \DateTime());
 		return $trail;
-	}//end createAuditTrailEntry()
+	}//end recordObjectEvent()
 }//end class
 
 /**
@@ -1260,6 +1271,18 @@ class EntityRelationMapper {
 	public function findByFileId(int $fileId): array {
 		return [];
 	}//end findByFileId()
+
+	/**
+	 * One page of the ids of the files that hold detected entities, ascending.
+	 *
+	 * @param int $afterFileId Only files with an id above this one.
+	 * @param int $limit       The page size.
+	 *
+	 * @return int[]
+	 */
+	public function findFileIdsWithEntities(int $afterFileId=0, int $limit=500): array {
+		return [];
+	}//end findFileIdsWithEntities()
 
 	/**
 	 * Find a single relation by id.
@@ -2108,6 +2131,15 @@ interface Node {
 	public function move(string $targetPath): \OCP\Files\Node;
 
 	/**
+	 * Copy the node to a path; the real OCP declares it here. BridgeDossierPickUp copies a staged file with it.
+	 *
+	 * @param string $targetPath The full target path.
+	 *
+	 * @return \OCP\Files\Node The copy.
+	 */
+	public function copy(string $targetPath): \OCP\Files\Node;
+
+	/**
 	 * Remove this node, through the trashbin when one is enabled.
 	 *
 	 * @return void
@@ -2428,6 +2460,53 @@ class ArchivalImmutableException extends \Exception {
 	public function getSchemaIdentifier(): string {
 		return $this->schemaIdentifier;
 	}//end getSchemaIdentifier()
+}//end class
+
+/**
+ * Stub for HookStoppedException.
+ *
+ * Mirrors openregister/lib/Exception/HookStoppedException.php on main
+ * (2026-11-17): the same constructor, code always 0, and `getErrors()`.
+ * OpenRegister throws it when a pre-save listener of the target app stops the
+ * write, as OpenCatalogi's DiWoo listener does for a document type outside
+ * the national list.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Exception
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class HookStoppedException extends \Exception {
+	/**
+	 * The hook's validation errors.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $errors;
+
+	/**
+	 * Construct the stub exception with the real class's signature.
+	 *
+	 * @param string               $message Error message.
+	 * @param array<string, mixed> $errors  Hook validation errors.
+	 */
+	public function __construct(
+		string $message = 'Operation blocked by schema hook',
+		array $errors = [],
+	) {
+		$this->errors = $errors;
+		parent::__construct($message, 0);
+	}//end __construct()
+
+	/**
+	 * Get the hook validation errors.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function getErrors(): array {
+		return $this->errors;
+	}//end getErrors()
 }//end class
 
 namespace OCA\OpenRegister\Event;
@@ -2943,11 +3022,11 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 	 * @SuppressWarnings(PHPMD.TooManyPublicMethods)
 	 */
 	interface ObjectServiceInterface {
-		public function saveObject(array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true, bool $silent = false, bool $_validation = true, ?array $uploadedFiles = null, ?\OCP\IUser $currentUser = null, bool $failIfExists = false): ObjectEntityInterface;
+		public function saveObject(array $object, \OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions $options = new \OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface;
 
 		public function setRegister(string|int $register): static;
 
-		public function find(int|string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true, bool $_render = true, bool $_audit = true): ?ObjectEntityInterface;
+		public function find(int|string $id, ?\OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?ObjectEntityInterface;
 
 		public function findAll(array $config = [], bool $_rbac = true, bool $_multitenancy = true): array;
 
@@ -2955,7 +3034,7 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 
 		public function searchObjects(array $query = [], bool $_rbac = true, bool $_multitenancy = true, ?array $ids = null, ?string $uses = null, ?array $views = null): array|int;
 
-		public function deleteObject(string $uuid, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false, ?\OCP\IUser $currentUser = null, bool $permanent = false): bool;
+		public function deleteObject(\OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true, bool $_retentionSweep = false): bool;
 
 		public function searchObjectsPaginated(array $query = [], bool $_rbac = true, bool $_multitenancy = true, bool $deleted = false, ?array $ids = null, ?string $uses = null, ?array $views = null): array;
 
@@ -2965,15 +3044,15 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 
 		public function buildSearchQuery(array $requestParams, int|string|array|null $register = null, int|string|array|null $schema = null, ?array $ids = null): array;
 
-		public function saveObjects(array $objects, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true, bool $validation = false, bool $events = false, bool $deduplicateIds = true, bool $enrich = true, bool $_audit = true): array;
+		public function saveObjects(array $objects, \OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions $options = new \OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): array;
 
 		public function runAsSystem(callable $operation);
 
 		public function count(array $config = []): int;
 
-		public function unlockObject(string|int $identifier, bool $advisory = false): bool;
+		public function unlockObject(\OCA\OpenRegister\Kernel\Contracts\Value\UnlockRequest $request): bool;
 
-		public function lockObject(string $identifier, ?string $process = null, ?int $duration = null, bool $advisory = false): array;
+		public function lockObject(\OCA\OpenRegister\Kernel\Contracts\Value\LockRequest $request, bool $advisory = false): array;
 
 		public function deleteObjects(array $uuids = [], bool $_rbac = true, bool $_multitenancy = true): array;
 
@@ -2987,7 +3066,7 @@ if (interface_exists(ObjectServiceInterface::class) === false) {
 
 		public function findByRelations(string $search, bool $partialMatch = true): array;
 
-		public function findSilent(string $id, ?array $_extend = [], bool $files = false, string|int|null $register = null, string|int|null $schema = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface;
+		public function findSilent(string $id, ?\OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface;
 
 		public function countSearchObjects(array $query = [], bool $_rbac = true, bool $_multitenancy = true, ?array $ids = null, ?string $uses = null): int;
 
@@ -3193,6 +3272,34 @@ final class LeafRendering {
 		public readonly ?string $loadStrategy = null,
 	) {
 	}
+}
+
+/**
+ * OpenRegister's integration provider contract, verbatim in shape: the data
+ * half of a data-provider leaf (template-library-leaf REQ-TMPL-14).
+ */
+interface IntegrationProvider {
+	public function getId(): string;
+
+	public function getLabel(): string;
+
+	public function getIcon(): string;
+
+	public function getGroup(): ?string;
+
+	public function getRequiredApp(): ?string;
+
+	public function getStorageStrategy(): string;
+
+	public function getOpenConnectorSource(): ?string;
+
+	public function isEnabled(): bool;
+
+	public function requiresPermission(): ?string;
+
+	public function authRequirements(): array;
+
+	public function health(): array;
 }
 
 namespace OCA\OpenRegister\Event;

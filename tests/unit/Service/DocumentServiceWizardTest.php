@@ -51,6 +51,8 @@ use OCA\Filinq\Tests\Unit\Service\Wizard\WizardObjectStore;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * generateDocument() with options.wizardContext.
@@ -85,7 +87,7 @@ class DocumentServiceWizardTest extends TestCase {
 	 */
 	private function service(): DocumentService {
 		$this->wizards = new WizardObjectStore();
-		$this->wizards->saveObject(object: WizardFixtures::seed(), register: 'filinq', schema: 'wizardDefinition', uuid: 'wizard-1');
+		$this->wizards->saveObject(object: WizardFixtures::seed(), options: new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'wizardDefinition'), uuid: 'wizard-1'));
 
 		$log = $this->createMock(ObjectService::class);
 		$log->method('saveObject')->willReturnCallback(function (array $object): array {
@@ -98,7 +100,7 @@ class DocumentServiceWizardTest extends TestCase {
 		$wizardResolver->method('resolve')->willReturn($this->wizards);
 
 		$templates = $this->createMock(TemplateService::class);
-		$templates->method('getTemplate')->willReturn(['name' => 'Beschikking parkeervergunning', 'content' => '<p>{{ besluit.uitkomst }}</p>', 'version' => 4]);
+		$templates->method($this->matchesRegularExpression('/^get(Published)?Template$/'))->willReturn(['name' => 'Beschikking parkeervergunning', 'content' => '<p>{{ besluit.uitkomst }}</p>', 'version' => 4]);
 		$resolver = $this->createMock(DataResolverService::class);
 		$resolver->method('resolve')->willReturnCallback(function (array $dataRefs, array $listRefs = [], array $adHocData = []): array {
 			$this->adHoc[] = $adHocData;

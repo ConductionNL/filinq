@@ -39,6 +39,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Unit tests for CorrespondenceService
@@ -259,6 +260,40 @@ class CorrespondenceServiceTest extends TestCase {
 	}//end testGenerateHtml()
 
 	/**
+	 * A letter's table is filled from two related records: the listRefs reach
+	 * the resolver and the resolved list reaches the renderer.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#3-generation-and-finality
+	 */
+	public function testATemplateTableIsFilledFromTwoRelatedRecords(): void {
+		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Besluit', 'content' => '{% for b in besluiten %}<tr>{{ b.title }}</tr>{% endfor %}']);
+
+		$listRefs = [['register' => 'zaken', 'schema' => 'besluit', 'as' => 'besluiten', 'filter' => ['zaak' => 'z-1']]];
+		$besluiten = [['title' => 'Vergunning verleend'], ['title' => 'Bezwaar ongegrond']];
+		$this->dataResolver->expects($this->once())->method('resolve')
+			->with([['register' => 'brp', 'schema' => 'x', 'id' => 'y']], $listRefs, ['naam' => 'Jan'])
+			->willReturn(['data' => ['naam' => 'Jan', 'besluiten' => $besluiten], 'errors' => [], 'warnings' => []]);
+
+		$this->renderer->expects($this->once())->method('renderTemplate')
+			->with($this->anything(), $this->callback(static fn (array $data): bool => ($data['besluiten'] ?? null) === $besluiten))
+			->willReturn('<tr>Vergunning verleend</tr><tr>Bezwaar ongegrond</tr>');
+
+		$logEntity = $this->createMock(ObjectEntity::class);
+		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log-1']);
+		$this->objectSvc->method('saveObject')->willReturn($logEntity);
+
+		$result = $this->service->generate(
+			templateId: 'tmpl-1',
+			dataRefs: [['register' => 'brp', 'schema' => 'x', 'id' => 'y']],
+			options: ['format' => 'html', 'listRefs' => $listRefs, 'adHocData' => ['naam' => 'Jan']]
+		);
+
+		$this->assertStringContainsString('Bezwaar ongegrond', $result['content']);
+	}//end testATemplateTableIsFilledFromTwoRelatedRecords()
+
+	/**
 	 * A DOCX letter goes through the shared converter; without LibreOffice it
 	 * is a 503 with the matrix's reason, as before the extraction.
 	 *
@@ -405,15 +440,15 @@ class CorrespondenceServiceTest extends TestCase {
 		$logEntity->method('jsonSerialize')->willReturn(['id' => 'log-entry']);
 		$this->objectSvc->expects($this->once())
 			->method('saveObject')
-			->with(
-				$this->callback(function ($entry) {
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->callback(function ($entry) {
 					return $entry['templateId'] === 'tmpl-1'
 						&& $entry['status'] === 'generated'
 						&& $entry['format'] === 'pdf';
 				}),
-				$this->equalTo('filinq'),
-				$this->equalTo('correspondence')
-			)
+					'register' => $this->equalTo('filinq'),
+					'schema' => $this->equalTo('correspondence'),
+				]))
 			->willReturn($logEntity);
 
 		$result = $this->service->generate(
