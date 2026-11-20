@@ -82,7 +82,7 @@ class SigningFolderServiceTest extends TestCase {
 
 		$this->actorResolver = $this->getMockBuilder(SigningActorResolver::class)
 			->disableOriginalConstructor()
-			->onlyMethods(['findSignerForUser'])
+			->onlyMethods(['findSignerForUser', 'recipientRole'])
 			->getMock();
 
 		$this->mandateService = $this->getMockBuilder(SigningMandateService::class)
@@ -341,6 +341,65 @@ class SigningFolderServiceTest extends TestCase {
 		$this->assertSame(['brief'], array_column($folder['entries'], 'requestId'));
 
 	}//end testADocumentOutsideTheMandateIsNotInTheFolder()
+
+	/**
+	 * Each entry says whether the caller signs or only accepts it, and an
+	 * accept-only entry stays in the folder outside the signing mandate:
+	 * accepting is not signing (signing-accept-only-recipient D2, task 4.2).
+	 *
+	 * @return void
+	 */
+	public function testAnAcceptOnlyEntryCarriesItsRoleAndNeedsNoMandate(): void {
+		$mandateService = $this->getMockBuilder(SigningMandateService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['maySign', 'assertMaySign', 'typeReference'])
+			->getMock();
+		$mandateService->method('typeReference')->willReturn('dossiq/besluit');
+		$mandateService->method('maySign')->willReturn(false);
+
+		$service = new SigningFolderService(
+			signingService: $this->signingService,
+			actorResolver: $this->actorResolver,
+			mandateService: $mandateService
+		);
+
+		$this->signingService->method('listRequests')->willReturn(
+			[$this->request('lease'), $this->request('besluit')]
+		);
+		$this->actorResolver->method('findSignerForUser')->willReturnCallback(
+			static fn (array $signerIds, string $userId): ?string => $signerIds[0]
+		);
+		$this->actorResolver->method('recipientRole')->willReturnCallback(
+			static fn (string $signerId): string => ($signerId === 'signer-lease' ? 'accept' : 'sign')
+		);
+
+		$folder = $service->folder(userId: 'woonconsulent');
+
+		$this->assertSame(['lease'], array_column($folder['entries'], 'requestId'));
+		$this->assertSame('accept', $folder['entries'][0]['role']);
+
+	}//end testAnAcceptOnlyEntryCarriesItsRoleAndNeedsNoMandate()
+
+	/**
+	 * A recipient who signs reads as `sign`, also when the role lookup
+	 * gives nothing back.
+	 *
+	 * @return void
+	 */
+	public function testASigningEntryReadsAsSign(): void {
+		$this->signingService->method('listRequests')->willReturn([$this->request('1'), $this->request('2')]);
+		$this->actorResolver->method('findSignerForUser')->willReturnCallback(
+			static fn (array $signerIds, string $userId): ?string => $signerIds[0]
+		);
+		$this->actorResolver->method('recipientRole')->willReturnCallback(
+			static fn (string $signerId): string => ($signerId === 'signer-1' ? 'sign' : '')
+		);
+
+		$folder = $this->service->folder(userId: 'wethouder');
+
+		$this->assertSame(['sign', 'sign'], array_column($folder['entries'], 'role'));
+
+	}//end testASigningEntryReadsAsSign()
 
 	/**
 	 * The folder pages, and the page is still ordered by deadline.

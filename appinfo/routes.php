@@ -407,6 +407,8 @@ $extra = [
         ['name' => 'signing#cancelRequest', 'url' => 'api/signing/requests/{id}', 'verb' => 'DELETE'],
         ['name' => 'signing#sign', 'url' => 'api/signing/requests/{id}/sign', 'verb' => 'POST'],
         ['name' => 'signing#decline', 'url' => 'api/signing/requests/{id}/decline', 'verb' => 'POST'],
+        // signing-accept-only-recipient: an accept-only recipient accepts without signing.
+        ['name' => 'signing#accept', 'url' => 'api/signing/requests/{id}/accept', 'verb' => 'POST'],
         ['name' => 'signing#bulkSign', 'url' => 'api/signing/bulk', 'verb' => 'POST'],
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         // Public, account-free signature verification by token (signature-verification-portal REQ-DDSVP-001/004).
@@ -484,6 +486,7 @@ $extra = [
         // the segment spelled exactly as the class: `portalSigningReceiver`.
         ['name' => 'portalSigningReceiver#signDocument', 'url' => 'api/portal/signing/sign', 'verb' => 'POST'],
         ['name' => 'portalSigningReceiver#declineDocument', 'url' => 'api/portal/signing/decline', 'verb' => 'POST'],
+        ['name' => 'portalSigningReceiver#acceptDocument', 'url' => 'api/portal/signing/accept', 'verb' => 'POST'],
         ['name' => 'portalSigningReceiver#viewDocument', 'url' => 'api/portal/signing/viewDocument', 'verb' => 'GET'],
 
         // Financial extraction routes (scan-en-herken).

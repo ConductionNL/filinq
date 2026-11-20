@@ -168,6 +168,36 @@ interface SigningServiceInterface {
 	public function decline(string $requestId, string $signerId, string $reason, ?array $verifiedActor = null): array;
 
 	/**
+	 * Accept a signing request as an accept-only recipient.
+	 *
+	 * @param string                    $requestId     The signing request ID.
+	 * @param string                    $signerId      The recipient's signer record ID.
+	 * @param array<string, mixed>|null $verifiedActor The verified portal actor, or null for the session user.
+	 *
+	 * @return array<string, mixed> The updated recipient record.
+	 *
+	 * @throws RuntimeException With code 422 for a recipient who signs, or when the request or recipient cannot accept.
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 */
+	public function accept(string $requestId, string $signerId, ?array $verifiedActor = null): array;
+
+	/**
+	 * The recipients of a request, in order, with their role and state.
+	 *
+	 * The caller has already been allowed to read the request. Each entry is
+	 * an allow-list: id, name, role (`sign` or `accept`), status, order and
+	 * the time the recipient signed or accepted.
+	 *
+	 * @param array<string, mixed> $request The signing request, as getRequest() returned it.
+	 *
+	 * @return list<array<string, mixed>> The recipients.
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+	 */
+	public function recipientsOf(array $request): array;
+
+	/**
 	 * Cancel a signing request
 	 *
 	 * @param string $requestId The signing request ID

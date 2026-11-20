@@ -146,6 +146,16 @@ class PortalContributionProvider {
 	private const DECLINE_ENDPOINT = '/apps/filinq/api/portal/signing/decline';
 
 	/**
+	 * Instance-local relative endpoint the `accept` rowAction resolves to.
+	 *
+	 * Targets the receiver's `acceptDocument` act: an accept-only recipient
+	 * accepts the document without signing it (signing-accept-only-recipient D5).
+	 *
+	 * @var string
+	 */
+	private const ACCEPT_ENDPOINT = '/apps/filinq/api/portal/signing/accept';
+
+	/**
 	 * Instance-local relative endpoint the `viewDocument` A6 action resolves to.
 	 *
 	 * Targets the `portal-signing-actions` receiver's `viewDocument` act
@@ -442,8 +452,8 @@ class PortalContributionProvider {
 	 * pure-data manifest can express.
 	 *
 	 * The manifest's top-level `actions` array additionally declares the
-	 * SAME three acts as contract-v2 A6 `endpoint`-type actions — `sign`,
-	 * `decline`, `viewDocument` (REQ-DDPSA-001) — for the A6
+	 * SAME acts as contract-v2 A6 `endpoint`-type actions — `sign`,
+	 * `decline`, `accept`, `viewDocument` (REQ-DDPSA-001) — for the A6
 	 * `POST /portal/api/actions/{appId}/{actionId}` forward mechanism, which
 	 * is a distinct rendering path from the per-row `rowActions` above (both
 	 * ultimately hit the SAME `PortalSigningReceiverController` endpoints).
@@ -535,20 +545,29 @@ class PortalContributionProvider {
 	}//end signerSigningRequestsCollection()
 
 	/**
-	 * The sign, decline and viewDocument acts: id, label, endpoint, method,
-	 * minimum trust and the body fields portaliq forwards.
+	 * The sign, decline, accept and viewDocument acts: id, label, endpoint,
+	 * method, minimum trust and the body fields portaliq forwards.
 	 *
 	 * `fields` is the whitelist portaliq rebuilds the forwarded body from:
 	 * the signing dialog sends `consent`, the decline dialog `reason`, and
-	 * viewing the document sends nothing but the row. `viewDocument` is a row
-	 * action too, so portaliq's signing dialog can fetch the document of the
-	 * row being signed and show it before the resident signs (portaliq
-	 * REQ-SGN-004); the portal shows it inside that dialog, not as a button.
+	 * viewing the document and accepting send nothing but the row.
+	 * `viewDocument` is a row action too, so portaliq's signing dialog can
+	 * fetch the document of the row being signed and show it before the
+	 * resident signs (portaliq REQ-SGN-004); the portal shows it inside that
+	 * dialog, not as a button.
 	 *
-	 * @return array<int, array<string, mixed>> The three acts.
+	 * Sign, decline and accept are declared on every row: the collection
+	 * lists `signingRequest` fields and the recipient's role sits on the
+	 * `signerRecord` it is reached through, so the receiver answers the
+	 * wrong act for a role with 422 (signing-accept-only-recipient D5).
+	 * Accepting needs the same trust as signing, because the acceptance is
+	 * attributed to a named person.
+	 *
+	 * @return array<int, array<string, mixed>> The four acts.
 	 *
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/specs/portal-signing-actions/spec.md
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#3-portal
 	 */
 	private function signingActs(): array {
 		return [
@@ -569,6 +588,14 @@ class PortalContributionProvider {
 				'fields' => ['reason'],
 			],
 			[
+				'id' => 'accept',
+				'label' => $this->translate(text: 'Accept'),
+				'endpoint' => self::ACCEPT_ENDPOINT,
+				'method' => 'POST',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+				'fields' => [],
+			],
+			[
 				'id' => 'viewDocument',
 				'label' => $this->translate(text: 'View document'),
 				'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
@@ -584,13 +611,13 @@ class PortalContributionProvider {
 	 * The actions on the `signer` manifest.
 	 *
 	 * Contract-v2 A6 endpoint-forward actions (REQ-DDPSA-001): the
-	 * ONLY three actions on the `signer` manifest, all instance-local
+	 * ONLY four actions on the `signer` manifest, all instance-local
 	 * relative endpoints under `/apps/filinq/api/portal/signing/`,
 	 * all gated `minTrust: substantial`. Handled by
 	 * `PortalSigningReceiverController` +
 	 * `Portal\PortalAssertionVerifier`.
 	 *
-	 * All three are endpoint ROW actions in portaliq's
+	 * All four are endpoint ROW actions in portaliq's
 	 * contract (portaliq#804 / #833): `rowField` is the body key the
 	 * portal stamps the proven row's id under, and `scopeClaim` rides
 	 * in the signed X-Portal-Subject assertion. The receiver reads
@@ -600,6 +627,7 @@ class PortalContributionProvider {
 	 * @return array<int, array<string, mixed>> The actions.
 	 *
 	 * @spec openspec/specs/portal-signing-actions/spec.md
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#3-portal
 	 */
 	private function signerActions(): array {
 		$actions = [];
