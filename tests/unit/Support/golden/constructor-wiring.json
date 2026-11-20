@@ -14,6 +14,7 @@
         "double RedactionOutputGuard",
         null,
         null,
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -33,6 +34,7 @@
         "double OpenRegisterServiceLocator",
         "double ProhibitionPolicyService",
         "double RedactionOutputGuard",
+        "double ReviewRenditionService",
         {
             "distinct objects built by the class": 0
         }

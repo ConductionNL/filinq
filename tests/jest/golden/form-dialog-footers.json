@@ -46,6 +46,11 @@
 					"disabled": false
 				},
 				{
+					"type": "x-ncselect",
+					"label": "Legal bases (grondslagen)",
+					"disabled": false
+				},
+				{
 					"type": "x-nccheckboxradioswitch",
 					"label": null,
 					"disabled": false
@@ -109,6 +114,11 @@
 				{
 					"type": "x-nctextfield",
 					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Legal bases (grondslagen)",
 					"disabled": false
 				},
 				{
@@ -190,6 +200,11 @@
 						"disabled": false
 					},
 					{
+						"type": "x-ncselect",
+						"label": "Legal bases (grondslagen)",
+						"disabled": false
+					},
+					{
 						"type": "x-nccheckboxradioswitch",
 						"label": null,
 						"disabled": false
@@ -239,7 +254,8 @@
 								"type": "bsn",
 								"value": "123456782"
 							}
-						]
+						],
+						"bases": []
 					}
 				]
 			]
@@ -288,6 +304,11 @@
 					{
 						"type": "x-nctextfield",
 						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Legal bases (grondslagen)",
 						"disabled": false
 					},
 					{
@@ -370,6 +391,11 @@
 						"disabled": false
 					},
 					{
+						"type": "x-ncselect",
+						"label": "Legal bases (grondslagen)",
+						"disabled": false
+					},
+					{
 						"type": "x-nccheckboxradioswitch",
 						"label": null,
 						"disabled": false
@@ -403,7 +429,15 @@
 			"emitted": []
 		},
 		"cancel": {
-			"emitted": [["update:open", false], ["cancel"]]
+			"emitted": [
+				[
+					"update:open",
+					false
+				],
+				[
+					"cancel"
+				]
+			]
 		},
 		"parentBusy": {
 			"title": "Add publish-never rule",
@@ -448,6 +482,11 @@
 				{
 					"type": "x-nctextfield",
 					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Legal bases (grondslagen)",
 					"disabled": false
 				},
 				{
@@ -529,6 +568,11 @@
 					"disabled": false
 				},
 				{
+					"type": "x-ncselect",
+					"label": "Legal bases (grondslagen)",
+					"disabled": false
+				},
+				{
 					"type": "x-nccheckboxradioswitch",
 					"label": null,
 					"disabled": false
@@ -592,6 +636,11 @@
 				{
 					"type": "x-nctextfield",
 					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Legal bases (grondslagen)",
 					"disabled": false
 				},
 				{
@@ -673,6 +722,11 @@
 						"disabled": false
 					},
 					{
+						"type": "x-ncselect",
+						"label": "Legal bases (grondslagen)",
+						"disabled": false
+					},
+					{
 						"type": "x-nccheckboxradioswitch",
 						"label": null,
 						"disabled": false
@@ -722,7 +776,8 @@
 								"type": "bsn",
 								"value": "123456782"
 							}
-						]
+						],
+						"bases": []
 					}
 				]
 			]
@@ -771,6 +826,11 @@
 					{
 						"type": "x-nctextfield",
 						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Legal bases (grondslagen)",
 						"disabled": false
 					},
 					{
@@ -853,6 +913,11 @@
 						"disabled": false
 					},
 					{
+						"type": "x-ncselect",
+						"label": "Legal bases (grondslagen)",
+						"disabled": false
+					},
+					{
 						"type": "x-nccheckboxradioswitch",
 						"label": null,
 						"disabled": false
@@ -886,7 +951,15 @@
 			"emitted": []
 		},
 		"cancel": {
-			"emitted": [["update:open", false], ["cancel"]]
+			"emitted": [
+				[
+					"update:open",
+					false
+				],
+				[
+					"cancel"
+				]
+			]
 		},
 		"parentBusy": {
 			"title": "Edit publish-never rule",
@@ -931,6 +1004,11 @@
 				{
 					"type": "x-nctextfield",
 					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Legal bases (grondslagen)",
 					"disabled": false
 				},
 				{
@@ -1012,6 +1090,11 @@
 					"disabled": false
 				},
 				{
+					"type": "x-ncselect",
+					"label": "Legal bases (grondslagen)",
+					"disabled": false
+				},
+				{
 					"type": "x-nccheckboxradioswitch",
 					"label": null,
 					"disabled": false
@@ -1075,6 +1158,11 @@
 				{
 					"type": "x-nctextfield",
 					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Legal bases (grondslagen)",
 					"disabled": false
 				},
 				{
@@ -1156,6 +1244,11 @@
 						"disabled": false
 					},
 					{
+						"type": "x-ncselect",
+						"label": "Legal bases (grondslagen)",
+						"disabled": false
+					},
+					{
 						"type": "x-nccheckboxradioswitch",
 						"label": null,
 						"disabled": false
@@ -1208,7 +1301,8 @@
 						],
 						"consentStatus": "consent_given",
 						"publicationDecision": "publish_with_consent",
-						"notificationStatus": "skipped"
+						"notificationStatus": "skipped",
+						"bases": []
 					}
 				]
 			]
@@ -1257,6 +1351,11 @@
 					{
 						"type": "x-nctextfield",
 						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Legal bases (grondslagen)",
 						"disabled": false
 					},
 					{
@@ -1339,6 +1438,11 @@
 						"disabled": false
 					},
 					{
+						"type": "x-ncselect",
+						"label": "Legal bases (grondslagen)",
+						"disabled": false
+					},
+					{
 						"type": "x-nccheckboxradioswitch",
 						"label": null,
 						"disabled": false
@@ -1372,7 +1476,15 @@
 			"emitted": []
 		},
 		"cancel": {
-			"emitted": [["update:open", false], ["cancel"]]
+			"emitted": [
+				[
+					"update:open",
+					false
+				],
+				[
+					"cancel"
+				]
+			]
 		},
 		"parentBusy": {
 			"title": "Add standing consent",
@@ -1417,6 +1529,11 @@
 				{
 					"type": "x-nctextfield",
 					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Legal bases (grondslagen)",
 					"disabled": false
 				},
 				{
@@ -1498,6 +1615,11 @@
 					"disabled": false
 				},
 				{
+					"type": "x-ncselect",
+					"label": "Legal bases (grondslagen)",
+					"disabled": false
+				},
+				{
 					"type": "x-nccheckboxradioswitch",
 					"label": null,
 					"disabled": false
@@ -1561,6 +1683,11 @@
 				{
 					"type": "x-nctextfield",
 					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Legal bases (grondslagen)",
 					"disabled": false
 				},
 				{
@@ -1642,6 +1769,11 @@
 						"disabled": false
 					},
 					{
+						"type": "x-ncselect",
+						"label": "Legal bases (grondslagen)",
+						"disabled": false
+					},
+					{
 						"type": "x-nccheckboxradioswitch",
 						"label": null,
 						"disabled": false
@@ -1694,7 +1826,8 @@
 						],
 						"consentStatus": "consent_given",
 						"publicationDecision": "publish_with_consent",
-						"notificationStatus": "skipped"
+						"notificationStatus": "skipped",
+						"bases": []
 					}
 				]
 			]
@@ -1743,6 +1876,11 @@
 					{
 						"type": "x-nctextfield",
 						"label": "Valid until (ISO 8601, optional)",
+						"disabled": false
+					},
+					{
+						"type": "x-ncselect",
+						"label": "Legal bases (grondslagen)",
 						"disabled": false
 					},
 					{
@@ -1825,6 +1963,11 @@
 						"disabled": false
 					},
 					{
+						"type": "x-ncselect",
+						"label": "Legal bases (grondslagen)",
+						"disabled": false
+					},
+					{
 						"type": "x-nccheckboxradioswitch",
 						"label": null,
 						"disabled": false
@@ -1858,7 +2001,15 @@
 			"emitted": []
 		},
 		"cancel": {
-			"emitted": [["update:open", false], ["cancel"]]
+			"emitted": [
+				[
+					"update:open",
+					false
+				],
+				[
+					"cancel"
+				]
+			]
 		},
 		"parentBusy": {
 			"title": "Edit standing consent",
@@ -1903,6 +2054,11 @@
 				{
 					"type": "x-nctextfield",
 					"label": "Valid until (ISO 8601, optional)",
+					"disabled": false
+				},
+				{
+					"type": "x-ncselect",
+					"label": "Legal bases (grondslagen)",
 					"disabled": false
 				},
 				{
@@ -2191,7 +2347,11 @@
 			"emitted": []
 		},
 		"cancel": {
-			"emitted": [["cancel"]]
+			"emitted": [
+				[
+					"cancel"
+				]
+			]
 		},
 		"parentBusy": {
 			"title": "Add custom dictionary",
@@ -2494,7 +2654,11 @@
 			"emitted": []
 		},
 		"cancel": {
-			"emitted": [["cancel"]]
+			"emitted": [
+				[
+					"cancel"
+				]
+			]
 		},
 		"parentBusy": {
 			"title": "Edit dictionary",
@@ -2745,7 +2909,15 @@
 			"emitted": []
 		},
 		"cancel": {
-			"emitted": [["cancel"], ["update:open", false]]
+			"emitted": [
+				[
+					"cancel"
+				],
+				[
+					"update:open",
+					false
+				]
+			]
 		},
 		"parentBusy": {
 			"title": "New dossier",
@@ -2935,7 +3107,11 @@
 			"emitted": []
 		},
 		"cancel": {
-			"emitted": [["cancel"]]
+			"emitted": [
+				[
+					"cancel"
+				]
+			]
 		},
 		"parentBusy": {
 			"title": "Import terms",

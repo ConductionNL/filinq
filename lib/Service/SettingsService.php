@@ -32,6 +32,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Service\Review\ReviewSettingsRules;
 use OCA\Filinq\Service\Extraction\UnattendedThresholdSetting;
 use OCA\Filinq\Service\Support\RegisterSetup;
 use OCP\IAppConfig;
@@ -81,6 +82,8 @@ class SettingsService implements SettingsServiceInterface {
 		'signing_request_expiry_days'                => ['30', 'int'],
 		'signing_guardian_consent_age'               => ['16', 'text'],
 		'filinq.anonymisation.default_output_format' => ['pdf-only', 'text'],
+		'filinq.review.checked_gate'                 => ['enforced', 'text'],
+		'filinq.review.certain_from'                 => ['0.85', 'float'],
 		'extraction_unattended_threshold'            => ['0.9', 'text'],
 		self::FOUR_EYES_KEY                          => [self::FOUR_EYES_DEFAULT, 'text'],
 	];
@@ -101,8 +104,9 @@ class SettingsService implements SettingsServiceInterface {
 	 * @param OcrService $ocrService OCR service for Tesseract status
 	 * @param LegalBasisProposalService $legalBasisProposal Grondslag-per-entity-type proposal service
 	 * @param OpenRegisterAvailabilityService $openRegister OpenRegister availability resolver
-	 * @param QpdfDecryptor|null $qpdf The qpdf probe for the admin status line; last and
-	 *                                 nullable so no construction site shifts.
+	 * @param ReviewSettingsRules|null $reviewRules The review workbench's save rules (gate mode, certain-from).
+	 * @param QpdfDecryptor|null $qpdf The qpdf probe for the admin status line; nullable
+	 *                                 so no construction site shifts.
 	 *
 	 * @return void
 	 *
@@ -115,6 +119,7 @@ class SettingsService implements SettingsServiceInterface {
 		private readonly OcrService $ocrService,
 		private readonly LegalBasisProposalService $legalBasisProposal,
 		private readonly OpenRegisterAvailabilityService $openRegister,
+		private readonly ?ReviewSettingsRules $reviewRules = null,
 		private readonly ?QpdfDecryptor $qpdf = null,
 	) {
 		$this->appName = 'filinq';
@@ -278,13 +283,14 @@ class SettingsService implements SettingsServiceInterface {
 	 * @param string                       $key  The app config key.
 	 * @param array{0: string, 1: string} $spec The default and the kind.
 	 *
-	 * @return int|bool|string The typed value.
+	 * @return int|float|bool|string The typed value.
 	 */
-	private function toggleValue(string $key, array $spec): int|bool|string {
+	private function toggleValue(string $key, array $spec): int|float|bool|string {
 		$raw = $this->config->getValueString($this->appName, $key, $spec[0]);
 
 		return match ($spec[1]) {
 			'int' => (int)$raw,
+			'float' => (float)$raw,
 			'on' => $raw === '1',
 			'notOff' => $raw !== '0',
 			default => $raw,
@@ -520,6 +526,10 @@ class SettingsService implements SettingsServiceInterface {
 		'filinq.confidentiality.label_vocabulary',
 		'filinq.confidentiality.prioritise_analysis',
 		self::SUBFOLDER_KEY,
+		// Review workbench checked gate: `enforced` (default) or `advisory`.
+		'filinq.review.checked_gate',
+		// Review workbench certain-from: a detected finding below it is uncertain.
+		'filinq.review.certain_from',
 		self::FOUR_EYES_KEY,
 		self::DEFAULT_PUBLISHER_KEY,
 	];
@@ -544,6 +554,7 @@ class SettingsService implements SettingsServiceInterface {
 	 */
 	public function updateSettings(array $data): array {
 		$this->assertValidSubfolderName(data: $data);
+		($this->reviewRules ?? new ReviewSettingsRules())->assertValid(data: $data);
 		(new UnattendedThresholdSetting())->assertValid(data: $data);
 		$this->assertValidFourEyesMode(data: $data);
 

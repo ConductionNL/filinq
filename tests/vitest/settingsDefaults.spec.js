@@ -39,6 +39,7 @@ describe('defaultSettings', () => {
 			['extraction_unattended_threshold', '0.9'],
 			['filinq.anonymisation.default_output_format', 'pdf-only'],
 			['anonymisation.output_subfolder_name', 'anonymised'],
+			['filinq.review.certain_from', 0.85],
 			['redaction_four_eyes', 'woo'],
 			['filinq.confidentiality.prioritise_analysis', false],
 			[

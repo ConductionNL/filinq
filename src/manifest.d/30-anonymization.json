@@ -141,6 +141,14 @@
 				}
 			},
 			"_note": "One batch (REQ-DDRAS-003/004/005/007) as a declarative type:detail page: the anonymizationBatch record's own fields render in the details widget. The live part is a bodyWidgets section (BatchOperationDetail) because it polls GET api/anonymization/batch/{id}/status while the batch runs, carries cancel and resume behind their own confirmation dialogs (POST .../cancel, .../resume) and lists the QA-sampled files with their review outcome; its props carry @objectId."
+		},
+		{
+			"id": "ReviewWorkbench",
+			"route": "/review/:fileId",
+			"type": "custom",
+			"title": "Review workbench",
+			"component": "ReviewWorkbench",
+			"_note": "Per-document anonymisation review: the original beside the anonymised result (DocumentCompare), the findings table as the decision panel, selection to a manual entity, and the reviewed mark the commit gate reads (/api/review/{fileId}). Opened from the file viewer's sidebar, which passes name, path and mime in the query; type:custom because the data comes from the anonymisation store and filinq's review endpoints, not a plain OR index."
 		}
 	]
 }

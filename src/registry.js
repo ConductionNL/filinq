@@ -66,6 +66,7 @@ import PrintPreview from './components/PrintPreview.vue'
 import DossierFormModal from './dialogs/DossierFormModal.vue'
 import AnonymizationIndex from './views/anonymization/AnonymizationIndex.vue'
 import FolderAnonymizationView from './views/anonymization/FolderAnonymizationView.vue'
+import ReviewWorkbench from './views/anonymization/ReviewWorkbench.vue'
 import BatchOperationDetail from './views/batchOperations/BatchOperationDetail.vue'
 import ClassificationPending from './views/classification/ClassificationPending.vue'
 import ComparisonView from './views/comparison/ComparisonView.vue'
@@ -89,8 +90,8 @@ import IntakeChannels from './views/intakeChannels/IntakeChannels.vue'
 import LegalHolds from './views/legalHolds/LegalHolds.vue'
 import MailArchiveImport from './views/mailArchiveImport/MailArchiveImport.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
-import OrganisationSettings from './views/organisation/OrganisationSettings.vue'
 import SharedLinksIndex from './views/myDocuments/SharedLinksIndex.vue'
+import OrganisationSettings from './views/organisation/OrganisationSettings.vue'
 import PolicyRuleIndex from './views/policy/PolicyRuleIndex.vue'
 import PrintJobs from './views/printJobs/PrintJobs.vue'
 import PublicationsPage from './views/publications/PublicationsPage.vue'
@@ -115,6 +116,7 @@ export default {
 	ConsentIndex: { kind: 'page', component: ConsentIndex },
 	ConsentDetail: { kind: 'page', component: ConsentDetail },
 	AnonymizationIndex: { kind: 'page', component: AnonymizationIndex },
+	ReviewWorkbench: { kind: 'page', component: ReviewWorkbench },
 	FolderAnonymizationView: { kind: 'page', component: FolderAnonymizationView },
 	TemplateDetail: { kind: 'page', component: TemplateDetail },
 	TemplateImport: { kind: 'page', component: TemplateImport },

@@ -563,6 +563,16 @@ const documentRecordId = computed(() =>
 				:error="reviewMessage"
 				:colleagueHint="colleagueHintText"
 				@confirm="onMarkChecked" />
+			<router-link
+				class="review-workbench-link"
+				data-testid="open-review-workbench"
+				:to="{
+					name: 'ReviewWorkbench',
+					params: { fileId: entry.fileId },
+					query: { name: entry.name, path: entry.filePath },
+				}">
+				{{ t('filinq', 'Open in review workbench') }}
+			</router-link>
 			<NcButton
 				variant="primary"
 				:disabled="includedCount === 0 || isAnonymising || !entryChecked || colleagueRequired"
@@ -2082,6 +2092,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.review-workbench-link {
+	display: block;
+	margin: 4px 0 8px;
+	color: var(--color-primary-element);
+	text-decoration: underline;
+}
+
 /* Match MainMenu / NcAppContent chrome: rounded card, soft shadow,
  * translucent background. Lib does not expose a variable for radius/shadow,
  * so override directly. */

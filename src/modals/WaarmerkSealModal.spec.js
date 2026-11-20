@@ -5,9 +5,9 @@
  * "Add waarmerk" and the anonymisation certificate dialog.
  */
 
-import { certifyRun, sealFile } from '../services/waarmerk.js'
 import WaarmerkSealModal from './WaarmerkSealModal.vue'
 import { renderStubbed } from '../../tests/jest/renderGolden.js'
+import { certifyRun, sealFile } from '../services/waarmerk.js'
 
 jest.mock('../services/waarmerk.js', () => ({ certifyRun: jest.fn(), sealFile: jest.fn() }))
 jest.mock('@nextcloud/l10n', () => ({ translate: (app, text) => text }))

@@ -96,6 +96,7 @@ Features that are specified and actively being developed or reviewed.
 | [Enhanced Anonymization (Batch)](./enhanced-anonymization.md) | enhanced-anonymization.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
 | [Batch Processing](./batch-processing.md) | batch-processing.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
 | [Anonymization Entity Review](./anonymization-entity-review.md) | anonymization-entity-review.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
+| [Review Workbench](./review-workbench.md) | review-workbench.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
 | [Print Preview](./print-preview.md) | print-preview.md | Outputmanagementcomponent | TEC-DMS-1 | Reviewed |
 | [Letter & Correspondence Generation](./letter-correspondence-generation.md) | letter-correspondence-generation.md | Outputmanagementcomponent | TEC-DMS-1 | Proposed |
 | [Edit a document before it is stored](./generation-drafts.md) | generation-drafts.md | Documentcreatiecomponent | TEC-DMS-1 | In progress |

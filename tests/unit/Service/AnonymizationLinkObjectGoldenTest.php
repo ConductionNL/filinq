@@ -79,6 +79,7 @@ class AnonymizationLinkObjectGoldenTest extends TestCase {
 			'a prior verdict and no verification' => [[$prior], $run],
 			'structure preservation' => [[], $run + ['structurePreservation' => ['tags' => 3, 'lost' => ['table']], 'extra' => 'dropped']],
 			'everything' => [[$prior], $run + ['redactionVerification' => $verified, 'structurePreservation' => ['tags' => 1]]],
+			'a review rendition' => [[], $run + ['reviewRendition' => ['fileId' => 11, 'sha256' => 'a1', 'kind' => 'converted', 'backend' => 'libreoffice', 'textLayer' => 'native', 'preparedAt' => '2026-11-15T10:00:00+00:00']]],
 		];
 	}//end runs()
 

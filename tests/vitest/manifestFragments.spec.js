@@ -42,6 +42,8 @@ const PAGES_BEFORE = [
 	['BatchOperations', '/batch-operations'], ['BatchOperationDetail', '/batch-operations/:id'],
 	// office-template-authoring added these two after the split.
 	['TextFragments', '/text-fragments'], ['TemplateImport', '/templates-import'],
+	// Added after the split: the anonymisation review workbench.
+	['ReviewWorkbench', '/review/:fileId'],
 ]
 
 /**
