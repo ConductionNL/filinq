@@ -472,8 +472,10 @@
         }
     ],
     "IntakeService defaults": [
+        "double ContentHasher",
         "double IUserSession",
         "double IntakeAuthorizationGate",
+        "double IntakeDeadlines",
         "double IntakeDefaultRuleService",
         "double IntakeFilePlacement",
         "double IntakeOcrQueue",
@@ -486,8 +488,10 @@
         }
     ],
     "IntakeService given": [
+        "double ContentHasher",
         "double IUserSession",
         "double IntakeAuthorizationGate",
+        "double IntakeDeadlines",
         "double IntakeDefaultRuleService",
         "double IntakeFilePlacement",
         "double IntakeOcrQueue",
