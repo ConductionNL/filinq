@@ -89,6 +89,7 @@ import IntakeChannels from './views/intakeChannels/IntakeChannels.vue'
 import LegalHolds from './views/legalHolds/LegalHolds.vue'
 import MailArchiveImport from './views/mailArchiveImport/MailArchiveImport.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
+import SharedLinksIndex from './views/myDocuments/SharedLinksIndex.vue'
 import PolicyRuleIndex from './views/policy/PolicyRuleIndex.vue'
 import PrintJobs from './views/printJobs/PrintJobs.vue'
 import PublicationsPage from './views/publications/PublicationsPage.vue'
@@ -120,6 +121,7 @@ export default {
 	SigningRequestForm: { kind: 'page', component: SigningRequestForm },
 	SignatureVerification: { kind: 'page', component: SignatureVerification },
 	MyDocumentsIndex: { kind: 'page', component: MyDocumentsIndex },
+	SharedLinksIndex: { kind: 'page', component: SharedLinksIndex },
 	PrintJobs: { kind: 'page', component: PrintJobs },
 	LegalHolds: { kind: 'page', component: LegalHolds },
 	ContractDetail: { kind: 'page', component: ContractDetail },

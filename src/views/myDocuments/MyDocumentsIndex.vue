@@ -170,6 +170,29 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							}}
 						</NcActionButton>
 						<NcActionButton
+							v-if="bulkSelect && selectedShareIds.length > 0"
+							closeAfterClick
+							data-testid="documents-share-selected"
+							@click="openShare(selectedShareIds)">
+							<template #icon>
+								<LinkVariant :size="20" />
+							</template>
+							{{
+								t('filinq', 'Share selected by link ({count})', {
+									count: selectedShareIds.length,
+								})
+							}}
+						</NcActionButton>
+						<NcActionButton
+							closeAfterClick
+							data-testid="documents-shared-links"
+							@click="$router.push({ name: 'SharedLinks' })">
+							<template #icon>
+								<LinkVariant :size="20" />
+							</template>
+							{{ t('filinq', 'Shared links') }}
+						</NcActionButton>
+						<NcActionButton
 							v-if="bulkSelect && selectedIds.length > 0"
 							closeAfterClick
 							@click="bulkDelete">
@@ -204,6 +227,16 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 								<Download :size="20" />
 							</template>
 							{{ t('filinq', 'Download') }}
+						</NcActionButton>
+						<NcActionButton
+							v-if="!row.isFolder"
+							closeAfterClick
+							data-testid="document-share-by-link"
+							@click="openShare([row.fileId])">
+							<template #icon>
+								<LinkVariant :size="20" />
+							</template>
+							{{ t('filinq', 'Share by link') }}
 						</NcActionButton>
 						<NcActionButton
 							v-if="!row.isFolder"
@@ -277,6 +310,10 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			</DdIndexPage>
 		</template>
 
+		<ShareByLinkDialog
+			:show="shareDocuments.length > 0"
+			:documents="shareDocuments"
+			@close="shareDocuments = []" />
 		<SanitizationReportModal
 			:show="sanitization.show"
 			:loading="sanitization.loading"
@@ -351,6 +388,7 @@ import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
 import History from 'vue-material-design-icons/History.vue'
+import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
 import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
@@ -362,6 +400,7 @@ import DueForReviewList from '../../components/myDocuments/DueForReviewList.vue'
 import WaitingForMeList from '../../components/myDocuments/WaitingForMeList.vue'
 import PdfPasswordModal from '../../modals/PdfPasswordModal.vue'
 import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
+import ShareByLinkDialog from '../../modals/ShareByLinkDialog.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import WaarmerkSealModal from '../../modals/WaarmerkSealModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
@@ -413,6 +452,8 @@ export default {
 		PdfPasswordModal,
 		ValidationResultModal,
 		SanitizationReportModal,
+		ShareByLinkDialog,
+		LinkVariant,
 		BroomIcon,
 		CnConfirmDialog,
 		DotsHorizontal,
@@ -443,6 +484,8 @@ export default {
 			viewMode: loadPersistedViewMode(),
 			bulkSelect: false,
 			selectedIds: [],
+			// The file ids the Share by link dialog is open for, or none.
+			shareDocuments: [],
 			sanitization: {
 				show: false,
 				loading: false,
@@ -509,6 +552,18 @@ export default {
 			return docs.filter((d) =>
 				(d.fileName || '').toLowerCase().includes(query),
 			)
+		},
+
+		/**
+		 * The selected documents that can be shared by link: files, not folders.
+		 *
+		 * @return {number[]} Their file ids.
+		 * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+		 */
+		selectedShareIds() {
+			return myDocumentsStore.documents
+				.filter((d) => !d.isFolder && this.selectedIds.includes(d.fileId))
+				.map((d) => d.fileId)
 		},
 
 		paginatedDocuments() {
@@ -789,6 +844,16 @@ export default {
 			} else {
 				this.selectedIds = [...new Set([...this.selectedIds, ...pageIds])]
 			}
+		},
+
+		/**
+		 * Open the Share by link dialog for one or several documents.
+		 *
+		 * @param {number[]} fileIds The documents.
+		 * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+		 */
+		openShare(fileIds) {
+			this.shareDocuments = [...fileIds]
 		},
 
 		/**

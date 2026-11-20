@@ -1,0 +1,534 @@
+{
+  "info": {
+    "name": "Filinq share-document-links",
+    "_postman_id": "filinq-share-document-links",
+    "description": "share-document-links 2.1 and 2.3 on a live instance: POST api/shares/preflight, POST api/shares and DELETE api/shares/{id}. A link share is made, opened logged out, refused to another user's take-back (403), taken back by the sharer, and then no longer opens. Run by run-newman.sh with username/password; otherUser is created over OCS provisioning.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "username",
+      "value": "admin"
+    },
+    {
+      "key": "password",
+      "value": "admin"
+    },
+    {
+      "key": "otherUser",
+      "value": "newman-share-other"
+    },
+    {
+      "key": "otherPass",
+      "value": "Nw-other-2026!Strong#pass"
+    },
+    {
+      "key": "fileName",
+      "value": ""
+    },
+    {
+      "key": "fileId",
+      "value": ""
+    },
+    {
+      "key": "expiresOn",
+      "value": ""
+    },
+    {
+      "key": "shareRecord",
+      "value": ""
+    },
+    {
+      "key": "shareUrl",
+      "value": ""
+    }
+  ],
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{username}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{password}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Nextcloud answers a state-changing request without this header with 412.",
+          "pm.request.headers.upsert({ key: 'OCS-APIRequest', value: 'true' });"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "set up: a second, ordinary account",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/x-www-form-urlencoded"
+          }
+        ],
+        "url": "{{baseUrl}}/ocs/v2.php/cloud/users?format=json",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            {
+              "key": "userid",
+              "value": "{{otherUser}}"
+            },
+            {
+              "key": "password",
+              "value": "{{otherPass}}"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const code = pm.response.json().ocs.meta.statuscode;",
+              "pm.test('the second account exists (created, or 102 already there)', () => pm.expect([100, 200, 102]).to.include(code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "set up: a document to share",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/remote.php/dav/files/{{username}}/{{fileName}}",
+        "body": {
+          "mode": "raw",
+          "raw": "A document shared by link from the Newman run."
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('fileName', 'newman-share-' + Date.now() + '.txt');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('the document is stored (201)', () => pm.expect([201, 204]).to.include(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "set up: read its file id",
+      "request": {
+        "method": "PROPFIND",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Depth",
+            "value": "0"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/xml"
+          }
+        ],
+        "url": "{{baseUrl}}/remote.php/dav/files/{{username}}/{{fileName}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<?xml version=\"1.0\"?><d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\"><d:prop><oc:fileid/></d:prop></d:propfind>"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('multistatus (207)', () => pm.response.to.have.status(207));",
+              "const m = pm.response.text().match(/<oc:fileid>(\\d+)<\\/oc:fileid>/);",
+              "pm.test('the file id is read', () => pm.expect(m).to.not.be.null);",
+              "pm.collectionVariables.set('fileId', m ? m[1] : '');"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "preflight answers the rules for one document",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/filinq/api/shares/preflight",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"fileId\": \"{{fileId}}\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const b = pm.response.json();",
+              "pm.test('it names the longest expiry and a default day', () => { pm.expect(b.maxDays).to.be.a('number'); pm.expect(b.defaultExpiresAt).to.match(/^\\d{4}-\\d{2}-\\d{2}$/); });",
+              "pm.test('one document is no bundle', () => pm.expect(b.bundle).to.eql(null));",
+              "pm.collectionVariables.set('expiresOn', b.defaultExpiresAt);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a share without a document is refused",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/filinq/api/shares",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"expiresOn\": \"{{expiresOn}}\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('400', () => pm.response.to.have.status(400));",
+              "pm.test('it says why', () => pm.expect(pm.response.json().error).to.be.a('string').and.not.empty);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the admin shares the document by link",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/filinq/api/shares",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"fileId\": \"{{fileId}}\", \"expiresOn\": \"{{expiresOn}}\", \"password\": \"Nw-share-2026!Strong#pass\", \"note\": \"Newman: for the applicant\"}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201', () => pm.response.to.have.status(201));",
+              "const b = pm.response.json();",
+              "pm.test('it answers a public link', () => pm.expect(b.url).to.match(/\\/s\\/[A-Za-z0-9]+/));",
+              "pm.test('the record is active, made by the admin, with the expiry used', () => { pm.expect(b.share.status).to.eql('active'); pm.expect(b.share.sharedBy).to.eql(pm.variables.get('username')); pm.expect(b.share.expiresAt).to.eql(b.expiresAt); });",
+              "const s = b.share || {};",
+              "pm.collectionVariables.set('shareRecord', s.uuid || s.id || (s['@self'] || {}).id || '');",
+              "pm.collectionVariables.set('shareUrl', b.url);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the link opens for someone who is not logged in",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "text/html"
+          }
+        ],
+        "url": "{{shareUrl}}",
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('the public share page answers 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "another user cannot take the link back",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/filinq/api/shares/{{shareRecord}}",
+        "auth": {
+          "type": "basic",
+          "basic": [
+            {
+              "key": "username",
+              "value": "{{otherUser}}",
+              "type": "string"
+            },
+            {
+              "key": "password",
+              "value": "{{otherPass}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('403', () => pm.response.to.have.status(403));",
+              "pm.test('it names who may', () => pm.expect(pm.response.json().error).to.include('Only the person who made the link'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the link still opens after the refused take-back",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "text/html"
+          }
+        ],
+        "url": "{{shareUrl}}",
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the sharer takes the link back",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/filinq/api/shares/{{shareRecord}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "pm.test('the record is revoked', () => pm.expect(pm.response.json().status).to.eql('revoked'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the link no longer opens",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "text/html"
+          }
+        ],
+        "url": "{{shareUrl}}",
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "taking it back twice is a conflict",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/filinq/api/shares/{{shareRecord}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('409', () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a share that does not exist cannot be taken back",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/filinq/api/shares/00000000-0000-4000-8000-000000000000"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('404', () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "clean up: remove the document",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/remote.php/dav/files/{{username}}/{{fileName}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('removed', () => pm.expect([204, 404]).to.include(pm.response.code));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -78,6 +78,14 @@
 			"_note": "Hosts the in-app file viewer (FileViewerPage renders when fileViewerStore.currentFile is set). The anonymisation widget routes here after upload so the user reviews detected entities next to the document contents."
 		},
 		{
+			"id": "SharedLinks",
+			"route": "/my-documents/shared-links",
+			"type": "custom",
+			"title": "Shared links",
+			"component": "SharedLinksIndex",
+			"_note": "share-document-links 3.3: the documentShare records, reached from the options menu on My documents rather than the main menu. type:custom because Take back goes through filinq's DELETE api/shares/{id}, which also deletes the Nextcloud share and a bundle's archive; the index page type's delete would only remove the record."
+		},
+		{
 			"id": "BatchOperations",
 			"route": "/batch-operations",
 			"type": "index",
