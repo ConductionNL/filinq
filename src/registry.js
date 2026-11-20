@@ -99,6 +99,7 @@ import SigningRequestDetail from './views/signing/SigningRequestDetail.vue'
 import SigningRequestForm from './views/signing/SigningRequestForm.vue'
 import SubjectErasures from './views/subjectErasures/SubjectErasures.vue'
 import TemplateDetail from './views/templates/TemplateDetail.vue'
+import TemplateImport from './views/templates/TemplateImport.vue'
 import VersionsView from './views/versions/VersionsView.vue'
 import WizardRunner from './views/wizard/WizardRunner.vue'
 
@@ -115,6 +116,7 @@ export default {
 	AnonymizationIndex: { kind: 'page', component: AnonymizationIndex },
 	FolderAnonymizationView: { kind: 'page', component: FolderAnonymizationView },
 	TemplateDetail: { kind: 'page', component: TemplateDetail },
+	TemplateImport: { kind: 'page', component: TemplateImport },
 	WizardRunner: { kind: 'page', component: WizardRunner },
 	SigningFolder: { kind: 'page', component: SigningFolder },
 	SigningRequestDetail: { kind: 'page', component: SigningRequestDetail },

@@ -40,6 +40,8 @@ const PAGES_BEFORE = [
 	['Flows', '/flows'], ['FlowDetail', '/flows/:id'], ['FlowRuns', '/flow-runs'],
 	// Added after the split by redaction-at-scale (REQ-DDRAS-003).
 	['BatchOperations', '/batch-operations'], ['BatchOperationDetail', '/batch-operations/:id'],
+	// office-template-authoring added these two after the split.
+	['TextFragments', '/text-fragments'], ['TemplateImport', '/templates-import'],
 ]
 
 /**
@@ -67,6 +69,8 @@ const MENU_BEFORE = [
 	['ReportsMenu', 95], ['FeaturesRoadmapMenu', 100], ['FlowsMenu', 96], ['FlowRunsMenu', 97],
 	// Added after the split by redaction-at-scale (REQ-DDRAS-003).
 	['BatchOperations', 42],
+	// office-template-authoring added these two after the split.
+	['TextFragments', 51], ['TemplateImport', 52],
 ]
 
 /**

@@ -73,6 +73,7 @@ import TagCheckOutline from 'vue-material-design-icons/TagCheckOutline.vue'
 import TagMultiple from 'vue-material-design-icons/TagMultiple.vue'
 import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
 import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
+import Upload from 'vue-material-design-icons/Upload.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 
 export default {
@@ -126,6 +127,8 @@ export default {
 	Scanner,
 	InboxArrowDown,
 	TagCheckOutline,
+	// The office template upload and import entries (office-template-authoring).
+	Upload,
 	Stamper,
 	MapMarkerPath,
 	Palette,

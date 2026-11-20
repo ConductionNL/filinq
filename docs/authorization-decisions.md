@@ -98,6 +98,8 @@ deliberately.
 |---|---|---|---|---|
 | `template` | authenticated | authenticated | template-editors | Templates exist to be **used** across the organisation, so read stays open; the measured defect was a foreign user rewriting one. |
 | `templateVersion` | authenticated | authenticated | template-editors | Snapshots follow their template. `create` must be as open as template create, because a version row is written as a side effect of editing. |
+| `textFragment` | authenticated | template-editors | template-editors | A fragment is rendered into every template that names it, so everyone who generates must read it; writing one changes many documents at once, which is a managed act. |
+| `templateImportJob` | template-editors | template-editors | template-editors | An import run and its report are the working state of whoever migrates a template estate; nobody else needs to see or change it. |
 | `huisstijl` | authenticated | template-editors | template-editors | Branding must be readable or nothing renders; changing the organisation's house style is a managed act. |
 | `correspondence` | authenticated | authenticated | template-editors | Audit row written as a side effect of generating, so `create` follows the generator. |
 | `generatedDocument` | authenticated | authenticated | template-editors | Same. |
