@@ -474,7 +474,7 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 *                                                                the file was anonymized.
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-3
 	 */
 	private function anonymizeBatchFile(array $entry, BatchAnonymizeRequest $request, string $userId): array {
 		try {

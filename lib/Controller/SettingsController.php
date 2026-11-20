@@ -226,7 +226,7 @@ class SettingsController extends Controller {
 	 * @return JSONResponse JSON response containing the updated settings
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function create(): JSONResponse {

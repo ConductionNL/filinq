@@ -1034,7 +1034,7 @@ export default {
 		 * asks for four eyes up front; a refusal the server sent is kept.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-5
 		 */
 		fourEyesReason() {
 			return colleagueReason(this.entry, {
@@ -1046,7 +1046,7 @@ export default {
 
 		/**
 		 * @return {boolean} True when the signed-in person may not anonymise the open file.
-		 * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
+		 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
 		 */
 		colleagueRequired() {
 			return this.fourEyesReason !== ''
@@ -1054,7 +1054,7 @@ export default {
 
 		/**
 		 * @return {string} The sentence the review card shows, or ''.
-		 * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
+		 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
 		 */
 		colleagueHintText() {
 			return colleagueHint(this.fourEyesReason, t)
@@ -2381,6 +2381,7 @@ export default {
 	font-size: 0.85rem;
 	list-style: disc;
 }
+
 .scope-redaction {
 	display: flex;
 	flex-direction: column;

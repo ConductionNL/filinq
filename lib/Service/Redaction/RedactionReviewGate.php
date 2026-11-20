@@ -45,7 +45,7 @@ use OCP\IL10N;
  * Decides whether a redacted copy may be written yet.
  *
  * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
- * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md
+ * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md
  */
 class RedactionReviewGate {
 
@@ -185,7 +185,7 @@ class RedactionReviewGate {
 	 *
 	 * @return array<string, mixed>|null The refusal, or null when a colleague anonymises.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-2
 	 */
 	public function refuseFourEyes(array $mark, string $actor): ?array {
 		$actor = trim($actor);

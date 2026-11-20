@@ -523,7 +523,7 @@ class BatchAnonymizeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-3
 	 */
 	public function testTheStarterIsTheActingUserAndTheirOwnCheckIsReported(): void {
 		$this->mockStateService->method('getBatch')->willReturn(

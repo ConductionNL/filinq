@@ -546,7 +546,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	public function testTheFourEyesChoiceDefaultsToWoo(): void {
 		$stored = null;
@@ -578,7 +578,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	public function testTheFourEyesChoiceIsWritable(): void {
 		$this->mockConfig->expects($this->once())
@@ -597,7 +597,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	public function testAnUnknownFourEyesChoiceIsRefusedAndNothingIsWritten(): void {
 		$this->mockConfig->expects($this->never())->method('setValueString');

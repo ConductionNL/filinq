@@ -174,7 +174,7 @@ final class AnonymizeOptions {
 	 *
 	 * @return self A changed copy.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-2
 	 */
 	public function withWooCase(bool $wooCase): self {
 		$copy = clone $this;
