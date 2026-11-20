@@ -82,6 +82,9 @@ class WaarmerkSettings implements WaarmerkSettingsInterface {
 	 *
 	 * @return WaarmerkCertificate|null
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) WaarmerkCertificate is a stateless helper or named
+	 * constructor; an instance would add nothing.
+	 *
 	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-organisation-certificate-is-managed-in-admin-settings-with-credentialref-key-custody-req-ddwmk-001
 	 */
 	public function certificate(): ?WaarmerkCertificate {
@@ -183,6 +186,16 @@ class WaarmerkSettings implements WaarmerkSettingsInterface {
 	 * @return array<string, mixed> The new summary.
 	 *
 	 * @throws WaarmerkRefusedException When the input is invalid.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) WaarmerkCertificate is a stateless helper or named
+	 * constructor; an instance would add nothing.
+	 * @SuppressWarnings(PHPMD.ErrorControlOperator) OpenSSL reports failure through the return value,
+	 * which is checked; the PHP warning it would also raise adds nothing, and a temp-file unlink is
+	 * best-effort cleanup.
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Each branch is an independent check of the saved
+	 * settings that refuses with a 400.
+	 * @SuppressWarnings(PHPMD.NPathComplexity) Each branch is an independent check of the saved
+	 * settings that refuses with a 400.
 	 *
 	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-organisation-certificate-is-managed-in-admin-settings-with-credentialref-key-custody-req-ddwmk-001
 	 */

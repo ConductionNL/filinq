@@ -53,6 +53,10 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The class wires the collaborators of one flow;
+ * its value objects and exceptions count toward the coupling too, and splitting it would split that
+ * flow.
+ *
  * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
  */
 class WaarmerkController extends Controller {
@@ -149,6 +153,9 @@ class WaarmerkController extends Controller {
 	 * Seal a PDF the caller can read; the sealed copy is written next to it.
 	 *
 	 * @return JSONResponse
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SealedArtifact is a stateless helper or named constructor;
+	 * an instance would add nothing.
 	 *
 	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
 	 */

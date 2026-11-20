@@ -46,7 +46,7 @@ final class BatchProgress {
 	 *
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
 	 */
-	public function of(array $batch, int $now): array {
+	public function figuresFor(array $batch, int $now): array {
 		$files = (array)($batch['files'] ?? []);
 		$succeeded = 0;
 		$failed = 0;
@@ -77,7 +77,7 @@ final class BatchProgress {
 			'documentsPerHour' => $this->perHour(batch: $batch, succeeded: $succeeded, now: $now),
 		];
 
-	}//end of()
+	}//end figuresFor()
 
 	/**
 	 * Documents per hour since the batch started, or null before a minute has passed.

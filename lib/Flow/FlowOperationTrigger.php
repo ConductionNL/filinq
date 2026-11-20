@@ -52,6 +52,10 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The class joins the Flow event, the operation
+ * registry and the run log of one Filinq operation; its value objects and exceptions count toward
+ * the coupling too.
+ *
  * @spec openspec/changes/flow-operations/tasks.md#task-2.3
  */
 class FlowOperationTrigger {
@@ -126,6 +130,9 @@ class FlowOperationTrigger {
 	 * @param IRuleMatcher          $ruleMatcher The matcher.
 	 *
 	 * @return string|null The queued run's uuid, or null.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) FlowOutputGuard is a stateless helper or named
+	 * constructor; an instance would add nothing.
 	 */
 	private function queue(AbstractFileOperation $operation, string $eventName, Event $event, IRuleMatcher $ruleMatcher): ?string {
 		$file = $this->fileOf(event: $event);

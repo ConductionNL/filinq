@@ -53,6 +53,9 @@ final class OcrPage {
 	 *
 	 * @return self The page; without a level-1 row its size is 0 x 0.
 	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Each branch skips one kind of malformed TSV row;
+	 * they are independent checks of one line.
+	 *
 	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
 	 */
 	public static function fromTsv(string $tsv): self {

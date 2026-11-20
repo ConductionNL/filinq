@@ -119,6 +119,9 @@ class BatchJobCoordinator extends TimedJob {
 	 *
 	 * @return void
 	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) `$argument` is Nextcloud's job argument; the base
+	 * class dictates the signature and this job takes none.
+	 *
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-chunked-background-processing-under-cron-req-ddras-002
 	 */
 	protected function run(mixed $argument): void {
