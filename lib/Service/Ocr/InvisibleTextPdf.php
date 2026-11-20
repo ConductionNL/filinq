@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-1.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -51,7 +51,7 @@ class InvisibleTextPdf extends Fpdi {
 	 *
 	 * @return int How many words were written.
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-1.1
 	 */
 	public function addInvisibleWords(OcrPage $page): int {
 		if ($page->width <= 0 || $page->height <= 0 || $page->words === []) {

@@ -102,7 +102,7 @@ class OcrRunService implements OcrRunServiceInterface {
 	 *         what became of the text layer: one of OcrTextLayerService's outcomes, or null without one.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
-	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-1.1
 	 */
 	public function run(File $file, string $trigger): array {
 		$reason = $this->refusal(mimeType: $file->getMimeType());

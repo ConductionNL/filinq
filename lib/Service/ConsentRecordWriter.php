@@ -370,7 +370,7 @@ class ConsentRecordWriter {
 	 *
 	 * @return array<string, mixed> The record as stored.
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/specs/consent-management/spec.md
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/specs/consent-management/spec.md
 	 */
 	public function recordNotification(array $record, array $fields, string $register, string $schema): array {
 		$updated = array_replace($record, $fields);

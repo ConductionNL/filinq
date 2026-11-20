@@ -124,7 +124,7 @@ interface DocumentServiceInterface {
 	 *
 	 * @return array<string, mixed> The generation result.
 	 *
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.2
 	 */
 	public function generateFromHtml(
 		string $templateId,

@@ -407,7 +407,7 @@ export default {
 		/**
 		 * Recheck whether the chosen template may be opened for editing.
 		 *
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.3
 		 */
 		'store.templateId': function() {
 			this.checkEditability()
@@ -481,7 +481,7 @@ export default {
 		 * be read keeps the action, and the server refuses a plain one.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.3
 		 */
 		async checkEditability() {
 			const templateId = this.store.templateId
@@ -496,7 +496,7 @@ export default {
 		 * Nothing is filed or logged until the clerk finishes it.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.3
 		 */
 		async openForEditing() {
 			this.opening = true

@@ -317,7 +317,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$log` only chooses the register the
 	 *   record goes to; production and filing are the same either way.
 	 *
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.2
 	 */
 	public function generateFromHtml(
 		string $templateId,
@@ -375,7 +375,7 @@ class DocumentService implements DocumentServiceInterface {
 	 *
 	 * @return array<string, mixed> The template.
 	 *
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.2
 	 */
 	private function templateFor(string $templateId, array $options): array {
 		if (isset($options['templateVersion']) === true) {

@@ -350,7 +350,7 @@ class DocumentRenderPipeline {
 	 *
 	 * @return array{sha256: string, pageCount?: int}
 	 *
-	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-the-generation-result-reports-the-bytes-filinq-produced-req-ddtvp-005
+	 * @spec openspec/changes/archive/2026-11-20-generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-the-generation-result-reports-the-bytes-filinq-produced-req-ddtvp-005
 	 */
 	public function describeOutput(string $content, string $format): array {
 		$described = ['sha256' => hash('sha256', $content)];

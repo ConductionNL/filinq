@@ -61,7 +61,7 @@ test.describe('A finality rule declared on the admin settings freezes a document
 		await page.close()
 	})
 
-	// @e2e openspec/changes/finish-half-built-capabilities/tasks.md#3.2
+	// @e2e openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#3.2
 	test('the administrator declares the rule in the settings section', async ({ page }) => {
 		await page.goto('/index.php/settings/admin/filinq', { waitUntil: 'domcontentloaded' })
 
@@ -96,7 +96,7 @@ test.describe('A finality rule declared on the admin settings freezes a document
 		)
 	})
 
-	// @e2e openspec/changes/finish-half-built-capabilities/tasks.md#3.2
+	// @e2e openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#3.2
 	test('a status change of the record then makes the document final', async ({ page }) => {
 		const { status, fileId } = await createDavFile(
 			page.request,

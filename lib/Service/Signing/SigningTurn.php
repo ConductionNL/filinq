@@ -32,7 +32,7 @@ use RuntimeException;
  * absent mode as parallel would let the last signer sign first on every
  * request written before the mode was stored.
  *
- * @spec openspec/changes/finish-half-built-capabilities/tasks.md#4-signing
+ * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#4-signing
  */
 final class SigningTurn {
 
@@ -59,7 +59,7 @@ final class SigningTurn {
 	 *
 	 * @throws RuntimeException Naming the signers whose turn comes first.
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#4-signing
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#4-signing
 	 */
 	public static function assertTurn(array $request, string $signerId, array $signers): void {
 		if ((string)($request['signingMode'] ?? '') === self::PARALLEL) {
