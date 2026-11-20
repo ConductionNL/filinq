@@ -42,6 +42,9 @@ export const useFileViewerStore = defineStore('fileViewer', {
 		// as `{ value, type }`. Pushed by the sidebar from the current
 		// entity list; consumed by the viewers (T09).
 		highlightEntities: [],
+		// Image-region overlays of the review (`regionOverlays()`), pushed by
+		// the sidebar from the same entity rows; drawn by the PDF viewer.
+		imageRegions: [],
 	}),
 	getters: {
 		/**
@@ -79,6 +82,7 @@ export const useFileViewerStore = defineStore('fileViewer', {
 			this.grondslagen = options.grondslagen ?? true
 			this.addMode = false
 			this.highlightEntities = []
+			this.imageRegions = []
 		},
 		/**
 		 * Attach the anonymised counterpart of the currently-open file.
@@ -105,6 +109,7 @@ export const useFileViewerStore = defineStore('fileViewer', {
 			this.selection = ''
 			this.addMode = false
 			this.highlightEntities = []
+			this.imageRegions = []
 		},
 		/**
 		 * Close the viewer. Host page reverts to file list.
@@ -118,6 +123,7 @@ export const useFileViewerStore = defineStore('fileViewer', {
 			this.grondslagen = true
 			this.addMode = false
 			this.highlightEntities = []
+			this.imageRegions = []
 		},
 		/**
 		 * Swap `currentFile` between the original and the anonymised variant.
@@ -134,6 +140,7 @@ export const useFileViewerStore = defineStore('fileViewer', {
 			this.selection = ''
 			this.addMode = false
 			this.highlightEntities = []
+			this.imageRegions = []
 		},
 		/**
 		 * Toggle whether the detected entities may be edited. Driven by the
@@ -185,6 +192,15 @@ export const useFileViewerStore = defineStore('fileViewer', {
 		 */
 		setHighlightEntities(list) {
 			this.highlightEntities = Array.isArray(list) ? list : []
+		},
+		/**
+		 * Replace the image-region overlays the viewer should draw.
+		 *
+		 * @param {Array<object>} list Overlays from `regionOverlays()`.
+		 * @spec openspec/changes/image-redaction/tasks.md#task-4.1
+		 */
+		setImageRegions(list) {
+			this.imageRegions = Array.isArray(list) ? list : []
 		},
 	},
 })

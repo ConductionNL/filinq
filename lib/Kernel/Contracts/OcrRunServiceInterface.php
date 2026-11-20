@@ -87,8 +87,9 @@ interface OcrRunServiceInterface {
 	 * @param File $file The file, already resolved and access-checked by the caller.
 	 * @param string $trigger `manual`, `fallback` or `flow`.
 	 *
-	 * @return array{processed: bool, reason: string|null, text: string, result: array<string, mixed>|null}
-	 *         `text` is for the pipeline only; no caller may return it.
+	 * @return array{processed: bool, reason: string|null, text: string, result: array<string, mixed>|null, textLayer?: string|null}
+	 *         `text` is for the pipeline only; no caller may return it. `textLayer`, on a processed run,
+	 *         is what became of the text layer written back into the file (REQ-FHB-01).
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
 	 */

@@ -123,4 +123,30 @@ describe('the signing folder store', () => {
 		expect(outcome.signed).toBe(1)
 		expect(outcome.results[1].reason).toBe('Outside your mandate')
 	})
+
+	it('accepts a document for the accept-only recipient through the accept route', async () => {
+		post.mockResolvedValueOnce({ data: { id: 's1', status: 'ACCEPTED' } })
+
+		const store = useSigningStore()
+		const recipient = await store.acceptDocument('lease', 's1')
+
+		expect(post).toHaveBeenCalledWith(
+			'/index.php/apps/filinq/api/signing/requests/lease/accept',
+			{ signerId: 's1' },
+		)
+		expect(recipient).toEqual({ id: 's1', status: 'ACCEPTED' })
+		expect(store.error).toBeNull()
+		expect(store.loading).toBe(false)
+	})
+
+	it('keeps the error when an acceptance is refused', async () => {
+		post.mockRejectedValueOnce(new Error('Request failed with status code 422'))
+
+		const store = useSigningStore()
+		const recipient = await store.acceptDocument('lease', 's1')
+
+		expect(recipient).toBeNull()
+		expect(store.error).toBe('Request failed with status code 422')
+		expect(store.loading).toBe(false)
+	})
 })

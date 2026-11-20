@@ -12,7 +12,7 @@ SPDX-License-Identifier: EUPL-1.2
 			{{
 				t(
 					'filinq',
-					'Everything still waiting for your signature, from every case.',
+					'Everything still waiting for your signature or acceptance, from every case.',
 				)
 			}}
 		</p>
@@ -79,7 +79,22 @@ SPDX-License-Identifier: EUPL-1.2
 				<tbody>
 					<tr v-for="entry in entries" :key="entry.requestId">
 						<td>
+							<!-- An accept-only recipient accepts here; it is
+							     never part of a signing pass (REQ-SAO-002). -->
+							<NcButton
+								v-if="acceptsOnly(entry)"
+								variant="secondary"
+								:disabled="signingStore.loading"
+								:aria-label="
+									t('filinq', 'Accept {document}', {
+										document: entry.documentName,
+									})
+								"
+								@click="acceptEntry(entry)">
+								{{ t('filinq', 'Accept') }}
+							</NcButton>
 							<input
+								v-else
 								type="checkbox"
 								:aria-label="
 									t('filinq', 'Select {document}', {
@@ -87,6 +102,7 @@ SPDX-License-Identifier: EUPL-1.2
 									})
 								"
 								:checked="selected.includes(entry.requestId)"
+								:disabled="hasFields(entry)"
 								@change="toggle(entry.requestId)" />
 						</td>
 						<td>
@@ -95,6 +111,22 @@ SPDX-License-Identifier: EUPL-1.2
 								@click="readDocument(entry)">
 								{{ entry.documentName }}
 							</NcButton>
+							<p
+								v-if="hasFields(entry)"
+								class="signing-folder__fields-note">
+								{{
+									t(
+										'filinq',
+										'This document has fields to fill in. Open it to sign.',
+									)
+								}}
+								<NcButton
+									variant="secondary"
+									:data-testid="`fill-in-and-sign-${entry.requestId}`"
+									@click="fillingIn = entry">
+									{{ t('filinq', 'Fill in and sign') }}
+								</NcButton>
+							</p>
 						</td>
 						<td>{{ caseOf(entry) }}</td>
 						<td>{{ entry.requestedBy }}</td>
@@ -110,7 +142,14 @@ SPDX-License-Identifier: EUPL-1.2
 			<h3>{{ t('filinq', 'What the last pass did') }}</h3>
 			<ul>
 				<li v-for="result in results" :key="result.requestId">
-					<span v-if="result.signed">
+					<span v-if="result.accepted">
+						{{
+							t('filinq', 'Accepted: {document}', {
+								document: result.documentName || result.requestId,
+							})
+						}}
+					</span>
+					<span v-else-if="result.signed">
 						{{
 							t('filinq', 'Signed: {document}', {
 								document: result.documentName || result.requestId,
@@ -145,6 +184,17 @@ SPDX-License-Identifier: EUPL-1.2
 			@close="stepUp = null"
 			@ready="stepUp = null" />
 
+		<FillInAndSignDialog
+			v-if="fillingIn"
+			:show="true"
+			:requestId="fillingIn.requestId"
+			:signerId="fillingIn.signerId"
+			:documentName="fillingIn.documentName"
+			:fields="fillingIn.fields"
+			@close="fillingIn = null"
+			@signed="onFilledIn"
+			@stepUp="onFillInStepUp" />
+
 		<SigningFolderDocumentModal
 			v-if="reading"
 			:show="true"
@@ -158,15 +208,18 @@ SPDX-License-Identifier: EUPL-1.2
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
+import FillInAndSignDialog from '../../modals/FillInAndSignDialog.vue'
 import SignerStepUpModal from '../../modals/SignerStepUpModal.vue'
 import SigningFolderDocumentModal from '../../modals/SigningFolderDocumentModal.vue'
 import SigningDelegations from './SigningDelegations.vue'
 import { stepUpHint, stepUpReturn } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
+import { hasFieldsToFillIn } from './fillInAndSign.js'
 
 export default {
 	name: 'SigningFolder',
 	components: {
+		FillInAndSignDialog,
 		NcButton,
 		NcEmptyContent,
 		NcLoadingIcon,
@@ -196,6 +249,7 @@ export default {
 			results: [],
 			reading: null,
 			stepUp: null,
+			fillingIn: null,
 		}
 	},
 
@@ -225,6 +279,48 @@ export default {
 
 	methods: {
 		/**
+		 * Whether the caller only accepts this document instead of signing it.
+		 *
+		 * @param {object} entry The folder entry.
+		 * @return {boolean}
+		 *
+		 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+		 */
+		acceptsOnly(entry) {
+			return entry?.role === 'accept'
+		},
+
+		/**
+		 * Accept one document as an accept-only recipient, then read the folder again.
+		 *
+		 * @param {object} entry The folder entry.
+		 *
+		 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+		 */
+		async acceptEntry(entry) {
+			const recipient = await this.signingStore.acceptDocument(
+				entry.requestId,
+				entry.signerId,
+			)
+			this.results = recipient
+				? [
+					{
+						requestId: entry.requestId,
+						documentName: entry.documentName,
+						accepted: true,
+					},
+				]
+				: [
+					{
+						requestId: entry.requestId,
+						signed: false,
+						reason: t('filinq', 'Failed to accept the document'),
+					},
+				]
+			await this.signingStore.fetchSigningFolder()
+		},
+
+		/**
 		 * Add or remove one document from the selection.
 		 *
 		 * @param {string} requestId The signing request.
@@ -232,6 +328,10 @@ export default {
 		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
 		 */
 		toggle(requestId) {
+			const entry = this.entries.find((e) => e.requestId === requestId)
+			if (hasFieldsToFillIn(entry)) {
+				return
+			}
 			if (this.selected.includes(requestId)) {
 				this.selected = this.selected.filter((id) => id !== requestId)
 				return
@@ -251,6 +351,53 @@ export default {
 			this.results = outcome?.results ?? []
 			this.selected = []
 			await this.signingStore.fetchSigningFolder()
+		},
+
+		/**
+		 * Does a document have fields for this signer, so it is signed on its
+		 * own through the "Fill in and sign" dialog, not in a selection.
+		 *
+		 * @param {object} entry The folder entry.
+		 * @return {boolean}
+		 *
+		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+		 */
+		hasFields(entry) {
+			return hasFieldsToFillIn(entry)
+		},
+
+		/**
+		 * A document was filled in and signed: report it and read the folder again.
+		 *
+		 * @param {object} signer The signed signer record.
+		 *
+		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+		 */
+		async onFilledIn(signer) {
+			const entry = this.fillingIn
+			this.fillingIn = null
+			this.results = [
+				{
+					requestId: entry.requestId,
+					documentName: entry.documentName,
+					signed: true,
+					signedAt: signer?.signedAt ?? '',
+				},
+			]
+			await this.signingStore.fetchSigningFolder()
+		},
+
+		/**
+		 * The document asks for a stronger identity: close the dialog and offer
+		 * the step-up, as for a selection.
+		 *
+		 * @param {object} result The request, signer and step-up hint.
+		 *
+		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+		 */
+		onFillInStepUp(result) {
+			this.fillingIn = null
+			this.stepUp = result
 		},
 
 		/**
@@ -338,6 +485,14 @@ export default {
 	text-align: start;
 	padding: 8px;
 	border-bottom: 1px solid var(--color-border);
+}
+
+.signing-folder__fields-note {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	color: var(--color-text-maxcontrast);
 }
 
 .signing-folder__results {

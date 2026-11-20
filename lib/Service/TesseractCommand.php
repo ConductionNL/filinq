@@ -136,6 +136,37 @@ class TesseractCommand {
 	}//end confidence()
 
 	/**
+	 * Tesseract's TSV output for an image: each word with its box, in pixels.
+	 *
+	 * @param string $filePath  Path to the image file
+	 * @param string $languages Tesseract language codes
+	 * @param int    $dpi       DPI setting
+	 *
+	 * @return string The TSV text, '' when tesseract fails
+	 *
+	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
+	 */
+	public function words(string $filePath, string $languages, int $dpi): string {
+		$output = [];
+		$returnCode = 0;
+		$command = sprintf(
+			'tesseract %s stdout -l %s --dpi %d tsv 2>/dev/null',
+			escapeshellarg($filePath),
+			escapeshellarg($languages),
+			$dpi
+		);
+		exec($command, $output, $returnCode);
+
+		if ($returnCode !== 0) {
+			$this->logger->debug('Tesseract could not read the words of an image', ['returnCode' => $returnCode]);
+			return '';
+		}
+
+		return implode("\n", $output);
+
+	}//end words()
+
+	/**
 	 * The mean of every `x_wconf` word confidence in hOCR markup.
 	 *
 	 * @param string $hocrContent The hOCR output.

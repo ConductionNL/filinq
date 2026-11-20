@@ -45,12 +45,14 @@ class OcrRunService implements OcrRunServiceInterface {
 	 * @param OcrResultRepository $results The ocrResult rows.
 	 * @param ITimeFactory $time The clock.
 	 * @param LoggerInterface $logger The logger.
+	 * @param OcrTextLayerService|null $textLayer Writes the recognised text back into the file; none: no text layer.
 	 */
 	public function __construct(
 		private readonly OcrService $ocr,
 		private readonly OcrResultRepository $results,
 		private readonly ITimeFactory $time,
 		private readonly LoggerInterface $logger,
+		private readonly ?OcrTextLayerService $textLayer = null,
 	) {
 
 	}//end __construct()
@@ -95,10 +97,12 @@ class OcrRunService implements OcrRunServiceInterface {
 	 * @param File $file The file, already resolved and access-checked by the caller.
 	 * @param string $trigger `manual`, `fallback` or `flow`.
 	 *
-	 * @return array{processed: bool, reason: string|null, text: string, result: array<string, mixed>|null}
-	 *         `text` is for the pipeline only; no caller may return it.
+	 * @return array{processed: bool, reason: string|null, text: string, result: array<string, mixed>|null, textLayer?: string|null}
+	 *         `text` is for the pipeline only; no caller may return it. `textLayer`, on a processed run, is
+	 *         what became of the text layer: one of OcrTextLayerService's outcomes, or null without one.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
+	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
 	 */
 	public function run(File $file, string $trigger): array {
 		$reason = $this->refusal(mimeType: $file->getMimeType());
@@ -134,7 +138,10 @@ class OcrRunService implements OcrRunServiceInterface {
 			]
 		);
 
-		return ['processed' => true, 'reason' => null, 'text' => $text, 'result' => $result];
+		// The recognised text goes back into the file, so the file itself is searchable (REQ-FHB-01).
+		$textLayer = $this->textLayer?->apply(file: $file, languages: $recognised['languages'], dpi: $recognised['dpi']);
+
+		return ['processed' => true, 'reason' => null, 'text' => $text, 'result' => $result, 'textLayer' => $textLayer];
 
 	}//end run()
 

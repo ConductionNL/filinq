@@ -25,6 +25,10 @@
 		"pendingValue": {
 			"deep": false,
 			"immediate": false
+		},
+		"imageRegions": {
+			"deep": true,
+			"immediate": false
 		}
 	},
 	"wiring": {

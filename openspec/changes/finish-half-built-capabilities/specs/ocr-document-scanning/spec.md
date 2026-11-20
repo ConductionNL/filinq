@@ -19,3 +19,10 @@ When OCR recognises text in a scanned PDF, Filinq SHALL write that text into the
 - **GIVEN** a JPEG of a printed page
 - **WHEN** OCR runs on the file
 - **THEN** a PDF with the image and its text layer is stored beside the JPEG
+
+#### Scenario: A final or signed PDF keeps its bytes
+
+- **GIVEN** a scanned PDF that is final, under signature, or the source of an anonymised copy
+- **WHEN** OCR runs on the file, by hand or as the automatic extraction fallback
+- **THEN** the PDF is not rewritten, so its frozen checksum and its signature still match
+- **AND** the run reports the text layer as `protected`
