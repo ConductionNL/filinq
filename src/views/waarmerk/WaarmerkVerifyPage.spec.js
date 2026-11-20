@@ -8,9 +8,9 @@
 
 import axios from '@nextcloud/axios'
 import { loadState } from '@nextcloud/initial-state'
-import { sha256Hex } from './sha256.js'
 import WaarmerkVerifyPage from './WaarmerkVerifyPage.vue'
 import { renderStubbed } from '../../../tests/jest/renderGolden.js'
+import { sha256Hex } from './sha256.js'
 
 jest.mock('@nextcloud/axios', () => ({ __esModule: true, default: { post: jest.fn() } }))
 jest.mock('@nextcloud/initial-state', () => ({ loadState: jest.fn() }))
