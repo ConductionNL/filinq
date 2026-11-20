@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
+use OCA\Filinq\Service\Intake\AnsweringRegistration;
 use OCA\Filinq\Service\Intake\SenderReach;
 use OCA\Filinq\Service\IntakeAcknowledgementService;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -45,6 +46,8 @@ class IntakeAcknowledgementServiceTest extends TestCase {
 
 	private LoggerInterface&MockObject $logger;
 
+	private AnsweringRegistration&MockObject $registrations;
+
 	/**
 	 * The service at 14 October 2026, 09:30 UTC.
 	 *
@@ -54,12 +57,13 @@ class IntakeAcknowledgementServiceTest extends TestCase {
 		$this->documents = $this->createMock(DocumentServiceInterface::class);
 		$this->reach = $this->createMock(SenderReach::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
+		$this->registrations = $this->createMock(AnsweringRegistration::class);
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn (string $text, array $parameters = []): string => vsprintf($text, $parameters));
 		$time = $this->createMock(ITimeFactory::class);
 		$time->method('getDateTime')->willReturn(new \DateTime('2026-10-14T09:30:00+00:00'));
 
-		return new IntakeAcknowledgementService($this->documents, $this->reach, $l10n, $time, $this->logger);
+		return new IntakeAcknowledgementService($this->documents, $this->reach, $l10n, $time, $this->logger, $this->registrations);
 	}//end service()
 
 	/**
@@ -110,6 +114,7 @@ class IntakeAcknowledgementServiceTest extends TestCase {
 					'sender' => 'j.devries@example.nl',
 					'receivedAt' => '2026-10-14T09:12:00+00:00',
 					'channel' => 'mail',
+					'registrationNumber' => '',
 				],
 			]
 		)->willReturn(['html' => '<p>Ontvangen op 14 oktober</p>', 'content' => 'x']);
@@ -179,14 +184,96 @@ class IntakeAcknowledgementServiceTest extends TestCase {
 	 */
 	public function testAPaperLetterIsQueuedAsALetter(): void {
 		$service = $this->service();
-		$this->documents->method('generateDocument')->willReturn(['html' => 'body']);
+		$formats = [];
+		$this->documents->expects($this->exactly(2))->method('generateDocument')->willReturnCallback(
+			static function (string $template, array $refs, array $options) use (&$formats): array {
+				$formats[] = [$options['format'], ($options['output']['mode'] ?? 'return')];
+				return $options['format'] === 'pdf' ? ['content' => '%PDF', 'output' => ['fileId' => 77]] : ['html' => 'body'];
+			}
+		);
 		$this->reach->method('notifySenderParties')->willReturn([]);
 		$this->reach->expects($this->never())->method('mailAddress');
 
 		$outcome = $service->acknowledge(self::mailed(['channel' => 'scan', 'sender' => 'Fam. de Vries, Dorpsstraat 1']), self::rule());
 
-		$this->assertSame(['queued-as-letter', null, null], [$outcome['status'], $outcome['address'], $outcome['reason']]);
+		$this->assertSame(['queued-as-letter', null, null, 77], [$outcome['status'], $outcome['address'], $outcome['reason'], $outcome['letter']]);
+		$this->assertSame([['html', 'return'], ['pdf', 'files']], $formats);
 	}//end testAPaperLetterIsQueuedAsALetter()
+
+	/**
+	 * A letter for the outgoing post that was not stored is failed, not queued.
+	 *
+	 * @return void
+	 */
+	public function testALetterThatWasNotStoredIsFailed(): void {
+		$service = $this->service();
+		$this->documents->method('generateDocument')->willReturn(['html' => 'body', 'output' => ['fileId' => null]]);
+		$this->reach->method('notifySenderParties')->willReturn([]);
+
+		$outcome = $service->acknowledge(self::mailed(['channel' => 'scan', 'sender' => 'Fam. de Vries']), self::rule());
+
+		$this->assertSame(['failed', 'the letter for the outgoing post was not stored'], [$outcome['status'], $outcome['reason']]);
+		$this->assertArrayNotHasKey('letter', $outcome);
+	}//end testALetterThatWasNotStoredIsFailed()
+
+	/**
+	 * With an inbound registration, the letter carries its number and the
+	 * acknowledgement is registered as the outbound entry answering it (D4).
+	 *
+	 * @return void
+	 */
+	public function testAnInboundRegistrationIsNumberedOnTheLetterAndAnswered(): void {
+		$service = $this->service();
+		$inbound = ['uuid' => 'reg-in', 'unit' => 'post', 'registrationNumber' => '2026-00042'];
+		$this->documents->expects($this->once())->method('generateDocument')->with(
+			'tpl-ontvangst',
+			[],
+			$this->callback(static fn (array $options): bool => $options['adHocData']['registrationNumber'] === '2026-00042')
+		)->willReturn(['html' => 'body', 'metadata' => ['id' => 'gen-1']]);
+		$this->reach->method('notifySenderParties')->willReturn([]);
+		$this->reach->method('mailAddress')->willReturn('dispatched');
+		$this->registrations->expects($this->once())->method('registerAnswer')->with($inbound, 'gen-1')
+			->willReturn(['uuid' => 'reg-out', 'answers' => 'reg-in']);
+
+		$outcome = $service->acknowledge(self::mailed(), self::rule(), $inbound);
+
+		$this->assertSame(['sent', 'reg-out'], [$outcome['status'], $outcome['registration']]);
+	}//end testAnInboundRegistrationIsNumberedOnTheLetterAndAnswered()
+
+	/**
+	 * A queued letter is registered with the stored PDF's entry, not the mail body's.
+	 *
+	 * @return void
+	 */
+	public function testAQueuedLetterIsRegisteredWithTheStoredLetter(): void {
+		$service = $this->service();
+		$this->documents->method('generateDocument')->willReturnCallback(
+			static fn (string $template, array $refs, array $options): array => $options['format'] === 'pdf'
+				? ['output' => ['fileId' => 77], 'metadata' => ['id' => 'gen-pdf']]
+				: ['html' => 'body', 'metadata' => ['id' => 'gen-html']]
+		);
+		$this->reach->method('notifySenderParties')->willReturn([]);
+		$this->registrations->expects($this->once())->method('registerAnswer')->with($this->anything(), 'gen-pdf')->willReturn(null);
+
+		$outcome = $service->acknowledge(self::mailed(['channel' => 'scan', 'sender' => 'Fam. de Vries']), self::rule(), ['uuid' => 'reg-in', 'unit' => 'post']);
+
+		$this->assertSame('queued-as-letter', $outcome['status']);
+		$this->assertArrayNotHasKey('registration', $outcome);
+	}//end testAQueuedLetterIsRegisteredWithTheStoredLetter()
+
+	/**
+	 * A refused or failed acknowledgement did not go out and is not registered.
+	 *
+	 * @return void
+	 */
+	public function testWhatDidNotGoOutIsNotRegistered(): void {
+		$service = $this->service();
+		$this->documents->method('generateDocument')->willReturn(['html' => 'body', 'metadata' => ['id' => 'gen-1']]);
+		$this->reach->method('notifySenderParties')->willReturn([['party' => 'p-1', 'address' => null, 'outcome' => 'refused-by-indicator']]);
+		$this->registrations->expects($this->never())->method('registerAnswer');
+
+		$this->assertSame('refused', $service->acknowledge(self::mailed(), self::rule(), ['uuid' => 'reg-in', 'unit' => 'post'])['status']);
+	}//end testWhatDidNotGoOutIsNotRegistered()
 
 	/**
 	 * A send the mail server refuses is failed with the send unit's reason.

@@ -43,9 +43,26 @@ metadata is complete and OpenCatalogi is installed. Filinq runs the checks
 again at that moment: if something changed, for example a new objection,
 the publication goes back to Not ready and nothing is handed off. Otherwise
 Filinq creates the publication in OpenCatalogi with the title, the document
-type as summary and the publication date, and attaches the redacted copy.
-The original never leaves Filinq. On the publication date the status moves
-to Published.
+type, the information category and the publication date, and attaches the
+redacted copy. The original never leaves Filinq. On the publication date the
+status moves to Published.
+
+The document type goes to the publication's own **documentsoort** field, as
+Filinq holds it (for example `besluit`). OpenCatalogi turns it into the
+address of that type on the national list of document types, and refuses a
+type that is not on the list. Filinq never writes the document type into the
+publication's summary.
+
+Before it writes, Filinq checks that OpenCatalogi's publication has the
+documentsoort field. An OpenCatalogi from before that field refuses the
+hand-off with a message asking for an OpenCatalogi update, and the
+publication stays Ready to hand off. When OpenCatalogi refuses the document
+type, its reason shows on the page and the publication also stays Ready to
+hand off: nothing is handed off halfway.
+
+Publications handed off before this change carry the document type in their
+summary. OpenCatalogi's own repair step moves it out of the summary into the
+new field; Filinq does not change another app's publications.
 
 ## Withdraw
 
@@ -69,6 +86,5 @@ entry is written once and no route changes or removes it.
 
 ## What stays in Filinq
 
-OpenCatalogi's publication has no fields for the information category, the
-document type as such, or the publisher yet. Filinq keeps them on its own
-record until OpenCatalogi can take them.
+OpenCatalogi's publication has no field for the publisher yet. Filinq keeps
+it on its own record until OpenCatalogi can take it.

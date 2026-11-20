@@ -1839,7 +1839,14 @@ OC.L10N.register(
         "The test arrived": "Le test est arrivé",
         "The test did not arrive": "Le test n'est pas arrivé",
         "Type a name and a URL and pick at least one event": "Saisissez un nom et une URL et choisissez au moins un événement",
-        "Type a secret so the receiver can check each delivery": "Saisissez un secret pour que le destinataire puisse vérifier chaque livraison"
+        "Type a secret so the receiver can check each delivery": "Saisissez un secret pour que le destinataire puisse vérifier chaque livraison",
+        "Acknowledged": "Accusé",
+        "Open stamped copy": "Ouvrir la copie tamponnée",
+        "Queued as letter": "En attente comme lettre",
+        "Acknowledgement of receipt: %s": "Accusé de réception : %s",
+        "Intake rules": "Règles d'entrée",
+        "New intake rule": "Nouvelle règle d'entrée",
+        "No intake rules yet": "Aucune règle d'entrée pour l'instant"
     },
     "nplurals=2; plural=(n > 1);"
 )

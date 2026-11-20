@@ -68,6 +68,9 @@
 				@click="openVerify">
 				{{ t('filinq', 'Verify') }}
 			</NcButton>
+			<SigningEvidenceCard
+				:requestId="id"
+				:status="signingStore.signingRequest.status || ''" />
 			<NcButton
 				v-if="canWithdraw"
 				variant="error"
@@ -129,6 +132,7 @@ import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import CancelSigningRequestDialog from '../../dialogs/CancelSigningRequestDialog.vue'
 import SignerStepUpModal from '../../modals/SignerStepUpModal.vue'
 import SigningEnvelopePanel from './SigningEnvelopePanel.vue'
+import SigningEvidenceCard from './SigningEvidenceCard.vue'
 import { stepUpReturn } from '../../services/signerStepUp.js'
 import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { useSigningStore } from '../../store/modules/signing.js'
@@ -147,6 +151,7 @@ export default {
 		NcNoteCard,
 		SignerStepUpModal,
 		SigningEnvelopePanel,
+		SigningEvidenceCard,
 	},
 
 	// leaf-integrations: the registry's leaves (Mail, Calendar) for this request.

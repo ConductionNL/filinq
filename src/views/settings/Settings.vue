@@ -286,6 +286,26 @@
 					)
 				"
 				data-testid="settings-inbound-classification" />
+
+			<div class="setting-item">
+				<NcTextField
+					:modelValue="String(settings.extraction_unattended_threshold)"
+					type="number"
+					min="0.6"
+					max="1"
+					step="0.01"
+					:label="t('filinq', 'Confidence for unattended receipts and invoices')"
+					:error="!!unattendedThresholdError"
+					:helperText="
+						unattendedThresholdError
+						|| t(
+							'filinq',
+							'A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.',
+						)
+					"
+					data-testid="settings-unattended-threshold"
+					@update:modelValue="settings.extraction_unattended_threshold = $event" />
+			</div>
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -762,9 +782,15 @@
 		<CaseSystemDeliverySettings v-if="isAdmin" />
 		<BridgeSourcesSettings v-if="isAdmin" />
 
+		<!-- Waarmerk organisation certificate (document-waarmerk-certification): its own admin endpoint -->
+		<WaarmerkSettings v-if="isAdmin" />
 		<DocumentWebhooksSection v-if="isAdmin" />
 
+		<IntegrityScanSection v-if="isAdmin" />
+
 		<EmailIngestionSettings v-if="isAdmin" />
+
+		<MailArchiveImportSettings v-if="isAdmin" />
 
 		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
 		<PageLayoutSettings v-if="isAdmin" />
@@ -942,11 +968,14 @@ import DetectionProviderSettings from './DetectionProviderSettings.vue'
 import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
+import IntegrityScanSection from './IntegrityScanSection.vue'
+import MailArchiveImportSettings from './MailArchiveImportSettings.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
 import RefusalGroundsSource from './RefusalGroundsSource.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
 import SigningSourcesSettings from './SigningSourcesSettings.vue'
+import WaarmerkSettings from './WaarmerkSettings.vue'
 import {
 	backendStateFromSettings,
 	emptyBackendState,
@@ -1059,6 +1088,7 @@ export default {
 	name: 'Settings',
 	components: {
 		DocumentWebhooksSection,
+		IntegrityScanSection,
 		RefusalGroundsSource,
 		NcSettingsSection,
 		NcNoteCard,
@@ -1077,12 +1107,14 @@ export default {
 		EntityTypeSelector,
 		DetectionProviderSettings,
 		EmailIngestionSettings,
+		MailArchiveImportSettings,
 		PageLayoutSettings,
 		SettingSwitchRow,
 		SignerIdentitySettings,
 		SigningSourcesSettings,
 		BridgeSourcesSettings,
 		CaseSystemDeliverySettings,
+		WaarmerkSettings,
 	},
 
 	data() {
@@ -1124,6 +1156,21 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Why the unattended confidence threshold cannot be saved, or '' when it can.
+		 *
+		 * @return {string} Localised reason.
+		 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+		 */
+		unattendedThresholdError() {
+			const raw = String(this.settings.extraction_unattended_threshold ?? '').trim()
+			const value = Number(raw)
+			if (raw === '' || !Number.isFinite(value) || value < 0.6 || value > 1) {
+				return t('filinq', 'Choose a value between 0.6 and 1.0.')
+			}
+			return ''
+		},
+
 		/**
 		 * Why the output subfolder name cannot be saved, or '' when it can.
 		 *
@@ -1327,6 +1374,8 @@ export default {
 						parseInt(data.signing_request_expiry_days, 10) || 30
 					this.settings.signing_guardian_consent_age =
 						parseInt(data.signing_guardian_consent_age, 10) || 16
+					this.settings.extraction_unattended_threshold =
+						data.extraction_unattended_threshold ?? '0.9'
 					this.settings['filinq.anonymisation.default_output_format'] =
 						data['filinq.anonymisation.default_output_format']
 						?? 'pdf-only'
@@ -1495,6 +1544,11 @@ export default {
 				return
 			}
 
+			if (this.unattendedThresholdError) {
+				showError(this.unattendedThresholdError)
+				return
+			}
+
 			this.saving = true
 
 			// Build OCR language string from checkboxes
@@ -1547,6 +1601,10 @@ export default {
 				signing_guardian_consent_age: String(
 					this.settings.signing_guardian_consent_age || 16,
 				),
+
+				extraction_unattended_threshold: String(
+					this.settings.extraction_unattended_threshold,
+				).trim(),
 
 				'filinq.anonymisation.default_output_format': [
 					'pdf-only',

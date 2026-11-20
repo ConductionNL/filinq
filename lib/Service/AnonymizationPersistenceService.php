@@ -191,6 +191,48 @@ class AnonymizationPersistenceService {
 	}//end setMappingRef()
 
 	/**
+	 * Record what the run did to the file's image content on its link.
+	 *
+	 * Only `imageRedactionPending` and `burnedRegionCount` are written, on the
+	 * link the run just wrote. Best-effort like the link itself: the run's own
+	 * result already carries the flag, so a failed write is logged, never
+	 * turned into a clean success.
+	 *
+	 * @param int                  $fileId The source Nextcloud file id.
+	 * @param array<string, mixed> $fields `imageRedactionPending` and `burnedRegionCount`.
+	 *
+	 * @return bool True when the link was updated.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.3
+	 */
+	public function recordImageRedaction(int $fileId, array $fields): bool {
+		$fields = array_intersect_key($fields, ['imageRedactionPending' => true, 'burnedRegionCount' => true]);
+		try {
+			$objectService = $this->locator->get(className: 'OCA\OpenRegister\Service\ObjectService');
+			$existing = $this->existingLink(objectService: $objectService, fileId: $fileId);
+			if ($fields === [] || (int) ($existing['sourceFileId'] ?? 0) !== $fileId) {
+				return false;
+			}
+
+			$objectService->saveObject(
+				object: array_merge($existing, $fields),
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'anonymizationLink')),
+				_rbac: false
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'[AnonymizationPersistenceService] could not record the image redaction state on the link',
+				['fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+
+			return false;
+		}//end try
+
+		return true;
+
+	}//end recordImageRedaction()
+
+	/**
 	 * Create publicationConsent records for each unredacted entity after a successful anonymise run.
 	 *
 	 * Calls ConsentService::createConsentRequest() once per entry. Any consent-creation
@@ -310,8 +352,8 @@ class AnonymizationPersistenceService {
 			verification: ($resultInfo['redactionVerification'] ?? null)
 		);
 
-		// Tag counts and loss reasons only, never an entity value; absent when the run recorded none.
-		return array_merge($object, array_intersect_key($resultInfo, ['structurePreservation' => true]));
+		// Tag counts, loss reasons and per-type entity counts only, never an entity value; absent when the run recorded none.
+		return array_merge($object, array_intersect_key($resultInfo, ['structurePreservation' => true, 'entityTypeCounts' => true]));
 	}//end buildLinkObject()
 
 	/**

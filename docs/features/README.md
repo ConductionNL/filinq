@@ -97,6 +97,7 @@ Features that are specified and actively being developed or reviewed.
 | [Anonymization Entity Review](./anonymization-entity-review.md) | anonymization-entity-review.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
 | [Print Preview](./print-preview.md) | print-preview.md | Outputmanagementcomponent | TEC-DMS-1 | Reviewed |
 | [Letter & Correspondence Generation](./letter-correspondence-generation.md) | letter-correspondence-generation.md | Outputmanagementcomponent | TEC-DMS-1 | Proposed |
+| [Edit a document before it is stored](./generation-drafts.md) | generation-drafts.md | Documentcreatiecomponent | TEC-DMS-1 | In progress |
 | [Document Creation from Templates](./document-creatie-sjablonen.md) | document-creatie-sjablonen.md | Documentcreatiecomponent | TEC-DMS-1 | Proposed |
 | [Register i18n](./register-i18n.md) | register-i18n.md | — | TEC-DMS-1 | Proposed |
 | [GDPR Anonymization](./gdpr-anonymization.md) | gdpr-anonymization.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
@@ -109,6 +110,7 @@ Features proposed based on tender analysis and customer requests. Not yet specif
 | Feature | Doc | GEMMA | TEC | Status |
 |---------|-----|-------|-----|--------|
 | [Woo publication pipeline](./woo-publicatie-pipeline.md) | woo-publicatie-pipeline.md | Publicatiecomponent | TEC-DMS-6 | Done |
+| [Woo decision letter and inventory](./woo-decision-templates.md) | woo-decision-templates.md | Documentcreatiecomponent | — | Implemented |
 | [Woo metadata worklist](./woo-metadata-worklist.md) | woo-metadata-worklist.md | Publicatiecomponent | TEC-DMS-6 | Done |
 | [Woo refusal grounds](./grondslagen.md) | grondslagen.md | Publicatiecomponent | TEC-DMS-6 | Done |
 | [Document Signing](./document-signing.md) | document-signing.md | — | TEC-DMS-4 | Roadmap |

@@ -243,6 +243,11 @@ class VeraPdfReportParser {
 	 * @return string The flavour, or '' when the name names none.
 	 */
 	private function flavour(string $profileName): string {
+		// PDF/UA profiles name their part only: "PDF/UA-1 validation profile" is ua1.
+		if (preg_match('/PDF\/UA-(\d)/i', $profileName, $match) === 1) {
+			return 'ua' . $match[1];
+		}
+
 		if (preg_match('/PDF\/A-(\d)([abu])?/i', $profileName, $match) !== 1) {
 			return '';
 		}

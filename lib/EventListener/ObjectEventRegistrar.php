@@ -112,6 +112,13 @@ class ObjectEventRegistrar {
 			\OCA\OpenRegister\Event\ObjectUpdatingEvent::class,
 			DocumentRegistrationWriteGuard::class
 		);
+		// A house style managed by thematiq is changed only in thematiq
+		// (templates-house-style-from-thematiq); named by string to keep this
+		// class's coupling where it is.
+		$context->registerEventListener(
+			\OCA\OpenRegister\Event\ObjectUpdatingEvent::class,
+			'OCA\\Filinq\\EventListener\\ManagedHuisstijlWriteGuard'
+		);
 		// Grondslagen-read-from-dossiq: a new Woo ground on `base` is refused;
 		// the Woo grounds come from dossiq's list.
 		$context->registerEventListener(

@@ -1841,7 +1841,14 @@
         "The test arrived": "Il test è arrivato",
         "The test did not arrive": "Il test non è arrivato",
         "Type a name and a URL and pick at least one event": "Inserisci un nome e un URL e scegli almeno un evento",
-        "Type a secret so the receiver can check each delivery": "Inserisci un segreto affinché il destinatario possa verificare ogni consegna"
+        "Type a secret so the receiver can check each delivery": "Inserisci un segreto affinché il destinatario possa verificare ogni consegna",
+        "Acknowledged": "Confermato",
+        "Open stamped copy": "Apri copia timbrata",
+        "Queued as letter": "In coda come lettera",
+        "Acknowledgement of receipt: %s": "Conferma di ricezione: %s",
+        "Intake rules": "Regole di ingresso",
+        "New intake rule": "Nuova regola di ingresso",
+        "No intake rules yet": "Ancora nessuna regola di ingresso"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
