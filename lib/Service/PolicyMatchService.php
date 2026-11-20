@@ -51,6 +51,9 @@ use Psr\Log\LoggerInterface;
 /**
  * Detection-time policy matcher.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the sum of small independent
+ * checks of one review (findings, decisions and the checked gate).
+ *
  * @spec openspec/specs/entity-publication-policies/spec.md
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
  */
