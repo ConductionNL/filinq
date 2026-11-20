@@ -48,6 +48,23 @@ interface SeparatorSheetServiceInterface {
 	public const PAYLOAD_PREFIX = 'filinq:sep:v1:';
 
 	/**
+	 * The payload of a separator that names a paper original of a
+	 * digitisation project: `filinq:sep:v2:<profileId>:po:<originalId>`.
+	 * The v1 payload stays valid beside it.
+	 *
+	 * @var string
+	 */
+	public const PAYLOAD_PREFIX_V2 = 'filinq:sep:v2:';
+
+	/**
+	 * What readPayload() puts before the original's id for a v2 sheet, so
+	 * the splitter can tell an original from a case number.
+	 *
+	 * @var string
+	 */
+	public const ORIGINAL_MARKER = 'po:';
+
+	/**
 	 * The payload one sheet carries.
 	 *
 	 * @param string $profileId The scan profile the sheet belongs to.
@@ -64,11 +81,40 @@ interface SeparatorSheetServiceInterface {
 	 *
 	 * @param string $payload The payload read off a page.
 	 *
-	 * @return string|null The case number, an empty string when the sheet named none, or null when this is not a separator.
+	 * @return string|null The case number, `po:<originalId>` for a sheet naming a paper original,
+	 *                     an empty string when the sheet named none, or null when this is not a separator.
 	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function readPayload(string $payload): ?string;
+
+	/**
+	 * The payload of a sheet naming one paper original.
+	 *
+	 * @param string $profileId  The scan profile the sheet belongs to.
+	 * @param string $originalId The paperOriginal the pages after it are the scan of.
+	 *
+	 * @return string The payload.
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 */
+	public function originalPayload(string $profileId, string $originalId): string;
+
+	/**
+	 * Render one separator sheet per paper original, with its shelf mark and
+	 * description in print so a person can check the sheet before it goes
+	 * into the scanner.
+	 *
+	 * @param string                           $profileId The scan profile the sheets belong to.
+	 * @param array<int, array<string, mixed>> $originals The paperOriginal records, each with `id`, `shelfMark` and `description`.
+	 *
+	 * @return string The sheets as PDF bytes.
+	 *
+	 * @throws RuntimeException When there is no original to print or the sheets do not render.
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 */
+	public function renderOriginals(string $profileId, array $originals): string;
 
 	/**
 	 * Render separator sheets, one page per case number.
