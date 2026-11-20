@@ -11,7 +11,7 @@ Acceptance criteria:
 
 ## 2. Make the document current before reading it
 
-- [ ] Ask the editor to flush unsaved state, then read
+- [x] Ask the editor to flush unsaved state, then read
 - [x] Have the agent announce the save before it happens
 
 Acceptance criteria:
@@ -20,9 +20,9 @@ Acceptance criteria:
 
 ## 3. Deliver the edit through the editor
 
-- [ ] Define one delivery interface; implement an adapter per suite
+- [x] Define one delivery interface; implement an adapter per suite
 - [x] Express edits as text-to-match, never as offsets
-- [ ] Fail loudly and specifically when the target text is not found
+- [x] Fail loudly and specifically when the target text is not found
 - [ ] Relay the edit from the companion, which already runs on the editor's page
 
 Acceptance criteria:
