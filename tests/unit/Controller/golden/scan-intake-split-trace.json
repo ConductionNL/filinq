@@ -54,7 +54,7 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ]
         ]
     },
@@ -75,7 +75,7 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ],
             [
                 "findByFile",
@@ -167,7 +167,7 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ],
             [
                 "findByFile",
@@ -233,7 +233,7 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ],
             [
                 "findByFile",
@@ -282,7 +282,7 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ]
         ]
     },
@@ -302,7 +302,7 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ],
             [
                 "findByFile",
@@ -334,7 +334,7 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ],
             [
                 "findByFile",

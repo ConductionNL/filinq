@@ -224,7 +224,10 @@ class ScanIntakeController extends Controller {
 				return $file;
 			}
 
-			$profile = $this->resolveProfile(profileId: $profileId, path: $file->getPath());
+			$profile = $this->resolveProfile(
+				profileId: $profileId,
+				path: $this->userRelativePath(userId: $user->getUID(), path: $file->getPath())
+			);
 			if ($profile === null) {
 				return new JSONResponse(
 					data: ['error' => 'No scan profile watches this folder, so there is nothing that says how to cut this batch.'],
@@ -327,4 +330,32 @@ class ScanIntakeController extends Controller {
 		return $this->profiles->forPath(path: $path);
 
 	}//end resolveProfile()
+
+	/**
+	 * A node path as the user sees it in Files, the way a profile stores its watched folder.
+	 *
+	 * The Node API answers `/<uid>/files/Scans/batch.pdf`; a profile watches
+	 * `Scans`. Without this the folder never matched and a split without a
+	 * named profile was always refused.
+	 *
+	 * @param string $userId The owner of the user folder the batch was found in.
+	 * @param string $path   The absolute node path.
+	 *
+	 * @return string The path below the user's Files root, starting with `/`.
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	private function userRelativePath(string $userId, string $path): string {
+		$root = '/' . $userId . '/files';
+		if ($path === $root) {
+			return '/';
+		}
+
+		if (str_starts_with($path, $root . '/') === true) {
+			return substr($path, strlen($root));
+		}
+
+		return $path;
+
+	}//end userRelativePath()
 }//end class
