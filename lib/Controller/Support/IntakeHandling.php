@@ -26,6 +26,7 @@ namespace OCA\Filinq\Controller\Support;
 use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeRoutingServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeServiceInterface;
+use OCA\Filinq\Service\Intake\IntakeOverdueList;
 
 /**
  * Handling an intake document: the inbox, detaching documents and routing them.
@@ -46,6 +47,7 @@ final class IntakeHandling {
 	 * @param IntakeServiceInterface           $intake     The intake inbox
 	 * @param IntakeDetachmentServiceInterface $detachment Detaches documents from a message
 	 * @param IntakeRoutingServiceInterface    $routing    Routes a document
+	 * @param IntakeOverdueList                $overdue    The documents past their handling deadline
 	 *
 	 * @return void
 	 *
@@ -55,6 +57,7 @@ final class IntakeHandling {
 		public readonly IntakeServiceInterface $intake,
 		public readonly IntakeDetachmentServiceInterface $detachment,
 		public readonly IntakeRoutingServiceInterface $routing,
+		public readonly IntakeOverdueList $overdue,
 	) {
 
 	}//end __construct()

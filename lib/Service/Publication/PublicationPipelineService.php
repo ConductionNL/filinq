@@ -67,6 +67,14 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	public const PAST_HANDOFF = ['handed_off', 'published', 'depublication_requested', 'depublished'];
 
 	/**
+	 * Why a hand-off is refused by an OpenCatalogi whose publication has no document type field.
+	 *
+	 * @var string
+	 */
+	public const NEEDS_DOCUMENT_TYPE_FIELD = 'OpenCatalogi cannot store the document type: update OpenCatalogi to a version whose '
+		. 'publication has the documentsoort field (DiWoo metadata on the publication)';
+
+	/**
 	 * The Woo metadata an operator may set.
 	 */
 	public const METADATA = [
@@ -351,6 +359,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 * @throws RuntimeException             When the platform is not there or refuses.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.3
+	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
 	 */
 	public function handoff(array $record, string $actor): array {
 		if ($this->platform->available() === false) {
@@ -376,6 +385,13 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 		$category = $this->platform->toPlatformCode(value: (string) $record['wooCategory']);
 		if ($category === null) {
 			throw new PublicationNotReadyException(reasons: ['Unknown Woo category']);
+		}
+
+		// The document type has its own field on the publication; an
+		// OpenCatalogi without it cannot take the record, and the type is
+		// never written into the summary instead (REQ-DDWPP-005).
+		if ($this->platform->publicationDeclares(field: 'documentsoort') === false) {
+			throw new RuntimeException(self::NEEDS_DOCUMENT_TYPE_FIELD, 409);
 		}
 
 		$copy = $this->platform->readCopy(fileId: (string) $record['redactedFileRef'], actor: $actor);

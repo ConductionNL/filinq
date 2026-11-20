@@ -27,9 +27,12 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Controller\Support\TranslatedErrorAnswer;
+use OCA\Filinq\Exception\ReceiptCaptureRefusedException;
+use OCA\Filinq\Exception\UploadRefusedException;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
+use OCA\Filinq\Service\Extraction\ReceiptCaptureService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -48,6 +51,9 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/financial-document-field-extraction/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) One controller for the extraction routes: reading,
+ *     correcting and capturing, each with the refusals it answers.
  */
 class ExtractionController extends Controller {
 	use AnswersNotAuthenticated;
@@ -61,6 +67,7 @@ class ExtractionController extends Controller {
 	 * @param IUserSession $userSession User session for authentication.
 	 * @param IL10N $l10n Localization service.
 	 * @param LoggerInterface $logger Logger.
+	 * @param ReceiptCaptureService $receiptCapture Stores and extracts a receipt photo (REQ-ERP-001).
 	 *
 	 * @return void
 	 */
@@ -71,6 +78,7 @@ class ExtractionController extends Controller {
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
+		private readonly ReceiptCaptureService $receiptCapture,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -105,6 +113,64 @@ class ExtractionController extends Controller {
 		}
 
 	}//end financial()
+
+	/**
+	 * Take a receipt or invoice photo from the camera, store it and extract it (REQ-ERP-001).
+	 *
+	 * Multipart `file` plus `docType`, `sourceApp` and `callbackEvent`. The
+	 * photo is stored in the signed-in user's own Files only.
+	 *
+	 * @return JSONResponse 201 with the stored extraction; 413 or 415 with the reason a photo is not taken.
+	 *
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.2
+	 */
+	public function capture(): JSONResponse {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+		}
+
+		$upload = $this->request->getUploadedFile('file');
+		$path = (string)($upload['tmp_name'] ?? '');
+		if (is_array($upload) === false || (int)($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || is_readable($path) === false) {
+			return new JSONResponse(['error' => $this->l10n->t('Send the photo as the file field.')], Http::STATUS_BAD_REQUEST);
+		}
+
+		try {
+			$result = $this->receiptCapture->capture(
+				userId: $user->getUID(),
+				fileName: (string)($upload['name'] ?? ''),
+				contents: (string)file_get_contents($path),
+				request: $this->request->getParams()
+			);
+			return new JSONResponse($result, Http::STATUS_CREATED);
+		} catch (ReceiptCaptureRefusedException | UploadRefusedException $e) {
+			// The reason is the user's to act on: a smaller photo, another format.
+			return new JSONResponse(['error' => $this->l10n->t($e->getMessage())], $this->refusalStatus(exception: $e));
+		} catch (Exception $e) {
+			return $this->errorResponse(message: 'Failed to capture the receipt', exception: $e);
+		}
+
+	}//end capture()
+
+	/**
+	 * The status a refused photo answers with.
+	 *
+	 * @param Exception $exception The refusal.
+	 *
+	 * @return int The HTTP status.
+	 */
+	private function refusalStatus(Exception $exception): int {
+		if ($exception->getCode() >= 400 && $exception->getCode() < 500) {
+			return $exception->getCode();
+		}
+
+		return Http::STATUS_BAD_REQUEST;
+
+	}//end refusalStatus()
 
 	/**
 	 * Store human-corrected field values for a prior extraction (REQ-FIN-07).

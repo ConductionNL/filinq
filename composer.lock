@@ -1733,16 +1733,16 @@
         },
         {
             "name": "tecnickcom/tc-lib-pdf",
-            "version": "8.84.0",
+            "version": "8.84.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tecnickcom/tc-lib-pdf.git",
-                "reference": "2be3a522329df9d2941381ce8315b6647d620c69"
+                "reference": "9a0d65988a6512144a46d6285373b79e5239fe33"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/2be3a522329df9d2941381ce8315b6647d620c69",
-                "reference": "2be3a522329df9d2941381ce8315b6647d620c69",
+                "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/9a0d65988a6512144a46d6285373b79e5239fe33",
+                "reference": "9a0d65988a6512144a46d6285373b79e5239fe33",
                 "shasum": ""
             },
             "require": {
@@ -1760,7 +1760,7 @@
                 "tecnickcom/tc-lib-color": "^3.0",
                 "tecnickcom/tc-lib-file": "^3.9",
                 "tecnickcom/tc-lib-pdf-encrypt": "^2.12",
-                "tecnickcom/tc-lib-pdf-font": "^4.8",
+                "tecnickcom/tc-lib-pdf-font": "^4.9",
                 "tecnickcom/tc-lib-pdf-graph": "^2.18",
                 "tecnickcom/tc-lib-pdf-image": "^3.15",
                 "tecnickcom/tc-lib-pdf-page": "^4.18",
@@ -1770,7 +1770,7 @@
                 "tecnickcom/tc-lib-unicode-data": "^3.1"
             },
             "require-dev": {
-                "carthage-software/mago": "1.59.0",
+                "carthage-software/mago": "1.60.1",
                 "ext-gd": "*",
                 "pdepend/pdepend": "^3.0",
                 "phpunit/phpunit": "^11.5 || ^12.5 || ^13.4"
@@ -1815,7 +1815,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-07T12:35:02+00:00"
+            "time": "2026-11-15T16:37:08+00:00"
         },
         {
             "name": "tecnickcom/tc-lib-pdf-encrypt",
@@ -4401,16 +4401,16 @@
         },
         {
             "name": "nextcloud/ocp",
-            "version": "v35.0.2",
+            "version": "v35.0.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/nextcloud-deps/ocp.git",
-                "reference": "1f372f9d20bc38860d1d11a55c1c16293b759e6c"
+                "reference": "a7babe4273fc6e5c7359e92843ef2613b7555f76"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/nextcloud-deps/ocp/zipball/1f372f9d20bc38860d1d11a55c1c16293b759e6c",
-                "reference": "1f372f9d20bc38860d1d11a55c1c16293b759e6c",
+                "url": "https://api.github.com/repos/nextcloud-deps/ocp/zipball/a7babe4273fc6e5c7359e92843ef2613b7555f76",
+                "reference": "a7babe4273fc6e5c7359e92843ef2613b7555f76",
                 "shasum": ""
             },
             "require": {
@@ -4448,9 +4448,9 @@
             "description": "Composer package containing Nextcloud's public OCP API and the unstable NCU API",
             "support": {
                 "issues": "https://github.com/nextcloud-deps/ocp/issues",
-                "source": "https://github.com/nextcloud-deps/ocp/tree/v35.0.2"
+                "source": "https://github.com/nextcloud-deps/ocp/tree/v35.0.3"
             },
-            "time": "2026-10-09T03:32:50+00:00"
+            "time": "2026-11-06T04:03:15+00:00"
         },
         {
             "name": "nikic/php-parser",
@@ -5510,11 +5510,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.3.5",
+            "version": "2.3.6",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/645a1bd6bead15fc1b8474137467961d0fa30a79",
-                "reference": "645a1bd6bead15fc1b8474137467961d0fa30a79",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/00cedebb76cc82c1592414fa4f616cefdccda16f",
+                "reference": "00cedebb76cc82c1592414fa4f616cefdccda16f",
                 "shasum": ""
             },
             "require": {
@@ -5570,7 +5570,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-11-03T12:14:22+00:00"
+            "time": "2026-11-15T19:58:26+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",

@@ -106,6 +106,19 @@ interface IntakeServiceInterface {
 	public function listWaiting(): array;
 
 	/**
+	 * Move a waiting document's handling deadline, with the reason it moved.
+	 *
+	 * @param string $uuid     The intake document.
+	 * @param string $deadline The new deadline (Y-m-d).
+	 * @param string $reason   Why it moved.
+	 *
+	 * @return array<string, mixed> The document.
+	 *
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+	 */
+	public function changeDeadline(string $uuid, string $deadline, string $reason): array;
+
+	/**
 	 * Assign one waiting document to a record.
 	 *
 	 * @param string $uuid The intake document.

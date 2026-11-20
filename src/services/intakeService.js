@@ -114,3 +114,32 @@ export async function decidePartySuggestion(decision) {
 	const { data } = await axios.post(url, decision)
 	return data
 }
+
+/**
+ * The documents past their handling deadline that are not handled yet.
+ *
+ * @return {Promise<Array<object>>} The overdue documents, the longest overdue first.
+ * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+ */
+export async function listOverdueDocuments() {
+	const url = generateUrl('/apps/filinq/api/intake/documents')
+	const { data } = await axios.get(url, { params: { mode: 'overdue' } })
+	return Array.isArray(data?.results) ? data.results : []
+}
+
+/**
+ * Move a waiting document's handling deadline, with the reason it moved.
+ *
+ * @param {string} uuid The intake document.
+ * @param {string} deadline The new deadline (Y-m-d).
+ * @param {string} reason Why it moved.
+ * @return {Promise<object>} The document.
+ * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+ */
+export async function changeIntakeDeadline(uuid, deadline, reason) {
+	const url = generateUrl('/apps/filinq/api/intake/documents/{uuid}/deadline', {
+		uuid,
+	})
+	const { data } = await axios.post(url, { deadline, reason })
+	return data
+}

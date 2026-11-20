@@ -2,7 +2,7 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Filinq",
-        "version": "0.2.8-unstable.20261021160000",
+        "version": "0.2.9-unstable.20261119124150",
         "description": "The JSON API of Filinq, document management for Nextcloud: anonymisation of documents and folders, signing, templates, archiving and retention, legal holds, settings and the setup wizard. The documents' metadata objects are stored in OpenRegister and read and written through its API; this document covers the endpoints Filinq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here; where this app documents them, openapi.standards.json does.",
         "contact": {
             "name": "Conduction B.V.",
@@ -322,6 +322,18 @@
         {
             "name": "document-audit",
             "description": "Reads the audit trail of one document the caller may open"
+        },
+        {
+            "name": "mdto",
+            "description": "The status is open to signed-in users and reads the record as them; export and transfer are for filinq-policy-admins and admins (checked in MdtoController)"
+        },
+        {
+            "name": "mail-archive-import",
+            "description": "Importing a mailbox archive in bulk into dossiers and the intake inbox"
+        },
+        {
+            "name": "digitisation",
+            "description": "Digitising a paper archive: per-box progress, separator sheets, box lists and scan checks."
         }
     ],
     "paths": {
@@ -1080,6 +1092,229 @@
                         }
                     }
                 ]
+            }
+        },
+        "/anonymization/scope/{fileId}": {
+            "get": {
+                "operationId": "scope-redaction-show",
+                "summary": "The scope decisions of a document",
+                "description": "The page, page-range and whole-document redaction decisions of a document the caller can open, its page count, and whether OpenRegister's image seam is there to commit page scopes. A file the caller cannot open is a 404.",
+                "tags": [
+                    "anonymization"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The document's Nextcloud file id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            },
+            "post": {
+                "operationId": "scope-redaction-decide",
+                "summary": "Decide a page, page range or whole document redaction",
+                "description": "Stores one scope decision with its grounds on the document's review. A page outside the document, a range that runs backwards or a decision without a ground is refused with 400 and nothing is stored.",
+                "tags": [
+                    "anonymization"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Success.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The document's Nextcloud file id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "scope",
+                                    "bases"
+                                ],
+                                "properties": {
+                                    "scope": {
+                                        "type": "string",
+                                        "enum": [
+                                            "page",
+                                            "pageRange",
+                                            "document"
+                                        ]
+                                    },
+                                    "fromPage": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "description": "First page, 1-based; for page and pageRange."
+                                    },
+                                    "toPage": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "description": "Last page, inclusive; for pageRange."
+                                    },
+                                    "bases": {
+                                        "type": "array",
+                                        "minItems": 1,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "The grounds; at least one."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/anonymization/scope/{fileId}/commit": {
+            "post": {
+                "operationId": "scope-redaction-commit",
+                "summary": "Commit a scope decision",
+                "description": "A page or page range is sent to OpenRegister's image seam as one full-page region per page, so OpenRegister burns the pages; a whole document is withheld: no output is written and its anonymisation link records `withheld` with the grounds. Without the image seam a page scope is refused with 400 and nothing is written.",
+                "tags": [
+                    "anonymization"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The document's Nextcloud file id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "scope",
+                                    "bases"
+                                ],
+                                "properties": {
+                                    "scope": {
+                                        "type": "string",
+                                        "enum": [
+                                            "page",
+                                            "pageRange",
+                                            "document"
+                                        ]
+                                    },
+                                    "fromPage": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "description": "First page, 1-based; for page and pageRange."
+                                    },
+                                    "toPage": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "description": "Last page, inclusive; for pageRange."
+                                    },
+                                    "bases": {
+                                        "type": "array",
+                                        "minItems": 1,
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "The grounds; at least one."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/anonymization/upload": {
@@ -2504,6 +2739,154 @@
                     },
                     "400": {
                         "$ref": "#/components/responses/Problem400"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/correspondence/send": {
+            "post": {
+                "operationId": "correspondence-send",
+                "summary": "Send one composed letter by email to its recipient  Accepts JSON body with: - templateId (string, required): UUID of the",
+                "description": "Send one composed letter by email to its recipient  Accepts JSON body with: - templateId (string, required): UUID of the template to use - dataRefs (array, required): data references, the first being the recipient - options (object, optional): huisstijlId, caseReference, recipientType, attachPdf  201 when the letter went, 502 when the mail server refused it (logged as failed), 400/404/422 when it could not be sent at all (nothing logged as sent).",
+                "tags": [
+                    "correspondence"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "What the send did",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "description": "What the send did",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "What the send did",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "502": {
+                        "description": "What the send did",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/correspondence/send/preview": {
+            "post": {
+                "operationId": "correspondence-send-preview",
+                "summary": "The address and subject a letter would be sent with, for the confirm dialog  Same body as send(); composes and sends not",
+                "description": "The address and subject a letter would be sent with, for the confirm dialog  Same body as send(); composes and sends nothing.",
+                "tags": [
+                    "correspondence"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{to, subject}, or the refusal send() would give",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "404": {
+                        "description": "{to, subject}, or the refusal send() would give",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "{to, subject}, or the refusal send() would give",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
@@ -4824,8 +5207,8 @@
         "/intake/documents": {
             "get": {
                 "operationId": "intake-index",
-                "summary": "List the documents waiting for a clerk",
-                "description": "List the documents waiting for a clerk.",
+                "summary": "List the documents waiting for a clerk, or the overdue ones",
+                "description": "List the documents waiting for a clerk. With `mode=overdue`, list the documents past their handling deadline that their rule does not count as handled yet, the longest overdue first.",
                 "tags": [
                     "intake"
                 ],
@@ -4849,7 +5232,22 @@
                     "401": {
                         "$ref": "#/components/responses/Problem401"
                     }
-                }
+                },
+                "parameters": [
+                    {
+                        "name": "mode",
+                        "in": "query",
+                        "required": false,
+                        "description": "`waiting` (the default) or `overdue`.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "waiting",
+                                "overdue"
+                            ]
+                        }
+                    }
+                ]
             }
         },
         "/intake/documents/detach": {
@@ -4993,6 +5391,67 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
+                                    "reason": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/intake/documents/{uuid}/deadline": {
+            "post": {
+                "operationId": "intake-changeDeadline",
+                "summary": "Move a waiting document's handling deadline, with a reason",
+                "description": "Move a waiting document's handling deadline, with a reason. `deadline` is a date written as YYYY-MM-DD; `reason` is required and stays on the document. A missing reason or a value that is not a date answers 400, a document that left the inbox 409, and a caller who may not write the intake register 403.",
+                "tags": [
+                    "intake"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The document with its new deadline, or the refusal.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The uuid.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": false,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "deadline": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
                                     "reason": {
                                         "type": "string"
                                     }
@@ -8238,6 +8697,78 @@
                     }
                 },
                 "x-provided-by": "openregister"
+            }
+        },
+        "/settings/integrity-scan": {
+            "get": {
+                "operationId": "settings-integrity-scan-last",
+                "summary": "The last stored integrity scan run",
+                "description": "The last stored run of the whole-collection integrity scan: its times, the records checked, the count of missing, changed and orphaned files, and the findings. Administrators only.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`run`: the last run, or null when no scan ran yet.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "settings-integrity-scan-start",
+                "summary": "Start an integrity scan now",
+                "description": "Scans every dossier, final document and anonymisation link now and stores the run. A run with missing or changed files notifies the administrators. Administrators only; a refused caller starts no scan.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`run`: the run just stored.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
             }
         },
         "/settings/signer-identity": {
@@ -12061,6 +12592,820 @@
                         }
                     }
                 ]
+            }
+        },
+        "/mdto/{id}": {
+            "get": {
+                "operationId": "mdto-status",
+                "summary": "A record's MDTO completeness verdict, retention block, supplement and proposals",
+                "description": "A record's MDTO completeness verdict, retention block, supplement and proposals.",
+                "tags": [
+                    "mdto"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The verdict with the missing fields, whether an e-depot transport is configured, and the prefill proposals.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The record UUID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/mdto/{id}/export": {
+            "get": {
+                "operationId": "mdto-export",
+                "summary": "The record's MDTO sidecar for download",
+                "description": "The record's MDTO sidecar for download, as XML or (format=json) its JSON projection.",
+                "tags": [
+                    "mdto"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The sidecar.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The record UUID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "required": false,
+                        "description": "xml (default) or json.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "xml",
+                                "json"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "/mdto/{id}/transfer": {
+            "post": {
+                "operationId": "mdto-transfer",
+                "summary": "Transfer the record to the e-depot through OpenRegister",
+                "description": "Transfer the record to the e-depot through OpenRegister.",
+                "tags": [
+                    "mdto"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transferred, or manual when no e-depot transport is configured.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "422": {
+                        "description": "Blocked: the record is not MDTO-complete; the missing fields are listed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The record UUID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/mail-archive-imports": {
+            "get": {
+                "operationId": "mail-archive-import-index",
+                "summary": "The user's own mail archive imports, newest first",
+                "description": "The user's own mail archive imports, newest first.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{results}.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "mail-archive-import-create",
+                "summary": "Start an import of an MBOX, PST or ZIP file the user can read; the answer lists its folders",
+                "description": "Start an import of an MBOX, PST or ZIP file the user can read; the answer lists its folders.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The import, in mapping or failed.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "fileId": {
+                                        "type": "integer",
+                                        "description": "The archive's Nextcloud file id.",
+                                        "example": 12345
+                                    }
+                                },
+                                "required": [
+                                    "fileId"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mail-archive-imports/settings": {
+            "get": {
+                "operationId": "mail-archive-import-settings",
+                "summary": "The per-run message limit and whether readpst is installed",
+                "description": "The per-run message limit and whether readpst is installed.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{messagesPerRun, readpstInstalled}.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "mail-archive-import-update-settings",
+                "summary": "Store the per-run message limit",
+                "description": "Store the per-run message limit.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The stored settings.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "messagesPerRun": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 2000,
+                                        "description": "Messages one cron run takes; clamped to 1..2000."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mail-archive-imports/{uuid}": {
+            "get": {
+                "operationId": "mail-archive-import-show",
+                "summary": "One of the user's imports, with its progress and failures",
+                "description": "One of the user's imports, with its progress and failures.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The import.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The import.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/mail-archive-imports/{uuid}/start": {
+            "post": {
+                "operationId": "mail-archive-import-start",
+                "summary": "Map the archive's folders to dossiers the user may write to and start importing",
+                "description": "Map the archive's folders to dossiers the user may write to and start importing.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The import, in importing.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The import.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "folderMap": {
+                                        "type": "array",
+                                        "description": "A folder left out or without a dossier goes to the intake inbox.",
+                                        "items": {
+                                            "type": "object",
+                                            "required": [
+                                                "archiveFolder"
+                                            ],
+                                            "properties": {
+                                                "archiveFolder": {
+                                                    "type": "string"
+                                                },
+                                                "dossier": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mail-archive-imports/{uuid}/cancel": {
+            "post": {
+                "operationId": "mail-archive-import-cancel",
+                "summary": "Cancel an import that has not ended; what was filed stays filed",
+                "description": "Cancel an import that has not ended; what was filed stays filed.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The import, in cancelled.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The import.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/digitisation/projects/{id}/boxes": {
+            "get": {
+                "operationId": "digitisation-boxes",
+                "summary": "The project's originals counted per box and state",
+                "description": "The project's originals counted per box and state, read with the caller's own rights.",
+                "tags": [
+                    "digitisation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "One row per box: registered, scanned, checked, rejected and total.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/digitisation/projects/{id}/separators": {
+            "get": {
+                "operationId": "digitisation-separators",
+                "summary": "The separator sheets of one box",
+                "description": "The separator sheets of one box: one page per original, as a PDF.",
+                "tags": [
+                    "digitisation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The sheets.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "box",
+                        "in": "query",
+                        "required": false,
+                        "description": "The box.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/digitisation/projects/{id}/originals/import": {
+            "post": {
+                "operationId": "digitisation-import-originals",
+                "summary": "Import a CSV box list into the project",
+                "description": "Import a CSV box list into the project. Rows that cannot be imported are listed with their line and reason (422).",
+                "tags": [
+                    "digitisation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{imported, failures}.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "description": "{imported, failures, message}: some rows failed.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "csv": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/digitisation/originals/{id}/check": {
+            "post": {
+                "operationId": "digitisation-check",
+                "summary": "Pass or reject the scan of an original",
+                "description": "Pass or reject the scan of an original. A rejection needs a note and sends the original back to registered.",
+                "tags": [
+                    "digitisation"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The original as saved.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "result": {
+                                        "type": "string",
+                                        "enum": [
+                                            "passed",
+                                            "rejected"
+                                        ]
+                                    },
+                                    "note": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/extraction/capture": {
+            "post": {
+                "operationId": "extraction-capture",
+                "summary": "Take a receipt or invoice photo from the camera, store it and extract it (REQ-ERP-001)",
+                "description": "Take a receipt or invoice photo from the camera, store it and extract it (REQ-ERP-001). Multipart `file` (JPEG, PNG, HEIC or PDF, up to 20 MB) plus `docType`, `sourceApp` and `callbackEvent`. The photo is turned upright, a HEIC photo converted to JPEG, and stored in the signed-in user's own Files under `Receipts/<yyyy>/<mm>/`; the stored extraction carries `capturedFileId`.",
+                "tags": [
+                    "extraction"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The stored extraction.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No file field, or the upload policy refused the file."
+                    },
+                    "413": {
+                        "description": "The photo is larger than 20 MB."
+                    },
+                    "415": {
+                        "description": "The photo is not JPEG, PNG, HEIC or PDF, or HEIC cannot be read on this server."
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
             }
         }
     },
