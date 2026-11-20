@@ -167,10 +167,30 @@ SPDX-License-Identifier: EUPL-1.2
 						@click="sendToPrint">
 						{{ t('filinq', 'Send to print') }}
 					</NcButton>
+					<NcButton
+						variant="secondary"
+						:disabled="!canGenerate || store.loading"
+						data-testid="correspondence-send-email"
+						@click="openSendDialog">
+						{{ t('filinq', 'Send by email') }}
+					</NcButton>
 				</div>
 				<NcNoteCard v-if="openError" type="error" data-testid="correspondence-open-error">
 					{{ openError }}
 				</NcNoteCard>
+				<NcNoteCard
+					v-if="store.lastSent"
+					type="success"
+					data-testid="correspondence-sent">
+					{{ t('filinq', 'Sent to {address}', { address: store.lastSent.to }) }}
+				</NcNoteCard>
+				<CorrespondenceSendDialog
+					v-if="sendDialogOpen"
+					:request="sendRequestBody"
+					:saving="store.loading"
+					:error="sendError"
+					@confirm="sendByEmail"
+					@cancel="sendDialogOpen = false" />
 			</template>
 
 			<!-- Batch mode -->
@@ -295,6 +315,7 @@ import axios from '@nextcloud/axios'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { NcButton, NcLoadingIcon, NcNoteCard, NcTextField } from '@nextcloud/vue'
+import CorrespondenceSendDialog from '../../dialogs/CorrespondenceSendDialog.vue'
 import { createDraft, templateEditability } from '../../services/drafts.js'
 import {
 	fetchFormatMatrix,
@@ -308,6 +329,7 @@ export default {
 	name: 'CorrespondenceIndex',
 
 	components: {
+		CorrespondenceSendDialog,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -328,6 +350,9 @@ export default {
 			templateEditable: true,
 			opening: false,
 			openError: '',
+			// letter-email-sending: the send-by-email confirm dialog.
+			sendDialogOpen: false,
+			sendError: '',
 		}
 	},
 
@@ -339,6 +364,15 @@ export default {
 		 */
 		store() {
 			return useCorrespondenceStore()
+		},
+
+		/**
+		 * The letter the send dialog previews and the store sends.
+		 *
+		 * @return {object}
+		 */
+		sendRequestBody() {
+			return this.store.sendBody
 		},
 
 		/**
@@ -488,6 +522,34 @@ export default {
 				return
 			}
 			this.$router.push({ name: 'DraftEditor', params: { id: String(result.data?.id || '') } })
+		},
+
+		/**
+		 * Open the send-by-email dialog for the current letter.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+		 */
+		openSendDialog() {
+			this.sendError = ''
+			this.sendDialogOpen = true
+		},
+
+		/**
+		 * Send the letter the officer confirmed; a refusal keeps the dialog open with its reason.
+		 *
+		 * @param {{attachPdf: boolean}} choice What the dialog confirmed.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+		 */
+		async sendByEmail(choice) {
+			this.sendError = ''
+			try {
+				await this.store.sendByEmail(Boolean(choice?.attachPdf))
+				this.sendDialogOpen = false
+			} catch (err) {
+				this.sendError = err.message
+			}
 		},
 
 		/**
