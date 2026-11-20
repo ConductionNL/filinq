@@ -3351,7 +3351,35 @@
         "Sent to": "Sent to",
         "When the letter was sent by email (ISO 8601).": "When the letter was sent by email (ISO 8601).",
         "The email address the letter was sent to.": "The email address the letter was sent to.",
-        "Nextcloud user ID of the officer who sent the letter.": "Nextcloud user ID of the officer who sent the letter."
+        "Nextcloud user ID of the officer who sent the letter.": "Nextcloud user ID of the officer who sent the letter.",
+        "SIGNATURE": "SIGNATURE",
+        "This document contains images, and no image detection is available here, so the images were not checked for personal data. Review them by hand.": "This document contains images, and no image detection is available here, so the images were not checked for personal data. Review them by hand.",
+        "The images in this document could not be checked for personal data. Review them by hand.": "The images in this document could not be checked for personal data. Review them by hand.",
+        "Signature detection is not available on this instance, so signatures were not looked for.": "Signature detection is not available on this instance, so signatures were not looked for.",
+        "The images in this copy were not redacted, so they may still show personal data. Do not publish it as it is.": "The images in this copy were not redacted, so they may still show personal data. Do not publish it as it is.",
+        "Whole document withheld": "Whole document withheld",
+        "Page {page} redacted": "Page {page} redacted",
+        "Pages {from} to {to} redacted": "Pages {from} to {to} redacted",
+        "The redaction could not be saved.": "The redaction could not be saved.",
+        "Redact pages or the whole document": "Redact pages or the whole document",
+        "What to redact": "What to redact",
+        "One page": "One page",
+        "A range of pages": "A range of pages",
+        "The whole document": "The whole document",
+        "From page": "From page",
+        "To page": "To page",
+        "A document withheld in full gets no redacted copy, and it is not offered for publication.": "A document withheld in full gets no redacted copy, and it is not offered for publication.",
+        "Page redaction needs OpenRegister's image seam, which this instance does not have. You can still withhold the whole document.": "Page redaction needs OpenRegister's image seam, which this instance does not have. You can still withhold the whole document.",
+        "Withhold document": "Withhold document",
+        "Redact pages": "Redact pages",
+        "Redact pages or document": "Redact pages or document",
+        "This document has %n page.": [
+            "This document has %n page.",
+            "This document has %n pages."
+        ],
+        "This document has %n pages.": "This document has %n pages.",
+        "Image region kept visible: {type}": "Image region kept visible: {type}",
+        "Image region to be redacted: {type}": "Image region to be redacted: {type}"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
