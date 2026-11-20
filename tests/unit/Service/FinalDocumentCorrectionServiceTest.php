@@ -32,6 +32,7 @@ use OCP\Files\Folder;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Asserts that a correction supersedes rather than overwrites: a new version
@@ -105,6 +106,7 @@ class FinalDocumentCorrectionServiceTest extends TestCase {
 		$objectService->method('searchObjectsBySlug')->willReturn($rows);
 		$objectService->method('find')->willReturnCallback(
 			static function (...$arguments) use ($rows): ?array {
+				$arguments = LegacyObjectArgs::positional(method: 'find', args: $arguments);
 				$id = (string)($arguments[0] ?? '');
 				foreach ($rows as $row) {
 					if ((string)($row['uuid'] ?? '') === $id) {
@@ -117,6 +119,7 @@ class FinalDocumentCorrectionServiceTest extends TestCase {
 		);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
+				$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 				$object = ($arguments[0] ?? []);
 				$this->written[] = $object;
 

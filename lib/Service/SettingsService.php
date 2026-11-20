@@ -80,6 +80,7 @@ class SettingsService implements SettingsServiceInterface {
 		'signing_request_expiry_days'                => ['30', 'int'],
 		'signing_guardian_consent_age'               => ['16', 'text'],
 		'filinq.anonymisation.default_output_format' => ['pdf-only', 'text'],
+		self::FOUR_EYES_KEY                          => [self::FOUR_EYES_DEFAULT, 'text'],
 	];
 
 	/**
@@ -98,6 +99,8 @@ class SettingsService implements SettingsServiceInterface {
 	 * @param OcrService $ocrService OCR service for Tesseract status
 	 * @param LegalBasisProposalService $legalBasisProposal Grondslag-per-entity-type proposal service
 	 * @param OpenRegisterAvailabilityService $openRegister OpenRegister availability resolver
+	 * @param QpdfDecryptor|null $qpdf The qpdf probe for the admin status line; last and
+	 *                                 nullable so no construction site shifts.
 	 *
 	 * @return void
 	 *
@@ -110,6 +113,7 @@ class SettingsService implements SettingsServiceInterface {
 		private readonly OcrService $ocrService,
 		private readonly LegalBasisProposalService $legalBasisProposal,
 		private readonly OpenRegisterAvailabilityService $openRegister,
+		private readonly ?QpdfDecryptor $qpdf = null,
 	) {
 		$this->appName = 'filinq';
 
@@ -123,6 +127,17 @@ class SettingsService implements SettingsServiceInterface {
 	private function isOpenRegisterInstalled(): bool {
 		return $this->openRegister->isInstalled();
 	}//end isOpenRegisterInstalled()
+
+	/**
+	 * OpenRegister's lifecycle transition engine, or null when this OpenRegister has none.
+	 *
+	 * @return object|null The engine, exposing `transitionAsSystem()`.
+	 *
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function getTransitionEngine(): ?object {
+		return $this->openRegister->getTransitionEngine();
+	}//end getTransitionEngine()
 
 	/**
 	 * Attempts to retrieve the OpenRegister service from the container
@@ -315,6 +330,22 @@ class SettingsService implements SettingsServiceInterface {
 	}//end getOcrStatus()
 
 	/**
+	 * Whether qpdf is installed, for the line beside Tesseract's (REQ-PPR-003).
+	 *
+	 * Without it a password-protected PDF cannot be unlocked, and the page says
+	 * so before a clerk tries.
+	 *
+	 * @return array{available: bool, version: string|null} The qpdf status.
+	 *
+	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+	 */
+	public function getQpdfStatus(): array {
+		$version = $this->qpdf?->version();
+
+		return ['available' => ($version !== null), 'version' => $version];
+	}//end getQpdfStatus()
+
+	/**
 	 * Retrieve all settings
 	 *
 	 * @return array<string, mixed> The current settings configuration
@@ -350,8 +381,11 @@ class SettingsService implements SettingsServiceInterface {
 			);
 			$data = array_merge($data, $this->loadFeatureToggles());
 			$data['ocrStatus'] = $this->getOcrStatus();
+			$data['qpdfStatus'] = $this->getQpdfStatus();
 			// Where batch and folder anonymisation put redacted copies.
 			$data[self::SUBFOLDER_KEY] = $this->config->getValueString($this->appName, self::SUBFOLDER_KEY, 'anonymised');
+			// The publisher a new Woo publication starts with (woo-metadata-worklist D3).
+			$data[self::DEFAULT_PUBLISHER_KEY] = $this->config->getValueString($this->appName, self::DEFAULT_PUBLISHER_KEY, '');
 
 			// Data for the grondslag-per-entity-type selector: the curated
 			// entity types and the available `base` records (slug + name).
@@ -413,6 +447,35 @@ class SettingsService implements SettingsServiceInterface {
 	private const SUBFOLDER_KEY = 'anonymisation.output_subfolder_name';
 
 	/**
+	 * Config key of the four-eyes rule for anonymising (REQ-SET-12): whether the
+	 * person who checked a document's findings may also anonymise it.
+	 *
+	 * @var string
+	 */
+	public const FOUR_EYES_KEY = 'redaction_four_eyes';
+
+	/**
+	 * The four-eyes choices: only in Woo runs, in every run, or never.
+	 *
+	 * @var array<int, string>
+	 */
+	public const FOUR_EYES_MODES = ['woo', 'always', 'off'];
+
+	/**
+	 * The four-eyes choice of an install that never set one.
+	 *
+	 * @var string
+	 */
+	public const FOUR_EYES_DEFAULT = 'woo';
+
+	/**
+	 * The TOOI identifier a new publication's publisher is prefilled with.
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+	 */
+	private const DEFAULT_PUBLISHER_KEY = 'woo.default_publisher';
+
+	/**
 	 * Keys that are permitted to be written via the settings endpoint.
 	 *
 	 * This allowlist prevents any authenticated user (wave-3 C1) from
@@ -450,6 +513,8 @@ class SettingsService implements SettingsServiceInterface {
 		'filinq.confidentiality.label_vocabulary',
 		'filinq.confidentiality.prioritise_analysis',
 		self::SUBFOLDER_KEY,
+		self::FOUR_EYES_KEY,
+		self::DEFAULT_PUBLISHER_KEY,
 	];
 
 	/**
@@ -468,9 +533,11 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	public function updateSettings(array $data): array {
 		$this->assertValidSubfolderName(data: $data);
+		$this->assertValidFourEyesMode(data: $data);
 
 		try {
 			foreach ($data as $key => $value) {
@@ -552,6 +619,57 @@ class SettingsService implements SettingsServiceInterface {
 		);
 
 	}//end assertValidSubfolderName()
+
+	/**
+	 * Refuse a four-eyes choice that is not one of the three offered.
+	 *
+	 * Checked before anything is written, so a refused save changes nothing.
+	 *
+	 * @param array<string, mixed> $data The settings data to update.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException With code 400 when the value is not woo, always or off.
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 */
+	private function assertValidFourEyesMode(array $data): void {
+		if (array_key_exists(self::FOUR_EYES_KEY, $data) === false) {
+			return;
+		}
+
+		$value = $data[self::FOUR_EYES_KEY];
+		if (is_string($value) === true && in_array($value, self::FOUR_EYES_MODES, true) === true) {
+			return;
+		}
+
+		throw new RuntimeException(
+			self::FOUR_EYES_KEY . ' must be one of ' . implode(', ', self::FOUR_EYES_MODES) . '.',
+			400
+		);
+
+	}//end assertValidFourEyesMode()
+
+	/**
+	 * When the person who checked a document may not also anonymise it.
+	 *
+	 * `woo` (the default when unset): in Woo runs only; `always`: in every run;
+	 * `off`: never. A stored value that is none of these reads as the default,
+	 * since the settings API refuses to store one.
+	 *
+	 * @return string One of woo, always or off.
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 */
+	public function getFourEyesMode(): string {
+		$mode = trim($this->config->getValueString($this->appName, self::FOUR_EYES_KEY, self::FOUR_EYES_DEFAULT));
+		if (in_array($mode, self::FOUR_EYES_MODES, true) === false) {
+			return self::FOUR_EYES_DEFAULT;
+		}
+
+		return $mode;
+
+	}//end getFourEyesMode()
 
 	/**
 	 * Resolve the signingRequest register/schema binding, or null when unset.

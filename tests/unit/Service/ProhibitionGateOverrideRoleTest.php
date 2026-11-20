@@ -141,4 +141,32 @@ class ProhibitionGateOverrideRoleTest extends TestCase {
 		$this->assertSame(expected: 'R-X', actual: $this->audits[0]['ruleId']);
 
 	}//end testAnOverrideWithTheRoleIsReleasedAndAudited()
+
+	/**
+	 * The anonymise gate reads the threshold under the key the review screen and
+	 * the spec use, so one admin setting moves both tiers together.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md
+	 */
+	public function testTheThresholdIsReadUnderTheSpecifiedKey(): void {
+		$config = $this->createMock(originalClassName: IAppConfig::class);
+		$config->method('getValueFloat')->willReturnCallback(
+			static fn (string $app, string $key, float $default = 0.0): float => ($app === 'filinq' && $key === 'filinq.prohibition.high_confidence_threshold') ? 0.95 : $default
+		);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$apps = $this->createMock(originalClassName: IAppManager::class);
+
+		$gate = new ProhibitionGateService(
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			appConfig: $config,
+			container: $container,
+			locator: new OpenRegisterServiceLocator(appManager: $apps, container: $container),
+			authority: $this->createMock(originalClassName: ProhibitionOverrideAuthority::class)
+		);
+
+		$this->assertSame(expected: 0.95, actual: $gate->getHighConfidenceThreshold());
+
+	}//end testTheThresholdIsReadUnderTheSpecifiedKey()
 }//end class

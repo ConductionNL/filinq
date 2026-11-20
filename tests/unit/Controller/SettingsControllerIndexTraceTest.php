@@ -26,9 +26,11 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use Exception;
+use OCA\Filinq\BackgroundJob\IntegrityScanJob;
 use OCA\Filinq\Controller\SettingsController;
 use OCA\Filinq\Controller\Support\AppConfiguration;
 use OCA\Filinq\Controller\Support\SettingsBackends;
+use OCA\Filinq\Service\IntegrityScanService;
 use OCA\Filinq\Kernel\Contracts\AnonymiserBackendStateClientInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\App\IAppManager;
@@ -220,6 +222,26 @@ class SettingsControllerIndexTraceTest extends TestCase {
 	}//end testCreateFailureAnswers500()
 
 	/**
+	 * A refused value is the caller's mistake and is answered 400 with its message.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 */
+	public function testARefusedValueAnswers400(): void {
+		$this->settings->method('updateSettings')->willThrowException(
+			new \RuntimeException('redaction_four_eyes must be one of woo, always, off.', 400)
+		);
+		$this->logger->expects($this->never())->method('error');
+
+		$response = $this->controller(uid: 'root')->create();
+
+		$this->assertSame(400, $response->getStatus());
+		$this->assertSame(['error' => 'redaction_four_eyes must be one of woo, always, off.'], $response->getData());
+
+	}//end testARefusedValueAnswers400()
+
+	/**
 	 * A failing load is logged and answered 500 with its message.
 	 *
 	 * @return void
@@ -293,7 +315,7 @@ class SettingsControllerIndexTraceTest extends TestCase {
 
 		return new SettingsController(
 			system: new AppConfiguration(apps: $apps, config: $config),
-			backends: new SettingsBackends(settings: $this->settings, anonymiser: $client),
+			backends: new SettingsBackends(settings: $this->settings, anonymiser: $client, integrityScan: $this->createMock(IntegrityScanService::class), integrityNotices: $this->createMock(IntegrityScanJob::class)),
 			request: $request,
 			groupManager: $groups,
 			userSession: $session,

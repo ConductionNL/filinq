@@ -30,6 +30,13 @@
 					}}
 				</NcButton>
 				<span
+					v-if="sourceVendor"
+					class="file-viewer-page__ocr-badge"
+					data-testid="file-viewer-source-badge"
+					:title="t('filinq', 'The master record of this document is in the case system')">
+					{{ sourceBadgeLabel(sourceVendor) }}
+				</span>
+				<span
 					v-if="ocrBadge"
 					class="file-viewer-page__ocr-badge"
 					:title="
@@ -61,6 +68,16 @@
 						<FileCheckOutline :size="18" />
 					</template>
 					{{ t('filinq', 'PDF/A report') }}
+				</NcButton>
+				<NcButton
+					v-if="pdfaOffered"
+					variant="secondary"
+					data-testid="open-pdfua-report"
+					@click="pdfUaOpen = true">
+					<template #icon>
+						<FileCheckOutline :size="18" />
+					</template>
+					{{ t('filinq', 'PDF/UA report') }}
 				</NcButton>
 				<NcButton
 					v-if="fileViewerStore.currentFile?.fileId"
@@ -101,6 +118,10 @@
 			:show="conformanceOpen"
 			:fileId="Number(fileViewerStore.currentFile?.fileId || 0)"
 			@close="conformanceOpen = false" />
+		<AccessibilityConformanceModal
+			:show="pdfUaOpen"
+			:fileId="Number(fileViewerStore.currentFile?.fileId || 0)"
+			@close="pdfUaOpen = false" />
 	</div>
 </template>
 
@@ -123,9 +144,11 @@ import OdtViewer from '../../components/viewers/OdtViewer.vue'
 import PdfViewer from '../../components/viewers/PdfViewer.vue'
 import TextViewer from '../../components/viewers/TextViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
+import AccessibilityConformanceModal from '../../modals/AccessibilityConformanceModal.vue'
 import AccessibilityPublishWarningModal from '../../modals/AccessibilityPublishWarningModal.vue'
 import ConformanceReportModal from '../../modals/ConformanceReportModal.vue'
 import { ocrRun } from '../../mixins/ocrRun.js'
+import { fetchSourceBadges, sourceBadgeLabel } from '../../services/bridge.js'
 import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { startPublication } from '../../services/publications.js'
 import { publicationReadiness } from '../../services/validationService.js'
@@ -160,6 +183,7 @@ export default {
 		FileAlertOutline,
 		FileCheckOutline,
 		AccessibilityPublishWarningModal,
+		AccessibilityConformanceModal,
 		ConformanceReportModal,
 		DdFileViewerHeader,
 		PdfViewer,
@@ -177,7 +201,9 @@ export default {
 			ocrAvailable: false,
 			ocrResult: null,
 			ocrRunning: false,
+			sourceVendor: '',
 			conformanceOpen: false,
+			pdfUaOpen: false,
 			publishWarning: {
 				show: false,
 				checked: true,
@@ -315,12 +341,34 @@ export default {
 			 */
 			handler() {
 				this.loadOcrStatus()
+				this.loadSourceBadge()
 			},
 		},
 	},
 
 	methods: {
 		t,
+		sourceBadgeLabel,
+
+		/**
+		 * Read whether this file came in from a case system, for the header badge
+		 * (zgw-document-bridge REQ-DDZGW-009).
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/zgw-document-bridge/tasks.md#3-2
+		 */
+		async loadSourceBadge() {
+			const fileId = fileViewerStore.currentFile?.fileId
+			this.sourceVendor = ''
+			if (!fileId) {
+				return
+			}
+			try {
+				this.sourceVendor = (await fetchSourceBadges([fileId]))[String(fileId)] || ''
+			} catch {
+				// No answer: no badge. The file itself still shows.
+			}
+		},
 
 		/**
 		 * Read whether OCR can run and this file's last result.

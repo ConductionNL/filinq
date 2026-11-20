@@ -20,6 +20,7 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
 use OCA\Filinq\Service\AnonymizationPersistenceService;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
@@ -28,6 +29,7 @@ use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Tests for the idempotent source↔anonymised file-link UPSERT.
@@ -140,7 +142,10 @@ class AnonymizationLinkServiceTest extends TestCase {
 			 *
 			 * @return mixed
 			 */
-			public function saveObject(array $object = [], string $register = '', string $schema = '', bool $_rbac = true, bool $_unowned = false): mixed {
+			public function saveObject(array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): mixed {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				$_unowned = $options->actor->unowned ?? false;
 				$this->saveCalled = true;
 				$this->captured = $object;
 				if ($this->saveThrows === true) {
@@ -166,7 +171,7 @@ class AnonymizationLinkServiceTest extends TestCase {
 	 *
 	 * @return AnonymizationPersistenceService
 	 */
-	private function buildService(object $objectService): AnonymizationPersistenceService {
+	private function buildService(object $objectService, ?DocumentActionAudit $audit = null): AnonymizationPersistenceService {
 		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturn($objectService);
 
@@ -177,7 +182,8 @@ class AnonymizationLinkServiceTest extends TestCase {
 			logger: new NullLogger(),
 			locator: new OpenRegisterServiceLocator($appManager, $container),
 			consentCrud: $this->createMock(originalClassName: ConsentCrudService::class),
-			consentService: $this->createMock(originalClassName: ConsentService::class)
+			consentService: $this->createMock(originalClassName: ConsentService::class),
+			audit: $audit
 		);
 
 	}//end buildService()
@@ -332,6 +338,42 @@ class AnonymizationLinkServiceTest extends TestCase {
 		$this->assertArrayNotHasKey(key: 'anonymizationLinkId', array: $result);
 
 	}//end testRecordAnonymizationLinkIsBestEffortOnSaveFailure()
+
+	/**
+	 * A recorded link writes "anonymised" into the source document's trail, once (REQ-SCR-007).
+	 *
+	 * @return void
+	 */
+	public function testARecordedLinkWritesTheAnonymisationIntoTheSourcesTrail(): void {
+		$audit = $this->createMock(originalClassName: DocumentActionAudit::class);
+		$audit->expects($this->once())->method('record')
+			->with(42, 'anonymised', ['anonymizedFileId' => 99, 'runCount' => 1])
+			->willReturn(true);
+		$service = $this->buildService(
+			objectService: $this->makeObjectService(searchResult: [], saveReturn: ['@self' => ['id' => 'new-uuid-001']]),
+			audit: $audit
+		);
+
+		$this->invokeRecord(service: $service, fileId: 42, sourceNode: null, resultInfo: ['anonymizedFileId' => 99, 'replacementCount' => 5]);
+
+	}//end testARecordedLinkWritesTheAnonymisationIntoTheSourcesTrail()
+
+	/**
+	 * A link that could not be saved writes nothing into the trail.
+	 *
+	 * @return void
+	 */
+	public function testAFailedLinkWritesNothingIntoTheTrail(): void {
+		$audit = $this->createMock(originalClassName: DocumentActionAudit::class);
+		$audit->expects($this->never())->method('record');
+		$service = $this->buildService(
+			objectService: $this->makeObjectService(searchResult: [], saveReturn: null, saveThrows: true),
+			audit: $audit
+		);
+
+		$this->invokeRecord(service: $service, fileId: 42, sourceNode: null, resultInfo: ['anonymizedFileId' => 99]);
+
+	}//end testAFailedLinkWritesNothingIntoTheTrail()
 
 	/**
 	 * Best-effort: a searchObjects failure is swallowed; the method returns without saving.

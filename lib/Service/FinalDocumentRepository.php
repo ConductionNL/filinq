@@ -30,6 +30,11 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\FinalDocumentRepositoryInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -47,45 +52,7 @@ use Throwable;
  *
  * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
  */
-class FinalDocumentRepository {
-
-	/**
-	 * The OpenRegister register holding Filinq's schemas.
-	 *
-	 * `filinq`, not `document`: this app declares one register since the
-	 * consolidation in descriptor v8.0.0.
-	 *
-	 * @var string
-	 */
-	public const REGISTER = 'filinq';
-
-	/**
-	 * The schema holding the finalisation records.
-	 *
-	 * @var string
-	 */
-	public const SCHEMA = 'documentVersion';
-
-	/**
-	 * The schema holding the dossiers.
-	 *
-	 * @var string
-	 */
-	public const DOSSIER_SCHEMA = 'dossier';
-
-	/**
-	 * The final state. Terminal: there is no transition out of it.
-	 *
-	 * @var string
-	 */
-	public const STATUS_FINAL = 'final';
-
-	/**
-	 * The draft state. Everything is draft until somebody makes it final.
-	 *
-	 * @var string
-	 */
-	public const STATUS_DRAFT = 'draft';
+class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 
 	/**
 	 * Constructor.
@@ -409,8 +376,7 @@ class FinalDocumentRepository {
 			// would have answered null for every record that exists.
 			$object = $this->objectResolver->resolve()->find(
 				id: $uuid,
-				register: self::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA)
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -447,11 +413,12 @@ class FinalDocumentRepository {
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $record,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $uuid,
-				_rbac: false,
-				_unowned: true
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+					uuid: $uuid,
+					actor: new SaveActor(unowned: true)
+				),
+				_rbac: false
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(

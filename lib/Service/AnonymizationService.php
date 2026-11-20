@@ -37,16 +37,23 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Review\ImageRedactionService;
+use OCP\Files\File;
 use Exception;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\DetectionUnavailableException;
 use OCA\Filinq\Exception\ProhibitionGateException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\Contracts\AnonymizationServiceInterface;
+use OCA\Filinq\Service\Detection\DetectionProviderResolver;
+use OCA\Filinq\Service\Detection\DetectionRequest;
 use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
+use OCA\OpenRegister\Mcp\Attribute\McpTool;
+use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * Service for orchestrating the document anonymization pipeline
@@ -72,6 +79,21 @@ use Psr\Log\LoggerInterface;
  * a bag would hide which of them a given instance actually needs.
  */
 class AnonymizationService implements AnonymizationServiceInterface {
+
+	/**
+	 * The trigger an agent's intake run is attributed to, next to `manual` and `flow`.
+	 *
+	 * @var string
+	 */
+	public const MCP_TRIGGER = 'mcp';
+
+	/**
+	 * The reason an agent's intake is refused when a publication prohibition applies.
+	 *
+	 * @var string
+	 */
+	public const PROHIBITION_REASON = 'A publication prohibition applies to this document. '
+		. 'The detection is in the review queue; a person decides there.';
 	/**
 	 * Constructor for AnonymizationService
 	 *
@@ -106,6 +128,12 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 *                                                   once per run: no live detector, no file.
 	 * @param OcrExtractionFallback $ocrFallback Runs OCR on a scan OpenRegister extracted no
 	 *                                           text from, and flags what detection missed.
+	 * @param DetectionProviderResolver|null $detectionResolver The organisation's detection
+	 *                                                          provider; null leaves OpenRegister's
+	 *                                                          detection as the only one.
+	 * @param ImageRedactionService|null $images The image leg around OpenRegister's image seam: it
+	 *                                           flags image content it could not look at or burn,
+	 *                                           and attaches found regions to the entity rows.
 	 *
 	 * @return void
 	 *
@@ -124,6 +152,8 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		private readonly RedactionOutputGuard $reviewGuard,
 		private readonly AnonymiserBackendStateClient $backendState,
 		private readonly OcrExtractionFallback $ocrFallback,
+		private readonly ?DetectionProviderResolver $detectionResolver=null,
+		private readonly ?ImageRedactionService $images=null,
 	) {
 
 	}//end __construct()
@@ -152,6 +182,111 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	public function extractAndDetectEntities(int $fileId): array {
 		return $this->runExtraction(fileId: $fileId, options: ['force' => false]);
 	}//end extractAndDetectEntities()
+
+	#[McpTool(
+		name: 'anonymizeDocument',
+		subject: 'document',
+		action: 'anonymize',
+		description: 'Start anonymisation of one document: detect the personal data in it and put it '
+			. 'in the review queue, where a person decides what is redacted. Takes only the file id. '
+			. 'It never produces the anonymised copy and never marks the document reviewed; it answers '
+			. 'with the number of entities found per type, never their values. A publication '
+			. 'prohibition on the document is answered as refused, with the reason.',
+		readOnlyHint: false,
+		destructiveHint: false,
+		idempotentHint: false,
+		scope: 'create'
+	)]
+	/**
+	 * Anonymisation intake for an agent: detection and review-queue routing only.
+	 *
+	 * The file id is the whole input: no entity list, no override and no
+	 * output choice, so nothing an agent sends can steer what is redacted or
+	 * lift a gate. The run never writes an anonymised copy, never marks the
+	 * review and never changes the source file. The answer holds counts and
+	 * statuses only, never an entity value. A file the caller may not read
+	 * answers not_found, like one that does not exist.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return array<string, mixed> `status`, `entityCounts`, `reviewRequired`, and `refusedReason` when refused.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.3
+	 */
+	public function anonymizeViaAgent(int $fileId): array {
+		$uid = $this->agentUid();
+		if ($uid === '' || $this->container->get(ReadableFileResolver::class)->node(fileId: $fileId) === null) {
+			return ['status' => 'not_found', 'entityCounts' => [], 'reviewRequired' => false];
+		}
+
+		$this->logger->info(
+			'Filinq: anonymisation intake started',
+			['fileId' => $fileId, 'triggeredBy' => self::MCP_TRIGGER, 'uid' => $uid]
+		);
+
+		try {
+			$detected = $this->extractAndDetectEntities(fileId: $fileId);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Filinq: anonymisation intake failed',
+				['fileId' => $fileId, 'triggeredBy' => self::MCP_TRIGGER, 'uid' => $uid, 'exception' => $e->getMessage()]
+			);
+			return ['status' => 'failed', 'entityCounts' => [], 'reviewRequired' => false];
+		}
+
+		$counts = FileEntityStatsService::countByType(entities: (array)($detected['entities'] ?? []));
+
+		if ($this->prohibited(fileId: $fileId) === true) {
+			return [
+				'status' => 'refused',
+				'entityCounts' => $counts,
+				'reviewRequired' => true,
+				'refusedReason' => self::PROHIBITION_REASON,
+			];
+		}
+
+		return ['status' => 'review_required', 'entityCounts' => $counts, 'reviewRequired' => true];
+
+	}//end anonymizeViaAgent()
+
+	/**
+	 * Whether an absolute publication prohibition applies to the file. A gate
+	 * that cannot be asked counts as applying: the agent path fails closed.
+	 *
+	 * @param int $fileId The file.
+	 *
+	 * @return bool True when the prohibition gate refuses the file.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.3
+	 */
+	private function prohibited(int $fileId): bool {
+		try {
+			return $this->absoluteProhibitionViolations(fileId: $fileId) !== [];
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'Filinq: the prohibition gate could not be asked; the agent intake is refused',
+				['fileId' => $fileId, 'exception' => $e->getMessage()]
+			);
+			return true;
+		}
+
+	}//end prohibited()
+
+	/**
+	 * The user the agent acts for, or an empty string without one.
+	 *
+	 * @return string The user id.
+	 *
+	 * @spec openspec/changes/mcp-generation-tools/tasks.md#task-1.3
+	 */
+	private function agentUid(): string {
+		try {
+			return (string)($this->container->get(IUserSession::class)->getUser()?->getUID() ?? '');
+		} catch (Throwable $e) {
+			return '';
+		}
+
+	}//end agentUid()
 
 	/**
 	 * Force a fresh extraction + detection even when the file is unchanged.
@@ -265,19 +400,100 @@ class AnonymizationService implements AnonymizationServiceInterface {
 			['fileId' => $fileId, 'entityTypes' => $entityTypes]
 		);
 
+		// The organisation's detection provider (llm-entity-detection-provider):
+		// OpenRegister's own detection ran during extraction; an organisation on
+		// the LLM provider gets its entities added here, or an explicit fallback
+		// warning when it could not run. Before the read-back below, so the LLM
+		// relations are included.
+		$providerFields = $this->runDetectionProvider(
+			request: new DetectionRequest(fileId: $fileId, entityTypes: $entityTypes, force: (bool) $force)
+		);
+
 		// Custom-dictionary pass (custom-dictionary-recognition, design.md
 		// §D3): runs after OR extraction and before the entities are read
 		// back below, so freshly-written CUSTOM_DICTIONARY relations are
 		// included. Best-effort — a failure here is logged and surfaced as a
 		// warning but never blocks OR's own detection.
 		$detected = ['customDictionaryWarning' => $this->dictionaryRunner->run(fileId: $fileId, entityTypeWhitelist: $entityTypes)];
+
+		// The image leg (image-redaction REQ-DDIMR-002/007): after the OCR
+		// fallback, so a scan is known, and before the read-back, so the
+		// regions the seam stores take the same proposals and policy as a
+		// text finding. It never makes image content silent.
+		$imageDetection = $this->imageDetection(fileId: $fileId, ocrFields: $ocrFields);
 		$detected += $this->detectedEntities(fileId: $fileId, legalBasisProposal: $legalBasisProposal);
+		$imageFields = ['entities' => $detected['entities'], 'fields' => []];
+		if ($this->images !== null) {
+			$imageFields = $this->images->withRegions(entities: array_values((array) $detected['entities']), detection: $imageDetection);
+		}
+
+		$detected['entities'] = $imageFields['entities'];
 
 		return array_merge(
 			$this->buildExtractionResult(fileId: $fileId, detected: $detected),
-			$ocrFields
+			$ocrFields,
+			$providerFields,
+			$imageFields['fields']
 		);
 	}//end extractAndDetect()
+
+	/**
+	 * Send the extracted file to the image seam when it carries image content.
+	 *
+	 * @param int                  $fileId    The file.
+	 * @param array<string, mixed> $ocrFields What the OCR fallback reported.
+	 *
+	 * @return array{regions: list<array<string, mixed>>, fields: array<string, mixed>} The regions and the fields to add.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.2
+	 */
+	private function imageDetection(int $fileId, array $ocrFields): array {
+		$file = $this->sourceFile(fileId: $fileId);
+		if ($this->images === null || $file === null) {
+			return ['regions' => [], 'fields' => []];
+		}
+
+		return $this->images->detect(file: $file, ocrFields: $ocrFields);
+	}//end imageDetection()
+
+	/**
+	 * The source file through OpenRegister's FileService, or null when it cannot be read.
+	 *
+	 * @param int $fileId The file.
+	 *
+	 * @return File|null The file.
+	 */
+	private function sourceFile(int $fileId): ?File {
+		try {
+			$node = $this->locator->get(className: 'OCA\OpenRegister\Service\FileService')->getFileById($fileId);
+		} catch (\Throwable) {
+			return null;
+		}
+
+		if (($node instanceof File) === false) {
+			return null;
+		}
+
+		return $node;
+	}//end sourceFile()
+
+	/**
+	 * Run the organisation's detection provider and return the payload fields naming it.
+	 *
+	 * @param DetectionRequest $request The file, the enabled entity types and whether this is a re-analysis.
+	 *
+	 * @return array<string, mixed> `detectionProvider`, `detectionFellBack`, `detectionWarning`;
+	 *                              empty when no resolver is wired.
+	 *
+	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+	 */
+	private function runDetectionProvider(DetectionRequest $request): array {
+		if ($this->detectionResolver === null) {
+			return [];
+		}
+
+		return $this->detectionResolver->runForActiveOrganisation(request: $request)->toPayload();
+	}//end runDetectionProvider()
 
 	/**
 	 * Read the file's detected entities back, with proposed bases and the
@@ -512,6 +728,28 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	}//end anonymizeDocument()
 
 	/**
+	 * Anonymize a document on behalf of a named user.
+	 *
+	 * @param int                         $fileId   The Nextcloud file ID
+	 * @param array<array<string, mixed>> $entities The entities to anonymize
+	 * @param string                      $userId   The acting user.
+	 *
+	 * @return array<string, mixed> Anonymization result
+	 *
+	 * @throws Exception If anonymization fails.
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-3
+	 */
+	public function anonymizeDocumentAs(int $fileId, array $entities, string $userId): array {
+		return $this->anonymizeDocument(
+			fileId: $fileId,
+			entities: $entities,
+			options: (new AnonymizeOptions())->withUserId(userId: $userId)
+		);
+
+	}//end anonymizeDocumentAs()
+
+	/**
 	 * Anonymize entities in a document AND append the grondslagen summary.
 	 *
 	 * Identical to {@see anonymizeDocument()} except that LegalBasesSummaryService
@@ -564,6 +802,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
 	 */
 	private function runAnonymize(AnonymizeRun $run): array {
 		$fileId = $run->fileId;
@@ -584,7 +823,15 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		// somebody has looked at THIS detection run and said so. It throws
 		// before the runner, which means a refused document produces no file
 		// at all rather than one nobody checked.
-		$this->reviewGuard->assertMayWrite(fileId: $fileId, entities: $entities);
+		//
+		// Under the four-eyes rule the person anonymising must not be the one
+		// who checked (REQ-RWB-09); the guard asks that of the same mark.
+		$this->reviewGuard->assertMayWrite(
+			fileId: $fileId,
+			entities: $entities,
+			actor: $run->userId(),
+			wooRun: $run->isWooRun()
+		);
 
 		// THE DETECTOR GATE. Zero detections from no detector look exactly like
 		// zero detections from a clean document, and the runner would file a
@@ -611,9 +858,34 @@ class AnonymizationService implements AnonymizationServiceInterface {
 			'outcome' => $outcome,
 		];
 
-		return $result;
+		// Image content the seam did not burn is never a clean success
+		// (image-redaction REQ-DDIMR-002/006): the run and its link say so.
+		return array_merge($result, $this->imageRedactionFields(fileId: $fileId));
 
 	}//end runAnonymize()
+
+	/**
+	 * The image fields of an anonymise run, recorded on its link.
+	 *
+	 * @param int $fileId The source file.
+	 *
+	 * @return array<string, mixed> `imageRedactionPending` and `burnedRegionCount`, or none.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.3
+	 */
+	private function imageRedactionFields(int $fileId): array {
+		$file = $this->sourceFile(fileId: $fileId);
+		if ($this->images === null || $file === null) {
+			return [];
+		}
+
+		$fields = $this->images->anonymizeFields(file: $file);
+		if ($fields !== []) {
+			$this->anonymizeRunner->recordImageRedaction(fileId: $fileId, fields: $fields);
+		}
+
+		return $fields;
+	}//end imageRedactionFields()
 
 	/**
 	 * Read OpenRegister's detection state and refuse unless a detector is live.

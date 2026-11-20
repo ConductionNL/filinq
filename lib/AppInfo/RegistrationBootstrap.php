@@ -30,8 +30,7 @@ use OCA\Filinq\EventListener\ListenerRegistrar;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Kernel\JobQueueInterface;
 use OCA\Filinq\Mcp\FilinqScannableServices;
-use OCA\Filinq\Middleware\ApiContractMiddleware;
-use OCA\Filinq\Middleware\LanguageNegotiationMiddleware;
+use OCA\Filinq\Middleware\MiddlewareRegistrar;
 use OCA\Filinq\Service\ServiceRegistrar;
 use OCA\OpenRegister\AppHost\Bootstrap;
 use OCA\OpenRegister\AppHost\LeafAdoption;
@@ -120,21 +119,15 @@ class RegistrationBootstrap {
 		// Background jobs are declared in appinfo/info.xml under
 		// <background-jobs>; Nextcloud auto-registers them with the IJobList.
 		// IRegistrationContext has no registerBackgroundJob() method.
-		// register-i18n adoption (Task 3.2): wire the filinq-side
-		// language-negotiation middleware so OR's `LanguageService`
-		// sees Accept-Language / ?_lang / X-Translation-Target-Language
-		// on requests that hit filinq routes (the OR LanguageMiddleware
-		// only fires for OR's own routes). This lets the OR
-		// TranslationHandler resolve translatable properties on filinq
-		// objects to the right variant.
-		$context->registerMiddleware(LanguageNegotiationMiddleware::class);
-
-		// API-Version header and problem details on the JSON API (spec api-contract).
-		$context->registerMiddleware(ApiContractMiddleware::class);
+		// The middleware registrations live with the Middleware component.
+		(new MiddlewareRegistrar())->register(context: $context);
 
 		// Legal holds (e-discovery-legal-hold): renders the place and release notifications.
 		// Named by string to keep this class's coupling where it is.
 		$context->registerNotifierService('OCA\\Filinq\\Notification\\LegalHoldNotifier');
+
+		// The nightly integrity scan's findings (whole-collection-integrity-scan REQ-DIS-02).
+		$context->registerNotifierService('OCA\\Filinq\\Notification\\IntegrityScanNotifier');
 
 		// AppHost observability adoption (ADR-006 / ADR-040). Registers only the
 		// MetricsEngine; the Health/Metrics controllers auto-wire from OCP and

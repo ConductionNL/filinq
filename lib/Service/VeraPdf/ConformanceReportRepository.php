@@ -26,16 +26,16 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\VeraPdf;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\KeepsRowsPerFile;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
 use RuntimeException;
-use Throwable;
 
 /**
  * Read and write conformance reports.
  */
 class ConformanceReportRepository {
 	use ReadsStoredObjectRows;
+	use KeepsRowsPerFile;
 
 	public const SCHEMA = 'conformanceReport';
 
@@ -68,22 +68,10 @@ class ConformanceReportRepository {
 	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-2.3
 	 */
 	public function findForFile(int $fileId): array {
-		try {
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
-				filters: ['fileId' => $fileId]
-			);
-		} catch (Throwable $e) {
-			throw new RuntimeException(message: 'The conformance report could not be read: ' . $e->getMessage(), code: 0, previous: $e);
-		}
-
 		$reports = [];
-		foreach ((array) $results as $result) {
-			$row = $this->storedFields(row: $result);
-			// The filter is the search's; the match is ours.
-			if ((int) ($row['fileId'] ?? 0) === $fileId && isset($reports[(string) ($row['subject'] ?? '')]) === false) {
-				$reports[(string) $row['subject']] = $row;
+		foreach ($this->rowsForFile(schema: self::SCHEMA, fileId: $fileId, failure: 'The conformance report could not be read: ') as $row) {
+			if (isset($reports[(string) ($row['subject'] ?? '')]) === false) {
+				$reports[(string) ($row['subject'] ?? '')] = $row;
 			}
 		}
 
@@ -103,24 +91,12 @@ class ConformanceReportRepository {
 	 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-2.3
 	 */
 	public function save(array $report): array {
-		unset($report['uuid']);
-		$arguments = [
-			'object' => $report,
-			'register' => IntakeRepository::REGISTER,
-			'schema' => self::SCHEMA,
-		];
-		$existing = ($this->findForFile(fileId: (int) $report['fileId'])[(string) $report['subject']] ?? null);
-		if ($existing !== null && ($existing['uuid'] ?? '') !== '') {
-			$arguments['uuid'] = $existing['uuid'];
-		}
-
-		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
-		} catch (Throwable $e) {
-			throw new RuntimeException(message: 'Could not store the conformance report: ' . $e->getMessage(), code: 0, previous: $e);
-		}
-
-		return $this->storedFields(row: $stored);
+		return $this->saveRowForFile(
+			schema: self::SCHEMA,
+			row: $report,
+			existing: ($this->findForFile(fileId: (int) $report['fileId'])[(string) $report['subject']] ?? null),
+			failure: 'Could not store the conformance report: '
+		);
 
 	}//end save()
 }//end class

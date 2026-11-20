@@ -205,6 +205,8 @@ class AnonymizationServiceDetectorTest extends TestCase {
 						'dossierKey' => 'dk-1',
 						'reversible' => true,
 						'userId' => 'alice',
+
+						'wooCase' => false,
 					],
 				],
 				[
@@ -218,6 +220,8 @@ class AnonymizationServiceDetectorTest extends TestCase {
 						'dossierKey' => null,
 						'reversible' => false,
 						'userId' => 'bob',
+
+						'wooCase' => false,
 					],
 				],
 			],

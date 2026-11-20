@@ -52,7 +52,7 @@ use Psr\Log\LoggerInterface;
 use OCA\Filinq\Service\Intake\ContentHasher;
 use OCA\Filinq\Service\Intake\IntakeDeadlines;
 use OCA\Filinq\Service\Support\IntakeSignals;
-
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Asserts what the intake inbox does with a delivered document, and what it
@@ -137,6 +137,7 @@ class IntakeServiceTest extends TestCase {
 		);
 		$objectService->method('find')->willReturnCallback(
 			static function (...$arguments) use ($rows): ?array {
+				$arguments = LegacyObjectArgs::positional(method: 'find', args: $arguments);
 				$id = (string)($arguments[0] ?? '');
 				foreach ($rows as $row) {
 					if ((string)($row['uuid'] ?? '') === $id) {
@@ -149,6 +150,7 @@ class IntakeServiceTest extends TestCase {
 		);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (...$arguments): array {
+				$arguments = LegacyObjectArgs::positional(method: 'saveObject', args: $arguments);
 				$object = ($arguments[0] ?? []);
 				$this->written[] = $object;
 				$this->writtenTo[] = ($arguments[3] ?? null);

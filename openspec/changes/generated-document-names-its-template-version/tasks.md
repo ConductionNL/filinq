@@ -51,18 +51,20 @@
       and read the exit code, not the summary line.
 - [x] 6.2 Run `openspec validate generated-document-names-its-template-version --strict`.
 - [x] 6.3 Run `composer check:strict`.
-- [ ] 6.4 Generate a document through `DocumentService::generateDocument()` on the dev instance and confirm the recorded
+- [x] 6.4 Generate a document through `DocumentService::generateDocument()` on the dev instance and confirm the recorded
       version matches the template's OpenRegister version, and that the
-      reported checksum matches the stored file's bytes. NOT DONE: the lane
-      clone is not mounted on the dev instance; recipe in the PR body.
+      reported checksum matches the stored file's bytes.
+      Live pass 2026-11-17 on a throwaway NC 34.0.6 + openregister main: a template edited once (head version 2),
+      generated in process as PDF with output mode `both`. The result's `templateVersion` was 2, equal to the
+      template's version, and the `generatedDocument` entry recorded 2; `sha256` equalled the SHA-256 of the stored
+      file's bytes (fileId 123) and of the returned content; `pageCount` 1.
 
 ## 7. Documentation and follow-on
 
 - [x] 7.1 Document `options.templateVersion` and the two new result fields in
       `docs/features/`.
-- [ ] 7.2 Raise the counterpart change in the dossiq repo: point
+- [x] 7.2 Raise the counterpart change in the dossiq repo: point
       `FilinqTemplateEngineAdapter::resolveVersion()` at the new query and
-      delete `countPages()`. NOT DONE: lanes may not write to another repo; the
-      issue text is drafted at
-      ~/memcap-work/build-all/for-ruben/dossiq-template-version-provenance.md.
-      The change stays open until it is filed.
+      delete `countPages()`. Done as ConductionNL/dossiq#6668: the adapter
+      asks `versionInForceAt()` for the end of the effective date and takes
+      `sha256` and `pageCount` from the generation result.

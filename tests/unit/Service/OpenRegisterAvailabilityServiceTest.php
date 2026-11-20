@@ -156,4 +156,59 @@ class OpenRegisterAvailabilityServiceTest extends TestCase {
 
 	}//end testGetObjectServiceThrowsWhenNotInstalled()
 
+
+	/**
+	 * The transition engine is answered only when OpenRegister is installed and can transition on an app's behalf.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function testGetTransitionEngineAnswersOnlyAUsableEngine(): void {
+		$engine = new class {
+			/**
+			 * @param string $objectId Unused.
+			 * @param string $action   Unused.
+			 * @param string $app      Unused.
+			 *
+			 * @return null
+			 */
+			public function transitionAsSystem(string $objectId, string $action, string $app) {
+				return null;
+			}
+		};
+
+		$this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
+		$this->mockContainer->expects($this->once())
+			->method('get')
+			->with(OpenRegisterAvailabilityService::TRANSITION_ENGINE)
+			->willReturn($engine);
+
+		$this->assertSame($engine, $this->service->getTransitionEngine());
+
+	}//end testGetTransitionEngineAnswersOnlyAUsableEngine()
+
+	/**
+	 * Without OpenRegister, or with one that has no usable engine, there is none.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md#requirement-a-cancelled-request-must-be-visibly-cancelled-and-must-not-be-re-signable
+	 */
+	public function testGetTransitionEngineIsNullWithoutAUsableEngine(): void {
+		$appManager = $this->createMock(IAppManager::class);
+		$appManager->method('getInstalledApps')->willReturn(['files']);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->never())->method('get');
+		$this->assertNull((new OpenRegisterAvailabilityService($appManager, $container))->getTransitionEngine());
+
+		$this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
+		$this->mockContainer->method('get')->willReturnOnConsecutiveCalls(new \stdClass());
+		$this->assertNull($this->service->getTransitionEngine(), 'an engine without transitionAsSystem is not used');
+
+		$failing = $this->createMock(ContainerInterface::class);
+		$failing->method('get')->willThrowException(new \RuntimeException('not registered'));
+		$this->assertNull((new OpenRegisterAvailabilityService($this->mockAppManager, $failing))->getTransitionEngine());
+
+	}//end testGetTransitionEngineIsNullWithoutAUsableEngine()
 }//end class

@@ -42,6 +42,7 @@
             suppressing every reference to it.
         -->
         <file name="tests/stubs/openregister-flow.stub.php" />
+        <file name="tests/stubs/openregister-integration.stub.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>
@@ -170,6 +171,8 @@
                 <referencedClass name="OCA\OpenRegister\AppHost\Observability\ManifestLoader"/>
                 <referencedClass name="OCA\OpenRegister\AppHost\Observability\HealthCheckExecutor"/>
                 <referencedClass name="OCA\OpenRegister\AppHost\Observability\MetricsEngine"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\MetricSources"/>
+                <referencedClass name="OCA\OpenRegister\AppHost\Observability\MetricsRuntime"/>
                 <referencedClass name="OCA\OpenRegister\AppHost\Observability\PrometheusRenderer"/>
                 <referencedClass name="OCA\OpenRegister\AppHost\Observability\Source\ObjectMetricSource"/>
                 <referencedClass name="OCA\OpenRegister\AppHost\Observability\Source\TableMetricSource"/>

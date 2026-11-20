@@ -26,16 +26,16 @@ namespace OCA\Filinq\Service\Ocr;
 
 use OCA\Filinq\Kernel\Contracts\OcrResultRepositoryInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\KeepsRowsPerFile;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
 use RuntimeException;
-use Throwable;
 
 /**
  * The `ocrResult` rows, keyed by file id.
  */
 class OcrResultRepository implements OcrResultRepositoryInterface {
 	use ReadsStoredObjectRows;
+	use KeepsRowsPerFile;
 
 	/**
 	 * Constructor.
@@ -60,32 +60,7 @@ class OcrResultRepository implements OcrResultRepositoryInterface {
 	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.4
 	 */
 	public function findForFile(int $fileId): ?array {
-		try {
-			// Slugs go through searchObjectsBySlug: searchObjects answers a
-			// slug with zero rows and no error.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
-				filters: ['fileId' => $fileId]
-			);
-		} catch (Throwable $e) {
-			throw new RuntimeException(
-				message: 'The OCR result could not be read: ' . $e->getMessage(),
-				code: 0,
-				previous: $e
-			);
-		}
-
-		foreach ((array) $results as $result) {
-			$row = $this->storedFields(row: $result);
-			// The filter is the search's; the match is ours, so a search that
-			// ignored the filter still answers for this file only.
-			if ((int) ($row['fileId'] ?? 0) === $fileId) {
-				return $row;
-			}
-		}
-
-		return null;
+		return ($this->rowsForFile(schema: self::SCHEMA, fileId: $fileId, failure: 'The OCR result could not be read: ')[0] ?? null);
 
 	}//end findForFile()
 
@@ -102,29 +77,12 @@ class OcrResultRepository implements OcrResultRepositoryInterface {
 	 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-2.1
 	 */
 	public function saveForFile(array $result): array {
-		unset($result['uuid']);
-		$arguments = [
-			'object' => $result,
-			'register' => IntakeRepository::REGISTER,
-			'schema' => self::SCHEMA,
-		];
-
-		$existing = $this->findForFile(fileId: (int) $result['fileId']);
-		if ($existing !== null && ($existing['uuid'] ?? '') !== '') {
-			$arguments['uuid'] = $existing['uuid'];
-		}
-
-		try {
-			$stored = $this->objectResolver->resolve()->saveObject(...$arguments);
-		} catch (Throwable $e) {
-			throw new RuntimeException(
-				message: 'Could not store the OCR result: ' . $e->getMessage(),
-				code: 0,
-				previous: $e
-			);
-		}
-
-		return $this->storedFields(row: $stored);
+		return $this->saveRowForFile(
+			schema: self::SCHEMA,
+			row: $result,
+			existing: $this->findForFile(fileId: (int) $result['fileId']),
+			failure: 'Could not store the OCR result: '
+		);
 
 	}//end saveForFile()
 }//end class

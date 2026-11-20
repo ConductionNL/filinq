@@ -24,6 +24,9 @@ namespace OCA\Filinq\Service\Signing;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Service\SettingsService;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -241,7 +244,7 @@ class NativeSigningProvider implements SigningProviderInterface {
 	 *
 	 * @throws RuntimeException If the session is not found, or is already completed.
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 */
 	public function cancelSigning(string $externalId): void {
 		$session = $this->loadSessionByExternalId(externalId: $externalId);
@@ -498,7 +501,11 @@ class NativeSigningProvider implements SigningProviderInterface {
 			$session['id'] = $uuid;
 		}
 
-		$objectService->saveObject(object: $session, register: $register, schema: $schema, _rbac: false, _unowned: true);
+		$objectService->saveObject(
+			object: $session,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema), actor: new SaveActor(unowned: true)),
+			_rbac: false
+		);
 
 	}//end persistSession()
 

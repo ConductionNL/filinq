@@ -34,10 +34,12 @@ use OCA\Filinq\Service\Publication\ConsentClearance;
 use OCA\Filinq\Service\Publication\OpenCatalogiPlatform;
 use OCA\Filinq\Service\Publication\OpenCatalogiPublicationMap;
 use OCA\Filinq\Exception\PublicationNotReadyException;
+use OCA\Filinq\Service\Publication\DiwooMissingFields;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationReadiness;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository;
+use OCA\OpenRegister\Exception\HookStoppedException;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -50,6 +52,8 @@ use Opis\JsonSchema\Validator;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * The pipeline from a document to OpenCatalogi.
@@ -107,11 +111,32 @@ class PublicationPipelineServiceTest extends TestCase {
 	private bool $platform = true;
 
 	/**
+	 * The properties OpenCatalogi's publication schema declares; null reads as a schema that cannot be found.
+	 *
+	 * @var array<string, mixed>|null
+	 */
+	private ?array $publicationProperties = null;
+
+	/**
+	 * Whether OpenCatalogi's pre-save listener refuses the publication's document type.
+	 *
+	 * @var bool
+	 */
+	private bool $refuseDocumentType = false;
+
+	/**
 	 * The accessibility gate mode (filinq.redaction.accessibility_gate).
 	 *
 	 * @var string
 	 */
 	private string $accessibilityGate = 'warn';
+
+	/**
+	 * The admin's default publisher; '' when none is set.
+	 *
+	 * @var string
+	 */
+	private string $defaultPublisher = '';
 
 	/**
 	 * The pipeline over the in-memory world.
@@ -121,7 +146,17 @@ class PublicationPipelineServiceTest extends TestCase {
 	private function pipeline(): PublicationPipelineService {
 		$objects = $this->createMock(ObjectService::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object = [], string $register = '', string $schema = '', ?string $uuid = null): array {
+			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions()): array {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
+				if ($schema === OpenCatalogiPublicationMap::SCHEMA && $this->refuseDocumentType === true) {
+					throw new HookStoppedException(
+						'documentsoort: "' . ($object['documentsoort'] ?? '') . '" is not on the national list of document types',
+						['documentsoort' => 'not on the national list']
+					);
+				}
+
+				$uuid = $options->uuid;
 				$this->saves[] = [$schema, $object];
 				$uuid = $uuid ?? ($schema . '-' . (count($this->rows[$schema] ?? []) + 1));
 				$this->rows[$schema][$uuid] = array_merge($object, ['uuid' => $uuid]);
@@ -129,7 +164,7 @@ class PublicationPipelineServiceTest extends TestCase {
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			fn (string $id = '', ?string $register = null, ?string $schema = null): ?array => $this->rows[$schema][$id] ?? null
+			fn (string $id = '', ?ObjectFindOptions $options = null): ?array => $this->rows[($options?->schema)][$id] ?? null
 		);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
 			fn (string $registerSlug, string $schemaSlug, array $filters = []): array => array_values(
@@ -175,11 +210,80 @@ class PublicationPipelineServiceTest extends TestCase {
 				];
 			}
 		};
+		$this->publicationProperties ??= json_decode((string) file_get_contents(__DIR__ . '/../../../fixtures/opencatalogi-publication-schema.json'), true)['properties'];
+		$registers = new class {
+			/**
+			 * OpenCatalogi's register, holding schema 7, as RegisterMapper::find() answers it.
+			 *
+			 * @param string|int $id            The register id or slug
+			 * @param bool       $_rbac         Ignored
+			 * @param bool       $_multitenancy Ignored
+			 *
+			 * @return object The register.
+			 */
+			public function find(string|int $id, bool $_rbac = true, bool $_multitenancy = true): object {
+				if ($id !== 'publication') {
+					throw new RuntimeException('Register not found');
+				}
+
+				return new class {
+					/**
+					 * @return array<int, int>
+					 */
+					public function getSchemas(): array {
+						return [7];
+					}
+				};
+			}
+		};
+		$schemas = new class ($this) {
+			/**
+			 * Constructor.
+			 *
+			 * @param PublicationPipelineServiceTest $test The test that holds the schema's properties
+			 */
+			public function __construct(private PublicationPipelineServiceTest $test) {
+			}
+
+			/**
+			 * The schema with this slug among the ids, as SchemaMapper::findBySlugInIds() answers it.
+			 *
+			 * @param string          $slug      The schema slug
+			 * @param array<int, int> $schemaIds The register's schema ids
+			 *
+			 * @return object|null The schema.
+			 */
+			public function findBySlugInIds(string $slug, array $schemaIds): ?object {
+				$properties = $this->test->publicationProperties();
+				if ($slug !== 'publication' || in_array(7, $schemaIds, true) === false || $properties === null) {
+					return null;
+				}
+
+				return new class ($properties) {
+					/**
+					 * Constructor.
+					 *
+					 * @param array<string, mixed> $properties The declared properties
+					 */
+					public function __construct(private array $properties) {
+					}
+
+					/**
+					 * @return array<string, mixed>
+					 */
+					public function getProperties(): array {
+						return $this->properties;
+					}
+				};
+			}
+		};
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static fn (string $id): object => match ($id) {
 				'OCA\OpenRegister\Service\FileService' => $fileService,
 				'OCA\OpenCatalogi\Service\TooiVocabularyService' => $tooi,
+				'OCA\OpenRegister\Db\RegisterMapper' => $registers,
+				'OCA\OpenRegister\Db\SchemaMapper' => $schemas,
 				default => $objects,
 			}
 		);
@@ -212,7 +316,11 @@ class PublicationPipelineServiceTest extends TestCase {
 
 		$appConfig = $this->createMock(IAppConfig::class);
 		$appConfig->method('getValueString')->willReturnCallback(
-			fn (string $app, string $key, string $default = ''): string => $key === RedactionAccessibilityService::CFG_GATE ? $this->accessibilityGate : $default
+			fn (string $app, string $key, string $default = ''): string => match ($key) {
+				RedactionAccessibilityService::CFG_GATE => $this->accessibilityGate,
+				PublicationPipelineService::CFG_DEFAULT_PUBLISHER => $this->defaultPublisher,
+				default => $default,
+			}
 		);
 
 		$clock = $this->createMock(ITimeFactory::class);
@@ -223,10 +331,21 @@ class PublicationPipelineServiceTest extends TestCase {
 			readiness: new PublicationReadiness(consents: $consentService, consentConfig: $consentConfig, policies: $policies, marks: $marks, store: $store, accessibility: new RedactionAccessibilityService($appConfig)),
 			map: new OpenCatalogiPublicationMap(),
 			platform: new OpenCatalogiPlatform(appManager: $apps, container: $container, rootFolder: $root),
-			clock: $clock
+			clock: $clock,
+			config: $appConfig
 		);
 
 	}//end pipeline()
+
+	/**
+	 * Called by the fake schema mapper.
+	 *
+	 * @return array<string, mixed>|null The publication schema's properties, null when there is no schema.
+	 */
+	public function publicationProperties(): ?array {
+		return $this->publicationProperties;
+
+	}//end publicationProperties()
 
 	/**
 	 * Called by the fake file service.
@@ -254,7 +373,7 @@ class PublicationPipelineServiceTest extends TestCase {
 
 		return $pipeline->updateMetadata(
 			record: $record,
-			metadata: ['officieleTitel' => 'Besluit 2025-017', 'wooCategory' => 'c_8c840238', 'documentsoort' => 'besluit', 'publicatiedatum' => '2026-09-29'],
+			metadata: ['officieleTitel' => 'Besluit 2025-017', 'wooCategory' => 'infocat009', 'documentsoort' => 'besluit', 'publicatiedatum' => '2026-09-29'],
 			actor: 'anna'
 		);
 
@@ -439,13 +558,260 @@ class PublicationPipelineServiceTest extends TestCase {
 		$pipeline = $this->pipeline();
 		$record = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
 
-		$this->assertSame('c_8c840238', $pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'c_8c840238'], actor: 'anna')['wooCategory']);
+		$this->assertSame('infocat009', $pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'infocat009'], actor: 'anna')['wooCategory']);
 
 		$this->expectException(InvalidArgumentException::class);
 		$this->expectExceptionCode(400);
 		$pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'besluiten'], actor: 'anna');
 
 	}//end testTheCategoryComesFromOpenCatalogisList()
+
+	/**
+	 * One value on three records: the two queued ones change and each gets its
+	 * own log entry with the coordinator's name; the published one is skipped.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 */
+	public function testABulkValueReachesEveryQueuedRecordAndSkipsAHandedOffOne(): void {
+		$pipeline = $this->pipeline();
+		$first = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$second = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$published = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$published['status'] = 'published';
+		$logBefore = count($this->rows['publicationLogEntry'] ?? []);
+
+		$outcome = $pipeline->updateMetadataMany(
+			records: [$first, $second, $published],
+			values: ['publisher' => ' https://identifier.overheid.nl/tooi/id/gemeente/gm0363 '],
+			actor: 'woo-coordinator'
+		);
+
+		$this->assertSame([(string) $first['uuid'], (string) $second['uuid']], array_column($outcome['updated'], 'uuid'));
+		$this->assertSame([['uuid' => (string) $published['uuid'], 'reason' => 'already handed off']], $outcome['skipped']);
+		$this->assertSame('https://identifier.overheid.nl/tooi/id/gemeente/gm0363', $this->rows['publicationRecord'][$first['uuid']]['publisher']);
+		$this->assertArrayNotHasKey('publisher', $this->rows['publicationRecord'][$published['uuid']]);
+
+		$entries = array_slice(array_values($this->rows['publicationLogEntry']), $logBefore);
+		$this->assertSame(['metadata_assembled', 'metadata_assembled'], array_column($entries, 'action'));
+		$this->assertSame(['woo-coordinator', 'woo-coordinator'], array_column($entries, 'actor'));
+		$this->assertSame([(string) $first['uuid'], (string) $second['uuid']], array_column($entries, 'publicationRecordRef'));
+
+	}//end testABulkValueReachesEveryQueuedRecordAndSkipsAHandedOffOne()
+
+	/**
+	 * A bulk change is checked before any record is touched: an unknown
+	 * category, a field that is not bulk-settable or a blank value changes nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 */
+	public function testABulkChangeIsRefusedWholeBeforeAnyRecordChanges(): void {
+		$pipeline = $this->pipeline();
+		$record = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$saves = count($this->saves);
+
+		foreach (
+			[
+				[['wooCategory' => 'besluiten'], 'Unknown Woo information category: besluiten'],
+				[['officieleTitel' => 'Nieuw'], 'This field cannot be set on a selection: officieleTitel'],
+				[['documentsoort' => '  '], 'A value for documentsoort is required'],
+				[[], 'Name at least one field to set'],
+			] as [$values, $message]
+		) {
+			try {
+				$pipeline->updateMetadataMany(records: [$record], values: $values, actor: 'anna');
+				$this->fail('refused: ' . $message);
+			} catch (InvalidArgumentException $e) {
+				$this->assertSame($message, $e->getMessage());
+				$this->assertSame(400, $e->getCode());
+			}
+		}
+
+		$this->assertCount($saves, $this->saves, 'a refused bulk change writes nothing');
+
+	}//end testABulkChangeIsRefusedWholeBeforeAnyRecordChanges()
+
+	/**
+	 * A new record starts with the admin's default publisher, and without one
+	 * when none is set.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-new-records-start-with-the-organisations-publisher-req-wmw-003
+	 */
+	public function testANewRecordStartsWithTheDefaultPublisher(): void {
+		$pipeline = $this->pipeline();
+		$without = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$this->assertArrayNotHasKey('publisher', $this->rows['publicationRecord'][$without['uuid']]);
+
+		$this->defaultPublisher = ' https://identifier.overheid.nl/tooi/id/gemeente/gm0363 ';
+		$with = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+
+		$this->assertSame('https://identifier.overheid.nl/tooi/id/gemeente/gm0363', $with['publisher']);
+		$this->assertNotContains('publisher', (new DiwooMissingFields())->of(record: $with));
+
+	}//end testANewRecordStartsWithTheDefaultPublisher()
+
+	/**
+	 * The hand-off files the publication under OpenCatalogi's code for its category.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.2
+	 */
+	public function testTheHandOffFilesTheCategoryCode(): void {
+		$pipeline = $this->pipeline();
+
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+
+		$this->assertSame('infocat009', $this->rows['publication'][$record['endpointPublicationRef']]['wooCategory']);
+
+	}//end testTheHandOffFilesTheCategoryCode()
+
+	/**
+	 * A record that still holds the TOOI basename hands off under the code of that category.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.2
+	 */
+	public function testARecordFromBeforeTheCodesIsTranslated(): void {
+		$pipeline = $this->pipeline();
+		$record = $this->readyRecord(pipeline: $pipeline);
+		$record['wooCategory'] = 'c_8c840238';
+
+		$record = $pipeline->handoff(record: $record, actor: 'anna');
+
+		$this->assertSame('infocat009', $this->rows['publication'][$record['endpointPublicationRef']]['wooCategory']);
+		$this->assertSame('c_8c840238', $record['wooCategory'], 'the stored record is not migrated');
+
+	}//end testARecordFromBeforeTheCodesIsTranslated()
+
+	/**
+	 * The document type travels in its own field and the summary stays empty.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-1
+	 */
+	public function testTheHandOffWritesTheDocumentTypeToItsOwnField(): void {
+		$pipeline = $this->pipeline();
+
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+
+		$publication = $this->rows['publication'][$record['endpointPublicationRef']];
+		$this->assertSame('besluit', $publication['documentsoort']);
+		$this->assertArrayNotHasKey('summary', $publication);
+		$this->assertContains('handed_off', array_column($this->rows['publicationLogEntry'], 'action'));
+
+	}//end testTheHandOffWritesTheDocumentTypeToItsOwnField()
+
+	/**
+	 * An OpenCatalogi whose publication has no documentsoort refuses the hand-off, names the update and writes nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
+	 */
+	public function testAnOpenCatalogiWithoutTheFieldRefusesTheHandoff(): void {
+		$properties = json_decode((string) file_get_contents(__DIR__ . '/../../../fixtures/opencatalogi-publication-schema.json'), true)['properties'];
+		unset($properties['documentsoort']);
+		$this->publicationProperties = $properties;
+		$pipeline = $this->pipeline();
+		$ready = $this->readyRecord(pipeline: $pipeline);
+
+		try {
+			$pipeline->handoff(record: $ready, actor: 'anna');
+			$this->fail('An OpenCatalogi without documentsoort must not take the hand-off');
+		} catch (RuntimeException $e) {
+			$this->assertSame(PublicationPipelineService::NEEDS_DOCUMENT_TYPE_FIELD, $e->getMessage());
+			$this->assertStringContainsString('update OpenCatalogi', $e->getMessage());
+			$this->assertSame(409, $e->getCode());
+		}
+
+		$this->assertArrayNotHasKey('publication', $this->rows);
+		$this->assertSame([], $this->attached);
+		$this->assertSame('ready', $this->rows['publicationRecord'][$ready['uuid']]['status']);
+
+	}//end testAnOpenCatalogiWithoutTheFieldRefusesTheHandoff()
+
+	/**
+	 * OpenCatalogi refusing the document type reaches the operator and leaves the record ready.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
+	 */
+	public function testARefusedDocumentTypeLeavesTheRecordReady(): void {
+		$this->refuseDocumentType = true;
+		$pipeline = $this->pipeline();
+		$ready = $this->readyRecord(pipeline: $pipeline);
+
+		try {
+			$pipeline->handoff(record: $ready, actor: 'anna');
+			$this->fail('A refused document type must not hand off');
+		} catch (RuntimeException $e) {
+			$this->assertStringContainsString('documentsoort', $e->getMessage());
+			$this->assertInstanceOf(HookStoppedException::class, $e->getPrevious());
+		}
+
+		$this->assertArrayNotHasKey('publication', $this->rows);
+		$this->assertSame([], $this->attached);
+		$this->assertSame('ready', $this->rows['publicationRecord'][$ready['uuid']]['status']);
+		$this->assertNotContains('handed_off', array_column($this->rows['publicationLogEntry'] ?? [], 'action'));
+
+	}//end testARefusedDocumentTypeLeavesTheRecordReady()
+
+	/**
+	 * A category that is neither a code nor a known basename blocks the hand-off and writes nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.2
+	 */
+	public function testAnUnknownCategoryBlocksTheHandOff(): void {
+		$pipeline = $this->pipeline();
+		$record = $this->readyRecord(pipeline: $pipeline);
+		$record['wooCategory'] = 'notacategory';
+
+		try {
+			$pipeline->handoff(record: $record, actor: 'anna');
+			$this->fail('An unknown category must not be handed off');
+		} catch (PublicationNotReadyException $e) {
+			$this->assertSame(['Unknown Woo category'], $e->getReasons());
+		}
+
+		$this->assertArrayNotHasKey('publication', $this->rows);
+		$this->assertSame([], $this->attached);
+
+	}//end testAnUnknownCategoryBlocksTheHandOff()
+
+	/**
+	 * Changing the category of a handed-off record moves its publication; a record not handed off moves nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.3
+	 */
+	public function testChangingTheCategoryMovesThePublication(): void {
+		$pipeline = $this->pipeline();
+		$draft = $pipeline->create(documentFileRef: '42', subjectType: 'document', dossierRef: '', actor: 'anna');
+		$pipeline->updateMetadata(record: $draft, metadata: ['wooCategory' => 'infocat001'], actor: 'anna');
+		$this->assertArrayNotHasKey('publication', $this->rows);
+
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+		$ref = $record['endpointPublicationRef'];
+
+		$pipeline->updateMetadata(record: $record, metadata: ['officieleTitel' => 'Besluit 2025-017 (herzien)'], actor: 'anna');
+		$this->assertSame('infocat009', $this->rows['publication'][$ref]['wooCategory'], 'no category in the edit, no move');
+
+		$pipeline->updateMetadata(record: $record, metadata: ['wooCategory' => 'infocat001'], actor: 'anna');
+		$this->assertSame('infocat001', $this->rows['publication'][$ref]['wooCategory']);
+
+	}//end testChangingTheCategoryMovesThePublication()
 
 	/**
 	 * Withdrawing needs a reason, sets the depublication date and never deletes.
@@ -584,4 +950,34 @@ class PublicationPipelineServiceTest extends TestCase {
 		$this->assertTrue($result->isValid(), $message);
 
 	}//end assertValid()
+
+	/**
+	 * A destroyed source takes its handed-off publication offline, with the
+	 * destruction as the logged reason; a publication that never left stays.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-a-publication-goes-offline-when-its-source-document-is-destroyed-req-scr-009
+	 */
+	public function testADestroyedSourceWithdrawsItsPublication(): void {
+		$pipeline = $this->pipeline();
+		$published = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+		$draft = $pipeline->create(documentFileRef: '77', subjectType: 'document', dossierRef: '', actor: 'anna');
+
+		$this->assertSame([], $pipeline->withdrawDestroyedSource(sourceRefs: ['77'], detail: '(object d-77)'));
+		$this->assertSame([], $pipeline->withdrawDestroyedSource(sourceRefs: ['', 'unknown'], detail: ''));
+
+		$withdrawn = $pipeline->withdrawDestroyedSource(sourceRefs: ['obj-1', '42'], detail: '(object obj-1)');
+
+		$this->assertCount(1, $withdrawn);
+		$this->assertSame($published['uuid'], $withdrawn[0]['uuid']);
+		$this->assertSame('depublished', $withdrawn[0]['status']);
+		$this->assertSame('Source document destroyed (object obj-1)', $withdrawn[0]['depublicationReason']);
+		$this->assertSame('2026-09-29T12:00:00+00:00', $this->rows['publication'][$published['endpointPublicationRef']]['depublicationDate']);
+		$log = array_values(array_filter($this->rows['publicationLogEntry'], static fn (array $e): bool => $e['action'] === 'depublication_requested'));
+		$this->assertSame('Source document destroyed (object obj-1)', $log[0]['details']);
+		$this->assertSame('system', $log[0]['actor']);
+		$this->assertSame('draft', $this->rows['publicationRecord'][$draft['uuid']]['status']);
+
+	}//end testADestroyedSourceWithdrawsItsPublication()
 }//end class

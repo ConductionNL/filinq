@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Signing;
 
 use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
+use OCA\Filinq\Exception\SigningCancellationRefusedException;
+use OCA\Filinq\Kernel\Contracts\SigningCancellationServiceInterface;
 use OCA\Filinq\Service\SigningService;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -67,9 +69,16 @@ use Throwable;
  *
  * @link https://filinq.app
  *
- * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+ * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
  */
-class SigningCancellationService {
+class SigningCancellationService implements SigningCancellationServiceInterface {
+
+	/**
+	 * The provider that signs against the request itself, without a provider session.
+	 *
+	 * @var string
+	 */
+	private const NATIVE_PROVIDER = 'native';
 
 	/**
 	 * Constructor.
@@ -97,59 +106,57 @@ class SigningCancellationService {
 	 *
 	 * @throws RuntimeException When the actor is not the creator, or the withdrawal fails.
 	 *
-	 * @spec openspec/changes/signing-cancellation/specs/signing-cancellation/spec.md
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 	 *
-	 * @orphaned-write-capability exclude shipped ahead of its caller. The
-	 * HTTP route signing#cancelRequest still runs the older path
-	 * (SigningService::cancelRequest) with its authorization inline in the
-	 * controller, so nothing reaches this service yet. Rewiring is NOT
-	 * mechanical and is deliberately not done here: this service refuses
-	 * every non-creator, while the controller currently lets an ADMIN cancel
-	 * any request, so swapping them silently removes an admin capability.
-	 * Tracked in filinq#628.
+	 * The order is fixed: authorise, then the state check, then the provider,
+	 * then the request's own transition. Nothing reaches the provider for an
+	 * actor who may not cancel or for a request that can no longer be withdrawn,
+	 * and the request is only marked CANCELLED once the provider has withdrawn it.
 	 */
 	public function cancel(string $uid, string $requestId): array {
 		$request = $this->creatorsRequest(uid: $uid, requestId: $requestId);
-		$externalId = $this->providerReference(request: $request);
+
+		$status = strtoupper((string)($request['status'] ?? ''));
+		if ($status === 'CANCELLED') {
+			// A double-click, not an error: nothing is asked of the provider again.
+			$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'already-cancelled', detail: '');
+			return ['requestId' => $requestId, 'status' => NativeSigningProvider::STATUS_CANCELLED, 'alreadyCancelled' => true];
+		}
+
+		if ($this->requests->isValidTransition(currentStatus: $status, newStatus: 'CANCELLED') === false) {
+			$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'refused-final-state', detail: $status);
+			$state = 'is ' . strtolower($status);
+			if ($status === '') {
+				$state = 'has no status';
+			}
+
+			throw new SigningCancellationRefusedException(
+				message: 'This signing request ' . $state . ' and can no longer be withdrawn.',
+				code: SigningCancellationRefusedException::FINAL_STATE
+			);
+		}
+
+		$this->withdrawAtProvider(uid: $uid, requestId: $requestId, request: $request);
 
 		try {
-			$this->providerFor(request: $request)->cancelSigning($externalId);
-		} catch (SigningCancellationNotSupportedException $e) {
-			// The provider CANNOT cancel. The request is still live, and the caller
-			// is told so rather than being shown a success they cannot rely on.
-			$this->recordAttempt(
-				uid: $uid,
-				requestId: $requestId,
-				outcome: 'failed-unsupported',
-				detail: $e->getMessage()
-			);
-			throw $e;
+			// The request's own transition: status, the cross-app conclusion
+			// event and the CANCELLED audit entry, as on every other path.
+			$this->requests->cancelRequest(requestId: $requestId);
 		} catch (Throwable $e) {
-			// A failed cancellation is recorded AS FAILED. "Attempted, provider
-			// refused, request still live" is the record that stops someone later
-			// concluding the document was withdrawn when it was not.
-			$this->recordAttempt(
-				uid: $uid,
-				requestId: $requestId,
-				outcome: 'failed',
-				detail: $e->getMessage()
-			);
+			$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'failed-transition', detail: $e->getMessage());
 			throw new RuntimeException(
-				'The signing request could not be withdrawn: ' . $e->getMessage()
-				. ' It is still live and its signatories can still sign.',
+				'The provider withdrew the signing request, but its status could not be recorded: ' . $e->getMessage(),
 				0,
 				$e
 			);
-		}//end try
-
-		$already = (($request['status'] ?? '') === NativeSigningProvider::STATUS_CANCELLED);
+		}
 
 		$this->recordAttempt(uid: $uid, requestId: $requestId, outcome: 'cancelled', detail: '');
 
 		return [
 			'requestId' => $requestId,
 			'status' => NativeSigningProvider::STATUS_CANCELLED,
-			'alreadyCancelled' => $already,
+			'alreadyCancelled' => false,
 		];
 	}//end cancel()
 
@@ -187,11 +194,71 @@ class SigningCancellationService {
 				detail: 'actor is not the creator, or the request does not exist'
 			);
 
-			throw new RuntimeException($this->refusalMessage(request: $request));
+			throw new SigningCancellationRefusedException(
+				message: $this->refusalMessage(request: $request),
+				code: SigningCancellationRefusedException::NOT_CREATOR
+			);
 		}
 
 		return $request;
 	}//end creatorsRequest()
+
+	/**
+	 * Withdraw the request at its provider, when the provider holds one.
+	 *
+	 * A native request is signed against the request itself and never opens a
+	 * provider session, so it carries no provider reference: its own transition
+	 * to CANCELLED is the withdrawal. Every other request must name the
+	 * provider's reference.
+	 *
+	 * @param string               $uid       The acting user id.
+	 * @param string               $requestId The signing request id.
+	 * @param array<string, mixed> $request   The request.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the provider refuses or cannot be reached.
+	 *
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
+	 */
+	private function withdrawAtProvider(string $uid, string $requestId, array $request): void {
+		if ((string)($request['externalId'] ?? '') === '' && ($request['provider'] ?? '') === self::NATIVE_PROVIDER) {
+			return;
+		}
+
+		$externalId = $this->providerReference(request: $request);
+
+		try {
+			$this->providerFor(request: $request)->cancelSigning($externalId);
+		} catch (SigningCancellationNotSupportedException $e) {
+			// The provider CANNOT cancel. The request is still live, and the caller
+			// is told so rather than being shown a success they cannot rely on.
+			$this->recordAttempt(
+				uid: $uid,
+				requestId: $requestId,
+				outcome: 'failed-unsupported',
+				detail: $e->getMessage()
+			);
+			throw $e;
+		} catch (Throwable $e) {
+			// A failed cancellation is recorded AS FAILED. "Attempted, provider
+			// refused, request still live" is the record that stops someone later
+			// concluding the document was withdrawn when it was not.
+			$this->recordAttempt(
+				uid: $uid,
+				requestId: $requestId,
+				outcome: 'failed',
+				detail: $e->getMessage()
+			);
+			throw new RuntimeException(
+				'The signing request could not be withdrawn: ' . $e->getMessage()
+				. ' It is still live and its signatories can still sign.',
+				0,
+				$e
+			);
+		}//end try
+
+	}//end withdrawAtProvider()
 
 	/**
 	 * The provider's reference for the request.
