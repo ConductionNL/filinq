@@ -45,7 +45,7 @@ an exception elsewhere — the delta rewrites the requirement so the spec stays 
 place the boundary is defined. The narrowed line is: **initiation gated, the act never**.
 The reachability test (`testNoSigningServiceIsReachableByAnAgent`) is extended, not
 deleted: it now asserts that exactly one signing-domain method carries the attribute and
-that it is `createRequest()`.
+that it is `startSigningRequest()`, the agent entry point that runs `createRequest()`'s creation with `mcp` attribution.
 
 ## Approval-gate mechanics
 

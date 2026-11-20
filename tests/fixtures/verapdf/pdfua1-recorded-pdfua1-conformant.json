@@ -1,0 +1,63 @@
+{"report":{"buildInformation":{"releaseDetails":[{
+  "id" : "core",
+  "version" : "1.28.2",
+  "buildDate" : 1752595620000
+},{
+  "id" : "validation-model",
+  "version" : "1.28.2",
+  "buildDate" : 1752595920000
+},{
+  "id" : "gui",
+  "version" : "1.28.2",
+  "buildDate" : 1752597840000
+}]},"jobs":[{"itemDetails":{
+  "name" : "/data/pdfua1-conformant.pdf",
+  "size" : 28555
+},"validationResult":[ {
+  "details" : {
+    "passedRules" : 106,
+    "failedRules" : 0,
+    "passedChecks" : 424,
+    "failedChecks" : 0,
+    "ruleSummaries" : [ ]
+  },
+  "jobEndStatus" : "normal",
+  "profileName" : "PDF/UA-1 validation profile",
+  "statement" : "PDF file is compliant with Validation Profile requirements.",
+  "compliant" : true
+} ],"processingTime":{
+  "start" : 1794928101408,
+  "finish" : 1794928101700,
+  "duration" : "00:00:00.292",
+  "difference" : 292
+}}],"batchSummary":{
+  "duration" : {
+    "start" : 1794928101341,
+    "finish" : 1794928101725,
+    "duration" : "00:00:00.384",
+    "difference" : 384
+  },
+  "totalJobs" : 1,
+  "outOfMemory" : 0,
+  "veraExceptions" : 0,
+  "failedEncryptedJobs" : 0,
+  "failedParsingJobs" : 0,
+  "validationSummary" : {
+    "nonCompliantPdfaCount" : 0,
+    "failedJobCount" : 0,
+    "totalJobCount" : 1,
+    "compliantPdfaCount" : 1,
+    "successfulJobCount" : 1
+  },
+  "featuresSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "repairSummary" : {
+    "failedJobCount" : 0,
+    "totalJobCount" : 0,
+    "successfulJobCount" : 0
+  },
+  "multiJob" : false
+}}}

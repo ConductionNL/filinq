@@ -48,5 +48,6 @@ final class McpToolServices {
 		FileListingService::class,
 		AnonymizationService::class,
 		SigningService::class,
+		ConsentDecisionAgent::class,
 	];
 }//end class

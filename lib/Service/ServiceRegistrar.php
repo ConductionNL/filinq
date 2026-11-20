@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Share\LinkShareGateway;
+use OCA\Filinq\Service\Share\NextcloudLinkShareGateway;
 use OCA\Filinq\Service\Conversion\PdfConversionRegistrar;
 use OCA\Filinq\Service\Signing\LibreSignClient;
 use OCA\Filinq\Service\Signing\OcsLibreSignClient;
@@ -76,6 +78,10 @@ class ServiceRegistrar {
 		// OCS client loads no LibreSign class, so the binding is safe on an
 		// instance without LibreSign (libresign-signing-provider task 1.3).
 		$context->registerServiceAlias(LibreSignClient::class, OcsLibreSignClient::class);
+
+		// Sharing by link goes through this seam, so the service can be
+		// tested without OCP\Share\IManager (share-document-links D2).
+		$context->registerServiceAlias(LinkShareGateway::class, NextcloudLinkShareGateway::class);
 
 	}//end register()
 }//end class

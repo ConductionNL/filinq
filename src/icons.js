@@ -57,6 +57,7 @@ import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import Palette from 'vue-material-design-icons/Palette.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Printer from 'vue-material-design-icons/Printer.vue'
+import ProgressClock from 'vue-material-design-icons/ProgressClock.vue'
 import Publish from 'vue-material-design-icons/Publish.vue'
 import PublishOff from 'vue-material-design-icons/PublishOff.vue'
 import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
@@ -72,6 +73,7 @@ import TagCheckOutline from 'vue-material-design-icons/TagCheckOutline.vue'
 import TagMultiple from 'vue-material-design-icons/TagMultiple.vue'
 import TextBoxOutline from 'vue-material-design-icons/TextBoxOutline.vue'
 import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
+import Upload from 'vue-material-design-icons/Upload.vue'
 import ViewDashboardOutline from 'vue-material-design-icons/ViewDashboardOutline.vue'
 
 export default {
@@ -125,11 +127,15 @@ export default {
 	Scanner,
 	InboxArrowDown,
 	TagCheckOutline,
+	// The office template upload and import entries (office-template-authoring).
+	Upload,
 	Stamper,
 	MapMarkerPath,
 	Palette,
 	Plus,
 	Printer,
+	// The Batch operations menu entry (redaction-at-scale).
+	ProgressClock,
 	// The two publication-policy menu entries. Both pages existed and were
 	// routable for months with no way in: an unregistered icon renders NOTHING
 	// in the navigation (rule 3 above), so adding the menu entry without these

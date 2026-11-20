@@ -112,6 +112,39 @@
 				"color": "transparent",
 				"background": "rgba(0, 100, 255, 0.4)"
 			}
+		},
+		{
+			"selector": ".pdf-viewer__page .pdf-viewer__region-layer",
+			"decls": {
+				"position": "absolute",
+				"inset": "0",
+				"pointer-events": "none",
+				"z-index": "2"
+			}
+		},
+		{
+			"selector": ".pdf-viewer__page .dd-region",
+			"decls": {
+				"position": "absolute",
+				"box-sizing": "border-box",
+				"border": "2px solid var(--color-error)",
+				"border-radius": "var(--border-radius-small, 2px)"
+			}
+		},
+		{
+			"selector": ".pdf-viewer__page .dd-region--redact",
+			"decls": {
+				"background": "var(--color-error)",
+				"opacity": "0.45"
+			}
+		},
+		{
+			"selector": ".pdf-viewer__page .dd-region--keep",
+			"decls": {
+				"border-style": "dashed",
+				"border-color": "var(--color-success)",
+				"background": "transparent"
+			}
 		}
 	]
 }

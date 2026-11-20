@@ -111,11 +111,13 @@ Features proposed based on tender analysis and customer requests. Not yet specif
 | Feature | Doc | GEMMA | TEC | Status |
 |---------|-----|-------|-----|--------|
 | [Woo publication pipeline](./woo-publicatie-pipeline.md) | woo-publicatie-pipeline.md | Publicatiecomponent | TEC-DMS-6 | Done |
+| [Woo decision letter and inventory](./woo-decision-templates.md) | woo-decision-templates.md | Documentcreatiecomponent | — | Implemented |
 | [Woo metadata worklist](./woo-metadata-worklist.md) | woo-metadata-worklist.md | Publicatiecomponent | TEC-DMS-6 | Done |
 | [Woo refusal grounds](./grondslagen.md) | grondslagen.md | Publicatiecomponent | TEC-DMS-6 | Done |
 | [Document Signing](./document-signing.md) | document-signing.md | — | TEC-DMS-4 | Roadmap |
 | [Digital Signing Integration](./digital-signing.md) | digital-signing.md | — | TEC-DMS-4 | Roadmap |
 | [PDF Page Stamping](./pdf-page-stamping.md) | pdf-page-stamping.md | — | — | Implemented |
+| [Sharing documents by link](./share-document-links.md) | share-document-links.md | Documentbeheercomponent | — | Implemented |
 | [Signing with LibreSign](./libresign-signing-provider.md) | libresign-signing-provider.md | — | TEC-DMS-4 | Done |
 | [One signing rail for the fleet](./one-signing-rail.md) | one-signing-rail.md | — | TEC-DMS-4 | In progress |
 | [Document Classification](./document-classification.md) | document-classification.md | Documentregistratiecomponent | TEC-DMS-4 | Roadmap |

@@ -153,4 +153,17 @@ class ValidationProfileResolverTest extends TestCase {
 		);
 		$this->assertSame($expected, $severities);
 	}//end testOnlyKnownChecksWithKnownSeveritiesAreOverridden()
+
+	/**
+	 * The configured profile keys are the known document types, `default` always among them.
+	 *
+	 * @spec openspec/changes/flow-operations/tasks.md#task-2.2
+	 *
+	 * @return void
+	 */
+	public function testTheConfiguredKeysAreTheKnownDocumentTypes(): void {
+		$this->assertSame(['besluit', 'brief', 'default'], $this->resolver('{"besluit":{},"brief":{"allowedMimes":[]}}')->documentTypes());
+		$this->assertSame(['besluit', 'default'], $this->resolver('{"besluit":{},"default":{}}')->documentTypes());
+		$this->assertSame(['default'], $this->resolver('not json')->documentTypes());
+	}//end testTheConfiguredKeysAreTheKnownDocumentTypes()
 }//end class
