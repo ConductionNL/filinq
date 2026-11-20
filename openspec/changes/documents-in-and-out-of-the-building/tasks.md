@@ -258,7 +258,10 @@
   - WHAT WAITS: the declaration itself, once somebody decides whether to add a
     window to the dialect or leave collapsing to the app. Not guessed at here.
 
-- [ ] 4.3 Call `lib/Service/DocumentDownloadRecorder.php` from every download path (file download, public share link, case archive) so a download is recorded and its notification queued (row rec-download-alert, REQ-DIO-06). Verify: PHPUnit per route that one download record is written.
+- [x] 4.3 Call `lib/Service/DocumentDownloadRecorder.php` from every download path (file download, public share link, case archive) so a download is recorded and its notification queued (row rec-download-alert, REQ-DIO-06). Verify: PHPUnit per route that one download record is written.
+  - Built: `lib/Service/Audit/DocumentDownloadLog.php` builds the record with `DocumentDownloadRecorder` and writes it as a `downloaded` entry of the document's trail (`DocumentActionAudit`); a failed write is logged and never fails the download. Wired into filinq's two routes that serve a file it owns, after the bytes are read: `version#download` (route `ui`, the version timestamp) and `publication#download` (the published copy). Tests per route: `VersionControllerTest::testAVersionDownloadIsRecordedOnce` / `testAFailedVersionDownloadIsNotRecorded`, `PublicationControllerTest::testAServedCopyIsRecordedOnce`; the service in `tests/unit/Service/Audit/DocumentDownloadLogTest.php`.
+  - Not a file download: `printJob#download` serves rendered print output from app data and `print#downloadPdfA` renders on the fly, so neither has a file id to record. filinq has no public share or case archive route of its own; the platform routes stay as named in 4.1.
+  - The notification half waits on 4.2's declaration: the record is written, nothing is enqueued yet.
 
 ## 5. Quality
 
