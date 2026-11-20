@@ -71,6 +71,10 @@ interface BatchAnonymizeServiceInterface {
 	 *
 	 * @throws Exception When the batch cannot be found.
 	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$sanitize` is the caller's per-run choice to also
+	 * sanitize the delivered output, an option of the same run (like the output format), not a second
+	 * responsibility.
+	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
@@ -103,6 +107,10 @@ interface BatchAnonymizeServiceInterface {
 	 * @return array<string, mixed> Summary of the run — see runBatch().
 	 *
 	 * @throws Exception When the batch cannot be found.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$sanitize` is the caller's per-run choice to also
+	 * sanitize the delivered output, an option of the same run (like the output format), not a second
+	 * responsibility.
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization

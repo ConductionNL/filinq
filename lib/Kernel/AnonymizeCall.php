@@ -47,6 +47,10 @@ final class AnonymizeCall {
 	 * @param bool                 $sanitize     Whether the delivered artifact is sanitized
 	 *
 	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$sanitize` is the caller's per-run choice to also
+	 * sanitize the delivered output, an option of the same run (like the output format), not a second
+	 * responsibility.
 	 */
 	public function __construct(
 		public readonly int $fileId,
