@@ -133,6 +133,9 @@ class WaarmerkVerifier implements WaarmerkVerifierInterface {
 	 * @param string $code The normalised code.
 	 *
 	 * @return array<string, mixed>|null
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) WaarmerkService is a stateless helper or named
+	 * constructor; an instance would add nothing.
 	 */
 	private function lookup(string $code): ?array {
 		if (WaarmerkService::isWellFormedCode(code: $code) === false) {
@@ -153,6 +156,10 @@ class WaarmerkVerifier implements WaarmerkVerifierInterface {
 	 * @param string $signerPem The signer certificate.
 	 *
 	 * @return bool
+	 *
+	 * @SuppressWarnings(PHPMD.ErrorControlOperator) OpenSSL reports failure through the return value,
+	 * which is checked; the PHP warning it would also raise adds nothing, and a temp-file unlink is
+	 * best-effort cleanup.
 	 */
 	private function expired(string $signerPem): bool {
 		$validTo = (int) (@openssl_x509_parse($signerPem)['validTo_time_t'] ?? 0);
@@ -191,6 +198,9 @@ class WaarmerkVerifier implements WaarmerkVerifierInterface {
 	 * @param array<string, mixed>|null $revocation The seal, only for a revoked answer.
 	 *
 	 * @return array<string, mixed>
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The flag is one fact of the verdict (whether the
+	 * signer certificate has expired), not a second responsibility.
 	 */
 	private function answer(string $status, ?array $seal = null, bool $expired = false, ?array $revocation = null): array {
 		$answer = [

@@ -22,7 +22,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Woo;
 
-use DateTimeImmutable;
 use OCA\Filinq\Exception\WooDecisionContractException;
 use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
 
@@ -92,6 +91,10 @@ class WooDecisionContextBuilder {
 	 * @return array<string, mixed> The decision for the templates.
 	 *
 	 * @throws WooDecisionContractException Naming every problem found.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The flag only widens which grounds count as
+	 * known (a redraft may cite a retired one); every other check is the same, so splitting
+	 * build() in two would duplicate the whole contract check.
 	 *
 	 * @spec openspec/changes/woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-woo-decision-data-contract-is-checked-before-anything-is-rendered-req-ddwrw-010
 	 */
@@ -236,7 +239,7 @@ class WooDecisionContextBuilder {
 			return false;
 		}
 
-		return DateTimeImmutable::createFromFormat('!Y-m-d', substr($value, 0, 10)) !== false
-			&& DateTimeImmutable::createFromFormat('!Y-m-d', substr($value, 0, 10))->format('Y-m-d') === substr($value, 0, 10);
+		[$year, $month, $day] = array_map(callback: 'intval', array: explode(separator: '-', string: substr(string: $value, offset: 0, length: 10)));
+		return checkdate(month: $month, day: $day, year: $year);
 	}//end isDate()
 }//end class
