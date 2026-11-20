@@ -247,6 +247,48 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		scope: 'create'
 	)]
 	public function generate(string $templateId, array $dataRefs, array $options = []): array {
+		$letter = $this->compose(templateId: $templateId, dataRefs: $dataRefs, options: $options);
+
+		// Log to correspondence register.
+		$registerEntry = $this->logCorrespondence(
+			request: new CorrespondenceRequest(templateId: $templateId, options: $options),
+			outcome: [
+				'templateName' => ($letter['template']['name'] ?? ''),
+				'dataRefs'     => $dataRefs,
+				'status'       => 'generated',
+				'errorMessage' => null,
+			]
+		);
+
+		return [
+			'content' => $letter['content'],
+			'format' => $letter['format'],
+			'warnings' => $letter['warnings'],
+			'registerEntry' => $registerEntry,
+		];
+
+	}//end generate()
+
+	/**
+	 * Compose one letter without logging it.
+	 *
+	 * Fetches the template, resolves the data, applies the huisstijl, renders
+	 * and produces the output. {@see generate()} logs what this returns; a send
+	 * by email composes through here and logs the send instead, so one sent
+	 * letter is one correspondence entry.
+	 *
+	 * @param string $templateId The UUID of the template to use
+	 * @param array $dataRefs Array of data references with register/schema/id
+	 * @param array $options Options: format (pdf|docx|html|email), huisstijlId, listRefs, adHocData, userId
+	 *
+	 * @return array{content: string, format: string, warnings: array, template: array}
+	 *
+	 * @throws Exception If composing fails
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
+	 * @spec openspec/changes/letter-email-sending/tasks.md#task-1
+	 */
+	public function compose(string $templateId, array $dataRefs, array $options = []): array {
 		$format = $options['format'] ?? $this->getDefaultFormat();
 		$this->validateFormat(format: $format);
 
@@ -271,7 +313,12 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		}
 
 		// Apply huisstijl if configured.
-		$huisstijl = $this->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
+		$requester = null;
+		if (is_string($options['userId'] ?? null) === true) {
+			$requester = $options['userId'];
+		}
+
+		$huisstijl = $this->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null), uid: $requester);
 		$pdfOptions = $this->buildPdfOptions(
 			template: $template,
 			huisstijl: $huisstijl,
@@ -297,25 +344,89 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 			pdfOptions: $pdfOptions
 		);
 
-		// Log to correspondence register.
-		$registerEntry = $this->logCorrespondence(
-			request: new CorrespondenceRequest(templateId: $templateId, options: $options),
-			outcome: [
-				'templateName' => ($template['name'] ?? ''),
-				'dataRefs'     => $dataRefs,
-				'status'       => 'generated',
-				'errorMessage' => null,
-			]
-		);
-
 		return [
 			'content' => $content,
 			'format' => $format,
 			'warnings' => $warnings,
-			'registerEntry' => $registerEntry,
+			'template' => $template,
 		];
 
-	}//end generate()
+	}//end compose()
+
+	/**
+	 * Log a letter sent by email, or a send that failed.
+	 *
+	 * The same correspondence entry {@see generate()} writes, in format
+	 * `email`, with status `sent` (and sentAt, sentTo, sentBy in `extra`) or
+	 * `failed` with the reason.
+	 *
+	 * @param string $templateId The template the letter was composed from.
+	 * @param string $templateName The template's name.
+	 * @param array $dataRefs The data references, the first being the recipient.
+	 * @param array $options The send options: userId, recipientType, caseReference.
+	 * @param array{status: string, errorMessage?: string|null, extra?: array<string, mixed>} $sending What the send did.
+	 *
+	 * @return array The created correspondence register entry, or [] when logging failed.
+	 *
+	 * @spec openspec/changes/letter-email-sending/tasks.md#task-1
+	 */
+	public function logSent(
+		string $templateId,
+		string $templateName,
+		array $dataRefs,
+		array $options,
+		array $sending,
+	): array {
+		return $this->logCorrespondence(
+			request: new CorrespondenceRequest(templateId: $templateId, options: (['format' => 'email'] + $options)),
+			outcome: [
+				'templateName' => $templateName,
+				'dataRefs' => $dataRefs,
+				'status' => $sending['status'],
+				'errorMessage' => ($sending['errorMessage'] ?? null),
+				'extra' => ($sending['extra'] ?? []),
+			]
+		);
+
+	}//end logSent()
+
+	/**
+	 * Log a letter finished from a draft the clerk edited.
+	 *
+	 * The same correspondence entry {@see generate()} writes, through the same
+	 * {@see logCorrespondence()}, plus the draft it came from and who edited it.
+	 *
+	 * @param string $templateId The template the draft was rendered from.
+	 * @param string $templateName The template's name.
+	 * @param array $dataRefs The data references the draft was rendered with.
+	 * @param array $options The generation options: format, userId, recipientType, caseReference.
+	 * @param string $draftId The documentDraft the letter was finished from.
+	 * @param string $editedBy The user who edited and finished it.
+	 *
+	 * @return array The created correspondence register entry, or [] when logging failed.
+	 *
+	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 */
+	public function logFinishedDraft(
+		string $templateId,
+		string $templateName,
+		array $dataRefs,
+		array $options,
+		string $draftId,
+		string $editedBy,
+	): array {
+		return $this->logCorrespondence(
+			request: new CorrespondenceRequest(templateId: $templateId, options: $options),
+			outcome: [
+				'templateName' => $templateName,
+				'dataRefs' => $dataRefs,
+				'status' => 'generated',
+				'errorMessage' => null,
+				'extra' => ['draftId' => $draftId, 'editedBy' => $editedBy],
+			]
+		);
+
+	}//end logFinishedDraft()
 
 	/**
 	 * Generate correspondence for a batch of recipients
@@ -578,15 +689,20 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	/**
 	 * Load huisstijl configuration from OpenRegister
 	 *
+	 * Without an id the managed house style of the user's thematiq token set
+	 * applies; a named id always wins.
+	 *
 	 * @param string|null $huisstijlId Optional specific huisstijl UUID
+	 * @param string|null $uid The requesting user; null for the signed-in user
 	 *
 	 * @return array|null The huisstijl configuration or null if not found
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-huisstijl-default-configuration
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
-	private function loadHuisstijl(?string $huisstijlId): ?array {
-		if ($huisstijlId === null) {
-			return null;
+	private function loadHuisstijl(?string $huisstijlId, ?string $uid = null): ?array {
+		if ($huisstijlId === null || $huisstijlId === '') {
+			return $this->managedHuisstijl(uid: $uid);
 		}
 
 		try {
@@ -618,6 +734,30 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	}//end loadHuisstijl()
 
 	/**
+	 * The managed house style of the user's token set, or null without thematiq.
+	 *
+	 * @param string|null $uid The requesting user; null for the signed-in user
+	 *
+	 * @return array|null The managed house style
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 */
+	private function managedHuisstijl(?string $uid): ?array {
+		try {
+			$sync = $this->container->get(HuisstijlProfileSync::class);
+		} catch (\Throwable) {
+			return null;
+		}
+
+		if (($sync instanceof HuisstijlProfileSync) === false) {
+			return null;
+		}
+
+		return $sync->syncFor(uid: $uid);
+
+	}//end managedHuisstijl()
+
+	/**
 	 * Build PDF options from template, huisstijl, and request options
 	 *
 	 * @param array $template The template object
@@ -638,6 +778,9 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		if ($huisstijl !== null && isset($huisstijl['defaultMargins']) === true) {
 			$pdfOptions['margin'] = $huisstijl['defaultMargins'];
 		}
+
+		// The house style's fonts, and its cover when the template asks for one.
+		$pdfOptions = array_merge($pdfOptions, (new HuisstijlProfileMapper())->pdfAssets(template: $template, huisstijl: $huisstijl));
 
 		// Request options override.
 		if (isset($options['pdfOptions']) === true) {
@@ -857,7 +1000,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 			'status' => $outcome['status'],
 			'generatedBy' => $options['userId'] ?? '',
 			'errorMessage' => $outcome['errorMessage'],
-		];
+		] + ($outcome['extra'] ?? []);
 	}//end correspondenceEntry()
 
 	/**

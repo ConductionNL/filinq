@@ -38,6 +38,11 @@
   surface probe assertion rather than a one-off grep).
 - [ ] 3.4 Component/integration tests: leaves render when their apps are enabled, hidden
   when absent; no second write path for `deadline` / `objectionDeadline` / `fileId`.
+  Partial: `src/sidebars/RecordLeafSidebar.spec.js` (Jest, 6 tests) pins Filinq's host: the
+  registry sidebar gets the published record with the registry on, nothing renders for an
+  unpublished record, and open/close writes back into the shared state. A leaf rendering
+  through the library's real `CnObjectSidebar` still has no runner: the library's CommonJS
+  build requires raw `.vue` files that this Jest setup does not transform.
 - [x] 3.5 CHANGELOG entry.
 
 ## What this change did NOT do, and why

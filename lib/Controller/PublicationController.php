@@ -21,14 +21,19 @@ namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Controller\Support\PublicationFlow;
 use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
 use OCA\Filinq\Kernel\Contracts\OpenCatalogiPlatformInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationAccessInterface;
+use OCA\Filinq\Service\Audit\DocumentDownloadLog;
 use OCA\Filinq\Service\Publication\DiwooMissingFields;
 use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\AppFramework\Http\Response;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -59,6 +64,8 @@ class PublicationController extends Controller {
 	 * @param PublicationAccessInterface          $access   Who may act
 	 * @param IUserSession               $session  The caller
 	 * @param LoggerInterface            $logger   Logger
+	 * @param DownloadAgreementGateInterface|null $agreements The download conditions (REQ-RWB-04)
+	 * @param DocumentDownloadLog|null            $downloads  Records each served copy in its trail (REQ-DIO-06); null records nothing
 	 *
 	 * @return void
 	 */
@@ -69,6 +76,8 @@ class PublicationController extends Controller {
 		private readonly PublicationAccessInterface $access,
 		private readonly IUserSession $session,
 		private readonly LoggerInterface $logger,
+		private readonly ?DownloadAgreementGateInterface $agreements = null,
+		private readonly ?DocumentDownloadLog $downloads = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -101,6 +110,129 @@ class PublicationController extends Controller {
 		return new JSONResponse(['results' => $results, 'platformAvailable' => $this->platform->available()]);
 
 	}//end index()
+
+	/**
+	 * The publications the caller can see that must be published actively,
+	 * each saying whether it is published and what still blocks it.
+	 *
+	 * @return JSONResponse {results: [{record, published, blockers}], categories: string[]}
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
+	 */
+	#[NoAdminRequired]
+	public function active(): JSONResponse {
+		if ($this->flow->active === null) {
+			return new JSONResponse(['results' => [], 'categories' => []]);
+		}
+
+		$uid = $this->uid();
+		$records = [];
+		foreach ($this->flow->store->listRecords() as $record) {
+			if ($this->access->maySee(uid: $uid, fileId: (string) ($record['documentFileRef'] ?? '')) === true) {
+				$records[] = $this->flow->pipeline->sync(record: $record);
+			}
+		}
+
+		return new JSONResponse(
+			[
+				'results' => $this->flow->active->entries(records: $records),
+				'categories' => $this->flow->active->categories(),
+			]
+		);
+
+	}//end active()
+
+	/**
+	 * Download the published copy of a publication, once the caller accepted
+	 * the download agreement in force for it.
+	 *
+	 * The agreement is checked on the published copy and on its source
+	 * document; either one carrying terms the caller has not accepted in their
+	 * current version answers 409 with the terms to show, and no file is served.
+	 *
+	 * @param string $id The record
+	 *
+	 * @return Response The file, 404 when not visible or not published, 409 with the agreement to accept
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	#[NoAdminRequired]
+	#[NoCSRFRequired]
+	public function download(string $id): Response {
+		$record = $this->readable(id: $id);
+		$copy = $this->publishedCopy(record: $record);
+		if ($record === null || $copy === '') {
+			return $this->forbidden();
+		}
+
+		if ($this->agreements === null) {
+			return new JSONResponse(['error' => 'Downloads are not available'], Http::STATUS_SERVICE_UNAVAILABLE);
+		}
+
+		$uid = $this->uid();
+		$unaccepted = $this->unacceptedAgreement(agreements: $this->agreements, documents: [$copy, (string) ($record['documentFileRef'] ?? '')], uid: $uid);
+		if ($unaccepted !== null) {
+			return $unaccepted;
+		}
+
+		try {
+			$file = $this->platform->readCopy(fileId: $copy, actor: $uid);
+			$response = new DataDownloadResponse($file->getContent(), $file->getName(), $file->getMimeType());
+			$this->downloads?->downloaded(fileId: (int) $file->getId(), version: '', route: DocumentDownloadLog::ROUTE_UI);
+
+			return $response;
+		} catch (Throwable $e) {
+			$this->logger->warning('[PublicationController] the published copy could not be read', ['record' => $id, 'error' => $e->getMessage()]);
+
+			return $this->forbidden();
+		}
+
+	}//end download()
+
+	/**
+	 * The published copy of a record that has been handed off or published, or '' when there is none.
+	 *
+	 * @param array<string, mixed>|null $record The record, or null when not visible
+	 *
+	 * @return string The published copy's file reference, or ''
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	private function publishedCopy(?array $record): string {
+		if ($record === null || in_array($record['status'] ?? '', ['handed_off', 'published'], true) === false) {
+			return '';
+		}
+
+		return (string) ($record['redactedFileRef'] ?? '');
+
+	}//end publishedCopy()
+
+	/**
+	 * The 409 answer for the first document whose download agreement the caller has not accepted, or null.
+	 *
+	 * @param DownloadAgreementGateInterface $agreements The download conditions
+	 * @param list<string>                   $documents  The published copy and its source document
+	 * @param string                         $uid        The caller
+	 *
+	 * @return JSONResponse|null 409 with the agreement to accept, or null when every agreement is accepted
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	private function unacceptedAgreement(DownloadAgreementGateInterface $agreements, array $documents, string $uid): ?JSONResponse {
+		foreach (array_unique($documents) as $document) {
+			if ($document === '') {
+				continue;
+			}
+
+			$decision = $agreements->check(document: $document, person: $uid);
+			if (($decision['mayDownload'] ?? false) !== true) {
+				return new JSONResponse($decision + ['document' => $document], Http::STATUS_CONFLICT);
+			}
+		}
+
+		return null;
+
+	}//end unacceptedAgreement()
 
 	/**
 	 * The Woo information categories to choose from.

@@ -13,6 +13,7 @@
         "double ProhibitionPolicyService",
         "double RedactionOutputGuard",
         null,
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -26,6 +27,7 @@
         "double DocumentAnonymizeRunner",
         "double EntityDetectionService",
         "double FileEntityStatsService",
+        "double ImageRedactionService",
         "double LoggerInterface",
         "double OcrExtractionFallback",
         "double OpenRegisterServiceLocator",
@@ -472,8 +474,10 @@
         }
     ],
     "IntakeService defaults": [
+        "double ContentHasher",
         "double IUserSession",
         "double IntakeAuthorizationGate",
+        "double IntakeDeadlines",
         "double IntakeDefaultRuleService",
         "double IntakeFilePlacement",
         "double IntakeOcrQueue",
@@ -486,8 +490,10 @@
         }
     ],
     "IntakeService given": [
+        "double ContentHasher",
         "double IUserSession",
         "double IntakeAuthorizationGate",
+        "double IntakeDeadlines",
         "double IntakeDefaultRuleService",
         "double IntakeFilePlacement",
         "double IntakeOcrQueue",
@@ -529,6 +535,7 @@
         "double SigningConclusionEmitter",
         "double SigningRequestValidator",
         null,
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -541,6 +548,7 @@
         "double SigningAssuranceGate",
         "double SigningAuditService",
         "double SigningConclusionEmitter",
+        "double SigningDelegationService",
         "double SigningMandateService",
         "double SigningRequestValidator",
         {

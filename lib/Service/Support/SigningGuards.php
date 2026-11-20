@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service\Support;
 
 use OCA\Filinq\Service\SignerAuth\SigningAssuranceGate;
 use OCA\Filinq\Service\Signing\GuardianConsentGuard;
+use OCA\Filinq\Service\Signing\SigningDelegationService;
 use OCA\Filinq\Service\SigningMandateService;
 use OCA\Filinq\Service\SigningRequestValidator;
 
@@ -55,6 +56,7 @@ final class SigningGuards {
 	 * @param GuardianConsentGuard       $consentGuard   The guardian rule for signers under the age of consent (REQ-DDSIR-008 to 010)
 	 * @param SigningAssuranceGate       $assuranceGate  The identity gate of every signing act (REQ-DDSIR-003)
 	 * @param SigningMandateService|null $mandateService The consuming app's per-type mandate for a direct signing attempt (REQ-SFC-04)
+	 * @param SigningDelegationService|null $delegations Delegated signing authority (REQ-SCR-003); null refuses every delegated signature
 	 *
 	 * @return void
 	 *
@@ -65,6 +67,7 @@ final class SigningGuards {
 		public readonly GuardianConsentGuard $consentGuard,
 		public readonly SigningAssuranceGate $assuranceGate,
 		public readonly ?SigningMandateService $mandateService = null,
+		public readonly ?SigningDelegationService $delegations = null,
 	) {
 
 	}//end __construct()

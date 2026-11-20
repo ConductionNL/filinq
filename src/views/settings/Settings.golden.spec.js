@@ -35,9 +35,11 @@ jest.mock('vue-material-design-icons/Plus.vue', () => ({}))
 jest.mock('vue-material-design-icons/Restart.vue', () => ({}))
 jest.mock('../../components/AnonymiserBackendWarning.vue', () => ({}))
 jest.mock('./EmailIngestionSettings.vue', () => ({}))
+jest.mock('./MailArchiveImportSettings.vue', () => ({}))
 jest.mock('./EntityTypeSelector.vue', () => ({}))
 jest.mock('./PageLayoutSettings.vue', () => ({}))
 jest.mock('./SignerIdentitySettings.vue', () => ({}))
+jest.mock('./SigningSourcesSettings.vue', () => ({}))
 jest.mock('../../services/conformance.js', () => ({
 	fetchValidatorStatus: () => new Promise(() => {}),
 }))

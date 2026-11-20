@@ -8,8 +8,8 @@
   - GIVEN a dossier member whose file id does not resolve THEN one `missing` finding naming the dossier
   - GIVEN a link whose source is gone THEN one `orphaned` finding
   - GIVEN a clean set THEN a stored run with zero counts
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 2: Nightly job, occ command and notification
 - **spec_ref**: `openspec/changes/whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02`
@@ -17,8 +17,9 @@
 - **acceptance_criteria**:
   - GIVEN a run with three `changed` findings THEN one notification per administrator
   - GIVEN a clean run THEN no notification and the command exits 0
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
+- Built: `IntegrityScanJob` (daily, trigger `nightly`, one notification per member of `admin` for a run with findings, none for a clean or failed run) and `IntegrityScanNotifier` (counts per kind, link to Filinq's admin section), registered in `info.xml` and `RegistrationBootstrap`; the occ command came with task 1's commit. PHPUnit `IntegrityScanJobTest`, `IntegrityScanNotifierTest`, `IntegrityScanCommandTest`.
 
 ### Task 3: The admin section reads and starts a scan
 - **spec_ref**: `openspec/changes/whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02`
@@ -26,8 +27,8 @@
 - **acceptance_criteria**:
   - GIVEN a non-administrator WHEN the start endpoint is called THEN 403 and no run
   - GIVEN a stored run with two missing files THEN the section shows "2 ontbrekend" and two links
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 4: Verification and the row
 - **files**: `tests/e2e/spec-coverage/whole-collection-integrity-scan.spec.ts` (seed a dossier with a deleted member, run "Nu controleren", read the finding), `openspec/parity/capabilities.json`

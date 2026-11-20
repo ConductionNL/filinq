@@ -151,6 +151,29 @@ interface IntakeRepositoryInterface {
 	public function findByUuid(string $uuid): ?array;
 
 	/**
+	 * The earliest intake document with this content that was not rejected.
+	 *
+	 * @param string $contentHash The SHA-256 of the file's bytes.
+	 *
+	 * @return array<string, mixed>|null The document, or null.
+	 *
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-an-arrival-whose-content-came-before-is-marked-never-refused-req-iws-003
+	 */
+	public function findByContentHash(string $contentHash): ?array;
+
+	/**
+	 * Every document past its handling deadline that is not handled yet.
+	 *
+	 * @param string                $today       Today as Y-m-d.
+	 * @param array<string, string> $handledWhen Rule uuid => `assigned` or `answered`.
+	 *
+	 * @return array<int, array<string, mixed>> The overdue documents.
+	 *
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+	 */
+	public function findOverdue(string $today, array $handledWhen): array;
+
+	/**
 	 * Write an intake document, creating it when its uuid is not known yet.
 	 *
 	 * @param array<string, mixed> $document The document to store.

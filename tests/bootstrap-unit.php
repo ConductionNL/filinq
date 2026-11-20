@@ -112,6 +112,17 @@ if (is_file($ocpCryptoPath) === true && interface_exists('OCP\\Security\\ICrypto
 // The real contacts manager contract (contract-lifecycle-management): contract
 // parties take their names from contacts, and a double of the real interface
 // cannot answer a search Nextcloud would not.
+// letter-email-sending: CorrespondenceSendService talks to Nextcloud's mailer.
+$ocpMailDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Mail';
+if (is_dir($ocpMailDir) === true) {
+	foreach (['IAttachment', 'IEMailTemplate', 'IMessage', 'IMailer'] as $ocpMailContract) {
+		$ocpMailPath = $ocpMailDir . '/' . $ocpMailContract . '.php';
+		if (is_file($ocpMailPath) === true && interface_exists('OCP\\Mail\\' . $ocpMailContract) === false) {
+			require_once $ocpMailPath;
+		}
+	}
+}
+
 $ocpContactsPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Contacts/IManager.php';
 if (is_file($ocpContactsPath) === true && interface_exists('OCP\\Contacts\\IManager') === false) {
 	require_once $ocpContactsPath;
@@ -312,6 +323,29 @@ foreach (['Share/IShare', 'Share/IManager'] as $ocpPath) {
 	$ocpFile = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpPath . '.php';
 	$ocpName = 'OCP\\' . str_replace('/', '\\', $ocpPath);
 	if (is_file($ocpFile) === true && interface_exists($ocpName) === false) {
+		require_once $ocpFile;
+	}
+}
+
+// The real OCP file node events and system tag contracts the PDF/UA attach
+// listener, its job and the verdict tagger use (pdfua-verapdf-matterhorn).
+foreach (
+	[
+		'EventDispatcher/IWebhookCompatibleEvent',
+		'EventDispatcher/JsonSerializer',
+		'Files/Events/Node/AbstractNodeEvent',
+		'Files/Events/Node/NodeCreatedEvent',
+		'Files/Events/Node/NodeWrittenEvent',
+		'SystemTag/ISystemTag',
+		'SystemTag/ISystemTagManager',
+		'SystemTag/ISystemTagObjectMapper',
+		'SystemTag/TagNotFoundException',
+		'SystemTag/TagAlreadyExistsException',
+	] as $ocpPath
+) {
+	$ocpFile = __DIR__ . '/../vendor/nextcloud/ocp/OCP/' . $ocpPath . '.php';
+	$ocpName = 'OCP\\' . str_replace('/', '\\', $ocpPath);
+	if (is_file($ocpFile) === true && class_exists($ocpName) === false && interface_exists($ocpName) === false) {
 		require_once $ocpFile;
 	}
 }
