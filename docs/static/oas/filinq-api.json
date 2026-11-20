@@ -8623,6 +8623,78 @@
                 "x-provided-by": "openregister"
             }
         },
+        "/settings/integrity-scan": {
+            "get": {
+                "operationId": "settings-integrity-scan-last",
+                "summary": "The last stored integrity scan run",
+                "description": "The last stored run of the whole-collection integrity scan: its times, the records checked, the count of missing, changed and orphaned files, and the findings. Administrators only.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`run`: the last run, or null when no scan ran yet.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "settings-integrity-scan-start",
+                "summary": "Start an integrity scan now",
+                "description": "Scans every dossier, final document and anonymisation link now and stores the run. A run with missing or changed files notifies the administrators. Administrators only; a refused caller starts no scan.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`run`: the run just stored.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
         "/settings/signer-identity": {
             "get": {
                 "operationId": "signer-identity-settings-index",

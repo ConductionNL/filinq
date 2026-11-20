@@ -3578,7 +3578,51 @@
         "Separator sheet with QR code": "Separator sheet with QR code",
         "The scanner profile could not be added.": "The scanner profile could not be added.",
         "The scanner profiles could not be read.": "The scanner profiles could not be read.",
-        "How the batch is cut: on the QR separator sheets filinq printed, on blank pages, or not at all (none: the whole batch is one document).": "How the batch is cut: on the QR separator sheets filinq printed, on blank pages, or not at all (none: the whole batch is one document)."
+        "How the batch is cut: on the QR separator sheets filinq printed, on blank pages, or not at all (none: the whole batch is one document).": "How the batch is cut: on the QR separator sheets filinq printed, on blank pages, or not at all (none: the whole batch is one document).",
+        "Anonymised copies whose source document is gone.": "Anonymised copies whose source document is gone.",
+        "Changed": "Changed",
+        "Each finding: its kind, the record's schema and id, its name and the file id.": "Each finding: its kind, the record's schema and id, its name and the file id.",
+        "Final documents whose file no longer matches the frozen checksum.": "Final documents whose file no longer matches the frozen checksum.",
+        "Findings": "Findings",
+        "How many records the run looked at.": "How many records the run looked at.",
+        "Integrity scan": "Integrity scan",
+        "Missing": "Missing",
+        "Orphaned": "Orphaned",
+        "Records checked": "Records checked",
+        "Records whose file no longer resolves.": "Records whose file no longer resolves.",
+        "Started at": "Started at",
+        "What started the run: the nightly job, the occ command or an administrator.": "What started the run: the nightly job, the occ command or an administrator.",
+        "When the run started.": "When the run started.",
+        "Integrity check": "Integrity check",
+        "The integrity check found %1$s missing, %2$s changed and %3$s orphaned files.": "The integrity check found %1$s missing, %2$s changed and %3$s orphaned files.",
+        "Every night filinq checks every dossier, final document and anonymised copy for files that are missing, changed or orphaned. The check only reads; it changes no file.": "Every night filinq checks every dossier, final document and anonymised copy for files that are missing, changed or orphaned. The check only reads; it changes no file.",
+        "No integrity scan has run yet.": "No integrity scan has run yet.",
+        "Last check: {time}": "Last check: {time}",
+        "%n record checked": [
+            "%n record checked",
+            "%n records checked"
+        ],
+        "%n records checked": "%n records checked",
+        "%n missing file": [
+            "%n missing file",
+            "%n missing files"
+        ],
+        "%n missing files": "%n missing files",
+        "%n changed file": [
+            "%n changed file",
+            "%n changed files"
+        ],
+        "%n changed files": "%n changed files",
+        "%n orphaned file": [
+            "%n orphaned file",
+            "%n orphaned files"
+        ],
+        "%n orphaned files": "%n orphaned files",
+        "File {fileId}": "File {fileId}",
+        "Check now": "Check now",
+        "The last integrity scan could not be read": "The last integrity scan could not be read",
+        "The integrity scan has finished": "The integrity scan has finished",
+        "The integrity scan could not run": "The integrity scan could not run"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

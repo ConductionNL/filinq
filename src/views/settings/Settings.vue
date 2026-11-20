@@ -764,6 +764,8 @@
 
 		<DocumentWebhooksSection v-if="isAdmin" />
 
+		<IntegrityScanSection v-if="isAdmin" />
+
 		<EmailIngestionSettings v-if="isAdmin" />
 
 		<MailArchiveImportSettings v-if="isAdmin" />
@@ -944,6 +946,7 @@ import DetectionProviderSettings from './DetectionProviderSettings.vue'
 import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
+import IntegrityScanSection from './IntegrityScanSection.vue'
 import MailArchiveImportSettings from './MailArchiveImportSettings.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
 import RefusalGroundsSource from './RefusalGroundsSource.vue'
@@ -1062,6 +1065,7 @@ export default {
 	name: 'Settings',
 	components: {
 		DocumentWebhooksSection,
+		IntegrityScanSection,
 		RefusalGroundsSource,
 		NcSettingsSection,
 		NcNoteCard,
