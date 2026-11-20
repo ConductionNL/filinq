@@ -3191,7 +3191,7 @@
                 "slug": "signingRequest",
                 "title": "Signing Request",
                 "description": "Ondertekeningsverzoek voor een document. DEPRECATED v1.2.0: bespoke signing approval-chain superseded by OR task sequences per openspec/changes/migrate-signing-to-or-tasks.",
-                "version": "1.13.0",
+                "version": "1.14.0",
                 "summary": "",
                 "icon": "FileSign",
                 "required": [
@@ -3782,7 +3782,7 @@
                 "slug": "signerRecord",
                 "title": "Signer Record",
                 "description": "Individueel ondertekeningsrecord",
-                "version": "1.9.0",
+                "version": "1.10.0",
                 "summary": "",
                 "icon": "AccountEdit",
                 "required": [
