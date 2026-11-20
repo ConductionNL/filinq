@@ -72,12 +72,14 @@
         "double LoggerInterface",
         "double ObjectionDeadlineChecker",
         "double PolicyMatchService",
+        null,
         {
             "distinct objects built by the class": 0
         }
     ],
     "ConsentService given": [
         "double ConsentRecordWriter",
+        "double ConsentRequestSender",
         "double ConsentScopeValidator",
         "double ConsentUpdateHandler",
         "double LoggerInterface",

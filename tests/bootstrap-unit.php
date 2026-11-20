@@ -354,6 +354,19 @@ foreach (
 	}
 }
 
+// Any other OCP interface (OCP\Mail\IMailer, ...) from the OCP package, which
+// does not classmap-autoload. Only reached for a class no stub above declared.
+spl_autoload_register(static function (string $class): void {
+	if (str_starts_with($class, 'OCP\\') === false) {
+		return;
+	}
+
+	$file = __DIR__ . '/../vendor/nextcloud/ocp/' . str_replace('\\', '/', $class) . '.php';
+	if (is_file($file) === true) {
+		require_once $file;
+	}
+});
+
 // OpenRegister's object-service option objects, from main, when OpenRegister itself is absent.
 spl_autoload_register(
 	static function (string $class): void {

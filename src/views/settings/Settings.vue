@@ -780,6 +780,8 @@
 		<SignerIdentitySettings v-if="isAdmin" />
 		<SigningSourcesSettings v-if="isAdmin" />
 		<CaseSystemDeliverySettings v-if="isAdmin" />
+		<!-- Finality rules (finish-half-built-capabilities 3.2): the caller of POST /api/document-finality-rules -->
+		<DocumentFinalityRuleSettings v-if="isAdmin" />
 		<BridgeSourcesSettings v-if="isAdmin" />
 
 		<!-- Waarmerk organisation certificate (document-waarmerk-certification): its own admin endpoint -->
@@ -965,6 +967,7 @@ import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.
 import BridgeSourcesSettings from './BridgeSourcesSettings.vue'
 import CaseSystemDeliverySettings from './CaseSystemDeliverySettings.vue'
 import DetectionProviderSettings from './DetectionProviderSettings.vue'
+import DocumentFinalityRuleSettings from './DocumentFinalityRuleSettings.vue'
 import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
@@ -1114,6 +1117,7 @@ export default {
 		SigningSourcesSettings,
 		BridgeSourcesSettings,
 		CaseSystemDeliverySettings,
+		DocumentFinalityRuleSettings,
 		WaarmerkSettings,
 	},
 
