@@ -93,7 +93,7 @@ class ListenerRegistrarTest extends TestCase {
 
 		(new ListenerRegistrar())->register($context);
 
-		self::assertCount(34, $registered);
+		self::assertCount(36, $registered);
 		self::assertSame(['OCA\Filinq\Event\IntakeDocumentReceivedEvent', 'OCA\Filinq\EventListener\IntakeDocumentReceivedListener'], $registered[0]);
 		self::assertSame(
 			[
@@ -130,6 +130,8 @@ class ListenerRegistrarTest extends TestCase {
 				['OCP\Files\Events\Node\NodeWrittenEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
 				['OCP\Files\Events\Node\BeforeNodeDeletedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
 				['OCP\Share\Events\ShareCreatedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
+				['OCA\Filinq\Event\Webhook\DocumentSignedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
+				['OCP\Files\Events\BeforeDirectFileDownloadEvent', 'OCA\Filinq\EventListener\DocumentDownloadedListener'],
 			],
 			array_slice($registered, 31)
 		);

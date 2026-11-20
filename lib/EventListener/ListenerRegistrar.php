@@ -49,6 +49,7 @@ class ListenerRegistrar {
 		'OCP\Files\Events\Node\NodeWrittenEvent',
 		'OCP\Files\Events\Node\BeforeNodeDeletedEvent',
 		'OCP\Share\Events\ShareCreatedEvent',
+		'OCA\Filinq\Event\Webhook\DocumentSignedEvent',
 	];
 
 	/**
@@ -67,22 +68,17 @@ class ListenerRegistrar {
 		(new DocumentGenerationRegistrar())->register(context: $context);
 		(new PdfUaEventRegistrar())->register(context: $context);
 
-		// A document's edits, deletion and shares go into its audit trail
+		// A document's edits, deletion, shares and completed signing go into its audit trail
 		// (specify-capability-rows, REQ-SCR-007). Named by string, like the
 		// optional peers, so this class keeps its coupling.
 		foreach (self::DOCUMENT_FILE_EVENTS as $fileEvent) {
 			$context->registerEventListener($fileEvent, 'OCA\Filinq\EventListener\DocumentFileActionListener');
 		}
 
-		// A person's download of a document, and a completed signing of one,
-		// go into the same trail (REQ-SCR-007).
+		// A person's direct download of a document goes into the same trail.
 		$context->registerEventListener(
 			'OCP\Files\Events\BeforeDirectFileDownloadEvent',
 			'OCA\Filinq\EventListener\DocumentDownloadedListener'
-		);
-		$context->registerEventListener(
-			'OCA\Filinq\Event\Webhook\DocumentSignedEvent',
-			'OCA\Filinq\EventListener\DocumentSignedAuditListener'
 		);
 
 	}//end register()

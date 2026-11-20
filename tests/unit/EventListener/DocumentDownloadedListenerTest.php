@@ -69,13 +69,13 @@ class DocumentDownloadedListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testADownloadedFileIsDownloaded(): void {
-		$file = $this->createMock(File::class);
-		$file->method('getId')->willReturn(41);
-		$downloads = $this->createMock(DocumentDownloadLog::class);
-		$downloads->expects($this->once())->method('downloaded')->with(fileId: 41, version: '', route: 'files')->willReturn(true);
+		$file = $this->createMock(originalClassName: File::class);
+		$file->expects($this->any())->method(constraint: 'getId')->willReturn(41);
+		$downloads = $this->createMock(originalClassName: DocumentDownloadLog::class);
+		$downloads->expects($this->once())->method('downloaded')->with(fileId: 41, version: '', route: 'files')->willReturn(value: true);
 
 		$this->listener(downloads: $downloads, node: $file, path: 'Cases/letter.pdf')
-			->handle(new BeforeDirectFileDownloadEvent('/Cases/letter.pdf'));
+			->handle(event: new BeforeDirectFileDownloadEvent(path: '/Cases/letter.pdf'));
 
 	}//end testADownloadedFileIsDownloaded()
 
@@ -85,12 +85,12 @@ class DocumentDownloadedListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testARefusedDownloadIsNotWritten(): void {
-		$downloads = $this->createMock(DocumentDownloadLog::class);
+		$downloads = $this->createMock(originalClassName: DocumentDownloadLog::class);
 		$downloads->expects($this->never())->method('downloaded');
-		$event = new BeforeDirectFileDownloadEvent('/Cases/letter.pdf');
-		$event->setSuccessful(false);
+		$event = new BeforeDirectFileDownloadEvent(path: '/Cases/letter.pdf');
+		$event->setSuccessful(successful: false);
 
-		$this->listener(downloads: $downloads, node: $this->createMock(File::class), path: 'Cases/letter.pdf')->handle($event);
+		$this->listener(downloads: $downloads, node: $this->createMock(originalClassName: File::class), path: 'Cases/letter.pdf')->handle(event: $event);
 
 	}//end testARefusedDownloadIsNotWritten()
 
@@ -100,15 +100,15 @@ class DocumentDownloadedListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testNothingButADownloadedFileIsWritten(): void {
-		$downloads = $this->createMock(DocumentDownloadLog::class);
+		$downloads = $this->createMock(originalClassName: DocumentDownloadLog::class);
 		$downloads->expects($this->never())->method('downloaded');
 
-		$this->listener(downloads: $downloads, node: $this->createMock(Folder::class), path: 'Cases')
-			->handle(new BeforeDirectFileDownloadEvent('/Cases'));
-		$this->listener(downloads: $downloads, node: $this->createMock(File::class), path: '')
-			->handle(new BeforeDirectFileDownloadEvent('/'));
-		$this->listener(downloads: $downloads, node: $this->createMock(File::class), path: 'x')
-			->handle(new Event());
+		$this->listener(downloads: $downloads, node: $this->createMock(originalClassName: Folder::class), path: 'Cases')
+			->handle(event: new BeforeDirectFileDownloadEvent(path: '/Cases'));
+		$this->listener(downloads: $downloads, node: $this->createMock(originalClassName: File::class), path: '')
+			->handle(event: new BeforeDirectFileDownloadEvent(path: '/'));
+		$this->listener(downloads: $downloads, node: $this->createMock(originalClassName: File::class), path: 'x')
+			->handle(event: new Event());
 
 	}//end testNothingButADownloadedFileIsWritten()
 
@@ -118,15 +118,20 @@ class DocumentDownloadedListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testWithoutAUserNothingIsWritten(): void {
-		$downloads = $this->createMock(DocumentDownloadLog::class);
+		$downloads = $this->createMock(originalClassName: DocumentDownloadLog::class);
 		$downloads->expects($this->never())->method('downloaded');
-		$root = $this->createMock(IRootFolder::class);
+		$root = $this->createMock(originalClassName: IRootFolder::class);
 		$root->expects($this->never())->method('getUserFolder');
-		$session = $this->createMock(IUserSession::class);
-		$session->method('getUser')->willReturn(null);
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->expects($this->any())->method(constraint: 'getUser')->willReturn(value: null);
 
-		(new DocumentDownloadedListener($downloads, $root, $session, $this->createMock(LoggerInterface::class)))
-			->handle(new BeforeDirectFileDownloadEvent('/Cases/letter.pdf'));
+		$listener = new DocumentDownloadedListener(
+			downloads: $downloads,
+			rootFolder: $root,
+			userSession: $session,
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
+		$listener->handle(event: new BeforeDirectFileDownloadEvent(path: '/Cases/letter.pdf'));
 
 	}//end testWithoutAUserNothingIsWritten()
 
@@ -136,17 +141,17 @@ class DocumentDownloadedListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnUnresolvablePathIsLogged(): void {
-		$downloads = $this->createMock(DocumentDownloadLog::class);
+		$downloads = $this->createMock(originalClassName: DocumentDownloadLog::class);
 		$downloads->expects($this->never())->method('downloaded');
-		$folder = $this->createMock(Folder::class);
-		$folder->method('get')->willThrowException(new NotFoundException('gone'));
-		$root = $this->createMock(IRootFolder::class);
-		$root->method('getUserFolder')->willReturn($folder);
-		$logger = $this->createMock(LoggerInterface::class);
+		$folder = $this->createMock(originalClassName: Folder::class);
+		$folder->expects($this->any())->method(constraint: 'get')->willThrowException(exception: new NotFoundException(message: 'gone'));
+		$root = $this->createMock(originalClassName: IRootFolder::class);
+		$root->expects($this->any())->method(constraint: 'getUserFolder')->willReturn(value: $folder);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->once())->method('warning');
 
-		(new DocumentDownloadedListener($downloads, $root, $this->session(), $logger))
-			->handle(new BeforeDirectFileDownloadEvent('/Cases/gone.pdf'));
+		(new DocumentDownloadedListener(downloads: $downloads, rootFolder: $root, userSession: $this->session(), logger: $logger))
+			->handle(event: new BeforeDirectFileDownloadEvent(path: '/Cases/gone.pdf'));
 
 	}//end testAnUnresolvablePathIsLogged()
 
@@ -160,12 +165,17 @@ class DocumentDownloadedListenerTest extends TestCase {
 	 * @return DocumentDownloadedListener
 	 */
 	private function listener(DocumentDownloadLog $downloads, mixed $node, string $path): DocumentDownloadedListener {
-		$folder = $this->createMock(Folder::class);
-		$folder->method('get')->with($path)->willReturn($node);
-		$root = $this->createMock(IRootFolder::class);
-		$root->method('getUserFolder')->with('anna')->willReturn($folder);
+		$folder = $this->createMock(originalClassName: Folder::class);
+		$folder->expects($this->any())->method(constraint: 'get')->with($path)->willReturn(value: $node);
+		$root = $this->createMock(originalClassName: IRootFolder::class);
+		$root->expects($this->any())->method(constraint: 'getUserFolder')->with('anna')->willReturn(value: $folder);
 
-		return new DocumentDownloadedListener($downloads, $root, $this->session(), $this->createMock(LoggerInterface::class));
+		return new DocumentDownloadedListener(
+			downloads: $downloads,
+			rootFolder: $root,
+			userSession: $this->session(),
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
+		);
 
 	}//end listener()
 
@@ -175,10 +185,10 @@ class DocumentDownloadedListenerTest extends TestCase {
 	 * @return IUserSession
 	 */
 	private function session(): IUserSession {
-		$user = $this->createMock(IUser::class);
-		$user->method('getUID')->willReturn('anna');
-		$session = $this->createMock(IUserSession::class);
-		$session->method('getUser')->willReturn($user);
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->expects($this->any())->method(constraint: 'getUID')->willReturn(value: 'anna');
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->expects($this->any())->method(constraint: 'getUser')->willReturn(value: $user);
 
 		return $session;
 

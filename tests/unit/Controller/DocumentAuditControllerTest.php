@@ -76,13 +76,13 @@ class DocumentAuditControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testOpeningAReadableDocumentIsRecorded(): void {
-		$audit = $this->createMock(DocumentActionAudit::class);
-		$audit->expects($this->once())->method('record')->with(fileId: 41, action: 'opened', context: ['route' => 'ui'])->willReturn(true);
+		$audit = $this->createMock(originalClassName: DocumentActionAudit::class);
+		$audit->expects($this->once())->method(constraint: 'record')->with(fileId: 41, action: 'opened', context: ['route' => 'ui'])->willReturn(value: true);
 
 		$response = $this->controller(audit: $audit, readable: true)->opened(fileId: 41);
 
-		$this->assertSame(200, $response->getStatus());
-		$this->assertSame(['recorded' => true], $response->getData());
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertSame(expected: ['recorded' => true], actual: $response->getData());
 
 	}//end testOpeningAReadableDocumentIsRecorded()
 
@@ -92,12 +92,12 @@ class DocumentAuditControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testOpeningAnUnreadableDocumentWritesNothing(): void {
-		$audit = $this->createMock(DocumentActionAudit::class);
-		$audit->expects($this->never())->method('record');
+		$audit = $this->createMock(originalClassName: DocumentActionAudit::class);
+		$audit->expects($this->never())->method(constraint: 'record');
 
 		$response = $this->controller(audit: $audit, readable: false)->opened(fileId: 41);
 
-		$this->assertSame(404, $response->getStatus());
+		$this->assertSame(expected: 404, actual: $response->getStatus());
 
 	}//end testOpeningAnUnreadableDocumentWritesNothing()
 
@@ -115,8 +115,8 @@ class DocumentAuditControllerTest extends TestCase {
 				&& $route['verb'] === 'POST'
 		);
 
-		$this->assertCount(1, $found);
-		$this->assertTrue(method_exists(DocumentAuditController::class, 'opened'));
+		$this->assertCount(expectedCount: 1, haystack: $found);
+		$this->assertTrue(condition: method_exists(DocumentAuditController::class, 'opened'));
 
 	}//end testTheOpenedRouteIsDeclared()
 
