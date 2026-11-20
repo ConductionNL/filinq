@@ -2381,6 +2381,7 @@ export default {
 	font-size: 0.85rem;
 	list-style: disc;
 }
+
 .scope-redaction {
 	display: flex;
 	flex-direction: column;
