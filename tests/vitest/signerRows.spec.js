@@ -8,9 +8,11 @@
 
 import { describe, expect, it } from 'vitest'
 import {
+	acceptsOnly,
 	emptySignerRow,
 	isReachable,
 	signersAreComplete,
+	someoneSigns,
 	toSigners,
 } from '../../src/views/signing/signerRows.js'
 
@@ -42,6 +44,35 @@ describe('signer rows on the signing request form', () => {
 		).toEqual([
 			{ order: 0, displayName: 'Bea', email: 'bea@example.org' },
 			{ order: 1, userId: 'carl' },
+		])
+	})
+
+	it('a new row signs, and a role of accept makes it accept-only', () => {
+		expect(emptySignerRow().role).toBe('sign')
+		expect(acceptsOnly(emptySignerRow())).toBe(false)
+		expect(acceptsOnly({ role: 'accept' })).toBe(true)
+		expect(acceptsOnly({ role: ' Accept ' })).toBe(true)
+		expect(acceptsOnly({})).toBe(false)
+	})
+
+	it('needs at least one row that signs', () => {
+		const officer = { email: 'officer@example.org', role: 'accept' }
+		const tenant = { email: 'tenant@example.org', role: 'sign' }
+		expect(someoneSigns([officer])).toBe(false)
+		expect(someoneSigns([officer, tenant])).toBe(true)
+		expect(signersAreComplete([officer])).toBe(false)
+		expect(signersAreComplete([tenant, officer])).toBe(true)
+	})
+
+	it('sends role accept for an accept-only recipient and no role for a signer', () => {
+		expect(
+			toSigners([
+				{ email: 'tenant@example.org', role: 'sign' },
+				{ displayName: 'Officer', userId: 'officer', role: 'accept' },
+			]),
+		).toEqual([
+			{ order: 0, email: 'tenant@example.org' },
+			{ order: 1, displayName: 'Officer', userId: 'officer', role: 'accept' },
 		])
 	})
 })

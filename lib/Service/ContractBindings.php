@@ -57,6 +57,7 @@ use OCA\Filinq\Kernel\Contracts\CustomDictionaryServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DataResolverServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DemoDataServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DetectionProviderConfigInterface;
+use OCA\Filinq\Kernel\Contracts\DigitisationWorklistInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentComparisonServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentDomainServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
@@ -121,6 +122,7 @@ use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
 use OCA\Filinq\Kernel\Contracts\OutputLayoutMoverInterface;
 use OCA\Filinq\Kernel\Contracts\OutputLayoutResolverInterface;
 use OCA\Filinq\Kernel\Contracts\PageLayoutServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PaperOriginalImportInterface;
 use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PdfPasswordRemovalServiceInterface;
@@ -135,12 +137,14 @@ use OCA\Filinq\Kernel\Contracts\PostRegisterReaderInterface;
 use OCA\Filinq\Kernel\Contracts\PrintJobFileStoreInterface;
 use OCA\Filinq\Kernel\Contracts\PrintJobRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\PrintJobServiceInterface;
+use OCA\Filinq\Kernel\Contracts\ProcessingCertificateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PseudonymMapServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PseudonymRestoreServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationAccessInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationListComposerInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationPipelineServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PublicationStoreInterface;
+use OCA\Filinq\Kernel\Contracts\ReadableFileResolverInterface;
 use OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface;
 use OCA\Filinq\Kernel\Contracts\RefusalGroundsLegacyMapInterface;
 use OCA\Filinq\Kernel\Contracts\RefusalGroundsResolverInterface;
@@ -149,6 +153,7 @@ use OCA\Filinq\Kernel\Contracts\SanitizationStatusInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SealedFileWriterInterface;
 use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SessionUserFileInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
@@ -159,6 +164,7 @@ use OCA\Filinq\Kernel\Contracts\SigningAuditServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningCancellationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningDelegationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningEnvelopeServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SigningEvidenceServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningFolderServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningMandateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SigningRetentionCheckInterface;
@@ -171,6 +177,10 @@ use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\TemplateVersionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\UploadFragmentReaperInterface;
 use OCA\Filinq\Kernel\Contracts\UploadPolicyServiceInterface;
+use OCA\Filinq\Kernel\Contracts\WaarmerkCmsInterface;
+use OCA\Filinq\Kernel\Contracts\WaarmerkServiceInterface;
+use OCA\Filinq\Kernel\Contracts\WaarmerkSettingsInterface;
+use OCA\Filinq\Kernel\Contracts\WaarmerkVerifierInterface;
 use OCA\Filinq\Kernel\Contracts\WaitingWorkServiceInterface;
 use OCA\Filinq\Kernel\Contracts\WizardServiceInterface;
 use OCA\Filinq\Service\BulkSigning\BulkSigningRunner;
@@ -226,6 +236,10 @@ use OCA\Filinq\Service\SigningEnvelope\SigningEnvelopeService;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureRun;
 use OCA\Filinq\Service\SubjectErasure\SubjectErasureService;
 use OCA\Filinq\Service\VeraPdf\ConformanceService;
+use OCA\Filinq\Service\Waarmerk\SealedFileWriter;
+use OCA\Filinq\Service\Waarmerk\WaarmerkCms;
+use OCA\Filinq\Service\Waarmerk\WaarmerkSettings;
+use OCA\Filinq\Service\Waarmerk\WaarmerkVerifier;
 use OCA\Filinq\Service\Wizard\WizardService;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
@@ -281,6 +295,7 @@ final class ContractBindings {
 		DataResolverServiceInterface::class            => DataResolverService::class,
 		DemoDataServiceInterface::class                => DemoDataService::class,
 		DetectionProviderConfigInterface::class        => DetectionProviderConfig::class,
+		DigitisationWorklistInterface::class           => DigitisationWorklist::class,
 		DocumentComparisonServiceInterface::class      => DocumentComparisonService::class,
 		DocumentDomainServiceInterface::class          => DocumentDomainService::class,
 		DocumentFinalityRuleServiceInterface::class    => DocumentFinalityRuleService::class,
@@ -345,6 +360,7 @@ final class ContractBindings {
 		OutputLayoutMoverInterface::class              => OutputLayoutMover::class,
 		OutputLayoutResolverInterface::class           => OutputLayoutResolver::class,
 		PageLayoutServiceInterface::class              => PageLayoutService::class,
+		PaperOriginalImportInterface::class            => PaperOriginalImport::class,
 		PartySuggestionServiceInterface::class         => PartySuggestionService::class,
 		Pdfa3ConversionServiceInterface::class         => Pdfa3ConversionService::class,
 		PdfPasswordRemovalServiceInterface::class      => PdfPasswordRemovalService::class,
@@ -359,12 +375,14 @@ final class ContractBindings {
 		PrintJobFileStoreInterface::class              => PrintJobFileStore::class,
 		PrintJobRepositoryInterface::class             => PrintJobRepository::class,
 		PrintJobServiceInterface::class                => PrintJobService::class,
+		ProcessingCertificateServiceInterface::class   => ProcessingCertificateService::class,
 		PseudonymMapServiceInterface::class            => PseudonymMapService::class,
 		PseudonymRestoreServiceInterface::class        => PseudonymRestoreService::class,
 		PublicationAccessInterface::class              => PublicationAccess::class,
 		PublicationListComposerInterface::class        => PublicationListComposer::class,
 		PublicationPipelineServiceInterface::class     => PublicationPipelineService::class,
 		PublicationStoreInterface::class               => PublicationStore::class,
+		ReadableFileResolverInterface::class           => ReadableFileResolver::class,
 		RedactionOutputGuardInterface::class           => RedactionOutputGuard::class,
 		RefusalGroundsLegacyMapInterface::class        => RefusalGroundsLegacyMap::class,
 		RefusalGroundsResolverInterface::class         => RefusalGroundsResolver::class,
@@ -373,6 +391,7 @@ final class ContractBindings {
 		ScanBatchRepositoryInterface::class            => ScanBatchRepository::class,
 		ScanBatchServiceInterface::class               => ScanBatchService::class,
 		ScanProfileServiceInterface::class             => ScanProfileService::class,
+		SealedFileWriterInterface::class               => SealedFileWriter::class,
 		SeparatorSheetServiceInterface::class          => SeparatorSheetService::class,
 		SessionUserFileInterface::class                => SessionUserFile::class,
 		SettingsServiceInterface::class                => SettingsService::class,
@@ -383,6 +402,7 @@ final class ContractBindings {
 		SigningCancellationServiceInterface::class     => SigningCancellationService::class,
 		SigningDelegationServiceInterface::class       => SigningDelegationService::class,
 		SigningEnvelopeServiceInterface::class         => SigningEnvelopeService::class,
+		SigningEvidenceServiceInterface::class         => SigningEvidenceService::class,
 		SigningFolderServiceInterface::class           => SigningFolderService::class,
 		SigningMandateServiceInterface::class          => SigningMandateService::class,
 		SigningRetentionCheckInterface::class          => SigningRetentionCheck::class,
@@ -395,6 +415,10 @@ final class ContractBindings {
 		TemplateVersionServiceInterface::class         => TemplateVersionService::class,
 		UploadFragmentReaperInterface::class           => UploadFragmentReaper::class,
 		UploadPolicyServiceInterface::class            => UploadPolicyService::class,
+		WaarmerkCmsInterface::class                    => WaarmerkCms::class,
+		WaarmerkServiceInterface::class                => WaarmerkService::class,
+		WaarmerkSettingsInterface::class               => WaarmerkSettings::class,
+		WaarmerkVerifierInterface::class               => WaarmerkVerifier::class,
 		WaitingWorkServiceInterface::class             => WaitingWorkService::class,
 		WizardServiceInterface::class                  => WizardService::class,
 	];

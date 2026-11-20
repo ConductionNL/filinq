@@ -355,7 +355,8 @@
                             "consentStatus": "consent_given",
                             "id": "c-2"
                         },
-                        "actor": "ingrid"
+                        "actor": "ingrid",
+                        "via": ""
                     }
                 }
             }
@@ -424,7 +425,8 @@
                             "consentStatus": "consent_given",
                             "updatedBy": "ingrid"
                         },
-                        "actor": "mallory"
+                        "actor": "mallory",
+                        "via": ""
                     }
                 }
             }
@@ -469,7 +471,8 @@
                             "consentStatus": "consent_given",
                             "actor": "ingrid"
                         },
-                        "actor": "mallory"
+                        "actor": "mallory",
+                        "via": ""
                     }
                 }
             }
@@ -572,7 +575,8 @@
                             "consentStatus": "consent_withdrawn",
                             "evidence": "brief"
                         },
-                        "actor": "ingrid"
+                        "actor": "ingrid",
+                        "via": ""
                     }
                 }
             }
@@ -614,7 +618,8 @@
                             "consentStatus": "consent_withdrawn",
                             "evidence": "brief"
                         },
-                        "actor": ""
+                        "actor": "",
+                        "via": ""
                     }
                 }
             }

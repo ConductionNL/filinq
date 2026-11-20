@@ -54,6 +54,16 @@ class OpenCatalogiPlatform implements OpenCatalogiPlatformInterface {
 	private const TOOI = 'OCA\\OpenCatalogi\\Service\\TooiVocabularyService';
 
 	/**
+	 * OpenRegister's register mapper, to find OpenCatalogi's register.
+	 */
+	private const REGISTER_MAPPER = 'OCA\\OpenRegister\\Db\\RegisterMapper';
+
+	/**
+	 * OpenRegister's schema mapper, to read the publication schema of that register.
+	 */
+	private const SCHEMA_MAPPER = 'OCA\\OpenRegister\\Db\\SchemaMapper';
+
+	/**
 	 * Constructor
 	 *
 	 * @param IAppManager        $appManager Whether OpenCatalogi is there
@@ -133,6 +143,47 @@ class OpenCatalogiPlatform implements OpenCatalogiPlatformInterface {
 		return null;
 
 	}//end toPlatformCode()
+
+	/**
+	 * Whether OpenCatalogi's `publication` schema declares a property.
+	 *
+	 * Read from the schema the publication register holds, through
+	 * OpenRegister's mappers, so an OpenCatalogi older than the field answers
+	 * no. Fails closed: without OpenCatalogi, or when the schema cannot be
+	 * read, the answer is no.
+	 *
+	 * @param string $field The property name.
+	 *
+	 * @return bool True when the publication schema has that property.
+	 *
+	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
+	 */
+	public function publicationDeclares(string $field): bool {
+		if ($field === '' || $this->available() === false) {
+			return false;
+		}
+
+		try {
+			$register = $this->container->get(self::REGISTER_MAPPER)->find(
+				id: OpenCatalogiPublicationMap::REGISTER,
+				_rbac: false,
+				_multitenancy: false
+			);
+			$schema = $this->container->get(self::SCHEMA_MAPPER)->findBySlugInIds(
+				slug: OpenCatalogiPublicationMap::SCHEMA,
+				schemaIds: (array) $register->getSchemas()
+			);
+		} catch (Throwable) {
+			return false;
+		}
+
+		if (is_object($schema) === false) {
+			return false;
+		}
+
+		return array_key_exists($field, (array) $schema->getProperties());
+
+	}//end publicationDeclares()
 
 	/**
 	 * OpenCatalogi's category list, keyed by its code.

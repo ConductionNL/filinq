@@ -49,6 +49,9 @@ use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Filinq\Service\Intake\ContentHasher;
+use OCA\Filinq\Service\Intake\IntakeDeadlines;
+use OCA\Filinq\Service\Support\IntakeSignals;
 use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
@@ -210,10 +213,25 @@ class IntakeServiceTest extends TestCase {
 			new IntakeFiling(placement: $placement, ocrQueue: $this->ocrQueue(readOnArrival: $readOnArrival, mimeType: $mimeType)),
 			new IntakeRouting(defaults: $defaults, routing: $routing, parties: $parties),
 			$session,
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->noSignals()
 		);
 
 	}//end service()
+
+	/**
+	 * Signals that set a fixed deadline and hash nothing.
+	 *
+	 * @return IntakeSignals
+	 */
+	private function noSignals(): IntakeSignals {
+		$deadlines = $this->createMock(IntakeDeadlines::class);
+		$deadlines->method('deadlineFor')->willReturn('2026-11-13');
+		$hasher = $this->createMock(ContentHasher::class);
+		$hasher->method('hashOf')->willReturn(null);
+
+		return new IntakeSignals(deadlines: $deadlines, hasher: $hasher);
+	}//end noSignals()
 
 	/**
 	 * The real reading-on-arrival queue over a job list that records what it is given.

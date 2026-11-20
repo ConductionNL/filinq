@@ -112,6 +112,17 @@ if (is_file($ocpCryptoPath) === true && interface_exists('OCP\\Security\\ICrypto
 // The real contacts manager contract (contract-lifecycle-management): contract
 // parties take their names from contacts, and a double of the real interface
 // cannot answer a search Nextcloud would not.
+// letter-email-sending: CorrespondenceSendService talks to Nextcloud's mailer.
+$ocpMailDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Mail';
+if (is_dir($ocpMailDir) === true) {
+	foreach (['IAttachment', 'IEMailTemplate', 'IMessage', 'IMailer'] as $ocpMailContract) {
+		$ocpMailPath = $ocpMailDir . '/' . $ocpMailContract . '.php';
+		if (is_file($ocpMailPath) === true && interface_exists('OCP\\Mail\\' . $ocpMailContract) === false) {
+			require_once $ocpMailPath;
+		}
+	}
+}
+
 $ocpContactsPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Contacts/IManager.php';
 if (is_file($ocpContactsPath) === true && interface_exists('OCP\\Contacts\\IManager') === false) {
 	require_once $ocpContactsPath;
@@ -301,6 +312,10 @@ require_once __DIR__ . '/unit/Support/RecordsCalls.php';
 // Subject erasure doubles (erase-a-person-while-the-records-stay); same
 // "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
 require_once __DIR__ . '/unit/Service/SubjectErasure/SubjectErasureDoubles.php';
+
+// The runtime-generated organisation certificate of the waarmerk tests (no
+// PEM or key fixture is committed); same PSR-4 situation as above.
+require_once __DIR__ . '/unit/Service/Waarmerk/WaarmerkKeyPair.php';
 
 // The veraPDF service over the recorded veraPDF (tests/fixtures/verapdf).
 require_once __DIR__ . '/unit/Service/VeraPdf/VeraPdfDoubles.php';

@@ -298,8 +298,10 @@ class SigningDelegationTest extends TestCase {
 		$signing->method('listRequests')->willReturnCallback(static fn (string $callerUserId = ''): array => ($callerUserId === 'wethouder') ? [$besluit] : []);
 		$signing->method('getRequest')->willReturnCallback(static fn (string $requestId, string $callerUserId = ''): ?array => ($callerUserId === 'wethouder') ? $besluit : null);
 
-		$actor = $this->getMockBuilder(SigningActorResolver::class)->disableOriginalConstructor()->onlyMethods(['findSignerForUser'])->getMock();
+		$actor = $this->getMockBuilder(SigningActorResolver::class)->disableOriginalConstructor()->onlyMethods(['findSignerForUser', 'recipientRole'])->getMock();
 		$actor->method('findSignerForUser')->willReturnCallback(static fn (array $signerIds, string $userId): ?string => ($userId === 'wethouder') ? 'signer-w' : null);
+		// The wethouder is a signer, not an accept-only recipient (signing-accept-only-recipient).
+		$actor->method('recipientRole')->willReturn('sign');
 
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturn('');
