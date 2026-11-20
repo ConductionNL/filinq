@@ -49,6 +49,7 @@ use RuntimeException;
  *
  * @covers \OCA\Filinq\Controller\BatchAnonymizationController
  * @uses \OCA\Filinq\Controller\Support\OutputFormatChoice
+ * @uses \OCA\Filinq\Controller\Support\SanitizeChoice
  */
 class BatchAnonymizationControllerAnonymizeTraceTest extends TestCase {
 
@@ -130,6 +131,41 @@ class BatchAnonymizationControllerAnonymizeTraceTest extends TestCase {
 		$this->assertSame(['error' => 'Invalid outputFormat: must be one of pdf-only, pdf, preserve'], $response->getData());
 
 	}//end testUnknownOutputFormatAnswers400()
+
+	/**
+	 * A per-batch `sanitize: true` reaches the batch service.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 */
+	public function testSanitizeReachesTheService(): void {
+		$this->anon->expects($this->once())->method('anonymizeBatch')
+			->with('b-1', self::REQUEST['entities'], self::REQUEST['unredactedEntities'], 'preserve', 'selected', true)
+			->willReturn(['processed' => 1]);
+
+		$response = $this->controller(params: ['outputFormat' => 'preserve', 'scope' => 'selected', 'sanitize' => true])->batchAnonymize('b-1');
+
+		$this->assertSame(207, $response->getStatus());
+
+	}//end testSanitizeReachesTheService()
+
+	/**
+	 * A `sanitize` that is not a boolean answers 400 and runs nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 */
+	public function testANonBooleanSanitizeAnswers400(): void {
+		$this->anon->expects($this->never())->method('anonymizeBatch');
+
+		$response = $this->controller(params: ['sanitize' => 'yes'])->batchAnonymize('b-1');
+
+		$this->assertSame(400, $response->getStatus());
+		$this->assertSame(['error' => 'Invalid sanitize: must be a boolean'], $response->getData());
+
+	}//end testANonBooleanSanitizeAnswers400()
 
 	/**
 	 * A malformed unredacted entry answers with the validator's own refusal.

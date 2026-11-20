@@ -35,7 +35,9 @@ use OCA\Filinq\Service\Pseudonymisation\PseudonymPairs;
 use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
 use OCA\Filinq\Service\RedactionAccessibilityService;
 use OCA\Filinq\Service\ReplacementVerificationService;
+use OCA\Filinq\Kernel\Contracts\DocumentSanitizationServiceInterface;
 use OCA\Filinq\Service\Sanitization\AnonymisationSanitizationRecorder;
+use OCA\Filinq\Service\Sanitization\FinalArtifactSanitizer;
 use OCA\Filinq\Service\Sanitization\SanitizationRecordRepository;
 use OCA\Filinq\Service\Support\AnonymisationRecords;
 use OCA\Filinq\Service\Support\AnonymisedOutputs;
@@ -56,6 +58,8 @@ use Psr\Log\NullLogger;
  * @author   Conduction Development Team <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @uses \OCA\Filinq\Service\Sanitization\FinalArtifactSanitizer
  */
 class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 	use PseudonymDoubles;
@@ -63,7 +67,7 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 	/** @var object The fake OpenRegister FileService of the last runner. */
 	private object $fileService;
 
-	private function runner(?array $report, string $preserveDefault = 'true'): DocumentAnonymizeRunner {
+	private function runner(?array $report, string $preserveDefault = 'true', ?FinalArtifactSanitizer $final = null, ?GrondslagenSummaryAttacher $summary = null): DocumentAnonymizeRunner {
 		$source = $this->createMock(File::class);
 		$source->method('getId')->willReturn(812200);
 		$source->method('getName')->willReturn('besluit.txt');
@@ -186,7 +190,7 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 				accessibility: new RedactionAccessibilityService($appConfig),
 				sanitization: new AnonymisationSanitizationRecorder(records: $this->sanitizationRecords(), logger: $logger)
 			)),
-			outputs: new AnonymisedOutputs(eml: $eml, pdf: $pdf, summary: $this->createMock(GrondslagenSummaryAttacher::class)),
+			outputs: new AnonymisedOutputs(eml: $eml, pdf: $pdf, summary: ($summary ?? $this->createMock(GrondslagenSummaryAttacher::class)), sanitizer: $final),
 			logger: $logger,
 			locator: $locator,
 			entityDetection: new EntityDetectionService(new AnonymizationResultParser())
@@ -289,4 +293,80 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 		$this->assertSame([], $this->sanitizationSaved);
 
 	}//end testARunWithoutAReportRecordsNothing()
+
+	/**
+	 * With `sanitize`, the pass runs on the delivered copy, after the grondslagen summary was appended.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 */
+	public function testTheSanitizeFlagCleansTheDeliveredCopyAfterTheSummary(): void {
+		$order = [];
+		$summary = $this->createMock(GrondslagenSummaryAttacher::class);
+		$summary->method('attachGrondslagenSummary')->willReturnCallback(
+			static function (mixed $anonymisedNode, int $sourceFileId, array $resultInfo) use (&$order): array {
+				$order[] = 'summary';
+				return $resultInfo + ['summaryAppended' => true];
+			}
+		);
+		$service = $this->createMock(DocumentSanitizationServiceInterface::class);
+		$service->expects($this->once())->method('sanitize')
+			->with(812201, 'alice', 'anonymisation')
+			->willReturnCallback(
+				static function () use (&$order): array {
+					$order[] = 'sanitize';
+					return ['sanitized' => true, 'sanitizedFileId' => 812202, 'sanitizedFileName' => 'besluit_anonymized_sanitized.docx', 'report' => ['commentsRemoved' => 0], 'recordId' => 'san-2'];
+				}
+			);
+
+		$this->entityRows = ['Jan Jansen' => ['id' => 41, 'type' => 'PERSON']];
+		$options = ['appendBasisSummary' => true, 'sanitize' => true] + $this->options();
+		$result = $this->runner(report: null, final: new FinalArtifactSanitizer(sanitizer: $service, logger: new NullLogger()), summary: $summary)
+			->run(fileId: 812200, entities: [['value' => 'Jan Jansen', 'type' => 'PERSON']], options: $options);
+
+		$this->assertSame(['summary', 'sanitize'], $order);
+		$this->assertTrue($result['summaryAppended']);
+		$this->assertSame(812202, $result['sanitization']['sanitizedFileId']);
+		$this->assertSame(812201, $result['anonymizedFileId']);
+
+	}//end testTheSanitizeFlagCleansTheDeliveredCopyAfterTheSummary()
+
+	/**
+	 * Without the flag the pass never runs and the result carries nothing new.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 */
+	public function testWithoutTheFlagNoPassRuns(): void {
+		$service = $this->createMock(DocumentSanitizationServiceInterface::class);
+		$service->expects($this->never())->method('sanitize');
+
+		$this->entityRows = ['Jan Jansen' => ['id' => 41, 'type' => 'PERSON']];
+		$result = $this->runner(report: null, final: new FinalArtifactSanitizer(sanitizer: $service, logger: new NullLogger()))
+			->run(fileId: 812200, entities: [['value' => 'Jan Jansen', 'type' => 'PERSON']], options: $this->options());
+
+		$this->assertArrayNotHasKey('sanitization', $result);
+		$this->assertArrayNotHasKey('sanitizationWarning', $result);
+
+	}//end testWithoutTheFlagNoPassRuns()
+
+	/**
+	 * The flag with no pass wired keeps the anonymised copy and warns.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 */
+	public function testTheFlagWithoutAPassWarnsAndKeepsTheCopy(): void {
+		$this->entityRows = ['Jan Jansen' => ['id' => 41, 'type' => 'PERSON']];
+		$result = $this->runner(report: null)
+			->run(fileId: 812200, entities: [['value' => 'Jan Jansen', 'type' => 'PERSON']], options: ['sanitize' => true] + $this->options());
+
+		$this->assertSame('sanitizer_unavailable', $result['sanitizationWarning']['code']);
+		$this->assertSame(812201, $result['sanitizationWarning']['unsanitizedFileId']);
+		$this->assertSame(812201, $result['anonymizedFileId']);
+
+	}//end testTheFlagWithoutAPassWarnsAndKeepsTheCopy()
 }//end class

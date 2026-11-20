@@ -38,6 +38,18 @@ SPDX-License-Identifier: EUPL-1.2
 						)
 					}}
 				</NcNoteCard>
+				<!-- The copy never carries the source's seal (REQ-DDSAN-005); a warning, not a block. -->
+				<NcNoteCard
+					v-if="result.sourceSealed"
+					type="warning"
+					data-testid="sanitization-seal-warning">
+					{{
+						t(
+							'filinq',
+							'The original carries a seal. This clean copy does not: seal it again before you publish it.',
+						)
+					}}
+				</NcNoteCard>
 				<p v-if="rows.length === 0">
 					{{ t('filinq', 'Nothing hidden was found.') }}
 				</p>

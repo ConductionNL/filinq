@@ -39,12 +39,14 @@ class SanitizationStatus implements SanitizationStatusInterface {
 	 *
 	 * @param IRootFolder                  $rootFolder The files, read through the user's folder.
 	 * @param SanitizationRecordRepository $records    The run records.
+	 * @param SealLookup|null              $seals      Whether the file carries an active waarmerk.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly IRootFolder $rootFolder,
 		private readonly SanitizationRecordRepository $records,
+		private readonly ?SealLookup $seals=null,
 	) {
 
 	}//end __construct()
@@ -55,7 +57,8 @@ class SanitizationStatus implements SanitizationStatusInterface {
 	 * @param int    $fileId The file.
 	 * @param string $userId The user.
 	 *
-	 * @return array{fileId: int, sanitized: bool, runs: list<array<string, mixed>>} Whether it is a sanitized derivative, and the runs on it.
+	 * @return array{fileId: int, sanitized: bool, sealed: bool, runs: list<array<string, mixed>>} Whether it is a
+	 *     sanitized derivative, whether it carries an active waarmerk, and the runs on it.
 	 *
 	 * @throws InvalidArgumentException 404 when the user cannot read the file.
 	 *
@@ -87,6 +90,8 @@ class SanitizationStatus implements SanitizationStatusInterface {
 		return [
 			'fileId'    => $fileId,
 			'sanitized' => $this->isSanitized(fileId: $fileId),
+			// A sanitize on a sealed file warns that the copy needs a new seal (REQ-DDSAN-005).
+			'sealed'    => $this->seals?->hasActiveSeal(fileId: $fileId) === true,
 			'runs'      => $runs,
 		];
 

@@ -99,6 +99,7 @@
         "double LoggerInterface",
         "double OpenRegisterServiceLocator",
         "double ReplacementVerificationService",
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -109,6 +110,7 @@
         "double AnonymizationPersistenceService",
         "double EmlAnonymizationService",
         "double EntityDetectionService",
+        "double FinalArtifactSanitizer",
         "double GrondslagenSummaryAttacher",
         "double LoggerInterface",
         "double OpenRegisterServiceLocator",
