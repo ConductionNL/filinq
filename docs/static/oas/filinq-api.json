@@ -326,6 +326,10 @@
         {
             "name": "mdto",
             "description": "The status is open to signed-in users and reads the record as them; export and transfer are for filinq-policy-admins and admins (checked in MdtoController)"
+        },
+        {
+            "name": "mail-archive-import",
+            "description": "Importing a mailbox archive in bulk into dossiers and the intake inbox"
         }
     ],
     "paths": {
@@ -12580,6 +12584,377 @@
                         "in": "path",
                         "required": true,
                         "description": "The record UUID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/mail-archive-imports": {
+            "get": {
+                "operationId": "mail-archive-import-index",
+                "summary": "The user's own mail archive imports, newest first",
+                "description": "The user's own mail archive imports, newest first.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{results}.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "mail-archive-import-create",
+                "summary": "Start an import of an MBOX, PST or ZIP file the user can read; the answer lists its folders",
+                "description": "Start an import of an MBOX, PST or ZIP file the user can read; the answer lists its folders.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The import, in mapping or failed.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "fileId": {
+                                        "type": "integer",
+                                        "description": "The archive's Nextcloud file id.",
+                                        "example": 12345
+                                    }
+                                },
+                                "required": [
+                                    "fileId"
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mail-archive-imports/settings": {
+            "get": {
+                "operationId": "mail-archive-import-settings",
+                "summary": "The per-run message limit and whether readpst is installed",
+                "description": "The per-run message limit and whether readpst is installed.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{messagesPerRun, readpstInstalled}.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "mail-archive-import-update-settings",
+                "summary": "Store the per-run message limit",
+                "description": "Store the per-run message limit.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The stored settings.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "messagesPerRun": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 2000,
+                                        "description": "Messages one cron run takes; clamped to 1..2000."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mail-archive-imports/{uuid}": {
+            "get": {
+                "operationId": "mail-archive-import-show",
+                "summary": "One of the user's imports, with its progress and failures",
+                "description": "One of the user's imports, with its progress and failures.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The import.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The import.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/mail-archive-imports/{uuid}/start": {
+            "post": {
+                "operationId": "mail-archive-import-start",
+                "summary": "Map the archive's folders to dossiers the user may write to and start importing",
+                "description": "Map the archive's folders to dossiers the user may write to and start importing.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The import, in importing.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The import.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "folderMap": {
+                                        "type": "array",
+                                        "description": "A folder left out or without a dossier goes to the intake inbox.",
+                                        "items": {
+                                            "type": "object",
+                                            "required": [
+                                                "archiveFolder"
+                                            ],
+                                            "properties": {
+                                                "archiveFolder": {
+                                                    "type": "string"
+                                                },
+                                                "dossier": {
+                                                    "type": "string"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/mail-archive-imports/{uuid}/cancel": {
+            "post": {
+                "operationId": "mail-archive-import-cancel",
+                "summary": "Cancel an import that has not ended; what was filed stays filed",
+                "description": "Cancel an import that has not ended; what was filed stays filed.",
+                "tags": [
+                    "mail-archive-import"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The import, in cancelled.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The import.",
                         "schema": {
                             "type": "string"
                         }

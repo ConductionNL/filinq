@@ -259,6 +259,14 @@ $extra = [
         ['name' => 'emailIngestion#settings', 'url' => 'api/email-ingestion/settings', 'verb' => 'GET'],
         ['name' => 'emailIngestion#updateSettings', 'url' => 'api/email-ingestion/settings', 'verb' => 'PUT'],
         ['name' => 'emailIngestion#retry', 'url' => 'api/email-ingestion/{uuid}/convert', 'verb' => 'POST'],
+        // Mail archive import (intake-mailbox-archive-import): start an import from a file the user can read, read their own, map the folders and start, cancel; the per-run limit and readpst status for admins.
+        ['name' => 'mailArchiveImport#settings', 'url' => 'api/mail-archive-imports/settings', 'verb' => 'GET'],
+        ['name' => 'mailArchiveImport#updateSettings', 'url' => 'api/mail-archive-imports/settings', 'verb' => 'PUT'],
+        ['name' => 'mailArchiveImport#index', 'url' => 'api/mail-archive-imports', 'verb' => 'GET'],
+        ['name' => 'mailArchiveImport#create', 'url' => 'api/mail-archive-imports', 'verb' => 'POST'],
+        ['name' => 'mailArchiveImport#show', 'url' => 'api/mail-archive-imports/{uuid}', 'verb' => 'GET'],
+        ['name' => 'mailArchiveImport#start', 'url' => 'api/mail-archive-imports/{uuid}/start', 'verb' => 'POST'],
+        ['name' => 'mailArchiveImport#cancel', 'url' => 'api/mail-archive-imports/{uuid}/cancel', 'verb' => 'POST'],
         // Guided document wizard (guided-document-wizard): author the wizard of a template, find the wizards for an object, prefill a run. Generation stays on api/documents/generate.
         ['name' => 'wizard#index', 'url' => 'api/wizards', 'verb' => 'GET'],
         ['name' => 'wizard#create', 'url' => 'api/wizards', 'verb' => 'POST'],
