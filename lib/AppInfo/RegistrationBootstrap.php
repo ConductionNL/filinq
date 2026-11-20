@@ -126,6 +126,9 @@ class RegistrationBootstrap {
 		// Named by string to keep this class's coupling where it is.
 		$context->registerNotifierService('OCA\\Filinq\\Notification\\LegalHoldNotifier');
 
+		// The nightly integrity scan's findings (whole-collection-integrity-scan REQ-DIS-02).
+		$context->registerNotifierService('OCA\\Filinq\\Notification\\IntegrityScanNotifier');
+
 		// AppHost observability adoption (ADR-006 / ADR-040). Registers only the
 		// MetricsEngine; the Health/Metrics controllers auto-wire from OCP and
 		// resolve the engine by FQCN string at dispatch time.

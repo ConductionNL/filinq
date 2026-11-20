@@ -27,6 +27,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\IntakeController;
 use OCA\Filinq\Controller\Support\IntakeHandling;
+use OCA\Filinq\Service\Intake\IntakeOverdueList;
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Kernel\Contracts\IntakeDetachmentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
@@ -223,7 +224,7 @@ class IntakeAssignGoldenTest extends TestCase {
 		}
 
 		return new IntakeController(
-			handling: new IntakeHandling(intake: $intake, detachment: $this->createMock(IntakeDetachmentServiceInterface::class), routing: $this->createMock(IntakeRoutingServiceInterface::class)),
+			handling: new IntakeHandling(intake: $intake, detachment: $this->createMock(IntakeDetachmentServiceInterface::class), routing: $this->createMock(IntakeRoutingServiceInterface::class), overdue: $this->createMock(IntakeOverdueList::class)),
 			request: $request,
 			parties: $this->createMock(PartySuggestionServiceInterface::class),
 			userSession: $session,
