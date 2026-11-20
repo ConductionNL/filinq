@@ -154,6 +154,9 @@ class BatchReportService implements BatchReportServiceInterface {
 	 * @param array<string, mixed> $file The per-file entry.
 	 *
 	 * @return string
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) BatchReportAggregator::reasonOf() is a pure function of
+	 * the file entry, shared with the summary.
 	 */
 	private function reasonColumn(array $file): string {
 		if (($file['status'] ?? '') !== 'error') {

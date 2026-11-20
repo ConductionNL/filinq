@@ -47,6 +47,10 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The class joins the organisation lookup, the
+ * admin checks and the settings store of one organisation's settings; its value objects and
+ * exceptions count toward the coupling too.
+ *
  * @spec openspec/changes/multi-tenant-hardening/specs/admin-settings/spec.md#requirement-per-organisation-settings-are-stored-as-organisationsettings-objects-req-ddmth-007
  */
 class OrganisationSettingsService {
@@ -139,6 +143,9 @@ class OrganisationSettingsService {
 	 * @throws OrganisationSettingsDeniedException When the caller may not write, or no organisation is active.
 	 * @throws InvalidArgumentException          When a value is out of range.
 	 * @throws RuntimeException                  When the stored state is ambiguous.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) OrganisationSettingsInput checks the posted settings as a
+	 * stateless helper; an instance would add nothing.
 	 *
 	 * @spec openspec/changes/multi-tenant-hardening/specs/admin-settings/spec.md#requirement-per-organisation-settings-are-stored-as-organisationsettings-objects-req-ddmth-007
 	 */

@@ -95,6 +95,9 @@ class ProcessingCertificateService implements ProcessingCertificateServiceInterf
 	 *
 	 * @throws WaarmerkRefusedException 404 for an unknown link or an unreadable anonymised file.
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SealedArtifact is a stateless helper or named constructor;
+	 * an instance would add nothing.
+	 *
 	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-anonymization-runs-can-be-certified-with-a-sealed-processing-certificate-req-ddwmk-003
 	 */
 	public function certify(string $linkId, string $userId): array {

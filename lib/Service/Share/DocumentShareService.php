@@ -46,6 +46,12 @@ use Throwable;
  * never its token or URL (D6). Every link runs out (D5), and a labelled
  * document is shared only after the sharer confirms (D8).
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the sum of small independent
+ * checks of one share's lifecycle (create, revoke, extend, lapse).
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The class joins the share store, Nextcloud's link
+ * shares, the archive and the audit for one share lifecycle; its value objects and exceptions count
+ * toward the coupling too.
+ *
  * @spec openspec/changes/share-document-links/tasks.md#task-2.2
  */
 class DocumentShareService {
@@ -504,14 +510,16 @@ class DocumentShareService {
 		$expiresAt = (string) ($record['expiresAt'] ?? '');
 		// Nextcloud lets a link work through its expiry day, so the
 		// record turns expired the day after.
-		if ($expiresAt !== '' && $expiresAt < $today) {
-			$record['status'] = 'expired';
-		} else if ($this->links->exists(shareId: (string) ($record['shareId'] ?? '')) === false) {
+		$record['status'] = 'expired';
+		if ($expiresAt === '' || $expiresAt >= $today) {
+			// Not lapsed: only a link removed in Files closes the record now.
+			if ($this->links->exists(shareId: (string) ($record['shareId'] ?? '')) === true) {
+				return null;
+			}
+
 			$record['status']    = 'revoked';
 			$record['revokedBy'] = self::REMOVED_IN_FILES;
 			$record['revokedAt'] = $this->now()->format(DateTimeInterface::ATOM);
-		} else {
-			return null;
 		}
 
 		$this->discardArchive(record: $record);
@@ -654,6 +662,9 @@ class DocumentShareService {
 	 * @return DateTimeImmutable The day the link stops working.
 	 *
 	 * @throws InvalidArgumentException When the date is not a YYYY-MM-DD date (400).
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) createFromFormat()/createFromImmutable() are PHP's named
+	 * constructors for a date; there is no instance form.
 	 *
 	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
 	 */

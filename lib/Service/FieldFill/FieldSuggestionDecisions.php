@@ -42,6 +42,10 @@ use Throwable;
 /**
  * Writes what a person decided, and only that.
  *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The class joins the record, the extraction model
+ * and the suggestion store of one field-fill flow; its value objects and exceptions count toward
+ * the coupling too.
+ *
  * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
  */
 class FieldSuggestionDecisions {

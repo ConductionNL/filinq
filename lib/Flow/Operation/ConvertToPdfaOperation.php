@@ -169,6 +169,9 @@ class ConvertToPdfaOperation extends AbstractFileOperation {
 	 *
 	 * @return FlowOperationOutcome The outcome.
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) FlowOperationOutcome is a stateless helper or named
+	 * constructor; an instance would add nothing.
+	 *
 	 * @spec openspec/changes/flow-operations/tasks.md#task-2.5
 	 */
 	public function execute(File $file, array $config, Folder $ownerHome): FlowOperationOutcome {

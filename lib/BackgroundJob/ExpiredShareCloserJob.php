@@ -81,6 +81,9 @@ class ExpiredShareCloserJob extends TimedJob {
 	 *
 	 * @return void
 	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) `$argument` is Nextcloud's job argument; the base
+	 * class dictates the signature and this job takes none.
+	 *
 	 * @spec openspec/changes/share-document-links/tasks.md#task-2.5
 	 */
 	protected function run(mixed $argument): void {
