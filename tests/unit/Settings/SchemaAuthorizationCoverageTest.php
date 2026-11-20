@@ -116,6 +116,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/PolicyRetroactiveService.php' => 2,
 		'lib/Service/ProhibitionOverrideCommitter.php' => 1,
 		'lib/Service/Pseudonymisation/PseudonymMapRepository.php' => 5,
+		'lib/Service/Publication/OpenCatalogiPlatform.php' => 1,
 		'lib/Service/Publication/PublicationStore.php' => 1,
 		'lib/Service/Redaction/AnonymizationLinkReader.php' => 1,
 		'lib/Service/Sanitization/SanitizationRecordRepository.php' => 1,
