@@ -3788,7 +3788,11 @@
         "Handling days": "Afhandeldagen",
         "How many working days a document this rule matches may wait, counted from its arrival. Empty uses the admin default.": "Hoeveel werkdagen een document dat deze regel treft mag wachten, gerekend vanaf binnenkomst. Leeg gebruikt de standaard van de beheerder.",
         "Handled when": "Afgehandeld wanneer",
-        "When a document this rule matches counts as handled: once it is assigned to a record, or once an outgoing letter answers it. A rejected document is always handled.": "Wanneer een document dat deze regel treft als afgehandeld telt: zodra het aan een dossier is toegewezen, of zodra een uitgaande brief het beantwoordt. Een afgewezen document is altijd afgehandeld."
+        "When a document this rule matches counts as handled: once it is assigned to a record, or once an outgoing letter answers it. A rejected document is always handled.": "Wanneer een document dat deze regel treft als afgehandeld telt: zodra het aan een dossier is toegewezen, of zodra een uitgaande brief het beantwoordt. Een afgewezen document is altijd afgehandeld.",
+        "%n note": "%n notitie",
+        "%n notes": "%n notities",
+        "Notes on {name}": "Notities bij {name}",
+        "This document has no file to leave notes on.": "Dit document heeft geen bestand om notities bij te zetten."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

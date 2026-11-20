@@ -132,6 +132,16 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 						{{ t('filinq', 'Assign') }}
 					</NcActionButton>
 					<NcActionButton
+						v-if="row.file"
+						closeAfterClick
+						data-testid="intake-open-notes"
+						@click="openNotes(row)">
+						<template #icon>
+							<CommentTextOutline :size="20" />
+						</template>
+						{{ t('filinq', 'Notes') }}
+					</NcActionButton>
+					<NcActionButton
 						v-if="mayRemovePassword(row)"
 						closeAfterClick
 						data-testid="intake-remove-password"
@@ -197,6 +207,11 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 			@confirm="reject"
 			@cancel="closeDialogs" />
 
+		<IntakeNotesDialog
+			v-if="notesTarget"
+			:document="notesTarget"
+			@close="notesTarget = null" />
+
 		<IntakeDeadlineDialog
 			v-if="deadlineTarget"
 			:document="deadlineTarget"
@@ -224,6 +239,7 @@ import { CnIndexPage, CnStatusBadge } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcActionButton, NcActions, NcButton, NcNoteCard } from '@nextcloud/vue'
 import CalendarClock from 'vue-material-design-icons/CalendarClock.vue'
+import CommentTextOutline from 'vue-material-design-icons/CommentTextOutline.vue'
 import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
@@ -234,6 +250,7 @@ import IntakeRoutingDeclaration from '../../components/intake/IntakeRoutingDecla
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
 import IntakeDeadlineDialog from '../../dialogs/IntakeDeadlineDialog.vue'
+import IntakeNotesDialog from '../../dialogs/IntakeNotesDialog.vue'
 import SeparatorSheetsDialog from '../../dialogs/SeparatorSheetsDialog.vue'
 import PdfPasswordModal from '../../modals/PdfPasswordModal.vue'
 import {
@@ -269,6 +286,7 @@ export default {
 		CnIndexPage,
 		CnStatusBadge,
 		NcButton,
+		CommentTextOutline,
 		CalendarClock,
 		ContentDuplicate,
 		Delete,
@@ -277,6 +295,7 @@ export default {
 		FinalDocumentReasonDialog,
 		FolderOutline,
 		IntakeAssignDialog,
+		IntakeNotesDialog,
 		IntakeDeadlineDialog,
 		IntakeRoutingDeclaration,
 		SeparatorSheetsDialog,
@@ -295,6 +314,7 @@ export default {
 			saving: false,
 			assignTarget: null,
 			rejectTarget: null,
+			notesTarget: null,
 			deadlineTarget: null,
 			today: localToday(),
 			unlockTarget: null,
@@ -572,6 +592,19 @@ export default {
 		openUnlock(row) {
 			this.closeDialogs()
 			this.unlockTarget = row
+		},
+
+		/**
+		 * Open the notes of one waiting document.
+		 *
+		 * @param {object} row The intake document.
+		 * @return {void}
+		 * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
+		 */
+		openNotes(row) {
+			this.assignTarget = null
+			this.rejectTarget = null
+			this.notesTarget = row
 		},
 
 		openReject(row) {

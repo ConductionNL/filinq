@@ -3569,7 +3569,11 @@ OC.L10N.register(
         "Handling days": "Handling days",
         "How many working days a document this rule matches may wait, counted from its arrival. Empty uses the admin default.": "How many working days a document this rule matches may wait, counted from its arrival. Empty uses the admin default.",
         "Handled when": "Handled when",
-        "When a document this rule matches counts as handled: once it is assigned to a record, or once an outgoing letter answers it. A rejected document is always handled.": "When a document this rule matches counts as handled: once it is assigned to a record, or once an outgoing letter answers it. A rejected document is always handled."
+        "When a document this rule matches counts as handled: once it is assigned to a record, or once an outgoing letter answers it. A rejected document is always handled.": "When a document this rule matches counts as handled: once it is assigned to a record, or once an outgoing letter answers it. A rejected document is always handled.",
+        "%n note": "%n note",
+        "%n notes": "%n notes",
+        "Notes on {name}": "Notes on {name}",
+        "This document has no file to leave notes on.": "This document has no file to leave notes on."
     },
     "nplurals=2; plural=(n != 1);"
 )
