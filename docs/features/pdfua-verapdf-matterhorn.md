@@ -24,6 +24,21 @@ document.
 Every accessibility finding says where it comes from: **Validator** or
 **Quick check**. A verdict is a conformance verdict, never a certification.
 
+### Example: tagged, and still not PDF/UA
+
+`tests/sample-documents/pdfua/heuristics-pass-matterhorn-fail.pdf` is tagged,
+marked, has a language, a title and the PDF/UA identifier, so the quick check
+finds nothing. veraPDF fails it on three Matterhorn checkpoints:
+
+| Clause | Test | What is wrong |
+| --- | --- | --- |
+| 7.21.4.1 | 1 | a font is not embedded |
+| 7.3 | 1 | a figure has no alternative text |
+| 7.1 | 3 | a paragraph is drawn outside the tags |
+
+The document therefore reads **does not conform**, not "looks tagged".
+`pdfua1-conformant.pdf` beside it, a LibreOffice PDF/UA export, passes both.
+
 ## Check one document
 
 Open a PDF and choose **PDF/UA report**. The report shows the state from the

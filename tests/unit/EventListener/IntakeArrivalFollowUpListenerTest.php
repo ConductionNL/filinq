@@ -121,7 +121,7 @@ class IntakeArrivalFollowUpListenerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-an-arriving-pdf-may-get-a-stamped-copy-req-ias-003
+	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-received-stamp-goes-on-a-copy-never-on-what-arrived-req-ias-003
 	 */
 	public function testAStampingRuleStoresTheStampedCopy(): void {
 		$entity = self::saved();

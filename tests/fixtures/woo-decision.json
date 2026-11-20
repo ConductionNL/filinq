@@ -1,0 +1,34 @@
+{
+    "reference": "WOO-2026-0042",
+    "subject": "Stukken over de herinrichting van het Marktplein",
+    "receivedAt": "2026-09-01",
+    "decisionDate": "2026-10-13",
+    "decisionKind": "partially-disclose",
+    "organisation": "Gemeente Voorbeeld",
+    "documents": [
+        {
+            "inventoryNumber": "1",
+            "title": "Raadsvoorstel herinrichting",
+            "date": "2026-01-10",
+            "assessment": "disclose",
+            "groundCodes": [],
+            "remark": ""
+        },
+        {
+            "inventoryNumber": "2",
+            "title": "Advies verkeerskundige",
+            "date": "2026-02-11",
+            "assessment": "partially-disclose",
+            "groundCodes": ["5.1.2.e"],
+            "remark": "Namen en telefoonnummers gelakt"
+        },
+        {
+            "inventoryNumber": "3",
+            "title": "Intern memo wethouder",
+            "date": "2026-03-12",
+            "assessment": "withhold",
+            "groundCodes": ["5.1.2.e", "5.2.1"],
+            "remark": ""
+        }
+    ]
+}

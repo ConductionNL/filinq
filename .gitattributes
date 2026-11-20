@@ -16,7 +16,6 @@ bin/console text eol=lf
 *.png binary
 *.pdf binary
 
-.github export-ignore
 .travis.yml export-ignore
 LICENSE export-ignore
 README.md export-ignore

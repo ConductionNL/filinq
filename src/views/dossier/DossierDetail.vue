@@ -56,6 +56,7 @@
 				<LegalHoldBadge
 					:objectId="dossierId"
 					@held="underLegalHold = $event" />
+				<MdtoPanel :objectId="dossierId" objectType="dossier" />
 				<NcNoteCard v-if="folderWarning" type="warning">
 					{{ folderWarning }}
 				</NcNoteCard>
@@ -224,6 +225,13 @@
 						<p v-else class="dossier-muted">
 							{{ t('filinq', 'Select a document to preview it.') }}
 						</p>
+						<!-- The selected document's own notes: its Nextcloud file comments (work-document-notes D3). -->
+						<CnNotesCard
+							v-if="notesFileId"
+							:key="notesFileId"
+							class="dossier-viewer-notes"
+							:fileId="notesFileId"
+							data-testid="dossier-document-notes" />
 					</div>
 				</div>
 			</section>
@@ -279,7 +287,7 @@
 </template>
 
 <script>
-import { CnConfirmDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnConfirmDialog, CnNotesCard, CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
@@ -297,6 +305,7 @@ import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import LegalHoldBadge from '../../components/LegalHoldBadge.vue'
+import MdtoPanel from '../../components/MdtoPanel.vue'
 import WizardEntryActions from '../../components/WizardEntryActions.vue'
 import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { dossierStore } from '../../store/store.js'
@@ -314,6 +323,7 @@ import { dossierStatusColors, dossierStatusLabel } from './dossierStatus.js'
 export default {
 	name: 'DossierDetail',
 	components: {
+		CnNotesCard,
 		CnStatusBadge,
 		CnConfirmDialog,
 		Delete,
@@ -322,6 +332,7 @@ export default {
 		FilePdfBox,
 		FolderAccount,
 		LegalHoldBadge,
+		MdtoPanel,
 		NcActionButton,
 		NcActions,
 		NcButton,
@@ -383,6 +394,20 @@ export default {
 				return targets
 			}
 			return targets.filter((target) => target !== 'published')
+		},
+
+		/**
+		 * The file whose notes show under the viewer: the selected document.
+		 *
+		 * @return {string|null} The file id, or null when nothing is open.
+		 * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
+		 */
+		notesFileId() {
+			const doc = this.dossierStore.selectedDocument
+			if (!doc || doc.missing || !doc.id) {
+				return null
+			}
+			return String(doc.id)
 		},
 
 		/**
@@ -654,8 +679,14 @@ export default {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 	display: flex;
+	flex-direction: column;
 	align-items: center;
 	justify-content: center;
+}
+
+.dossier-viewer-notes {
+	align-self: stretch;
+	border-top: 1px solid var(--color-border);
 }
 
 .dossier-viewer-frame {

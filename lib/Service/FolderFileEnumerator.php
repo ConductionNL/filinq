@@ -244,6 +244,57 @@ class FolderFileEnumerator {
 	}//end enumerate()
 
 	/**
+	 * Every source file under a folder and its subfolders, depth-first.
+	 *
+	 * The anonymised-output subfolder is not walked: its files are redacted
+	 * copies, not source material. The same legacy-output filter and the same
+	 * optional confidentiality ordering as the flat scan apply.
+	 *
+	 * @param Folder $folder The folder to walk
+	 *
+	 * @return File[] The files, in analysis order
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/folder-batch-analysis/spec.md#requirement-optional-recursive-folder-enumeration-req-ddras-011
+	 */
+	public function enumerateRecursive(Folder $folder): array {
+		return $this->applyConfidentialityPriorityOrdering(files: $this->collectRecursive(folder: $folder));
+	}//end enumerateRecursive()
+
+	/**
+	 * Every source file under a folder, depth-first.
+	 *
+	 * @param Folder $folder The folder to walk.
+	 *
+	 * @return File[] The files, in walk order.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/folder-batch-analysis/spec.md#requirement-optional-recursive-folder-enumeration-req-ddras-011
+	 */
+	private function collectRecursive(Folder $folder): array {
+		$outputFolder = $this->layout->getSubfolderName();
+		$files = [];
+		foreach ($folder->getDirectoryListing() as $node) {
+			if ($node instanceof Folder) {
+				if ($node->getName() !== $outputFolder) {
+					array_push($files, ...$this->collectRecursive(folder: $node));
+				}
+
+				continue;
+			}
+
+			if ($node instanceof File === false) {
+				continue;
+			}
+
+			$baseName = pathinfo($node->getName(), PATHINFO_FILENAME);
+			if ($this->layout->isLegacyAnonymizedOutput(baseName: $baseName) === false) {
+				$files[] = $node;
+			}
+		}
+
+		return $files;
+	}//end collectRecursive()
+
+	/**
 	 * Optionally reorder enumerated files by confidentiality level.
 	 *
 	 * A pure suggestion signal: when

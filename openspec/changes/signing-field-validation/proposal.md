@@ -103,6 +103,8 @@ open change `bulk-signing-field-builder` (REQ-DDBSF-003) and depends on it.
   `ValidateObject::getValidator()` (`lib/Service/Object/ValidateObject.php:2016`)
   and allow it in `PropertyValidatorHandler` (`:234`), and let an app check
   one value against a named format without saving an object.
+  Built as ConductionNL/openregister#10571 (`IbanFormat`, schema format
+  `iban`; `new IbanFormat(country: 'NL')` checks one value without saving).
 - **portaliq**: the portal sign row action must collect the field values
   filinq declares for the signer and send them with the sign act. Today a
   row action carries no inputs.
