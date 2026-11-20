@@ -768,6 +768,8 @@
 
 		<EmailIngestionSettings v-if="isAdmin" />
 
+		<MailArchiveImportSettings v-if="isAdmin" />
+
 		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
 		<PageLayoutSettings v-if="isAdmin" />
 
@@ -945,6 +947,7 @@ import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import IntegrityScanSection from './IntegrityScanSection.vue'
+import MailArchiveImportSettings from './MailArchiveImportSettings.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
 import RefusalGroundsSource from './RefusalGroundsSource.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
@@ -1081,6 +1084,7 @@ export default {
 		EntityTypeSelector,
 		DetectionProviderSettings,
 		EmailIngestionSettings,
+		MailArchiveImportSettings,
 		PageLayoutSettings,
 		SettingSwitchRow,
 		SignerIdentitySettings,
