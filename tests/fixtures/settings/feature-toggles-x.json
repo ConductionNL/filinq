@@ -13,6 +13,7 @@
         "signing_request_expiry_days": 0,
         "signing_guardian_consent_age": "x",
         "filinq.anonymisation.default_output_format": "x",
+        "extraction_unattended_threshold": "x",
         "redaction_four_eyes": "x",
         "ocr_enabled": false,
         "ocr_languages": "x",
@@ -34,8 +35,7 @@
             "Confidential": 2,
             "Secret": 3
         },
-        "filinq.confidentiality.prioritise_analysis": false,
-        "extraction_unattended_threshold": "x"
+        "filinq.confidentiality.prioritise_analysis": false
     },
     "types": {
         "publication_objection_period_days": "int",
@@ -51,6 +51,7 @@
         "signing_request_expiry_days": "int",
         "signing_guardian_consent_age": "string",
         "filinq.anonymisation.default_output_format": "string",
+        "extraction_unattended_threshold": "string",
         "redaction_four_eyes": "string",
         "ocr_enabled": "bool",
         "ocr_languages": "string",
@@ -61,8 +62,7 @@
         "filinq.grondslagen.entity_type_bases": "array",
         "filinq.anonymisation.enabled_entity_types": "array",
         "filinq.confidentiality.label_vocabulary": "array",
-        "filinq.confidentiality.prioritise_analysis": "bool",
-        "extraction_unattended_threshold": "string"
+        "filinq.confidentiality.prioritise_analysis": "bool"
     },
     "reads": [
         "string publication_objection_period_days 28",
@@ -78,6 +78,7 @@
         "string signing_request_expiry_days 30",
         "string signing_guardian_consent_age 16",
         "string filinq.anonymisation.default_output_format pdf-only",
+        "string extraction_unattended_threshold 0.9",
         "string redaction_four_eyes woo",
         "string ocr_enabled 1",
         "string ocr_languages nld+eng",
@@ -86,7 +87,6 @@
         "string pseudonymisation_restore_allowed_groups []",
         "string legal_hold_authority_groups []",
         "string filinq.confidentiality.label_vocabulary ",
-        "bool filinq.confidentiality.prioritise_analysis false",
-        "string extraction_unattended_threshold 0.9"
+        "bool filinq.confidentiality.prioritise_analysis false"
     ]
 }
