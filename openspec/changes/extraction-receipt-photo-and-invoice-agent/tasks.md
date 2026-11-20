@@ -27,5 +27,6 @@ Built in this pass: the register moves to 8.52.0 with `financialExtraction` 1.1.
 - [ ] 4.1 File the shillinq issues for the camera entry on its receipts screen and for acting on the verdict event (proposal, cross-app dependencies). Verify: both issue links are in the PR body.
 - [x] 4.2 Dutch and English strings (ADR-005) and `@spec` tags on every new method. Verify: `npm run lint`, `npm run check:l10n` and `composer check:strict` pass.
   English and Dutch in `l10n/en.json` and `l10n/nl.json` (rebuilt `.js`); `@spec` on every new method.
-- [ ] 4.3 PHPUnit at 75% or more on the new classes (ADR-009). Verify: the coverage report for the new files.
+- [x] 4.3 PHPUnit at 75% or more on the new classes (ADR-009). Verify: the coverage report for the new files.
+  - Coverage measured 2026-11-20 with pcov over the full unit suite (8398 tests, 0 failures), statements of the lib files carrying this change's `@spec` tag: 531 of 564, 94.1% over 10 files. `PhotoNormaliser` went from 24/37 to 26/37 (70.3%) with two new tests (a turned photo whose image cannot be decoded stays as it came; an undecodable HEIC is refused with 415). The 11 statements left are its Imagick branches, which run only where Imagick is installed.
 - [ ] 4.4 A section in `docs/features/` on the capture route and the verdict, with a screenshot of the threshold setting (ADR-010). Verify: the docs page renders with the screenshot.
