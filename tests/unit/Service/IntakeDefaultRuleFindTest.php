@@ -79,4 +79,23 @@ class IntakeDefaultRuleFindTest extends TestCase {
 		$this->assertNull($service->findRule(''));
 		$this->assertNull($service->findRule('rule-gone'));
 	}//end testAnEmptyOrUnknownUuidFindsNothing()
+
+	/**
+	 * The rule a document was stamped with comes back with its BRP purpose,
+	 * also when the uuid carries surrounding whitespace.
+	 *
+	 * @return void
+	 */
+	public function testARuleIsFoundWithItsPurposeByATrimmedUuid(): void {
+		$service = $this->service(
+			[
+				['uuid' => 'rule-1', 'channel' => 'scan', 'brpPurpose' => ''],
+				['@self' => ['id' => 'rule-2'], 'channel' => 'mail', 'brpPurpose' => 'Behandeling bezwaar'],
+			]
+		);
+
+		$this->assertSame('Behandeling bezwaar', ($service->findRule(uuid: ' rule-2 ')['brpPurpose'] ?? null));
+		$this->assertSame('scan', ($service->findRule(uuid: 'rule-1')['channel'] ?? null));
+		$this->assertNull($service->findRule(uuid: 'rule-9'));
+	}//end testARuleIsFoundWithItsPurposeByATrimmedUuid()
 }//end class

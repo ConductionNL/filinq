@@ -287,6 +287,17 @@
 				"
 				data-testid="settings-inbound-classification" />
 
+			<!-- BRP lookup of a BSN on an arriving document (intake-base-registry-enrichment D3): off by default. -->
+			<SettingSwitchRow
+				v-model="settings['intake.brp_lookup_enabled']"
+				:label="t('filinq', 'Look up BSNs in the BRP')"
+				:description="
+					t(
+						'filinq',
+						'Ask the BRP for the name and address behind a BSN on an arriving document. Only for intake rules that state a purpose, and only as a suggestion somebody accepts.',
+					)
+				"
+				data-testid="settings-brp-lookup" />
 			<div class="setting-item">
 				<NcTextField
 					:modelValue="String(settings.extraction_unattended_threshold)"
@@ -1366,6 +1377,7 @@ export default {
 						data.enable_inbound_classification ?? true
 					this.settings.ocr_enabled = data.ocr_enabled ?? true
 					this.settings.ocr_on_arrival = data.ocr_on_arrival ?? true
+					this.settings['intake.brp_lookup_enabled'] = data['intake.brp_lookup_enabled'] === true
 					this.settings.ocr_dpi = data.ocr_dpi ?? 300
 					// Signing settings
 					this.settings.signing_enabled =
@@ -1595,6 +1607,7 @@ export default {
 
 				ocr_enabled: this.settings.ocr_enabled ? '1' : '0',
 				ocr_on_arrival: this.settings.ocr_on_arrival ? '1' : '0',
+				'intake.brp_lookup_enabled': this.settings['intake.brp_lookup_enabled'] ? '1' : '0',
 				ocr_languages: ocrLangs,
 				ocr_dpi: String(this.settings.ocr_dpi),
 				signing_enabled: this.settings.signing_enabled ? '1' : '0',
