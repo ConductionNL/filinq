@@ -3,7 +3,7 @@
   - SPDX-License-Identifier: EUPL-1.2
 -->
 <script setup>
-import { translate as t } from '@nextcloud/l10n'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 </script>
 
@@ -56,6 +56,13 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							class="my-documents-name__icon" />
 						<span>{{ displayName(row) }}</span>
 						<span
+							v-if="sealedIds[String(row.fileId)]"
+							class="my-documents-ocr-badge"
+							data-testid="waarmerk-badge"
+							:title="t('filinq', 'This file carries an organisation waarmerk')">
+							{{ t('filinq', 'Waarmerk') }}
+						</span>
+						<span
 							v-if="ocrBadgeFor(row)"
 							class="my-documents-ocr-badge"
 							:title="
@@ -65,6 +72,15 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 								)
 							">
 							{{ ocrBadgeFor(row) }}
+						</span>
+						<span
+							v-if="row.notesCount > 0"
+							class="my-documents-notes-count"
+							:title="n('filinq', '%n note', '%n notes', row.notesCount)"
+							:aria-label="n('filinq', '%n note', '%n notes', row.notesCount)"
+							data-testid="my-documents-notes-count">
+							<CommentTextOutline :size="16" />
+							{{ row.notesCount }}
 						</span>
 						<span
 							v-if="caseSystemFiles[String(row.fileId)]"
@@ -154,6 +170,29 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							}}
 						</NcActionButton>
 						<NcActionButton
+							v-if="bulkSelect && selectedShareIds.length > 0"
+							closeAfterClick
+							data-testid="documents-share-selected"
+							@click="openShare(selectedShareIds)">
+							<template #icon>
+								<LinkVariant :size="20" />
+							</template>
+							{{
+								t('filinq', 'Share selected by link ({count})', {
+									count: selectedShareIds.length,
+								})
+							}}
+						</NcActionButton>
+						<NcActionButton
+							closeAfterClick
+							data-testid="documents-shared-links"
+							@click="$router.push({ name: 'SharedLinks' })">
+							<template #icon>
+								<LinkVariant :size="20" />
+							</template>
+							{{ t('filinq', 'Shared links') }}
+						</NcActionButton>
+						<NcActionButton
 							v-if="bulkSelect && selectedIds.length > 0"
 							closeAfterClick
 							@click="bulkDelete">
@@ -192,6 +231,16 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 						<NcActionButton
 							v-if="!row.isFolder"
 							closeAfterClick
+							data-testid="document-share-by-link"
+							@click="openShare([row.fileId])">
+							<template #icon>
+								<LinkVariant :size="20" />
+							</template>
+							{{ t('filinq', 'Share by link') }}
+						</NcActionButton>
+						<NcActionButton
+							v-if="!row.isFolder"
+							closeAfterClick
 							@click="validateDocument(row)">
 							<template #icon>
 								<ShieldCheckOutline :size="20" />
@@ -223,6 +272,16 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							}}
 						</NcActionButton>
 						<NcActionButton
+							v-if="!row.isFolder && iconFor(row) === 'pdf'"
+							closeAfterClick
+							data-testid="document-waarmerk"
+							@click="openWaarmerk(row)">
+							<template #icon>
+								<CertificateOutline :size="20" />
+							</template>
+							{{ t('filinq', 'Add waarmerk') }}
+						</NcActionButton>
+						<NcActionButton
 							v-if="!row.isFolder"
 							closeAfterClick
 							@click="compareDocument(row)">
@@ -251,12 +310,22 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			</DdIndexPage>
 		</template>
 
+		<ShareByLinkDialog
+			:show="shareDocuments.length > 0"
+			:documents="shareDocuments"
+			@close="shareDocuments = []" />
 		<SanitizationReportModal
 			:show="sanitization.show"
 			:loading="sanitization.loading"
 			:error="sanitization.error"
 			:result="sanitization.result"
 			@close="sanitization.show = false" />
+		<WaarmerkSealModal
+			:show="waarmerk.show"
+			:fileId="waarmerk.fileId"
+			:fileName="waarmerk.fileName"
+			@sealed="onSealed"
+			@close="waarmerk.show = false" />
 		<ValidationResultModal
 			:show="validation.show"
 			:loading="validation.loading"
@@ -306,9 +375,11 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { generateUrl } from '@nextcloud/router'
 import { NcActionButton, NcActions } from '@nextcloud/vue'
 import BroomIcon from 'vue-material-design-icons/Broom.vue'
+import CertificateOutline from 'vue-material-design-icons/CertificateOutline.vue'
 import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
 import CheckDecagram from 'vue-material-design-icons/CheckDecagram.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import CommentTextOutline from 'vue-material-design-icons/CommentTextOutline.vue'
 import Compare from 'vue-material-design-icons/Compare.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
@@ -317,6 +388,7 @@ import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import FilterOutline from 'vue-material-design-icons/FilterOutline.vue'
 import History from 'vue-material-design-icons/History.vue'
+import LinkVariant from 'vue-material-design-icons/LinkVariant.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
 import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
 import DdDocumentCard from '../../components/DdDocumentCard.vue'
@@ -328,7 +400,9 @@ import DueForReviewList from '../../components/myDocuments/DueForReviewList.vue'
 import WaitingForMeList from '../../components/myDocuments/WaitingForMeList.vue'
 import PdfPasswordModal from '../../modals/PdfPasswordModal.vue'
 import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
+import ShareByLinkDialog from '../../modals/ShareByLinkDialog.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
+import WaarmerkSealModal from '../../modals/WaarmerkSealModal.vue'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import { ocrRun } from '../../mixins/ocrRun.js'
 import { fetchSourceBadges, sourceBadgeLabel } from '../../services/bridge.js'
@@ -337,6 +411,7 @@ import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/oc
 import { fetchReviewMarks } from '../../services/reviewMark.js'
 import { sanitizeFile } from '../../services/sanitization.js'
 import { validateFile } from '../../services/validationService.js'
+import { sealedFileIds } from '../../services/waarmerk.js'
 
 const VIEW_MODE_STORAGE_KEY = 'filinq:myDocuments:viewMode'
 const VALID_VIEW_MODES = ['table', 'cards']
@@ -362,6 +437,7 @@ function loadPersistedViewMode() {
 export default {
 	name: 'MyDocumentsIndex',
 	components: {
+		CommentTextOutline,
 		DueForReviewList,
 		WaitingForMeList,
 		DdIndexPage,
@@ -376,6 +452,8 @@ export default {
 		PdfPasswordModal,
 		ValidationResultModal,
 		SanitizationReportModal,
+		ShareByLinkDialog,
+		LinkVariant,
 		BroomIcon,
 		CnConfirmDialog,
 		DotsHorizontal,
@@ -392,6 +470,8 @@ export default {
 		Cog,
 		CheckboxMultipleMarkedOutline,
 		FilterOutline,
+		CertificateOutline,
+		WaarmerkSealModal,
 	},
 
 	mixins: [ocrRun],
@@ -404,6 +484,8 @@ export default {
 			viewMode: loadPersistedViewMode(),
 			bulkSelect: false,
 			selectedIds: [],
+			// The file ids the Share by link dialog is open for, or none.
+			shareDocuments: [],
 			sanitization: {
 				show: false,
 				loading: false,
@@ -440,6 +522,9 @@ export default {
 			caseSystemFiles: {},
 			sourceBadges: {},
 			ocrRunning: {},
+			// Waarmerk (document-waarmerk-certification): the seal dialog and the sealed file ids.
+			waarmerk: { show: false, fileId: 0, fileName: '' },
+			sealedIds: {},
 		}
 	},
 
@@ -467,6 +552,18 @@ export default {
 			return docs.filter((d) =>
 				(d.fileName || '').toLowerCase().includes(query),
 			)
+		},
+
+		/**
+		 * The selected documents that can be shared by link: files, not folders.
+		 *
+		 * @return {number[]} Their file ids.
+		 * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+		 */
+		selectedShareIds() {
+			return myDocumentsStore.documents
+				.filter((d) => !d.isFolder && this.selectedIds.includes(d.fileId))
+				.map((d) => d.fileId)
 		},
 
 		paginatedDocuments() {
@@ -549,8 +646,14 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the documents and which of them carry a waarmerk.
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
+	 */
 	mounted() {
 		myDocumentsStore.fetchDocuments()
+		this.loadSealedIds()
 		window.addEventListener('keydown', this.onKeydown)
 	},
 
@@ -559,6 +662,44 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Which files carry an active waarmerk, for the badge. A failure leaves no badges.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
+		 */
+		async loadSealedIds() {
+			try {
+				const ids = await sealedFileIds()
+				this.sealedIds = Object.fromEntries([...ids].map((id) => [String(id), true]))
+			} catch {
+				this.sealedIds = {}
+			}
+		},
+
+		/**
+		 * Open the "Add waarmerk" dialog for a PDF.
+		 *
+		 * @param {object} row The document row.
+		 * @return {void}
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
+		 */
+		openWaarmerk(row) {
+			this.waarmerk = { show: true, fileId: Number(row.fileId), fileName: this.displayName(row) }
+		},
+
+		/**
+		 * A seal was made: list the sealed copy and mark it.
+		 *
+		 * @param {object} result The seal result.
+		 * @return {void}
+		 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md
+		 */
+		onSealed(result) {
+			this.sealedIds = { ...this.sealedIds, [String(result.fileId)]: true }
+			myDocumentsStore.fetchDocuments()
+		},
+
 		/**
 		 * Read whether OCR can run, and the results for the images and PDFs on this page.
 		 *
@@ -703,6 +844,16 @@ export default {
 			} else {
 				this.selectedIds = [...new Set([...this.selectedIds, ...pageIds])]
 			}
+		},
+
+		/**
+		 * Open the Share by link dialog for one or several documents.
+		 *
+		 * @param {number[]} fileIds The documents.
+		 * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+		 */
+		openShare(fileIds) {
+			this.shareDocuments = [...fileIds]
 		},
 
 		/**
@@ -1292,6 +1443,14 @@ export default {
 	.my-documents-name__icon {
 		transition: none;
 	}
+}
+
+.my-documents-notes-count {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	margin-inline-start: 8px;
+	color: var(--color-text-maxcontrast);
 }
 
 .my-documents-case-system-badge {

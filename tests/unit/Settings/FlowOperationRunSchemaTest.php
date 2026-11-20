@@ -112,7 +112,7 @@ class FlowOperationRunSchemaTest extends TestCase {
 	}//end testTheRunCarriesTheProcessingLogFields()
 
 	/**
-	 * A run starts queued, runs, and ends succeeded or failed; a queued run can be skipped.
+	 * A run starts queued, runs, and ends succeeded or failed; a queued or a started run can be skipped.
 	 *
 	 * @return void
 	 */
@@ -128,7 +128,7 @@ class FlowOperationRunSchemaTest extends TestCase {
 			$moves[$name] = $transition['from'] . '>' . $transition['to'];
 		}
 
-		$this->assertSame(['start' => 'queued>running', 'succeed' => 'running>succeeded', 'fail' => 'running>failed', 'skip' => 'queued>skipped'], $moves);
+		$this->assertSame(['start' => 'queued>running', 'succeed' => 'running>succeeded', 'fail' => 'running>failed', 'skip' => 'queued>skipped', 'pass' => 'running>skipped'], $moves);
 
 		$terminal = array_keys(array_filter($lifecycle['states'], static fn (array $state): bool => $state['terminal'] === true));
 		$this->assertSame(['succeeded', 'failed', 'skipped'], $terminal);

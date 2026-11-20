@@ -38,6 +38,7 @@ import FileCheckOutline from 'vue-material-design-icons/FileCheckOutline.vue'
 import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import FileDocumentCheck from 'vue-material-design-icons/FileDocumentCheck.vue'
 import FileDocumentMultipleOutline from 'vue-material-design-icons/FileDocumentMultipleOutline.vue'
+import FileEdit from 'vue-material-design-icons/FileEdit.vue'
 import FileLinkOutline from 'vue-material-design-icons/FileLinkOutline.vue'
 import FileLock from 'vue-material-design-icons/FileLock.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
@@ -56,6 +57,7 @@ import MapMarkerPath from 'vue-material-design-icons/MapMarkerPath.vue'
 import Palette from 'vue-material-design-icons/Palette.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Printer from 'vue-material-design-icons/Printer.vue'
+import ProgressClock from 'vue-material-design-icons/ProgressClock.vue'
 import Publish from 'vue-material-design-icons/Publish.vue'
 import PublishOff from 'vue-material-design-icons/PublishOff.vue'
 import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
@@ -107,6 +109,7 @@ export default {
 	FileDocument,
 	FileDocumentCheck,
 	FileDocumentMultipleOutline,
+	FileEdit,
 	FilePdfBox,
 	FileLinkOutline,
 	FileLock,
@@ -131,6 +134,8 @@ export default {
 	Palette,
 	Plus,
 	Printer,
+	// The Batch operations menu entry (redaction-at-scale).
+	ProgressClock,
 	// The two publication-policy menu entries. Both pages existed and were
 	// routable for months with no way in: an unregistered icon renders NOTHING
 	// in the navigation (rule 3 above), so adding the menu entry without these

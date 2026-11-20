@@ -26,6 +26,7 @@ use OCA\Filinq\Controller\Support\SigningServices;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
 use OCA\Filinq\Exception\SigningCancellationNotSupportedException;
 use OCA\Filinq\Exception\SigningCancellationRefusedException;
+use OCA\Filinq\Exception\SigningFieldsRefusedException;
 use OCA\Filinq\Exception\SigningRequestWithdrawnException;
 use OCA\Filinq\Exception\StepUpRequiredException;
 use OCA\Filinq\Kernel\AppIdentity;
@@ -161,6 +162,7 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
 	 */
 	public function showRequest(string $id): JSONResponse {
 		try {
@@ -181,6 +183,9 @@ class SigningController extends Controller {
 			if ($result === null) {
 				return $this->notFoundResponse();
 			}
+
+			// The detail page lists who signs and who accepts (signing-accept-only-recipient 4.2).
+			$result['recipients'] = $this->services->signing->recipientsOf(request: $result);
 
 			return new JSONResponse($result);
 		} catch (Exception $e) {
@@ -252,6 +257,7 @@ class SigningController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
 	 *
 	 * @no-admin-idor-exempt SigningActorResolver::loadAuthorisedSigner() refuses unless the signer record
@@ -265,7 +271,13 @@ class SigningController extends Controller {
 			}
 
 			$signerId = $this->request->getParam('signerId', '');
-			$result = $this->services->signing->sign(requestId: $id, signerId: $signerId);
+			// A missing `fields` object means the act carries none (D7).
+			$fields = $this->request->getParam('fields');
+			if (is_array($fields) === false) {
+				$fields = null;
+			}
+
+			$result = $this->services->signing->sign(requestId: $id, signerId: $signerId, fields: $fields);
 			return new JSONResponse($result);
 		} catch (SigningRequestWithdrawnException $e) {
 			return new JSONResponse(data: ['error' => $this->l10n->t('The signing request was withdrawn.')], statusCode: $e->getCode());
@@ -274,6 +286,36 @@ class SigningController extends Controller {
 		}
 
 	}//end sign()
+
+	/**
+	 * Accept a signing request as an accept-only recipient
+	 *
+	 * @param string $id The signing request ID
+	 *
+	 * @return JSONResponse The updated recipient record
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 *
+	 * @no-admin-idor-exempt SigningActorResolver::loadAuthorisedSigner() refuses unless the signer record
+	 * belongs to this request and its userId is the session user.
+	 */
+	public function accept(string $id): JSONResponse {
+		try {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
+			}
+
+			$signerId = $this->request->getParam('signerId', '');
+			$result = $this->services->signing->accept(requestId: $id, signerId: $signerId);
+			return new JSONResponse($result);
+		} catch (Exception $e) {
+			return $this->errorResponse(message: 'Failed to accept the document', exception: $e);
+		}
+
+	}//end accept()
 
 	/**
 	 * Decline a signing request
@@ -470,6 +512,13 @@ class SigningController extends Controller {
 		// check, so only the signer the record belongs to ever sees it.
 		if ($exception instanceof StepUpRequiredException) {
 			$body['stepUp'] = $exception->stepUp();
+		}
+
+		// Signer-filled fields (signing-field-validation REQ-SFV-003): the
+		// dialog shows a message on each refused field. Thrown only after the
+		// ownership check, and no message carries what was typed.
+		if ($exception instanceof SigningFieldsRefusedException) {
+			$body['fieldErrors'] = array_map(fn (string $message): string => $this->l10n->t($message), $exception->fieldErrors());
 		}
 
 		return new JSONResponse($body, $statusCode);

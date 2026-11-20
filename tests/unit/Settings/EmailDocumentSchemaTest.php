@@ -64,11 +64,11 @@ class EmailDocumentSchemaTest extends TestCase {
 		$this->assertContains('emailDocument', $this->register['components']['registers']['filinq']['schemas']);
 		$this->assertTrue(version_compare($this->register['info']['version'], '8.42.0', '>='));
 		$schema = $schemas['emailDocument'];
-		$this->assertSame('1.0.0', $schema['version']);
+		$this->assertSame('1.1.0', $schema['version']);
 		$this->assertSame(['sourceFileRef', 'status', 'ingestedAt'], $schema['required']);
 		$this->assertSame('subject', $schema['configuration']['objectNameField']);
 		$this->assertSame(['received', 'filed', 'failed'], $schema['properties']['status']['enum']);
-		$this->assertSame(['watched-folder', 'manual'], $schema['properties']['ingestSource']['enum']);
+		$this->assertSame(['watched-folder', 'manual', 'archive-import'], $schema['properties']['ingestSource']['enum']);
 		foreach (['pdfFileRef', 'dossierRef', 'fromAddress', 'toAddresses', 'ccAddresses', 'sentAt', 'messageId', 'inReplyTo', 'references', 'threadKey', 'attachmentCount', 'attachmentNames', 'contentHash', 'failureReason'] as $field) {
 			$this->assertArrayHasKey($field, $schema['properties'], $field);
 		}

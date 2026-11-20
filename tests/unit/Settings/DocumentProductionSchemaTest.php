@@ -132,8 +132,10 @@ class DocumentProductionSchemaTest extends TestCase {
 		// 1.7.0 since `generate-store-in-case-system` (optional caseSystemDeliveryId) and,
 		// separately, `office-template-authoring` (optional templateType and fragments);
 		// 1.8.0 since `template-library-leaf` (optional sourceObject) and, separately,
-		// once both 1.7.0 lines were on one schema; 1.9.0 once both 1.8.0 lines are.
-		$this->assertSame('1.9.0', $document['version']);
+		// once both 1.7.0 lines were on one schema; 1.9.0 since
+		// `generate-draft-and-attended-edit` (optional draftId and editedBy) and, separately,
+		// once both 1.8.0 lines were; 1.10.0 once both 1.9.0 lines are on one schema.
+		$this->assertSame('1.10.0', $document['version']);
 		$this->assertSame(['twig', 'office'], $document['properties']['templateType']['enum']);
 		$this->assertSame('array', $document['properties']['fragments']['type']);
 		$this->assertArrayHasKey('caseSystemDeliveryId', $document['properties']);
@@ -172,10 +174,12 @@ class DocumentProductionSchemaTest extends TestCase {
 		// separately, office-template-authoring added `templateType`, the office
 		// source and the tag report; 1.7.0 once both are on one schema, and
 		// separately since specify-capability-rows added `status` and
-		// `publishedVersion`; 1.8.0 once both 1.7.0 lines are on one schema. An
+		// `publishedVersion`; 1.8.0 once both 1.7.0 lines are on one schema, and
+		// separately since woo-request-workflow added `dataContract`; 1.9.0 once
+		// both 1.8.0 lines are on one schema. An
 		// importer skips an unchanged version, so this pin moves whenever the
 		// schema actually does.
-		$this->assertSame(expected: '1.8.0', actual: $schemas['template']['version']);
+		$this->assertSame(expected: '1.9.0', actual: $schemas['template']['version']);
 
 		foreach (['templateId', 'requiredStatements', 'source'] as $part) {
 			$this->assertArrayHasKey(

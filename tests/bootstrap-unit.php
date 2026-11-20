@@ -112,6 +112,17 @@ if (is_file($ocpCryptoPath) === true && interface_exists('OCP\\Security\\ICrypto
 // The real contacts manager contract (contract-lifecycle-management): contract
 // parties take their names from contacts, and a double of the real interface
 // cannot answer a search Nextcloud would not.
+// letter-email-sending: CorrespondenceSendService talks to Nextcloud's mailer.
+$ocpMailDir = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Mail';
+if (is_dir($ocpMailDir) === true) {
+	foreach (['IAttachment', 'IEMailTemplate', 'IMessage', 'IMailer'] as $ocpMailContract) {
+		$ocpMailPath = $ocpMailDir . '/' . $ocpMailContract . '.php';
+		if (is_file($ocpMailPath) === true && interface_exists('OCP\\Mail\\' . $ocpMailContract) === false) {
+			require_once $ocpMailPath;
+		}
+	}
+}
+
 $ocpContactsPath = __DIR__ . '/../vendor/nextcloud/ocp/OCP/Contacts/IManager.php';
 if (is_file($ocpContactsPath) === true && interface_exists('OCP\\Contacts\\IManager') === false) {
 	require_once $ocpContactsPath;
@@ -126,6 +137,25 @@ if (is_dir($ocpDbExceptionDir) === true) {
 		}
 	}
 }
+
+// The Flow engine's public contracts and the file / tag events it dispatches
+// (flow-operations), read from vendor/nextcloud/ocp on first use. Lazy and
+// scoped to these prefixes so nothing NextcloudStubs.php declares is shadowed.
+spl_autoload_register(
+	static function (string $class): void {
+		$prefixes = ['OCP\\WorkflowEngine\\', 'OCP\\Files\\Events\\Node\\', 'OCP\\SystemTag\\MapperEvent', 'OCP\\EventDispatcher\\IWebhookCompatibleEvent'];
+		foreach ($prefixes as $prefix) {
+			if (str_starts_with($class, $prefix) === true) {
+				$path = __DIR__ . '/../vendor/nextcloud/ocp/' . str_replace('\\', '/', $class) . '.php';
+				if (is_file($path) === true) {
+					require_once $path;
+				}
+
+				return;
+			}
+		}
+	}
+);
 
 // Load OCP's public system-tag API (files_confidential label consumption,
 // files-confidential-labels) — same "real file, not classmapped" situation
@@ -267,6 +297,7 @@ require_once __DIR__ . '/unit/Service/BuildsAnonymizationService.php';
 require_once __DIR__ . '/unit/Service/ReadsAnonymizeOptions.php';
 require_once __DIR__ . '/unit/Service/DetectionStates.php';
 require_once __DIR__ . '/unit/Service/Ocr/OcrDoubles.php';
+require_once __DIR__ . '/unit/Flow/FlowOperationDoubles.php';
 require_once __DIR__ . '/unit/Service/Pseudonymisation/PseudonymDoubles.php';
 // The real OCP contracts the legal hold notifier implements and uses
 // (e-discovery-legal-hold), so its double cannot drift from Nextcloud's.
@@ -301,6 +332,10 @@ require_once __DIR__ . '/unit/Support/RecordsCalls.php';
 // Subject erasure doubles (erase-a-person-while-the-records-stay); same
 // "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
 require_once __DIR__ . '/unit/Service/SubjectErasure/SubjectErasureDoubles.php';
+
+// The runtime-generated organisation certificate of the waarmerk tests (no
+// PEM or key fixture is committed); same PSR-4 situation as above.
+require_once __DIR__ . '/unit/Service/Waarmerk/WaarmerkKeyPair.php';
 
 // The veraPDF service over the recorded veraPDF (tests/fixtures/verapdf).
 require_once __DIR__ . '/unit/Service/VeraPdf/VeraPdfDoubles.php';
@@ -338,6 +373,19 @@ foreach (
 		require_once $ocpFile;
 	}
 }
+
+// Any other OCP interface (OCP\Mail\IMailer, ...) from the OCP package, which
+// does not classmap-autoload. Only reached for a class no stub above declared.
+spl_autoload_register(static function (string $class): void {
+	if (str_starts_with($class, 'OCP\\') === false) {
+		return;
+	}
+
+	$file = __DIR__ . '/../vendor/nextcloud/ocp/' . str_replace('\\', '/', $class) . '.php';
+	if (is_file($file) === true) {
+		require_once $file;
+	}
+});
 
 // OpenRegister's object-service option objects, from main, when OpenRegister itself is absent.
 spl_autoload_register(

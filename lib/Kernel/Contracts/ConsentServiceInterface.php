@@ -117,6 +117,7 @@ interface ConsentServiceInterface {
 	 * @param string $schema The schema ID
 	 * @param array<string, mixed> $data The data to update
 	 * @param string $actor The user making the change, recorded on each status event
+	 * @param string $via   How: `mcp` for an agent through Hermiq's gate, '' in Filinq itself
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
@@ -124,7 +125,7 @@ interface ConsentServiceInterface {
 	 *
 	 * @spec openspec/specs/consent-management/spec.md
 	 */
-	public function updateConsentStatus(string $consentId, string $register, string $schema, array $data, string $actor = ''): array;
+	public function updateConsentStatus(string $consentId, string $register, string $schema, array $data, string $actor = '', string $via = ''): array;
 
 	/**
 	 * Check if an objection deadline has expired

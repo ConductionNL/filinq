@@ -27,6 +27,13 @@
 			"icon": "EmailOutline",
 			"route": "Correspondence",
 			"order": 55
+		},
+		{
+			"id": "Drafts",
+			"label": "Drafts",
+			"icon": "FileEdit",
+			"route": "Drafts",
+			"order": 54
 		}
 	],
 	"pages": [
@@ -119,6 +126,59 @@
 			"title": "Letters & correspondence",
 			"component": "CorrespondenceIndex",
 			"_note": "Letter/correspondence generation from templates with merge data (single or batch), via correspondenceStore + CorrespondenceController (generate/generateBatch/jobStatus). Hybrid data path; type:custom preserves it. Restored reachability — openspec/changes/orphaned-surface-restoration (REQ-DDOSR-003); the component and backend already existed, only the manifest/registry/menu wiring was missing."
+		},
+		{
+			"id": "Drafts",
+			"route": "/drafts",
+			"type": "index",
+			"title": "Drafts",
+			"config": {
+				"register": "filinq",
+				"schema": "documentDraft",
+				"columns": [
+					{
+						"key": "templateName",
+						"label": "Template"
+					},
+					{
+						"key": "@self.updated",
+						"label": "Last change"
+					},
+					{
+						"key": "stage",
+						"label": "Stage"
+					},
+					{
+						"key": "origin",
+						"label": "Started from"
+					}
+				],
+				"defaultFilters": {
+					"stage": [
+						"answering",
+						"editing"
+					]
+				},
+				"defaultSort": [
+					{
+						"field": "expiresAt",
+						"order": "desc"
+					}
+				],
+				"rowRoute": "DraftEditor",
+				"showAdd": false,
+				"showTitle": true,
+				"emptyText": "No drafts. Choose Open for editing on Letters & correspondence, or Save and finish later in a guided document."
+			},
+			"_note": "generate-draft-and-attended-edit REQ-GDA-003: the session user's drafts still being answered or edited. documentDraft declares authorization.scope private, so OpenRegister lists only the user's own (an administrator sees all). Sorted on expiresAt, which every save sets 30 days on, so the newest change comes first. A row opens DraftEditor, which sends a wizard run still being answered back into the wizard at its saved step."
+		},
+		{
+			"id": "DraftEditor",
+			"route": "/drafts/:id",
+			"type": "custom",
+			"title": "Draft",
+			"component": "DraftEditor",
+			"_note": "generate-draft-and-attended-edit: edit the rendered document before it is stored, then Finish (api/documents/drafts/{id}/finish files and logs it through the direct path) or Discard. type:custom because finishing is a filinq route and the editing surface is HtmlDocumentEditor, shared with TemplateDetail (design D7)."
 		},
 		{
 			"id": "PrintPreview",
