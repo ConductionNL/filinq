@@ -63,6 +63,12 @@ use RuntimeException;
  * signing act and the portal assurance this class builds count as well as its
  * four collaborators; inlining them elsewhere would split one lifecycle.
  *
+ * @SuppressWarnings(PHPMD.TooManyMethods) Each method is one step of the signing request lifecycle
+ * (create, sign, accept, decline, progress); splitting the class would spread that lifecycle over
+ * two.
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods) Each public method is one lifecycle operation of
+ * SigningServiceInterface; accept() is the accept-only recipient's counterpart of sign().
+ *
  * @spec openspec/specs/document-signing/spec.md
  * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
  */
@@ -211,6 +217,9 @@ class SigningService implements SigningServiceInterface {
 	 * @throws \InvalidArgumentException With code 400 when a guardian entry is invalid,
 	 *                                   or a signer under the age of consent has no guardian.
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
+	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
@@ -220,12 +229,8 @@ class SigningService implements SigningServiceInterface {
 
 		$objectService = $this->settingsService->getObjectService();
 
-		// These three were read straight off IAppConfig here, duplicating both
-		// the keys AND the defaults ('30', 'SES', 'native') that
-		// SettingsService::loadFeatureToggles() already owns — two sources of
-		// truth for the same three settings, free to drift. getFeatureToggles()
-		// is the cheap accessor (plain IAppConfig reads, no register or schema
-		// discovery), which is why it is safe on a write path.
+		// SettingsService owns these keys and defaults ('30', 'SES', 'native'); getFeatureToggles()
+		// is the cheap accessor (plain IAppConfig reads, no register discovery), safe on a write path.
 		$toggles = $this->settingsService->getFeatureToggles();
 		$expiryDays = (int)$toggles['signing_request_expiry_days'];
 		$deadline = (new DateTimeImmutable())->modify('+' . $expiryDays . ' days');
@@ -400,6 +405,9 @@ class SigningService implements SigningServiceInterface {
 	 * @param SignerEntries $entries The signer entries, their guardian fields and guardian-to-signer links.
 	 *
 	 * @return list<string> The signer record ids, in entry order.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
 	 *
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
@@ -672,6 +680,9 @@ class SigningService implements SigningServiceInterface {
 	 * @return array<string, mixed> The updated signer record
 	 *
 	 * @throws RuntimeException If signing fails
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
 	 */
 	private function signAct(array $act): array {
 		$requestId     = $act['requestId'];
@@ -862,6 +873,9 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @throws RuntimeException With code 422 for a recipient who signs, or when the request or recipient cannot accept.
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
+	 *
 	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 */
 	public function accept(string $requestId, string $signerId, ?array $verifiedActor = null): array {
@@ -928,6 +942,9 @@ class SigningService implements SigningServiceInterface {
 	 * @return void
 	 *
 	 * @throws RuntimeException With code 409 when an earlier recipient has not responded.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
 	 *
 	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 */
@@ -1288,6 +1305,9 @@ class SigningService implements SigningServiceInterface {
 	 * @param SigningAct $act The signing act: request ID, request data and verified actor.
 	 *
 	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
 	 */
 	private function updateRequestStatus(SigningAct $act): void {
 		$requestId = $act->requestId;
@@ -1445,6 +1465,9 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @return array{allSigned: bool, signers: array<string, array<string, mixed>>} Whether every
 	 *     signer signed, and the records read, keyed by signer ID.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
 	 */
 	private function signerProgress(array $request): array {
 		$objectService = $this->settingsService->getObjectService();
@@ -1502,6 +1525,9 @@ class SigningService implements SigningServiceInterface {
 	 * @param array<string, mixed> $request The signing request, as getRequest() returned it.
 	 *
 	 * @return list<array<string, mixed>> The recipients.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
 	 *
 	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
 	 */
