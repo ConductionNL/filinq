@@ -75,6 +75,9 @@ class NextcloudLinkShareGateway implements LinkShareGateway {
 	 *
 	 * @throws RuntimeException With Nextcloud's reason when it refuses the share.
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) createFromFormat()/createFromImmutable() are PHP's named
+	 * constructors for a date; there is no instance form.
+	 *
 	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
 	 */
 	public function createLink(int $fileId, string $uid, DateTimeImmutable $expires, ?string $password, string $note): array {
