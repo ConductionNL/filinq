@@ -71,7 +71,7 @@ class DocumentAuditController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(int $fileId): JSONResponse {
-		if ($this->mayReadFile(fileId: $fileId) === false) {
+		if ($this->mayAccessFile(fileId: $fileId) === false) {
 			return new JSONResponse(data: ['error' => 'Document not found'], statusCode: Http::STATUS_NOT_FOUND);
 		}
 
@@ -96,7 +96,7 @@ class DocumentAuditController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function opened(int $fileId): JSONResponse {
-		if ($this->mayReadFile(fileId: $fileId) === false) {
+		if ($this->mayAccessFile(fileId: $fileId) === false) {
 			return new JSONResponse(data: ['error' => 'Document not found'], statusCode: Http::STATUS_NOT_FOUND);
 		}
 
@@ -117,8 +117,8 @@ class DocumentAuditController extends Controller {
 	 *
 	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
 	 */
-	private function mayReadFile(int $fileId): bool {
+	private function mayAccessFile(int $fileId): bool {
 		return $this->files->node(fileId: $fileId) !== null;
 
-	}//end mayReadFile()
+	}//end mayAccessFile()
 }//end class
