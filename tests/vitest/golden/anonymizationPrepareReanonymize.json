@@ -1,6 +1,7 @@
 [
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "p.pdf",
 			"fileId": 3,
 			"status": "extracted",
@@ -133,6 +134,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "p.pdf",
 			"fileId": 3,
 			"status": "completed",
@@ -163,6 +165,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "p.pdf",
 			"fileId": 3,
 			"status": "completed",
@@ -193,6 +196,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "p.pdf",
 			"fileId": 3,
 			"status": "completed",
@@ -223,6 +227,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "p.pdf",
 			"fileId": 3,
 			"status": "extracted",
@@ -270,6 +275,7 @@
 	},
 	{
 		"entry": {
+			"imageWarning": null,
 			"name": "p.pdf",
 			"fileId": 3,
 			"status": "completed",
