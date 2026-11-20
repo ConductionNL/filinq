@@ -59,6 +59,10 @@ class WaarmerkCms implements WaarmerkCmsInterface {
 	 *
 	 * @throws WaarmerkRefusedException 503 when OpenSSL cannot sign.
 	 *
+	 * @SuppressWarnings(PHPMD.ErrorControlOperator) OpenSSL reports failure through the return value,
+	 * which is checked; the PHP warning it would also raise adds nothing, and a temp-file unlink is
+	 * best-effort cleanup.
+	 *
 	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
 	 */
 	public function sign(string $hash, string $certificatePem, string $keyPem): string {
@@ -92,6 +96,10 @@ class WaarmerkCms implements WaarmerkCmsInterface {
 	 * @param string $fingerprint The recorded certificate fingerprint (colon hex).
 	 *
 	 * @return string|null The signer certificate (PEM) when the signature is valid, else null.
+	 *
+	 * @SuppressWarnings(PHPMD.ErrorControlOperator) OpenSSL reports failure through the return value,
+	 * which is checked; the PHP warning it would also raise adds nothing, and a temp-file unlink is
+	 * best-effort cleanup.
 	 *
 	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-waarmerk-is-publicly-verifiable-fail-closed-req-ddwmk-004
 	 */
