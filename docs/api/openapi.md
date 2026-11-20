@@ -5,68 +5,48 @@ title: API Documentation
 
 # Filinq API Documentation
 
-Filinq provides a RESTful API that allows you to interact with documents, folders, and tags programmatically. This page explains how to use the API documentation.
+Every Filinq function has a JSON endpoint: anonymisation, signing, templates and document generation, intake, extraction, consent, dossiers, archiving and retention, legal holds, settings and the setup wizard. This page explains where the reference is, how to authenticate and where the stored records are documented.
 
-## OpenAPI Specification
+## The reference
 
-Our API is documented using the [OpenAPI Specification](https://swagger.io/specification/) (OAS), which provides a standardized way to describe RESTful APIs. The OAS files are available in the following formats:
+The [API reference](/api) renders Filinq's OpenAPI document (OpenAPI 3.0). It lists every endpoint with its parameters, answers and status codes, grouped by function.
 
-- [YAML Format](/oas/filinq-api.yaml)
+- On the docs site: [/api](/api), or download the [OpenAPI document (JSON)](/oas/filinq-api.json).
+- On your own instance: `GET https://<your-nextcloud>/index.php/apps/filinq/api/v1/openapi.json` serves the document of the version you run.
 
-## Using the API Documentation
+The document is `openapi.json` in the repository. A unit test keeps it in step with the routes in `appinfo/routes.php`: a route that is not documented, or a documented path that is not routed, fails the build. The docs site copies that same file when it is built, so the site and the app describe the same API.
 
-You can use the OAS files with various tools:
+You can import the document into Postman, Insomnia or the Swagger Editor to try the endpoints.
 
-### Swagger UI
+## Base path and versions
 
-You can view the API documentation using Swagger UI by:
-
-1. Visiting our [Redocly UI page](/api) (coming soon)
-2. Downloading the OAS file and importing it into the [Swagger Editor](https://editor.swagger.io/)
-
-### Postman
-
-To use the API with Postman:
-
-1. Download the OAS file
-2. In Postman, click 'Import' and select the downloaded file
-3. Postman will create a collection with all available endpoints
+Every endpoint is served under `/index.php/apps/filinq/api/v1/`. The older unversioned paths under `/api/` still answer, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Every answer carries an `API-Version` header with the installed version.
 
 ## Authentication
 
-All API requests require authentication. You need to include your Nextcloud authentication token in the request headers:
+Filinq uses Nextcloud's own authentication. For a script or another system, create an **app password** in Nextcloud under *Personal settings → Security → Devices & sessions*, and send it with the user name as HTTP basic authentication. Keep both in environment variables rather than in the script:
 
+```bash
+curl -u "$NC_USER:$NC_APP_PASSWORD" \
+  -H 'OCS-APIRequest: true' \
+  https://cloud.example.com/index.php/apps/filinq/api/v1/templates
 ```
-Authorization: Bearer YOUR_TOKEN
-```
 
-## API Endpoints
+The request runs as that user, with that user's rights: an endpoint refuses what the user may not do in the app either. A Nextcloud OAuth2 access token can be sent as a bearer token instead. Do not put the account's own password in a script.
 
-The Filinq API provides endpoints for managing:
+## Errors
 
-- **Documents**: Create, read, update, and delete documents
-- **Folders**: Organize documents in folders
-- **Tags**: Categorize documents with tags
-- **Search**: Find documents based on various criteria
+A failed request answers with a standard HTTP status code and a problem details body (RFC 9457, `application/problem+json`) with `type`, `title`, `status` and `detail`. Some endpoints add their own members, such as a `reason`, which the reference names per endpoint.
 
-For detailed information about each endpoint, including request parameters and response formats, please refer to the OpenAPI documentation.
+## Stored records: OpenRegister
 
-## Data Models
+Filinq keeps its records (templates, signing requests, consent records, dossiers, publications and the rest) as objects in OpenRegister. The Filinq reference documents the endpoints Filinq adds on top; the records themselves are documented by OpenRegister, which serves an OpenAPI document per register:
 
-The API uses the following main data models:
+- `GET https://<your-nextcloud>/index.php/apps/openregister/api/registers/{id}/oas` for one register (for Filinq, the `filinq` register);
+- `GET https://<your-nextcloud>/index.php/apps/openregister/api/registers/oas` for all registers.
 
-- **Document**: Represents a document in the system
-- **Folder**: Represents a folder that can contain documents
-- **Tag**: Represents a tag that can be applied to documents
+Read and write those records through OpenRegister's API, with the same authentication.
 
-## Error Handling
+## External standards
 
-The API uses standard HTTP status codes to indicate the success or failure of requests. In case of an error, the response will include a JSON object with an error code and message.
-
-## Versioning
-
-The API is versioned to ensure backward compatibility. The current version is v1, which is reflected in the API base path: `/apps/filinq/api/v1`.
-
-## Contributing
-
-If you find issues with the API or documentation, please report them on our [GitHub repository](https://github.com/yourusername/filinq). 
+Endpoints that implement an external standard keep that standard's own formats and are not in the Filinq reference. Where Filinq documents them, `openapi.standards.json` in the repository does.
