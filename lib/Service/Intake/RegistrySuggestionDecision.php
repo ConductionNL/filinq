@@ -96,6 +96,11 @@ class RegistrySuggestionDecision {
 	 *
 	 * @throws IntakeRefusedException When the decision, document, suggestion or rights do not allow it.
 	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) The method is a sequence of guard clauses, each
+	 * refusing or answering early.
+	 * @SuppressWarnings(PHPMD.NPathComplexity) The method is a sequence of guard clauses, each
+	 * refusing or answering early.
+	 *
 	 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-person-accepts-or-dismisses-a-registry-suggestion-req-ibr-004
 	 */
 	public function decide(string $uuid, int $index, string $decision, array $fields = []): array {

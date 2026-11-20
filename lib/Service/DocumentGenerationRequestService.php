@@ -58,6 +58,10 @@ use UnexpectedValueException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The one generation path the flow node, the
+ * command event and the API share: the Woo decision context builder joins the template lookup,
+ * the object writes and the event, and splitting it would split that single path.
+ *
  * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-one-generation-path-for-the-flow-node-the-command-event-and-the-api
  */
 class DocumentGenerationRequestService implements GenerationRequestServiceInterface {

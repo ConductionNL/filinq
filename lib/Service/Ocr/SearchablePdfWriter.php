@@ -66,6 +66,9 @@ class SearchablePdfWriter {
 	 * @throws RuntimeException When the pages cannot be rendered, or their count differs from the PDF's.
 	 * @throws \setasign\Fpdi\PdfParser\PdfParserException When FPDI cannot read the PDF.
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) OcrPage's named constructors build a value object from OCR
+	 * output; an instance would add nothing.
+	 *
 	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
 	 */
 	public function fromPdf(string $pdfPath, string $languages, int $dpi): array {
@@ -111,6 +114,11 @@ class SearchablePdfWriter {
 	 * @return array{bytes: string, words: int} The PDF and how many words it carries.
 	 *
 	 * @throws InvalidArgumentException When the type is not one of IMAGE_TYPES, or the image has no size.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) OcrPage's named constructors build a value object from OCR
+	 * output; an instance would add nothing.
+	 * @SuppressWarnings(PHPMD.ErrorControlOperator) The call reports failure through its return value,
+	 * which is checked right after; the PHP warning it would also raise adds nothing.
 	 *
 	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
 	 */

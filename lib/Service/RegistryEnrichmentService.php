@@ -48,6 +48,9 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the sum of the KvK and BRP
+ * lookups' guard clauses, each answering early.
+ *
  * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md
  */
 class RegistryEnrichmentService {
@@ -199,6 +202,11 @@ class RegistryEnrichmentService {
 	 *
 	 * @return array{kvk: list<string>, bsn: list<string>} The identifiers, digits only.
 	 *
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) The method is a sequence of guard clauses, each
+	 * refusing or answering early.
+	 * @SuppressWarnings(PHPMD.NPathComplexity) The method is a sequence of guard clauses, each
+	 * refusing or answering early.
+	 *
 	 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-a-kvk-number-on-an-arrival-becomes-a-registry-suggestion-req-ibr-001
 	 */
 	public function identifiersOf(int $fileId): array {
@@ -300,6 +308,9 @@ class RegistryEnrichmentService {
 	 * @param string $kvkNumber The 8-digit number.
 	 *
 	 * @return array{0: array<string, mixed>|null, 1: string} The suggestion or null, and a note or ''.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RegistryAnswer reads a registry's answer as a stateless
+	 * helper; an instance would add nothing.
 	 */
 	private function lookupCompany(string $kvkNumber): array {
 		$provider = $this->provider(className: self::KVK_PROVIDER);
@@ -350,6 +361,13 @@ class RegistryEnrichmentService {
 	 * @param string $purpose The purpose the matching rule declares, or ''.
 	 *
 	 * @return array{0: array<string, mixed>|null, 1: string} The suggestion or null, and a note or ''.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RegistryAnswer reads a registry's answer as a stateless
+	 * helper; an instance would add nothing.
+	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) The method is a sequence of guard clauses, each
+	 * refusing or answering early.
+	 * @SuppressWarnings(PHPMD.NPathComplexity) The method is a sequence of guard clauses, each
+	 * refusing or answering early.
 	 */
 	private function lookupPerson(string $bsn, string $purpose): array {
 		if ($this->brpLookupEnabled() === false) {

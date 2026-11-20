@@ -128,12 +128,11 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 		}
 
 		$office = ($this->officeRenderer !== null && $this->officeRenderer->isOffice(template: $template) === true);
-		if ($office === true) {
-			// Every format of an office template starts from the one filled DOCX.
-			$render = $this->documents->fillOfficeTemplate(template: $template, dataRefs: $dataRefs, options: $options);
-		} else {
-			$render = $this->documents->generatePreview(templateId: $templateId, dataRefs: $dataRefs, options: $options);
-		}
+		// Every format of an office template starts from the one filled DOCX.
+		$render = match ($office) {
+			true => $this->documents->fillOfficeTemplate(template: $template, dataRefs: $dataRefs, options: $options),
+			false => $this->documents->generatePreview(templateId: $templateId, dataRefs: $dataRefs, options: $options),
+		};
 
 		$pdfOptions = $this->renderPipeline->buildPdfOptions(
 			template: $template,
@@ -276,10 +275,12 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 		foreach ($job->formats as $format) {
 			$output = ['format' => $format, 'status' => 'generated', 'fileId' => null, 'fileName' => null, 'path' => null, 'size' => null];
 			try {
-				if (($rendering['docx'] ?? null) !== null && $this->officeRenderer !== null) {
-					$content = $this->officeRenderer->convert(docx: $rendering['docx'], format: $format, options: $rendering['options']);
-				} else {
-					$content = $this->renderPipeline->produceOutput(htmlContent: $rendering['html'], format: $format, pdfOptions: $rendering['pdfOptions']);
+				$fromDocx = (($rendering['docx'] ?? null) !== null && $this->officeRenderer !== null);
+				$content  = match ($fromDocx) {
+					true => $this->officeRenderer->convert(docx: $rendering['docx'], format: $format, options: $rendering['options']),
+					false => $this->renderPipeline->produceOutput(htmlContent: $rendering['html'], format: $format, pdfOptions: $rendering['pdfOptions']),
+				};
+				if ($fromDocx === false) {
 					$warnings = array_merge($warnings, $this->renderPipeline->getLastOutputWarnings());
 				}
 				$stored = $this->storage->store(
