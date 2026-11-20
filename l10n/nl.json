@@ -3792,7 +3792,15 @@
         "%n note": "%n notitie",
         "%n notes": "%n notities",
         "Notes on {name}": "Notities bij {name}",
-        "This document has no file to leave notes on.": "Dit document heeft geen bestand om notities bij te zetten."
+        "This document has no file to leave notes on.": "Dit document heeft geen bestand om notities bij te zetten.",
+        "Confidence for unattended receipts and invoices": "Zekerheid voor bonnen en facturen zonder controle",
+        "A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.": "Een gelezen bon of factuur gaat alleen zonder controle door als elk nodig veld minstens zo zeker is gelezen. Tussen 0,6 en 1,0; standaard 0,9.",
+        "Choose a value between 0.6 and 1.0.": "Kies een waarde tussen 0,6 en 1,0.",
+        "Send the photo as the file field.": "Stuur de foto mee in het veld file.",
+        "This photo is larger than 20 MB. Take it again at a lower resolution.": "Deze foto is groter dan 20 MB. Maak hem opnieuw met een lagere resolutie.",
+        "Only a JPEG, PNG or HEIC photo or a PDF can be captured.": "Alleen een JPEG-, PNG- of HEIC-foto of een pdf kan worden vastgelegd.",
+        "This photo format cannot be read on this server. Take the photo as JPEG.": "Dit fotoformaat kan deze server niet lezen. Maak de foto als JPEG.",
+        "Failed to capture the receipt": "De bon kon niet worden vastgelegd"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

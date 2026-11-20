@@ -102,6 +102,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/Editing/DocumentGuard.php' => 1,
 		'lib/Service/EmailIngestion/EmailDocumentRepository.php' => 3,
 		'lib/Service/EntitySearch/EntitySearchLog.php' => 1,
+		'lib/Service/Extraction/ExtractionDuplicateLookup.php' => 1,
 		'lib/Service/FinalDocumentRepository.php' => 1,
 		'lib/Service/IntegrityScanService.php' => 2,
 		'lib/Service/HuisstijlProfileSync.php' => 2,

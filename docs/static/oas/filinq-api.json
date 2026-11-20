@@ -13367,6 +13367,46 @@
                     }
                 }
             }
+        },
+        "/extraction/capture": {
+            "post": {
+                "operationId": "extraction-capture",
+                "summary": "Take a receipt or invoice photo from the camera, store it and extract it (REQ-ERP-001)",
+                "description": "Take a receipt or invoice photo from the camera, store it and extract it (REQ-ERP-001). Multipart `file` (JPEG, PNG, HEIC or PDF, up to 20 MB) plus `docType`, `sourceApp` and `callbackEvent`. The photo is turned upright, a HEIC photo converted to JPEG, and stored in the signed-in user's own Files under `Receipts/<yyyy>/<mm>/`; the stored extraction carries `capturedFileId`.",
+                "tags": [
+                    "extraction"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The stored extraction.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No file field, or the upload policy refused the file."
+                    },
+                    "413": {
+                        "description": "The photo is larger than 20 MB."
+                    },
+                    "415": {
+                        "description": "The photo is not JPEG, PNG, HEIC or PDF, or HEIC cannot be read on this server."
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
         }
     },
     "components": {

@@ -472,6 +472,7 @@ $extra = [
 
         // Financial extraction routes (scan-en-herken).
         ['name' => 'extraction#financial', 'url' => 'api/extraction/financial', 'verb' => 'POST'],
+        ['name' => 'extraction#capture', 'url' => 'api/extraction/capture', 'verb' => 'POST'],
         ['name' => 'extraction#corrections', 'url' => 'api/extraction/{id}/corrections', 'verb' => 'POST'],
 
         // GL-account ("grootboekrekening") suggestion route (ai-gl-account-suggestion).

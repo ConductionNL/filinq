@@ -3656,7 +3656,15 @@
         "%n note": "%n note",
         "%n notes": "%n notes",
         "Notes on {name}": "Notes on {name}",
-        "This document has no file to leave notes on.": "This document has no file to leave notes on."
+        "This document has no file to leave notes on.": "This document has no file to leave notes on.",
+        "Confidence for unattended receipts and invoices": "Confidence for unattended receipts and invoices",
+        "A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.": "A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.",
+        "Choose a value between 0.6 and 1.0.": "Choose a value between 0.6 and 1.0.",
+        "Send the photo as the file field.": "Send the photo as the file field.",
+        "This photo is larger than 20 MB. Take it again at a lower resolution.": "This photo is larger than 20 MB. Take it again at a lower resolution.",
+        "Only a JPEG, PNG or HEIC photo or a PDF can be captured.": "Only a JPEG, PNG or HEIC photo or a PDF can be captured.",
+        "This photo format cannot be read on this server. Take the photo as JPEG.": "This photo format cannot be read on this server. Take the photo as JPEG.",
+        "Failed to capture the receipt": "Failed to capture the receipt"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
