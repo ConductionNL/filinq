@@ -87,6 +87,13 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'compare.js'),
 		filename: appId + '-compare.js',
 	},
+	// The public waarmerk verification page (document-waarmerk-certification):
+	// a guest page outside the app shell, so it is one self-contained file
+	// like `compare` (see `chunks`).
+	waarmerkVerify: {
+		import: path.join(__dirname, 'src', 'waarmerkVerify.js'),
+		filename: appId + '-waarmerkVerify.js',
+	},
 	// The public signature verification page (signature-verification-portal
 	// REQ-DDSVP-001), for a visitor with no account: `main` is the signed-in
 	// shell, which an anonymous visitor cannot load. templates/verify.php
@@ -227,7 +234,7 @@ webpackConfig.optimization = {
 		...(webpackConfig.optimization?.splitChunks || {}),
 		// Every entry shares the framework chunks except `compare`: another app
 		// loads that bundle on its own page and cannot know these chunk names.
-		chunks: (chunk) => chunk.name !== 'compare',
+		chunks: (chunk) => chunk.name !== 'compare' && chunk.name !== 'waarmerkVerify',
 		cacheGroups: {
 			default: false,
 			defaultVendors: false,

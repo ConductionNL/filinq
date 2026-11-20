@@ -10029,6 +10029,108 @@
                 ]
             }
         },
+        "/signing/{id}/evidence": {
+            "get": {
+                "operationId": "signing-evidence-download",
+                "summary": "Download the sealed evidence document of a finished signing request",
+                "description": "Download the sealed evidence document of a finished signing request",
+                "tags": [
+                    "signing"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The sealed evidence PDF.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/signing/{id}/evidence/copy": {
+            "post": {
+                "operationId": "signing-evidence-copy",
+                "summary": "Write the sealed evidence document next to the signed document",
+                "description": "Write the sealed evidence document next to the signed document",
+                "tags": [
+                    "signing"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The waarmerk and the written file.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/store/items": {
             "get": {
                 "operationId": "store-search",
@@ -11411,6 +11513,431 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/waarmerk": {
+            "get": {
+                "operationId": "waarmerk-index",
+                "summary": "List the caller's waarmerken (all for an admin), optionally for one sealed file",
+                "description": "List the caller's waarmerken (all for an admin), optionally for one sealed file",
+                "tags": [
+                    "waarmerk"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The result.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/waarmerk/anonymization/{linkId}": {
+            "post": {
+                "operationId": "waarmerk-certify",
+                "summary": "Certify an anonymisation run with a sealed processing certificate (entity types and counts only)",
+                "description": "Certify an anonymisation run with a sealed processing certificate (entity types and counts only)",
+                "tags": [
+                    "waarmerk"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The waarmerk and the certificate file.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "linkId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The linkId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/waarmerk/seal": {
+            "post": {
+                "operationId": "waarmerk-seal",
+                "summary": "Seal a PDF the caller can read with the organisation waarmerk; the sealed copy is written next to it",
+                "description": "Seal a PDF the caller can read with the organisation waarmerk; the sealed copy is written next to it",
+                "tags": [
+                    "waarmerk"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "The waarmerk and the sealed file.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "fileId": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/waarmerk/settings": {
+            "get": {
+                "operationId": "waarmerk-settings-show",
+                "summary": "The organisation certificate summary (public facts, credential reference, custody); never key material",
+                "description": "The organisation certificate summary (public facts, credential reference, custody); never key material",
+                "tags": [
+                    "waarmerk"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The result.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "waarmerk-settings-update",
+                "summary": "Save the organisation certificate, credential reference and custody mode",
+                "description": "Save the organisation certificate, credential reference and custody mode",
+                "tags": [
+                    "waarmerk"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The result.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "certificate": {
+                                        "type": "string"
+                                    },
+                                    "credentialRef": {
+                                        "type": "string"
+                                    },
+                                    "custody": {
+                                        "type": "string",
+                                        "enum": [
+                                            "broker",
+                                            "local"
+                                        ]
+                                    },
+                                    "localKey": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/waarmerk/settings/test": {
+            "post": {
+                "operationId": "waarmerk-settings-test-seal",
+                "summary": "Seal a throwaway test document in memory and verify it; nothing is stored",
+                "description": "Seal a throwaway test document in memory and verify it; nothing is stored",
+                "tags": [
+                    "waarmerk"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The result.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                }
+            }
+        },
+        "/waarmerk/verify": {
+            "post": {
+                "operationId": "waarmerk-verify",
+                "summary": "Public, fail-closed verification of a waarmerk code against the verifier's own sha256: valid, hash-mismatch, revoked or unknown",
+                "description": "Public, fail-closed verification of a waarmerk code against the verifier's own sha256: valid, hash-mismatch, revoked or unknown",
+                "tags": [
+                    "waarmerk"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The result.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "code": {
+                                        "type": "string"
+                                    },
+                                    "sha256": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/waarmerk/{id}": {
+            "get": {
+                "operationId": "waarmerk-show",
+                "summary": "One waarmerk (the sealer's own, or any for an admin)",
+                "description": "One waarmerk (the sealer's own, or any for an admin)",
+                "tags": [
+                    "waarmerk"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The result.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/waarmerk/{id}/revoke": {
+            "post": {
+                "operationId": "waarmerk-revoke",
+                "summary": "Revoke a waarmerk with a mandatory reason; admin or the sealer only; irreversible",
+                "description": "Revoke a waarmerk with a mandatory reason; admin or the sealer only; irreversible",
+                "tags": [
+                    "waarmerk"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The result.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The id.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "reason": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

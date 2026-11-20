@@ -112,8 +112,9 @@ class PseudonymMapSchemaTest extends TestCase {
 		$link = $this->descriptor()['components']['schemas']['anonymizationLink'];
 
 		// 1.5.0 since image-redaction: the burn and withhold fields follow `mappingRef`, and a document
-		// withheld in full has no output, so `anonymizedFileId` is no longer required.
-		$this->assertSame(expected: '1.5.0', actual: $link['version']);
+		// withheld in full has no output, so `anonymizedFileId` is no longer required. 1.5.1 adds
+		// entityTypeCounts (document-waarmerk-certification).
+		$this->assertSame(expected: '1.5.1', actual: $link['version']);
 		$this->assertSame(['sourceFileId'], $link['required']);
 		$this->assertSame(
 			[
@@ -121,6 +122,7 @@ class PseudonymMapSchemaTest extends TestCase {
 				'outputFormat', 'status', 'replacementCount', 'runCount', 'anonymizedAt', 'anonymizedBy', 'verificationVerdict',
 				'verificationOutputMode', 'verificationRoutes', 'verificationLeakRoutes', 'verifiedAt', 'mappingRef',
 				'structurePreservation', 'burnedRegionCount', 'imageRedactionPending', 'withheld', 'withheldBases',
+				'entityTypeCounts',
 			],
 			array_keys($link['properties'])
 		);

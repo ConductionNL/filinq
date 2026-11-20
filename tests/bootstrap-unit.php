@@ -313,6 +313,10 @@ require_once __DIR__ . '/unit/Support/RecordsCalls.php';
 // "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
 require_once __DIR__ . '/unit/Service/SubjectErasure/SubjectErasureDoubles.php';
 
+// The runtime-generated organisation certificate of the waarmerk tests (no
+// PEM or key fixture is committed); same PSR-4 situation as above.
+require_once __DIR__ . '/unit/Service/Waarmerk/WaarmerkKeyPair.php';
+
 // The veraPDF service over the recorded veraPDF (tests/fixtures/verapdf).
 require_once __DIR__ . '/unit/Service/VeraPdf/VeraPdfDoubles.php';
 require_once __DIR__ . '/unit/Service/Conversion/DiskLikeSofficeRunner.php';

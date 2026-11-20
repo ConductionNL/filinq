@@ -782,6 +782,8 @@
 		<CaseSystemDeliverySettings v-if="isAdmin" />
 		<BridgeSourcesSettings v-if="isAdmin" />
 
+		<!-- Waarmerk organisation certificate (document-waarmerk-certification): its own admin endpoint -->
+		<WaarmerkSettings v-if="isAdmin" />
 		<DocumentWebhooksSection v-if="isAdmin" />
 
 		<IntegrityScanSection v-if="isAdmin" />
@@ -973,6 +975,7 @@ import RefusalGroundsSource from './RefusalGroundsSource.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
 import SigningSourcesSettings from './SigningSourcesSettings.vue'
+import WaarmerkSettings from './WaarmerkSettings.vue'
 import {
 	backendStateFromSettings,
 	emptyBackendState,
@@ -1111,6 +1114,7 @@ export default {
 		SigningSourcesSettings,
 		BridgeSourcesSettings,
 		CaseSystemDeliverySettings,
+		WaarmerkSettings,
 	},
 
 	data() {

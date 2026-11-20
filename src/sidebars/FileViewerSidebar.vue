@@ -122,6 +122,10 @@ const documentRecordId = computed(() =>
 						{{ t('filinq', 'Download anonymised file') }}
 					</a>
 				</NcNoteCard>
+				<WaarmerkRunActions
+					:anonymizedFileId="entry.anonymizedFileId"
+					:fileName="entry.anonymizedFileName || ''"
+					:anonymizationLinkId="entry.anonymizationLinkId || null" />
 
 				<NcNoteCard
 					v-if="accessibility"
@@ -675,6 +679,7 @@ import DdRemovedEntitiesList from '../components/DdRemovedEntitiesList.vue'
 import DdSearchBar from '../components/DdSearchBar.vue'
 import DdToggle from '../components/DdToggle.vue'
 import ReviewMarkCard from '../components/ReviewMarkCard.vue'
+import WaarmerkRunActions from '../components/WaarmerkRunActions.vue'
 import ProhibitionBlockedDialog from '../dialogs/ProhibitionBlockedDialog.vue'
 import RestoreOriginalDialog from '../dialogs/RestoreOriginalDialog.vue'
 import ScopeRedactionDialog from '../dialogs/ScopeRedactionDialog.vue'
@@ -707,6 +712,7 @@ export default {
 		ScopeRedactionDialog,
 		FileHidden,
 		ReviewMarkCard,
+		WaarmerkRunActions,
 		KeyVariant,
 		Plus,
 		ShieldLockOutline,
