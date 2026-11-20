@@ -67,6 +67,9 @@ class IntegrityScanCommand extends Command {
 	 *
 	 * @return int 0 for a clean collection, 1 when the scan found anything.
 	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) `$input` is Symfony's Command::execute()
+	 *                                               signature; the scan takes no options.
+	 *
 	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-2-nightly-job-occ-command-and-notification
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
