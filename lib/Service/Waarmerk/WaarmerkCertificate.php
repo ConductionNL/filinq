@@ -70,6 +70,10 @@ class WaarmerkCertificate {
 	 *
 	 * @throws WaarmerkRefusedException When the text is not an X.509 certificate or holds a private key.
 	 *
+	 * @SuppressWarnings(PHPMD.ErrorControlOperator) OpenSSL reports failure through the return value,
+	 * which is checked; the PHP warning it would also raise adds nothing, and a temp-file unlink is
+	 * best-effort cleanup.
+	 *
 	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-organisation-certificate-is-managed-in-admin-settings-with-credentialref-key-custody-req-ddwmk-001
 	 */
 	public static function fromPem(string $pem): self {

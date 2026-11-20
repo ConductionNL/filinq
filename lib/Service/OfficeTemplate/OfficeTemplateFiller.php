@@ -43,6 +43,9 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the sum of small independent
+ * steps of one office template (tags, fragments, conditions, tables).
+ *
  * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
  */
 class OfficeTemplateFiller {
@@ -249,7 +252,9 @@ class OfficeTemplateFiller {
 			$text = sprintf(self::MISSING_FRAGMENT, $slug);
 			if (isset($run->fragments[$slug]) === false) {
 				$run->warnings[] = 'Text fragment "'.$slug.'" does not exist; a marker is shown in its place.';
-			} else {
+			}
+
+			if (isset($run->fragments[$slug]) === true) {
 				$text = $this->fillFragmentText(text: $run->fragments[$slug], run: $run);
 				$run->fragmentsUsed[] = $slug;
 			}
@@ -553,6 +558,9 @@ class OfficeTemplateFiller {
 	 * @param string $value The value.
 	 *
 	 * @return string
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) PhpWord exposes its output-escaping setting only as the
+	 * static Settings::isOutputEscapingEnabled().
 	 */
 	private function escape(string $value): string {
 		if (Settings::isOutputEscapingEnabled() === true) {

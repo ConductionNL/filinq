@@ -111,6 +111,10 @@ class WaarmerkStampComposer {
 	 * @return string
 	 *
 	 * @throws WaarmerkRefusedException 422 when FPDI cannot read the source.
+	 *
+	 * @SuppressWarnings(PHPMD.ErrorControlOperator) OpenSSL reports failure through the return value,
+	 * which is checked; the PHP warning it would also raise adds nothing, and a temp-file unlink is
+	 * best-effort cleanup.
 	 */
 	private function append(string $sourcePdf, string $stampPdf): string {
 		$source = (string) tempnam(sys_get_temp_dir(), 'filinq-seal-src-');
