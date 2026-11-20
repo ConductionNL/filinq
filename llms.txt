@@ -1,0 +1,33 @@
+# Filinq
+
+> Filinq is a Nextcloud app for document generation, anonymisation, signing, and GDPR/Woo publication consent. It stores its records as objects in OpenRegister.
+
+Start with AGENTS.md for the build, test and lint commands. All paths below are relative to the repository root.
+
+## Docs
+
+- [AGENTS.md](AGENTS.md): setup, build, test, lint, OpenSpec flow and conventions
+- [README.md](README.md): features, installation and development
+- [ARCHITECTURE.md](ARCHITECTURE.md): system boundary, directory roles and functional components
+- [docs/architecture.md](docs/architecture.md): the anonymisation flow in depth
+- [docs/intro.md](docs/intro.md): start page of the documentation site
+- [docs/features/README.md](docs/features/README.md): one page per feature
+- [docs/admin/](docs/admin/): administrator guides for anonymisation and signing
+- [docs/Installation/demo-environment.md](docs/Installation/demo-environment.md): the demo environment
+- [CONTRIBUTING.md](CONTRIBUTING.md): contribution rules and commit format
+
+## API
+
+- [openapi.json](openapi.json): OpenAPI document for the app's HTTP API
+- [openapi.standards.json](openapi.standards.json): OpenAPI document for the endpoints that implement an external standard
+- [docs/api/openapi.md](docs/api/openapi.md): how the API is documented
+- [docs/api/](docs/api/): guides for document processing, reports, anonymisation logs and the Presidio integration
+- [appinfo/routes.php](appinfo/routes.php): route table
+
+## Specs
+
+- [openspec/specs/](openspec/specs/): one directory per capability, each with a spec.md of requirements and scenarios
+- [openspec/changes/](openspec/changes/): open change proposals; [openspec/changes/README.md](openspec/changes/README.md) indexes them
+- [openspec/architecture/](openspec/architecture/): architecture decision records
+- [openspec/config.yaml](openspec/config.yaml): rules for proposals, specs and designs
+- [lib/Settings/filinq_register.json](lib/Settings/filinq_register.json): the OpenRegister schemas the app installs

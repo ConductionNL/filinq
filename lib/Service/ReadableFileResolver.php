@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\ReadableFileResolverInterface;
 use OCP\Files\IRootFolder;
 use OCP\Files\Node;
 use OCP\IUserSession;
@@ -44,7 +45,7 @@ use Throwable;
  *
  * @spec openspec/specs/document-register/spec.md
  */
-class ReadableFileResolver {
+class ReadableFileResolver implements ReadableFileResolverInterface {
 
 	/**
 	 * OpenRegister's read check for a file: an object's file follows the object's read rule.

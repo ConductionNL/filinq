@@ -78,6 +78,14 @@
 					)
 				}}
 			</p>
+			<p class="signers__hint">
+				{{
+					t(
+						'filinq',
+						'A recipient who only accepts confirms the document without signing it. At least one recipient signs.',
+					)
+				}}
+			</p>
 			<div
 				v-for="(signer, index) in signerRows"
 				:key="index"
@@ -110,6 +118,15 @@
 						v-model="signer.userId"
 						type="text" />
 				</div>
+				<div class="form-group">
+					<NcSelect
+						v-model="signer.role"
+						:inputLabel="t('filinq', 'Role')"
+						:options="roleOptions"
+						:clearable="false"
+						label="label"
+						:reduce="(option) => option.id" />
+				</div>
 				<NcButton
 					variant="tertiary"
 					:disabled="signerRows.length === 1"
@@ -123,6 +140,12 @@
 			<NcButton variant="secondary" @click="addSigner">
 				{{ t('filinq', 'Add signer') }}
 			</NcButton>
+			<NcNoteCard
+				v-if="!someoneSigns(signerRows)"
+				type="warning"
+				class="signers__warning">
+				{{ t('filinq', 'A signing request needs at least one signer') }}
+			</NcNoteCard>
 		</fieldset>
 		<div class="form-group">
 			<NcCheckboxRadioSwitch
@@ -182,7 +205,12 @@ import FieldPlacementEditor from './FieldPlacementEditor.vue'
 import { assuranceFloor, assuranceLevelsFrom } from '../../services/signerStepUp.js'
 import { useSigningStore } from '../../store/modules/signing.js'
 import { dropSignerPlacements, toRequestPlacements } from './fieldPlacement.js'
-import { emptySignerRow, signersAreComplete, toSigners } from './signerRows.js'
+import {
+	emptySignerRow,
+	signersAreComplete,
+	someoneSigns,
+	toSigners,
+} from './signerRows.js'
 
 export default {
 	name: 'SigningRequestForm',
@@ -215,6 +243,20 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * What a recipient is asked to do: sign, or only accept (REQ-SAO-001).
+		 *
+		 * @return {Array<object>} Id and label per role.
+		 *
+		 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+		 */
+		roleOptions() {
+			return [
+				{ id: 'sign', label: t('filinq', 'Sign') },
+				{ id: 'accept', label: t('filinq', 'Accept only') },
+			]
+		},
+
 		/**
 		 * The name each signer row goes by, for the placement editor.
 		 *
@@ -337,6 +379,7 @@ export default {
 	methods: {
 		t,
 		signersAreComplete,
+		someoneSigns,
 		/**
 		 * Add an empty signer row at the end.
 		 *
@@ -425,6 +468,10 @@ export default {
 	align-items: flex-end;
 	gap: 8px;
 	margin-bottom: 8px;
+}
+
+.signers__warning {
+	margin-top: 8px;
 }
 
 .signers__row .form-group {

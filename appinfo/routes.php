@@ -45,6 +45,9 @@ $extra = [
         // Settings routes.
         ['name' => 'settings#index', 'url' => 'api/settings', 'verb' => 'GET'],
         ['name' => 'settings#create', 'url' => 'api/settings', 'verb' => 'POST'],
+        // Whole-collection integrity scan (admin only): the last run, and start one now.
+        ['name' => 'settings#integrityScanLast', 'url' => 'api/settings/integrity-scan', 'verb' => 'GET'],
+        ['name' => 'settings#integrityScanStart', 'url' => 'api/settings/integrity-scan', 'verb' => 'POST'],
 
         // Consent routes.
         ['name' => 'consent#index', 'url' => 'api/consents', 'verb' => 'GET'],
@@ -91,11 +94,13 @@ $extra = [
         ['name' => 'intake#index', 'url' => 'api/intake/documents', 'verb' => 'GET'],
         ['name' => 'intake#assign', 'url' => 'api/intake/documents/{uuid}/assign', 'verb' => 'POST'],
         ['name' => 'intake#reject', 'url' => 'api/intake/documents/{uuid}/reject', 'verb' => 'POST'],
+        ['name' => 'intake#changeDeadline', 'url' => 'api/intake/documents/{uuid}/deadline', 'verb' => 'POST'],
 
         // Inbound worklist, party suggestions and routing (inbound-documents-and-the-worklist).
         ['name' => 'intake#detached', 'url' => 'api/intake/detached', 'verb' => 'GET'],
         ['name' => 'intake#detach', 'url' => 'api/intake/documents/detach', 'verb' => 'POST'],
         ['name' => 'intake#decideParty', 'url' => 'api/intake/party-decisions', 'verb' => 'POST'],
+        ['name' => 'intake#decideRegistry', 'url' => 'api/intake/documents/{uuid}/registry-decisions', 'verb' => 'POST'],
         ['name' => 'intake#declareRouting', 'url' => 'api/intake/routing-rules', 'verb' => 'POST'],
 
         // Case documents: the flat list, the domains and the upload policy
@@ -129,6 +134,10 @@ $extra = [
         ['name' => 'documentProduction#createLayout', 'url' => 'api/page-layouts/new', 'verb' => 'POST'],
         ['name' => 'documentProduction#archivePreflight', 'url' => 'api/case-archive/preflight', 'verb' => 'GET'],
         ['name' => 'documentProduction#archiveManifest', 'url' => 'api/case-archive/manifest', 'verb' => 'POST'],
+        // Share documents outside the organisation by a link that runs out (share-document-links).
+        ['name' => 'documentShare#create', 'url' => 'api/shares', 'verb' => 'POST'],
+        ['name' => 'documentShare#preflight', 'url' => 'api/shares/preflight', 'verb' => 'POST'],
+        ['name' => 'documentShare#revoke', 'url' => 'api/shares/{id}', 'verb' => 'DELETE'],
         ['name' => 'documentProduction#runPeriodic', 'url' => 'api/periodic-documents/run', 'verb' => 'POST'],
         ['name' => 'documentProduction#dueForReview', 'url' => 'api/documents/due-for-review', 'verb' => 'GET'],
         ['name' => 'documentProduction#markReviewed', 'url' => 'api/documents/{uuid}/reviewed', 'verb' => 'POST'],
@@ -143,6 +152,14 @@ $extra = [
         ['name' => 'scanIntake#listProfiles', 'url' => 'api/scan/profiles', 'verb' => 'GET'],
         ['name' => 'scanIntake#declareProfiles', 'url' => 'api/scan/profiles', 'verb' => 'POST'],
         ['name' => 'scanIntake#split', 'url' => 'api/scan/batches/{fileId}/split', 'verb' => 'POST'],
+
+        // A digitisation project: per-box progress, the separator sheets of
+        // one box, a CSV box list and the check of a scan
+        // (intake-paper-archive-digitisation).
+        ['name' => 'digitisation#boxes', 'url' => 'api/digitisation/projects/{id}/boxes', 'verb' => 'GET'],
+        ['name' => 'digitisation#separators', 'url' => 'api/digitisation/projects/{id}/separators', 'verb' => 'GET'],
+        ['name' => 'digitisation#importOriginals', 'url' => 'api/digitisation/projects/{id}/originals/import', 'verb' => 'POST'],
+        ['name' => 'digitisation#check', 'url' => 'api/digitisation/originals/{id}/check', 'verb' => 'POST'],
 
         // What leaves the building: the review mark, the composed publication
         // list and the conditions a gated download waits on
@@ -159,6 +176,10 @@ $extra = [
         ['name' => 'anonymization#extract', 'url' => 'api/anonymization/extract/{fileId}', 'verb' => 'POST'],
         ['name' => 'anonymization#anonymize', 'url' => 'api/anonymization/anonymize/{fileId}', 'verb' => 'POST'],
         ['name' => 'anonymization#updateRelation', 'url' => 'api/anonymization/relations/{id}', 'verb' => 'PATCH', 'requirements' => ['id' => '\\d+']],
+        // A page, a range of pages or a whole document redacted in one action (image-redaction REQ-DDIMR-009).
+        ['name' => 'scopeRedaction#show', 'url' => 'api/anonymization/scope/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'scopeRedaction#decide', 'url' => 'api/anonymization/scope/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'scopeRedaction#commit', 'url' => 'api/anonymization/scope/{fileId}/commit', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
 
         // Original-EML preview (renders the source message to a PDF for the viewer).
         ['name' => 'emlPreview#preview', 'url' => 'api/anonymization/eml-preview/{fileId}', 'verb' => 'GET'],
@@ -184,6 +205,8 @@ $extra = [
         ['name' => 'batchAnonymization#batchEntities', 'url' => 'api/anonymization/batch/{batchId}/entities', 'verb' => 'GET'],
         ['name' => 'batchAnonymization#batchAnonymize', 'url' => 'api/anonymization/batch/{batchId}/anonymize', 'verb' => 'POST'],
         ['name' => 'batchAnonymization#batchReport', 'url' => 'api/anonymization/batch/{batchId}/report', 'verb' => 'GET'],
+        ['name' => 'batchLifecycle#cancel', 'url' => 'api/anonymization/batch/{batchId}/cancel', 'verb' => 'POST'],
+        ['name' => 'batchLifecycle#resume', 'url' => 'api/anonymization/batch/{batchId}/resume', 'verb' => 'POST'],
 
         // WOO entity profile routes.
         ['name' => 'batchAnonymization#getProfiles', 'url' => 'api/anonymization/profiles', 'verb' => 'GET'],
@@ -255,6 +278,14 @@ $extra = [
         ['name' => 'emailIngestion#settings', 'url' => 'api/email-ingestion/settings', 'verb' => 'GET'],
         ['name' => 'emailIngestion#updateSettings', 'url' => 'api/email-ingestion/settings', 'verb' => 'PUT'],
         ['name' => 'emailIngestion#retry', 'url' => 'api/email-ingestion/{uuid}/convert', 'verb' => 'POST'],
+        // Mail archive import (intake-mailbox-archive-import): start an import from a file the user can read, read their own, map the folders and start, cancel; the per-run limit and readpst status for admins.
+        ['name' => 'mailArchiveImport#settings', 'url' => 'api/mail-archive-imports/settings', 'verb' => 'GET'],
+        ['name' => 'mailArchiveImport#updateSettings', 'url' => 'api/mail-archive-imports/settings', 'verb' => 'PUT'],
+        ['name' => 'mailArchiveImport#index', 'url' => 'api/mail-archive-imports', 'verb' => 'GET'],
+        ['name' => 'mailArchiveImport#create', 'url' => 'api/mail-archive-imports', 'verb' => 'POST'],
+        ['name' => 'mailArchiveImport#show', 'url' => 'api/mail-archive-imports/{uuid}', 'verb' => 'GET'],
+        ['name' => 'mailArchiveImport#start', 'url' => 'api/mail-archive-imports/{uuid}/start', 'verb' => 'POST'],
+        ['name' => 'mailArchiveImport#cancel', 'url' => 'api/mail-archive-imports/{uuid}/cancel', 'verb' => 'POST'],
         // Guided document wizard (guided-document-wizard): author the wizard of a template, find the wizards for an object, prefill a run. Generation stays on api/documents/generate.
         ['name' => 'wizard#index', 'url' => 'api/wizards', 'verb' => 'GET'],
         ['name' => 'wizard#create', 'url' => 'api/wizards', 'verb' => 'POST'],
@@ -268,6 +299,10 @@ $extra = [
         ['name' => 'classification#confirm', 'url' => 'api/classification/{fileId}/confirm', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'classification#reject', 'url' => 'api/classification/{fileId}/reject', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'classification#show', 'url' => 'api/classification/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        // MDTO metadata (tmlo-mdto-metadata): completeness verdict, sidecar download, e-depot transfer through OpenRegister.
+        ['name' => 'mdto#status', 'url' => 'api/mdto/{id}', 'verb' => 'GET'],
+        ['name' => 'mdto#export', 'url' => 'api/mdto/{id}/export', 'verb' => 'GET'],
+        ['name' => 'mdto#transfer', 'url' => 'api/mdto/{id}/transfer', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#index', 'url' => 'api/legal-holds', 'verb' => 'GET'],
         ['name' => 'legalHoldCase#create', 'url' => 'api/legal-holds', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#status', 'url' => 'api/legal-holds/status/{objectId}', 'verb' => 'GET'],
@@ -333,6 +368,9 @@ $extra = [
         // Correspondence routes.
         ['name' => 'correspondence#generate', 'url' => 'api/correspondence/generate', 'verb' => 'POST'],
         ['name' => 'correspondence#generateBatch', 'url' => 'api/correspondence/generate/batch', 'verb' => 'POST'],
+        // letter-email-sending: send a composed letter by email, and the dialog's preview of it.
+        ['name' => 'correspondence#send', 'url' => 'api/correspondence/send', 'verb' => 'POST'],
+        ['name' => 'correspondence#sendPreview', 'url' => 'api/correspondence/send/preview', 'verb' => 'POST'],
         ['name' => 'correspondence#jobStatus', 'url' => 'api/correspondence/jobs/{jobId}', 'verb' => 'GET'],
 
         // Template routes.
@@ -340,6 +378,10 @@ $extra = [
         // template-library-leaf 2.2: the templates that apply to one host object, for the generate-document leaf. Before api/templates/{id}.
         ['name' => 'templates#forObject', 'url' => 'api/templates/for-object', 'verb' => 'GET'],
         ['name' => 'templates#create', 'url' => 'api/templates', 'verb' => 'POST'],
+        ['name' => 'officeTemplates#create', 'url' => 'api/templates/office', 'verb' => 'POST'],
+        // Bulk import of office templates and fragments (office-template-authoring REQ-DDOTA-005).
+        ['name' => 'templateImports#create', 'url' => 'api/templates/import', 'verb' => 'POST'],
+        ['name' => 'templateImports#show', 'url' => 'api/templates/import/{jobId}', 'verb' => 'GET'],
         ['name' => 'templatePreview#preview', 'url' => 'api/templates/preview', 'verb' => 'POST'],
         ['name' => 'templates#show', 'url' => 'api/templates/{id}', 'verb' => 'GET'],
         ['name' => 'templates#update', 'url' => 'api/templates/{id}', 'verb' => 'PUT'],
@@ -352,6 +394,33 @@ $extra = [
         ['name' => 'templates#duplicate', 'url' => 'api/templates/{id}/duplicate', 'verb' => 'POST'],
         ['name' => 'templates#lock', 'url' => 'api/templates/{id}/lock', 'verb' => 'POST'],
         ['name' => 'templates#unlock', 'url' => 'api/templates/{id}/lock', 'verb' => 'DELETE'],
+        // Office template source, preview and field mapping (office-template-authoring).
+        ['name' => 'officeTemplates#newSource', 'url' => 'api/templates/{id}/office', 'verb' => 'POST'],
+        ['name' => 'officeTemplates#source', 'url' => 'api/templates/{id}/office/source', 'verb' => 'GET'],
+        ['name' => 'officeTemplates#preview', 'url' => 'api/templates/{id}/office/preview', 'verb' => 'GET'],
+        ['name' => 'officeTemplates#preview', 'url' => 'api/templates/{id}/office/preview', 'verb' => 'POST', 'postfix' => 'withData'],
+        ['name' => 'officeTemplates#fieldMap', 'url' => 'api/templates/{id}/field-map', 'verb' => 'PUT'],
+
+        // Text fragments (bouwstenen), office-template-authoring REQ-DDOTA-004.
+        ['name' => 'textFragments#index', 'url' => 'api/text-fragments', 'verb' => 'GET'],
+        ['name' => 'textFragments#create', 'url' => 'api/text-fragments', 'verb' => 'POST'],
+        ['name' => 'textFragments#show', 'url' => 'api/text-fragments/{id}', 'verb' => 'GET'],
+        ['name' => 'textFragments#update', 'url' => 'api/text-fragments/{id}', 'verb' => 'PUT'],
+        ['name' => 'textFragments#destroy', 'url' => 'api/text-fragments/{id}', 'verb' => 'DELETE'],
+
+        // Waarmerk: organisation seal (document-waarmerk-certification). Specific paths before {id}.
+        ['name' => 'waarmerkSettings#show', 'url' => 'api/waarmerk/settings', 'verb' => 'GET'],
+        ['name' => 'waarmerkSettings#update', 'url' => 'api/waarmerk/settings', 'verb' => 'PUT'],
+        ['name' => 'waarmerkSettings#testSeal', 'url' => 'api/waarmerk/settings/test', 'verb' => 'POST'],
+        ['name' => 'waarmerkVerify#verify', 'url' => 'api/waarmerk/verify', 'verb' => 'POST'],
+        ['name' => 'waarmerkVerify#verifyPage', 'url' => '/verify/{code}', 'verb' => 'GET'],
+        ['name' => 'waarmerk#seal', 'url' => 'api/waarmerk/seal', 'verb' => 'POST'],
+        ['name' => 'waarmerk#certify', 'url' => 'api/waarmerk/anonymization/{linkId}', 'verb' => 'POST'],
+        ['name' => 'waarmerk#index', 'url' => 'api/waarmerk', 'verb' => 'GET'],
+        ['name' => 'waarmerk#show', 'url' => 'api/waarmerk/{id}', 'verb' => 'GET'],
+        ['name' => 'waarmerk#revoke', 'url' => 'api/waarmerk/{id}/revoke', 'verb' => 'POST'],
+        ['name' => 'signingEvidence#download', 'url' => 'api/signing/{id}/evidence', 'verb' => 'GET'],
+        ['name' => 'signingEvidence#copy', 'url' => 'api/signing/{id}/evidence/copy', 'verb' => 'POST'],
 
         // Signing routes.
         ['name' => 'signing#createRequest', 'url' => 'api/signing/requests', 'verb' => 'POST'],
@@ -360,6 +429,8 @@ $extra = [
         ['name' => 'signing#cancelRequest', 'url' => 'api/signing/requests/{id}', 'verb' => 'DELETE'],
         ['name' => 'signing#sign', 'url' => 'api/signing/requests/{id}/sign', 'verb' => 'POST'],
         ['name' => 'signing#decline', 'url' => 'api/signing/requests/{id}/decline', 'verb' => 'POST'],
+        // signing-accept-only-recipient: an accept-only recipient accepts without signing.
+        ['name' => 'signing#accept', 'url' => 'api/signing/requests/{id}/accept', 'verb' => 'POST'],
         ['name' => 'signing#bulkSign', 'url' => 'api/signing/bulk', 'verb' => 'POST'],
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         // Public, account-free signature verification by token (signature-verification-portal REQ-DDSVP-001/004).
@@ -442,10 +513,21 @@ $extra = [
         // the segment spelled exactly as the class: `portalSigningReceiver`.
         ['name' => 'portalSigningReceiver#signDocument', 'url' => 'api/portal/signing/sign', 'verb' => 'POST'],
         ['name' => 'portalSigningReceiver#declineDocument', 'url' => 'api/portal/signing/decline', 'verb' => 'POST'],
+        ['name' => 'portalSigningReceiver#acceptDocument', 'url' => 'api/portal/signing/accept', 'verb' => 'POST'],
         ['name' => 'portalSigningReceiver#viewDocument', 'url' => 'api/portal/signing/viewDocument', 'verb' => 'GET'],
 
         // Financial extraction routes (scan-en-herken).
+        // Schema field suggestions (extraction-model-filled-fields). The literal
+        // `fields` and `field-profiles` paths come before the `{id}` routes.
+        ['name' => 'fieldFill#fields', 'url' => 'api/extraction/fields', 'verb' => 'POST'],
+        ['name' => 'fieldFill#status', 'url' => 'api/extraction/fields/status', 'verb' => 'GET'],
+        ['name' => 'fieldFill#setEnabled', 'url' => 'api/extraction/fields/status', 'verb' => 'PUT'],
+        ['name' => 'fieldFill#decide', 'url' => 'api/extraction/fields/{id}/decide', 'verb' => 'POST'],
+        ['name' => 'fieldFill#profiles', 'url' => 'api/extraction/field-profiles', 'verb' => 'GET'],
+        ['name' => 'fieldFill#saveProfile', 'url' => 'api/extraction/field-profiles', 'verb' => 'POST'],
+        ['name' => 'fieldFill#saveProfile', 'url' => 'api/extraction/field-profiles/{id}', 'verb' => 'PUT', 'postfix' => 'update'],
         ['name' => 'extraction#financial', 'url' => 'api/extraction/financial', 'verb' => 'POST'],
+        ['name' => 'extraction#capture', 'url' => 'api/extraction/capture', 'verb' => 'POST'],
         ['name' => 'extraction#corrections', 'url' => 'api/extraction/{id}/corrections', 'verb' => 'POST'],
 
         // GL-account ("grootboekrekening") suggestion route (ai-gl-account-suggestion).

@@ -124,6 +124,31 @@ class SigningEventsTest extends TestCase {
 	}//end testConcludedEventFromRequest()
 
 	/**
+	 * An accept-only recipient is listed as accepted, never among the
+	 * signers (signing-accept-only-recipient D3); without accepters both
+	 * read as before.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-backend
+	 */
+	public function testAnAccepterIsListedAsAcceptedNeverAsASigner(): void {
+		$event = (new SigningConcludedEventFactory())->create(
+			request: ['id' => 'req-3', 'signerIds' => ['tenant', 'officer', 'landlord'], 'accepterIds' => ['officer']],
+			status: 'signed',
+			signedDocumentRef: 'file:3@v2'
+		);
+
+		$this->assertSame(['tenant', 'landlord'], $event->getSigners());
+		$this->assertSame(['officer'], $event->getAccepted());
+
+		$plain = (new SigningConcludedEventFactory())->create(request: ['id' => 'req-4', 'signerIds' => ['s1']], status: 'signed');
+		$this->assertSame(['s1'], $plain->getSigners());
+		$this->assertSame([], $plain->getAccepted());
+
+	}//end testAnAccepterIsListedAsAcceptedNeverAsASigner()
+
+	/**
 	 * fromRequest() tolerates a minimal internal request (no provenance).
 	 *
 	 * @return void

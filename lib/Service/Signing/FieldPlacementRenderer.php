@@ -139,10 +139,37 @@ class FieldPlacementRenderer {
 			'initials' => $this->initials(name: $signer),
 			'date'     => substr($timestamp, 0, 10),
 			'checkbox' => 'X',
+			'text'     => $this->typedText(placement: $placement, signer: $signer),
 			default    => $signer,
 		};
 
 	}//end fieldText()
+
+	/**
+	 * What a text block shows: the value the signer typed, else the signer's name.
+	 *
+	 * An IBAN is shown in groups of four (signing-field-validation D4).
+	 *
+	 * @param array<string, mixed> $placement The placement, with `value` when one was typed.
+	 * @param string               $signer    The signer's name.
+	 *
+	 * @return string The text to draw.
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 */
+	private function typedText(array $placement, string $signer): string {
+		$value = ($placement['value'] ?? null);
+		if (is_string($value) === false || $value === '') {
+			return $signer;
+		}
+
+		if (isset(FieldValueChecker::CHECKS[(string) ($placement['validation'] ?? '')]) === true) {
+			return trim(chunk_split($value, 4, ' '));
+		}
+
+		return $value;
+
+	}//end typedText()
 
 	/**
 	 * The initials of a name: the first letter of each word, upper case.

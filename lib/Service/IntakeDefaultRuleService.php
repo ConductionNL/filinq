@@ -54,6 +54,20 @@ class IntakeDefaultRuleService {
 	public const SCHEMA = 'intakeDefaultRule';
 
 	/**
+	 * A document counts as handled once it is assigned to a record.
+	 *
+	 * @var string
+	 */
+	public const HANDLED_ASSIGNED = 'assigned';
+
+	/**
+	 * A document counts as handled once an outgoing letter answers it.
+	 *
+	 * @var string
+	 */
+	public const HANDLED_ANSWERED = 'answered';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
@@ -154,15 +168,49 @@ class IntakeDefaultRuleService {
 	}//end stamp()
 
 	/**
+	 * When a document counts as handled, per rule uuid.
+	 *
+	 * `assigned` unless a rule says `answered`; an unreadable rule set answers
+	 * no rules, so every document falls back to `assigned`.
+	 *
+	 * @return array<string, string> Rule uuid => `assigned` or `answered`.
+	 *
+	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+	 */
+	public function handledWhenByRule(): array {
+		$handledWhen = [];
+		foreach ($this->rules() as $rule) {
+			$uuid = (string)($rule['uuid'] ?? '');
+			if ($uuid === '') {
+				continue;
+			}
+
+			$handledWhen[$uuid] = self::HANDLED_ASSIGNED;
+			if (($rule['handledWhen'] ?? null) === self::HANDLED_ANSWERED) {
+				$handledWhen[$uuid] = self::HANDLED_ANSWERED;
+			}
+		}
+
+		return $handledWhen;
+
+	}//end handledWhenByRule()
+
+	/**
 	 * One rule by its uuid, as match() reads the rule set.
+	 *
+	 * The registry lookup reads the rule an intake document was stamped with,
+	 * so the purpose it declares for a BRP lookup is the one the organisation
+	 * wrote down for that channel and sender.
 	 *
 	 * @param string $uuid The rule's uuid, as `defaultRule` names it on a document.
 	 *
 	 * @return array<string, mixed>|null The rule, or null when none has that uuid.
 	 *
 	 * @spec openspec/changes/intake-acknowledge-and-stamp
+	 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-the-brp-is-asked-only-under-a-declared-purpose-req-ibr-002
 	 */
 	public function findRule(string $uuid): ?array {
+		$uuid = trim($uuid);
 		if ($uuid === '') {
 			return null;
 		}

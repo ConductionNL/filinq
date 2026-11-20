@@ -35,7 +35,7 @@ use setasign\Fpdi\Fpdi;
 /**
  * The stamp sits on page 1 of a copy; the pages and the arrived file stay as they were.
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-an-arriving-pdf-may-get-a-stamped-copy-req-ias-003
+ * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-received-stamp-goes-on-a-copy-never-on-what-arrived-req-ias-003
  */
 #[CoversClass(ReceivedStampService::class)]
 #[UsesClass(PdfStreamReaderFactory::class)]

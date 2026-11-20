@@ -8,6 +8,13 @@
 			"order": 26
 		},
 		{
+			"id": "MailArchiveImport",
+			"label": "Mail archive import",
+			"icon": "EmailMultipleOutline",
+			"route": "MailArchiveImport",
+			"order": 28
+		},
+		{
 			"id": "ClassificationPending",
 			"label": "Classification",
 			"icon": "TagCheckOutline",
@@ -29,9 +36,25 @@
 			"route": "EmailIngestion",
 			"section": "settings",
 			"order": 94
+		},
+		{
+			"id": "IntakeChannels",
+			"label": "Intake channels",
+			"icon": "Scanner",
+			"route": "IntakeChannels",
+			"section": "settings",
+			"order": 95
 		}
 	],
 	"pages": [
+		{
+			"id": "IntakeChannels",
+			"route": "/intake-channels",
+			"type": "custom",
+			"title": "Intake channels",
+			"component": "IntakeChannels",
+			"_note": "The scanner profiles: which folder a scanner writes to and how a batch that lands there is cut (scan-intake-with-separator-sheets REQ-SCI-05). type:custom because profiles are instance settings read and declared through api/scan/profiles, not OpenRegister objects."
+		},
 		{
 			"id": "IntakeRules",
 			"route": "/intake/rules",
@@ -82,6 +105,14 @@
 			"title": "Classification suggestions",
 			"component": "ClassificationPending",
 			"_note": "The document type, sender and dossier suggestions waiting for a person (inbound-auto-classification). type:custom because the list is filtered on the caller's own access to each file and confirm/reject are filinq endpoints that write the document and move the file, not object operations."
+		},
+		{
+			"id": "MailArchiveImport",
+			"route": "/mail-archive-import",
+			"type": "custom",
+			"title": "Mail archive import",
+			"component": "MailArchiveImport",
+			"_note": "Bulk import of an MBOX, PST or ZIP mail archive into dossiers and the intake inbox (intake-mailbox-archive-import). type:custom because the import is started from a picked file, its folders are mapped with a check on each dossier's write rights, and progress is read from filinq's api/mail-archive-imports routes, which answer only the user who started an import; none of that is an object operation."
 		}
 	]
 }

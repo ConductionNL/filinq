@@ -43,12 +43,17 @@ class BatchReportService implements BatchReportServiceInterface {
 	 *
 	 * @param BatchStateService       $stateService      Service that exposes stored batch state.
 	 * @param ReportOrganisationLabel $organisationLabel Names the organisation the batch belongs to.
+	 * @param BatchReportAggregator   $aggregator        The read-time summary of a batch.
+	 * @param BatchQaOutcomes|null    $qaOutcomes        Reads each QA sample's outcome from its review;
+	 *                                                   null reports the stored outcome.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly BatchStateService $stateService,
 		private readonly ReportOrganisationLabel $organisationLabel,
+		private readonly BatchReportAggregator $aggregator = new BatchReportAggregator(),
+		private readonly ?BatchQaOutcomes $qaOutcomes = null,
 	) {
 
 	}//end __construct()
@@ -78,6 +83,9 @@ class BatchReportService implements BatchReportServiceInterface {
 		}
 
 		$organisation = $this->organisationLabel->describe(uuid: $batch['organisation'] ?? null);
+		if ($this->qaOutcomes !== null) {
+			$batch = $this->qaOutcomes->refresh(batch: $batch);
+		}
 
 		$output = fopen('php://temp', 'r+');
 		fputcsv(
@@ -90,30 +98,101 @@ class BatchReportService implements BatchReportServiceInterface {
 				'replacementCount',
 				'status',
 				'timestamp',
+				'reason',
+				'qaOutcome',
 				'organisationName',
 				'organisationUuid',
 			]
 		);
+		$timestamp = date('c', $batch['createdAt'] ?? time());
 		foreach ($batch['files'] as $f) {
-			fputcsv(
-				$output,
-				[
-					$f['fileName'] ?? '',
-					$f['fileId'] ?? '',
-					$f['anonymizedFileId'] ?? '',
-					$f['entityCount'] ?? 0,
-					$f['replacementCount'] ?? 0,
-					$f['status'] ?? '',
-					date('c', $batch['createdAt'] ?? time()),
-					$organisation['name'],
-					$organisation['uuid'],
-				]
-			);
+			fputcsv($output, $this->fileRow(file: $f, timestamp: $timestamp, organisation: $organisation));
 		}
+
+		$summary = $this->aggregator->summarise(batch: $batch);
+		$summary['qaSampling'] = 'enabled';
+		if (isset($batch['qaSampleRate']) === true && (int)$batch['qaSampleRate'] === 0) {
+			$summary['qaSampling'] = 'disabled';
+		}
+
+		$this->writeSummary(output: $output, summary: $summary);
 
 		rewind($output);
 		$csv = stream_get_contents($output);
 		fclose($output);
 		return $csv;
 	}//end generateReport()
+
+	/**
+	 * One file's row of the report, in the header's column order.
+	 *
+	 * @param array<string, mixed>                $file         The per-file entry.
+	 * @param string                              $timestamp    The batch's creation time, ISO 8601.
+	 * @param array{name: string, uuid: string} $organisation The organisation the batch belongs to.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private function fileRow(array $file, string $timestamp, array $organisation): array {
+		return [
+			$file['fileName'] ?? '',
+			$file['fileId'] ?? '',
+			$file['anonymizedFileId'] ?? '',
+			$file['entityCount'] ?? 0,
+			$file['replacementCount'] ?? 0,
+			$file['status'] ?? '',
+			$timestamp,
+			$this->reasonColumn(file: $file),
+			$file['qaOutcome'] ?? '',
+			$organisation['name'],
+			$organisation['uuid'],
+		];
+	}//end fileRow()
+
+	/**
+	 * The failure group of a failed file, empty for a file that did not fail.
+	 *
+	 * @param array<string, mixed> $file The per-file entry.
+	 *
+	 * @return string
+	 */
+	private function reasonColumn(array $file): string {
+		if (($file['status'] ?? '') !== 'error') {
+			return '';
+		}
+
+		return BatchReportAggregator::reasonOf(file: $file);
+	}//end reasonColumn()
+
+	/**
+	 * Write the read-time summary below the per-file rows (redaction-at-scale
+	 * REQ-DDRAS-006): totals, documents per hour, phase durations, failures
+	 * per reason and the QA sample outcomes. Entity values are not in it.
+	 *
+	 * @param resource             $output  The CSV stream.
+	 * @param array<string, mixed> $summary BatchReportAggregator::summarise().
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-throughput-and-failure-reporting-req-ddras-006
+	 */
+	private function writeSummary($output, array $summary): void {
+		fputcsv($output, []);
+		fputcsv($output, ['summary', 'files', $summary['files']]);
+		fputcsv($output, ['summary', 'succeeded', $summary['succeeded']]);
+		fputcsv($output, ['summary', 'failed', $summary['failed']]);
+		fputcsv($output, ['summary', 'documentsPerHour', $summary['documentsPerHour'] ?? '']);
+		fputcsv($output, ['summary', 'extractMs', $summary['phaseMs']['extract'] ?? '']);
+		fputcsv($output, ['summary', 'anonymizeMs', $summary['phaseMs']['anonymize'] ?? '']);
+		foreach ($summary['failures'] as $reason => $count) {
+			fputcsv($output, ['failures', (string)$reason, $count]);
+		}
+
+		if (($summary['qaSampling'] ?? '') === 'disabled') {
+			fputcsv($output, ['summary', 'qaSampling', 'disabled']);
+		}
+
+		foreach ($summary['qaSamples'] as $fileId => $outcome) {
+			fputcsv($output, ['qaSample', (string)$fileId, $outcome]);
+		}
+	}//end writeSummary()
 }//end class

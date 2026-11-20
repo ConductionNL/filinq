@@ -247,6 +247,48 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		scope: 'create'
 	)]
 	public function generate(string $templateId, array $dataRefs, array $options = []): array {
+		$letter = $this->compose(templateId: $templateId, dataRefs: $dataRefs, options: $options);
+
+		// Log to correspondence register.
+		$registerEntry = $this->logCorrespondence(
+			request: new CorrespondenceRequest(templateId: $templateId, options: $options),
+			outcome: [
+				'templateName' => ($letter['template']['name'] ?? ''),
+				'dataRefs'     => $dataRefs,
+				'status'       => 'generated',
+				'errorMessage' => null,
+			]
+		);
+
+		return [
+			'content' => $letter['content'],
+			'format' => $letter['format'],
+			'warnings' => $letter['warnings'],
+			'registerEntry' => $registerEntry,
+		];
+
+	}//end generate()
+
+	/**
+	 * Compose one letter without logging it.
+	 *
+	 * Fetches the template, resolves the data, applies the huisstijl, renders
+	 * and produces the output. {@see generate()} logs what this returns; a send
+	 * by email composes through here and logs the send instead, so one sent
+	 * letter is one correspondence entry.
+	 *
+	 * @param string $templateId The UUID of the template to use
+	 * @param array $dataRefs Array of data references with register/schema/id
+	 * @param array $options Options: format (pdf|docx|html|email), huisstijlId, listRefs, adHocData, userId
+	 *
+	 * @return array{content: string, format: string, warnings: array, template: array}
+	 *
+	 * @throws Exception If composing fails
+	 *
+	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
+	 * @spec openspec/changes/letter-email-sending/tasks.md#task-1
+	 */
+	public function compose(string $templateId, array $dataRefs, array $options = []): array {
 		$format = $options['format'] ?? $this->getDefaultFormat();
 		$this->validateFormat(format: $format);
 
@@ -302,25 +344,51 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 			pdfOptions: $pdfOptions
 		);
 
-		// Log to correspondence register.
-		$registerEntry = $this->logCorrespondence(
-			request: new CorrespondenceRequest(templateId: $templateId, options: $options),
-			outcome: [
-				'templateName' => ($template['name'] ?? ''),
-				'dataRefs'     => $dataRefs,
-				'status'       => 'generated',
-				'errorMessage' => null,
-			]
-		);
-
 		return [
 			'content' => $content,
 			'format' => $format,
 			'warnings' => $warnings,
-			'registerEntry' => $registerEntry,
+			'template' => $template,
 		];
 
-	}//end generate()
+	}//end compose()
+
+	/**
+	 * Log a letter sent by email, or a send that failed.
+	 *
+	 * The same correspondence entry {@see generate()} writes, in format
+	 * `email`, with status `sent` (and sentAt, sentTo, sentBy in `extra`) or
+	 * `failed` with the reason.
+	 *
+	 * @param string $templateId The template the letter was composed from.
+	 * @param string $templateName The template's name.
+	 * @param array $dataRefs The data references, the first being the recipient.
+	 * @param array $options The send options: userId, recipientType, caseReference.
+	 * @param array{status: string, errorMessage?: string|null, extra?: array<string, mixed>} $sending What the send did.
+	 *
+	 * @return array The created correspondence register entry, or [] when logging failed.
+	 *
+	 * @spec openspec/changes/letter-email-sending/tasks.md#task-1
+	 */
+	public function logSent(
+		string $templateId,
+		string $templateName,
+		array $dataRefs,
+		array $options,
+		array $sending,
+	): array {
+		return $this->logCorrespondence(
+			request: new CorrespondenceRequest(templateId: $templateId, options: (['format' => 'email'] + $options)),
+			outcome: [
+				'templateName' => $templateName,
+				'dataRefs' => $dataRefs,
+				'status' => $sending['status'],
+				'errorMessage' => ($sending['errorMessage'] ?? null),
+				'extra' => ($sending['extra'] ?? []),
+			]
+		);
+
+	}//end logSent()
 
 	/**
 	 * Log a letter finished from a draft the clerk edited.
