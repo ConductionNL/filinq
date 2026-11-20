@@ -7,6 +7,7 @@ import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { computed } from 'vue'
 import ClassificationCard from '../components/ClassificationCard.vue'
 import DocumentLeafTabs from '../components/DocumentLeafTabs.vue'
+import MdtoPanel from '../components/MdtoPanel.vue'
 import { documentRecordIdFor } from '../services/documentLeafTabs.js'
 import {
 	anonymizationStore,
@@ -641,6 +642,8 @@ const documentRecordId = computed(() =>
 		     does (ADR-022 documented exception). -->
 		<!-- The document's classification suggestion, when it has one
 		     (inbound-auto-classification): confirm, correct or reject. -->
+		<!-- The document's MDTO archival metadata (tmlo-mdto-metadata). -->
+		<MdtoPanel :objectId="documentRecordId" objectType="document" />
 		<ClassificationCard :fileId="currentFileId" />
 		<DocumentLeafTabs
 			register="filinq"

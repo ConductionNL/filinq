@@ -272,6 +272,10 @@ $extra = [
         ['name' => 'classification#confirm', 'url' => 'api/classification/{fileId}/confirm', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'classification#reject', 'url' => 'api/classification/{fileId}/reject', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'classification#show', 'url' => 'api/classification/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        // MDTO metadata (tmlo-mdto-metadata): completeness verdict, sidecar download, e-depot transfer through OpenRegister.
+        ['name' => 'mdto#status', 'url' => 'api/mdto/{id}', 'verb' => 'GET'],
+        ['name' => 'mdto#export', 'url' => 'api/mdto/{id}/export', 'verb' => 'GET'],
+        ['name' => 'mdto#transfer', 'url' => 'api/mdto/{id}/transfer', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#index', 'url' => 'api/legal-holds', 'verb' => 'GET'],
         ['name' => 'legalHoldCase#create', 'url' => 'api/legal-holds', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#status', 'url' => 'api/legal-holds/status/{objectId}', 'verb' => 'GET'],

@@ -322,6 +322,10 @@
         {
             "name": "document-audit",
             "description": "Reads the audit trail of one document the caller may open"
+        },
+        {
+            "name": "mdto",
+            "description": "The status is open to signed-in users and reads the record as them; export and transfer are for filinq-policy-admins and admins (checked in MdtoController)"
         }
     ],
     "paths": {
@@ -12427,6 +12431,155 @@
                         "name": "id",
                         "in": "path",
                         "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/mdto/{id}": {
+            "get": {
+                "operationId": "mdto-status",
+                "summary": "A record's MDTO completeness verdict, retention block, supplement and proposals",
+                "description": "A record's MDTO completeness verdict, retention block, supplement and proposals.",
+                "tags": [
+                    "mdto"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The verdict with the missing fields, whether an e-depot transport is configured, and the prefill proposals.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The record UUID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/mdto/{id}/export": {
+            "get": {
+                "operationId": "mdto-export",
+                "summary": "The record's MDTO sidecar for download",
+                "description": "The record's MDTO sidecar for download, as XML or (format=json) its JSON projection.",
+                "tags": [
+                    "mdto"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The sidecar.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/xml": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The record UUID.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "format",
+                        "in": "query",
+                        "required": false,
+                        "description": "xml (default) or json.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "xml",
+                                "json"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "/mdto/{id}/transfer": {
+            "post": {
+                "operationId": "mdto-transfer",
+                "summary": "Transfer the record to the e-depot through OpenRegister",
+                "description": "Transfer the record to the e-depot through OpenRegister.",
+                "tags": [
+                    "mdto"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Transferred, or manual when no e-depot transport is configured.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "422": {
+                        "description": "Blocked: the record is not MDTO-complete; the missing fields are listed.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "The record UUID.",
                         "schema": {
                             "type": "string"
                         }
