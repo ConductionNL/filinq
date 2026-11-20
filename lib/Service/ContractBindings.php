@@ -57,6 +57,7 @@ use OCA\Filinq\Kernel\Contracts\CustomDictionaryServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DataResolverServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DemoDataServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DetectionProviderConfigInterface;
+use OCA\Filinq\Kernel\Contracts\DigitisationWorklistInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentComparisonServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentDomainServiceInterface;
 use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
@@ -121,6 +122,7 @@ use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
 use OCA\Filinq\Kernel\Contracts\OutputLayoutMoverInterface;
 use OCA\Filinq\Kernel\Contracts\OutputLayoutResolverInterface;
 use OCA\Filinq\Kernel\Contracts\PageLayoutServiceInterface;
+use OCA\Filinq\Kernel\Contracts\PaperOriginalImportInterface;
 use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\Pdfa3ConversionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\PdfPasswordRemovalServiceInterface;
@@ -293,6 +295,7 @@ final class ContractBindings {
 		DataResolverServiceInterface::class            => DataResolverService::class,
 		DemoDataServiceInterface::class                => DemoDataService::class,
 		DetectionProviderConfigInterface::class        => DetectionProviderConfig::class,
+		DigitisationWorklistInterface::class           => DigitisationWorklist::class,
 		DocumentComparisonServiceInterface::class      => DocumentComparisonService::class,
 		DocumentDomainServiceInterface::class          => DocumentDomainService::class,
 		DocumentFinalityRuleServiceInterface::class    => DocumentFinalityRuleService::class,
@@ -357,6 +360,7 @@ final class ContractBindings {
 		OutputLayoutMoverInterface::class              => OutputLayoutMover::class,
 		OutputLayoutResolverInterface::class           => OutputLayoutResolver::class,
 		PageLayoutServiceInterface::class              => PageLayoutService::class,
+		PaperOriginalImportInterface::class            => PaperOriginalImport::class,
 		PartySuggestionServiceInterface::class         => PartySuggestionService::class,
 		Pdfa3ConversionServiceInterface::class         => Pdfa3ConversionService::class,
 		PdfPasswordRemovalServiceInterface::class      => PdfPasswordRemovalService::class,

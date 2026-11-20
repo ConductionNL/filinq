@@ -3,7 +3,7 @@
   - SPDX-License-Identifier: EUPL-1.2
 -->
 <script setup>
-import { translate as t } from '@nextcloud/l10n'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 </script>
 
@@ -72,6 +72,15 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 								)
 							">
 							{{ ocrBadgeFor(row) }}
+						</span>
+						<span
+							v-if="row.notesCount > 0"
+							class="my-documents-notes-count"
+							:title="n('filinq', '%n note', '%n notes', row.notesCount)"
+							:aria-label="n('filinq', '%n note', '%n notes', row.notesCount)"
+							data-testid="my-documents-notes-count">
+							<CommentTextOutline :size="16" />
+							{{ row.notesCount }}
 						</span>
 						<span
 							v-if="caseSystemFiles[String(row.fileId)]"
@@ -333,6 +342,7 @@ import CertificateOutline from 'vue-material-design-icons/CertificateOutline.vue
 import CheckboxMultipleMarkedOutline from 'vue-material-design-icons/CheckboxMultipleMarkedOutline.vue'
 import CheckDecagram from 'vue-material-design-icons/CheckDecagram.vue'
 import Cog from 'vue-material-design-icons/Cog.vue'
+import CommentTextOutline from 'vue-material-design-icons/CommentTextOutline.vue'
 import Compare from 'vue-material-design-icons/Compare.vue'
 import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
@@ -388,6 +398,7 @@ function loadPersistedViewMode() {
 export default {
 	name: 'MyDocumentsIndex',
 	components: {
+		CommentTextOutline,
 		DueForReviewList,
 		WaitingForMeList,
 		DdIndexPage,
@@ -1367,6 +1378,14 @@ export default {
 	.my-documents-name__icon {
 		transition: none;
 	}
+}
+
+.my-documents-notes-count {
+	display: inline-flex;
+	align-items: center;
+	gap: 2px;
+	margin-inline-start: 8px;
+	color: var(--color-text-maxcontrast);
 }
 
 .my-documents-case-system-badge {

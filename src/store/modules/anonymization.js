@@ -39,6 +39,7 @@ import { defineStore } from 'pinia'
 import { applyDetectionNotice } from '../../services/detectionProvider.js'
 import { extractDocumentText } from '../../services/fileViewerService.js'
 import { FOUR_EYES_REASONS } from '../../services/fourEyes.js'
+import { applyImageFlags, applyImageRedactionResult } from '../../services/imageRedaction.js'
 import { applyOcrFlags } from '../../services/ocr.js'
 import {
 	markChecked,
@@ -623,7 +624,9 @@ function applyExtractResponse(entry, data) {
 	applyDetectionNotice(entry, data)
 	// A scan detection could not read is not "nothing to anonymise".
 	const unseen = applyOcrFlags(entry, data)
-	return { found: entities.length, unseen }
+	// Nor are images nobody looked at (image-redaction REQ-DDIMR-002).
+	const imagesUnseen = applyImageFlags(entry, data)
+	return { found: entities.length, unseen: unseen || imagesUnseen }
 }
 
 /**
@@ -1033,6 +1036,7 @@ function applyAnonymizeResult(entry, data) {
 	entry.pseudonymisation = data.pseudonymisation || null
 	entry.structurePreservation = data.structurePreservation || null
 	entry.sanitizationReport = data.sanitizationReport || null
+	applyImageRedactionResult(entry, data)
 	entry.reanonymize = false
 	entry.status = 'completed'
 }

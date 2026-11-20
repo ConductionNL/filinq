@@ -39,6 +39,7 @@ use OCA\Filinq\Service\Publication\PublicationPipelineService;
 use OCA\Filinq\Service\Publication\PublicationReadiness;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository;
+use OCA\OpenRegister\Exception\HookStoppedException;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -110,6 +111,20 @@ class PublicationPipelineServiceTest extends TestCase {
 	private bool $platform = true;
 
 	/**
+	 * The properties OpenCatalogi's publication schema declares; null reads as a schema that cannot be found.
+	 *
+	 * @var array<string, mixed>|null
+	 */
+	private ?array $publicationProperties = null;
+
+	/**
+	 * Whether OpenCatalogi's pre-save listener refuses the publication's document type.
+	 *
+	 * @var bool
+	 */
+	private bool $refuseDocumentType = false;
+
+	/**
 	 * The accessibility gate mode (filinq.redaction.accessibility_gate).
 	 *
 	 * @var string
@@ -134,6 +149,13 @@ class PublicationPipelineServiceTest extends TestCase {
 			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions()): array {
 				$register = $options->target->register ?? '';
 				$schema = $options->target->schema ?? '';
+				if ($schema === OpenCatalogiPublicationMap::SCHEMA && $this->refuseDocumentType === true) {
+					throw new HookStoppedException(
+						'documentsoort: "' . ($object['documentsoort'] ?? '') . '" is not on the national list of document types',
+						['documentsoort' => 'not on the national list']
+					);
+				}
+
 				$uuid = $options->uuid;
 				$this->saves[] = [$schema, $object];
 				$uuid = $uuid ?? ($schema . '-' . (count($this->rows[$schema] ?? []) + 1));
@@ -188,11 +210,80 @@ class PublicationPipelineServiceTest extends TestCase {
 				];
 			}
 		};
+		$this->publicationProperties ??= json_decode((string) file_get_contents(__DIR__ . '/../../../fixtures/opencatalogi-publication-schema.json'), true)['properties'];
+		$registers = new class {
+			/**
+			 * OpenCatalogi's register, holding schema 7, as RegisterMapper::find() answers it.
+			 *
+			 * @param string|int $id            The register id or slug
+			 * @param bool       $_rbac         Ignored
+			 * @param bool       $_multitenancy Ignored
+			 *
+			 * @return object The register.
+			 */
+			public function find(string|int $id, bool $_rbac = true, bool $_multitenancy = true): object {
+				if ($id !== 'publication') {
+					throw new RuntimeException('Register not found');
+				}
+
+				return new class {
+					/**
+					 * @return array<int, int>
+					 */
+					public function getSchemas(): array {
+						return [7];
+					}
+				};
+			}
+		};
+		$schemas = new class ($this) {
+			/**
+			 * Constructor.
+			 *
+			 * @param PublicationPipelineServiceTest $test The test that holds the schema's properties
+			 */
+			public function __construct(private PublicationPipelineServiceTest $test) {
+			}
+
+			/**
+			 * The schema with this slug among the ids, as SchemaMapper::findBySlugInIds() answers it.
+			 *
+			 * @param string          $slug      The schema slug
+			 * @param array<int, int> $schemaIds The register's schema ids
+			 *
+			 * @return object|null The schema.
+			 */
+			public function findBySlugInIds(string $slug, array $schemaIds): ?object {
+				$properties = $this->test->publicationProperties();
+				if ($slug !== 'publication' || in_array(7, $schemaIds, true) === false || $properties === null) {
+					return null;
+				}
+
+				return new class ($properties) {
+					/**
+					 * Constructor.
+					 *
+					 * @param array<string, mixed> $properties The declared properties
+					 */
+					public function __construct(private array $properties) {
+					}
+
+					/**
+					 * @return array<string, mixed>
+					 */
+					public function getProperties(): array {
+						return $this->properties;
+					}
+				};
+			}
+		};
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static fn (string $id): object => match ($id) {
 				'OCA\OpenRegister\Service\FileService' => $fileService,
 				'OCA\OpenCatalogi\Service\TooiVocabularyService' => $tooi,
+				'OCA\OpenRegister\Db\RegisterMapper' => $registers,
+				'OCA\OpenRegister\Db\SchemaMapper' => $schemas,
 				default => $objects,
 			}
 		);
@@ -245,6 +336,16 @@ class PublicationPipelineServiceTest extends TestCase {
 		);
 
 	}//end pipeline()
+
+	/**
+	 * Called by the fake schema mapper.
+	 *
+	 * @return array<string, mixed>|null The publication schema's properties, null when there is no schema.
+	 */
+	public function publicationProperties(): ?array {
+		return $this->publicationProperties;
+
+	}//end publicationProperties()
 
 	/**
 	 * Called by the fake file service.
@@ -588,6 +689,81 @@ class PublicationPipelineServiceTest extends TestCase {
 		$this->assertSame('c_8c840238', $record['wooCategory'], 'the stored record is not migrated');
 
 	}//end testARecordFromBeforeTheCodesIsTranslated()
+
+	/**
+	 * The document type travels in its own field and the summary stays empty.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-1
+	 */
+	public function testTheHandOffWritesTheDocumentTypeToItsOwnField(): void {
+		$pipeline = $this->pipeline();
+
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+
+		$publication = $this->rows['publication'][$record['endpointPublicationRef']];
+		$this->assertSame('besluit', $publication['documentsoort']);
+		$this->assertArrayNotHasKey('summary', $publication);
+		$this->assertContains('handed_off', array_column($this->rows['publicationLogEntry'], 'action'));
+
+	}//end testTheHandOffWritesTheDocumentTypeToItsOwnField()
+
+	/**
+	 * An OpenCatalogi whose publication has no documentsoort refuses the hand-off, names the update and writes nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
+	 */
+	public function testAnOpenCatalogiWithoutTheFieldRefusesTheHandoff(): void {
+		$properties = json_decode((string) file_get_contents(__DIR__ . '/../../../fixtures/opencatalogi-publication-schema.json'), true)['properties'];
+		unset($properties['documentsoort']);
+		$this->publicationProperties = $properties;
+		$pipeline = $this->pipeline();
+		$ready = $this->readyRecord(pipeline: $pipeline);
+
+		try {
+			$pipeline->handoff(record: $ready, actor: 'anna');
+			$this->fail('An OpenCatalogi without documentsoort must not take the hand-off');
+		} catch (RuntimeException $e) {
+			$this->assertSame(PublicationPipelineService::NEEDS_DOCUMENT_TYPE_FIELD, $e->getMessage());
+			$this->assertStringContainsString('update OpenCatalogi', $e->getMessage());
+			$this->assertSame(409, $e->getCode());
+		}
+
+		$this->assertArrayNotHasKey('publication', $this->rows);
+		$this->assertSame([], $this->attached);
+		$this->assertSame('ready', $this->rows['publicationRecord'][$ready['uuid']]['status']);
+
+	}//end testAnOpenCatalogiWithoutTheFieldRefusesTheHandoff()
+
+	/**
+	 * OpenCatalogi refusing the document type reaches the operator and leaves the record ready.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
+	 */
+	public function testARefusedDocumentTypeLeavesTheRecordReady(): void {
+		$this->refuseDocumentType = true;
+		$pipeline = $this->pipeline();
+		$ready = $this->readyRecord(pipeline: $pipeline);
+
+		try {
+			$pipeline->handoff(record: $ready, actor: 'anna');
+			$this->fail('A refused document type must not hand off');
+		} catch (RuntimeException $e) {
+			$this->assertStringContainsString('documentsoort', $e->getMessage());
+			$this->assertInstanceOf(HookStoppedException::class, $e->getPrevious());
+		}
+
+		$this->assertArrayNotHasKey('publication', $this->rows);
+		$this->assertSame([], $this->attached);
+		$this->assertSame('ready', $this->rows['publicationRecord'][$ready['uuid']]['status']);
+		$this->assertNotContains('handed_off', array_column($this->rows['publicationLogEntry'] ?? [], 'action'));
+
+	}//end testARefusedDocumentTypeLeavesTheRecordReady()
 
 	/**
 	 * A category that is neither a code nor a known basename blocks the hand-off and writes nothing.

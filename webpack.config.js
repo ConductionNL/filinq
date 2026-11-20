@@ -161,7 +161,9 @@ webpackConfig.resolve.alias = {
 	...webpackConfig.resolve.alias,
 	...(useLocalLib ? { '@conduction/nextcloud-vue': localLib } : {}),
 	vue$: path.resolve(__dirname, 'node_modules/vue'),
-	pinia$: path.resolve(__dirname, 'node_modules/pinia'),
+	// pinia 4 is ESM-only too (only an `exports` map), so the same applies:
+	// alias the resolved entry FILE, not the package directory.
+	pinia$: require.resolve('pinia', { paths: [__dirname] }),
 	// @nextcloud/vue@9, @nextcloud/dialogs@7 and vue-router@5 are ESM-only:
 	// their package.json has NO `main` and NO `module`, only an `exports` map.
 	// A Vue-2-era alias to the package DIRECTORY bypasses `exports` entirely

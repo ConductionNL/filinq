@@ -163,6 +163,7 @@ class CorrespondenceControllerBatchTraceTest extends TestCase {
 			userSession: $session,
 			logger: $this->logger,
 			l10n: $l10n,
+			sender: $this->createMock(\OCA\Filinq\Service\CorrespondenceSendService::class),
 		);
 
 	}//end controller()

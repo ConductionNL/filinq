@@ -284,7 +284,8 @@
 			"</x-ncbutton>",
 			"</div>",
 			"</x-slot>",
-			"</x-cnadminsettingsshell>"
+			"</x-cnadminsettingsshell>",
+			"<x-nctextfield modelvalue=\"0.9\" type=\"number\" min=\"0.6\" max=\"1\" step=\"0.01\" label=\"Confidence for unattended receipts and invoices\" error=\"false\" helpertext=\"A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.\" data-testid=\"settings-unattended-threshold\" data-on-onupdate:modelvalue=\"\">"
 		],
 		"switches": [
 			{
@@ -793,7 +794,12 @@
 			"</x-ncbutton>",
 			"</div>",
 			"</x-slot>",
-			"</x-cnadminsettingsshell>"
+			"</x-cnadminsettingsshell>",
+			"<x-nctextfield modelvalue=\"0.9\" type=\"number\" min=\"0.6\" max=\"1\" step=\"0.01\" label=\"Confidence for unattended receipts and invoices\" error=\"false\" helpertext=\"A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.\" data-testid=\"settings-unattended-threshold\" data-on-onupdate:modelvalue=\"\">",
+			"<x-integrityscansection>",
+			"</x-integrityscansection>",
+			"<x-mailarchiveimportsettings>",
+			"</x-mailarchiveimportsettings>"
 		],
 		"switches": [
 			{
@@ -1227,7 +1233,8 @@
 			"</x-ncbutton>",
 			"</div>",
 			"</x-slot>",
-			"</x-cnadminsettingsshell>"
+			"</x-cnadminsettingsshell>",
+			"<x-nctextfield modelvalue=\"0.9\" type=\"number\" min=\"0.6\" max=\"1\" step=\"0.01\" label=\"Confidence for unattended receipts and invoices\" error=\"false\" helpertext=\"A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.\" data-testid=\"settings-unattended-threshold\" data-on-onupdate:modelvalue=\"\">"
 		],
 		"switches": [
 			{
@@ -1669,7 +1676,12 @@
 			"</x-ncbutton>",
 			"</div>",
 			"</x-slot>",
-			"</x-cnadminsettingsshell>"
+			"</x-cnadminsettingsshell>",
+			"<x-nctextfield modelvalue=\"0.9\" type=\"number\" min=\"0.6\" max=\"1\" step=\"0.01\" label=\"Confidence for unattended receipts and invoices\" error=\"false\" helpertext=\"A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.\" data-testid=\"settings-unattended-threshold\" data-on-onupdate:modelvalue=\"\">",
+			"<x-integrityscansection>",
+			"</x-integrityscansection>",
+			"<x-mailarchiveimportsettings>",
+			"</x-mailarchiveimportsettings>"
 		],
 		"switches": [
 			{

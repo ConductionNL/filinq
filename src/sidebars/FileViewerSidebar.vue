@@ -7,6 +7,7 @@ import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { computed } from 'vue'
 import ClassificationCard from '../components/ClassificationCard.vue'
 import DocumentLeafTabs from '../components/DocumentLeafTabs.vue'
+import MdtoPanel from '../components/MdtoPanel.vue'
 import { documentRecordIdFor } from '../services/documentLeafTabs.js'
 import {
 	anonymizationStore,
@@ -309,6 +310,56 @@ const documentRecordId = computed(() =>
 				{{ entry.ocrWarning }}
 			</NcNoteCard>
 
+			<NcNoteCard
+				v-if="entry && entry.imageWarning"
+				type="warning"
+				class="image-warning"
+				data-testid="image-redaction-warning">
+				{{ entry.imageWarning }}
+			</NcNoteCard>
+			<NcNoteCard
+				v-if="entry && imageRedactionPendingNote"
+				type="warning"
+				data-testid="image-redaction-pending">
+				{{ imageRedactionPendingNote }}
+			</NcNoteCard>
+
+			<!-- A page, a range of pages or the whole document in one action
+			     (image-redaction REQ-DDIMR-009): each decision is one row with
+			     its grounds; OpenRegister's image seam burns the pages. -->
+			<div
+				v-if="entry && entry.viewMode !== 'anonymized'"
+				class="scope-redaction"
+				data-testid="scope-redaction">
+				<ul v-if="scopeState.decisions.length" class="scope-redaction__rows">
+					<li
+						v-for="(decision, idx) in scopeState.decisions"
+						:key="'scope-' + idx"
+						data-testid="scope-decision-row">
+						<span class="scope-redaction__label">{{ scopeLabel(decision) }}</span>
+						<span class="scope-redaction__bases">{{ (decision.bases || []).join(', ') }}</span>
+					</li>
+				</ul>
+				<NcButton
+					wide
+					variant="secondary"
+					data-testid="scope-redaction-open"
+					@click="openScopeDialog">
+					<template #icon>
+						<FileHidden :size="20" />
+					</template>
+					{{ t('filinq', 'Redact pages or document') }}
+				</NcButton>
+			</div>
+			<ScopeRedactionDialog
+				v-if="scopeOpen && currentFileId"
+				:fileId="currentFileId"
+				:pageCount="scopeState.pageCount"
+				:pageScopesAvailable="scopeState.pageScopesAvailable"
+				:basesOptions="basesOptions"
+				@decided="onScopeDecided"
+				@close="scopeOpen = false" />
+
 			<div
 				v-if="entry && entry.confidentialityLabel"
 				class="confidentiality-chip-row">
@@ -595,6 +646,8 @@ const documentRecordId = computed(() =>
 		     does (ADR-022 documented exception). -->
 		<!-- The document's classification suggestion, when it has one
 		     (inbound-auto-classification): confirm, correct or reject. -->
+		<!-- The document's MDTO archival metadata (tmlo-mdto-metadata). -->
+		<MdtoPanel :objectId="documentRecordId" objectType="document" />
 		<ClassificationCard :fileId="currentFileId" />
 		<DocumentLeafTabs
 			register="filinq"
@@ -616,6 +669,7 @@ import {
 } from '@nextcloud/vue'
 import JSZip from 'jszip'
 import Download from 'vue-material-design-icons/Download.vue'
+import FileHidden from 'vue-material-design-icons/FileHidden.vue'
 import KeyVariant from 'vue-material-design-icons/KeyVariant.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
@@ -628,9 +682,11 @@ import ReviewMarkCard from '../components/ReviewMarkCard.vue'
 import WaarmerkRunActions from '../components/WaarmerkRunActions.vue'
 import ProhibitionBlockedDialog from '../dialogs/ProhibitionBlockedDialog.vue'
 import RestoreOriginalDialog from '../dialogs/RestoreOriginalDialog.vue'
+import ScopeRedactionDialog from '../dialogs/ScopeRedactionDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 import { colleagueHint, colleagueReason } from '../services/fourEyes.js'
+import { fetchScope, imageRedactionWarning, regionOverlays, scopeLabel } from '../services/imageRedaction.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 import { accessibilityNote } from '../services/redactionAccessibility.js'
 import { reportRows } from '../services/sanitization.js'
@@ -653,6 +709,8 @@ export default {
 		DdSearchBar,
 		ProhibitionBlockedDialog,
 		RestoreOriginalDialog,
+		ScopeRedactionDialog,
+		FileHidden,
 		ReviewMarkCard,
 		WaarmerkRunActions,
 		KeyVariant,
@@ -695,10 +753,23 @@ export default {
 			anonymiseMode: 'irreversible',
 			pseudonymStatus: null,
 			restoreOpen: false,
+			// Scope redaction (image-redaction REQ-DDIMR-009).
+			scopeOpen: false,
+			scopeState: { decisions: [], pageCount: 0, pageScopesAvailable: false },
 		}
 	},
 
 	computed: {
+		/**
+		 * The warning when the last anonymise left image content unredacted.
+		 *
+		 * @return {string|null} The warning.
+		 * @spec openspec/changes/image-redaction/tasks.md#task-4.2
+		 */
+		imageRedactionPendingNote() {
+			return imageRedactionWarning(this.entry)
+		},
+
 		/**
 		 * Id of the file currently open in the viewer, or null. Watched to
 		 * trigger entity loading — a plain instance computed fires reliably
@@ -1295,6 +1366,21 @@ export default {
 		},
 
 		/**
+		 * The image-region overlays of the review, from the same entity rows
+		 * as the table, so an overlay always shows its row's decision. Only
+		 * for the review step, like the highlights.
+		 *
+		 * @return {Array<object>} Overlays from `regionOverlays()`.
+		 * @spec openspec/changes/image-redaction/tasks.md#task-4.1
+		 */
+		regionList() {
+			if (!this.entry || this.entry.viewMode === 'anonymized') {
+				return []
+			}
+			return regionOverlays(this.entry.entities || [])
+		},
+
+		/**
 		 * Whether the user may edit the detected entities. Mirrors the
 		 * shared viewer state set by the upload modal and the header switch.
 		 * Read through a computed (not a template store-path) so the toggle
@@ -1455,8 +1541,10 @@ export default {
 		 * `currentFileId` computed rather than `fileViewerStore.currentFile`
 		 * directly: the store is a `<script setup>` import, so it is NOT a
 		 * `this`-property and a string-path watch on it never fires.
+		 * It also reads the file's scope decisions, so their rows show.
 		 *
 		 * @param {number|null} fileId New file id (null when viewer closed).
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
 		 */
 		currentFileId: {
 			handler(fileId) {
@@ -1465,6 +1553,7 @@ export default {
 					return
 				}
 				this.loadEntitiesForCurrentFile(file)
+				this.loadScope()
 			},
 
 			immediate: true,
@@ -1507,6 +1596,21 @@ export default {
 			deep: true,
 			immediate: true,
 		},
+
+		/**
+		 * Push the image-region overlays to the viewer whenever a decision or
+		 * the entity list changes.
+		 *
+		 * @param {Array<object>} list Overlays to draw.
+		 */
+		regionList: {
+			handler(list) {
+				fileViewerStore.setImageRegions(list)
+			},
+
+			deep: true,
+			immediate: true,
+		},
 	},
 
 	async created() {
@@ -1516,6 +1620,46 @@ export default {
 	},
 
 	methods: {
+		scopeLabel,
+		/**
+		 * Read the document's scope state and open the dialog.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+		 */
+		async openScopeDialog() {
+			await this.loadScope()
+			this.scopeOpen = true
+		},
+
+		/**
+		 * Read the document's scope decisions, page count and seam state.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+		 */
+		async loadScope() {
+			if (!this.currentFileId) {
+				return
+			}
+			try {
+				this.scopeState = await fetchScope(this.currentFileId)
+			} catch {
+				this.scopeState = { decisions: [], pageCount: 0, pageScopesAvailable: false }
+			}
+		},
+
+		/**
+		 * A decision was stored and committed: show its row and close.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+		 */
+		async onScopeDecided() {
+			this.scopeOpen = false
+			await this.loadScope()
+		},
+
 		entityTypeLabel,
 		/**
 		 * Toggle an entity's inclusion (= skip decision) through the guarded
@@ -2219,5 +2363,29 @@ export default {
 	padding-inline-start: 20px;
 	font-size: 0.85rem;
 	list-style: disc;
+}
+.scope-redaction {
+	display: flex;
+	flex-direction: column;
+	gap: var(--default-grid-baseline, 4px);
+	margin-block: calc(var(--default-grid-baseline, 4px) * 2);
+}
+
+.scope-redaction__rows {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.scope-redaction__rows li {
+	display: flex;
+	justify-content: space-between;
+	gap: calc(var(--default-grid-baseline, 4px) * 2);
+	padding-block: var(--default-grid-baseline, 4px);
+	border-bottom: 1px solid var(--color-border);
+}
+
+.scope-redaction__bases {
+	color: var(--color-text-maxcontrast);
 }
 </style>
