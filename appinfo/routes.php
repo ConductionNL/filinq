@@ -159,6 +159,10 @@ $extra = [
         ['name' => 'anonymization#extract', 'url' => 'api/anonymization/extract/{fileId}', 'verb' => 'POST'],
         ['name' => 'anonymization#anonymize', 'url' => 'api/anonymization/anonymize/{fileId}', 'verb' => 'POST'],
         ['name' => 'anonymization#updateRelation', 'url' => 'api/anonymization/relations/{id}', 'verb' => 'PATCH', 'requirements' => ['id' => '\\d+']],
+        // A page, a range of pages or a whole document redacted in one action (image-redaction REQ-DDIMR-009).
+        ['name' => 'scopeRedaction#show', 'url' => 'api/anonymization/scope/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'scopeRedaction#decide', 'url' => 'api/anonymization/scope/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'scopeRedaction#commit', 'url' => 'api/anonymization/scope/{fileId}/commit', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
 
         // Original-EML preview (renders the source message to a PDF for the viewer).
         ['name' => 'emlPreview#preview', 'url' => 'api/anonymization/eml-preview/{fileId}', 'verb' => 'GET'],
@@ -337,6 +341,9 @@ $extra = [
         // Correspondence routes.
         ['name' => 'correspondence#generate', 'url' => 'api/correspondence/generate', 'verb' => 'POST'],
         ['name' => 'correspondence#generateBatch', 'url' => 'api/correspondence/generate/batch', 'verb' => 'POST'],
+        // letter-email-sending: send a composed letter by email, and the dialog's preview of it.
+        ['name' => 'correspondence#send', 'url' => 'api/correspondence/send', 'verb' => 'POST'],
+        ['name' => 'correspondence#sendPreview', 'url' => 'api/correspondence/send/preview', 'verb' => 'POST'],
         ['name' => 'correspondence#jobStatus', 'url' => 'api/correspondence/jobs/{jobId}', 'verb' => 'GET'],
 
         // Template routes.
