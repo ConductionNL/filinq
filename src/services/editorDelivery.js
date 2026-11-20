@@ -39,11 +39,34 @@ export const SAVE_TIMEOUT_MS = 15000
  * @property {function(object, {find: string, replace: string}): Promise<void>} replace Replace a text.
  */
 
+/* global Api, Asc */
+
+/**
+ * The commands sent through the ONLYOFFICE / Euro-Office connector.
+ *
+ * The editor runs each one from its source in its own context, so a command
+ * cannot close over local values: it reads its data from `Asc.scope`, which
+ * runCommand sets just before the call. The commands themselves never change.
+ *
+ * @type {Readonly<Record<string, function(): unknown>>}
+ */
+const CONNECTOR_COMMANDS = Object.freeze({
+	save: function() {
+		Api.Save()
+		return true
+	},
+	count: function() {
+		const found = Api.GetDocument().Search(Asc.scope.find, true)
+		return found ? found.length : 0
+	},
+	replace: function() {
+		Api.GetDocument().SearchAndReplace({ searchString: Asc.scope.find, replaceString: Asc.scope.replace, matchCase: true })
+		return true
+	},
+})
+
 /**
  * The ONLYOFFICE / Euro-Office automation connector (`docEditor.createConnector()`).
- *
- * The command runs inside the editor, so it cannot close over local values:
- * the texts are embedded as JSON literals in the command's source.
  *
  * @type {EditorAdapter}
  */
@@ -56,7 +79,7 @@ const connectorAdapter = {
 	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-the-stored-document-must-be-made-current-before-the-agent-reads-it
 	 */
 	flush(connector) {
-		return runCommand(connector, 'Api.Save(); return true;').then(() => undefined)
+		return runCommand(connector, CONNECTOR_COMMANDS.save).then(() => undefined)
 	},
 
 	/**
@@ -68,10 +91,8 @@ const connectorAdapter = {
 	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-an-edit-must-be-expressed-as-text-to-match-never-as-an-offset
 	 */
 	count(connector, find) {
-		return runCommand(
-			connector,
-			`var found = Api.GetDocument().Search(${JSON.stringify(find)}, true); return found ? found.length : 0;`,
-		).then((result) => Number(result ?? 0))
+		return runCommand(connector, CONNECTOR_COMMANDS.count, { find })
+			.then((result) => Number(result ?? 0))
 	},
 
 	/**
@@ -83,11 +104,8 @@ const connectorAdapter = {
 	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-an-edit-must-be-expressed-as-text-to-match-never-as-an-offset
 	 */
 	replace(connector, { find, replace }) {
-		const options = JSON.stringify({ searchString: find, replaceString: replace, matchCase: true })
-		return runCommand(
-			connector,
-			`Api.GetDocument().SearchAndReplace(${options}); return true;`,
-		).then(() => undefined)
+		return runCommand(connector, CONNECTOR_COMMANDS.replace, { find, replace })
+			.then(() => undefined)
 	},
 }
 
@@ -372,15 +390,17 @@ function textOf(read) {
  * Run an automation command inside an ONLYOFFICE-family editor.
  *
  * @param {object} connector The automation connector.
- * @param {string} body The command body.
+ * @param {function(): unknown} command One of CONNECTOR_COMMANDS.
+ * @param {object} [scope] The data the command reads from `Asc.scope`.
  * @return {Promise<unknown>} What the command returned.
  */
-function runCommand(connector, body) {
+function runCommand(connector, command, scope = {}) {
 	if (typeof connector?.callCommand !== 'function') {
 		return Promise.reject(new Error('The open editor exposes no automation connector, so the document was not changed.'))
 	}
 
-	const command = new Function(body)
+	globalThis.Asc = globalThis.Asc ?? {}
+	globalThis.Asc.scope = { ...scope }
 	return new Promise((resolve) => {
 		connector.callCommand(command, (result) => resolve(result))
 	})

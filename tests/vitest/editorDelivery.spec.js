@@ -47,9 +47,11 @@ function fakeConnector(text) {
 		state,
 		callCommand(command, callback) {
 			state.commands.push(String(command))
-			// The editor evaluates the command's source with its own Api in scope.
-			const run = new Function('Api', `return (${String(command)})()`)
-			callback(run(Api))
+			// The editor receives the command's source and a JSON copy of Asc.scope,
+			// and runs the source with only its own Api and that scope in reach.
+			const scope = JSON.parse(JSON.stringify(globalThis.Asc?.scope ?? {}))
+			const run = new Function('Api', 'Asc', `return (${String(command)})()`)
+			callback(run(Api, { scope }))
 		},
 	}
 }
@@ -180,10 +182,32 @@ describe('connector adapter (ONLYOFFICE, Euro-Office)', () => {
 		expect(connector.state.text).toBe('Zaanstad en Zaanstad')
 	})
 
-	it('embeds the texts as literals, so quotes cannot break out of the command', async () => {
+	it('passes texts with quotes intact', async () => {
 		const connector = fakeConnector('Hij zei "ja"\'s avonds.')
 		await deliverEdit(delivery('connector', [{ find: '"ja"\'s', replace: '"nee"\'s' }]), connector)
 		expect(connector.state.text).toBe('Hij zei "nee"\'s avonds.')
+	})
+
+	it('sends fixed commands and passes the texts only through Asc.scope', async () => {
+		const connector = fakeConnector('Gemeente Zaanstad besluit.')
+		await deliverEdit(delivery('connector', [{ find: 'Zaanstad', replace: 'Haarlem' }]), connector)
+		expect(connector.state.commands.length).toBeGreaterThan(0)
+		for (const source of connector.state.commands) {
+			expect(source).not.toContain('Zaanstad')
+			expect(source).not.toContain('Haarlem')
+		}
+
+		const other = fakeConnector('Gemeente Utrecht besluit.')
+		await deliverEdit(delivery('connector', [{ find: 'Utrecht', replace: 'Breda' }]), other)
+		expect(other.state.commands).toEqual(connector.state.commands)
+	})
+
+	it('treats text that looks like code as text', async () => {
+		const code = '"); Api.Save(); ("'
+		const connector = fakeConnector(`Voor ${code} na.`)
+		await deliverEdit(delivery('connector', [{ find: code, replace: 'X' }]), connector)
+		expect(connector.state.text).toBe('Voor X na.')
+		expect(connector.state.saved).toBe(0)
 	})
 
 	it('refuses a handle that is not a connector', async () => {
