@@ -147,8 +147,6 @@ heuristic floor MUST NOT be removed or regressed by this change.
 - THEN the state is presented as a heuristic "looks tagged" result, not a PDF/UA conformance verdict
 - @e2e exclude presentation-labelling branch — covered by Vitest on the accessibility panel state
 
-## ADDED Requirements (amendment 2026-10-05, Woo rows 15.3 and 15.7, decision D5)
-
 ### Requirement: Every PDF attached to an OpenRegister object is checked for PDF/UA (REQ-DDPUM-006)
 
 Filinq SHALL listen to `NodeCreatedEvent` and `NodeWrittenEvent`, and for a

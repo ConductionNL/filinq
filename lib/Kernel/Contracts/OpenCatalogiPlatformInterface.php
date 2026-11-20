@@ -72,6 +72,18 @@ interface OpenCatalogiPlatformInterface {
 	public function toPlatformCode(string $value): ?string;
 
 	/**
+	 * Whether OpenCatalogi's `publication` schema declares a property; no when
+	 * OpenCatalogi is absent or the schema cannot be read.
+	 *
+	 * @param string $field The property name.
+	 *
+	 * @return bool True when the publication schema has that property.
+	 *
+	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
+	 */
+	public function publicationDeclares(string $field): bool;
+
+	/**
 	 * Attach the redacted copy to the platform's publication, shared so the public sees it.
 	 *
 	 * @param string $publicationUuid The platform's publication

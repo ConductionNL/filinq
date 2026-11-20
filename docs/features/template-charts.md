@@ -67,8 +67,69 @@ else's file exists.
   marker names the format, for example `[chart error: the chart could not be
   converted for odf]`.
 
-Office templates with `${chart:…}` and `${image:…}` placeholders are planned
-in the `office-charts-and-images` change.
+## In an office (Word) template
+
+A Word template uses placeholders instead of functions. Type them as plain
+text, each in one piece, so Word does not split them.
+
+Word templates are filled once the office generation path from the
+`office-template-authoring` change is available on your server; until then a
+template is generated from its HTML version.
+
+**A chart.** `${chart:bezwaren}` becomes a real Word chart that you can still
+edit in Word or LibreOffice. The generation data names it under `charts`:
+
+```json
+{
+  "charts": {
+    "bezwaren": {
+      "type": "bar",
+      "data": {
+        "labels": ["Q1", "Q2", "Q3"],
+        "series": [{"name": "Bezwaren", "values": [4, 7, 2]}]
+      },
+      "options": {"title": "Bezwaren per kwartaal"}
+    }
+  }
+}
+```
+
+The types are `bar`, `line` and `pie`, with the same `labels` and `series` as
+the `chart()` function. `"orientation": "horizontal"` lays bars on their side,
+and `legend` turns the legend on or off. A pie shows its first series. An
+empty point counts as 0, because a Word chart has no gaps.
+
+**An image.** `${image:logo}` becomes the image whose Nextcloud file id is in
+`images.logo`. Give the id alone, or the id with a size:
+
+```json
+{"images": {"logo": {"fileId": 812, "width": 120, "height": 60}}}
+```
+
+The same rules apply as for `nc_image()`: only files the person generating can
+open, PNG, JPEG or GIF only (WebP cannot go into a Word file), and the same
+size limit.
+
+**A table over a list.** A Word template needs no table function. Make a
+table with a header row and one row of placeholders, and Filinq repeats that
+row for every item. For a repeated section that is not a table, wrap it in a
+block:
+
+```text
+| Zaaknummer      | Status          |
+| ${zaak.nummer}  | ${zaak.status}  |
+
+${block_besluiten}
+Besluit ${besluit.titel}
+${/block_besluiten}
+```
+
+A chart or image that cannot be made leaves the same marker text as in an HTML
+template, for example `[chart error: no data]` or
+`[image unavailable: not found or no access]`, and the warning is listed with
+the result.
+
+The sample template `tests/sample-documents/chart-template.docx` has all three.
 
 ## Try it
 

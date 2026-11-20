@@ -66,6 +66,13 @@ use RuntimeException;
 class SigningService implements SigningServiceInterface {
 
 	/**
+	 * How an agent's request is attributed: started via mcp, through Hermiq's approval gate.
+	 *
+	 * @var string
+	 */
+	private const VIA_MCP = 'mcp';
+
+	/**
 	 * The app a lifecycle move made on filinq's behalf is recorded against.
 	 */
 	private const APP_ID = 'filinq';
@@ -131,8 +138,11 @@ class SigningService implements SigningServiceInterface {
 	// gives: the spec-coverage gate cannot walk past a multi-line attribute's `)]`.
 	//
 	// This is the only signing method an agent may reach, and only to START a
-	// request: sign(), decline(), bulkSign(), cancelRequest() and every class
-	// under Service/Signing/ stay attribute-free. The write hints route the tool
+	// request: createRequest() (the form, bulk and envelope paths), sign(),
+	// decline(), bulkSign(), cancelRequest() and every class under
+	// Service/Signing/ stay attribute-free. It is a separate entry point so the
+	// request it creates says it came via mcp; createRequest() cannot tell an
+	// agent's call from the form's. The write hints route the tool
 	// through Hermiq's human-approval gate; Filinq adds no gate of its own.
 
 	#[McpTool(
@@ -149,6 +159,30 @@ class SigningService implements SigningServiceInterface {
 		scope: 'create'
 	)]
 	/**
+	 * Start a signing request on an agent's behalf, attributed `mcp`.
+	 *
+	 * The same creation createRequest() runs, as the signed-in user (the
+	 * invoking principal), with every validation unchanged. The persisted
+	 * request carries `initiatedVia: mcp` and its CREATED audit entry records
+	 * `via: mcp` beside the actor, so an agent-started request is told apart
+	 * from one started in Filinq. Neither can be set through the request data.
+	 *
+	 * @param array<string, mixed> $data The signing request data, as createRequest() takes it.
+	 *
+	 * @return array<string, mixed> The created signing request.
+	 *
+	 * @throws RuntimeException If creation fails.
+	 * @throws \InvalidArgumentException With code 400 when the request or a guardian entry is invalid.
+	 *
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-an-approval-gated-signing-request-initiation-tool-exists-req-ddhat-001
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-agent-initiated-writes-are-attributable-req-ddhat-003
+	 */
+	public function startSigningRequest(array $data): array {
+		return $this->persistRequest(data: $data, via: self::VIA_MCP);
+
+	}//end startSigningRequest()
+
+	/**
 	 * Create a new signing request
 	 *
 	 * @param array<string, mixed> $data The signing request data
@@ -161,9 +195,25 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
-	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-an-approval-gated-signing-request-initiation-tool-exists-req-ddhat-001
 	 */
 	public function createRequest(array $data): array {
+		return $this->persistRequest(data: $data, via: '');
+
+	}//end createRequest()
+
+	/**
+	 * Create a signing request, attributed to how it was started.
+	 *
+	 * @param array<string, mixed> $data The signing request data.
+	 * @param string               $via  `mcp` for an agent's request, '' for Filinq's own paths.
+	 *
+	 * @return array<string, mixed> The created signing request.
+	 *
+	 * @throws RuntimeException If creation fails.
+	 * @throws \InvalidArgumentException With code 400 when a guardian entry is invalid,
+	 *                                   or a signer under the age of consent has no guardian.
+	 */
+	private function persistRequest(array $data, string $via): array {
 		// Throws RuntimeException('No authenticated user') when there is no
 		// session user — exactly as the inline check here did before.
 		[$initiatorUserId, $initiatorDisplayName] = $this->actorResolver->resolveActingIdentity();
@@ -232,6 +282,7 @@ class SigningService implements SigningServiceInterface {
 		$request = $this->withProvenance(request: $request, data: $data);
 		$request = $this->guards->validator->withPlacements(request: $request, data: $data, producer: $this->outputs->artifactProducer);
 		$request = $this->outputs->artifactProducer->delegate(request: $request, signers: $signers);
+		$request = self::withAttribution(request: $request, via: $via);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 		$savedRequest = $objectService->saveObject(
@@ -261,12 +312,46 @@ class SigningService implements SigningServiceInterface {
 					userId: $initiatorUserId,
 					displayName: $initiatorDisplayName,
 					ipAddress: $this->actorResolver->getClientIp()
-				)
+				),
+				metadata: self::auditAttribution(via: $via)
 			)
 		);
 
 		return $createdRequest;
-	}//end createRequest()
+	}//end persistRequest()
+
+	/**
+	 * Mark a request an agent started; leave Filinq's own requests as they were.
+	 *
+	 * @param array<string, mixed> $request The request being created.
+	 * @param string               $via     `mcp`, or '' for Filinq's own paths.
+	 *
+	 * @return array<string, mixed> The request, with `initiatedVia` when an agent started it.
+	 */
+	private static function withAttribution(array $request, string $via): array {
+		if ($via !== '') {
+			$request['initiatedVia'] = $via;
+		}
+
+		return $request;
+
+	}//end withAttribution()
+
+	/**
+	 * The CREATED audit entry's extra context: how the request was started.
+	 *
+	 * @param string $via `mcp`, or '' for Filinq's own paths.
+	 *
+	 * @return array<string, string> `['via' => 'mcp']` for an agent's request, empty otherwise.
+	 */
+	private static function auditAttribution(string $via): array {
+		if ($via === '') {
+			return [];
+		}
+
+		return ['via' => $via];
+
+	}//end auditAttribution()
 
 	/**
 	 * Copy the provenance a consuming app sent onto the request.
