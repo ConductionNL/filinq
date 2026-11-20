@@ -33,7 +33,9 @@ const PAGES_BEFORE = [
 	['StandingConsents', '/policy/standing-consents'], ['Reports', '/reports'], ['SigningReport', '/reports/signing'],
 	['AnonymizationReport', '/reports/anonymization'], ['ProducedDocumentsReport', '/reports/documents'],
 	['PersonalDataReport', '/reports/personal-data'],
-	['Intake', '/intake'], ['IntakeRules', '/intake/rules'], ['ClassificationPending', '/classification'], ['FeaturesRoadmap', '/features-roadmap'],
+	['Intake', '/intake'], ['IntakeRules', '/intake/rules'], ['ClassificationPending', '/classification'],
+	['DigitisationProjects', '/digitisation'], ['DigitisationProjectDetail', '/digitisation/:id'], ['ScanChecks', '/scan-checks'],
+	['PaperOriginalDetail', '/paper-originals/:id'], ['FeaturesRoadmap', '/features-roadmap'],
 	['Flows', '/flows'], ['FlowDetail', '/flows/:id'],
 ]
 
@@ -53,7 +55,7 @@ const MENU_ADDED = [
 
 const MENU_BEFORE = [
 	['Dashboard', 10], ['Consent', 20], ['StandingConsents', 22], ['Prohibitions', 24], ['Intake', 26],
-	['ClassificationPending', 27], ['Anonymization', 30], ['MyDocuments', 35], ['FolderAnonymization', 40],
+	['ClassificationPending', 27], ['DigitisationProjects', 28], ['ScanChecks', 29], ['Anonymization', 30], ['MyDocuments', 35], ['FolderAnonymization', 40],
 	['Dossiers', 45], ['Contracts', 46], ['ContractPipeline', 47], ['Templates', 50], ['Correspondence', 55],
 	['Publications', 57], ['PrintJobs', 56], ['LegalHolds', 58], ['SubjectErasures', 59], ['IntakeRules', 93], ['EmailIngestion', 94],
 	['MailArchiveImport', 28],

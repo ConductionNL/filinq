@@ -35,10 +35,12 @@ final class ScanDelivery {
 	/**
 	 * @param string $scannerId The scanner, named in every file name and as the sender.
 	 * @param Folder $target The folder the segments are written to.
+	 * @param string $batchId The scan batch, recorded on a scanned paper original.
 	 */
 	public function __construct(
 		public readonly string $scannerId,
 		public readonly Folder $target,
+		public readonly string $batchId = '',
 	) {
 	}//end __construct()
 }//end class
