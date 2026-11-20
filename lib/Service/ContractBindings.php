@@ -80,6 +80,7 @@ use OCA\Filinq\Kernel\Contracts\EmlPreviewServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EntitySearchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ExternalMountValidatorInterface;
+use OCA\Filinq\Kernel\Contracts\FieldFillProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FileListingServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentCorrectionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentFailureMapperInterface;
@@ -153,6 +154,7 @@ use OCA\Filinq\Kernel\Contracts\SanitizationStatusInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
+use OCA\Filinq\Kernel\Contracts\SchemaFieldFillServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SealedFileWriterInterface;
 use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SessionUserFileInterface;
@@ -201,6 +203,8 @@ use OCA\Filinq\Service\EmailIngestion\EmailDocumentRepository;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionService;
 use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
 use OCA\Filinq\Service\EntitySearch\EntitySearchService;
+use OCA\Filinq\Service\FieldFill\FieldFillProfileService;
+use OCA\Filinq\Service\FieldFill\SchemaFieldFillService;
 use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
 use OCA\Filinq\Service\Intake\IntakeNotificationReach;
@@ -318,6 +322,7 @@ final class ContractBindings {
 		EntityConsolidationServiceInterface::class     => EntityConsolidationService::class,
 		EntitySearchServiceInterface::class            => EntitySearchService::class,
 		ExternalMountValidatorInterface::class         => ExternalMountValidator::class,
+		FieldFillProfileServiceInterface::class        => FieldFillProfileService::class,
 		FileListingServiceInterface::class             => FileListingService::class,
 		FinalDocumentCorrectionServiceInterface::class => FinalDocumentCorrectionService::class,
 		FinalDocumentFailureMapperInterface::class     => FinalDocumentFailureMapper::class,
@@ -391,6 +396,7 @@ final class ContractBindings {
 		ScanBatchRepositoryInterface::class            => ScanBatchRepository::class,
 		ScanBatchServiceInterface::class               => ScanBatchService::class,
 		ScanProfileServiceInterface::class             => ScanProfileService::class,
+		SchemaFieldFillServiceInterface::class         => SchemaFieldFillService::class,
 		SealedFileWriterInterface::class               => SealedFileWriter::class,
 		SeparatorSheetServiceInterface::class          => SeparatorSheetService::class,
 		SessionUserFileInterface::class                => SessionUserFile::class,

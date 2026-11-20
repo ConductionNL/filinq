@@ -791,6 +791,7 @@
 		<IntegrityScanSection v-if="isAdmin" />
 
 		<EmailIngestionSettings v-if="isAdmin" />
+		<ModelFillingSettings v-if="isAdmin" />
 
 		<MailArchiveImportSettings v-if="isAdmin" />
 
@@ -971,6 +972,7 @@ import DocumentFinalityRuleSettings from './DocumentFinalityRuleSettings.vue'
 import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
+import ModelFillingSettings from './ModelFillingSettings.vue'
 import IntegrityScanSection from './IntegrityScanSection.vue'
 import MailArchiveImportSettings from './MailArchiveImportSettings.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
@@ -1110,6 +1112,7 @@ export default {
 		EntityTypeSelector,
 		DetectionProviderSettings,
 		EmailIngestionSettings,
+		ModelFillingSettings,
 		MailArchiveImportSettings,
 		PageLayoutSettings,
 		SettingSwitchRow,
