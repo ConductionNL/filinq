@@ -122,10 +122,10 @@ class PhotoNormaliserTest extends TestCase {
 	public function testATurnedPhotoWithBrokenImageDataIsUnchanged(): void {
 		$photo = $this->photo(orientation: 6);
 		// Turn the frame header into a comment: the EXIF block still reads, the image does not.
-		$broken = (string)preg_replace('/\xFF\xC0/', "\xFF\xFE", $photo, 1);
-		$this->assertNotSame($photo, $broken);
+		$broken = (string)preg_replace(pattern: '/\xFF\xC0/', replacement: "\xFF\xFE", subject: $photo, limit: 1);
+		$this->assertNotSame(expected: $photo, actual: $broken);
 
-		$this->assertSame($broken, (new PhotoNormaliser())->upright(jpeg: $broken));
+		$this->assertSame(expected: $broken, actual: (new PhotoNormaliser())->upright(jpeg: $broken));
 	}//end testATurnedPhotoWithBrokenImageDataIsUnchanged()
 
 	/**
@@ -149,11 +149,11 @@ class PhotoNormaliserTest extends TestCase {
 
 		try {
 			$normaliser->heicToJpeg(heic: 'not a heic photo');
-			$this->fail('An undecodable HEIC photo must be refused.');
+			$this->fail(message: 'An undecodable HEIC photo must be refused.');
 		} catch (ReceiptCaptureRefusedException $e) {
-			$this->assertSame(415, $e->getCode());
-			$this->assertSame(PhotoNormaliser::MESSAGE_HEIC, $e->getMessage());
-			$this->assertNotNull($e->getPrevious());
+			$this->assertSame(expected: 415, actual: $e->getCode());
+			$this->assertSame(expected: PhotoNormaliser::MESSAGE_HEIC, actual: $e->getMessage());
+			$this->assertNotNull(actual: $e->getPrevious());
 		}
 	}//end testAHeicPhotoThatCannotBeDecodedIsRefused()
 }//end class

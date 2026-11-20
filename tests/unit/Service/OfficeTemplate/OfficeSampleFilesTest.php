@@ -71,9 +71,9 @@ class OfficeSampleFilesTest extends TestCase {
 	 * @return string
 	 */
 	private function fixture(string $name): string {
-		$this->assertFileExists(self::DIR.$name);
+		$this->assertFileExists(filename: self::DIR.$name);
 
-		return (string) file_get_contents(self::DIR.$name);
+		return (string) file_get_contents(filename: self::DIR.$name);
 	}//end fixture()
 
 	/**
@@ -88,7 +88,7 @@ class OfficeSampleFilesTest extends TestCase {
 		try {
 			$this->guard->inspect(fileName: $fileName, bytes: $bytes, maxBytes: OfficeSourceGuard::DEFAULT_MAX_BYTES);
 		} catch (OfficeSourceRefusedException $e) {
-			$this->assertSame(422, $e->getCode());
+			$this->assertSame(expected: 422, actual: $e->getCode());
 
 			return $e->getReason();
 		}
@@ -106,8 +106,11 @@ class OfficeSampleFilesTest extends TestCase {
 	public function testTheValidDocxIsAccepted(): void {
 		$bytes = $this->fixture(name: 'beschikking-parkeervergunning.docx');
 
-		$this->assertSame('docx', $this->guard->inspect(fileName: 'beschikking-parkeervergunning.docx', bytes: $bytes, maxBytes: OfficeSourceGuard::DEFAULT_MAX_BYTES));
-		$this->assertNotSame([], (new MergeTagReader())->tags(docx: $bytes));
+		$this->assertSame(
+			expected: 'docx',
+			actual: $this->guard->inspect(fileName: 'beschikking-parkeervergunning.docx', bytes: $bytes, maxBytes: OfficeSourceGuard::DEFAULT_MAX_BYTES)
+		);
+		$this->assertNotSame(expected: [], actual: (new MergeTagReader())->tags(docx: $bytes));
 	}//end testTheValidDocxIsAccepted()
 
 	/**
@@ -120,7 +123,10 @@ class OfficeSampleFilesTest extends TestCase {
 	public function testTheOdtIsAccepted(): void {
 		$bytes = $this->fixture(name: 'office/letter.odt');
 
-		$this->assertSame('odt', $this->guard->inspect(fileName: 'letter.odt', bytes: $bytes, maxBytes: OfficeSourceGuard::DEFAULT_MAX_BYTES));
+		$this->assertSame(
+			expected: 'odt',
+			actual: $this->guard->inspect(fileName: 'letter.odt', bytes: $bytes, maxBytes: OfficeSourceGuard::DEFAULT_MAX_BYTES)
+		);
 	}//end testTheOdtIsAccepted()
 
 	/**
@@ -132,8 +138,8 @@ class OfficeSampleFilesTest extends TestCase {
 	 */
 	public function testTheMacroDocxIsRefused(): void {
 		$this->assertSame(
-			OfficeSourceRefusedException::REASON_MACRO,
-			$this->refusal(fileName: 'macro-letter.docx', bytes: $this->fixture(name: 'office/macro-letter.docx'))
+			expected: OfficeSourceRefusedException::REASON_MACRO,
+			actual: $this->refusal(fileName: 'macro-letter.docx', bytes: $this->fixture(name: 'office/macro-letter.docx'))
 		);
 	}//end testTheMacroDocxIsRefused()
 
@@ -146,8 +152,8 @@ class OfficeSampleFilesTest extends TestCase {
 	 */
 	public function testTheCorruptDocxIsRefused(): void {
 		$this->assertSame(
-			OfficeSourceRefusedException::REASON_TYPE,
-			$this->refusal(fileName: 'corrupt-letter.docx', bytes: $this->fixture(name: 'office/corrupt-letter.docx'))
+			expected: OfficeSourceRefusedException::REASON_TYPE,
+			actual: $this->refusal(fileName: 'corrupt-letter.docx', bytes: $this->fixture(name: 'office/corrupt-letter.docx'))
 		);
 	}//end testTheCorruptDocxIsRefused()
 }//end class
