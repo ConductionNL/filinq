@@ -53,6 +53,10 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The class joins the Flow event, the operation
+ * registry and the run log of one Filinq operation; its value objects and exceptions count toward
+ * the coupling too.
+ *
  * @spec openspec/changes/flow-operations/tasks.md#task-2.3
  */
 class FlowOperationJob extends QueuedJob {
@@ -108,6 +112,9 @@ class FlowOperationJob extends QueuedJob {
 	 *
 	 * @return void
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) FlowOperationOutcome is a stateless helper or named
+	 * constructor; an instance would add nothing.
+	 *
 	 * @spec openspec/changes/flow-operations/tasks.md#task-2.3
 	 */
 	protected function run(mixed $argument): void {
@@ -160,6 +167,9 @@ class FlowOperationJob extends QueuedJob {
 	 * @param array<string, mixed> $run            The started run.
 	 *
 	 * @return FlowOperationOutcome The outcome.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) FlowOperationOutcome is a stateless helper or named
+	 * constructor; an instance would add nothing.
 	 */
 	private function outcome(string $operationClass, string $config, array $run): FlowOperationOutcome {
 		if (in_array($operationClass, self::OPERATIONS, true) === false) {
