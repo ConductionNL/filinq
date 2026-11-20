@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service\Extraction;
 use OCA\Filinq\Service\OpenRegisterResolver;
 use OCA\Filinq\Service\SettingsService;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -166,7 +167,7 @@ class ExtractionDuplicateLookup {
 	private function candidates(string $invoiceNumber): array {
 		$objectService = $this->settings->getObjectService();
 		if ($objectService === null) {
-			throw new \RuntimeException('OpenRegister is not available.');
+			throw new RuntimeException('OpenRegister is not available.');
 		}
 
 		['register' => $register, 'schema' => $schema] = $this->registers->getFinancialExtractionRegisterAndSchema();
