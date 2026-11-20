@@ -101,6 +101,9 @@ class InvisibleTextPdf extends Fpdi {
 	 * @param string $text The UTF-8 word.
 	 *
 	 * @return string
+	 *
+	 * @SuppressWarnings(PHPMD.ErrorControlOperator) The call reports failure through its return value,
+	 * which is checked right after; the PHP warning it would also raise adds nothing.
 	 */
 	private function latin1(string $text): string {
 		$converted = @iconv('UTF-8', 'Windows-1252//TRANSLIT//IGNORE', $text);

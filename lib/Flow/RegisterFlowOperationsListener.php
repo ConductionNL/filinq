@@ -80,6 +80,9 @@ class RegisterFlowOperationsListener implements IEventListener {
 	 *
 	 * @return void
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) \OCP\Util::addScript() is Nextcloud's only API for
+	 * adding a script to a page Filinq does not own.
+	 *
 	 * @spec openspec/changes/flow-operations/tasks.md#task-2.1
 	 */
 	public function handle(Event $event): void {

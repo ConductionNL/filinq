@@ -147,12 +147,13 @@ class RefusalGroundsResolver implements RefusalGroundsResolverInterface {
 		}
 
 		try {
-			$list = $this->container->get($this->groundsClass);
+			$list   = $this->container->get($this->groundsClass);
+			$method = 'list';
 			if ($withRetired === true) {
-				$grounds = $list->listWithRetired();
-			} else {
-				$grounds = $list->list();
+				$method = 'listWithRetired';
 			}
+
+			$grounds = $list->$method();
 		} catch (Throwable $e) {
 			$reason = $e->getMessage();
 			if (is_a($e, self::DOSSIQ_UNAVAILABLE) === false) {

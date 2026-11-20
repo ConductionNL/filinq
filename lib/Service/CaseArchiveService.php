@@ -51,6 +51,10 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Bundling one object's files joins the file
+ * reads, the archive writer and its manifest; its value objects and exceptions count toward the
+ * coupling too.
+ *
  * @spec openspec/specs/document-creatie-sjablonen/spec.md
  */
 class CaseArchiveService implements CaseArchiveServiceInterface {

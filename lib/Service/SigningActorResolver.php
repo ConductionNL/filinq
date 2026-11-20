@@ -228,6 +228,9 @@ class SigningActorResolver {
 	 *
 	 * @return string `sign` or `accept`.
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
+	 *
 	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
 	 */
 	public function recipientRole(string $signerId): string {

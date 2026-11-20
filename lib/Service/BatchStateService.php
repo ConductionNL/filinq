@@ -274,7 +274,7 @@ class BatchStateService implements BatchStateServiceInterface {
 		$batch['stateVersion'] = ((int)($batch['stateVersion'] ?? 0) + 1);
 		// The progress figures the operations view lists, computed from the
 		// files in this same write (REQ-DDRAS-003).
-		$batch = array_merge($batch, (new BatchProgress())->of(batch: $batch, now: time()));
+		$batch = array_merge($batch, (new BatchProgress())->figuresFor(batch: $batch, now: time()));
 		$this->cache->remove(self::CACHE_PREFIX . $batchId);
 		// Store of record first, cache second — so a cache that accepted the
 		// write can never be the only place the new state exists.

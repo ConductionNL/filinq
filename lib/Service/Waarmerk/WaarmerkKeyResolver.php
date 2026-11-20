@@ -69,6 +69,10 @@ class WaarmerkKeyResolver {
 	 *
 	 * @throws WaarmerkRefusedException 503 when the key cannot be resolved or does not match.
 	 *
+	 * @SuppressWarnings(PHPMD.ErrorControlOperator) OpenSSL reports failure through the return value,
+	 * which is checked; the PHP warning it would also raise adds nothing, and a temp-file unlink is
+	 * best-effort cleanup.
+	 *
 	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-organisation-certificate-is-managed-in-admin-settings-with-credentialref-key-custody-req-ddwmk-001
 	 */
 	public function resolve(WaarmerkCertificate $certificate): string {

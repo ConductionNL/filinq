@@ -66,6 +66,9 @@ use Throwable;
  * PortalSignAct, which reads the sign act's consent, drawn signature and typed
  * field values and answers a refused value with 422, so the controller itself
  * stays one call and one branch.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the sum of small independent
+ * checks of the portal's signing callbacks.
  */
 class PortalSigningReceiverController extends Controller {
 	/**

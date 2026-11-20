@@ -46,6 +46,10 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The class wires the collaborators of one flow;
+ * its value objects and exceptions count toward the coupling too, and splitting it would split that
+ * flow.
+ *
  * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-completed-signing-transaction-yields-one-sealed-evidence-document-req-ddwmk-006
  */
 class SigningEvidenceService implements SigningEvidenceServiceInterface {
@@ -188,6 +192,9 @@ class SigningEvidenceService implements SigningEvidenceServiceInterface {
 	 * @return array{artifact: SealedArtifact, name: string, document: File|null}
 	 *
 	 * @throws WaarmerkRefusedException 404 or 409.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SealedArtifact is a stateless helper or named constructor;
+	 * an instance would add nothing.
 	 */
 	private function sealed(string $requestId, string $callerScope, string $userId): array {
 		$request = $this->signing->getRequest(requestId: $requestId, callerUserId: $callerScope);
