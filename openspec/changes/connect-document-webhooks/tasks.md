@@ -6,12 +6,12 @@
 
 - [x] 1.1 Add `lib/Event/DocumentWebhookEvent.php` and the four subclasses, each returning its envelope (D1, D4) (REQ-CDW-001, REQ-CDW-002). Verify: PHPUnit asserts each envelope holds exactly the listed keys and no file content, entity, e-mail address or IP address.
 - [x] 1.2 Add `lib/EventListener/DocumentEventTranslator.php` and subscribe it in `ObjectEventRegistrar::boot()` for `signingRequest`, `anonymizationLink`, `generatedDocument` and `documentRegistration` (D2) (REQ-CDW-001). Verify: PHPUnit that constructs the real `ObjectTransitionedEvent` and `ObjectCreatedEvent` classes asserts one dispatch per event, none for a `generatedDocument` with status `failed`, and none for another schema.
-- [ ] 1.3 Prove the path end to end once openregister's half is in (D3) (REQ-CDW-001, REQ-CDW-004). Verify: Newman creates a webhook for `DocumentSignedEvent` pointing at the test receiver, completes a signing request through OpenRegister's objects API, and the receiver shows one signed delivery with a valid signature.
+- [ ] 1.3 Prove the path end to end once openregister's half is in (D3) (REQ-CDW-001, REQ-CDW-004). Verify: Newman creates a webhook for `DocumentSignedEvent` pointing at the test receiver, completes a signing request through OpenRegister's objects API, and the receiver shows one signed delivery with a valid signature. Collection written: `tests/integration/document-webhooks.postman_collection.json` (receiver from `WEBHOOK_RECEIVER_URL`, base URL from `BASE_URL`, run by `run-newman.sh`); not run here, so left open until it passes against an instance.
 
 ## 2. Settings section
 
-- [x] 2.1 Add `src/views/settings/DocumentWebhooksSection.vue` to `Settings.vue`: list, add, send a test, show the last delivery, delete, over OpenRegister's `/api/webhooks` endpoints (D5) (REQ-CDW-003). Verify: Playwright as admin adds a receiver for "Document signed", sends a test and deletes it.
-- [x] 2.2 Refuse to save without a secret, and show "Delivery is not available on this server" when OpenRegister's catalogue lists no filinq event (D6) (REQ-CDW-003, REQ-CDW-004). Verify: Playwright saves with an empty secret and reads the refusal; a PHPUnit or Vitest case covers the unavailable state.
+- [x] 2.1 Add `src/views/settings/DocumentWebhooksSection.vue` to `Settings.vue`: list, add, send a test, show the last delivery, delete, over OpenRegister's `/api/webhooks` endpoints (D5) (REQ-CDW-003). Verify: Playwright as admin adds a receiver for "Document signed", sends a test and deletes it. Spec: `tests/e2e/workflows/document-webhooks.spec.ts` (not run here).
+- [x] 2.2 Refuse to save without a secret, and show "Delivery is not available on this server" when OpenRegister's catalogue lists no filinq event (D6) (REQ-CDW-003, REQ-CDW-004). Verify: Playwright saves with an empty secret and reads the refusal (`tests/e2e/workflows/document-webhooks.spec.ts`); a PHPUnit or Vitest case covers the unavailable state.
 
 ## 3. Strings, docs and the sibling half
 
