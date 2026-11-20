@@ -73,6 +73,22 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
 class BatchAnonymizationController extends Controller {
+
+	/**
+	 * The progress figures a background batch carries, added to the status
+	 * answer when present (REQ-DDRAS-003); written with every batch write.
+	 */
+	private const PROGRESS_FIELDS = [
+		'background',
+		'throttled',
+		'startedAt',
+		'completedAt',
+		'filesSucceeded',
+		'filesFailed',
+		'filesPending',
+		'progressPercent',
+		'documentsPerHour',
+	];
 	use AnswersNotAuthenticated;
 
 	/**
@@ -195,9 +211,9 @@ class BatchAnonymizationController extends Controller {
 				return new JSONResponse($folder['error']['body'], $folder['error']['status']);
 			}
 
-			$batch = $this->folderBatchService->createFolderBatch(
-				folderId: $folder['folderId'],
-				folderPath: $folder['folderPath']
+			$batch = $this->createFolderBatchFor(
+				folder: $folder,
+				recursive: filter_var($this->request->getParam('recursive', false), FILTER_VALIDATE_BOOLEAN)
 			);
 
 			return new JSONResponse(
@@ -207,6 +223,8 @@ class BatchAnonymizationController extends Controller {
 					'folderPath' => $batch['folderPath'],
 					'fileCount' => count($batch['files']),
 					'files' => $batch['files'],
+					'background' => ($batch['background'] ?? false),
+					'batchStatus' => ($batch['status'] ?? null),
 				]
 			);
 		} catch (\Throwable $e) {
@@ -214,6 +232,31 @@ class BatchAnonymizationController extends Controller {
 		}//end try
 
 	}//end folderBatch()
+
+	/**
+	 * Create the folder batch, flat or with every subfolder.
+	 *
+	 * @param array{folderId: int|null, folderPath: string|null} $folder    The resolved folder parameters.
+	 * @param bool                                             $recursive Whether subfolders are included.
+	 *
+	 * @return array<string, mixed> The created batch.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/folder-batch-analysis/spec.md#requirement-optional-recursive-folder-enumeration-req-ddras-011
+	 */
+	private function createFolderBatchFor(array $folder, bool $recursive): array {
+		if ($recursive === true) {
+			return $this->folderBatchService->createRecursiveFolderBatch(
+				folderId: $folder['folderId'],
+				folderPath: $folder['folderPath']
+			);
+		}
+
+		return $this->folderBatchService->createFolderBatch(
+			folderId: $folder['folderId'],
+			folderPath: $folder['folderPath']
+		);
+
+	}//end createFolderBatchFor()
 
 	/**
 	 * Extract entities from the next pending file in a batch.
@@ -282,7 +325,7 @@ class BatchAnonymizationController extends Controller {
 				'totalEntities' => $summary['totalEntities'],
 				'progress' => $summary['progress'],
 				'totalFiles' => $summary['totalFiles'],
-			]
+			] + array_intersect_key($batch, array_flip(self::PROGRESS_FIELDS))
 		);
 
 	}//end batchStatus()

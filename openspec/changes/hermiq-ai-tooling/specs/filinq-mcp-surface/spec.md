@@ -10,7 +10,10 @@ refusal is restated and remains binding.
 
 ### Requirement: An approval-gated signing-request initiation tool exists (REQ-DDHAT-001)
 
-`SigningService::createRequest()` MUST carry `#[McpTool(name: 'startSigningRequest',
+`SigningService::startSigningRequest()` — an agent entry point that runs the same creation
+as `SigningService::createRequest()`, unchanged, and adds only the `mcp` attribution of
+REQ-DDHAT-003 (`createRequest()` itself cannot tell an agent's call from the form's) — MUST
+carry `#[McpTool(name: 'startSigningRequest',
 scope: 'create', readOnlyHint: false, destructiveHint: false, idempotentHint: false)]`,
 and `FilinqScannableServices` MUST include `SigningService::class`. The tool MUST be
 approval-required: Hermiq's human-approval gate MUST present the resolved request —

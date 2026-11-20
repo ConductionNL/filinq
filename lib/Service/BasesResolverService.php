@@ -250,6 +250,10 @@ class BasesResolverService {
 	 * `$folderId`. Returns an empty array when no dossier is found or when
 	 * the dossier's `bases` field is absent or empty.
 	 *
+	 * A user-request path (multi-tenant-hardening D2): no RBAC or
+	 * multitenancy bypass, so OpenRegister scopes the dossiers to what the
+	 * user may read in the active organisation.
+	 *
 	 * @param mixed $objectService OpenRegister ObjectService instance.
 	 * @param int $folderId Nextcloud folder node ID.
 	 *
@@ -265,7 +269,6 @@ class BasesResolverService {
 						'folder' => (string)$folderId,
 					],
 				],
-				_rbac: false
 			);
 		} catch (\Throwable $e) {
 			$this->logger->debug(

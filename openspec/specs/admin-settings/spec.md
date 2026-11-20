@@ -1,8 +1,11 @@
 ---
-status: done
+status: in-progress
 ---
 
 # Admin Settings
+
+**OpenSpec changes**
+- multi-tenant-hardening
 
 ## Purpose
 

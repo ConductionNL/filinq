@@ -32,6 +32,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Service\Extraction\UnattendedThresholdSetting;
 use OCA\Filinq\Service\Support\RegisterSetup;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -80,6 +81,7 @@ class SettingsService implements SettingsServiceInterface {
 		'signing_request_expiry_days'                => ['30', 'int'],
 		'signing_guardian_consent_age'               => ['16', 'text'],
 		'filinq.anonymisation.default_output_format' => ['pdf-only', 'text'],
+		'extraction_unattended_threshold'            => ['0.9', 'text'],
 		self::FOUR_EYES_KEY                          => [self::FOUR_EYES_DEFAULT, 'text'],
 	];
 
@@ -194,9 +196,10 @@ class SettingsService implements SettingsServiceInterface {
 	 * The OCR settings: tenant-wide toggles read by OcrService, and whether
 	 * an arriving intake scan is read in the background.
 	 *
-	 * @return array{ocr_enabled: bool, ocr_languages: string, ocr_dpi: int, ocr_on_arrival: bool} The settings.
+	 * @return array{ocr_enabled: bool, ocr_languages: string, ocr_dpi: int, ocr_on_arrival: bool, 'intake.brp_lookup_enabled': bool} The settings.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.4
+	 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-the-brp-is-asked-only-under-a-declared-purpose-req-ibr-002
 	 */
 	private function loadOcrSettings(): array {
 		return [
@@ -204,6 +207,8 @@ class SettingsService implements SettingsServiceInterface {
 			'ocr_languages' => $this->config->getValueString($this->appName, 'ocr_languages', 'nld+eng'),
 			'ocr_dpi' => (int)$this->config->getValueString($this->appName, 'ocr_dpi', '300'),
 			'ocr_on_arrival' => $this->config->getValueString($this->appName, 'ocr_on_arrival', '1') === '1',
+			// Base registry lookups of an arriving document's BSN (intake-base-registry-enrichment D3): off unless an admin turns it on.
+			'intake.brp_lookup_enabled' => $this->config->getValueString($this->appName, 'intake.brp_lookup_enabled', '0') === '1',
 		];
 
 	}//end loadOcrSettings()
@@ -504,10 +509,12 @@ class SettingsService implements SettingsServiceInterface {
 		'libresign_qualified',
 		'signing_request_expiry_days',
 		'signing_guardian_consent_age',
+		'extraction_unattended_threshold',
 		'ocr_enabled',
 		'ocr_languages',
 		'ocr_dpi',
 		'ocr_on_arrival',
+		'intake.brp_lookup_enabled',
 		'pseudonymisation_restore_allowed_groups',
 		'legal_hold_authority_groups',
 		'filinq.confidentiality.label_vocabulary',
@@ -537,6 +544,7 @@ class SettingsService implements SettingsServiceInterface {
 	 */
 	public function updateSettings(array $data): array {
 		$this->assertValidSubfolderName(data: $data);
+		(new UnattendedThresholdSetting())->assertValid(data: $data);
 		$this->assertValidFourEyesMode(data: $data);
 
 		try {

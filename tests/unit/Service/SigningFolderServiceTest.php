@@ -82,7 +82,7 @@ class SigningFolderServiceTest extends TestCase {
 
 		$this->actorResolver = $this->getMockBuilder(SigningActorResolver::class)
 			->disableOriginalConstructor()
-			->onlyMethods(['findSignerForUser'])
+			->onlyMethods(['findSignerForUser', 'recipientRole'])
 			->getMock();
 
 		$this->mandateService = $this->getMockBuilder(SigningMandateService::class)
@@ -343,6 +343,65 @@ class SigningFolderServiceTest extends TestCase {
 	}//end testADocumentOutsideTheMandateIsNotInTheFolder()
 
 	/**
+	 * Each entry says whether the caller signs or only accepts it, and an
+	 * accept-only entry stays in the folder outside the signing mandate:
+	 * accepting is not signing (signing-accept-only-recipient D2, task 4.2).
+	 *
+	 * @return void
+	 */
+	public function testAnAcceptOnlyEntryCarriesItsRoleAndNeedsNoMandate(): void {
+		$mandateService = $this->getMockBuilder(SigningMandateService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['maySign', 'assertMaySign', 'typeReference'])
+			->getMock();
+		$mandateService->method('typeReference')->willReturn('dossiq/besluit');
+		$mandateService->method('maySign')->willReturn(false);
+
+		$service = new SigningFolderService(
+			signingService: $this->signingService,
+			actorResolver: $this->actorResolver,
+			mandateService: $mandateService
+		);
+
+		$this->signingService->method('listRequests')->willReturn(
+			[$this->request('lease'), $this->request('besluit')]
+		);
+		$this->actorResolver->method('findSignerForUser')->willReturnCallback(
+			static fn (array $signerIds, string $userId): ?string => $signerIds[0]
+		);
+		$this->actorResolver->method('recipientRole')->willReturnCallback(
+			static fn (string $signerId): string => ($signerId === 'signer-lease' ? 'accept' : 'sign')
+		);
+
+		$folder = $service->folder(userId: 'woonconsulent');
+
+		$this->assertSame(['lease'], array_column($folder['entries'], 'requestId'));
+		$this->assertSame('accept', $folder['entries'][0]['role']);
+
+	}//end testAnAcceptOnlyEntryCarriesItsRoleAndNeedsNoMandate()
+
+	/**
+	 * A recipient who signs reads as `sign`, also when the role lookup
+	 * gives nothing back.
+	 *
+	 * @return void
+	 */
+	public function testASigningEntryReadsAsSign(): void {
+		$this->signingService->method('listRequests')->willReturn([$this->request('1'), $this->request('2')]);
+		$this->actorResolver->method('findSignerForUser')->willReturnCallback(
+			static fn (array $signerIds, string $userId): ?string => $signerIds[0]
+		);
+		$this->actorResolver->method('recipientRole')->willReturnCallback(
+			static fn (string $signerId): string => ($signerId === 'signer-1' ? 'sign' : '')
+		);
+
+		$folder = $this->service->folder(userId: 'wethouder');
+
+		$this->assertSame(['sign', 'sign'], array_column($folder['entries'], 'role'));
+
+	}//end testASigningEntryReadsAsSign()
+
+	/**
 	 * The folder pages, and the page is still ordered by deadline.
 	 *
 	 * @return void
@@ -586,5 +645,47 @@ class SigningFolderServiceTest extends TestCase {
 		$this->assertSame('This document asks for a stronger identity check', $entry['reason']);
 
 	}//end testADocumentNeedingAStrongerIdentityCarriesTheStepUpHint()
+
+	/**
+	 * A folder entry carries only this signer's text fields, with the settings
+	 * the "Fill in and sign" dialog needs (signing-field-validation task 3.2).
+	 *
+	 * @return void
+	 */
+	public function testAnEntryCarriesOnlyThisSignersTextFields(): void {
+		$request = $this->request(
+			id: 'fields',
+			overrides: [
+				'signerIds' => ['signer-other', 'signer-me'],
+				'fieldPlacements' => [
+					['signerIndex' => 1, 'page' => 1, 'type' => 'signature', 'x' => 0.1, 'y' => 0.1, 'width' => 0.3, 'height' => 0.06],
+					['signerIndex' => 0, 'page' => 1, 'type' => 'text', 'label' => 'Not mine', 'x' => 0.1, 'y' => 0.2, 'width' => 0.3, 'height' => 0.04],
+					[
+						'signerIndex' => 1, 'page' => 1, 'type' => 'text', 'label' => 'Account for the payment',
+						'required' => true, 'validation' => 'iban-nl', 'x' => 0.1, 'y' => 0.3, 'width' => 0.3, 'height' => 0.04,
+					],
+					['signerIndex' => 1, 'page' => 2, 'type' => 'text', 'x' => 0.1, 'y' => 0.3, 'width' => 0.3, 'height' => 0.04],
+				],
+			]
+		);
+		$plain = $this->request(id: 'plain');
+
+		$this->signingService->method('listRequests')->willReturn([$request, $plain]);
+		$this->actorResolver->method('findSignerForUser')->willReturnCallback(
+			static fn (array $signerIds, string $userId): ?string => end(array: $signerIds)
+		);
+
+		$entries = array_column(array: $this->service->folder(userId: 'wethouder')['entries'], column_key: null, index_key: 'requestId');
+
+		$this->assertSame(
+			expected: [
+				['placement' => 2, 'label' => 'Account for the payment', 'required' => true, 'validation' => 'iban-nl'],
+				['placement' => 3, 'label' => '', 'required' => false, 'validation' => null],
+			],
+			actual: $entries['fields']['fields']
+		);
+		$this->assertSame(expected: [], actual: $entries['plain']['fields']);
+
+	}//end testAnEntryCarriesOnlyThisSignersTextFields()
 
 }//end class

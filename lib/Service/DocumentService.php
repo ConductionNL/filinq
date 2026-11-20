@@ -35,6 +35,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
+use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateRenderer;
 use OCA\Filinq\Service\Support\DocumentOutput;
 use OCA\Filinq\Service\Support\DocumentProduction;
 use OCA\Filinq\Service\Support\TemplateSources;
@@ -50,6 +51,12 @@ use OCA\Filinq\Service\Wizard\WizardGenerationGate;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+ *
+ * @SuppressWarnings(PHPMD.TooManyMethods) generateFromHtml() has to live here: it shares
+ *   the private produce, file and log steps with generateFromTemplate(), so a finished
+ *   draft and a direct generation cannot drift apart (generate-draft-and-attended-edit D3).
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength) Same reason.
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) Same reason.
  */
 class DocumentService implements DocumentServiceInterface {
 
@@ -115,6 +122,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @param WizardGenerationGate|null $wizardGate Checks a wizard run before it renders (options.wizardContext)
 	 * @param TemplateMergeFieldService|null $mergeFields Names the fields a template fills, for the merge preview
 	 * @param CaseSystemDeliveryService|null $caseSystem Records a stored document's delivery to the case system
+	 * @param OfficeTemplateRenderer|null $officeRenderer Fills office templates and resolves text fragments
 	 *
 	 * @return void
 	 */
@@ -126,6 +134,7 @@ class DocumentService implements DocumentServiceInterface {
 		private readonly ?WizardGenerationGate $wizardGate = null,
 		private readonly ?TemplateMergeFieldService $mergeFields = null,
 		private readonly ?CaseSystemDeliveryService $caseSystem = null,
+		private readonly ?OfficeTemplateRenderer $officeRenderer = null,
 	) {
 
 	}//end __construct()
@@ -283,6 +292,100 @@ class DocumentService implements DocumentServiceInterface {
 	}//end generateFromTemplate()
 
 	/**
+	 * Produce, file and log a document from HTML that was already rendered.
+	 *
+	 * The tail of {@see generateFromTemplate()} for a draft a clerk edited:
+	 * the HTML is turned into bytes by the same `produceOutput()`, filed by
+	 * the same `storeOutputIfRequested()` and logged by the same logger. It
+	 * is never rendered through Twig again, so braces a clerk typed stay
+	 * text. A wizard draft's `options.wizardContext` runs through the same
+	 * wizard check as a direct generation. Pass `$log` false when the caller
+	 * logs the result in a register of its own (a correspondence draft).
+	 *
+	 * @param string $templateId The template the HTML was rendered from.
+	 * @param string $html The rendered (and edited, sanitised) HTML.
+	 * @param array $dataRefs The data references the HTML was rendered with, for the record.
+	 * @param array $options The same options {@see generateDocument()} takes (format, userId,
+	 *                       filename, output, huisstijlId, templateVersion, wizardContext, caseId).
+	 * @param array $recordFields Extra fields for the generatedDocument record (draftId, editedBy).
+	 * @param bool $log Whether to write the generatedDocument record.
+	 *
+	 * @return array<string, mixed> The same result shape as {@see generateDocument()}.
+	 *
+	 * @throws Exception On an unsupported format or output mode, or a storage failure.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$log` only chooses the register the
+	 *   record goes to; production and filing are the same either way.
+	 *
+	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 */
+	public function generateFromHtml(
+		string $templateId,
+		string $html,
+		array $dataRefs = [],
+		array $options = [],
+		array $recordFields = [],
+		bool $log = true,
+	): array {
+		$run = [
+			'templateId' => $templateId,
+			'dataRefs' => $dataRefs,
+			'options' => $options,
+			'format' => ($options['format'] ?? self::DEFAULT_FORMAT),
+		];
+		$this->validateFormat(format: $run['format']);
+		$run['outputMode'] = $this->resolveOutputMode(options: $options);
+		$run['template'] = $this->templateFor(templateId: $templateId, options: $options);
+
+		if (isset($options['wizardContext']) === true && $this->wizardGate !== null) {
+			$recordFields = array_merge(
+				$recordFields,
+				$this->wizardGate->check(templateId: $templateId, dataRefs: $dataRefs, context: $options['wizardContext'])
+			);
+		}
+
+		$run['recordFields'] = $recordFields;
+
+		$huisstijl  = $this->production->pipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null));
+		$pdfOptions = $this->production->pipeline->buildPdfOptions(template: $run['template'], huisstijl: $huisstijl, options: $options);
+		$content    = $this->production->pipeline->produceOutput(htmlContent: $html, format: $run['format'], pdfOptions: $pdfOptions);
+		$rendered   = ['html' => $html, 'content' => $content, 'warnings' => $this->production->pipeline->getLastOutputWarnings()];
+		$stored     = $this->storeOutputIfRequested(run: $run, output: $rendered);
+
+		$outcome = [
+			'rendered' => $rendered,
+			'stored' => $stored,
+			'plain' => ['rendition' => null, 'record' => [], 'warnings' => []],
+			'warnings' => $stored['warnings'],
+			'metadata' => [],
+		];
+		if ($log === true) {
+			$outcome['metadata'] = $this->logGenerated(run: $run, outcome: $outcome);
+		}
+
+		return $this->generationResult(run: $run, outcome: $outcome);
+
+	}//end generateFromHtml()
+
+	/**
+	 * The template of a generation: the stored version the options name, else the head.
+	 *
+	 * @param string $templateId The template UUID.
+	 * @param array<string, mixed> $options The generation options (templateVersion).
+	 *
+	 * @return array<string, mixed> The template.
+	 *
+	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 */
+	private function templateFor(string $templateId, array $options): array {
+		if (isset($options['templateVersion']) === true) {
+			return $this->sources->templates->getTemplateAtVersion(id: $templateId, version: (int) $options['templateVersion']);
+		}
+
+		return $this->sources->templates->getTemplate(id: $templateId);
+	}//end templateFor()
+
+	/**
 	 * Resolve the data a generation renders, turning failed references into warnings.
 	 *
 	 * @param array<string, mixed> $run The generation run: dataRefs and options.
@@ -319,10 +422,15 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 */
 	private function renderDocument(array $run, array $resolved): array {
+		if ($this->officeRenderer !== null && $this->officeRenderer->isOffice(template: $run['template']) === true) {
+			return $this->renderOfficeDocument(run: $run, resolved: $resolved);
+		}
+
 		$huisstijl    = $this->production->pipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
 		$pdfOptions   = $this->production->pipeline->buildPdfOptions(template: $run['template'], huisstijl: $huisstijl, options: $run['options']);
+		$twig         = $this->twigContent(template: $run['template']);
 		$renderResult = $this->production->pipeline->renderWithHuisstijl(
-			templateContent: $run['template']['content'],
+			templateContent: $twig['content'],
 			data: $resolved['data'],
 			huisstijl: $huisstijl
 		);
@@ -338,9 +446,70 @@ class DocumentService implements DocumentServiceInterface {
 			'pdfOptions' => $pdfOptions,
 			'html' => $renderResult['html'],
 			'content' => $content,
-			'warnings' => array_merge($resolved['warnings'], $renderResult['warnings'], $this->production->pipeline->getLastOutputWarnings()),
+			'warnings' => array_merge(
+				$resolved['warnings'],
+				$twig['warnings'],
+				$renderResult['warnings'],
+				$this->production->pipeline->getLastOutputWarnings()
+			),
+			'fragments' => $twig['fragments'],
 		];
 	}//end renderDocument()
+
+	/**
+	 * Fill an office template and produce the output bytes.
+	 *
+	 * An office template carries its own house style, so a requested
+	 * huisstijl is not applied and the warnings say so.
+	 *
+	 * @param array<string, mixed> $run      The generation run: template, format and options.
+	 * @param array<string, mixed> $resolved The resolved data and the warnings so far.
+	 *
+	 * @return array<string, mixed> The rendering, in the shape renderDocument() returns.
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 */
+	private function renderOfficeDocument(array $run, array $resolved): array {
+		$warnings = $resolved['warnings'];
+		if (empty($run['options']['huisstijlId']) === false) {
+			$warnings[] = 'A huisstijl is not applied to an office template; the document keeps its own house style.';
+		}
+
+		$rendered = $this->officeRenderer->render(
+			template: $run['template'],
+			data: $resolved['data'],
+			format: $run['format'],
+			options: $run['options']
+		);
+
+		return [
+			'data' => $resolved['data'],
+			'huisstijl' => null,
+			'pdfOptions' => [],
+			'html' => $rendered['html'],
+			'content' => $rendered['content'],
+			'warnings' => array_merge($warnings, $rendered['warnings']),
+			'fragments' => $rendered['fragments'],
+		];
+	}//end renderOfficeDocument()
+
+	/**
+	 * A Twig template's text with its fragment references resolved.
+	 *
+	 * @param array<string, mixed> $template The template.
+	 *
+	 * @return array{content: string, warnings: array<int, string>, fragments: array<int, string>}
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 */
+	private function twigContent(array $template): array {
+		$content = (string) ($template['content'] ?? '');
+		if ($this->officeRenderer === null) {
+			return ['content' => $content, 'warnings' => [], 'fragments' => []];
+		}
+
+		return $this->officeRenderer->resolveTwigFragments(content: $content, namespace: (string) ($template['namespace'] ?? ''));
+	}//end twigContent()
 
 	/**
 	 * Write the generatedDocument audit entry for a generation.
@@ -363,7 +532,7 @@ class DocumentService implements DocumentServiceInterface {
 				dataRefs: $run['dataRefs'],
 				format: $run['format'],
 				userId: (string)($run['options']['userId'] ?? ''),
-				extra: array_merge($run['recordFields'], $outcome['plain']['record'])
+				extra: array_merge($run['recordFields'], $outcome['plain']['record'], $this->templateRecord(run: $run, outcome: $outcome))
 			),
 			outcome: [
 				'status' => 'generated',
@@ -405,6 +574,33 @@ class DocumentService implements DocumentServiceInterface {
 
 		return $outcome;
 	}//end deliverToCaseSystem()
+
+	/**
+	 * What the audit entry records about the template's type and fragments.
+	 *
+	 * A Twig template without fragments adds nothing, so its entry is as before.
+	 *
+	 * @param array<string, mixed> $run     The generation run.
+	 * @param array<string, mixed> $outcome The rendering.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 */
+	private function templateRecord(array $run, array $outcome): array {
+		$record = [];
+		if ($this->officeRenderer !== null && $this->officeRenderer->isOffice(template: $run['template']) === true) {
+			$record['templateType'] = OfficeTemplateRenderer::TYPE_OFFICE;
+		}
+
+		$fragments = ($outcome['rendered']['fragments'] ?? []);
+		if ($fragments !== []) {
+			$record['templateType'] ??= 'twig';
+			$record['fragments'] = $fragments;
+		}
+
+		return $record;
+	}//end templateRecord()
 
 	/**
 	 * The answer of a generation: the bytes, the audit entry and where the output went.
@@ -525,21 +721,60 @@ class DocumentService implements DocumentServiceInterface {
 	 */
 	private function renderPreview(array $run): array {
 		$resolved = $this->resolveTemplateData(run: $run);
+		if ($this->officeRenderer !== null && $this->officeRenderer->isOffice(template: $run['template']) === true) {
+			// An office preview shows the filled document's text; the PDF of the
+			// same fill comes from a generation with format pdf.
+			$filled = $this->officeRenderer->fill(template: $run['template'], data: $resolved['data']);
+			return [
+				'html' => $filled['html'],
+				'warnings' => array_merge($resolved['warnings'], $filled['warnings']),
+				'data' => $resolved['data'],
+			];
+		}
 
 		$huisstijl = $this->production->pipeline->loadHuisstijl(huisstijlId: ($run['options']['huisstijlId'] ?? null));
+		$twig = $this->twigContent(template: $run['template']);
 		$renderResult = $this->production->pipeline->renderWithHuisstijl(
-			templateContent: $run['template']['content'],
+			templateContent: $twig['content'],
 			data: $resolved['data'],
 			huisstijl: $huisstijl
 		);
 
 		return [
 			'html' => $renderResult['html'],
-			'warnings' => array_merge($resolved['warnings'], $renderResult['warnings']),
+			'warnings' => array_merge($resolved['warnings'], $twig['warnings'], $renderResult['warnings']),
 			'data' => $resolved['data'],
 		];
 
 	}//end renderPreview()
+
+	/**
+	 * Resolve the data of an office template and fill its DOCX, without
+	 * converting, storing or logging anything: the one fill every format of
+	 * a multi-format run is made from.
+	 *
+	 * @param array<string, mixed> $template The office template.
+	 * @param array                $dataRefs Data references: [{register, schema, id}, ...].
+	 * @param array                $options  Options: adHocData, listRefs.
+	 *
+	 * @return array{docx: string, html: string, warnings: array<int, string>, fragments: array<int, string>}
+	 *
+	 * @throws Exception When no office renderer is wired (501), or the source is missing (404) or unreadable (422).
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/document-creatie-sjablonen/spec.md
+	 */
+	public function fillOfficeTemplate(array $template, array $dataRefs, array $options = []): array {
+		if ($this->officeRenderer === null) {
+			throw new Exception(message: 'Office templates cannot be rendered on this server', code: 501);
+		}
+
+		$resolved = $this->resolveTemplateData(run: ['dataRefs' => $dataRefs, 'options' => $options]);
+		$filled = $this->officeRenderer->fill(template: $template, data: $resolved['data']);
+		$filled['warnings'] = array_merge($resolved['warnings'], $filled['warnings']);
+
+		return $filled;
+
+	}//end fillOfficeTemplate()
 
 	/**
 	 * Generate documents for multiple objects in a single request.

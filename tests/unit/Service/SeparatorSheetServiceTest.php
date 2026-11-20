@@ -265,4 +265,70 @@ class SeparatorSheetServiceTest extends TestCase {
 		$this->assertSame([], $profiles->all());
 
 	}//end testUnreadableProfilesWatchNothing()
+
+	/**
+	 * The QR code on an original's sheet reads back as that original; the
+	 * shelf mark and description are in print beside it (REQ-PAD-002).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 */
+	public function testTheQrPayloadOfAnOriginalsSheetNamesTheOriginal(): void {
+		$service = $this->sheets();
+
+		$html = $service->renderOriginals(
+			profileId: 'archief',
+			originals: [
+				['id' => 'po-1', 'shelfMark' => 'Doos 12 / 3', 'description' => 'Bouwvergunning Dorpsstraat 4 <1978>'],
+				['id' => '', 'shelfMark' => 'skipped'],
+				['@self' => ['id' => 'po-2'], 'shelfMark' => 'Doos 12 / 4', 'description' => 'Sloopmelding'],
+			]
+		);
+
+		preg_match_all('/<barcode code="([^"]+)"/', $html, $codes);
+		$this->assertSame(['filinq:sep:v2:archief:po:po-1', 'filinq:sep:v2:archief:po:po-2'], $codes[1]);
+		$this->assertSame(['po:po-1', 'po:po-2'], array_map(static fn (string $code): ?string => $service->readPayload(payload: html_entity_decode($code)), $codes[1]));
+		$this->assertStringContainsString('Scheidingsvel voor Doos 12 / 3', $html);
+		$this->assertStringContainsString('Bouwvergunning Dorpsstraat 4 &lt;1978&gt;', $html);
+		$this->assertSame(1, substr_count($html, '<pagebreak />'));
+		$this->assertStringNotContainsString('skipped', $html);
+	}//end testTheQrPayloadOfAnOriginalsSheetNamesTheOriginal()
+
+	/**
+	 * A v2 payload is found in the page text; the v1 payload reads as before;
+	 * a v2 payload without an original is no separator.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 */
+	public function testV1AndV2PayloadsReadSideBySide(): void {
+		$service = $this->sheets();
+
+		$this->assertSame('po:po-9', $service->readPayload(payload: "Scheidingsvel voor Doos 1\nfilinq:sep:v2:archief:po:po-9 trailing text"));
+		$this->assertSame('2026-0042', $service->readPayload(payload: $service->payload(profileId: 'postkamer', caseNumber: '2026-0042')));
+		$this->assertNull($service->readPayload(payload: 'filinq:sep:v2:archief:po:'));
+		$this->assertNull($service->readPayload(payload: 'filinq:sep:v2:archief'));
+		$this->assertSame('filinq:sep:v2:archief:po:po-9', $service->originalPayload(profileId: ' archief ', originalId: 'po-9 '));
+	}//end testV1AndV2PayloadsReadSideBySide()
+
+	/**
+	 * Nothing to print, or no profile, is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 */
+	public function testAnOriginalsPrintWithoutOriginalsOrProfileIsRefused(): void {
+		$service = $this->sheets();
+		foreach ([['archief', []], ['', [['id' => 'po-1']]]] as [$profile, $originals]) {
+			try {
+				$service->renderOriginals(profileId: $profile, originals: $originals);
+				$this->fail('the print was not refused');
+			} catch (RuntimeException $e) {
+				$this->assertNotSame('', $e->getMessage());
+			}
+		}
+	}//end testAnOriginalsPrintWithoutOriginalsOrProfileIsRefused()
 }//end class

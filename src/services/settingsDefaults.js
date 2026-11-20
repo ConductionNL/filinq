@@ -24,6 +24,8 @@ export function defaultSettings() {
 		enable_inbound_classification: true,
 		ocr_enabled: true,
 		ocr_on_arrival: true,
+		// intake-base-registry-enrichment D3: no BRP lookup until an admin turns it on.
+		'intake.brp_lookup_enabled': false,
 		ocr_dpi: 300,
 		signing_enabled: false,
 		signing_provider: 'native',
@@ -31,6 +33,7 @@ export function defaultSettings() {
 		signing_default_level: 'SES',
 		signing_request_expiry_days: 30,
 		signing_guardian_consent_age: 16,
+		extraction_unattended_threshold: '0.9',
 		'filinq.anonymisation.default_output_format': 'pdf-only',
 		'anonymisation.output_subfolder_name': 'anonymised',
 		// Four eyes when anonymising (REQ-SET-12): Woo cases only by default.

@@ -232,6 +232,21 @@ class DocumentAnonymizeRunner {
 	}//end run()
 
 	/**
+	 * Record what the run did to the file's image content on its link.
+	 *
+	 * @param int                  $fileId The source file.
+	 * @param array<string, mixed> $fields `imageRedactionPending` and `burnedRegionCount`.
+	 *
+	 * @return bool True when the link was updated.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.3
+	 */
+	public function recordImageRedaction(int $fileId, array $fields): bool {
+		return $this->persistence->recordImageRedaction(fileId: $fileId, fields: $fields);
+
+	}//end recordImageRedaction()
+
+	/**
 	 * Run the standard (non-EML) anonymise path for one document.
 	 *
 	 * Captures a textual projection of the ORIGINAL document BEFORE anonymization

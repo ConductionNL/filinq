@@ -92,6 +92,11 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function readPayload(string $payload): ?string {
+		$original = $this->readOriginal(payload: $payload);
+		if ($original !== null) {
+			return $original;
+		}
+
 		$position = stripos($payload, self::PAYLOAD_PREFIX);
 		if ($position === false) {
 			return null;
@@ -111,6 +116,85 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 		return trim($parts[1]);
 
 	}//end readPayload()
+
+	/**
+	 * The payload of a sheet naming one paper original.
+	 *
+	 * @param string $profileId  The scan profile the sheet belongs to.
+	 * @param string $originalId The paperOriginal the pages after it are the scan of.
+	 *
+	 * @return string The payload.
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 */
+	public function originalPayload(string $profileId, string $originalId): string {
+		return self::PAYLOAD_PREFIX_V2 . trim($profileId) . ':' . self::ORIGINAL_MARKER . trim($originalId);
+
+	}//end originalPayload()
+
+	/**
+	 * Render one separator sheet per paper original.
+	 *
+	 * @param string                           $profileId The scan profile the sheets belong to.
+	 * @param array<int, array<string, mixed>> $originals The paperOriginal records, each with `id`, `shelfMark` and `description`.
+	 *
+	 * @return string The sheets as PDF bytes.
+	 *
+	 * @throws RuntimeException When there is no original to print or the sheets do not render.
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 */
+	public function renderOriginals(string $profileId, array $originals): string {
+		if (trim($profileId) === '') {
+			throw new RuntimeException(message: 'A separator sheet names the scan profile it belongs to.');
+		}
+
+		$pages = [];
+		foreach ($originals as $original) {
+			$originalId = trim((string)($original['id'] ?? ($original['@self']['id'] ?? '')));
+			if ($originalId !== '') {
+				$pages[] = $this->originalSheetHtml(payload: $this->originalPayload(profileId: $profileId, originalId: $originalId), original: $original);
+			}
+		}
+
+		if ($pages === []) {
+			throw new RuntimeException(message: 'There is no paper original to print a separator sheet for.');
+		}
+
+		return $this->renderPages(pages: $pages);
+
+	}//end renderOriginals()
+
+	/**
+	 * The `po:<originalId>` a v2 payload names, or null when it is no v2 separator.
+	 *
+	 * @param string $payload The payload read off a page.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 */
+	private function readOriginal(string $payload): ?string {
+		$position = stripos($payload, self::PAYLOAD_PREFIX_V2);
+		if ($position === false) {
+			return null;
+		}
+
+		$rest = substr($payload, ($position + strlen(self::PAYLOAD_PREFIX_V2)));
+		$rest = trim((string)preg_replace('/\s.*$/s', '', $rest));
+		$marker = strpos($rest, ':' . self::ORIGINAL_MARKER);
+		if ($marker === false) {
+			return null;
+		}
+
+		$originalId = trim(substr($rest, ($marker + 1 + strlen(self::ORIGINAL_MARKER))));
+		if ($originalId === '') {
+			return null;
+		}
+
+		return self::ORIGINAL_MARKER . $originalId;
+
+	}//end readOriginal()
 
 	/**
 	 * Render separator sheets, one page per case number.
@@ -150,6 +234,20 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 			$pages[] = $this->sheetHtml(payload: $this->payload(profileId: $profileId, caseNumber: $number), caseNumber: $number);
 		}
 
+		return $this->renderPages(pages: $pages);
+
+	}//end render()
+
+	/**
+	 * The sheets' pages as one PDF.
+	 *
+	 * @param array<int, string> $pages One sheet's HTML each.
+	 *
+	 * @return string The PDF bytes.
+	 *
+	 * @throws RuntimeException When the sheets do not render.
+	 */
+	private function renderPages(array $pages): string {
 		try {
 			return $this->pdf->generatePdfFromHtml(
 				implode('<pagebreak />', $pages),
@@ -163,7 +261,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 			);
 		}
 
-	}//end render()
+	}//end renderPages()
 
 	/**
 	 * One sheet's HTML.
@@ -194,4 +292,29 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 			. '</div>';
 
 	}//end sheetHtml()
+
+	/**
+	 * One original's sheet: the shelf mark and description in print above the code.
+	 *
+	 * @param string               $payload  The payload it carries.
+	 * @param array<string, mixed> $original The paperOriginal.
+	 *
+	 * @return string The HTML.
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 */
+	private function originalSheetHtml(string $payload, array $original): string {
+		$shelfMark = htmlspecialchars(trim((string)($original['shelfMark'] ?? '')), ENT_QUOTES);
+		$description = htmlspecialchars(trim((string)($original['description'] ?? '')), ENT_QUOTES);
+		$safePayload = htmlspecialchars($payload, ENT_QUOTES);
+
+		return '<div style="text-align:center;font-family:sans-serif;">'
+			. '<h1 style="font-size:28pt;margin-top:60pt;">Scheidingsvel voor ' . $shelfMark . '</h1>'
+			. '<p style="font-size:14pt;">' . $description . '</p>'
+			. '<p style="font-size:12pt;">Leg dit vel voor het origineel met dit kenmerk. Wat erna komt, is de scan ervan.</p>'
+			. '<barcode code="' . $safePayload . '" type="QR" class="barcode" size="1.6" error="M" disableborder="1" />'
+			. '<p style="font-size:16pt;letter-spacing:1pt;margin-top:24pt;font-family:monospace;">' . $safePayload . '</p>'
+			. '</div>';
+
+	}//end originalSheetHtml()
 }//end class

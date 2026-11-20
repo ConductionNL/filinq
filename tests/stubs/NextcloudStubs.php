@@ -310,6 +310,49 @@ class Response {
 	public function getHeaders(): array {
 		return $this->headers;
 	}
+	/**
+	 * Whether the response is throttled.
+	 *
+	 * @var bool
+	 */
+	private bool $throttled = false;
+
+	/**
+	 * The throttle metadata.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $throttleMetadata = [];
+
+	/**
+	 * Mark the response for brute-force throttling, as the real class does.
+	 *
+	 * @param array<string, mixed> $metadata The throttle metadata.
+	 *
+	 * @return void
+	 */
+	public function throttle(array $metadata = []): void {
+		$this->throttled = true;
+		$this->throttleMetadata = $metadata;
+	}//end throttle()
+
+	/**
+	 * Whether the response is throttled.
+	 *
+	 * @return bool
+	 */
+	public function isThrottled(): bool {
+		return $this->throttled;
+	}//end isThrottled()
+
+	/**
+	 * The throttle metadata.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function getThrottleMetadata(): array {
+		return $this->throttleMetadata;
+	}//end getThrottleMetadata()
 }//end class
 
 class JSONResponse extends Response {
@@ -712,6 +755,10 @@ class TextPlainResponse {
  */
 class TemplateResponse {
 
+	public const RENDER_AS_GUEST = 'guest';
+
+	public const RENDER_AS_PUBLIC = 'public';
+
 	/**
 	 * Application name.
 	 *
@@ -810,6 +857,49 @@ class TemplateResponse {
 	public function getParams(): array {
 		return $this->params;
 	}//end getParams()
+	/**
+	 * Whether the response is throttled.
+	 *
+	 * @var bool
+	 */
+	private bool $throttled = false;
+
+	/**
+	 * The throttle metadata.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $throttleMetadata = [];
+
+	/**
+	 * Mark the response for brute-force throttling, as the real class does.
+	 *
+	 * @param array<string, mixed> $metadata The throttle metadata.
+	 *
+	 * @return void
+	 */
+	public function throttle(array $metadata = []): void {
+		$this->throttled = true;
+		$this->throttleMetadata = $metadata;
+	}//end throttle()
+
+	/**
+	 * Whether the response is throttled.
+	 *
+	 * @return bool
+	 */
+	public function isThrottled(): bool {
+		return $this->throttled;
+	}//end isThrottled()
+
+	/**
+	 * The throttle metadata.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function getThrottleMetadata(): array {
+		return $this->throttleMetadata;
+	}//end getThrottleMetadata()
 }//end class
 
 /**
@@ -1201,6 +1291,24 @@ abstract class TimedJob {
 	public function setInterval(int $seconds): void {
 		$this->interval = $seconds;
 	}//end setInterval()
+
+	/**
+	 * Whether the job may run in parallel with itself.
+	 *
+	 * @var boolean
+	 */
+	public bool $allowParallelRuns = true;
+
+	/**
+	 * Allow or forbid parallel runs (OCP\BackgroundJob\Job::setAllowParallelRuns).
+	 *
+	 * @param bool $allow Whether parallel runs are allowed
+	 *
+	 * @return void
+	 */
+	public function setAllowParallelRuns(bool $allow): void {
+		$this->allowParallelRuns = $allow;
+	}//end setAllowParallelRuns()
 
 	/**
 	 * Set the time sensitivity.
