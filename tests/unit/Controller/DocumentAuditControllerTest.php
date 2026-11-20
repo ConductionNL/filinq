@@ -77,7 +77,9 @@ class DocumentAuditControllerTest extends TestCase {
 	 */
 	public function testOpeningAReadableDocumentIsRecorded(): void {
 		$audit = $this->createMock(originalClassName: DocumentActionAudit::class);
-		$audit->expects($this->once())->method(constraint: 'record')->with(fileId: 41, action: 'opened', context: ['route' => 'ui'])->willReturn(value: true);
+		$audit->expects($this->once())->method(constraint: 'record')
+			->with(fileId: 41, action: 'opened', context: ['route' => 'ui'])
+			->willReturn(value: true);
 
 		$response = $this->controller(audit: $audit, readable: true)->opened(fileId: 41);
 

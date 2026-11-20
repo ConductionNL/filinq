@@ -157,9 +157,27 @@ class DocumentActionAuditTest extends TestCase {
 
 		$this->assertSame(
 			[
-				['id' => 'row-anna', 'action' => 'create', 'user' => 'anna', 'userName' => 'Name of anna', 'created' => '2026-11-01T09:00:00+00:00'],
-				['id' => 'row-carl', 'action' => 'filinq.document.signed', 'user' => 'carl', 'userName' => 'Name of carl', 'created' => '2026-11-02T12:00:00+00:00'],
-				['id' => 'row-bea', 'action' => 'filinq.document.downloaded', 'user' => 'bea', 'userName' => 'Name of bea', 'created' => '2026-11-03T10:00:00+00:00'],
+				[
+					'id' => 'row-anna',
+					'action' => 'create',
+					'user' => 'anna',
+					'userName' => 'Name of anna',
+					'created' => '2026-11-01T09:00:00+00:00',
+				],
+				[
+					'id' => 'row-carl',
+					'action' => 'filinq.document.signed',
+					'user' => 'carl',
+					'userName' => 'Name of carl',
+					'created' => '2026-11-02T12:00:00+00:00',
+				],
+				[
+					'id' => 'row-bea',
+					'action' => 'filinq.document.downloaded',
+					'user' => 'bea',
+					'userName' => 'Name of bea',
+					'created' => '2026-11-03T10:00:00+00:00',
+				],
 			],
 			$trail
 		);
@@ -212,7 +230,14 @@ class DocumentActionAuditTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function jsonSerialize(): array {
-				return ['uuid' => 'row-' . $this->rowUser, 'action' => $this->rowAction, 'user' => $this->rowUser, 'userName' => 'Name of ' . $this->rowUser, 'created' => $this->rowCreated, 'changed' => ['title' => 'x']];
+				return [
+					'uuid' => 'row-' . $this->rowUser,
+					'action' => $this->rowAction,
+					'user' => $this->rowUser,
+					'userName' => 'Name of ' . $this->rowUser,
+					'created' => $this->rowCreated,
+					'changed' => ['title' => 'x'],
+				];
 			}
 		};
 

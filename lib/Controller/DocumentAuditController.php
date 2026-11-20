@@ -71,7 +71,7 @@ class DocumentAuditController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(int $fileId): JSONResponse {
-		if ($this->files->node(fileId: $fileId) === null) {
+		if ($this->mayReadFile(fileId: $fileId) === false) {
 			return new JSONResponse(data: ['error' => 'Document not found'], statusCode: Http::STATUS_NOT_FOUND);
 		}
 
@@ -96,7 +96,7 @@ class DocumentAuditController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function opened(int $fileId): JSONResponse {
-		if ($this->files->node(fileId: $fileId) === null) {
+		if ($this->mayReadFile(fileId: $fileId) === false) {
 			return new JSONResponse(data: ['error' => 'Document not found'], statusCode: Http::STATUS_NOT_FOUND);
 		}
 
@@ -105,4 +105,20 @@ class DocumentAuditController extends Controller {
 		return new JSONResponse(data: ['recorded' => $recorded], statusCode: Http::STATUS_OK);
 
 	}//end opened()
+
+	/**
+	 * Whether the caller may read the file: the resolver opens it only through
+	 * the caller's own access, so a file they may not read and one that does
+	 * not exist answer alike.
+	 *
+	 * @param int $fileId The Nextcloud file id.
+	 *
+	 * @return bool True when the caller may read the file.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 */
+	private function mayReadFile(int $fileId): bool {
+		return $this->files->node(fileId: $fileId) !== null;
+
+	}//end mayReadFile()
 }//end class
