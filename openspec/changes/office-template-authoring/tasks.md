@@ -57,7 +57,8 @@
 
 ## 5. Quality, i18n, docs
 
-- [ ] 5.1 Unit tests (≥75% coverage on new code) incl. register-drift pins for the new schema fields; run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- [x] 5.1 Unit tests (≥75% coverage on new code) incl. register-drift pins for the new schema fields; run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+  - Coverage measured 2026-11-20 with pcov over the full unit suite (8398 tests, 0 failures), statements of the lib files carrying this change's `@spec` tag: 1490 of 1690, 88.2% over 23 files. Register-drift pins: `OfficeTemplateSeedTest::testTheOfficeDataModelIsPinned()`. Fixtures on disk: `tests/sample-documents/beschikking-parkeervergunning.docx` (valid) and `tests/sample-documents/office/` `macro-letter.docx`, `corrupt-letter.docx`, `letter.odt`, pinned through the source guard by `OfficeSampleFilesTest`.
   - Fixtures: valid DOCX, macro DOCX, corrupt DOCX, ODT in `tests/sample-documents/`
 
 - [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/office-template-authoring.spec.ts` + extend `templates.spec.ts` for the parity scenarios; verify on Postgres (8080), test with nldesign theme enabled

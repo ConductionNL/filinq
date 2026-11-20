@@ -112,4 +112,48 @@ class PhotoNormaliserTest extends TestCase {
 			$this->assertSame(PhotoNormaliser::MESSAGE_HEIC, $e->getMessage());
 		}
 	}//end testHeicWithoutSupportIsRefused()
+	/**
+	 * A photo that says it is turned but whose image data cannot be read comes back as it came.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+	 */
+	public function testATurnedPhotoWithBrokenImageDataIsUnchanged(): void {
+		$photo = $this->photo(orientation: 6);
+		// Turn the frame header into a comment: the EXIF block still reads, the image does not.
+		$broken = (string)preg_replace(pattern: '/\xFF\xC0/', replacement: "\xFF\xFE", subject: $photo, limit: 1);
+		$this->assertNotSame(expected: $photo, actual: $broken);
+
+		$this->assertSame(expected: $broken, actual: (new PhotoNormaliser())->upright(jpeg: $broken));
+	}//end testATurnedPhotoWithBrokenImageDataIsUnchanged()
+
+	/**
+	 * A server that claims HEIC support but cannot decode this photo refuses it with 415 too.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+	 */
+	public function testAHeicPhotoThatCannotBeDecodedIsRefused(): void {
+		$normaliser = new class extends PhotoNormaliser {
+			/**
+			 * Claim HEIC support, so the conversion itself is attempted.
+			 *
+			 * @return bool
+			 */
+			public function readsHeic(): bool {
+				return true;
+			}//end readsHeic()
+		};
+
+		try {
+			$normaliser->heicToJpeg(heic: 'not a heic photo');
+			$this->fail(message: 'An undecodable HEIC photo must be refused.');
+		} catch (ReceiptCaptureRefusedException $e) {
+			$this->assertSame(expected: 415, actual: $e->getCode());
+			$this->assertSame(expected: PhotoNormaliser::MESSAGE_HEIC, actual: $e->getMessage());
+			$this->assertNotNull(actual: $e->getPrevious());
+		}
+	}//end testAHeicPhotoThatCannotBeDecodedIsRefused()
 }//end class
