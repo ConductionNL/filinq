@@ -13,6 +13,7 @@
         "double ProhibitionPolicyService",
         "double RedactionOutputGuard",
         null,
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -26,6 +27,7 @@
         "double DocumentAnonymizeRunner",
         "double EntityDetectionService",
         "double FileEntityStatsService",
+        "double ImageRedactionService",
         "double LoggerInterface",
         "double OcrExtractionFallback",
         "double OpenRegisterServiceLocator",
@@ -350,6 +352,7 @@
         "double SettingsService",
         "double TotalsReconciler",
         "double VatIdExtractor",
+        null,
         {
             "distinct objects built by the class": 0
         }
@@ -368,6 +371,7 @@
         "double OpenRegisterResolver",
         "double SettingsService",
         "double TotalsReconciler",
+        "double UnattendedVerdict",
         "double VatIdExtractor",
         {
             "distinct objects built by the class": 0
@@ -380,6 +384,7 @@
         "double IUserSession",
         "double JobQueueInterface",
         "double LoggerInterface",
+        null,
         {
             "built OCA\\Filinq\\Service\\FolderFileEnumerator": [
                 "double ConfidentialityLabelService",
@@ -393,6 +398,7 @@
     ],
     "FolderBatchService given": [
         "double AnonymizationService",
+        "double BatchRouting",
         "double BatchStateService",
         "double IRootFolder",
         "double IUserSession",
@@ -470,8 +476,10 @@
         }
     ],
     "IntakeService defaults": [
+        "double ContentHasher",
         "double IUserSession",
         "double IntakeAuthorizationGate",
+        "double IntakeDeadlines",
         "double IntakeDefaultRuleService",
         "double IntakeFilePlacement",
         "double IntakeOcrQueue",
@@ -484,8 +492,10 @@
         }
     ],
     "IntakeService given": [
+        "double ContentHasher",
         "double IUserSession",
         "double IntakeAuthorizationGate",
+        "double IntakeDeadlines",
         "double IntakeDefaultRuleService",
         "double IntakeFilePlacement",
         "double IntakeOcrQueue",

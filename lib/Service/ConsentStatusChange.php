@@ -41,12 +41,14 @@ final class ConsentStatusChange {
 	 *
 	 * @param array<string, mixed> $data  The proposed update, with `evidence` for a status move that needs it
 	 * @param string               $actor The user making the change, recorded on each status event
+	 * @param string               $via   How the change was made: `mcp` for an agent through Hermiq's gate, '' in Filinq itself
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		public readonly array $data,
 		public readonly string $actor = '',
+		public readonly string $via = '',
 	) {
 
 	}//end __construct()

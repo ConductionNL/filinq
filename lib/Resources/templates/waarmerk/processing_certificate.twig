@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Anonimisatiecertificaat</title>
+<style>
+  body { font-family: 'DejaVu Sans', sans-serif; font-size: 10pt; color: #1a1a1a; }
+  h1 { font-size: 18pt; color: #154273; margin: 0 0 6pt 0; }
+  h2 { font-size: 12pt; margin: 14pt 0 4pt 0; }
+  table { width: 100%; border-collapse: collapse; }
+  td, th { padding: 3pt 6pt; text-align: left; vertical-align: top; border-bottom: 0.4pt solid #ccc; }
+  td.label { color: #555; width: 38%; }
+  td.n { text-align: right; }
+  .note { font-size: 8.5pt; color: #444; margin-top: 12pt; }
+</style>
+</head>
+<body>
+<h1>Anonimisatiecertificaat</h1>
+<p>Dit certificaat legt vast wat er bij deze anonimisatie is vastgelegd. Het bevat alleen soorten gegevens en aantallen, nooit de gevonden gegevens zelf of tekst uit het document.</p>
+<h2>Verwerking</h2>
+<table>
+  <tr><td class="label">Bronbestand</td><td>{{ certificate.sourceFileName|default('—')|escape }}</td></tr>
+  <tr><td class="label">Geanonimiseerd bestand</td><td>{{ certificate.anonymizedFileName|default('—')|escape }}</td></tr>
+  <tr><td class="label">Uitvoerformaat</td><td>{{ certificate.outputFormat|default('—')|escape }}</td></tr>
+  <tr><td class="label">Geanonimiseerd op</td><td>{{ certificate.anonymizedAt|default('—')|escape }}</td></tr>
+  <tr><td class="label">Geanonimiseerd door</td><td>{{ certificate.anonymizedBy|default('—')|escape }}</td></tr>
+  <tr><td class="label">Detectiemethode</td><td>{{ certificate.detectionBackend|default('—')|escape }}</td></tr>
+  <tr><td class="label">Aantal vervangingen</td><td>{{ certificate.replacementCount|default(0) }}</td></tr>
+  <tr><td class="label">Aantal runs</td><td>{{ certificate.runCount|default(1) }}</td></tr>
+  <tr><td class="label">Controle op restanten</td><td>{{ certificate.verificationVerdict|default('—')|escape }}</td></tr>
+  <tr><td class="label">Run-kenmerk</td><td>{{ certificate.anonymizationLinkId|escape }}</td></tr>
+</table>
+<h2>Vervangen per soort gegeven</h2>
+{% if certificate.entityTypeCounts|length > 0 %}
+<table>
+  <tr><th>Soort</th><th class="n">Aantal</th></tr>
+  {% for type, count in certificate.entityTypeCounts %}
+  <tr><td>{{ type|escape }}</td><td class="n">{{ count }}</td></tr>
+  {% endfor %}
+</table>
+{% else %}
+<p>Voor deze run zijn geen aantallen per soort gegeven vastgelegd; alleen het totaal hierboven is bekend.</p>
+{% endif %}
+<p class="note">Dit certificaat is voorzien van een organisatiewaarmerk (geen gekwalificeerd zegel). De laatste pagina bevat de controlecode en de QR-code naar de controlepagina.</p>
+</body>
+</html>

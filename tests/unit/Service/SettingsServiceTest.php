@@ -366,6 +366,46 @@ class SettingsServiceTest extends TestCase {
 	}//end testInvalidOutputSubfolderNameIsRefusedAndNothingIsWritten()
 
 	/**
+	 * The unattended threshold is saved from 0.6 to 1.0 (REQ-ERP-005).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+	 */
+	public function testTheUnattendedThresholdIsWritableWithinItsBounds(): void {
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'extraction_unattended_threshold', '0.95');
+		$this->mockConfig->method('getValueString')->willReturn('0.95');
+
+		$result = $this->settingsService->updateSettings(['extraction_unattended_threshold' => '0.95']);
+
+		$this->assertSame('0.95', $result['extraction_unattended_threshold']);
+
+	}//end testTheUnattendedThresholdIsWritableWithinItsBounds()
+
+	/**
+	 * A threshold of 0.5, above 1.0 or not a number is refused before anything is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+	 */
+	public function testAnUnattendedThresholdOutsideItsBoundsIsRefused(): void {
+		$this->mockConfig->expects($this->never())->method('setValueString');
+
+		foreach (['0.5', '1.01', 'high', ''] as $value) {
+			try {
+				$this->settingsService->updateSettings(['signing_provider' => 'native', 'extraction_unattended_threshold' => $value]);
+				$this->fail('Threshold ' . $value . ' was accepted.');
+			} catch (\RuntimeException $e) {
+				$this->assertSame([400, 'Choose a value between 0.6 and 1.0.'], [$e->getCode(), $e->getMessage()]);
+			}
+		}
+
+	}//end testAnUnattendedThresholdOutsideItsBoundsIsRefused()
+
+	/**
 	 * An empty subfolder name is refused too.
 	 *
 	 * @return void

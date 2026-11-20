@@ -63,9 +63,8 @@
 
 - [x] 7.1 Document `options.templateVersion` and the two new result fields in
       `docs/features/`.
-- [ ] 7.2 Raise the counterpart change in the dossiq repo: point
+- [x] 7.2 Raise the counterpart change in the dossiq repo: point
       `FilinqTemplateEngineAdapter::resolveVersion()` at the new query and
-      delete `countPages()`. NOT DONE: lanes may not write to another repo; the
-      issue text is drafted at
-      ~/memcap-work/build-all/for-ruben/dossiq-template-version-provenance.md.
-      The change stays open until it is filed.
+      delete `countPages()`. Done as ConductionNL/dossiq#6668: the adapter
+      asks `versionInForceAt()` for the end of the effective date and takes
+      `sha256` and `pageCount` from the generation result.

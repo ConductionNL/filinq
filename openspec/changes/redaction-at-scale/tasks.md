@@ -5,33 +5,36 @@
 
 ## 1. Register & seed data
 
-- [ ] 1.1 Re-verify against HEAD whether the REQ-BANON-00 OR-state migration (`docudesk-adopt-or-abstractions`) has landed; land or absorb the `batchAnonymizationJob` + `batchAnonymizationFile` schemas in `lib/Settings/filinq_register.json`
+- [x] 1.1 Re-verify against HEAD whether the REQ-BANON-00 OR-state migration (`docudesk-adopt-or-abstractions`) has landed; land or absorb the `batchAnonymizationJob` + `batchAnonymizationFile` schemas in `lib/Settings/filinq_register.json`
   - Spec-says-done is not proof — check the register JSON and `BatchStateService` on the apply branch.
-- [ ] 1.2 Extend the batch schemas with progress, cancellation and QA fields (`totalFiles`, succeeded/failed counters at read time, `qaSampleRate`, `qaSampleSeed`, `throttled`; per-file `qaSampled`, `qaOutcome`, `durationMs`, retry count) — additive, union-merge only
-- [ ] 1.3 Seed one demo batch (12 files, 1 error, 1 QA sample) per design.md Seed Data
+- [x] 1.2 Extend the batch schemas with progress, cancellation and QA fields (`totalFiles`, succeeded/failed counters at read time, `qaSampleRate`, `qaSampleSeed`, `throttled`; per-file `qaSampled`, `qaOutcome`, `durationMs`, retry count) — additive, union-merge only
+- [x] 1.3 Seed one demo batch (12 files, 1 error, 1 QA sample) per design.md Seed Data
 
 ## 2. Backend — durable state & work units
 
-- [ ] 2.1 Rebase `BatchStateService` onto OR objects as the source of truth with ICache as an invalidated read-through cache (REQ-DDRAS-001)
+- [x] 2.1 Rebase `BatchStateService` onto OR objects as the source of truth with ICache as an invalidated read-through cache (REQ-DDRAS-001)
   - Wire statuses unchanged; cache entries carry batch version.
-- [ ] 2.2 Implement `BatchJobCoordinator` (cron `TimedJob`) with `files_per_tick`/`seconds_per_tick` budgets, sequential per-file processing, per-file state writes, throttled-flag computation (REQ-DDRAS-002, REQ-DDRAS-003)
+- [x] 2.2 Implement `BatchJobCoordinator` (cron `TimedJob`) with `files_per_tick`/`seconds_per_tick` budgets, sequential per-file processing, per-file state writes, throttled-flag computation (REQ-DDRAS-002, REQ-DDRAS-003)
   - One work unit per instance at a time; injected clock for tests.
-- [ ] 2.3 Route batches between sync and background paths by the two caps; server-side clamp `filinq.batch.max_files_background` (default 1000) (REQ-DDRAS-008, REQ-DDRAS-009)
+- [x] 2.3 Route batches between sync and background paths by the two caps; server-side clamp `filinq.batch.max_files_background` (default 1000) (REQ-DDRAS-008, REQ-DDRAS-009)
   - Anonymize endpoint returns HTTP 202 + persisted entity list above the sync cap; pre-change contract below it.
-- [ ] 2.4 Implement cancel and resume endpoints + worker-side cooperative cancellation and `anonymizationLink`-keyed idempotent resume (REQ-DDRAS-004, REQ-DDRAS-005)
+- [x] 2.4 Implement cancel and resume endpoints + worker-side cooperative cancellation and `anonymizationLink`-keyed idempotent resume (REQ-DDRAS-004, REQ-DDRAS-005)
   - Auth attributes + owner/admin guards on every new route (route-auth, no-admin-idor gates).
-- [ ] 2.5 Treat soffice lock misses as bounded-retry per-file outcomes; migrate `FolderExtractionJob` processing into the coordinator work units; add `recursive` folder enumeration with relative paths (REQ-DDRAS-008, REQ-DDRAS-010, REQ-DDRAS-011)
+  - Done: `BatchLifecycleService` + `BatchLifecycleController` (`POST .../cancel`, `POST .../resume`, 202/401/404/409, ownership through `BatchStateService::getBatch()`); `BatchAnonymizeService` and `BatchWorkUnit` check for a cancel between files. A resume stamps `resumedAt`; a file whose `anonymizationLink` (by `sourceFileId`) records a copy made after the batch started is taken from the link instead of anonymized again (`BatchBackgroundPath::existingOutput`).
+- [x] 2.5 Treat soffice lock misses as bounded-retry per-file outcomes; migrate `FolderExtractionJob` processing into the coordinator work units; add `recursive` folder enumeration with relative paths (REQ-DDRAS-008, REQ-DDRAS-010, REQ-DDRAS-011)
 
 ## 3. Backend — reporting & QA
 
-- [ ] 3.1 Extend `BatchReportService` with read-time throughput, per-phase durations and failure grouping; keep entity values out of the report (REQ-DDRAS-006)
-- [ ] 3.2 Implement the seeded-PRNG QA sampler marking N% of succeeded files `qaSampled` and creating their review-queue routing via the `documentReview` gate; record outcomes on the report (REQ-DDRAS-007)
+- [x] 3.1 Extend `BatchReportService` with read-time throughput, per-phase durations and failure grouping; keep entity values out of the report (REQ-DDRAS-006)
+- [x] 3.2 Implement the seeded-PRNG QA sampler marking N% of succeeded files `qaSampled` and creating their review-queue routing via the `documentReview` gate; record outcomes on the report (REQ-DDRAS-007)
   - Depends on `anonymization-review-workbench` (documentReview schema); coordinate landing order.
+  - Done: `BatchAnonymizeService` marks the sample on completion through `BatchQaSampler`, using `batch.qa_sample_rate` (default 5) and a stored or newly generated `qaSampleSeed`. A sample's outcome is read from its `documentReview` (keyed on the source `fileId`) by `BatchQaOutcomes` when the report is generated: none = `pending`, manual entities added = `corrected`, else `confirmed`; rate 0 reports `qaSampling,disabled`. The workbench queue view that lists unchecked files is `anonymization-review-workbench` task 3.1.
 
 ## 4. Frontend
 
-- [ ] 4.1 Batch operations view (`CnIndexPage`/`CnDataTable`): active/recent batches, phase, progress %, throughput, throttled indicator; owner-scoped with admin overview (REQ-DDRAS-003)
-- [ ] 4.2 Cancel/resume actions with confirmation dialogs (own modal files) and QA-sample badges linking to the review workbench (REQ-DDRAS-004, REQ-DDRAS-005, REQ-DDRAS-007)
+- [x] 4.1 Batch operations view (`CnIndexPage`/`CnDataTable`): active/recent batches, phase, progress %, throughput, throttled indicator; owner-scoped with admin overview (REQ-DDRAS-003)
+- [x] 4.2 Cancel/resume actions with confirmation dialogs (own modal files) and QA-sample badges linking to the review workbench (REQ-DDRAS-004, REQ-DDRAS-005, REQ-DDRAS-007)
+  - Done: manifest `index` page `BatchOperations` over the `anonymizationBatch` objects (OR's cascade scopes it: owners their own, admins all; progress and documents per hour are written with each batch write by `BatchProgress`), row route to the custom `BatchOperationDetail` (polls status while running; cancel/resume through `src/dialogs/CancelBatchDialog.vue` / `ResumeBatchDialog.vue`; QA samples with their outcome badge). The badge links to the anonymization view with the file id until the workbench view (`anonymization-review-workbench` 3.1) exists.
 
 ## 5. Quality
 
