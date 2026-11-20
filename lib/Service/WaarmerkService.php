@@ -198,7 +198,7 @@ class WaarmerkService implements WaarmerkServiceInterface {
 				'documentName' => $seal['documentName'],
 				'sealedAt' => $seal['sealedAt'],
 				'verificationCode' => $code,
-				'verificationUrl' => $this->urls->linkToRouteAbsolute('filinq.waarmerk.verifyPage', ['code' => $code]),
+				'verificationUrl' => $this->urls->linkToRouteAbsolute('filinq.waarmerkVerify.verifyPage', ['code' => $code]),
 			]
 		);
 

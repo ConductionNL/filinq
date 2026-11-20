@@ -97,6 +97,13 @@ class WaarmerkServiceTest extends TestCase {
 	private array $logged = [];
 
 	/**
+	 * The route names the service asked a URL for.
+	 *
+	 * @var array<int, string>
+	 */
+	private array $routes = [];
+
+	/**
 	 * Set up the doubles.
 	 *
 	 * @return void
@@ -131,7 +138,10 @@ class WaarmerkServiceTest extends TestCase {
 	 */
 	private function service(): WaarmerkService {
 		$urls = $this->createMock(IURLGenerator::class);
-		$urls->method('linkToRouteAbsolute')->willReturnCallback(fn (string $route, array $args): string => 'https://cloud.example/apps/filinq/verify/' . $args['code']);
+		$urls->method('linkToRouteAbsolute')->willReturnCallback(function (string $route, array $args): string {
+			$this->routes[] = $route;
+			return 'https://cloud.example/apps/filinq/verify/' . $args['code'];
+		});
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->method('info')->willReturnCallback(function (string $message, array $context = []): void {
 			$this->logged[] = $message . json_encode($context);
@@ -192,6 +202,26 @@ class WaarmerkServiceTest extends TestCase {
 			$this->assertStringNotContainsString('PRIVATE KEY', (string) $value);
 		}
 	}//end testPrepareSealsTheArtifact()
+
+	/**
+	 * The stamp's QR names the verification page by the route name routes.php registers.
+	 *
+	 * Nextcloud answers an unknown route name with no URL, so a wrong name
+	 * puts a QR on the document that leads nowhere.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
+	 */
+	public function testTheStampLinksTheRegisteredVerificationRoute(): void {
+		$this->sealed();
+
+		$routes = require __DIR__ . '/../../../appinfo/routes.php';
+		$names  = array_map(static fn (array $route): string => 'filinq.' . str_replace('#', '.', (string) $route['name']), $routes['routes'] ?? []);
+
+		$this->assertSame(expected: ['filinq.waarmerkVerify.verifyPage'], actual: $this->routes);
+		$this->assertContains(needle: $this->routes[0], haystack: $names);
+	}//end testTheStampLinksTheRegisteredVerificationRoute()
 
 	/**
 	 * Without a resolvable key: 503 and nothing composed, nothing stored.
