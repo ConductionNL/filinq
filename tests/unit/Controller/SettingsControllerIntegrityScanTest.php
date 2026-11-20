@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+ * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
  */
 
 declare(strict_types=1);

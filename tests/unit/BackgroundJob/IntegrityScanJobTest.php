@@ -12,7 +12,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-2-nightly-job-occ-command-and-notification
+ * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-2-nightly-job-occ-command-and-notification
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use RuntimeException;
 /**
  * A run with findings tells every administrator once; a clean run tells nobody.
  *
- * @spec openspec/changes/whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02
+ * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02
  */
 #[CoversClass(IntegrityScanJob::class)]
 class IntegrityScanJobTest extends TestCase {

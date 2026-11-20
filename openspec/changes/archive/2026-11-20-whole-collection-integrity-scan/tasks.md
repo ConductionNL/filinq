@@ -1,7 +1,7 @@
 # Tasks: whole-collection-integrity-scan
 
 ### Task 1: The scan service finds the three kinds
-- **spec_ref**: `openspec/changes/whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-a-scan-finds-missing-changed-and-orphaned-files-across-the-collection-req-dis-01`
+- **spec_ref**: `openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-a-scan-finds-missing-changed-and-orphaned-files-across-the-collection-req-dis-01`
 - **files**: `lib/Service/IntegrityScanService.php` (new; reuses `FinalDocumentService::verifyChecksum()`, `DossierContextService::members()`, `AnonymizationLinkReader::forAnonymized()`, and the correspondence log), `lib/Settings/filinq_register.json` (`integrityScan` schema), `tests/unit/Service/IntegrityScanServiceTest.php`
 - **acceptance_criteria**:
   - GIVEN a final document with a mismatching checksum THEN one `changed` finding and no write to the file
@@ -12,7 +12,7 @@
 - [x] Test
 
 ### Task 2: Nightly job, occ command and notification
-- **spec_ref**: `openspec/changes/whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02`
+- **spec_ref**: `openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02`
 - **files**: `lib/BackgroundJob/IntegrityScanJob.php` (new, `TimedJob`, daily), `lib/Command/IntegrityScanCommand.php` (new, `filinq:integrity:scan`, prints the counts, exit 1 when there are findings), `appinfo/info.xml` (job and command), `lib/Notification/IntegrityScanNotifier.php` (new, registered the way `LegalHoldNotifier` is) (one notification per run with findings), `tests/unit/BackgroundJob/IntegrityScanJobTest.php`, `tests/unit/Command/IntegrityScanCommandTest.php`
 - **acceptance_criteria**:
   - GIVEN a run with three `changed` findings THEN one notification per administrator
@@ -22,7 +22,7 @@
 - Built: `IntegrityScanJob` (daily, trigger `nightly`, one notification per member of `admin` for a run with findings, none for a clean or failed run) and `IntegrityScanNotifier` (counts per kind, link to Filinq's admin section), registered in `info.xml` and `RegistrationBootstrap`; the occ command came with task 1's commit. PHPUnit `IntegrityScanJobTest`, `IntegrityScanNotifierTest`, `IntegrityScanCommandTest`.
 
 ### Task 3: The admin section reads and starts a scan
-- **spec_ref**: `openspec/changes/whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02`
+- **spec_ref**: `openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02`
 - **files**: `lib/Controller/SettingsController.php` (`integrityScanLast()`, `integrityScanStart()`, admin only), `appinfo/routes.php`, `src/views/settings/Settings.vue` ("Integriteitscontrole" section: time, counts, findings with links, "Nu controleren"), `l10n/nl.json`, `l10n/en.json`, `tests/unit/Controller/SettingsControllerIntegrityScanTest.php`
 - **acceptance_criteria**:
   - GIVEN a non-administrator WHEN the start endpoint is called THEN 403 and no run
@@ -32,5 +32,6 @@
 
 ### Task 4: Verification and the row
 - **files**: `tests/e2e/spec-coverage/whole-collection-integrity-scan.spec.ts` (seed a dossier with a deleted member, run "Nu controleren", read the finding), `openspec/parity/capabilities.json`
-- [ ] `@spec` tags on changed methods (gate 16) and the e2e scenarios (gate 19)
-- [ ] When tasks 1 to 3 are done: set row op-integrity `filinq` to `yes`, cite REQ-DIS-01, archive this change
+- [x] `@spec` tags on changed methods (gate 16) and the e2e scenarios (gate 19)
+  - Every public method of the change carries `@spec` (`IntegrityScanCommand::configure()` was the one left). `tests/e2e/spec-coverage/whole-collection-integrity-scan.spec.ts` anchors the five scenarios that are not `@e2e exclude`; written, not run (the live pass runs it).
+- [x] When tasks 1 to 3 are done: set row op-integrity `filinq` to `yes`, cite REQ-DIS-01, archive this change

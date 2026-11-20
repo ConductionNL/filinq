@@ -16,7 +16,7 @@
  *
  * @link https://filinq.app
  *
- * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-2-nightly-job-occ-command-and-notification
+ * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-2-nightly-job-occ-command-and-notification
  *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
@@ -34,7 +34,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * `occ filinq:integrity:scan`.
  *
- * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-2-nightly-job-occ-command-and-notification
+ * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-2-nightly-job-occ-command-and-notification
  */
 class IntegrityScanCommand extends Command {
 
@@ -53,6 +53,8 @@ class IntegrityScanCommand extends Command {
 	 * Name and describe the command.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-2-nightly-job-occ-command-and-notification
 	 */
 	protected function configure(): void {
 		$this->setName(name: 'filinq:integrity:scan')
@@ -70,7 +72,7 @@ class IntegrityScanCommand extends Command {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) `$input` is Symfony's Command::execute()
 	 *                                               signature; the scan takes no options.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-2-nightly-job-occ-command-and-notification
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-2-nightly-job-occ-command-and-notification
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
 		$run = $this->scan->run(trigger: 'command');

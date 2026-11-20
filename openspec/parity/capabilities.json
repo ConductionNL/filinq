@@ -8866,27 +8866,27 @@
 			"name": "Run a check that finds missing, changed or orphaned files.",
 			"source": "competitor-derived",
 			"sourceRef": "paperless-ngx v3.2.1 source (reader rA)",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "planned",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): only a final document whose file changed is reported when it is opened; no scan finds missing, changed or orphaned files across the collection (REQ-DIS-01/02). Planned in openspec/changes/whole-collection-integrity-scan. Built so far: per-document check only, for final documents: lib/Service/FinalDocumentService.php:241 verifyChecksum() compares the frozen checksum with the file now on storage, shown as a warning at src/views/versions/VersionsView.vue:37 via GET api/documents/{fileId}/final. The nightly job (appinfo/info.xml:106 DomainFolderReconciliationJob -> lib/Service/DomainFolderReconciler.php:80) reconciles domain folder existence and group access, not missing or orphaned document files. No collection-wide scan exists (grep -ri 'orphan|sanity|integrity' lib).",
-				"change": "openspec/changes/whole-collection-integrity-scan",
+				"evidence": "A whole-collection scan (REQ-DIS-01): lib/Service/IntegrityScanService.php reads every dossier member, final document and anonymisation link and stores an integrityScan run with the count per kind (missing: a file id that no longer resolves; changed: a final document whose bytes no longer match its frozen checksum, via FinalDocumentService::verifyChecksum(); orphaned: an anonymised copy whose source is gone) and the findings; it only reads. Runs nightly (lib/BackgroundJob/IntegrityScanJob.php, daily TimedJob, one notification per administrator for a run with missing or changed files through lib/Notification/IntegrityScanNotifier.php), on demand with occ filinq:integrity:scan (lib/Command/IntegrityScanCommand.php, exit 1 on findings) and from the Integrity scan section of the admin page (src/views/settings/IntegrityScanSection.vue over GET/POST api/settings/integrity-scan, admin only, REQ-DIS-02). Tests: IntegrityScanServiceTest, IntegrityScanJobTest, IntegrityScanNotifierTest, IntegrityScanCommandTest, SettingsControllerIntegrityScanTest, vitest IntegrityScanSection.spec.js; e2e tests/e2e/spec-coverage/whole-collection-integrity-scan.spec.ts written, not yet run live.",
+				"change": "openspec/changes/archive/2026-11-20-whole-collection-integrity-scan",
 				"spec": "openspec/specs/document-versions",
 				"requirement": [
 					"openspec/specs/document-versions :: Every write path refuses a final version (REQ-FDF-02)",
 					"openspec/specs/document-versions :: Final is a declared lifecycle state (REQ-FDF-01)",
-					"openspec/changes/whole-collection-integrity-scan/specs/document-versions :: A scan finds missing, changed and orphaned files across the collection (REQ-DIS-01)",
-					"openspec/changes/whole-collection-integrity-scan/specs/document-versions :: The scan runs nightly and on demand, and administrators see the result (REQ-DIS-02)"
+					"openspec/specs/document-versions :: A scan finds missing, changed and orphaned files across the collection (REQ-DIS-01)",
+					"openspec/specs/document-versions :: The scan runs nightly and on demand, and administrators see the result (REQ-DIS-02)"
 				],
-				"plan": "openspec/changes/whole-collection-integrity-scan"
+				"readOn": "2026-11-20"
 			},
-			"reachedOn": "/versions (VersionsView.vue) checksum warning for one final document at a time",
+			"reachedOn": "the Integrity scan section of the admin settings; occ filinq:integrity:scan; the nightly job; /versions for one final document at a time",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "document-versions",
 			"featureConfidence": "high",
-			"note": "Partial (DECISIONS row 268, 2026-10-30): finds a changed file for a frozen document when someone opens it; no scan finds missing or orphaned files across the collection yet. Planned in change whole-collection-integrity-scan.",
+			"note": "Built 2026-11-20 (change whole-collection-integrity-scan, REQ-DIS-01): a nightly and on-demand scan finds missing, changed and orphaned files across the collection.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",

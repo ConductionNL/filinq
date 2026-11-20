@@ -90,7 +90,7 @@ export default {
 		 *
 		 * @return {Array<object>} Kind, value and label per kind.
 		 *
-		 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+		 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
 		 */
 		counts() {
 			const run = this.run || {}
@@ -106,7 +106,7 @@ export default {
 		 *
 		 * @return {Array<object>} The findings, or none.
 		 *
-		 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+		 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
 		 */
 		findings() {
 			return Array.isArray(this.run?.findings) ? this.run.findings : []
@@ -126,7 +126,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+		 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
 		 */
 		async load() {
 			this.loading = true
@@ -145,7 +145,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+		 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
 		 */
 		async start() {
 			this.busy = true
@@ -166,7 +166,7 @@ export default {
 		 * @param {string} kind missing, changed or orphaned.
 		 * @return {string} The label.
 		 *
-		 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+		 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
 		 */
 		kindLabel(kind) {
 			return {
@@ -182,7 +182,7 @@ export default {
 		 * @param {object} finding The finding.
 		 * @return {string} The URL.
 		 *
-		 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+		 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
 		 */
 		recordLink(finding) {
 			const page = RECORD_PAGES[finding.schema]
@@ -198,7 +198,7 @@ export default {
 		 * @param {object} finding The finding.
 		 * @return {string} The name.
 		 *
-		 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+		 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
 		 */
 		findingName(finding) {
 			return finding.name || String(finding.record || '')
@@ -210,7 +210,7 @@ export default {
 		 * @param {string} value An ISO 8601 time.
 		 * @return {string} The time, or the value as is when it does not parse.
 		 *
-		 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+		 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
 		 */
 		formatTime(value) {
 			const date = new Date(value)
