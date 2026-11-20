@@ -86,6 +86,29 @@
 		<ul v-if="modelValue.length" class="field-placement__list">
 			<li v-for="(box, index) in modelValue" :key="index">
 				{{ boxLabel({ ...box, index }) }}
+				<div
+					v-if="box.type === 'text'"
+					class="field-placement__settings"
+					:data-testid="`field-settings-${index}`">
+					<NcTextField
+						:modelValue="box.label ?? ''"
+						:label="t('filinq', 'Label for the signer')"
+						:maxlength="maxLabel"
+						@update:modelValue="setting(index, { label: $event })" />
+					<NcCheckboxRadioSwitch
+						:modelValue="box.required === true"
+						@update:modelValue="setting(index, { required: $event })">
+						{{ t('filinq', 'The signer must fill this in') }}
+					</NcCheckboxRadioSwitch>
+					<NcSelect
+						:modelValue="box.validation ?? 'none'"
+						:inputLabel="t('filinq', 'Check')"
+						:options="checkOptions"
+						:clearable="false"
+						label="label"
+						:reduce="(option) => option.id"
+						@update:modelValue="setting(index, { validation: $event })" />
+				</div>
 				<NcButton
 					variant="tertiary"
 					:aria-label="
@@ -102,19 +125,35 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import {
+	NcButton,
+	NcCheckboxRadioSwitch,
+	NcNoteCard,
+	NcSelect,
+	NcTextField,
+} from '@nextcloud/vue'
 import { fetchUrlAsArrayBuffer } from '../../services/fileViewerService.js'
 import { loadPdfjs } from '../../services/pdfjsLoader.js'
 import {
 	addPlacement,
+	FIELD_CHECKS,
 	FIELD_TYPES,
+	MAX_LABEL,
 	movePlacement,
 	resizePlacement,
+	updateTextSettings,
 } from './fieldPlacement.js'
 
 export default {
 	name: 'FieldPlacementEditor',
-	components: { NcButton, NcNoteCard, NcSelect },
+	components: {
+		NcButton,
+		NcCheckboxRadioSwitch,
+		NcNoteCard,
+		NcSelect,
+		NcTextField,
+	},
+
 	props: {
 		fileId: {
 			type: [String, Number],
@@ -143,6 +182,7 @@ export default {
 			error: '',
 			pdfDoc: null,
 			drag: null,
+			maxLabel: MAX_LABEL,
 		}
 	},
 
@@ -164,6 +204,21 @@ export default {
 		 */
 		typeOptions() {
 			return FIELD_TYPES.map((id) => ({ id, label: this.typeLabel(id) }))
+		},
+
+		/**
+		 * @return {Array<object>} No check, and the checks the server runs.
+		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.1
+		 */
+		checkOptions() {
+			const labels = {
+				'iban-nl': t('filinq', 'Dutch IBAN'),
+				iban: t('filinq', 'Any IBAN'),
+			}
+			return [
+				{ id: 'none', label: t('filinq', 'No check') },
+				...FIELD_CHECKS.map((id) => ({ id, label: labels[id] ?? id })),
+			]
 		},
 
 		/**
@@ -432,6 +487,20 @@ export default {
 		},
 
 		/**
+		 * Change the label, required flag or check of a text field.
+		 *
+		 * @param {number} index The box.
+		 * @param {object} settings What changes.
+		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.1
+		 */
+		setting(index, settings) {
+			this.$emit(
+				'update:modelValue',
+				updateTextSettings(this.modelValue, index, settings),
+			)
+		},
+
+		/**
 		 * Remove one field.
 		 *
 		 * @param {number} index The box.
@@ -493,6 +562,14 @@ export default {
 .field-placement__box:focus-visible {
 	outline: 2px solid var(--color-main-text);
 	outline-offset: 1px;
+}
+
+.field-placement__settings {
+	display: flex;
+	flex-wrap: wrap;
+	gap: calc(var(--default-grid-baseline) * 2);
+	align-items: flex-end;
+	margin-block: var(--default-grid-baseline);
 }
 
 .field-placement__hint {

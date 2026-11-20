@@ -37,6 +37,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\PortalSigningReceiverController;
 use OCA\Filinq\Portal\PortalAssertionVerifier;
+use OCA\Filinq\Exception\SigningFieldsRefusedException;
 use OCA\Filinq\Service\OpenRegisterResolver;
 use OCA\Filinq\Service\PortalSigningDocumentResolver;
 use OCA\Filinq\Service\SettingsService;
@@ -492,6 +493,88 @@ class PortalSigningReceiverControllerTest extends TestCase {
 		$this->assertSame('SIGNED', $result->getData()['status']);
 
 	}//end testSignDocumentHappyPath()
+
+	/**
+	 * The portal sign act passes `fields` on; a refused value answers 422 with
+	 * the message per field and no value (signing-field-validation D7).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 */
+	public function testSignDocumentPassesTheFieldsAndAnswers422OnARefusedValue(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(
+			assertion: $this->mintAssertion(),
+			params: [
+				'signingRequestId' => 'request-uuid-1',
+				'consent' => true,
+				'fields' => ['0' => 'NL91 ABNA 0417 1643 01'],
+			]
+		);
+
+		$this->mockSigningService->expects($this->once())
+			->method('sign')
+			->with('request-uuid-1', 'signer-uuid-1', $this->isType('array'), ['consent' => true], ['0' => 'NL91 ABNA 0417 1643 01'])
+			->willThrowException(new SigningFieldsRefusedException(fieldErrors: [0 => 'Type a valid Dutch IBAN, for example NL91 ABNA 0417 1643 00']));
+
+		$result = $this->controller()->signDocument();
+
+		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $result->getStatus());
+		$this->assertSame(
+			['error' => 'fields_refused', 'fieldErrors' => [0 => 'Type a valid Dutch IBAN, for example NL91 ABNA 0417 1643 00']],
+			$result->getData()
+		);
+
+	}//end testSignDocumentPassesTheFieldsAndAnswers422OnARefusedValue()
+
+	/**
+	 * A portal act passes the typed text values on and drops non-text ones.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 */
+	public function testSignDocumentWithoutFieldsSendsAnEmptyMap(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(
+			assertion: $this->mintAssertion(),
+			params: ['signingRequestId' => 'request-uuid-1', 'consent' => true, 'fields' => ['0' => ['x'], '1' => 'ok']]
+		);
+
+		$this->mockSigningService->expects($this->once())
+			->method('sign')
+			->with('request-uuid-1', 'signer-uuid-1', $this->isType('array'), ['consent' => true], ['1' => 'ok'])
+			->willReturn(['status' => 'SIGNED']);
+
+		$this->assertSame(Http::STATUS_OK, $this->controller()->signDocument()->getStatus());
+
+	}//end testSignDocumentWithoutFieldsSendsAnEmptyMap()
+
+	/**
+	 * Without `fields` the act carries an empty map, and any failure that is
+	 * not a field refusal is still a downstream failure.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 */
+	public function testSignDocumentWithNoFieldsAtAllSendsAnEmptyMap(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(
+			assertion: $this->mintAssertion(),
+			params: ['signingRequestId' => 'request-uuid-1', 'consent' => true]
+		);
+		$this->mockSigningService->expects($this->once())
+			->method('sign')
+			->with('request-uuid-1', 'signer-uuid-1', $this->isType('array'), ['consent' => true], [])
+			->willThrowException(new \RuntimeException('Not a field refusal', 500));
+
+		$result = $this->controller()->signDocument();
+		$this->assertSame(Http::STATUS_BAD_GATEWAY, $result->getStatus());
+		$this->assertSame(['error' => 'downstream_failure'], $result->getData());
+
+	}//end testSignDocumentWithNoFieldsAtAllSendsAnEmptyMap()
 
 	/**
 	 * The portal answer names the assurance the signature recorded, so the
