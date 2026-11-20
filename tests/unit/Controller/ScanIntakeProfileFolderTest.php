@@ -65,34 +65,34 @@ class ScanIntakeProfileFolderTest extends TestCase {
 	 */
 	private function controller(string $nodePath): ScanIntakeController {
 		$parent = $this->createMock(originalClassName: Folder::class);
-		$parent->method(constraint: 'getPath')->willReturn(value: dirname(path: $nodePath));
+		$parent->expects(matcher: $this->any())->method(constraint: 'getPath')->willReturn(value: dirname(path: $nodePath));
 
 		$file = $this->createMock(originalClassName: File::class);
-		$file->method(constraint: 'getPath')->willReturn(value: $nodePath);
-		$file->method(constraint: 'getId')->willReturn(value: 42);
-		$file->method(constraint: 'getParent')->willReturn(value: $parent);
+		$file->expects(matcher: $this->any())->method(constraint: 'getPath')->willReturn(value: $nodePath);
+		$file->expects(matcher: $this->any())->method(constraint: 'getId')->willReturn(value: 42);
+		$file->expects(matcher: $this->any())->method(constraint: 'getParent')->willReturn(value: $parent);
 
 		$userFolder = $this->createMock(originalClassName: Folder::class);
-		$userFolder->method(constraint: 'getById')->willReturn(value: [$file]);
+		$userFolder->expects(matcher: $this->any())->method(constraint: 'getById')->willReturn(value: [$file]);
 		$root = $this->createMock(originalClassName: IRootFolder::class);
-		$root->method(constraint: 'getUserFolder')->willReturn(value: $userFolder);
+		$root->expects(matcher: $this->any())->method(constraint: 'getUserFolder')->willReturn(value: $userFolder);
 
 		$user = $this->createMock(originalClassName: IUser::class);
-		$user->method(constraint: 'getUID')->willReturn(value: 'fenna');
+		$user->expects(matcher: $this->any())->method(constraint: 'getUID')->willReturn(value: 'fenna');
 		$session = $this->createMock(originalClassName: IUserSession::class);
-		$session->method(constraint: 'getUser')->willReturn(value: $user);
+		$session->expects(matcher: $this->any())->method(constraint: 'getUser')->willReturn(value: $user);
 
 		$config = $this->createMock(originalClassName: IAppConfig::class);
-		$config->method(constraint: 'getValueString')->willReturn(value: 
+		$config->expects(matcher: $this->any())->method(constraint: 'getValueString')->willReturn(value: 
 			(string) json_encode(value: [['id' => 'post', 'watchedFolder' => 'Scans/Post']])
 		);
 		$profiles = new ScanProfileService(config: $config, logger: $this->createMock(originalClassName: LoggerInterface::class));
 
 		$store = $this->createMock(originalClassName: ScanBatchRepositoryInterface::class);
-		$store->method(constraint: 'findByFile')->willReturn(value: ['id' => 'batch-1', 'status' => 'received']);
+		$store->expects(matcher: $this->any())->method(constraint: 'findByFile')->willReturn(value: ['id' => 'batch-1', 'status' => 'received']);
 
 		$batches = $this->createMock(originalClassName: ScanBatchServiceInterface::class);
-		$batches->method(constraint: 'split')->willReturnCallback(
+		$batches->expects(matcher: $this->any())->method(constraint: 'split')->willReturnCallback(
 			function (array $batch, array $profile): array {
 				$this->cutWith = $profile;
 
