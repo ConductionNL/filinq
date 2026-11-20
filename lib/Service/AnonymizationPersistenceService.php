@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
 use Exception;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -58,6 +59,7 @@ class AnonymizationPersistenceService {
 	 * @param OpenRegisterServiceLocator $locator Resolver for OpenRegister services and mappers.
 	 * @param ConsentCrudService $consentCrud Consent CRUD service for register/schema config.
 	 * @param ConsentService $consentService Consent service for creating publication consents.
+	 * @param DocumentActionAudit|null $audit Writes the anonymisation into the source document's trail; null writes nothing.
 	 *
 	 * @return void
 	 */
@@ -66,6 +68,7 @@ class AnonymizationPersistenceService {
 		private readonly OpenRegisterServiceLocator $locator,
 		private readonly ConsentCrudService $consentCrud,
 		private readonly ConsentService $consentService,
+		private readonly ?DocumentActionAudit $audit = null,
 	) {
 
 	}//end __construct()
@@ -120,6 +123,15 @@ class AnonymizationPersistenceService {
 			if ($linkId !== null) {
 				$resultInfo['anonymizationLinkId'] = $linkId;
 			}
+
+			// The source document's own trail says it was anonymised
+			// (specify-capability-rows REQ-SCR-007). Best-effort like the
+			// link: the audit never throws for a failed write.
+			$this->audit?->record(
+				fileId: $fileId,
+				action: 'anonymised',
+				context: ['anonymizedFileId' => $object['anonymizedFileId'], 'runCount' => $object['runCount']]
+			);
 
 			$this->logger->info(
 				'Anonymisation link recorded',
@@ -177,6 +189,48 @@ class AnonymizationPersistenceService {
 		);
 
 	}//end setMappingRef()
+
+	/**
+	 * Record what the run did to the file's image content on its link.
+	 *
+	 * Only `imageRedactionPending` and `burnedRegionCount` are written, on the
+	 * link the run just wrote. Best-effort like the link itself: the run's own
+	 * result already carries the flag, so a failed write is logged, never
+	 * turned into a clean success.
+	 *
+	 * @param int                  $fileId The source Nextcloud file id.
+	 * @param array<string, mixed> $fields `imageRedactionPending` and `burnedRegionCount`.
+	 *
+	 * @return bool True when the link was updated.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.3
+	 */
+	public function recordImageRedaction(int $fileId, array $fields): bool {
+		$fields = array_intersect_key($fields, ['imageRedactionPending' => true, 'burnedRegionCount' => true]);
+		try {
+			$objectService = $this->locator->get(className: 'OCA\OpenRegister\Service\ObjectService');
+			$existing = $this->existingLink(objectService: $objectService, fileId: $fileId);
+			if ($fields === [] || (int) ($existing['sourceFileId'] ?? 0) !== $fileId) {
+				return false;
+			}
+
+			$objectService->saveObject(
+				object: array_merge($existing, $fields),
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'anonymizationLink')),
+				_rbac: false
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'[AnonymizationPersistenceService] could not record the image redaction state on the link',
+				['fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+
+			return false;
+		}//end try
+
+		return true;
+
+	}//end recordImageRedaction()
 
 	/**
 	 * Create publicationConsent records for each unredacted entity after a successful anonymise run.

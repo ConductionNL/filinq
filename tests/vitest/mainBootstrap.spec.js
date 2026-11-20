@@ -8,7 +8,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md
+ * @spec openspec/changes/archive/2026-11-17-filinq-adopt-buildmanifest-pipeline/specs/menu-architecture/spec.md
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -71,6 +71,7 @@ vi.mock('../../src/manifestFragments.js', () => ({ get default() { return s.frag
 vi.mock('../../src/store/store.js', () => ({ initializeStores: () => s.initializeStores() }))
 vi.mock('../../src/integrations/registerDocumentsLeaf.js', () => ({ registerDocumentsLeaf: recorder('documents') }))
 vi.mock('../../src/integrations/registerMergeToPdfLeaf.js', () => ({ registerMergeToPdfLeaf: recorder('mergeToPdf') }))
+vi.mock('../../src/integrations/registerGenerateDocumentLeaf.js', () => ({ registerGenerateDocumentLeaf: recorder('generateDocument') }))
 vi.mock('../../src/integrations/registerDownloadAllFilesLeaf.js', () => ({ registerDownloadAllFilesLeaf: recorder('downloadAllFiles') }))
 vi.mock('../../src/integrations/registerSigningFolderLeaf.js', () => ({ registerSigningFolderLeaf: recorder('signingFolder') }))
 vi.mock('../../src/integrations/registerDocumentIntakeLeaf.js', () => ({ registerDocumentIntakeLeaf: recorder('documentIntake') }))
@@ -128,7 +129,7 @@ describe('booting the SPA', () => {
 		expect(s.calls.map((c) => c[0])).toEqual([
 			'registerIcons', 'registerBuiltinDashboardWidgets', 'registerTranslations',
 			'buildManifest', 'loadTranslations', 'initializeStores', 'mount',
-			'documents', 'mergeToPdf', 'downloadAllFiles', 'signingFolder', 'documentIntake',
+			'documents', 'mergeToPdf', 'generateDocument', 'downloadAllFiles', 'signingFolder', 'documentIntake',
 		])
 		expect(s.calls[0][1]).toEqual({ Folder: 'FolderIcon' })
 		expect(s.calls.find((c) => c[0] === 'loadTranslations')[1]).toBe('filinq')

@@ -727,6 +727,24 @@ class Register {
  */
 class Schema {
 	/**
+	 * Get the archive block.
+	 *
+	 * @return array
+	 */
+	public function getArchive(): array {
+		return [];
+	}//end getArchive()
+
+	/**
+	 * Get the configuration.
+	 *
+	 * @return array|null
+	 */
+	public function getConfiguration(): ?array {
+		return null;
+	}//end getConfiguration()
+
+	/**
 	 * Get title
 	 *
 	 * @return string
@@ -1253,6 +1271,18 @@ class EntityRelationMapper {
 	public function findByFileId(int $fileId): array {
 		return [];
 	}//end findByFileId()
+
+	/**
+	 * One page of the ids of the files that hold detected entities, ascending.
+	 *
+	 * @param int $afterFileId Only files with an id above this one.
+	 * @param int $limit       The page size.
+	 *
+	 * @return int[]
+	 */
+	public function findFileIdsWithEntities(int $afterFileId=0, int $limit=500): array {
+		return [];
+	}//end findFileIdsWithEntities()
 
 	/**
 	 * Find a single relation by id.
@@ -2101,6 +2131,15 @@ interface Node {
 	public function move(string $targetPath): \OCP\Files\Node;
 
 	/**
+	 * Copy the node to a path; the real OCP declares it here. BridgeDossierPickUp copies a staged file with it.
+	 *
+	 * @param string $targetPath The full target path.
+	 *
+	 * @return \OCP\Files\Node The copy.
+	 */
+	public function copy(string $targetPath): \OCP\Files\Node;
+
+	/**
 	 * Remove this node, through the trashbin when one is enabled.
 	 *
 	 * @return void
@@ -2421,6 +2460,53 @@ class ArchivalImmutableException extends \Exception {
 	public function getSchemaIdentifier(): string {
 		return $this->schemaIdentifier;
 	}//end getSchemaIdentifier()
+}//end class
+
+/**
+ * Stub for HookStoppedException.
+ *
+ * Mirrors openregister/lib/Exception/HookStoppedException.php on main
+ * (2026-11-17): the same constructor, code always 0, and `getErrors()`.
+ * OpenRegister throws it when a pre-save listener of the target app stops the
+ * write, as OpenCatalogi's DiWoo listener does for a document type outside
+ * the national list.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Exception
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class HookStoppedException extends \Exception {
+	/**
+	 * The hook's validation errors.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $errors;
+
+	/**
+	 * Construct the stub exception with the real class's signature.
+	 *
+	 * @param string               $message Error message.
+	 * @param array<string, mixed> $errors  Hook validation errors.
+	 */
+	public function __construct(
+		string $message = 'Operation blocked by schema hook',
+		array $errors = [],
+	) {
+		$this->errors = $errors;
+		parent::__construct($message, 0);
+	}//end __construct()
+
+	/**
+	 * Get the hook validation errors.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function getErrors(): array {
+		return $this->errors;
+	}//end getErrors()
 }//end class
 
 namespace OCA\OpenRegister\Event;
@@ -3186,6 +3272,34 @@ final class LeafRendering {
 		public readonly ?string $loadStrategy = null,
 	) {
 	}
+}
+
+/**
+ * OpenRegister's integration provider contract, verbatim in shape: the data
+ * half of a data-provider leaf (template-library-leaf REQ-TMPL-14).
+ */
+interface IntegrationProvider {
+	public function getId(): string;
+
+	public function getLabel(): string;
+
+	public function getIcon(): string;
+
+	public function getGroup(): ?string;
+
+	public function getRequiredApp(): ?string;
+
+	public function getStorageStrategy(): string;
+
+	public function getOpenConnectorSource(): ?string;
+
+	public function isEnabled(): bool;
+
+	public function requiresPermission(): ?string;
+
+	public function authRequirements(): array;
+
+	public function health(): array;
 }
 
 namespace OCA\OpenRegister\Event;

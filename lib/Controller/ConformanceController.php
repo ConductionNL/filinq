@@ -46,6 +46,7 @@ use Throwable;
  * GET and POST api/validation/conformance/{fileId}.
  */
 class ConformanceController extends Controller {
+	use ResolvesOwnFile;
 
 	/**
 	 * Constructor.
@@ -105,13 +106,11 @@ class ConformanceController extends Controller {
 		try {
 			$reports = $this->conformance->reportsFor(fileId: $fileId);
 		} catch (Throwable $e) {
-			$this->logger->error(
-				message: '[ConformanceController] reports could not be read',
-				context: ['fileId' => $fileId, 'error' => $e->getMessage()]
-			);
-			return new JSONResponse(
-				['error' => $this->l10n->t('The conformance report could not be read. Try again later.')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
+			return $this->stepFailed(
+				log: '[ConformanceController] reports could not be read',
+				fileId: $fileId,
+				e: $e,
+				message: $this->l10n->t('The conformance report could not be read. Try again later.')
 			);
 		}
 
@@ -153,47 +152,17 @@ class ConformanceController extends Controller {
 				Http::STATUS_SERVICE_UNAVAILABLE
 			);
 		} catch (Throwable $e) {
-			$this->logger->error(
-				message: '[ConformanceController] the report could not be stored',
-				context: ['fileId' => $fileId, 'error' => $e->getMessage()]
-			);
-			return new JSONResponse(
-				['error' => $this->l10n->t('The check ran, but its report could not be stored. Try again later.')],
-				Http::STATUS_INTERNAL_SERVER_ERROR
+			return $this->stepFailed(
+				log: '[ConformanceController] the report could not be stored',
+				fileId: $fileId,
+				e: $e,
+				message: $this->l10n->t('The check ran, but its report could not be stored. Try again later.')
 			);
 		}
 
 		return new JSONResponse(['report' => $report]);
 
 	}//end check()
-
-	/**
-	 * The file with this id in the caller's own folder.
-	 *
-	 * @param int $fileId The file id.
-	 *
-	 * @return File|null The file, or null when there is no caller or no such file for them.
-	 */
-	private function ownFile(int $fileId): ?File {
-		$user = $this->userSession->getUser();
-		if ($user === null || $fileId <= 0) {
-			return null;
-		}
-
-		try {
-			$nodes = $this->rootFolder->getUserFolder($user->getUID())->getById($fileId);
-		} catch (Throwable) {
-			return null;
-		}
-
-		$node = ($nodes[0] ?? null);
-		if ($node instanceof File) {
-			return $node;
-		}
-
-		return null;
-
-	}//end ownFile()
 
 	/**
 	 * The 404 every unresolvable file gets.

@@ -29,7 +29,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/generate-document-runs-directly-on-an-object/specs/flow-document-generation/spec.md#requirement-the-generate-document-step-can-be-run-directly-on-one-object
+ * @spec openspec/changes/archive/2026-11-17-generate-document-runs-directly-on-an-object/specs/flow-document-generation/spec.md#requirement-the-generate-document-step-can-be-run-directly-on-one-object
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use OCA\OpenRegister\Service\Flow\IFlowDirectlyInvokable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/generate-document-runs-directly-on-an-object/specs/flow-document-generation/spec.md#requirement-the-generate-document-step-can-be-run-directly-on-one-object
+ * @spec openspec/changes/archive/2026-11-17-generate-document-runs-directly-on-an-object/specs/flow-document-generation/spec.md#requirement-the-generate-document-step-can-be-run-directly-on-one-object
  */
 class DirectGenerateDocumentNode extends GenerateDocumentNode implements IFlowDirectlyInvokable {
 }//end class

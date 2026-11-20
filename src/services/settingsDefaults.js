@@ -31,8 +31,11 @@ export function defaultSettings() {
 		signing_default_level: 'SES',
 		signing_request_expiry_days: 30,
 		signing_guardian_consent_age: 16,
+		extraction_unattended_threshold: '0.9',
 		'filinq.anonymisation.default_output_format': 'pdf-only',
 		'anonymisation.output_subfolder_name': 'anonymised',
+		// Four eyes when anonymising (REQ-SET-12): Woo cases only by default.
+		redaction_four_eyes: 'woo',
 		// files-confidential-labels — off by default (design.md D3).
 		'filinq.confidentiality.prioritise_analysis': false,
 		'filinq.confidentiality.label_vocabulary': {

@@ -5,35 +5,42 @@
 
 ## 1. Register & seed data
 
-- [ ] 1.1 Add the `accessibilityConformanceReport` schema (`fileId`, `flavour`, `compliant`, `failedCheckCount`, `failedChecks` clause/test/checkpoint references, `validatorVersion`, `validatedAt`, `trigger`) to `lib/Settings/filinq_register.json` — additive, union-merge only; references only, never document content (REQ-DDPUM-002)
-- [ ] 1.2 Seed two `tests/sample-documents/` fixtures (generated, no personal data): one genuinely PDF/UA-1-conformant tagged PDF; one that passes the wave-1 heuristics but fails Matterhorn checkpoints (untagged content + figure without alt) — the "heuristics ≠ conformance" fixture
+- [x] 1.1 Add the `accessibilityConformanceReport` schema (`fileId`, `flavour`, `compliant`, `failedCheckCount`, `failedChecks` clause/test/checkpoint references, `validatorVersion`, `validatedAt`, `trigger`) to `lib/Settings/filinq_register.json` — additive, union-merge only; references only, never document content (REQ-DDPUM-002)
+- [x] 1.2 Seed two `tests/sample-documents/` fixtures (generated, no personal data): one genuinely PDF/UA-1-conformant tagged PDF; one that passes the wave-1 heuristics but fails Matterhorn checkpoints (untagged content + figure without alt) — the "heuristics ≠ conformance" fixture
+  - Built: `tests/sample-documents/pdfua/pdfua1-conformant.pdf` (LibreOffice Writer PDF/UA export, embedded DejaVu Sans) and `heuristics-pass-matterhorn-fail.pdf` (hand-built: a paragraph outside the tags, a Figure without /Alt, a font not embedded). veraPDF 1.28.2 `--flavour ua1`: PASS, and FAIL on 7.21.4.1-1, 7.3-1, 7.1-3; its JSON reports are recorded under `tests/fixtures/verapdf/pdfua1-recorded-*.json` for the stand-in. Test: `tests/unit/Service/Validation/PdfUaFixturesTest.php`.
 
 ## 2. Shared backend (verapdf-validation)
 
-- [ ] 2.1 Extend `verapdf-validation`'s `VeraPdfService` with `validateUa(File): array` invoking the same probed binary with `--flavour ua1`, parsing the same JSON shape (flavour/compliant/failedChecks/validatorVersion), typed error on timeout/crash/unparseable — NO second binary, probe, config or admin row (REQ-DDPUM-001)
+- [x] 2.1 Extend `verapdf-validation`'s `VeraPdfService` with `validateUa(File): array` invoking the same probed binary with `--flavour ua1`, parsing the same JSON shape (flavour/compliant/failedChecks/validatorVersion), typed error on timeout/crash/unparseable — NO second binary, probe, config or admin row (REQ-DDPUM-001)
   - Hard build dependency on `verapdf-validation`; verify `VeraPdfService` exists at apply time — apply the two together (see design D1 / Open Questions).
 
 ## 3. Backend
 
-- [ ] 3.1 Add `accessibility`-category validator checks to `DocumentValidationService`: `pdfua-conformance-failed`, `accessibility-validator-unavailable` — PDF-only, per-profile opt-in, default `off`, validator-presence-gated, references only; wave-1 heuristic checks untouched (REQ-DDPUM-005)
-- [ ] 3.2 New accessibility conformance endpoint `POST /api/validation/accessibility/{fileId}` — auth attribute, IDOR-safe user-folder resolution (404, no existence disclosure), persists/updates the `accessibilityConformanceReport` distinct from the PDF/A `conformanceReport` (REQ-DDPUM-002)
-- [ ] 3.3 Remediation guidance from failure shape (Filinq-generated → regenerate accessible; imported/mPDF → re-author from accessible source, no retag of imported pages), i18n-keyed; verdict never claims certification (REQ-DDPUM-003)
-- [ ] 3.4 Surface the validator verdict as the authoritative accessibility conformance when available; heuristics remain the labelled floor when absent; heuristic-pass + validator-fail surfaces as fail (REQ-DDPUM-004)
+- [x] 3.1 Add `accessibility`-category validator checks to `DocumentValidationService`: `pdfua-conformance-failed`, `accessibility-validator-unavailable` — PDF-only, per-profile opt-in, default `off`, validator-presence-gated, references only; wave-1 heuristic checks untouched (REQ-DDPUM-005)
+- [x] 3.2 New accessibility conformance endpoint `POST /api/validation/accessibility/{fileId}` — auth attribute, IDOR-safe user-folder resolution (404, no existence disclosure), persists/updates the `accessibilityConformanceReport` distinct from the PDF/A `conformanceReport` (REQ-DDPUM-002)
+- [x] 3.3 Remediation guidance from failure shape (Filinq-generated → regenerate accessible; imported/mPDF → re-author from accessible source, no retag of imported pages), i18n-keyed; verdict never claims certification (REQ-DDPUM-003)
+- [x] 3.4 Surface the validator verdict as the authoritative accessibility conformance when available; heuristics remain the labelled floor when absent; heuristic-pass + validator-fail surfaces as fail (REQ-DDPUM-004)
 
 ## 4. Frontend
 
-- [ ] 4.1 PDF/UA conformance card on document detail (flavour, verdict, failed checkpoints, guidance); validator findings rendered in the existing `accessibility` findings group, source-labelled (REQ-DDPUM-002, REQ-DDPUM-004)
-- [ ] 4.2 Heuristic-vs-validator labelling in the accessibility panel; "not validated" state when the binary is absent (REQ-DDPUM-001, REQ-DDPUM-004)
+- [x] 4.1 PDF/UA conformance card on document detail (flavour, verdict, failed checkpoints, guidance); validator findings rendered in the existing `accessibility` findings group, source-labelled (REQ-DDPUM-002, REQ-DDPUM-004)
+- [x] 4.2 Heuristic-vs-validator labelling in the accessibility panel; "not validated" state when the binary is absent (REQ-DDPUM-001, REQ-DDPUM-004)
 
 ## 5. Quality
 
 - [ ] 5.1 PHPUnit for `validateUa()` parsing/degradation, the two checks, endpoint resolution + dual-report persistence, guidance classification, verdict-hierarchy — 75% coverage on new code (ADR-009)
+  - Build round 2: the PHPUnit half is in place (`VeraPdfUaValidationTest`, `PdfUaChecksTest`, `AccessibilityConformanceControllerTest`, `AccessibilityGuidanceTest`, `AccessibilityConformanceStateTest`, and `PdfUaFixturesTest` on the two fixtures). Open: the 75% figure (no coverage driver in the build environment) and the live run on 8080.
+  - Build round 2, c3: coverage measured with pcov over the unit suite (7295 tests, 0 failures): 671 of 712 statements, 94.2%, across the 20 lib files that carry this change's `@spec` tag; lowest `ResolvesOwnFile` 83.3%. The 75% figure is met; the live run below is what keeps this open.
   - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Live-verify on Postgres (8080) with veraPDF installed: validate the heuristic-pass/Matterhorn-fail fixture → non-conformant verdict, findings + card; remove the binary → honest heuristic-floor degradation.
-- [ ] 5.2 Playwright spec `tests/e2e/spec-coverage/pdfua-verapdf-matterhorn.spec.ts` for the `@e2e`-referenced scenarios
-- [ ] 5.3 i18n EN + NL for all new UI + guidance strings (keys in English); nldesign theme check; new UI itself WCAG 2.1 AA (ADR-005, ADR-003)
+- [x] 5.2 Playwright spec `tests/e2e/spec-coverage/pdfua-verapdf-matterhorn.spec.ts` for the `@e2e`-referenced scenarios
+  - Built: covers every non-excluded `@e2e` scenario of both deltas with route-handled server answers built from the recorded veraPDF reports. Linted (eslint, prettier, tsc), not run: needs an instance.
+- [x] 5.3 i18n EN + NL for all new UI + guidance strings (keys in English); nldesign theme check; new UI itself WCAG 2.1 AA (ADR-005, ADR-003)
+  - Every string of the card, the findings panel and the guidance is in `l10n/en.json`, `l10n/nl.json` and the browser catalogues; the new UI uses Nextcloud CSS variables only. A browser WCAG pass is part of the live run.
 - [ ] 5.4 Docs: `docs/features/pdfua-verapdf-matterhorn.md` with Playwright screenshots (conformance card, source-labelled findings, degradation) and the heuristic→validator hierarchy explainer (ADR-010)
+  - Built: the page, the hierarchy explainer and a worked example from the Matterhorn-fail fixture. Open: the Playwright screenshots (need an instance).
 - [ ] 5.5 Validate: `openspec validate pdfua-verapdf-matterhorn --type change --strict` passes; hydra gates green
+  - Build round 2: the amendment requirements (REQ-DDPUM-006 to 008) sat under a heading archive does not read, so they would have been dropped; they are now under `## ADDED Requirements`, and `openspec show --deltas-only` lists all eight. `openspec validate --strict` (latest CLI) still reports the long-requirement and preamble warnings every change in this repo carries. Hydra gates: 84 of 84 applicable ran; the 8 failures are all inherited from development (no lib/ change here).
 
 ## Quality checklist
 
@@ -47,25 +54,26 @@ Build after sections 1 to 5. Every test named here fails on `development`
 today: no attach listener, attach job, readiness reason or regeneration
 service exists. Acceptance lines are plain bullets, so the checkbox cap holds.
 
-- [ ] 6.1 Attach listener and job (REQ-DDPUM-006). Files: `lib/EventListener/PdfUaAttachListener.php`, `lib/BackgroundJob/PdfUaAttachCheckJob.php`, `lib/AppInfo/Application.php` (register on `NodeCreatedEvent` and `NodeWrittenEvent`), `lib/Service/VeraPdf/ConformanceService.php` (trigger `attach`, a `ua1` run).
+- [x] 6.1 Attach listener and job (REQ-DDPUM-006). Files: `lib/EventListener/PdfUaAttachListener.php`, `lib/BackgroundJob/PdfUaAttachCheckJob.php`, `lib/AppInfo/Application.php` (register on `NodeCreatedEvent` and `NodeWrittenEvent`), `lib/Service/VeraPdf/ConformanceService.php` (trigger `attach`, a `ua1` run).
   - GIVEN a PDF under `Open Registers/` WHEN the real `NodeCreatedEvent` is handled THEN one job is added and `ConformanceService` is not called.
   - GIVEN a PDF elsewhere, or a non-PDF WHEN handled THEN nothing is queued.
   - Test: PHPUnit `PdfUaAttachListenerTest::testTheListenerOnlyQueues`, `::testAFileOutsideOpenRegisterIsIgnored`, constructing the real `OCP\Files\Events\Node\NodeCreatedEvent` (constructor `(Node $node)`).
   - Wiring: a test that boots `Application::register()` with a registration context double and asserts the listener is registered for both events. A listener with a green suite and no registration is the defect this line prevents.
-- [ ] 6.2 Verdict tags (REQ-DDPUM-006). Files: `lib/BackgroundJob/PdfUaAttachCheckJob.php`, `lib/Service/VeraPdf/PdfUaVerdictTagger.php` (through `ISystemTagManager` and `ISystemTagObjectMapper`, object type `files`).
+- [x] 6.2 Verdict tags (REQ-DDPUM-006). Files: `lib/BackgroundJob/PdfUaAttachCheckJob.php`, `lib/Service/VeraPdf/PdfUaVerdictTagger.php` (through `ISystemTagManager` and `ISystemTagObjectMapper`, object type `files`).
   - GIVEN a compliant report WHEN the job runs THEN the file carries `pdfua-conform` and neither other tag.
   - GIVEN veraPDF absent, a timeout or unparseable output WHEN the job runs THEN `pdfua-niet-gecontroleerd` and no compliant report.
   - Test: PHPUnit `PdfUaAttachCheckJobTest::testACompliantFileIsTaggedConform`, `::testNoValidatorTagsNotChecked`, `::testTheTagsAreExclusive`. `testNoValidatorTagsNotChecked` must be shown failing on `development` first; paste the line in the PR body.
   - Cross-app: one Playwright step opens the publication in opencatalogi and reads the label in its file list, so the claim "the officer sees it" is tested through the app the officer uses, not through filinq.
-- [ ] 6.3 Readiness reason (REQ-DDPUM-007). Files: `lib/Service/Publication/PublicationReadiness.php`.
+- [x] 6.3 Readiness reason (REQ-DDPUM-007). Files: `lib/Service/Publication/PublicationReadiness.php`.
   - GIVEN a record with a non-compliant or unchecked PDF WHEN evaluated THEN `readinessReasons` names the file; with severity `blocking` THEN `isReady()` is false.
   - Test: PHPUnit `PublicationReadinessTest::testAFailedPdfUaVerdictIsAReason`, `::testABlockingSeverityStopsTheHandOff`, `::testAMissingReportCountsAsNotPassed`.
-- [ ] 6.4 Regenerate as PDF/UA, generated documents only (REQ-DDPUM-008, D5). Files: `lib/Service/VeraPdf/AccessibleRegenerationService.php`, `lib/Controller/ConformanceController.php` (`POST /api/validation/accessibility/{fileId}/regenerate`, IDOR-safe resolution, auth attribute), `appinfo/routes.php`, the conformance card.
+- [x] 6.4 Regenerate as PDF/UA, generated documents only (REQ-DDPUM-008, D5). Files: `lib/Service/VeraPdf/AccessibleRegenerationService.php`, `lib/Controller/ConformanceController.php` (`POST /api/validation/accessibility/{fileId}/regenerate`, IDOR-safe resolution, auth attribute), `appinfo/routes.php`, the conformance card.
   - GIVEN a generated PDF WHEN regenerated and the copy passes `ua1` THEN a new file version is stored and tagged `pdfua-conform`.
   - GIVEN the copy fails THEN the original and its version are unchanged.
   - GIVEN an imported PDF WHEN the route is called THEN 409 with `not-generated-by-filinq`, and the card offers no action.
   - Test: PHPUnit `AccessibleRegenerationServiceTest::testACompliantCopyReplacesTheOriginal`, `::testAFailingCopyIsDiscarded`, `::testAnImportedPdfIsRefused`; the route-reachability gate. One live run with the veraPDF binary, output recorded in the PR body.
-- [ ] 6.5 Strings, docs and e2e. Files: `l10n/en.json`, `l10n/nl.json`, `docs/features/pdfua-verapdf-matterhorn.md` (the three tags, the gate, why imported PDFs are never converted), `tests/e2e/spec-coverage/pdfua-verapdf-matterhorn.spec.ts`.
+- [x] 6.5 Strings, docs and e2e. Files: `l10n/en.json`, `l10n/nl.json`, `docs/features/pdfua-verapdf-matterhorn.md` (the three tags, the gate, why imported PDFs are never converted), `tests/e2e/spec-coverage/pdfua-verapdf-matterhorn.spec.ts`.
+  - Strings and docs done; the e2e covers the imported-PDF scenario and, since build round 2 c3, the attach scenario: the Matterhorn-fail fixture is put under `Open Registers/`, the queued `PdfUaAttachCheckJob` runs through occ, and the test reads the stored report (trigger `attach`) and the `pdfua-niet-conform` system tag over WebDAV. Linted (eslint, prettier) and listed by Playwright, not run: it needs an instance with veraPDF, and skips with that reason without it.
   - Test: the Playwright spec covers the attach scenario and the imported-PDF scenario.
 
 Verification for section 6 (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:

@@ -222,7 +222,7 @@ class DossierControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
+	 * @spec openspec/changes/archive/2026-11-17-fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
 	 */
 	public function testAnUnknownOrUnreadableDossierAnswers403NotA500(): void {
 		$user = $this->createMock(IUser::class);
@@ -247,7 +247,7 @@ class DossierControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
+	 * @spec openspec/changes/archive/2026-11-17-fix-dossier-grondslagen-route-mismatch/tasks.md#task-R-2.1
 	 */
 	public function testAMissingDossierFromTheMapperAnswers403(): void {
 		$user = $this->createMock(IUser::class);

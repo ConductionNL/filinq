@@ -122,6 +122,30 @@
 			</div>
 
 			<div class="setting-item">
+				<div class="setting-label">
+					{{ t('filinq', 'Four eyes when anonymising') }}
+				</div>
+				<NcCheckboxRadioSwitch
+					v-for="option in fourEyesOptions"
+					:key="option.value"
+					:modelValue="settings.redaction_four_eyes"
+					:value="option.value"
+					name="redaction_four_eyes"
+					type="radio"
+					@update:modelValue="settings.redaction_four_eyes = $event">
+					{{ option.label }}
+				</NcCheckboxRadioSwitch>
+				<div class="setting-description">
+					{{
+						t(
+							'filinq',
+							'Whether the person who checked the findings of a document may also anonymise it. With four eyes a colleague must anonymise it. A Woo case is a dossier run, or a document a case system flags as one.',
+						)
+					}}
+				</div>
+			</div>
+
+			<div class="setting-item">
 				<NcTextField
 					:modelValue="settings['anonymisation.output_subfolder_name']"
 					:label="t('filinq', 'Subfolder for anonymised copies')"
@@ -145,6 +169,21 @@
 					}}
 				</div>
 			</div>
+
+			<div class="setting-item">
+				<NcTextField
+					:modelValue="settings['woo.default_publisher']"
+					:label="t('filinq', 'Publisher (TOOI identifier)')"
+					:helperText="t('filinq', 'A new publication starts with this publisher.')"
+					data-testid="settings-woo-default-publisher"
+					@update:modelValue="settings['woo.default_publisher'] = $event" />
+			</div>
+		</NcSettingsSection>
+
+		<NcSettingsSection
+			:name="t('filinq', 'Woo refusal grounds')"
+			:description="t('filinq', 'Where the Woo refusal grounds used for redaction come from.')">
+			<RefusalGroundsSource />
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -247,6 +286,26 @@
 					)
 				"
 				data-testid="settings-inbound-classification" />
+
+			<div class="setting-item">
+				<NcTextField
+					:modelValue="String(settings.extraction_unattended_threshold)"
+					type="number"
+					min="0.6"
+					max="1"
+					step="0.01"
+					:label="t('filinq', 'Confidence for unattended receipts and invoices')"
+					:error="!!unattendedThresholdError"
+					:helperText="
+						unattendedThresholdError
+						|| t(
+							'filinq',
+							'A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.',
+						)
+					"
+					data-testid="settings-unattended-threshold"
+					@update:modelValue="settings.extraction_unattended_threshold = $event" />
+			</div>
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -719,11 +778,17 @@
 
 		<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->
 		<SignerIdentitySettings v-if="isAdmin" />
+		<SigningSourcesSettings v-if="isAdmin" />
 		<CaseSystemDeliverySettings v-if="isAdmin" />
+		<BridgeSourcesSettings v-if="isAdmin" />
 
 		<DocumentWebhooksSection v-if="isAdmin" />
 
+		<IntegrityScanSection v-if="isAdmin" />
+
 		<EmailIngestionSettings v-if="isAdmin" />
+
+		<MailArchiveImportSettings v-if="isAdmin" />
 
 		<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->
 		<PageLayoutSettings v-if="isAdmin" />
@@ -895,14 +960,19 @@ import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
+import BridgeSourcesSettings from './BridgeSourcesSettings.vue'
 import CaseSystemDeliverySettings from './CaseSystemDeliverySettings.vue'
 import DetectionProviderSettings from './DetectionProviderSettings.vue'
 import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
+import IntegrityScanSection from './IntegrityScanSection.vue'
+import MailArchiveImportSettings from './MailArchiveImportSettings.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
+import RefusalGroundsSource from './RefusalGroundsSource.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
+import SigningSourcesSettings from './SigningSourcesSettings.vue'
 import {
 	backendStateFromSettings,
 	emptyBackendState,
@@ -1015,6 +1085,8 @@ export default {
 	name: 'Settings',
 	components: {
 		DocumentWebhooksSection,
+		IntegrityScanSection,
+		RefusalGroundsSource,
 		NcSettingsSection,
 		NcNoteCard,
 		NcSelect,
@@ -1032,9 +1104,12 @@ export default {
 		EntityTypeSelector,
 		DetectionProviderSettings,
 		EmailIngestionSettings,
+		MailArchiveImportSettings,
 		PageLayoutSettings,
 		SettingSwitchRow,
 		SignerIdentitySettings,
+		SigningSourcesSettings,
+		BridgeSourcesSettings,
 		CaseSystemDeliverySettings,
 	},
 
@@ -1078,6 +1153,21 @@ export default {
 
 	computed: {
 		/**
+		 * Why the unattended confidence threshold cannot be saved, or '' when it can.
+		 *
+		 * @return {string} Localised reason.
+		 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+		 */
+		unattendedThresholdError() {
+			const raw = String(this.settings.extraction_unattended_threshold ?? '').trim()
+			const value = Number(raw)
+			if (raw === '' || !Number.isFinite(value) || value < 0.6 || value > 1) {
+				return t('filinq', 'Choose a value between 0.6 and 1.0.')
+			}
+			return ''
+		},
+
+		/**
 		 * Why the output subfolder name cannot be saved, or '' when it can.
 		 *
 		 * @return {string} Localised reason.
@@ -1096,6 +1186,20 @@ export default {
 					.map((c) => (c === ' ' ? '␣' : c))
 					.join(' '),
 			})
+		},
+
+		/**
+		 * The four-eyes choices (REQ-SET-12), the default first.
+		 *
+		 * @return {Array<{value: string, label: string}>} The radio options.
+		 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-4
+		 */
+		fourEyesOptions() {
+			return [
+				{ value: 'woo', label: t('filinq', 'Only for Woo cases') },
+				{ value: 'always', label: t('filinq', 'Always') },
+				{ value: 'off', label: t('filinq', 'Off') },
+			]
 		},
 
 		/**
@@ -1266,11 +1370,20 @@ export default {
 						parseInt(data.signing_request_expiry_days, 10) || 30
 					this.settings.signing_guardian_consent_age =
 						parseInt(data.signing_guardian_consent_age, 10) || 16
+					this.settings.extraction_unattended_threshold =
+						data.extraction_unattended_threshold ?? '0.9'
 					this.settings['filinq.anonymisation.default_output_format'] =
 						data['filinq.anonymisation.default_output_format']
 						?? 'pdf-only'
 					this.settings['anonymisation.output_subfolder_name'] =
 						data['anonymisation.output_subfolder_name'] || 'anonymised'
+					this.settings.redaction_four_eyes = ['woo', 'always', 'off'].includes(
+						data.redaction_four_eyes,
+					)
+						? data.redaction_four_eyes
+						: 'woo'
+					this.settings['woo.default_publisher'] =
+						data['woo.default_publisher'] || ''
 					// Entity types enabled for automatic detection (all-on by default).
 					this.enabledEntityTypes =
 						data['filinq.anonymisation.enabled_entity_types'] || []
@@ -1427,6 +1540,11 @@ export default {
 				return
 			}
 
+			if (this.unattendedThresholdError) {
+				showError(this.unattendedThresholdError)
+				return
+			}
+
 			this.saving = true
 
 			// Build OCR language string from checkboxes
@@ -1480,6 +1598,10 @@ export default {
 					this.settings.signing_guardian_consent_age || 16,
 				),
 
+				extraction_unattended_threshold: String(
+					this.settings.extraction_unattended_threshold,
+				).trim(),
+
 				'filinq.anonymisation.default_output_format': [
 					'pdf-only',
 					'pdf',
@@ -1492,6 +1614,10 @@ export default {
 
 				'anonymisation.output_subfolder_name':
 					this.settings['anonymisation.output_subfolder_name'],
+
+				redaction_four_eyes: this.settings.redaction_four_eyes || 'woo',
+
+				'woo.default_publisher': (this.settings['woo.default_publisher'] || '').trim(),
 
 				// Sent as an object; the backend json-encodes it for storage.
 				'filinq.grondslagen.entity_type_bases': this.entityTypeBases,

@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Intake;
 
 use OCA\Filinq\Exception\IntakeRefusedException;
+use OCA\Filinq\Kernel\Contracts\IntakePasswordRemovalInterface;
 use OCA\Filinq\Service\IntakeAuthorizationGate;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\PdfPasswordRemovalService;
@@ -34,7 +35,7 @@ use OCA\Filinq\Service\SessionUserFile;
 /**
  * Unlocks the file of one waiting intake document.
  */
-class IntakePasswordRemoval {
+class IntakePasswordRemoval implements IntakePasswordRemovalInterface {
 
 	/**
 	 * Constructor.

@@ -112,6 +112,19 @@ class ObjectEventRegistrar {
 			\OCA\OpenRegister\Event\ObjectUpdatingEvent::class,
 			DocumentRegistrationWriteGuard::class
 		);
+		// A house style managed by thematiq is changed only in thematiq
+		// (templates-house-style-from-thematiq); named by string to keep this
+		// class's coupling where it is.
+		$context->registerEventListener(
+			\OCA\OpenRegister\Event\ObjectUpdatingEvent::class,
+			'OCA\\Filinq\\EventListener\\ManagedHuisstijlWriteGuard'
+		);
+		// Grondslagen-read-from-dossiq: a new Woo ground on `base` is refused;
+		// the Woo grounds come from dossiq's list.
+		$context->registerEventListener(
+			'OCA\\OpenRegister\\Event\\ObjectCreatingEvent',
+			BaseRefusalGroundGuard::class
+		);
 		// A contract saved without a notice deadline gets end date minus
 		// notice period, however it is saved (contract-lifecycle-management).
 		foreach (['ObjectCreatingEvent', 'ObjectUpdatingEvent'] as $preWrite) {
@@ -121,6 +134,14 @@ class ObjectEventRegistrar {
 			);
 		}
 
+		// A saved intake document is acknowledged to its sender after the save,
+		// never inside receive() (intake-acknowledge-and-stamp D2). Named by
+		// string, like the listeners below, to keep this class's coupling.
+		$context->registerEventListener(
+			ObjectCreatedEvent::class,
+			'OCA\Filinq\EventListener\IntakeArrivalFollowUpListener'
+		);
+
 		$context->registerEventListener(ObjectDeletedEvent::class, FilinqEventListener::class);
 
 		// A deleted anonymisation link takes its reversible-pseudonymisation
@@ -129,6 +150,13 @@ class ObjectEventRegistrar {
 		$context->registerEventListener(
 			ObjectDeletedEvent::class,
 			'OCA\Filinq\EventListener\PseudonymMapLinkDeletedListener'
+		);
+
+		// A publication goes offline when OpenRegister destroys its source
+		// (specify-capability-rows, REQ-SCR-009).
+		$context->registerEventListener(
+			ObjectDeletedEvent::class,
+			'OCA\Filinq\EventListener\PublicationSourceDestroyedListener'
 		);
 
 		// REGISTERED BY STRING, NOT BY `::class`. `EntityRelationDecisionUpdatedEvent`

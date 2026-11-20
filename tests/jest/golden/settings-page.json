@@ -36,10 +36,33 @@
 			"</div>",
 			"</div>",
 			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Four eyes when anonymising</div>",
+			"<x-nccheckboxradioswitch modelvalue=\"woo\" name=\"redaction_four_eyes\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"woo\">",
+			"<x-slot name=\"default\">Only for Woo cases</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"woo\" name=\"redaction_four_eyes\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"always\">",
+			"<x-slot name=\"default\">Always</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"woo\" name=\"redaction_four_eyes\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"off\">",
+			"<x-slot name=\"default\">Off</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Whether the person who checked the findings of a document may also anonymise it. With four eyes a colleague must anonymise it. A Woo case is a dossier run, or a document a case system flags as one.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
 			"<x-nctextfield modelvalue=\"anonymised\" label=\"Subfolder for anonymised copies\" error=\"false\" helpertext=\"Use lowercase letters, digits, hyphens and underscores only.\" data-on-onupdate:modelvalue=\"\">",
 			"</x-nctextfield>",
 			"<div class=\"setting-description\">Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.</div>",
 			"</div>",
+			"<div class=\"setting-item\">",
+			"<x-nctextfield label=\"Publisher (TOOI identifier)\" helpertext=\"A new publication starts with this publisher.\" data-testid=\"settings-woo-default-publisher\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nctextfield>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Woo refusal grounds\" description=\"Where the Woo refusal grounds used for redaction come from.\">",
+			"<x-slot name=\"default\">",
+			"<x-refusalgroundssource>",
+			"</x-refusalgroundssource>",
 			"</x-slot>",
 			"</x-ncsettingssection>",
 			"<x-ncsettingssection name=\"Legal basis per entity type\" description=\"Propose a default legal basis (grondslag) per detected entity type. After analysis, each detected entity is pre-filled with the selected basis (or bases) for its type when none has been assigned yet — operators can always override, and entity types left unmapped get no proposal.\">",
@@ -88,6 +111,10 @@
 			"<x-nccheckboxradioswitch aria-label=\"Inbound classification\" modelvalue=\"true\" type=\"switch\" data-testid=\"settings-inbound-classification\" data-on-onupdate:modelvalue=\"\">",
 			"</x-nccheckboxradioswitch>",
 			"<div class=\"setting-description\">Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<x-nctextfield modelvalue=\"0.9\" type=\"number\" min=\"0.6\" max=\"1\" step=\"0.01\" label=\"Confidence for unattended receipts and invoices\" error=\"false\" helpertext=\"A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.\" data-testid=\"settings-unattended-threshold\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nctextfield>",
 			"</div>",
 			"</x-slot>",
 			"</x-ncsettingssection>",
@@ -241,6 +268,10 @@
 			"<!--v-if-->",
 			"<!--v-if-->",
 			"<!--v-if-->",
+			"<!--v-if-->",
+			"<!--v-if-->",
+			"<!--v-if-->",
+			"<!--v-if-->",
 			"<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->",
 			"<!--v-if-->",
 			"<!-- Entity detection provider (llm-entity-detection-provider): its own admin endpoint -->",
@@ -279,52 +310,70 @@
 				}
 			},
 			{
+				"label": "woo",
+				"writes": {
+					"settings.redaction_four_eyes": "SENTINEL-3"
+				}
+			},
+			{
+				"label": "always",
+				"writes": {
+					"settings.redaction_four_eyes": "SENTINEL-4"
+				}
+			},
+			{
+				"label": "off",
+				"writes": {
+					"settings.redaction_four_eyes": "SENTINEL-5"
+				}
+			},
+			{
 				"label": "Language Detection",
 				"writes": {
-					"settings.enable_language_detection": "SENTINEL-3"
+					"settings.enable_language_detection": "SENTINEL-6"
 				}
 			},
 			{
 				"label": "Keyword Extraction",
 				"writes": {
-					"settings.enable_keyword_extraction": "SENTINEL-4"
+					"settings.enable_keyword_extraction": "SENTINEL-7"
 				}
 			},
 			{
 				"label": "Topic Classification",
 				"writes": {
-					"settings.enable_topic_classification": "SENTINEL-5"
+					"settings.enable_topic_classification": "SENTINEL-8"
 				}
 			},
 			{
 				"label": "Contract terms",
 				"writes": {
-					"settings.enable_contract_term_extraction": "SENTINEL-6"
+					"settings.enable_contract_term_extraction": "SENTINEL-9"
 				}
 			},
 			{
 				"label": "Inbound classification",
 				"writes": {
-					"settings.enable_inbound_classification": "SENTINEL-7"
+					"settings.enable_inbound_classification": "SENTINEL-10"
 				}
 			},
 			{
 				"label": "Enable OCR",
 				"writes": {
-					"settings.ocr_enabled": "SENTINEL-8"
+					"settings.ocr_enabled": "SENTINEL-11"
 				}
 			},
 			{
 				"label": "Read scans on arrival",
 				"writes": {
-					"settings.ocr_on_arrival": "SENTINEL-9"
+					"settings.ocr_on_arrival": "SENTINEL-12"
 				}
 			},
 			{
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
+						"nld": "SENTINEL-13",
 						"eng": true,
 						"deu": false,
 						"fra": false
@@ -335,8 +384,8 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
+						"nld": "SENTINEL-13",
+						"eng": "SENTINEL-14",
 						"deu": false,
 						"fra": false
 					}
@@ -346,9 +395,9 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
+						"nld": "SENTINEL-13",
+						"eng": "SENTINEL-14",
+						"deu": "SENTINEL-15",
 						"fra": false
 					}
 				}
@@ -357,23 +406,23 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
-						"fra": "SENTINEL-13"
+						"nld": "SENTINEL-13",
+						"eng": "SENTINEL-14",
+						"deu": "SENTINEL-15",
+						"fra": "SENTINEL-16"
 					}
 				}
 			},
 			{
 				"label": "Prioritise higher-confidentiality files in batch/folder analysis",
 				"writes": {
-					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-14"
+					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-17"
 				}
 			},
 			{
 				"label": "Enable Digital Signing",
 				"writes": {
-					"settings.signing_enabled": "SENTINEL-15"
+					"settings.signing_enabled": "SENTINEL-18"
 				}
 			}
 		]
@@ -419,10 +468,33 @@
 			"<!--v-if-->",
 			"</div>",
 			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Four eyes when anonymising</div>",
+			"<x-nccheckboxradioswitch modelvalue=\"woo\" name=\"redaction_four_eyes\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"woo\">",
+			"<x-slot name=\"default\">Only for Woo cases</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"woo\" name=\"redaction_four_eyes\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"always\">",
+			"<x-slot name=\"default\">Always</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"woo\" name=\"redaction_four_eyes\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"off\">",
+			"<x-slot name=\"default\">Off</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Whether the person who checked the findings of a document may also anonymise it. With four eyes a colleague must anonymise it. A Woo case is a dossier run, or a document a case system flags as one.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
 			"<x-nctextfield modelvalue=\"anonymised\" label=\"Subfolder for anonymised copies\" error=\"false\" helpertext=\"Use lowercase letters, digits, hyphens and underscores only.\" data-on-onupdate:modelvalue=\"\">",
 			"</x-nctextfield>",
 			"<div class=\"setting-description\">Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.</div>",
 			"</div>",
+			"<div class=\"setting-item\">",
+			"<x-nctextfield label=\"Publisher (TOOI identifier)\" helpertext=\"A new publication starts with this publisher.\" data-testid=\"settings-woo-default-publisher\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nctextfield>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Woo refusal grounds\" description=\"Where the Woo refusal grounds used for redaction come from.\">",
+			"<x-slot name=\"default\">",
+			"<x-refusalgroundssource>",
+			"</x-refusalgroundssource>",
 			"</x-slot>",
 			"</x-ncsettingssection>",
 			"<x-ncsettingssection name=\"Legal basis per entity type\" description=\"Propose a default legal basis (grondslag) per detected entity type. After analysis, each detected entity is pre-filled with the selected basis (or bases) for its type when none has been assigned yet — operators can always override, and entity types left unmapped get no proposal.\">",
@@ -471,6 +543,10 @@
 			"<x-nccheckboxradioswitch aria-label=\"Inbound classification\" modelvalue=\"false\" type=\"switch\" data-testid=\"settings-inbound-classification\" data-on-onupdate:modelvalue=\"\">",
 			"</x-nccheckboxradioswitch>",
 			"<div class=\"setting-description\">Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<x-nctextfield modelvalue=\"0.9\" type=\"number\" min=\"0.6\" max=\"1\" step=\"0.01\" label=\"Confidence for unattended receipts and invoices\" error=\"false\" helpertext=\"A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.\" data-testid=\"settings-unattended-threshold\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nctextfield>",
 			"</div>",
 			"</x-slot>",
 			"</x-ncsettingssection>",
@@ -627,12 +703,20 @@
 			"\t\t     analysis. -->",
 			"<x-signeridentitysettings>",
 			"</x-signeridentitysettings>",
+			"<x-signingsourcessettings>",
+			"</x-signingsourcessettings>",
 			"<x-casesystemdeliverysettings>",
 			"</x-casesystemdeliverysettings>",
+			"<x-bridgesourcessettings>",
+			"</x-bridgesourcessettings>",
 			"<x-documentwebhookssection>",
 			"</x-documentwebhookssection>",
+			"<x-integrityscansection>",
+			"</x-integrityscansection>",
 			"<x-emailingestionsettings>",
 			"</x-emailingestionsettings>",
+			"<x-mailarchiveimportsettings>",
+			"</x-mailarchiveimportsettings>",
 			"<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->",
 			"<x-pagelayoutsettings>",
 			"</x-pagelayoutsettings>",
@@ -740,52 +824,70 @@
 				}
 			},
 			{
+				"label": "woo",
+				"writes": {
+					"settings.redaction_four_eyes": "SENTINEL-3"
+				}
+			},
+			{
+				"label": "always",
+				"writes": {
+					"settings.redaction_four_eyes": "SENTINEL-4"
+				}
+			},
+			{
+				"label": "off",
+				"writes": {
+					"settings.redaction_four_eyes": "SENTINEL-5"
+				}
+			},
+			{
 				"label": "Language Detection",
 				"writes": {
-					"settings.enable_language_detection": "SENTINEL-3"
+					"settings.enable_language_detection": "SENTINEL-6"
 				}
 			},
 			{
 				"label": "Keyword Extraction",
 				"writes": {
-					"settings.enable_keyword_extraction": "SENTINEL-4"
+					"settings.enable_keyword_extraction": "SENTINEL-7"
 				}
 			},
 			{
 				"label": "Topic Classification",
 				"writes": {
-					"settings.enable_topic_classification": "SENTINEL-5"
+					"settings.enable_topic_classification": "SENTINEL-8"
 				}
 			},
 			{
 				"label": "Contract terms",
 				"writes": {
-					"settings.enable_contract_term_extraction": "SENTINEL-6"
+					"settings.enable_contract_term_extraction": "SENTINEL-9"
 				}
 			},
 			{
 				"label": "Inbound classification",
 				"writes": {
-					"settings.enable_inbound_classification": "SENTINEL-7"
+					"settings.enable_inbound_classification": "SENTINEL-10"
 				}
 			},
 			{
 				"label": "Enable OCR",
 				"writes": {
-					"settings.ocr_enabled": "SENTINEL-8"
+					"settings.ocr_enabled": "SENTINEL-11"
 				}
 			},
 			{
 				"label": "Read scans on arrival",
 				"writes": {
-					"settings.ocr_on_arrival": "SENTINEL-9"
+					"settings.ocr_on_arrival": "SENTINEL-12"
 				}
 			},
 			{
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
+						"nld": "SENTINEL-13",
 						"eng": true,
 						"deu": false,
 						"fra": false
@@ -796,8 +898,8 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
+						"nld": "SENTINEL-13",
+						"eng": "SENTINEL-14",
 						"deu": false,
 						"fra": false
 					}
@@ -807,9 +909,9 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
+						"nld": "SENTINEL-13",
+						"eng": "SENTINEL-14",
+						"deu": "SENTINEL-15",
 						"fra": false
 					}
 				}
@@ -818,23 +920,23 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
-						"fra": "SENTINEL-13"
+						"nld": "SENTINEL-13",
+						"eng": "SENTINEL-14",
+						"deu": "SENTINEL-15",
+						"fra": "SENTINEL-16"
 					}
 				}
 			},
 			{
 				"label": "Prioritise higher-confidentiality files in batch/folder analysis",
 				"writes": {
-					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-14"
+					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-17"
 				}
 			},
 			{
 				"label": "Enable Digital Signing",
 				"writes": {
-					"settings.signing_enabled": "SENTINEL-15"
+					"settings.signing_enabled": "SENTINEL-18"
 				}
 			},
 			{
@@ -844,7 +946,7 @@
 			{
 				"label": "LibreSign certificate is qualified",
 				"writes": {
-					"settings.libresign_qualified": "SENTINEL-17"
+					"settings.libresign_qualified": "SENTINEL-20"
 				}
 			}
 		]
@@ -886,10 +988,33 @@
 			"</div>",
 			"</div>",
 			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Four eyes when anonymising</div>",
+			"<x-nccheckboxradioswitch modelvalue=\"woo\" name=\"redaction_four_eyes\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"woo\">",
+			"<x-slot name=\"default\">Only for Woo cases</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"woo\" name=\"redaction_four_eyes\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"always\">",
+			"<x-slot name=\"default\">Always</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"woo\" name=\"redaction_four_eyes\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"off\">",
+			"<x-slot name=\"default\">Off</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Whether the person who checked the findings of a document may also anonymise it. With four eyes a colleague must anonymise it. A Woo case is a dossier run, or a document a case system flags as one.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
 			"<x-nctextfield modelvalue=\"anonymised\" label=\"Subfolder for anonymised copies\" error=\"false\" helpertext=\"Use lowercase letters, digits, hyphens and underscores only.\" data-on-onupdate:modelvalue=\"\">",
 			"</x-nctextfield>",
 			"<div class=\"setting-description\">Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.</div>",
 			"</div>",
+			"<div class=\"setting-item\">",
+			"<x-nctextfield label=\"Publisher (TOOI identifier)\" helpertext=\"A new publication starts with this publisher.\" data-testid=\"settings-woo-default-publisher\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nctextfield>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Woo refusal grounds\" description=\"Where the Woo refusal grounds used for redaction come from.\">",
+			"<x-slot name=\"default\">",
+			"<x-refusalgroundssource>",
+			"</x-refusalgroundssource>",
 			"</x-slot>",
 			"</x-ncsettingssection>",
 			"<x-ncsettingssection name=\"Legal basis per entity type\" description=\"Propose a default legal basis (grondslag) per detected entity type. After analysis, each detected entity is pre-filled with the selected basis (or bases) for its type when none has been assigned yet — operators can always override, and entity types left unmapped get no proposal.\">",
@@ -938,6 +1063,10 @@
 			"<x-nccheckboxradioswitch aria-label=\"Inbound classification\" modelvalue=\"true\" type=\"switch\" data-testid=\"settings-inbound-classification\" data-on-onupdate:modelvalue=\"\">",
 			"</x-nccheckboxradioswitch>",
 			"<div class=\"setting-description\">Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<x-nctextfield modelvalue=\"0.9\" type=\"number\" min=\"0.6\" max=\"1\" step=\"0.01\" label=\"Confidence for unattended receipts and invoices\" error=\"false\" helpertext=\"A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.\" data-testid=\"settings-unattended-threshold\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nctextfield>",
 			"</div>",
 			"</x-slot>",
 			"</x-ncsettingssection>",
@@ -1091,6 +1220,10 @@
 			"<!--v-if-->",
 			"<!--v-if-->",
 			"<!--v-if-->",
+			"<!--v-if-->",
+			"<!--v-if-->",
+			"<!--v-if-->",
+			"<!--v-if-->",
 			"<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->",
 			"<!--v-if-->",
 			"<!-- Entity detection provider (llm-entity-detection-provider): its own admin endpoint -->",
@@ -1129,52 +1262,70 @@
 				}
 			},
 			{
+				"label": "woo",
+				"writes": {
+					"settings.redaction_four_eyes": "SENTINEL-3"
+				}
+			},
+			{
+				"label": "always",
+				"writes": {
+					"settings.redaction_four_eyes": "SENTINEL-4"
+				}
+			},
+			{
+				"label": "off",
+				"writes": {
+					"settings.redaction_four_eyes": "SENTINEL-5"
+				}
+			},
+			{
 				"label": "Language Detection",
 				"writes": {
-					"settings.enable_language_detection": "SENTINEL-3"
+					"settings.enable_language_detection": "SENTINEL-6"
 				}
 			},
 			{
 				"label": "Keyword Extraction",
 				"writes": {
-					"settings.enable_keyword_extraction": "SENTINEL-4"
+					"settings.enable_keyword_extraction": "SENTINEL-7"
 				}
 			},
 			{
 				"label": "Topic Classification",
 				"writes": {
-					"settings.enable_topic_classification": "SENTINEL-5"
+					"settings.enable_topic_classification": "SENTINEL-8"
 				}
 			},
 			{
 				"label": "Contract terms",
 				"writes": {
-					"settings.enable_contract_term_extraction": "SENTINEL-6"
+					"settings.enable_contract_term_extraction": "SENTINEL-9"
 				}
 			},
 			{
 				"label": "Inbound classification",
 				"writes": {
-					"settings.enable_inbound_classification": "SENTINEL-7"
+					"settings.enable_inbound_classification": "SENTINEL-10"
 				}
 			},
 			{
 				"label": "Enable OCR",
 				"writes": {
-					"settings.ocr_enabled": "SENTINEL-8"
+					"settings.ocr_enabled": "SENTINEL-11"
 				}
 			},
 			{
 				"label": "Read scans on arrival",
 				"writes": {
-					"settings.ocr_on_arrival": "SENTINEL-9"
+					"settings.ocr_on_arrival": "SENTINEL-12"
 				}
 			},
 			{
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
+						"nld": "SENTINEL-13",
 						"eng": true,
 						"deu": false,
 						"fra": false
@@ -1185,8 +1336,8 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
+						"nld": "SENTINEL-13",
+						"eng": "SENTINEL-14",
 						"deu": false,
 						"fra": false
 					}
@@ -1196,9 +1347,9 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
+						"nld": "SENTINEL-13",
+						"eng": "SENTINEL-14",
+						"deu": "SENTINEL-15",
 						"fra": false
 					}
 				}
@@ -1207,23 +1358,23 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
-						"fra": "SENTINEL-13"
+						"nld": "SENTINEL-13",
+						"eng": "SENTINEL-14",
+						"deu": "SENTINEL-15",
+						"fra": "SENTINEL-16"
 					}
 				}
 			},
 			{
 				"label": "Prioritise higher-confidentiality files in batch/folder analysis",
 				"writes": {
-					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-14"
+					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-17"
 				}
 			},
 			{
 				"label": "Enable Digital Signing",
 				"writes": {
-					"settings.signing_enabled": "SENTINEL-15"
+					"settings.signing_enabled": "SENTINEL-18"
 				}
 			}
 		]
@@ -1266,10 +1417,33 @@
 			"</div>",
 			"</div>",
 			"<div class=\"setting-item\">",
+			"<div class=\"setting-label\">Four eyes when anonymising</div>",
+			"<x-nccheckboxradioswitch modelvalue=\"woo\" name=\"redaction_four_eyes\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"woo\">",
+			"<x-slot name=\"default\">Only for Woo cases</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"woo\" name=\"redaction_four_eyes\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"always\">",
+			"<x-slot name=\"default\">Always</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<x-nccheckboxradioswitch modelvalue=\"woo\" name=\"redaction_four_eyes\" type=\"radio\" data-on-onupdate:modelvalue=\"\" value=\"off\">",
+			"<x-slot name=\"default\">Off</x-slot>",
+			"</x-nccheckboxradioswitch>",
+			"<div class=\"setting-description\">Whether the person who checked the findings of a document may also anonymise it. With four eyes a colleague must anonymise it. A Woo case is a dossier run, or a document a case system flags as one.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
 			"<x-nctextfield modelvalue=\"anonymised\" label=\"Subfolder for anonymised copies\" error=\"false\" helpertext=\"Use lowercase letters, digits, hyphens and underscores only.\" data-on-onupdate:modelvalue=\"\">",
 			"</x-nctextfield>",
 			"<div class=\"setting-description\">Batch and folder anonymisation put the redacted copies in this subfolder, next to the originals.</div>",
 			"</div>",
+			"<div class=\"setting-item\">",
+			"<x-nctextfield label=\"Publisher (TOOI identifier)\" helpertext=\"A new publication starts with this publisher.\" data-testid=\"settings-woo-default-publisher\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nctextfield>",
+			"</div>",
+			"</x-slot>",
+			"</x-ncsettingssection>",
+			"<x-ncsettingssection name=\"Woo refusal grounds\" description=\"Where the Woo refusal grounds used for redaction come from.\">",
+			"<x-slot name=\"default\">",
+			"<x-refusalgroundssource>",
+			"</x-refusalgroundssource>",
 			"</x-slot>",
 			"</x-ncsettingssection>",
 			"<x-ncsettingssection name=\"Legal basis per entity type\" description=\"Propose a default legal basis (grondslag) per detected entity type. After analysis, each detected entity is pre-filled with the selected basis (or bases) for its type when none has been assigned yet — operators can always override, and entity types left unmapped get no proposal.\">",
@@ -1318,6 +1492,10 @@
 			"<x-nccheckboxradioswitch aria-label=\"Inbound classification\" modelvalue=\"true\" type=\"switch\" data-testid=\"settings-inbound-classification\" data-on-onupdate:modelvalue=\"\">",
 			"</x-nccheckboxradioswitch>",
 			"<div class=\"setting-description\">Suggest a document type, a sender and a dossier for documents that come in. A suggestion changes nothing until somebody confirms it.</div>",
+			"</div>",
+			"<div class=\"setting-item\">",
+			"<x-nctextfield modelvalue=\"0.9\" type=\"number\" min=\"0.6\" max=\"1\" step=\"0.01\" label=\"Confidence for unattended receipts and invoices\" error=\"false\" helpertext=\"A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.\" data-testid=\"settings-unattended-threshold\" data-on-onupdate:modelvalue=\"\">",
+			"</x-nctextfield>",
 			"</div>",
 			"</x-slot>",
 			"</x-ncsettingssection>",
@@ -1469,12 +1647,20 @@
 			"\t\t     analysis. -->",
 			"<x-signeridentitysettings>",
 			"</x-signeridentitysettings>",
+			"<x-signingsourcessettings>",
+			"</x-signingsourcessettings>",
 			"<x-casesystemdeliverysettings>",
 			"</x-casesystemdeliverysettings>",
+			"<x-bridgesourcessettings>",
+			"</x-bridgesourcessettings>",
 			"<x-documentwebhookssection>",
 			"</x-documentwebhookssection>",
+			"<x-integrityscansection>",
+			"</x-integrityscansection>",
 			"<x-emailingestionsettings>",
 			"</x-emailingestionsettings>",
+			"<x-mailarchiveimportsettings>",
+			"</x-mailarchiveimportsettings>",
 			"<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->",
 			"<x-pagelayoutsettings>",
 			"</x-pagelayoutsettings>",
@@ -1523,52 +1709,70 @@
 				}
 			},
 			{
+				"label": "woo",
+				"writes": {
+					"settings.redaction_four_eyes": "SENTINEL-3"
+				}
+			},
+			{
+				"label": "always",
+				"writes": {
+					"settings.redaction_four_eyes": "SENTINEL-4"
+				}
+			},
+			{
+				"label": "off",
+				"writes": {
+					"settings.redaction_four_eyes": "SENTINEL-5"
+				}
+			},
+			{
 				"label": "Language Detection",
 				"writes": {
-					"settings.enable_language_detection": "SENTINEL-3"
+					"settings.enable_language_detection": "SENTINEL-6"
 				}
 			},
 			{
 				"label": "Keyword Extraction",
 				"writes": {
-					"settings.enable_keyword_extraction": "SENTINEL-4"
+					"settings.enable_keyword_extraction": "SENTINEL-7"
 				}
 			},
 			{
 				"label": "Topic Classification",
 				"writes": {
-					"settings.enable_topic_classification": "SENTINEL-5"
+					"settings.enable_topic_classification": "SENTINEL-8"
 				}
 			},
 			{
 				"label": "Contract terms",
 				"writes": {
-					"settings.enable_contract_term_extraction": "SENTINEL-6"
+					"settings.enable_contract_term_extraction": "SENTINEL-9"
 				}
 			},
 			{
 				"label": "Inbound classification",
 				"writes": {
-					"settings.enable_inbound_classification": "SENTINEL-7"
+					"settings.enable_inbound_classification": "SENTINEL-10"
 				}
 			},
 			{
 				"label": "Enable OCR",
 				"writes": {
-					"settings.ocr_enabled": "SENTINEL-8"
+					"settings.ocr_enabled": "SENTINEL-11"
 				}
 			},
 			{
 				"label": "Read scans on arrival",
 				"writes": {
-					"settings.ocr_on_arrival": "SENTINEL-9"
+					"settings.ocr_on_arrival": "SENTINEL-12"
 				}
 			},
 			{
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
+						"nld": "SENTINEL-13",
 						"eng": true,
 						"deu": false,
 						"fra": false
@@ -1579,8 +1783,8 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
+						"nld": "SENTINEL-13",
+						"eng": "SENTINEL-14",
 						"deu": false,
 						"fra": false
 					}
@@ -1590,9 +1794,9 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
+						"nld": "SENTINEL-13",
+						"eng": "SENTINEL-14",
+						"deu": "SENTINEL-15",
 						"fra": false
 					}
 				}
@@ -1601,23 +1805,23 @@
 				"label": null,
 				"writes": {
 					"ocrLanguages": {
-						"nld": "SENTINEL-10",
-						"eng": "SENTINEL-11",
-						"deu": "SENTINEL-12",
-						"fra": "SENTINEL-13"
+						"nld": "SENTINEL-13",
+						"eng": "SENTINEL-14",
+						"deu": "SENTINEL-15",
+						"fra": "SENTINEL-16"
 					}
 				}
 			},
 			{
 				"label": "Prioritise higher-confidentiality files in batch/folder analysis",
 				"writes": {
-					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-14"
+					"settings.filinq.confidentiality.prioritise_analysis": "SENTINEL-17"
 				}
 			},
 			{
 				"label": "Enable Digital Signing",
 				"writes": {
-					"settings.signing_enabled": "SENTINEL-15"
+					"settings.signing_enabled": "SENTINEL-18"
 				}
 			}
 		]

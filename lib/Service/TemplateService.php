@@ -49,8 +49,26 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) listForObject() put the class at the threshold
+ *   with a one-line delegate; the scope matching it delegates to lives in TemplateScope.
  */
 class TemplateService implements TemplateServiceInterface {
+
+	/**
+	 * A template version that only its authors see.
+	 *
+	 * @var string
+	 */
+	public const STATUS_DRAFT = 'draft';
+
+	/**
+	 * A template version users may generate documents from.
+	 *
+	 * @var string
+	 */
+	public const STATUS_PUBLISHED = 'published';
+
 
 	/**
 	 * Lock timeout in minutes
@@ -295,6 +313,11 @@ class TemplateService implements TemplateServiceInterface {
 			);
 		}
 
+		// A new template starts as a draft; publishing is an explicit action
+		// of the author (REQ-SCR-015).
+		$data['status'] = self::STATUS_DRAFT;
+		unset($data['publishedVersion']);
+
 		$objectService = $this->getObjectService();
 		$config = $this->registerResolver->getRegisterAndSchema();
 
@@ -346,11 +369,20 @@ class TemplateService implements TemplateServiceInterface {
 
 		// Namespace is immutable after creation.
 		unset($data['namespace']);
+		// Only publishTemplate() moves the published version.
+		unset($data['status'], $data['publishedVersion']);
 
 		$data['id'] = $id;
 		$merged = array_merge($existing, $data);
 		// The version is read from the chain, never stored on the template.
 		unset($merged['version']);
+		// A changed version starts as a draft; users keep the last published one.
+		$merged['status'] = self::STATUS_DRAFT;
+		// A template users could generate from (published, or without a status
+		// because it predates drafts) stays generatable at the version it was on.
+		if (($existing['status'] ?? self::STATUS_PUBLISHED) !== self::STATUS_DRAFT && is_int($existing['version'] ?? null) === true) {
+			$merged['publishedVersion'] = $existing['version'];
+		}
 
 		// Release lock after successful save.
 		$merged['lockedBy'] = null;
@@ -420,6 +452,65 @@ class TemplateService implements TemplateServiceInterface {
 	}//end updateTemplateWithoutVersion()
 
 	/**
+	 * Publish the version the template is on, so users may generate from it.
+	 *
+	 * Publishing is the author's explicit action: the head version becomes the
+	 * one {@see getPublishedTemplate()} answers until the next publish. No new
+	 * version is made; the save goes through OpenRegister's update check.
+	 *
+	 * @param string $id The template UUID
+	 *
+	 * @return array The template, now published
+	 *
+	 * @throws Exception 404 when the template does not exist, 409 while another user holds its lock
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 */
+	public function publishTemplate(string $id): array {
+		$existing = $this->getTemplate(id: $id);
+		if ($this->heldByAnother(template: $existing, userId: $this->getCurrentUserId()) === true) {
+			throw new Exception(message: 'Template is locked by another user', code: 409);
+		}
+
+		$data = ['status' => self::STATUS_PUBLISHED];
+		if (is_int($existing['version'] ?? null) === true) {
+			$data['publishedVersion'] = $existing['version'];
+		}
+
+		return $this->updateTemplateWithoutVersion(id: $id, data: $data);
+	}//end publishTemplate()
+
+	/**
+	 * Get the template as users generate from it: its last published version.
+	 *
+	 * A template without a status predates drafts and counts as published. A
+	 * draft answers the version it last published from the version chain; a
+	 * draft that was never published is refused, so a user never renders a
+	 * version its author has not released.
+	 *
+	 * @param string $id The template UUID
+	 *
+	 * @return array The template at its last published version
+	 *
+	 * @throws Exception 404 when the template does not exist, 409 when it has no published version
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 */
+	public function getPublishedTemplate(string $id): array {
+		$template = $this->getTemplate(id: $id);
+		if (($template['status'] ?? self::STATUS_PUBLISHED) !== self::STATUS_DRAFT) {
+			return $template;
+		}
+
+		$published = $template['publishedVersion'] ?? null;
+		if (is_int($published) === false || $published < 1) {
+			throw new Exception(message: "Template {$id} has no published version", code: 409);
+		}
+
+		return $this->getTemplateAtVersion(id: $id, version: $published);
+	}//end getPublishedTemplate()
+
+	/**
 	 * Delete a template
 	 *
 	 * Scoped to the template register and schema, so an id of any other
@@ -471,6 +562,31 @@ class TemplateService implements TemplateServiceInterface {
 
 		return $result['results'];
 	}//end getTemplatesByNamespace()
+
+	/**
+	 * The templates that apply to an object of this register and schema.
+	 *
+	 * A template applies when its `scope` is empty, or holds the
+	 * `{register, schema}` pair. Scope entries match on slugs, which each app
+	 * keeps frozen, so a scope written today still matches tomorrow.
+	 *
+	 * @param string $register The host object's register slug.
+	 * @param string $schema   The host object's schema slug.
+	 * @param int    $limit    How many templates to consider at most.
+	 *
+	 * @return list<array<string, mixed>> The applicable templates, in listing order.
+	 *
+	 * @throws Exception If listing fails
+	 *
+	 * @spec openspec/changes/template-library-leaf/specs/template-management/spec.md#requirement-template-scope-per-register-and-schema-req-tmpl-13
+	 */
+	public function listForObject(string $register, string $schema, int $limit=100): array {
+		return (new TemplateScope())->applicable(
+			page: $this->getTemplates(filters: [], limit: $limit, offset: 0),
+			register: $register,
+			schema: $schema
+		);
+	}//end listForObject()
 
 	/**
 	 * Duplicate a template

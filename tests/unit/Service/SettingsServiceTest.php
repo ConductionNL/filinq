@@ -321,6 +321,25 @@ class SettingsServiceTest extends TestCase {
 	}//end testOutputSubfolderNameIsWritable()
 
 	/**
+	 * The default Woo publisher is writable from the admin settings page.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+	 */
+	public function testTheDefaultWooPublisherIsWritable(): void {
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'woo.default_publisher', 'https://identifier.overheid.nl/tooi/id/gemeente/gm0363');
+		$this->mockConfig->method('getValueString')->willReturn('https://identifier.overheid.nl/tooi/id/gemeente/gm0363');
+
+		$result = $this->settingsService->updateSettings(['woo.default_publisher' => 'https://identifier.overheid.nl/tooi/id/gemeente/gm0363']);
+
+		$this->assertSame('https://identifier.overheid.nl/tooi/id/gemeente/gm0363', $result['woo.default_publisher']);
+
+	}//end testTheDefaultWooPublisherIsWritable()
+
+	/**
 	 * A traversal attempt is refused before anything is written, naming the characters.
 	 *
 	 * @return void
@@ -347,6 +366,46 @@ class SettingsServiceTest extends TestCase {
 	}//end testInvalidOutputSubfolderNameIsRefusedAndNothingIsWritten()
 
 	/**
+	 * The unattended threshold is saved from 0.6 to 1.0 (REQ-ERP-005).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+	 */
+	public function testTheUnattendedThresholdIsWritableWithinItsBounds(): void {
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'extraction_unattended_threshold', '0.95');
+		$this->mockConfig->method('getValueString')->willReturn('0.95');
+
+		$result = $this->settingsService->updateSettings(['extraction_unattended_threshold' => '0.95']);
+
+		$this->assertSame('0.95', $result['extraction_unattended_threshold']);
+
+	}//end testTheUnattendedThresholdIsWritableWithinItsBounds()
+
+	/**
+	 * A threshold of 0.5, above 1.0 or not a number is refused before anything is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+	 */
+	public function testAnUnattendedThresholdOutsideItsBoundsIsRefused(): void {
+		$this->mockConfig->expects($this->never())->method('setValueString');
+
+		foreach (['0.5', '1.01', 'high', ''] as $value) {
+			try {
+				$this->settingsService->updateSettings(['signing_provider' => 'native', 'extraction_unattended_threshold' => $value]);
+				$this->fail('Threshold ' . $value . ' was accepted.');
+			} catch (\RuntimeException $e) {
+				$this->assertSame([400, 'Choose a value between 0.6 and 1.0.'], [$e->getCode(), $e->getMessage()]);
+			}
+		}
+
+	}//end testAnUnattendedThresholdOutsideItsBoundsIsRefused()
+
+	/**
 	 * An empty subfolder name is refused too.
 	 *
 	 * @return void
@@ -359,6 +418,80 @@ class SettingsServiceTest extends TestCase {
 		$this->settingsService->updateSettings(['anonymisation.output_subfolder_name' => '']);
 
 	}//end testEmptyOutputSubfolderNameIsRefused()
+
+	/**
+	 * An install that never chose reads `woo`, a stored choice reads as stored,
+	 * and a stored value that is no choice reads as the default.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 */
+	public function testTheFourEyesChoiceDefaultsToWoo(): void {
+		$stored = null;
+		$this->mockConfig->method('getValueString')->willReturnCallback(
+			static function (string $app, string $key, string $default) use (&$stored): string {
+				if ($key !== 'redaction_four_eyes') {
+					return $default;
+				}
+
+				return ($stored ?? $default);
+			}
+		);
+
+		$this->assertSame('woo', $this->settingsService->getFourEyesMode());
+
+		$stored = 'always';
+		$this->assertSame('always', $this->settingsService->getFourEyesMode());
+
+		$stored = ' off ';
+		$this->assertSame('off', $this->settingsService->getFourEyesMode());
+
+		$stored = 'sometimes';
+		$this->assertSame('woo', $this->settingsService->getFourEyesMode());
+
+	}//end testTheFourEyesChoiceDefaultsToWoo()
+
+	/**
+	 * Each of the three choices is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 */
+	public function testTheFourEyesChoiceIsWritable(): void {
+		$this->mockConfig->expects($this->once())
+			->method('setValueString')
+			->with('filinq', 'redaction_four_eyes', 'off');
+		$this->mockConfig->method('getValueString')->willReturn('off');
+
+		$result = $this->settingsService->updateSettings(['redaction_four_eyes' => 'off']);
+
+		$this->assertSame('off', $result['redaction_four_eyes']);
+
+	}//end testTheFourEyesChoiceIsWritable()
+
+	/**
+	 * An unknown choice is refused with 400 before anything is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 */
+	public function testAnUnknownFourEyesChoiceIsRefusedAndNothingIsWritten(): void {
+		$this->mockConfig->expects($this->never())->method('setValueString');
+
+		foreach (['sometimes', 'WOO', '', true] as $value) {
+			try {
+				$this->settingsService->updateSettings(['signing_provider' => 'native', 'redaction_four_eyes' => $value]);
+				$this->fail('An unknown four-eyes choice was accepted: ' . var_export($value, true));
+			} catch (\RuntimeException $e) {
+				$this->assertSame(400, $e->getCode());
+				$this->assertSame('redaction_four_eyes must be one of woo, always, off.', $e->getMessage());
+			}
+		}
+
+	}//end testAnUnknownFourEyesChoiceIsRefusedAndNothingIsWritten()
 
 	/**
 	 * The settings key is the one the resolver reads.

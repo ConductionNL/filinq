@@ -38,6 +38,8 @@ import { generateRemoteUrl, generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
 import { applyDetectionNotice } from '../../services/detectionProvider.js'
 import { extractDocumentText } from '../../services/fileViewerService.js'
+import { FOUR_EYES_REASONS } from '../../services/fourEyes.js'
+import { applyImageFlags, applyImageRedactionResult } from '../../services/imageRedaction.js'
 import { applyOcrFlags } from '../../services/ocr.js'
 import {
 	markChecked,
@@ -622,7 +624,9 @@ function applyExtractResponse(entry, data) {
 	applyDetectionNotice(entry, data)
 	// A scan detection could not read is not "nothing to anonymise".
 	const unseen = applyOcrFlags(entry, data)
-	return { found: entities.length, unseen }
+	// Nor are images nobody looked at (image-redaction REQ-DDIMR-002).
+	const imagesUnseen = applyImageFlags(entry, data)
+	return { found: entities.length, unseen: unseen || imagesUnseen }
 }
 
 /**
@@ -1030,6 +1034,7 @@ function applyAnonymizeResult(entry, data) {
 	entry.pseudonymisation = data.pseudonymisation || null
 	entry.structurePreservation = data.structurePreservation || null
 	entry.sanitizationReport = data.sanitizationReport || null
+	applyImageRedactionResult(entry, data)
 	entry.reanonymize = false
 	entry.status = 'completed'
 }
@@ -1079,6 +1084,14 @@ async function resolveFaithfulMarkers(store, entry) {
 function applyAnonymizeFailure(entry, err) {
 	console.error(`Failed to anonymise ${entry.name}:`, err)
 	entry.error = err.response?.data?.error || err.message
+	// Four eyes (redaction-four-eyes-setting REQ-RWB-09): the document is
+	// checked, only by the person anonymising. The mark stays, so a colleague
+	// can anonymise it without checking it again.
+	if (FOUR_EYES_REASONS.includes(err.response?.data?.reviewRequired)) {
+		entry.fourEyes = err.response.data.reviewRequired
+		entry.status = 'extracted'
+		return
+	}
 	if (err.response?.data?.reviewRequired) {
 		entry.reviewMark = null
 		entry.reviewRequired = true
@@ -1389,6 +1402,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 				)
 				entry.reviewRequired = false
 				entry.error = null
+				entry.fourEyes = null
 			} catch (err) {
 				entry.reviewError = err.response?.data?.error || err.message
 			} finally {
