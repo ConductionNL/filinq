@@ -55,6 +55,23 @@ function requestError(err) {
 	return err.response?.data?.error || err.message
 }
 
+/**
+ * The body of a send by email and of its preview: the letter, without a format
+ * (a sent letter is always composed as an email).
+ *
+ * @param {object} state The store state.
+ * @return {{templateId: string, dataRefs: Array<object>, options: {huisstijlId: (string|undefined), caseReference: (string|undefined)}}}
+ * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+ */
+export function sendRequest(state) {
+	const { huisstijlId, caseReference } = letterOptions(state)
+	return {
+		templateId: state.templateId,
+		dataRefs: state.dataRefs,
+		options: { huisstijlId, caseReference },
+	}
+}
+
 export const useCorrespondenceStore = defineStore('correspondence', {
 	state: () => ({
 		/** @type {string} */
@@ -79,6 +96,8 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 		jobStatus: null,
 		/** @type {Array<string>} */
 		warnings: [],
+		/** @type {{to: string, subject: string, sentAt: string}|null} The last letter sent by email. */
+		lastSent: null,
 	}),
 
 	getters: {
@@ -93,6 +112,17 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 				.split('\n')
 				.map((s) => s.trim())
 				.filter(Boolean)
+		},
+
+		/**
+		 * The body of a send by email and of its preview.
+		 *
+		 * @param {object} state The store state.
+		 * @return {object}
+		 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+		 */
+		sendBody(state) {
+			return sendRequest(state)
 		},
 
 		/**
@@ -216,6 +246,37 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 		},
 
 		/**
+		 * Send the letter by email to the first data reference's recipient.
+		 *
+		 * Resolves with what the server answered; a refused or failed send
+		 * rejects with the server's message, which the dialog shows.
+		 *
+		 * @param {boolean} attachPdf Whether the PDF of the same letter goes along.
+		 * @return {Promise<object>} The send result: status, to, subject, sentAt.
+		 *
+		 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+		 */
+		async sendByEmail(attachPdf = false) {
+			this.loading = true
+			this.lastSent = null
+			try {
+				const body = sendRequest(this)
+				body.options.attachPdf = Boolean(attachPdf)
+				const { data } = await axios.post(
+					generateUrl('/apps/filinq/api/correspondence/send'),
+					body,
+				)
+				this.lastSent = { to: data.to, subject: data.subject, sentAt: data.sentAt }
+				this.warnings = data.warnings || []
+				return data
+			} catch (err) {
+				throw new Error(requestError(err), { cause: err })
+			} finally {
+				this.loading = false
+			}
+		},
+
+		/**
 		 * Reset form state.
 		 *
 		 * @return {void}
@@ -231,6 +292,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 			this.jobId = null
 			this.jobStatus = null
 			this.warnings = []
+			this.lastSent = null
 		},
 
 		/**
