@@ -83,6 +83,7 @@ import ComponentGallery from './views/gallery/ComponentGallery.vue'
 import IntakeIndex from './views/intake/IntakeIndex.vue'
 import IntakeChannels from './views/intakeChannels/IntakeChannels.vue'
 import LegalHolds from './views/legalHolds/LegalHolds.vue'
+import MailArchiveImport from './views/mailArchiveImport/MailArchiveImport.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
 import PolicyRuleIndex from './views/policy/PolicyRuleIndex.vue'
 import PrintJobs from './views/printJobs/PrintJobs.vue'
@@ -122,6 +123,7 @@ export default {
 	SubjectErasures: { kind: 'page', component: SubjectErasures },
 	EmailIngestion: { kind: 'page', component: EmailIngestion },
 	IntakeChannels: { kind: 'page', component: IntakeChannels },
+	MailArchiveImport: { kind: 'page', component: MailArchiveImport },
 	ClassificationPending: { kind: 'page', component: ClassificationPending },
 	EntitySearch: { kind: 'page', component: EntitySearch },
 	PublicationsPage: { kind: 'page', component: PublicationsPage },

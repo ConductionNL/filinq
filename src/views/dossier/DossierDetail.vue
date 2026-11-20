@@ -56,6 +56,7 @@
 				<LegalHoldBadge
 					:objectId="dossierId"
 					@held="underLegalHold = $event" />
+				<MdtoPanel :objectId="dossierId" objectType="dossier" />
 				<NcNoteCard v-if="folderWarning" type="warning">
 					{{ folderWarning }}
 				</NcNoteCard>
@@ -297,6 +298,7 @@ import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import LegalHoldBadge from '../../components/LegalHoldBadge.vue'
+import MdtoPanel from '../../components/MdtoPanel.vue'
 import WizardEntryActions from '../../components/WizardEntryActions.vue'
 import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { dossierStore } from '../../store/store.js'
@@ -322,6 +324,7 @@ export default {
 		FilePdfBox,
 		FolderAccount,
 		LegalHoldBadge,
+		MdtoPanel,
 		NcActionButton,
 		NcActions,
 		NcButton,
