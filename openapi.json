@@ -661,6 +661,54 @@
                 ]
             }
         },
+        "/anonymization/batch/{batchId}/cancel": {
+            "post": {
+                "operationId": "batch-lifecycle-cancel",
+                "summary": "Cancel a batch between files",
+                "description": "A batch a worker is busy in becomes `cancelling` and stops after the file in progress; any other open batch becomes `cancelled` at once. Outputs already produced are kept. A completed, errored or cancelled batch answers 409.",
+                "tags": [
+                    "batch-anonymization"
+                ],
+                "responses": {
+                    "202": {
+                        "description": "The new batch status.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "batchId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The batchId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/anonymization/batch/{batchId}/entities": {
             "get": {
                 "operationId": "batch-anonymization-batch-entities",
@@ -769,6 +817,54 @@
                                 }
                             }
                         }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "batchId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The batchId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/anonymization/batch/{batchId}/resume": {
+            "post": {
+                "operationId": "batch-lifecycle-resume",
+                "summary": "Resume an errored or cancelled batch",
+                "description": "Re-queues only the files that did not produce their output; a file that already succeeded is left alone. Answers 409 for a batch that is not errored or cancelled.",
+                "tags": [
+                    "batch-anonymization"
+                ],
+                "responses": {
+                    "202": {
+                        "description": "The new batch status.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
                     }
                 },
                 "parameters": [

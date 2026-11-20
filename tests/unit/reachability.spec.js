@@ -39,6 +39,8 @@ const RECOGNISED_KINDS = new Set([
 	'widget',
 	'form-field',
 	'cell-renderer',
+	// A detail page's config.bodyWidgets entry: CnDetailPage resolves it from the registry by name.
+	'section',
 ])
 
 /**

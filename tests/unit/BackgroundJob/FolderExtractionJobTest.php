@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for FolderExtractionJob
+ * Unit tests for FolderExtractionJob: the fallback extraction of an in-request folder batch.
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\BackgroundJob
@@ -14,722 +14,257 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-7
+ * @spec openspec/changes/redaction-at-scale/specs/folder-batch-analysis/spec.md#requirement-background-extraction-via-queuedjob
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
+
+declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\BackgroundJob;
 
 use Exception;
 use OCA\Filinq\BackgroundJob\FolderExtractionJob;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\BatchAnonymizeService;
+use OCA\Filinq\Service\BatchBackgroundPath;
+use OCA\Filinq\Service\BatchRouting;
 use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\BatchWorkUnit;
 use OCA\Filinq\Service\Conversion\OutputLayoutMover;
-use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\Files\File;
-use OCP\Files\Folder;
-use OCP\Files\IRootFolder;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use ReflectionMethod;
 
 /**
- * Unit tests for FolderExtractionJob
+ * The job extracts every queued file through the work unit and leaves the batch in review.
  *
- * @category Tests
- * @package  OCA\Filinq\Tests\Unit\BackgroundJob
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.filinq.nl
- *
- * @psalm-suppress                                 PropertyNotSetInConstructor
- * @phpstan-extends                                TestCase
- * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
- * @SuppressWarnings(PHPMD.TooManyPublicMethods)
+ * @covers \OCA\Filinq\BackgroundJob\FolderExtractionJob
+ * @uses   \OCA\Filinq\Service\BatchWorkUnit
+ * @uses   \OCA\Filinq\Service\BatchAnonymizeService
+ * @uses   \OCA\Filinq\Service\BatchBackgroundPath
+ * @uses   \OCA\Filinq\Service\BatchLifecycleService
+ * @uses   \OCA\Filinq\Service\BatchRetryPolicy
  */
 class FolderExtractionJobTest extends TestCase {
 
 	/**
-	 * The FolderExtractionJob under test
+	 * The stored batch, or null for none.
+	 *
+	 * @var array<string, mixed>|null
+	 */
+	private ?array $stored = null;
+
+	/**
+	 * Every batch status written, in order.
+	 *
+	 * @var array<int, string>
+	 */
+	private array $statuses = [];
+
+	/**
+	 * Single-document extraction double.
+	 *
+	 * @var AnonymizationService&MockObject
+	 */
+	private AnonymizationService&MockObject $anon;
+
+	/**
+	 * Logger double.
+	 *
+	 * @var LoggerInterface&MockObject
+	 */
+	private LoggerInterface&MockObject $logger;
+
+	/**
+	 * The job under test.
 	 *
 	 * @var FolderExtractionJob
 	 */
 	private FolderExtractionJob $job;
 
 	/**
-	 * Mocked AnonymizationService
-	 *
-	 * @var AnonymizationService|MockObject
-	 */
-	private AnonymizationService|MockObject $mockAnonService;
-
-	/**
-	 * Mocked BatchStateService
-	 *
-	 * @var BatchStateService|MockObject
-	 */
-	private BatchStateService|MockObject $mockStateService;
-
-	/**
-	 * Mocked LoggerInterface
-	 *
-	 * @var LoggerInterface|MockObject
-	 */
-	private LoggerInterface|MockObject $mockLogger;
-
-	/**
-	 * Mocked OutputLayoutResolver
-	 *
-	 * @var OutputLayoutResolver|MockObject
-	 */
-	private OutputLayoutResolver|MockObject $mockLayoutResolver;
-
-	/**
-	 * Mocked IRootFolder
-	 *
-	 * @var IRootFolder|MockObject
-	 */
-	private IRootFolder|MockObject $mockRootFolder;
-
-	/**
-	 * Set up test environment
+	 * Build the job over a real work unit and a stateful store double.
 	 *
 	 * @return void
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService = $this->createMock(AnonymizationService::class);
-		$this->mockStateService = $this->createMock(BatchStateService::class);
-		$this->mockLogger = $this->createMock(LoggerInterface::class);
-		$this->mockLayoutResolver = $this->createMock(OutputLayoutResolver::class);
-		$this->mockRootFolder = $this->createMock(IRootFolder::class);
-		$mockTime = $this->createMock(ITimeFactory::class);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->job = new FolderExtractionJob(
-			$mockTime,
-			$this->mockAnonService,
-			$this->mockStateService,
-			$this->mockLogger,
-			$this->mockLayoutResolver,
-			new OutputLayoutMover($this->mockLayoutResolver, $this->mockRootFolder, $this->mockLogger)
+		$state = $this->createMock(BatchStateService::class);
+		$state->method('getBatch')->willReturnCallback(fn (): ?array => $this->stored);
+		$state->method('updateBatch')->willReturnCallback(
+			function (string $batchId, array $batch): void {
+				$this->stored = $batch;
+				$this->statuses[] = (string)$batch['status'];
+			}
 		);
-		// phpcs:enable CustomSn.Functions.NamedParameters
+		$this->anon = $this->createMock(AnonymizationService::class);
+		$this->logger = $this->createMock(LoggerInterface::class);
+		$time = $this->createMock(ITimeFactory::class);
+		$time->method('getTime')->willReturn(1000);
+		$unit = new BatchWorkUnit(
+			stateService: $state,
+			anonService: $this->anon,
+			anonymizer: new BatchAnonymizeService(
+				anonService: $this->anon,
+				stateService: $state,
+				layoutMover: $this->createMock(OutputLayoutMover::class)
+			),
+			background: new BatchBackgroundPath(
+				stateService: $state,
+				routing: $this->createMock(BatchRouting::class),
+				linkReader: $this->createMock(AnonymizationLinkReader::class)
+			),
+			clock: $time,
+			logger: $this->logger
+		);
+		$this->job = new FolderExtractionJob(time: $time, stateService: $state, workUnit: $unit, logger: $this->logger);
 
 	}//end setUp()
 
 	/**
-	 * Build a mock Folder for use in post-process move stubs.
+	 * Run the job's protected run().
 	 *
-	 * @param string $path Absolute path of the folder.
-	 *
-	 * @return Folder|MockObject
-	 */
-	private function buildFolder(string $path = '/testuser/files/Dossier'): Folder|MockObject {
-		$folder = $this->createMock(Folder::class);
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$folder->method('getPath')->willReturn($path);
-		$folder->method('nodeExists')->willReturn(false);
-		$folder->method('newFolder')->willReturn($this->createMock(Folder::class));
-		// phpcs:enable CustomSn.Functions.NamedParameters
-		return $folder;
-	}//end buildFolder()
-
-	/**
-	 * Build a mock anonymized file node for post-process move stubs.
-	 *
-	 * @param string $name File name returned by getName().
-	 *
-	 * @return File|MockObject
-	 */
-	private function buildAnonFile(string $name = 'report_anonymized.pdf'): File|MockObject {
-		$anonFile = $this->createMock(File::class);
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$anonFile->method('getName')->willReturn($name);
-		$anonFile->method('getParent')->willReturn($this->buildFolder());
-		// phpcs:enable CustomSn.Functions.NamedParameters
-		return $anonFile;
-	}//end buildAnonFile()
-
-	/**
-	 * Stub the IRootFolder so applyOutputLayout can look up the anonymized file.
-	 *
-	 * @param int $anonymizedFileId The file ID to return from getById.
-	 * @param File|null $anonFile The file node to return, or null for empty.
+	 * @param mixed $argument The job argument.
 	 *
 	 * @return void
 	 */
-	private function stubRootFolderForMove(int $anonymizedFileId, ?File $anonFile = null): void {
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$mockUserFolder = $this->createMock(Folder::class);
-		$mockUserFolder->method('getById')->willReturnCallback(
-			function (int $id) use ($anonymizedFileId, $anonFile) {
-				if ($id !== $anonymizedFileId) {
-					return [];
-				}
+	private function runJob(mixed $argument): void {
+		(new ReflectionMethod($this->job, 'run'))->invoke($this->job, $argument);
 
-				if ($anonFile !== null) {
-					return [$anonFile];
-				}
+	}//end runJob()
 
-				return [];
+	/**
+	 * Store a batch of uploaded files.
+	 *
+	 * @param int                  $count Number of files.
+	 * @param array<string, mixed> $extra Extra batch fields.
+	 *
+	 * @return void
+	 */
+	private function store(int $count, array $extra=[]): void {
+		$files = [];
+		for ($i = 1; $i <= $count; $i++) {
+			$files[] = ['fileId' => $i, 'fileName' => 'f' . $i . '.pdf', 'status' => 'uploaded'];
+		}
+
+		$this->stored = array_merge(['batchId' => 'b-1', 'userId' => 'u', 'status' => 'uploading', 'files' => $files], $extra);
+
+	}//end store()
+
+	/**
+	 * Three files are extracted one after another and the batch ends in review, not anonymized.
+	 *
+	 * @return void
+	 */
+	public function testEveryFileIsExtractedAndTheBatchGoesToReview(): void {
+		$this->store(count: 3);
+		$order = [];
+		$this->anon->method('extractAndDetectEntities')->willReturnCallback(
+			static function (int $fileId) use (&$order): array {
+				$order[] = $fileId;
+				return ['entityCount' => ($fileId * 2)];
 			}
 		);
-		$this->mockRootFolder->method('getUserFolder')->willReturn($mockUserFolder);
-		// phpcs:enable CustomSn.Functions.NamedParameters
+		$this->anon->expects($this->never())->method('anonymizeDocument');
 
-	}//end stubRootFolderForMove()
+		$this->runJob(argument: ['batchId' => 'b-1']);
+
+		$this->assertSame([1, 2, 3], $order);
+		$this->assertSame('review', $this->stored['status']);
+		$this->assertSame('extracting', $this->statuses[0]);
+		$this->assertSame(['extracted', 'extracted', 'extracted'], array_column($this->stored['files'], 'status'));
+		$this->assertSame(6, $this->stored['files'][2]['entityCount']);
+
+	}//end testEveryFileIsExtractedAndTheBatchGoesToReview()
 
 	/**
-	 * Test sequential extraction + anonymization of all files
+	 * More files than one unit holds are still all extracted, unit after unit.
 	 *
 	 * @return void
-	 *
-	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-7
 	 */
-	public function testProcessesAllFilesSequentially(): void {
-		$batch = [
-			'batchId' => 'batch-1',
-			'userId' => 'testuser',
-			'status' => 'uploading',
-			'files' => [
-				['fileId' => 1, 'fileName' => 'a.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
-				['fileId' => 2, 'fileName' => 'b.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
-			],
-		];
+	public function testABatchLargerThanOneUnitIsExtractedCompletely(): void {
+		$this->store(count: 60);
+		$this->anon->method('extractAndDetectEntities')->willReturn(['entityCount' => 1]);
 
-		$this->mockStateService->method('getBatch')->willReturn($batch);
+		$this->runJob(argument: ['batchId' => 'b-1']);
 
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService->expects($this->exactly(2))
-			->method('extractAndDetectEntities')
-			->willReturnMap(
-				[
-					[1, ['entityCount' => 5, 'entities' => [['type' => 'PERSON', 'value' => 'Alice']]]],
-					[2, ['entityCount' => 3, 'entities' => [['type' => 'EMAIL', 'value' => 'b@b.nl']]]],
-				]
-			);
+		$this->assertSame('review', $this->stored['status']);
+		$this->assertCount(60, array_filter($this->stored['files'], static fn (array $f): bool => $f['status'] === 'extracted'));
 
-		$this->mockAnonService->expects($this->exactly(2))
-			->method('anonymizeDocumentAs')
-			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/legacy/path.pdf', 'replacementCount' => 1]);
-		// phpcs:enable CustomSn.Functions.NamedParameters
+	}//end testABatchLargerThanOneUnitIsExtractedCompletely()
 
-		// Capture all updateBatch calls to verify state transitions.
-		$updates = [];
-		$this->mockStateService->method('updateBatch')
-			->willReturnCallback(
-				function (string $id, array $b) use (&$updates) {
-					$updates[] = $b;
+	/**
+	 * One failing file does not stop the others.
+	 *
+	 * @return void
+	 */
+	public function testOneFailingFileDoesNotAbortTheBatch(): void {
+		$this->store(count: 3);
+		$this->anon->method('extractAndDetectEntities')->willReturnCallback(
+			static function (int $fileId): array {
+				if ($fileId === 2) {
+					throw new Exception('unreadable');
 				}
-			);
 
-		// Use reflection to call protected run().
-		$ref = new \ReflectionMethod($this->job, 'run');
-		$ref->setAccessible(true);
-		$ref->invoke($this->job, ['batchId' => 'batch-1']);
-
-		// Final update should be 'completed', files 'anonymized'.
-		$last = end($updates);
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->assertEquals('completed', $last['status']);
-		$this->assertEquals('anonymized', $last['files'][0]['status']);
-		$this->assertEquals('anonymized', $last['files'][1]['status']);
-		$this->assertEquals(5, $last['files'][0]['entityCount']);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-	}//end testProcessesAllFilesSequentially()
-
-	/**
-	 * A folder entry names the backend that looked and what it found.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
-	 */
-	public function testEachFolderEntryCarriesTheDetectionOutcome(): void {
-		$detection = ['ran' => true, 'backend' => 'regex', 'entitiesRedacted' => 1, 'outcome' => 'redacted'];
-		$this->mockStateService->method('getBatch')->willReturn(
-			[
-				'batchId' => 'batch-d',
-				'userId' => 'testuser',
-				'status' => 'uploading',
-				'files' => [['fileId' => 1, 'fileName' => 'a.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null]],
-			]
-		);
-		$this->mockAnonService->method('extractAndDetectEntities')
-			->willReturn(['entityCount' => 1, 'entities' => [['type' => 'PERSON', 'value' => 'Alice']]]);
-		$this->mockAnonService->method('anonymizeDocumentAs')
-			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/p.pdf', 'replacementCount' => 1, 'detection' => $detection]);
-
-		$updates = [];
-		$this->mockStateService->method('updateBatch')->willReturnCallback(
-			function (string $id, array $batch) use (&$updates): void {
-				$updates[] = $batch;
+				return ['entityCount' => 1];
 			}
 		);
 
-		$ref = new \ReflectionMethod($this->job, 'run');
-		$ref->invoke($this->job, ['batchId' => 'batch-d']);
+		$this->runJob(argument: ['batchId' => 'b-1']);
 
-		$last = end($updates);
-		$this->assertSame($detection, $last['files'][0]['detection']);
+		$this->assertSame(['extracted', 'error', 'extracted'], array_column($this->stored['files'], 'status'));
+		$this->assertSame('unreadable', $this->stored['files'][1]['error']);
+		$this->assertSame('review', $this->stored['status']);
 
-	}//end testEachFolderEntryCarriesTheDetectionOutcome()
-
-	/**
-	 * Test that a single file extraction failure does not abort the batch
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-7
-	 */
-	public function testSingleFileExtractionFailureDoesNotAbortBatch(): void {
-		$batch = [
-			'batchId' => 'batch-2',
-			'userId' => 'testuser',
-			'status' => 'uploading',
-			'files' => [
-				['fileId' => 1, 'fileName' => 'a.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
-				['fileId' => 2, 'fileName' => 'b.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
-				['fileId' => 3, 'fileName' => 'c.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
-			],
-		];
-
-		$this->mockStateService->method('getBatch')->willReturn($batch);
-
-		$this->mockAnonService->method('extractAndDetectEntities')
-			->willReturnCallback(
-				function (int $fileId) {
-					if ($fileId === 2) {
-						throw new Exception('Extraction failed');
-					}
-
-					return ['entityCount' => 3, 'entities' => []];
-				}
-			);
-
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService->method('anonymizeDocumentAs')
-			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/legacy/p.pdf', 'replacementCount' => 1]);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-		$updates = [];
-		$this->mockStateService->method('updateBatch')
-			->willReturnCallback(
-				function (string $id, array $b) use (&$updates) {
-					$updates[] = $b;
-				}
-			);
-
-		$ref = new \ReflectionMethod($this->job, 'run');
-		$ref->setAccessible(true);
-		$ref->invoke($this->job, ['batchId' => 'batch-2']);
-
-		$last = end($updates);
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->assertEquals('completed', $last['status']);
-		$this->assertEquals('anonymized', $last['files'][0]['status']);
-		$this->assertEquals('error', $last['files'][1]['status']);
-		$this->assertEquals('anonymized', $last['files'][2]['status']);
-		$this->assertNotEmpty($last['files'][1]['error']);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-	}//end testSingleFileExtractionFailureDoesNotAbortBatch()
+	}//end testOneFailingFileDoesNotAbortTheBatch()
 
 	/**
-	 * Test that missing batchId logs error and returns
+	 * A background batch belongs to the cron coordinator: the job leaves it alone.
 	 *
 	 * @return void
 	 */
-	public function testMissingBatchIdLogsError(): void {
-		$this->mockLogger->expects($this->once())->method('error');
-		$this->mockStateService->expects($this->never())->method('getBatch');
+	public function testABackgroundBatchIsLeftToTheCoordinator(): void {
+		$this->store(count: 2, extra: ['background' => true, 'status' => 'extracting']);
+		$this->anon->expects($this->never())->method('extractAndDetectEntities');
 
-		$ref = new \ReflectionMethod($this->job, 'run');
-		$ref->setAccessible(true);
-		$ref->invoke($this->job, []);
+		$this->runJob(argument: ['batchId' => 'b-1']);
 
-	}//end testMissingBatchIdLogsError()
+		$this->assertSame([], $this->statuses);
+
+	}//end testABackgroundBatchIsLeftToTheCoordinator()
 
 	/**
-	 * Test that expired batch logs error and returns
+	 * A batch already past extraction is not extracted again.
 	 *
 	 * @return void
 	 */
-	public function testExpiredBatchLogsError(): void {
-		$this->mockStateService->method('getBatch')->willReturn(null);
-		$this->mockLogger->expects($this->once())->method('error');
-		$this->mockAnonService->expects($this->never())->method('extractAndDetectEntities');
+	public function testABatchInReviewIsNotExtractedAgain(): void {
+		$this->store(count: 2, extra: ['status' => 'review']);
+		$this->anon->expects($this->never())->method('extractAndDetectEntities');
 
-		$ref = new \ReflectionMethod($this->job, 'run');
-		$ref->setAccessible(true);
-		$ref->invoke($this->job, ['batchId' => 'expired-batch']);
+		$this->runJob(argument: ['batchId' => 'b-1']);
 
-	}//end testExpiredBatchLogsError()
+		$this->assertSame([], $this->statuses);
 
-	/**
-	 * Test status transitions through extracting to completed
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-7
-	 */
-	public function testStatusTransitionsExtractingToCompleted(): void {
-		$batch = [
-			'batchId' => 'batch-3',
-			'userId' => 'testuser',
-			'status' => 'uploading',
-			'files' => [
-				['fileId' => 1, 'fileName' => 'a.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
-			],
-		];
-
-		$this->mockStateService->method('getBatch')->willReturn($batch);
-		$this->mockAnonService->method('extractAndDetectEntities')->willReturn(['entityCount' => 1, 'entities' => []]);
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService->method('anonymizeDocumentAs')
-			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/p.pdf', 'replacementCount' => 0]);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-		$statuses = [];
-		$this->mockStateService->method('updateBatch')
-			->willReturnCallback(
-				function (string $id, array $b) use (&$statuses) {
-					$statuses[] = $b['status'];
-				}
-			);
-
-		$ref = new \ReflectionMethod($this->job, 'run');
-		$ref->setAccessible(true);
-		$ref->invoke($this->job, ['batchId' => 'batch-3']);
-
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->assertEquals('extracting', $statuses[0]);
-		$this->assertEquals('completed', end($statuses));
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-	}//end testStatusTransitionsExtractingToCompleted()
+	}//end testABatchInReviewIsNotExtractedAgain()
 
 	/**
-	 * Test that _anonymized-suffixed files are skipped during extraction.
+	 * A missing batch id or an unknown batch is logged as an error.
 	 *
 	 * @return void
-	 *
-	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-3
 	 */
-	public function testSkipsLegacyAnonymizedSuffixedFiles(): void {
-		$batch = [
-			'batchId' => 'batch-filter',
-			'userId' => 'testuser',
-			'status' => 'uploading',
-			'files' => [
-				['fileId' => 1, 'fileName' => 'report.pdf',            'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
-				['fileId' => 2, 'fileName' => 'report_anonymized.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
-				['fileId' => 3, 'fileName' => 'letter.docx',           'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
-			],
-		];
+	public function testAMissingOrUnknownBatchIsLogged(): void {
+		$this->logger->expects($this->exactly(2))->method('error')->with(
+			$this->logicalOr('FolderExtractionJob: missing batchId', 'FolderExtractionJob: batch not found')
+		);
 
-		$this->mockStateService->method('getBatch')->willReturn($batch);
+		$this->runJob(argument: []);
+		$this->runJob(argument: ['batchId' => 'gone']);
 
-		// hasAnonymizedSuffix returns true only for the legacy file.
-		$this->mockLayoutResolver->method('hasAnonymizedSuffix')
-			->willReturnCallback(
-				function (string $fileName): bool {
-					return str_ends_with(pathinfo($fileName, PATHINFO_FILENAME), '_anonymized');
-				}
-			);
-
-		// extractAndDetectEntities must NOT be called for the _anonymized file.
-		$this->mockAnonService->expects($this->exactly(2))
-			->method('extractAndDetectEntities')
-			->willReturn(['entityCount' => 2, 'entities' => []]);
-
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService->method('anonymizeDocumentAs')
-			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/p.pdf', 'replacementCount' => 0]);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-		$updates = [];
-		$this->mockStateService->method('updateBatch')
-			->willReturnCallback(
-				function (string $id, array $b) use (&$updates) {
-					$updates[] = $b;
-				}
-			);
-
-		$ref = new \ReflectionMethod($this->job, 'run');
-		$ref->setAccessible(true);
-		$ref->invoke($this->job, ['batchId' => 'batch-filter']);
-
-		$last = end($updates);
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->assertEquals('anonymized', $last['files'][0]['status'], 'clean file should be anonymized');
-		$this->assertEquals('skipped', $last['files'][1]['status'], 'legacy file should be skipped');
-		$this->assertEquals('anonymized', $last['files'][2]['status'], 'clean file should be anonymized');
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-	}//end testSkipsLegacyAnonymizedSuffixedFiles()
-
-	/**
-	 * Test that retry is idempotent: files already in 'anonymized' status are skipped.
-	 *
-	 * When the shutdown handler ran first and anonymized file 1, the job
-	 * running as a fallback skips it (not 'uploaded') and processes only file 2.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
-	 */
-	public function testRetryIsIdempotentForAlreadyAnonymizedFiles(): void {
-		$batch = [
-			'batchId' => 'batch-retry',
-			'userId' => 'testuser',
-			'status' => 'extracting',
-			'files' => [
-				['fileId' => 1, 'fileName' => 'a.pdf', 'status' => 'anonymized', 'entityCount' => 3, 'error' => null],
-				['fileId' => 2, 'fileName' => 'b.pdf', 'status' => 'uploaded',   'entityCount' => 0, 'error' => null],
-			],
-		];
-
-		$this->mockStateService->method('getBatch')->willReturn($batch);
-
-		// Only the un-processed file should be extracted and anonymized.
-		$this->mockAnonService->expects($this->once())
-			->method('extractAndDetectEntities')
-			->with(2)
-			->willReturn(['entityCount' => 5, 'entities' => []]);
-
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService->expects($this->once())
-			->method('anonymizeDocumentAs')
-			->willReturn(['anonymizedFileId' => null, 'anonymizedFilePath' => '/p.pdf', 'replacementCount' => 0]);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-		$updates = [];
-		$this->mockStateService->method('updateBatch')
-			->willReturnCallback(
-				function (string $id, array $b) use (&$updates) {
-					$updates[] = $b;
-				}
-			);
-
-		$ref = new \ReflectionMethod($this->job, 'run');
-		$ref->setAccessible(true);
-		$ref->invoke($this->job, ['batchId' => 'batch-retry']);
-
-		$last = end($updates);
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->assertEquals('completed', $last['status']);
-		$this->assertEquals('anonymized', $last['files'][0]['status'], 'already-anonymized file unchanged');
-		$this->assertEquals('anonymized', $last['files'][1]['status'], 'newly processed file anonymized');
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-	}//end testRetryIsIdempotentForAlreadyAnonymizedFiles()
-
-	/**
-	 * Test that the job applies the output layout and records the target path.
-	 *
-	 * The anonymized file is moved from OR's legacy path to the subfolder.
-	 * anonymizedFilePath in the file entry reflects the new target path.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
-	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-4
-	 */
-	public function testJobAppliesOutputLayoutAndRecordsTargetPath(): void {
-		$batch = [
-			'batchId' => 'batch-layout',
-			'userId' => 'testuser',
-			'status' => 'uploading',
-			'files' => [
-				['fileId' => 10, 'fileName' => 'report.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
-			],
-		];
-
-		$this->mockStateService->method('getBatch')->willReturn($batch);
-		$this->mockAnonService->method('extractAndDetectEntities')
-			->willReturn(['entityCount' => 2, 'entities' => []]);
-
-		$anonFileId = 999;
-		$legacyPath = '/testuser/files/Dossier/report_anonymized.pdf';
-		$targetPath = '/testuser/files/Dossier/anonymised/report.pdf';
-
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService->method('anonymizeDocumentAs')
-			->willReturn(
-				[
-					'anonymizedFileId' => $anonFileId,
-					'anonymizedFilePath' => $legacyPath,
-					'replacementCount' => 3,
-				]
-			);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-		// Set up the anonFile node.
-		$anonFile = $this->buildAnonFile('report_anonymized.pdf');
-		$subfolder = $this->createMock(Folder::class);
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$subfolder->method('nodeExists')->willReturn(false);
-		$sourceFolder = $this->createMock(Folder::class);
-		$sourceFolder->method('getPath')->willReturn('/testuser/files/Dossier');
-		$sourceFolder->method('nodeExists')->willReturn(false);
-		$sourceFolder->method('newFolder')->willReturn($subfolder);
-		$anonFile->method('getParent')->willReturn($sourceFolder);
-		$anonFile->expects($this->once())->method('move')->with($targetPath);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-		$this->stubRootFolderForMove(anonymizedFileId: $anonFileId, anonFile: $anonFile);
-
-		// Resolver returns 'anonymised' subfolder and strips no suffix here.
-		$this->mockLayoutResolver->method('readSubfolderName')->willReturn('anonymised');
-		$this->mockLayoutResolver->method('resolveBatchDestination')->willReturn($targetPath);
-
-		$updates = [];
-		$this->mockStateService->method('updateBatch')
-			->willReturnCallback(
-				function (string $id, array $b) use (&$updates) {
-					$updates[] = $b;
-				}
-			);
-
-		$ref = new \ReflectionMethod($this->job, 'run');
-		$ref->setAccessible(true);
-		$ref->invoke($this->job, ['batchId' => 'batch-layout']);
-
-		$last = end($updates);
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->assertEquals('anonymized', $last['files'][0]['status']);
-		$this->assertEquals($targetPath, $last['files'][0]['anonymizedFilePath']);
-		$this->assertArrayNotHasKey('warning', $last['files'][0]);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-	}//end testJobAppliesOutputLayoutAndRecordsTargetPath()
-
-	/**
-	 * Test that a move failure preserves the file at the legacy path with a warning.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-2
-	 */
-	public function testMoveFailurePreservesLegacyPathWithWarning(): void {
-		$batch = [
-			'batchId' => 'batch-move-fail',
-			'userId' => 'testuser',
-			'status' => 'uploading',
-			'files' => [
-				['fileId' => 20, 'fileName' => 'letter.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
-			],
-		];
-
-		$this->mockStateService->method('getBatch')->willReturn($batch);
-		$this->mockAnonService->method('extractAndDetectEntities')
-			->willReturn(['entityCount' => 1, 'entities' => []]);
-
-		$anonFileId = 888;
-		$legacyPath = '/testuser/files/Dossier/letter_anonymized.pdf';
-		$targetPath = '/testuser/files/Dossier/anonymised/letter.pdf';
-
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->mockAnonService->method('anonymizeDocumentAs')
-			->willReturn(
-				[
-					'anonymizedFileId' => $anonFileId,
-					'anonymizedFilePath' => $legacyPath,
-					'replacementCount' => 1,
-				]
-			);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-		// anonFile throws on move() — simulates move failure.
-		$anonFile = $this->buildAnonFile('letter_anonymized.pdf');
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$sourceFolder = $this->createMock(Folder::class);
-		$sourceFolder->method('getPath')->willReturn('/testuser/files/Dossier');
-		$sourceFolder->method('nodeExists')->willReturn(false);
-		$sourceFolder->method('newFolder')->willReturn($this->createMock(Folder::class));
-		$anonFile->method('getParent')->willReturn($sourceFolder);
-		$anonFile->method('move')->willThrowException(new \Exception('Move failed'));
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-		$this->stubRootFolderForMove(anonymizedFileId: $anonFileId, anonFile: $anonFile);
-		$this->mockLayoutResolver->method('readSubfolderName')->willReturn('anonymised');
-		$this->mockLayoutResolver->method('resolveBatchDestination')->willReturn($targetPath);
-
-		$updates = [];
-		$this->mockStateService->method('updateBatch')
-			->willReturnCallback(
-				function (string $id, array $b) use (&$updates) {
-					$updates[] = $b;
-				}
-			);
-
-		$ref = new \ReflectionMethod($this->job, 'run');
-		$ref->setAccessible(true);
-		$ref->invoke($this->job, ['batchId' => 'batch-move-fail']);
-
-		$last = end($updates);
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->assertEquals('anonymized', $last['files'][0]['status'], 'file is still anonymized despite move failure');
-		$this->assertEquals($legacyPath, $last['files'][0]['anonymizedFilePath'], 'path stays at legacy');
-		$this->assertArrayHasKey('warning', $last['files'][0]);
-		$this->assertEquals('MOVE_FAILED', $last['files'][0]['warning']['code']);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-	}//end testMoveFailurePreservesLegacyPathWithWarning()
-
-	/**
-	 * Test that the anonymization step failure marks the file as 'error'.
-	 *
-	 * Extraction succeeds but anonymizeDocument throws.
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md#task-7
-	 */
-	public function testAnonymizationFailureMarksFileAsError(): void {
-		$batch = [
-			'batchId' => 'batch-anon-fail',
-			'userId' => 'testuser',
-			'status' => 'uploading',
-			'files' => [
-				['fileId' => 30, 'fileName' => 'doc.pdf', 'status' => 'uploaded', 'entityCount' => 0, 'error' => null],
-			],
-		];
-
-		$this->mockStateService->method('getBatch')->willReturn($batch);
-		$this->mockAnonService->method('extractAndDetectEntities')
-			->willReturn(['entityCount' => 1, 'entities' => []]);
-
-		$this->mockAnonService->method('anonymizeDocumentAs')
-			->willThrowException(new Exception('Backend unavailable'));
-
-		$updates = [];
-		$this->mockStateService->method('updateBatch')
-			->willReturnCallback(
-				function (string $id, array $b) use (&$updates) {
-					$updates[] = $b;
-				}
-			);
-
-		$ref = new \ReflectionMethod($this->job, 'run');
-		$ref->setAccessible(true);
-		$ref->invoke($this->job, ['batchId' => 'batch-anon-fail']);
-
-		$last = end($updates);
-		// phpcs:disable CustomSn.Functions.NamedParameters
-		$this->assertEquals('completed', $last['status']);
-		$this->assertEquals('error', $last['files'][0]['status']);
-		$this->assertStringContainsString('Backend unavailable', $last['files'][0]['error']);
-		// phpcs:enable CustomSn.Functions.NamedParameters
-
-	}//end testAnonymizationFailureMarksFileAsError()
+	}//end testAMissingOrUnknownBatchIsLogged()
 }//end class
