@@ -2,17 +2,35 @@ publiccodeYmlVersion: "0.4"
 
 name: Filinq
 url: "https://github.com/ConductionNL/filinq"
+landingURL: "https://filinq.conduction.nl"
 logo: img/app-store.svg
 softwareVersion: "0.2.0"
 releaseDate: "2026-09-06"
 developmentStatus: stable
-softwareType: "standalone/other"
+softwareType: "addon"
 
 platforms:
-  - nextcloud
+  - web
 
 categories:
   - document-management
+  - e-signature
+  - compliance-management
+
+dependsOn:
+  open:
+    - name: Nextcloud
+      versionMin: "32"
+      versionMax: "35"
+    - name: OpenRegister
+      versionMin: "0.2.14"
+
+intendedAudience:
+  countries:
+    - nl
+  scope:
+    - local-authorities
+    - government
 
 description:
   en:
@@ -27,6 +45,8 @@ description:
       topic classification, PDF generation, document signing (SES/AES/QES), and
       anonymization.
       Conduction maintains this component on behalf of the Municipality of Haarlem.
+      Install it from the Nextcloud App Store at https://apps.nextcloud.com/apps/filinq.
+    documentation: "https://filinq.conduction.nl"
     features:
       - GDPR publication consent tracking
       - Wet Open Overheid (WOO) compliance
@@ -34,6 +54,14 @@ description:
       - Language detection and keyword extraction
       - Document signing (SES / AES / QES)
       - Document anonymization
+      - Local processing, no document data leaves your Nextcloud
+      - Detection of names, addresses and BSN numbers before anonymization
+      - Batch processing of multiple documents
+      - PDF generation
+    screenshots:
+      - img/screenshot-dashboard.png
+      - img/screenshot-consent.png
+      - img/screenshot-anonymization.png
 
   nl:
     shortDescription: >
@@ -47,6 +75,8 @@ description:
       taaldetectie, trefwoordextractie, onderwerpclassificatie, PDF-generatie,
       documentondertekening (SES/AES/QES) en anonimisering.
       Conduction onderhoudt dit component in opdracht van Gemeente Haarlem.
+      Installeer het vanuit de Nextcloud App Store op https://apps.nextcloud.com/apps/filinq.
+    documentation: "https://filinq.conduction.nl"
     features:
       - AVG-publicatietoestemmingsbeheer
       - Wet Open Overheid (WOO)-compliance
@@ -54,6 +84,14 @@ description:
       - Taaldetectie en trefwoordextractie
       - Documentondertekening (SES / AES / QES)
       - Documentanonimisering
+      - Lokale verwerking, er verlaat geen documentdata je Nextcloud
+      - Herkenning van namen, adressen en BSN-nummers voor anonimisering
+      - Batchverwerking van meerdere documenten
+      - PDF-generatie
+    screenshots:
+      - img/screenshot-dashboard.png
+      - img/screenshot-consent.png
+      - img/screenshot-anonymization.png
 
 legal:
   license: EUPL-1.2
@@ -77,6 +115,10 @@ localisation:
   availableLanguages:
     - nl
     - en
+    - de
+    - fr
+    - es
+    - it
 
 # Common Ground layer (nl.vng profile), as a standard supports entry.
 supports:

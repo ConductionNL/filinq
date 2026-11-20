@@ -86,7 +86,7 @@ const config = createConfig({
       {
         specs: [
           {
-            spec: 'static/oas/filinq-api.yaml',
+            spec: 'static/oas/filinq-api.json',
             route: '/api',
           },
         ],

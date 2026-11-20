@@ -11,6 +11,7 @@
 
 import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
+import { fileViewerStore } from '../../src/store/store.js'
 import { createInstance, loadSfcOptions } from './sfc/sfcOptions.js'
 
 vi.mock('@nextcloud/l10n', () => ({
@@ -58,7 +59,7 @@ function fakePage() {
 }
 
 describe('PdfViewer.renderPage', () => {
-	it('replaces the previous page content with the canvas and the text layer', async () => {
+	it('replaces the previous page content with the canvas, the text layer and the region layer', async () => {
 		vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({})
 		const options = await loadSfcOptions(
 			join(__dirname, '../../src/components/viewers/PdfViewer.vue'),
@@ -75,8 +76,35 @@ describe('PdfViewer.renderPage', () => {
 		expect(Array.from(wrapper.children, (el) => el.className)).toEqual([
 			'pdf-viewer__canvas',
 			'pdf-viewer__text-layer',
+			'pdf-viewer__region-layer',
 		])
 		expect(wrapper.textContent).toBe('')
 		expect(vm.applyHighlightsTo).toHaveBeenCalledWith(wrapper.children[1])
+	})
+
+	// @spec openspec/changes/image-redaction/tasks.md#task-4.1
+	it('draws the image regions of the page into its region layer, and redraws them on a new decision', async () => {
+		vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({})
+		const options = await loadSfcOptions(
+			join(__dirname, '../../src/components/viewers/PdfViewer.vue'),
+		)
+		const vm = createInstance(options)
+		const wrapper = document.createElement('div')
+		vm.pageRefs = { 1: wrapper }
+		vm.pdfDoc = { getPage: async () => fakePage() }
+		vm.applyHighlightsTo = vi.fn()
+		const region = { index: 0, page: 1, x: 0.5, y: 0.5, w: 0.25, h: 0.1, type: 'BSN', state: 'redact' }
+		fileViewerStore.imageRegions = [region, { ...region, page: 2 }]
+
+		await vm.renderPage(1)
+
+		const layer = wrapper.querySelector('.pdf-viewer__region-layer')
+		expect(Array.from(layer.children, (el) => el.className)).toEqual(['dd-region dd-region--redact'])
+		expect(layer.children[0].style.left).toBe('50%')
+
+		fileViewerStore.imageRegions = [{ ...region, state: 'keep' }]
+		vm.applyRegions()
+		expect(Array.from(layer.children, (el) => el.className)).toEqual(['dd-region dd-region--keep'])
+		fileViewerStore.imageRegions = undefined
 	})
 })
