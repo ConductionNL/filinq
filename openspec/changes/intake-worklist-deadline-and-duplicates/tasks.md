@@ -32,5 +32,6 @@
 
 - [ ] 5.1 Dutch and English strings (ADR-005), `@spec` tags, `docs/features/` with screenshots (ADR-010). Verify: `npm run check:l10n`, `npm run lint`, `composer check:strict`.
   - Partly: Dutch and English strings in `l10n/en.json` and `l10n/nl.json` (catalogues rebuilt), `@spec` tags, and `docs/features/intake-worklist-signals.md` without screenshots. Screenshots need a running instance.
-- [ ] 5.2 PHPUnit at 75% on the new code inside the container (ADR-009). Verify: the coverage report for `IntakeService` and `IntakeRepository`.
+- [x] 5.2 PHPUnit at 75% on the new code inside the container (ADR-009). Verify: the coverage report for `IntakeService` and `IntakeRepository`.
+  - Coverage measured 2026-11-20 with pcov over the full unit suite (8398 tests, 0 failures), statements of the lib files carrying this change's `@spec` tag: 567 of 602, 94.2% over 11 files; `IntakeService` 194/198 (98.0%), `IntakeRepository` 133/135 (98.5%).
   - Every new class has unit tests; the in-container coverage report was not run here.
