@@ -1,6 +1,18 @@
 OC.L10N.register(
     "filinq",
     {
+        "Activity": "Activiteit",
+        "No activity recorded for this document yet": "Nog geen activiteit vastgelegd voor dit document",
+        "The activity of this document could not be loaded": "De activiteit van dit document kon niet worden geladen",
+        "Record changed": "Record gewijzigd",
+        "Opened": "Geopend",
+        "Downloaded": "Gedownload",
+        "Edited": "Bewerkt",
+        "Version restored": "Versie teruggezet",
+        "Shared": "Gedeeld",
+        "Deleted": "Verwijderd",
+        "Copied to another record": "Gekopieerd naar een ander record",
+        "Copied from another record": "Gekopieerd uit een ander record",
         "Related records for tables (listRefs, JSON)": "Gerelateerde records voor tabellen (listRefs, JSON)",
         "Default detection (OpenRegister)": "Standaarddetectie (OpenRegister)",
         "Local language model (Hermiq agentflow)": "Lokaal taalmodel (Hermiq-agentflow)",

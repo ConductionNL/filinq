@@ -1,5 +1,17 @@
 {
     "translations": {
+        "Activity": "Actividad",
+        "No activity recorded for this document yet": "Todavía no se ha registrado ninguna actividad para este documento",
+        "The activity of this document could not be loaded": "No se pudo cargar la actividad de este documento",
+        "Record changed": "Registro modificado",
+        "Opened": "Abierto",
+        "Downloaded": "Descargado",
+        "Edited": "Editado",
+        "Version restored": "Versión restaurada",
+        "Shared": "Compartido",
+        "Deleted": "Eliminado",
+        "Copied to another record": "Copiado a otro registro",
+        "Copied from another record": "Copiado de otro registro",
         "A new publication starts with this publisher.": "Una nueva publicación empieza con este editor.",
         "Metadata incomplete": "Metadatos incompletos",
         "Set metadata": "Establecer metadatos",

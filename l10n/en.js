@@ -1,6 +1,18 @@
 OC.L10N.register(
     "filinq",
     {
+        "Activity": "Activity",
+        "No activity recorded for this document yet": "No activity recorded for this document yet",
+        "The activity of this document could not be loaded": "The activity of this document could not be loaded",
+        "Record changed": "Record changed",
+        "Opened": "Opened",
+        "Downloaded": "Downloaded",
+        "Edited": "Edited",
+        "Version restored": "Version restored",
+        "Shared": "Shared",
+        "Deleted": "Deleted",
+        "Copied to another record": "Copied to another record",
+        "Copied from another record": "Copied from another record",
         "Related records for tables (listRefs, JSON)": "Related records for tables (listRefs, JSON)",
         "Default detection (OpenRegister)": "Default detection (OpenRegister)",
         "Local language model (Hermiq agentflow)": "Local language model (Hermiq agentflow)",

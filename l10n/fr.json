@@ -1,5 +1,17 @@
 {
     "translations": {
+        "Activity": "Activité",
+        "No activity recorded for this document yet": "Aucune activité n'a encore été enregistrée pour ce document",
+        "The activity of this document could not be loaded": "L'activité de ce document n'a pas pu être chargée",
+        "Record changed": "Enregistrement modifié",
+        "Opened": "Ouvert",
+        "Downloaded": "Téléchargé",
+        "Edited": "Modifié",
+        "Version restored": "Version restaurée",
+        "Shared": "Partagé",
+        "Deleted": "Supprimé",
+        "Copied to another record": "Copié vers un autre enregistrement",
+        "Copied from another record": "Copié depuis un autre enregistrement",
         "A new publication starts with this publisher.": "Une nouvelle publication commence avec cet éditeur.",
         "Metadata incomplete": "Métadonnées incomplètes",
         "Set metadata": "Définir les métadonnées",

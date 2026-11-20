@@ -114,6 +114,19 @@
 				class="file-viewer-page__notes"
 				data-testid="file-viewer-notes">
 				<CnNotesCard :key="notesFileId" :fileId="notesFileId" />
+				<!-- What happened to this document: its trail in OpenRegister (specify-capability-rows REQ-SCR-007). -->
+				<CnAuditTrailCard
+					:key="`activity-${notesFileId}`"
+					:objectId="notesFileId"
+					:endpoint="activityEndpoint"
+					:actionLabels="activityLabels"
+					:title="t('filinq', 'Activity')"
+					:noEntriesLabel="t('filinq', 'No activity recorded for this document yet')"
+					:failedLabel="t('filinq', 'The activity of this document could not be loaded')"
+					:maxDisplay="20"
+					order="newest"
+					layout="stacked"
+					data-testid="file-viewer-activity" />
 			</aside>
 		</div>
 		<AccessibilityPublishWarningModal
@@ -135,7 +148,7 @@
 </template>
 
 <script>
-import { CnNotesCard } from '@conduction/nextcloud-vue'
+import { CnAuditTrailCard, CnNotesCard } from '@conduction/nextcloud-vue'
 import { showError } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
@@ -159,6 +172,7 @@ import AccessibilityPublishWarningModal from '../../modals/AccessibilityPublishW
 import ConformanceReportModal from '../../modals/ConformanceReportModal.vue'
 import { ocrRun } from '../../mixins/ocrRun.js'
 import { fetchSourceBadges, sourceBadgeLabel } from '../../services/bridge.js'
+import { DOCUMENT_ACTIVITY_ENDPOINT, documentActivityLabels, recordDocumentOpened } from '../../services/documentActivity.js'
 import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { startPublication } from '../../services/publications.js'
 import { publicationReadiness } from '../../services/validationService.js'
@@ -181,6 +195,7 @@ const FILE_TYPE_ICONS = new Map([
 export default {
 	name: 'FileViewerPage',
 	components: {
+		CnAuditTrailCard,
 		CnNotesCard,
 		NcLoadingIcon,
 		TextRecognition,
@@ -208,6 +223,8 @@ export default {
 	data() {
 		return {
 			fileViewerStore,
+			activityEndpoint: DOCUMENT_ACTIVITY_ENDPOINT,
+			activityLabels: documentActivityLabels(),
 			publishing: false,
 			ocrAvailable: false,
 			ocrResult: null,
@@ -366,6 +383,7 @@ export default {
 			handler() {
 				this.loadOcrStatus()
 				this.loadSourceBadge()
+				recordDocumentOpened(this.notesFileId)
 			},
 		},
 	},
