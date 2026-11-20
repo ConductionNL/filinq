@@ -62,6 +62,9 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the sum of small independent
+ * checks of the signing fields and their placement on one document.
+ *
  * @spec openspec/specs/document-signing/spec.md
  */
 class SignedArtifactProducer {
