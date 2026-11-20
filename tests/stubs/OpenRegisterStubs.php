@@ -2462,6 +2462,53 @@ class ArchivalImmutableException extends \Exception {
 	}//end getSchemaIdentifier()
 }//end class
 
+/**
+ * Stub for HookStoppedException.
+ *
+ * Mirrors openregister/lib/Exception/HookStoppedException.php on main
+ * (2026-11-17): the same constructor, code always 0, and `getErrors()`.
+ * OpenRegister throws it when a pre-save listener of the target app stops the
+ * write, as OpenCatalogi's DiWoo listener does for a document type outside
+ * the national list.
+ *
+ * @category Tests
+ * @package  OCA\OpenRegister\Exception
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+class HookStoppedException extends \Exception {
+	/**
+	 * The hook's validation errors.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $errors;
+
+	/**
+	 * Construct the stub exception with the real class's signature.
+	 *
+	 * @param string               $message Error message.
+	 * @param array<string, mixed> $errors  Hook validation errors.
+	 */
+	public function __construct(
+		string $message = 'Operation blocked by schema hook',
+		array $errors = [],
+	) {
+		$this->errors = $errors;
+		parent::__construct($message, 0);
+	}//end __construct()
+
+	/**
+	 * Get the hook validation errors.
+	 *
+	 * @return array<string, mixed>
+	 */
+	public function getErrors(): array {
+		return $this->errors;
+	}//end getErrors()
+}//end class
+
 namespace OCA\OpenRegister\Event;
 
 use OCA\OpenRegister\Db\ObjectEntity;

@@ -184,6 +184,8 @@ class ScanProfileServiceTest extends TestCase {
 				'label' => 'front',
 				'watchedFolder' => '/Scans',
 				'separatorMode' => 'qr',
+				'resolution' => 300,
+				'colourMode' => 'colour',
 				'inkThreshold' => 4096,
 				'targetFolder' => '/Scans',
 			],
@@ -192,6 +194,8 @@ class ScanProfileServiceTest extends TestCase {
 				'label' => 'Back office',
 				'watchedFolder' => '/Back',
 				'separatorMode' => 'blankPage',
+				'resolution' => 300,
+				'colourMode' => 'colour',
 				'inkThreshold' => 100,
 				'targetFolder' => '/Sorted',
 			],
@@ -242,11 +246,99 @@ class ScanProfileServiceTest extends TestCase {
 		$this->config->expects($this->never())->method('setValueString');
 
 		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('A scan profile cuts on qr or on blankPage, not on "barcode".');
+		$this->expectExceptionMessage('A scan profile cuts on qr, on blankPage or not at all (none), not on "barcode".');
 
 		(new ScanProfileService($this->config, $this->logger))->declare([
 			['id' => 'front', 'watchedFolder' => '/Scans', 'separatorMode' => 'barcode'],
 		]);
 
 	}//end testDeclareRefusesAnUnknownSeparatorMode()
+
+	/**
+	 * A profile keeps its resolution, colour mode and separator mode `none`,
+	 * and is read back as declared (REQ-SCI-05).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
+	 */
+	public function testDeclareKeepsResolutionColourModeAndNoSplit(): void {
+		$stored = null;
+		$this->config->expects($this->once())->method('setValueString')->willReturnCallback(
+			static function (string $app, string $key, string $value) use (&$stored): bool {
+				$stored = $value;
+				return true;
+			}
+		);
+
+		$service = new ScanProfileService($this->config, $this->logger);
+		$declared = $service->declare([
+			['id' => 'floor2', 'label' => 'Scanner 2e verdieping', 'watchedFolder' => 'Scans/Post', 'separatorMode' => 'qr', 'resolution' => '300', 'colourMode' => 'blackAndWhite'],
+			['id' => 'desk', 'watchedFolder' => 'Scans/Balie', 'separatorMode' => 'none', 'resolution' => 600, 'colourMode' => 'greyscale'],
+		]);
+
+		$this->assertSame(['qr', 'none'], array_column($declared, 'separatorMode'));
+		$this->assertSame([300, 600], array_column($declared, 'resolution'));
+		$this->assertSame(['blackAndWhite', 'greyscale'], array_column($declared, 'colourMode'));
+
+		$reread = (new ScanProfileService($this->configHolding((string)$stored), $this->logger))->all();
+		$this->assertSame($declared, $reread);
+
+	}//end testDeclareKeepsResolutionColourModeAndNoSplit()
+
+	/**
+	 * A resolution outside 75–1200 dpi, or not a whole number, is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
+	 */
+	public function testDeclareRefusesAnImpossibleResolution(): void {
+		$this->config->expects($this->never())->method('setValueString');
+		$service = new ScanProfileService($this->config, $this->logger);
+
+		foreach ([[50, '"50"'], [2400, '"2400"'], ['high', '"high"'], [300.5, '"300.5"']] as [$value, $shown]) {
+			try {
+				$service->declare([['id' => 'x', 'watchedFolder' => '/Scans', 'resolution' => $value]]);
+				$this->fail('a resolution of ' . $shown . ' must be refused');
+			} catch (RuntimeException $e) {
+				$this->assertSame('A scan profile scans at a resolution from 75 to 1200 dpi, not at ' . $shown . '.', $e->getMessage());
+			}
+		}
+
+	}//end testDeclareRefusesAnImpossibleResolution()
+
+	/**
+	 * An unknown colour mode is refused, naming the ones that exist.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
+	 */
+	public function testDeclareRefusesAnUnknownColourMode(): void {
+		$this->config->expects($this->never())->method('setValueString');
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('A scan profile scans in colour, greyscale, blackAndWhite, not in "sepia".');
+
+		(new ScanProfileService($this->config, $this->logger))->declare([
+			['id' => 'front', 'watchedFolder' => '/Scans', 'colourMode' => 'sepia'],
+		]);
+
+	}//end testDeclareRefusesAnUnknownColourMode()
+
+	/**
+	 * A config double that holds one stored value.
+	 *
+	 * @param string $raw The stored JSON.
+	 *
+	 * @return IAppConfig&MockObject
+	 */
+	private function configHolding(string $raw): IAppConfig {
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->with('filinq', 'scanProfiles', '')->willReturn($raw);
+
+		return $config;
+
+	}//end configHolding()
 }//end class
