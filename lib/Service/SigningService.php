@@ -32,6 +32,7 @@ use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Kernel\SigningAuditSubject;
 use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
 use OCA\Filinq\Service\Signing\SignerEntries;
+use OCA\Filinq\Service\Signing\SigningAttribution;
 use OCA\Filinq\Service\Signing\SigningAct;
 use OCA\Filinq\Service\Signing\SigningTurn;
 use OCA\Filinq\Service\Support\SigningGuards;
@@ -64,6 +65,13 @@ use RuntimeException;
  * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SigningService implements SigningServiceInterface {
+
+	/**
+	 * How an agent's request is attributed: started via mcp, through Hermiq's approval gate.
+	 *
+	 * @var string
+	 */
+	private const VIA_MCP = 'mcp';
 
 	/**
 	 * The app a lifecycle move made on filinq's behalf is recorded against.
@@ -131,8 +139,11 @@ class SigningService implements SigningServiceInterface {
 	// gives: the spec-coverage gate cannot walk past a multi-line attribute's `)]`.
 	//
 	// This is the only signing method an agent may reach, and only to START a
-	// request: sign(), decline(), bulkSign(), cancelRequest() and every class
-	// under Service/Signing/ stay attribute-free. The write hints route the tool
+	// request: createRequest() (the form, bulk and envelope paths), sign(),
+	// decline(), bulkSign(), cancelRequest() and every class under
+	// Service/Signing/ stay attribute-free. It is a separate entry point so the
+	// request it creates says it came via mcp; createRequest() cannot tell an
+	// agent's call from the form's. The write hints route the tool
 	// through Hermiq's human-approval gate; Filinq adds no gate of its own.
 
 	#[McpTool(
@@ -149,9 +160,36 @@ class SigningService implements SigningServiceInterface {
 		scope: 'create'
 	)]
 	/**
+	 * Start a signing request on an agent's behalf, attributed `mcp`.
+	 *
+	 * The same creation createRequest() runs, as the signed-in user (the
+	 * invoking principal), with every validation unchanged. The persisted
+	 * request carries `initiatedVia: mcp` and its CREATED audit entry records
+	 * `via: mcp` beside the actor, so an agent-started request is told apart
+	 * from one started in Filinq. Neither can be set through the request data.
+	 *
+	 * @param array<string, mixed> $data The signing request data, as createRequest() takes it.
+	 *
+	 * @return array<string, mixed> The created signing request.
+	 *
+	 * @throws RuntimeException If creation fails.
+	 * @throws \InvalidArgumentException With code 400 when the request or a guardian entry is invalid.
+	 *
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-an-approval-gated-signing-request-initiation-tool-exists-req-ddhat-001
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-agent-initiated-writes-are-attributable-req-ddhat-003
+	 */
+	public function startSigningRequest(array $data): array {
+		return $this->createRequest(data: $data, via: self::VIA_MCP);
+
+	}//end startSigningRequest()
+
+	/**
 	 * Create a new signing request
 	 *
 	 * @param array<string, mixed> $data The signing request data
+	 * @param string               $via  How it was started: `mcp` from startSigningRequest(), ''
+	 *                                   (the default) for Filinq's own paths. The request data
+	 *                                   cannot set it.
 	 *
 	 * @return array<string, mixed> The created signing request
 	 *
@@ -161,11 +199,9 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
-	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-an-approval-gated-signing-request-initiation-tool-exists-req-ddhat-001
 	 */
-	public function createRequest(array $data): array {
-		// Throws RuntimeException('No authenticated user') when there is no
-		// session user — exactly as the inline check here did before.
+	public function createRequest(array $data, string $via=''): array {
+		// Throws RuntimeException('No authenticated user') when there is no session user.
 		[$initiatorUserId, $initiatorDisplayName] = $this->actorResolver->resolveActingIdentity();
 
 		$objectService = $this->settingsService->getObjectService();
@@ -232,6 +268,7 @@ class SigningService implements SigningServiceInterface {
 		$request = $this->withProvenance(request: $request, data: $data);
 		$request = $this->guards->validator->withPlacements(request: $request, data: $data, producer: $this->outputs->artifactProducer);
 		$request = $this->outputs->artifactProducer->delegate(request: $request, signers: $signers);
+		$request = (new SigningAttribution(via: $via))->onto(request: $request);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 		$savedRequest = $objectService->saveObject(
@@ -253,20 +290,41 @@ class SigningService implements SigningServiceInterface {
 		);
 		$createdRequest['assuranceFloor'] = $this->guards->assuranceGate->floorFor(request: $request);
 
+		$this->logCreated(
+			request: $request,
+			requestId: (string)$requestId,
+			initiator: [$initiatorUserId, $initiatorDisplayName],
+			attribution: new SigningAttribution(via: $via)
+		);
+
+		return $createdRequest;
+	}//end createRequest()
+
+	/**
+	 * Write the CREATED audit entry of a new request, with how it was started.
+	 *
+	 * @param array<string, mixed>     $request     The created request.
+	 * @param string                   $requestId   Its id.
+	 * @param array{0: string, 1: string} $initiator   The initiator's user id and display name.
+	 * @param SigningAttribution       $attribution How the request was started.
+	 *
+	 * @return void
+	 */
+	private function logCreated(array $request, string $requestId, array $initiator, SigningAttribution $attribution): void {
 		$this->outputs->auditService->logEvent(
 			event: new SigningAuditEvent(
 				request: new SigningAuditSubject(id: $requestId, signatureLevel: $request['signatureLevel'], provider: $request['provider']),
 				action: 'CREATED',
 				actor: new SigningAuditActor(
-					userId: $initiatorUserId,
-					displayName: $initiatorDisplayName,
+					userId: $initiator[0],
+					displayName: $initiator[1],
 					ipAddress: $this->actorResolver->getClientIp()
-				)
+				),
+				metadata: $attribution->auditMetadata()
 			)
 		);
 
-		return $createdRequest;
-	}//end createRequest()
+	}//end logCreated()
 
 	/**
 	 * Copy the provenance a consuming app sent onto the request.
