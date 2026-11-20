@@ -16206,7 +16206,7 @@
                 "uri": null,
                 "slug": "integrityScan",
                 "title": "Integrity scan",
-                "description": "One run of the whole-collection integrity scan: when it ran, how many records it checked, and the files it found missing, changed against their frozen checksum, or orphaned. Written only by the scan; it never changes a file. See openspec/changes/archive/2026-11-20-whole-collection-integrity-scan.",
+                "description": "One run of the whole-collection integrity scan: when it ran, how many records it checked, and the files it found missing, changed against their frozen checksum, or orphaned. Written only by the scan; it never changes a file. See openspec/changes/whole-collection-integrity-scan.",
                 "version": "1.0.0",
                 "summary": "",
                 "icon": "ShieldCheckOutline",

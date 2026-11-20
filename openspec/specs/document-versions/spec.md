@@ -236,11 +236,9 @@ The scan SHALL run nightly as a background job and SHALL be startable by an admi
 - **GIVEN** a signed-in user who is not an administrator
 - **WHEN** that user posts to the start-scan endpoint
 - **THEN** the answer is 403 and no scan runs
-- @e2e exclude authorisation; covered by PHPUnit on the controller
 
 #### Scenario: A run with findings notifies once
 
 - **GIVEN** a run that finds three changed files
 - **WHEN** the run ends
 - **THEN** each administrator gets one notification for the run
-- @e2e exclude background job; covered by PHPUnit on IntegrityScanJob

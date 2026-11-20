@@ -20,9 +20,9 @@
  * test runs only when `FILINQ_E2E_CLEAN_INSTANCE=1`, on an instance nothing
  * else writes to, because any finding on a shared instance would fail it.
  *
- * The two remaining scenarios of REQ-DIS-02 (403 for a non-administrator and
- * one notification per run) are `@e2e exclude` in the spec and covered by
- * PHPUnit on SettingsController and IntegrityScanJob.
+ * THE 403 TEST CREATES A USER. It makes a throwaway non-administrator through
+ * the provisioning API as the signed-in admin, posts as that user, and deletes
+ * the user afterwards.
  *
  * Not run in the change that wrote it (decision 139): the live pass runs it.
  */
@@ -32,6 +32,8 @@
 // @e2e document-versions::an-anonymised-copy-lost-its-source
 // @e2e document-versions::a-clean-collection
 // @e2e document-versions::the-administrator-reads-the-last-result
+// @e2e document-versions::only-administrators-start-a-scan
+// @e2e document-versions::a-run-with-findings-notifies-once
 
 import type { APIRequestContext, Page } from '@playwright/test'
 
@@ -52,6 +54,10 @@ const CHANGED_FILE_ID = process.env.FILINQ_E2E_CHANGED_FILE_ID ?? ''
 const ORPHANED_FILE_ID = process.env.FILINQ_E2E_ORPHANED_FILE_ID ?? ''
 const CLEAN_INSTANCE = process.env.FILINQ_E2E_CLEAN_INSTANCE === '1'
 
+/** The provisioning and notification endpoints. */
+const USERS_API = '/ocs/v1.php/cloud/users'
+const NOTIFICATIONS_API = '/ocs/v2.php/apps/notifications/api/v2/notifications?format=json'
+
 /** What one stored run carries. */
 interface ScanRun {
 	startedAt: string
@@ -70,7 +76,7 @@ interface ScanRun {
  */
 async function startScan(request: APIRequestContext): Promise<ScanRun> {
 	const res = await request.post(SCAN_API, {
-		headers: { 'OCS-APIRequest': 'true', requesttoken: '' },
+		headers: { 'OCS-APIRequest': 'true' },
 	})
 	expect(res.ok(), `POST ${SCAN_API} -> ${res.status()}`).toBeTruthy()
 	const body = await res.json()
@@ -118,6 +124,53 @@ async function deleteFile(request: APIRequestContext, name: string): Promise<voi
 }
 
 /**
+ * Seed a dossier that lists a deleted file, so the next run has a `missing`
+ * finding. Answers the dossier id and the file id.
+ *
+ * @param request The authenticated request context.
+ * @return The dossier id and the deleted file's id.
+ */
+async function seedMissingMember(request: APIRequestContext): Promise<{ dossierId: string; fileId: number }> {
+	const name = `integrity-scan-${Date.now()}.txt`
+	const fileId = await uploadFile(request, name)
+
+	const created = await request.post(DOSSIER_API, {
+		headers: { 'OCS-APIRequest': 'true' },
+		data: { name: `Integrity scan ${Date.now()}` },
+	})
+	expect(created.status(), `POST ${DOSSIER_API}`).toBe(201)
+	const dossier = await created.json()
+	const dossierId = String(dossier.id ?? dossier.uuid ?? dossier['@self']?.id ?? '')
+	expect(dossierId).not.toBe('')
+
+	const linked = await request.post(`${DOSSIER_API}/${dossierId}/documents`, {
+		headers: { 'OCS-APIRequest': 'true' },
+		data: { fileId },
+	})
+	expect(linked.ok(), `link ${fileId} -> ${linked.status()}`).toBeTruthy()
+
+	await deleteFile(request, name)
+
+	return { dossierId, fileId }
+}
+
+/**
+ * The signed-in user's filinq integrity-scan notifications.
+ *
+ * @param request The authenticated request context.
+ * @return The notifications for integrity scan runs.
+ */
+async function scanNotifications(request: APIRequestContext): Promise<Array<{ object_id: string }>> {
+	const res = await request.get(NOTIFICATIONS_API, { headers: { 'OCS-APIRequest': 'true' } })
+	expect(res.ok(), `GET notifications -> ${res.status()}`).toBeTruthy()
+	const body = await res.json()
+
+	return (body?.ocs?.data ?? []).filter(
+		(n: any) => n.app === 'filinq' && n.object_type === 'integrityScan',
+	)
+}
+
+/**
  * Open filinq's admin settings and wait for the integrity scan section.
  *
  * @param page The page.
@@ -134,25 +187,7 @@ test.describe('whole-collection integrity scan', () => {
 	test.setTimeout(180_000)
 
 	test('a dossier member deleted from storage is reported as missing, naming the dossier', async ({ request }) => {
-		const name = `integrity-scan-${Date.now()}.txt`
-		const fileId = await uploadFile(request, name)
-
-		const created = await request.post(DOSSIER_API, {
-			headers: { 'OCS-APIRequest': 'true' },
-			data: { name: `Integrity scan ${Date.now()}` },
-		})
-		expect(created.status(), `POST ${DOSSIER_API}`).toBe(201)
-		const dossier = await created.json()
-		const dossierId = String(dossier.id ?? dossier.uuid ?? dossier['@self']?.id ?? '')
-		expect(dossierId).not.toBe('')
-
-		const linked = await request.post(`${DOSSIER_API}/${dossierId}/documents`, {
-			headers: { 'OCS-APIRequest': 'true' },
-			data: { fileId },
-		})
-		expect(linked.ok(), `link ${fileId} -> ${linked.status()}`).toBeTruthy()
-
-		await deleteFile(request, name)
+		const { dossierId, fileId } = await seedMissingMember(request)
 
 		const run = await startScan(request)
 		const missing = run.findings.filter((f) => f.kind === 'missing' && String(f.fileId) === String(fileId))
@@ -210,5 +245,44 @@ test.describe('whole-collection integrity scan', () => {
 		// "Check now" runs a scan from the page and shows its result.
 		await page.getByRole('button', { name: /Check now|Nu controleren/ }).click()
 		await expect(page.locator('.integrity-scan__time')).toBeVisible({ timeout: 60_000 })
+	})
+
+	test('a user who is not an administrator is refused and no scan runs', async ({ playwright, request, baseURL }) => {
+		const before = await request.get(SCAN_API, { headers: { 'OCS-APIRequest': 'true' } })
+		expect(before.ok()).toBeTruthy()
+		const lastStarted = (await before.json()).run?.startedAt ?? null
+
+		const userid = `scan-e2e-${Date.now()}`
+		const password = `Pw-${Date.now()}-integrity!`
+		const made = await request.post(USERS_API, {
+			headers: { 'OCS-APIRequest': 'true' },
+			form: { userid, password },
+		})
+		expect(made.ok(), `create user -> ${made.status()}`).toBeTruthy()
+
+		const asUser = await playwright.request.newContext({
+			baseURL,
+			httpCredentials: { username: userid, password },
+		})
+		try {
+			const res = await asUser.post(SCAN_API, { headers: { 'OCS-APIRequest': 'true' } })
+			expect(res.status()).toBe(403)
+
+			const after = await request.get(SCAN_API, { headers: { 'OCS-APIRequest': 'true' } })
+			expect((await after.json()).run?.startedAt ?? null).toBe(lastStarted)
+		} finally {
+			await asUser.dispose()
+			await request.delete(`${USERS_API}/${userid}`, { headers: { 'OCS-APIRequest': 'true' } })
+		}
+	})
+
+	test('a run with a missing file notifies each administrator once for that run', async ({ request }) => {
+		await seedMissingMember(request)
+
+		const run = await startScan(request)
+		expect(run.missing + run.changed).toBeGreaterThan(0)
+
+		const forRun = (await scanNotifications(request)).filter((n) => n.object_id === String(run.startedAt))
+		expect(forRun, 'one notification for this run').toHaveLength(1)
 	})
 })
