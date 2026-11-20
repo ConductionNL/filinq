@@ -86,3 +86,6 @@ No PHP, no schema, no route.
   accept a Nextcloud file as its source, reading and writing that file's
   comments through `/remote.php/dav/comments/files/{fileId}`. This is an
   added prop, a minor release, not a major one.
+  Shipped: `CnNotesCard` takes a `fileId` and reads that file's comments in
+  `@conduction/nextcloud-vue` 2.180.0, the version `package-lock.json`
+  already resolves, so no bump was needed.

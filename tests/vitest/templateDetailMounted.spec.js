@@ -73,7 +73,9 @@ describe('template editor mount golden', () => {
 			golden('templateDetailMounted-' + name.replace(/\W+/g, '-'), {
 				calls: world.calls,
 				form: vm.form,
-				editorHtml: vm.editorHtml,
+				// The editor mounts form.content through HtmlDocumentEditor's v-model
+				// (generate-draft-and-attended-edit D7); it held its own copy before.
+				editorHtml: vm.form.content,
 				lockOwner: vm.lockOwner,
 				hasWizard: vm.hasWizard,
 			})

@@ -7,7 +7,7 @@
     "tools": [
       {
         "name": "composer",
-        "version": "2.10.2"
+        "version": "2.8.12"
       },
       {
         "vendor": "cyclonedx",
@@ -105,10 +105,10 @@
   },
   "components": [
     {
-      "bom-ref": "adbario/php-dot-notation-3.5.0.0",
+      "bom-ref": "adbario/php-dot-notation-3.6.0.0",
       "type": "library",
       "name": "php-dot-notation",
-      "version": "3.5.0",
+      "version": "3.6.0",
       "group": "adbario",
       "description": "PHP dot notation access to arrays",
       "author": "Riku Särkinen",
@@ -119,17 +119,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/adbario/php-dot-notation@3.5.0",
+      "purl": "pkg:composer/adbario/php-dot-notation@3.6.0",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/adbario/php-dot-notation/zipball/aa09db5a7a365a8d2d8dd7edfa3cd501d1a8acb0",
-          "comment": "dist reference: aa09db5a7a365a8d2d8dd7edfa3cd501d1a8acb0"
+          "url": "https://api.github.com/repos/adbario/php-dot-notation/zipball/b59a609293b22fdb8a7d9fcb4b9b283176463d40",
+          "comment": "dist reference: b59a609293b22fdb8a7d9fcb4b9b283176463d40"
         },
         {
           "type": "vcs",
           "url": "https://github.com/adbario/php-dot-notation.git",
-          "comment": "source reference: aa09db5a7a365a8d2d8dd7edfa3cd501d1a8acb0"
+          "comment": "source reference: b59a609293b22fdb8a7d9fcb4b9b283176463d40"
         },
         {
           "type": "website",
@@ -143,18 +143,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/adbario/php-dot-notation/tree/3.5.0",
+          "url": "https://github.com/adbario/php-dot-notation/tree/3.6.0",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "aa09db5a7a365a8d2d8dd7edfa3cd501d1a8acb0"
+          "value": "b59a609293b22fdb8a7d9fcb4b9b283176463d40"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "aa09db5a7a365a8d2d8dd7edfa3cd501d1a8acb0"
+          "value": "b59a609293b22fdb8a7d9fcb4b9b283176463d40"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1905,10 +1905,10 @@
       ]
     },
     {
-      "bom-ref": "tecnickcom/tc-lib-pdf-8.84.0.0",
+      "bom-ref": "tecnickcom/tc-lib-pdf-8.84.3.0",
       "type": "library",
       "name": "tc-lib-pdf",
-      "version": "8.84.0",
+      "version": "8.84.3",
       "group": "tecnickcom",
       "description": "PHP PDF Library",
       "author": "Nicola Asuni",
@@ -1919,17 +1919,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/tecnickcom/tc-lib-pdf@8.84.0",
+      "purl": "pkg:composer/tecnickcom/tc-lib-pdf@8.84.3",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/2be3a522329df9d2941381ce8315b6647d620c69",
-          "comment": "dist reference: 2be3a522329df9d2941381ce8315b6647d620c69"
+          "url": "https://api.github.com/repos/tecnickcom/tc-lib-pdf/zipball/9a0d65988a6512144a46d6285373b79e5239fe33",
+          "comment": "dist reference: 9a0d65988a6512144a46d6285373b79e5239fe33"
         },
         {
           "type": "vcs",
           "url": "https://github.com/tecnickcom/tc-lib-pdf.git",
-          "comment": "source reference: 2be3a522329df9d2941381ce8315b6647d620c69"
+          "comment": "source reference: 9a0d65988a6512144a46d6285373b79e5239fe33"
         },
         {
           "type": "website",
@@ -1950,11 +1950,11 @@
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "2be3a522329df9d2941381ce8315b6647d620c69"
+          "value": "9a0d65988a6512144a46d6285373b79e5239fe33"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "2be3a522329df9d2941381ce8315b6647d620c69"
+          "value": "9a0d65988a6512144a46d6285373b79e5239fe33"
         },
         {
           "name": "cdx:composer:package:type",
@@ -6825,141 +6825,6 @@
               "value": "node_modules/@nextcloud/vue/node_modules/@vueuse/metadata"
             }
           ]
-        },
-        {
-          "type": "library",
-          "name": "devtools-api",
-          "group": "@vue",
-          "version": "8.2.1",
-          "bom-ref": "filinq@1.0.0|@nextcloud/vue@9.14.1|@vue/devtools-api@8.2.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40vue/devtools-api@8.2.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@vue/devtools-api/-/devtools-api-8.2.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "eaee2f5c19480400b5c0ca65219829c8f9fbba1fece017fa1796cccef2eff84749d1a1ecffee01ed882ff3ae044ad4128d16ec4734e4a3f9141b503521e8d0dc"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/@nextcloud/vue/node_modules/@vue/devtools-api"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "devtools-kit",
-          "group": "@vue",
-          "version": "8.2.1",
-          "bom-ref": "filinq@1.0.0|@nextcloud/vue@9.14.1|@vue/devtools-kit@8.2.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40vue/devtools-kit@8.2.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@vue/devtools-kit/-/devtools-kit-8.2.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "148188baadc0591784a5b00763f71119e1c37c8d2a39bf0e090dd88db1005f4e2e6b12036c673dae191b55c1bbae77c73d713746c5392ab58ebbd57fa2477c01"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/@nextcloud/vue/node_modules/@vue/devtools-kit"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "devtools-shared",
-          "group": "@vue",
-          "version": "8.2.1",
-          "bom-ref": "filinq@1.0.0|@nextcloud/vue@9.14.1|@vue/devtools-shared@8.2.1",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40vue/devtools-shared@8.2.1",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@vue/devtools-shared/-/devtools-shared-8.2.1.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "16469cee551d1917a1ea954e8b70183d119ef362d0a919807d3856ed14658a03803f4640fd9d73f572c70ccf5dbf7e295761d173bf432bcb8a3de1b67cb9c0fe"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/@nextcloud/vue/node_modules/@vue/devtools-shared"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "perfect-debounce",
-          "version": "2.1.0",
-          "bom-ref": "filinq@1.0.0|@nextcloud/vue@9.14.1|perfect-debounce@2.1.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/perfect-debounce@2.1.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/perfect-debounce/-/perfect-debounce-2.1.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "2e381d4f2b5515779482d1d9afd59856261233f83c3247133d80e53daddc0ea322ac78ca89264f61de83a0bee92bc00942bfae5a442f0a31cd76232ab2b26cfa"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/@nextcloud/vue/node_modules/perfect-debounce"
-            }
-          ]
         }
       ]
     },
@@ -10445,8 +10310,8 @@
       "type": "library",
       "name": "devtools-api",
       "group": "@vue",
-      "version": "7.7.10",
-      "bom-ref": "filinq@1.0.0|@vue/devtools-api@7.7.10",
+      "version": "8.2.1",
+      "bom-ref": "filinq@1.0.0|@vue/devtools-api@8.2.1",
       "licenses": [
         {
           "license": {
@@ -10454,15 +10319,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40vue/devtools-api@7.7.10",
+      "purl": "pkg:npm/%40vue/devtools-api@8.2.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@vue/devtools-api/-/devtools-api-7.7.10.tgz",
+          "url": "https://registry.npmjs.org/@vue/devtools-api/-/devtools-api-8.2.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "2b1b44a5438ea45cffa8e191ac0c00dfa405ec3a8803e157802622b7d9a4f708db699b74b17385cfcd4494e66d280e076d61d4770363647045b05172a7905988"
+              "content": "eaee2f5c19480400b5c0ca65219829c8f9fbba1fece017fa1796cccef2eff84749d1a1ecffee01ed882ff3ae044ad4128d16ec4734e4a3f9141b503521e8d0dc"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -10479,8 +10344,8 @@
       "type": "library",
       "name": "devtools-kit",
       "group": "@vue",
-      "version": "7.7.10",
-      "bom-ref": "filinq@1.0.0|@vue/devtools-kit@7.7.10",
+      "version": "8.2.1",
+      "bom-ref": "filinq@1.0.0|@vue/devtools-kit@8.2.1",
       "licenses": [
         {
           "license": {
@@ -10488,15 +10353,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40vue/devtools-kit@7.7.10",
+      "purl": "pkg:npm/%40vue/devtools-kit@8.2.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@vue/devtools-kit/-/devtools-kit-7.7.10.tgz",
+          "url": "https://registry.npmjs.org/@vue/devtools-kit/-/devtools-kit-8.2.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "dd6362d8aab8b5ba556e686697b462a61980b74dbbf688777ca35e58c408ae5b5f5fc43dd5be22e4f2fc0edc8d29dc2672c1ab5787e0f9eaf058e983d3908b23"
+              "content": "148188baadc0591784a5b00763f71119e1c37c8d2a39bf0e090dd88db1005f4e2e6b12036c673dae191b55c1bbae77c73d713746c5392ab58ebbd57fa2477c01"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -10513,8 +10378,8 @@
       "type": "library",
       "name": "devtools-shared",
       "group": "@vue",
-      "version": "7.7.10",
-      "bom-ref": "filinq@1.0.0|@vue/devtools-shared@7.7.10",
+      "version": "8.2.1",
+      "bom-ref": "filinq@1.0.0|@vue/devtools-shared@8.2.1",
       "licenses": [
         {
           "license": {
@@ -10522,15 +10387,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40vue/devtools-shared@7.7.10",
+      "purl": "pkg:npm/%40vue/devtools-shared@8.2.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@vue/devtools-shared/-/devtools-shared-7.7.10.tgz",
+          "url": "https://registry.npmjs.org/@vue/devtools-shared/-/devtools-shared-8.2.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "c0e3ec97307cbd3be9c7075a39c476a806f09ae48fd0bfab869a02e827f9e95dc98a9f8759becf4105ce50f801350011a57b1b417ffe9af8bc90ab9c981191c1"
+              "content": "16469cee551d1917a1ea954e8b70183d119ef362d0a919807d3856ed14658a03803f4640fd9d73f572c70ccf5dbf7e295761d173bf432bcb8a3de1b67cb9c0fe"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -13511,39 +13376,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/confbox"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "copy-anything",
-      "version": "4.1.5",
-      "bom-ref": "filinq@1.0.0|copy-anything@4.1.5",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/copy-anything@4.1.5",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/copy-anything/-/copy-anything-4.1.5.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "bde3ecb7654b4d2a8f8255bb43df15c05a46886a4e1d3c97228f3530ee55c8b79c039ccc6d9c3f3ff575be6c03d6392c6b6889a67fd8903ac9dd78537f353285"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/copy-anything"
         }
       ]
     },
@@ -21679,39 +21511,6 @@
     },
     {
       "type": "library",
-      "name": "mitt",
-      "version": "3.0.1",
-      "bom-ref": "filinq@1.0.0|mitt@3.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/mitt@3.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/mitt/-/mitt-3.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "bca8af0137ebf7b976fd00426009176036eb2163ccd8820a125ed83e18c2bca946de4136826fae068ea71172b7339fc57e1fc52e9284c73390dc926824614a07"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/mitt"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "mlly",
       "version": "1.8.2",
       "bom-ref": "filinq@1.0.0|mlly@1.8.2",
@@ -22850,8 +22649,8 @@
     {
       "type": "library",
       "name": "perfect-debounce",
-      "version": "1.0.0",
-      "bom-ref": "filinq@1.0.0|perfect-debounce@1.0.0",
+      "version": "2.1.0",
+      "bom-ref": "filinq@1.0.0|perfect-debounce@2.1.0",
       "licenses": [
         {
           "license": {
@@ -22859,15 +22658,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/perfect-debounce@1.0.0",
+      "purl": "pkg:npm/perfect-debounce@2.1.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/perfect-debounce/-/perfect-debounce-1.0.0.tgz",
+          "url": "https://registry.npmjs.org/perfect-debounce/-/perfect-debounce-2.1.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "c42cbd574e7918b12aa05687a02d52a0b21a2e659cb60094681696c4367bfd9c78093c97edc2502c93a893fa2b7e364087d9046298c96b877429c26609b72d64"
+              "content": "2e381d4f2b5515779482d1d9afd59856261233f83c3247133d80e53daddc0ea322ac78ca89264f61de83a0bee92bc00942bfae5a442f0a31cd76232ab2b26cfa"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -22949,8 +22748,8 @@
     {
       "type": "library",
       "name": "pinia",
-      "version": "3.0.4",
-      "bom-ref": "filinq@1.0.0|pinia@3.0.4",
+      "version": "4.1.0",
+      "bom-ref": "filinq@1.0.0|pinia@4.1.0",
       "licenses": [
         {
           "license": {
@@ -22958,15 +22757,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/pinia@3.0.4",
+      "purl": "pkg:npm/pinia@4.1.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/pinia/-/pinia-3.0.4.tgz",
+          "url": "https://registry.npmjs.org/pinia/-/pinia-4.1.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "97ba6a2d415323ff844979fa9379eedf4648cd6e44d96645fcb687244a68aba12570b0fec1db99a01da404dd7d76ee8aff8143a4f31acd8db026bf889dd06d43"
+              "content": "fb9fc732e5636107ca9420f9c50ef37d79f5c54cd81446bba5dd0340ae5268c7d909a1514c795a1ff734d8dd45a0639d9734a2c1fe4438f809c7fff5403c3a83"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -24429,39 +24228,6 @@
     },
     {
       "type": "library",
-      "name": "rfdc",
-      "version": "1.4.1",
-      "bom-ref": "filinq@1.0.0|rfdc@1.4.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/rfdc@1.4.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/rfdc/-/rfdc-1.4.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "ab56f737942445459497b8b2ca569a8f790ea484f43768bd32a2044173fbdc656c37d730ddf771f17eb77049968491a2d8f3c2176dc88e9ee4b66777f6b6b020"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/rfdc"
-        }
-      ]
-    },
-    {
-      "type": "library",
       "name": "rollup",
       "version": "4.68.3",
       "bom-ref": "filinq@1.0.0|rollup@4.68.3",
@@ -25060,39 +24826,6 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/space-separated-tokens"
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "speakingurl",
-      "version": "14.0.1",
-      "bom-ref": "filinq@1.0.0|speakingurl@14.0.1",
-      "licenses": [
-        {
-          "license": {
-            "id": "BSD-3-Clause"
-          }
-        }
-      ],
-      "purl": "pkg:npm/speakingurl@14.0.1",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/speakingurl/-/speakingurl-14.0.1.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "d4f398bfbbafda05e8c861690429a90d548d57be087ec5a50d6db5e943e36d6b9f35ff9b494e8675b0ecc5d731b5fc1be31948df2c73393282954a2cc40458ad"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/speakingurl"
         }
       ]
     },
@@ -26181,39 +25914,6 @@
               "value": "node_modules/stylelint/node_modules/signal-exit"
             }
           ]
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "name": "superjson",
-      "version": "2.2.6",
-      "bom-ref": "filinq@1.0.0|superjson@2.2.6",
-      "licenses": [
-        {
-          "license": {
-            "id": "MIT"
-          }
-        }
-      ],
-      "purl": "pkg:npm/superjson@2.2.6",
-      "externalReferences": [
-        {
-          "url": "https://registry.npmjs.org/superjson/-/superjson-2.2.6.tgz",
-          "type": "distribution",
-          "hashes": [
-            {
-              "alg": "SHA-512",
-              "content": "1feb9ef19a38bc9995da7463a71f3a3f7e65cf00d3de722d9c8b28720ba682bd211cc43e646ab9beb11183d909068e405869b16438730e8f9654826a901d1c18"
-            }
-          ],
-          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-        }
-      ],
-      "properties": [
-        {
-          "name": "cdx:npm:package:path",
-          "value": "node_modules/superjson"
         }
       ]
     },
@@ -28658,7 +28358,7 @@
   ],
   "dependencies": [
     {
-      "ref": "adbario/php-dot-notation-3.5.0.0"
+      "ref": "adbario/php-dot-notation-3.6.0.0"
     },
     {
       "ref": "mpdf/mpdf-8.3.1.0",
@@ -28765,7 +28465,7 @@
       "ref": "tecnickcom/tc-lib-file-3.9.11.0"
     },
     {
-      "ref": "tecnickcom/tc-lib-pdf-8.84.0.0",
+      "ref": "tecnickcom/tc-lib-pdf-8.84.3.0",
       "dependsOn": [
         "tecnickcom/tc-lib-barcode-2.17.4.0",
         "tecnickcom/tc-lib-color-3.0.15.0",
@@ -28848,7 +28548,7 @@
     {
       "ref": "conductionnl/filinq-1.0.0.0",
       "dependsOn": [
-        "adbario/php-dot-notation-3.5.0.0",
+        "adbario/php-dot-notation-3.6.0.0",
         "mpdf/mpdf-8.3.1.0",
         "opis/json-schema-2.6.2.0",
         "phpoffice/phpword-1.4.0.0",
@@ -28856,7 +28556,7 @@
         "setasign/fpdf-1.9.0.0",
         "symfony/uid-6.4.32.0",
         "symfony/yaml-6.4.48.0",
-        "tecnickcom/tc-lib-pdf-8.84.0.0",
+        "tecnickcom/tc-lib-pdf-8.84.3.0",
         "thiagoalessio/tesseract_ocr-2.13.0.0",
         "twig/twig-3.30.0.0"
       ]

@@ -9,7 +9,7 @@
  * manifest's top-level `widgets[]` arrays. Each entry is
  * `{ kind, component }`.
  *
- * Recognised kinds: page, modal, widget, form-field, cell-renderer.
+ * Recognised kinds: page, modal, widget, section, form-field, cell-renderer.
  *
  * Resolution paths at runtime:
  *   - `pages[].type === 'custom'` → CnPageRenderer resolves
@@ -18,6 +18,9 @@
  *   - `pages[].widgets[].widgetKey` (v2 uniform widget array) →
  *     CnWidgetGrid resolves against the `registry` prop and mounts the
  *     matching `kind:"widget"` entry's component.
+ *   - `pages[].config.bodyWidgets[].component` (a detail page's body
+ *     section) → CnDetailPage resolves it against the `registry` prop and
+ *     mounts the `kind:"section"` entry's component.
  *   - Future `kind:"modal"` entries are looked up directly from the
  *     `registry` prop by CnAppRoot.
  *
@@ -63,6 +66,7 @@ import PrintPreview from './components/PrintPreview.vue'
 import DossierFormModal from './dialogs/DossierFormModal.vue'
 import AnonymizationIndex from './views/anonymization/AnonymizationIndex.vue'
 import FolderAnonymizationView from './views/anonymization/FolderAnonymizationView.vue'
+import BatchOperationDetail from './views/batchOperations/BatchOperationDetail.vue'
 import ClassificationPending from './views/classification/ClassificationPending.vue'
 import ComparisonView from './views/comparison/ComparisonView.vue'
 import ConsentDetail from './views/consent/ConsentDetail.vue'
@@ -75,12 +79,15 @@ import CustomDictionaryIndex from './views/customDictionary/CustomDictionaryInde
 import DashboardIndex from './views/dashboard/DashboardIndex.vue'
 import DossierDetail from './views/dossier/DossierDetail.vue'
 import DossierIndex from './views/dossier/DossierIndex.vue'
+import DraftEditor from './views/drafts/DraftEditor.vue'
 import EmailIngestion from './views/emailIngestion/EmailIngestion.vue'
 import EntitySearch from './views/entitySearch/EntitySearch.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ComponentGallery from './views/gallery/ComponentGallery.vue'
 import IntakeIndex from './views/intake/IntakeIndex.vue'
+import IntakeChannels from './views/intakeChannels/IntakeChannels.vue'
 import LegalHolds from './views/legalHolds/LegalHolds.vue'
+import MailArchiveImport from './views/mailArchiveImport/MailArchiveImport.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
 import PolicyRuleIndex from './views/policy/PolicyRuleIndex.vue'
 import PrintJobs from './views/printJobs/PrintJobs.vue'
@@ -116,9 +123,12 @@ export default {
 	PrintJobs: { kind: 'page', component: PrintJobs },
 	LegalHolds: { kind: 'page', component: LegalHolds },
 	ContractDetail: { kind: 'page', component: ContractDetail },
+	BatchOperationDetail: { kind: 'section', component: BatchOperationDetail },
 	ContractPipeline: { kind: 'page', component: ContractPipeline },
 	SubjectErasures: { kind: 'page', component: SubjectErasures },
 	EmailIngestion: { kind: 'page', component: EmailIngestion },
+	IntakeChannels: { kind: 'page', component: IntakeChannels },
+	MailArchiveImport: { kind: 'page', component: MailArchiveImport },
 	ClassificationPending: { kind: 'page', component: ClassificationPending },
 	EntitySearch: { kind: 'page', component: EntitySearch },
 	PublicationsPage: { kind: 'page', component: PublicationsPage },
@@ -127,6 +137,7 @@ export default {
 	VersionsView: { kind: 'page', component: VersionsView },
 	ComponentGallery: { kind: 'page', component: ComponentGallery },
 	CorrespondenceIndex: { kind: 'page', component: CorrespondenceIndex },
+	DraftEditor: { kind: 'page', component: DraftEditor },
 	ProhibitionIndex: { kind: 'page', component: PolicyRuleIndex },
 	StandingConsentIndex: { kind: 'page', component: PolicyRuleIndex },
 	CustomDictionaryIndex: { kind: 'page', component: CustomDictionaryIndex },

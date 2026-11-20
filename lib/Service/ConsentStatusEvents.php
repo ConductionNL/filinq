@@ -67,19 +67,29 @@ class ConsentStatusEvents {
 	 * @param string               $actor    Who makes them.
 	 * @param string               $evidence How the outcome reached the organisation.
 	 * @param DateTimeImmutable    $now      When.
+	 * @param string               $via      How: `mcp` for an agent through Hermiq's approval gate, '' in Filinq itself.
 	 *
 	 * @return array<string, mixed> The changes, with `statusEvents` when a status moved.
 	 *
 	 * @throws InvalidArgumentException With code 400 for an undeclared move or missing evidence.
 	 *
 	 * @spec openspec/specs/consent-management/spec.md
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-agent-initiated-writes-are-attributable-req-ddhat-003
 	 */
-	public function apply(array $existing, array $changes, string $actor, string $evidence, DateTimeImmutable $now): array {
+	public function apply(array $existing, array $changes, string $actor, string $evidence, DateTimeImmutable $now, string $via = ''): array {
 		$events = [];
 		foreach (array_keys(self::MOVES) as $field) {
 			$event = $this->eventFor(field: $field, existing: $existing, changes: $changes, evidence: $evidence);
 			if ($event !== null) {
-				$events[] = $event + ['by' => $actor, 'at' => $now->format(DateTimeInterface::ATOM)];
+				$event = $event + ['by' => $actor, 'at' => $now->format(DateTimeInterface::ATOM)];
+				// An agent's change says so beside the principal it ran as
+				// (hermiq-ai-tooling REQ-DDHAT-003); a change made in Filinq
+				// itself carries no `via`, as before.
+				if ($via !== '') {
+					$event['via'] = $via;
+				}
+
+				$events[] = $event;
 			}
 		}
 

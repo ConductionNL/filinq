@@ -100,6 +100,7 @@ class CorrespondenceControllerTest extends TestCase {
 			userSession: $this->mockUserSession,
 			logger: $this->mockLogger,
 			l10n: $this->mockL10n,
+			sender: $this->createMock(\OCA\Filinq\Service\CorrespondenceSendService::class),
 		);
 
 	}//end setUp()
@@ -120,6 +121,7 @@ class CorrespondenceControllerTest extends TestCase {
 			userSession: $mockSession,
 			logger: $this->mockLogger,
 			l10n: $this->mockL10n,
+			sender: $this->createMock(\OCA\Filinq\Service\CorrespondenceSendService::class),
 		);
 
 		$result = $controller->generate();
