@@ -242,6 +242,27 @@ class ScanBatchSegmentationTest extends TestCase {
 	}//end testABatchWithNoSeparatorsIsOneDocument()
 
 	/**
+	 * A profile with separator mode `none` delivers the whole batch as one
+	 * document: a separator sheet or a blank page inside it is not a cut.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
+	 */
+	public function testModeNoneKeepsTheWholeBatchAsOneDocument(): void {
+		$service = $this->service($this->reader(['sep' => $this->separatorText('ZAAK-9'), 'blank' => '']));
+
+		$segments = $service->segmentsOf(
+			pages: ['a1', 'sep', 'blank', 'a2'],
+			mode: ScanBatchService::MODE_NONE,
+			profile: ['inkThreshold' => 4096]
+		);
+
+		$this->assertSame([['pages' => ['a1', 'sep', 'blank', 'a2'], 'firstPage' => 1, 'caseNumber' => '']], $segments);
+		$this->assertSame([], $service->segmentsOf(pages: [], mode: ScanBatchService::MODE_NONE, profile: []));
+	}//end testModeNoneKeepsTheWholeBatchAsOneDocument()
+
+	/**
 	 * Two separators back to back produce no empty document.
 	 *
 	 * Somebody puts two sheets in by accident constantly. An empty segment

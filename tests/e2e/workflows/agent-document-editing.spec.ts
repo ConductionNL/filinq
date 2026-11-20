@@ -31,14 +31,9 @@
  * provider; it is not automatable here because it needs a live LLM credential.
  */
 
-import type { APIRequestContext } from '@playwright/test'
-
 import { expect, test } from '@playwright/test'
-import { FIXTURE_DOCX_B64 } from './_agentDocumentFixture.ts'
 import { harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures.ts'
-
-/** OpenRegister's MCP JSON-RPC endpoint — the tool surface under test. */
-const MCP = '/index.php/apps/openregister/api/mcp'
+import { callTool, FIXTURE_DOCX_B64, MCP, openMcpSession } from './_mcp.ts'
 
 /** WebDAV root for the admin account the E2E session runs as. */
 const DAV = '/remote.php/dav/files/admin'
@@ -46,100 +41,10 @@ const DAV = '/remote.php/dav/files/admin'
 /** The ADR-088 mark, fleet-wide and deliberately untranslated. */
 const AGENT_TAG = 'Agent authored'
 
+
 /** Name of the seeded document, unique per run so parallel runs cannot collide. */
 const DOC_NAME = `${TEST_PREFIX}-agent-edit.docx`
 
-/**
- * Open an MCP session and return its id.
- *
- * The endpoint refuses every `tools/call` without `Mcp-Session-Id`, so the
- * handshake is part of the contract rather than boilerplate.
- *
- * @param request The Playwright request context.
- * @param token The harvested CSRF request-token.
- *
- * @return The session id.
- */
-async function openMcpSession(
-	request: APIRequestContext,
-	token: string,
-): Promise<string> {
-	const res = await request.post(MCP, {
-		headers: jsonHeaders(token),
-		data: {
-			jsonrpc: '2.0',
-			id: 0,
-			method: 'initialize',
-			params: {
-				protocolVersion: '2025-06-18',
-				capabilities: {},
-				clientInfo: { name: 'filinq-e2e', version: '1' },
-			},
-		},
-	})
-
-	expect(
-		res.status(),
-		'the MCP endpoint must accept an initialize handshake',
-	).toBe(200)
-
-	const sessionId = res.headers()['mcp-session-id']
-	expect(sessionId, 'initialize must return an Mcp-Session-Id header').toBeTruthy()
-
-	return sessionId
-}
-
-/**
- * Call one MCP tool and return its decoded result plus the isError flag.
- *
- * The endpoint reports a tool-level refusal as `isError: true` with the message
- * in the text content — NOT as a JSON-RPC error and NOT as a non-200 status —
- * so a test that only checked the status code would read every refusal as a
- * pass.
- *
- * @param request The Playwright request context.
- * @param token The harvested CSRF request-token.
- * @param sessionId The MCP session id.
- * @param name The tool name.
- * @param args The tool arguments.
- *
- * @return The decoded payload and whether the tool refused.
- */
-async function callTool(
-	request: APIRequestContext,
-	token: string,
-	sessionId: string,
-	name: string,
-	args: Record<string, unknown>,
-): Promise<{ isError: boolean; payload: Record<string, unknown>; text: string }> {
-	const res = await request.post(MCP, {
-		headers: { ...jsonHeaders(token), 'Mcp-Session-Id': sessionId },
-		data: {
-			jsonrpc: '2.0',
-			id: 1,
-			method: 'tools/call',
-			params: { name, arguments: args },
-		},
-	})
-
-	expect(res.status(), `${name} must reach the endpoint`).toBe(200)
-
-	const body = await res.json()
-	expect(
-		body.result,
-		`${name} must return a JSON-RPC result, got: ${JSON.stringify(body.error ?? {})}`,
-	).toBeTruthy()
-
-	const text = String(body.result.content?.[0]?.text ?? '')
-	let payload: Record<string, unknown>
-	try {
-		payload = JSON.parse(text)
-	} catch {
-		payload = {}
-	}
-
-	return { isError: body.result.isError === true, payload, text }
-}
 
 test.describe('agent document editing', () => {
 	let token = ''

@@ -154,6 +154,30 @@ class IntakeDefaultRuleService {
 	}//end stamp()
 
 	/**
+	 * One rule by its uuid, as match() reads the rule set.
+	 *
+	 * @param string $uuid The rule's uuid, as `defaultRule` names it on a document.
+	 *
+	 * @return array<string, mixed>|null The rule, or null when none has that uuid.
+	 *
+	 * @spec openspec/changes/intake-acknowledge-and-stamp
+	 */
+	public function findRule(string $uuid): ?array {
+		if ($uuid === '') {
+			return null;
+		}
+
+		foreach ($this->rules() as $rule) {
+			if (($rule['uuid'] ?? '') === $uuid) {
+				return $rule;
+			}
+		}
+
+		return null;
+
+	}//end findRule()
+
+	/**
 	 * Every rule in the register.
 	 *
 	 * @return array<int, array<string, mixed>> The rules, or an empty list when the register cannot be read.
