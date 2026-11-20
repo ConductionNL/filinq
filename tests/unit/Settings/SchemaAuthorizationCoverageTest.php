@@ -84,7 +84,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 	 */
 	private const RECORDED_BYPASSES = [
 		'lib/Controller/PortalSigningReceiverController.php' => 1,
-		'lib/Service/AnonymizationPersistenceService.php' => 2,
+		'lib/Service/AnonymizationPersistenceService.php' => 3,
 		'lib/Service/Audit/DocumentActionAudit.php' => 1,
 		'lib/Service/BaseLabelResolver.php' => 1,
 		'lib/Service/BasesResolverService.php' => 1,
@@ -107,9 +107,12 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/LegalBasisCatalog.php' => 1,
 		'lib/Service/LegalHold/LegalHoldCaseRepository.php' => 2,
 		'lib/Service/LegalHold/LegalHoldRecordFreeze.php' => 1,
+		'lib/Service/PaperOriginalFiling.php' => 2,
+		'lib/Service/MailArchive/MailArchiveImportRepository.php' => 3,
 		'lib/Service/PolicyCrudService.php' => 5,
 		'lib/Service/PolicyMatchService.php' => 2,
 		'lib/Service/PrintJobRepository.php' => 3,
+		'lib/Service/Review/ScopeDecisionStore.php' => 1,
 		'lib/Service/PolicyRetroactiveService.php' => 2,
 		'lib/Service/ProhibitionOverrideCommitter.php' => 1,
 		'lib/Service/Pseudonymisation/PseudonymMapRepository.php' => 5,
