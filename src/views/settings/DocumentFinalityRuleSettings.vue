@@ -62,7 +62,7 @@ import { declareFinalityRule } from '../../services/finalDocumentService.js'
  * @param {string} text The comma-separated states.
  * @return {Array<string>} The states.
  *
- * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-3.2
  */
 export function parseStates(text) {
 	return [
@@ -107,7 +107,7 @@ export default {
 		 *
 		 * @return {boolean}
 		 *
-		 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-3.2
 		 */
 		complete() {
 			return (
@@ -126,7 +126,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-3.2
 		 */
 		async save() {
 			this.saving = true

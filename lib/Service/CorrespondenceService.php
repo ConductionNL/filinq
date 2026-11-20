@@ -405,7 +405,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	 *
 	 * @return array The created correspondence register entry, or [] when logging failed.
 	 *
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.2
 	 */
 	public function logFinishedDraft(
 		string $templateId,

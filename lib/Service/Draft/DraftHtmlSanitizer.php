@@ -12,7 +12,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,7 +36,7 @@ use DOMXPath;
  * or `data:` links, and keeps the markup and inline `<style>` the huisstijl
  * uses. Text is never interpreted, so braces stay characters.
  *
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.3
  */
 final class DraftHtmlSanitizer {
 
@@ -75,7 +75,7 @@ final class DraftHtmlSanitizer {
 	 *
 	 * @return string The sanitised HTML; a fragment stays a fragment, a document a document.
 	 *
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.3
 	 */
 	public function sanitize(string $html): string {
 		if (trim($html) === '') {

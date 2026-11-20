@@ -12,7 +12,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.5
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * runs without a user, so it reads and deletes with RBAC off; it touches the
  * documentDraft schema only.
  *
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.5
  */
 class DocumentDraftExpiryJob extends TimedJob {
 
@@ -68,7 +68,7 @@ class DocumentDraftExpiryJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.5
 	 */
 	protected function run(mixed $argument): void {
 		$this->sweep();
@@ -79,7 +79,7 @@ class DocumentDraftExpiryJob extends TimedJob {
 	 *
 	 * @return int The number deleted.
 	 *
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.5
 	 */
 	public function sweep(): int {
 		$objectService = $this->settings->getObjectService();
@@ -136,7 +136,7 @@ class DocumentDraftExpiryJob extends TimedJob {
 	 *
 	 * @return bool True when `expiresAt` is set, readable and before the moment.
 	 *
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.5
 	 */
 	private function isExpired(array $draft, DateTimeInterface $now): bool {
 		$expiresAt = (string) ($draft['expiresAt'] ?? '');

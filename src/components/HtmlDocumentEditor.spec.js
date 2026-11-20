@@ -8,7 +8,7 @@
  * change from outside so the caret stays where the person types, takes the
  * raw-HTML box, and changes nothing when read-only.
  *
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.1
  */
 
 import { createApp, h, nextTick, ref } from 'vue'

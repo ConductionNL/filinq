@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-1.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -56,7 +56,7 @@ final class OcrPage {
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Each branch skips one kind of malformed TSV row;
 	 * they are independent checks of one line.
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-1.1
 	 */
 	public static function fromTsv(string $tsv): self {
 		$width  = 0;

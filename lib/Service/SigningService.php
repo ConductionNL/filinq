@@ -1420,7 +1420,7 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @return array<string, array<string, mixed>> The records, by id.
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#4-signing
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#4-signing
 	 */
 	private function signerRecords(array $request, array $known): array {
 		$earlier = [];

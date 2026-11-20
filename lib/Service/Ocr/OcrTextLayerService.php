@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-1.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -96,8 +96,8 @@ class OcrTextLayerService {
 	 *
 	 * @return string WRITTEN, COPY_CREATED or one of the SKIP_* reasons.
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/specs/ocr-document-scanning/spec.md
-	 * @spec openspec/changes/finish-half-built-capabilities/specs/ocr-document-scanning/spec.md#scenario-a-final-or-signed-pdf-keeps-its-bytes
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/specs/ocr-document-scanning/spec.md
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/specs/ocr-document-scanning/spec.md#scenario-a-final-or-signed-pdf-keeps-its-bytes
 	 */
 	public function apply(File $file, string $languages, int $dpi): string {
 		$mimeType = $file->getMimeType();

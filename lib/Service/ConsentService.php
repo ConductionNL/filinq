@@ -229,7 +229,7 @@ class ConsentService implements ConsentServiceInterface {
 	 *
 	 * @return array<string, mixed> The record, with the outcome.
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/specs/consent-management/spec.md
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/specs/consent-management/spec.md
 	 */
 	private function notify(array $record, array $context): array {
 		if ($this->sender === null || ($record['notificationStatus'] ?? null) !== 'pending') {

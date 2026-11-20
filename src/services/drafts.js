@@ -8,7 +8,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
  */
 
 import axios from '@nextcloud/axios'
@@ -33,7 +33,7 @@ const READ_ONLY_FIELDS = ['@self', 'id', 'uuid', 'finishedDocumentId']
  *
  * @param {Date} now The moment of the save.
  * @return {string} ISO 8601, 30 days on.
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
  */
 export function expiresAt(now = new Date()) {
 	return new Date(now.getTime() + DRAFT_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString()
@@ -67,7 +67,7 @@ function writable(draft) {
  *
  * @param {object} draft The draft.
  * @return {string} The id, or ''.
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
  */
 export function draftId(draft) {
 	return String(draft?.id || draft?.uuid || draft?.['@self']?.id || '')
@@ -78,7 +78,7 @@ export function draftId(draft) {
  *
  * @param {object} draft The draft.
  * @return {boolean} False for a finished draft.
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
  */
 export function isOpen(draft) {
 	return OPEN_STAGES.includes(draft?.stage)
@@ -93,7 +93,7 @@ export function isOpen(draft) {
  * @param {object} request.options Format, output and, from a wizard, `wizardContext`.
  * @param {string} request.origin `correspondence`, `document` or `wizard`.
  * @return {Promise<object>} `{ ok, data: { id, stage, html, warnings, expiresAt } }`, or the refusal (409 for a plain-language template).
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
  */
 export function createDraft({ templateId, dataRefs = [], options = {}, origin = 'document' }) {
 	return answer(
@@ -111,7 +111,7 @@ export function createDraft({ templateId, dataRefs = [], options = {}, origin = 
  *
  * @param {string} id The draft.
  * @return {Promise<object>} `{ ok, data }` or the refusal.
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
  */
 export function loadDraft(id) {
 	return answer(axios.get(objectUrl(id)))
@@ -124,7 +124,7 @@ export function loadDraft(id) {
  * @param {object} changes The fields that changed, such as `html`.
  * @param {Date} [now] The moment of the save.
  * @return {Promise<object>} `{ ok, data }` or the refusal.
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
  */
 export function saveDraft(draft, changes, now = new Date()) {
 	return answer(
@@ -141,7 +141,7 @@ export function saveDraft(draft, changes, now = new Date()) {
  *
  * @param {string} id The draft.
  * @return {Promise<object>} `{ ok }` or the refusal.
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
  */
 export function discardDraft(id) {
 	return answer(axios.delete(objectUrl(id)))
@@ -161,7 +161,7 @@ export function discardDraft(id) {
  * @param {string} run.format The chosen format.
  * @param {Date} [now] The moment of the save.
  * @return {Promise<object>} `{ ok, data }` with the saved draft, or the refusal.
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.4
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.4
  */
 export function saveWizardDraft({ draft = null, templateId, templateName = '', wizard, answers, step, format = 'pdf' }, now = new Date()) {
 	const fields = {
@@ -191,7 +191,7 @@ export function saveWizardDraft({ draft = null, templateId, templateName = '', w
  *
  * @param {object} draft The draft.
  * @return {object} A router location.
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.4
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.4
  */
 export function resumeRoute(draft) {
 	if (draft?.stage === 'answering') {
@@ -225,7 +225,7 @@ async function jsonBody(data) {
  * @param {string} id The draft.
  * @return {Promise<object>} `{ ok, data: Blob|null, json, filename }`, or
  *         `{ ok: false, status, error, errors }` (422 lists the wizard answers that did not pass).
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
  */
 export async function finishDraft(id) {
 	try {
@@ -258,7 +258,7 @@ export async function finishDraft(id) {
  * @param {string} templateId The template.
  * @return {Promise<{known: boolean, editable: boolean}>} `known` false when the
  *         template could not be read; the server still refuses a plain one then.
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.3
  */
 export async function templateEditability(templateId) {
 	if (!templateId) {
@@ -278,7 +278,7 @@ export async function templateEditability(templateId) {
  *
  * @param {unknown} plain The template's `plainLanguage`.
  * @return {boolean} False for nothing, an empty object or an empty list.
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.3
  */
 export function hasPlainLanguage(plain) {
 	if (plain === null || plain === undefined || plain === false || plain === '') {

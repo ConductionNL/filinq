@@ -144,7 +144,7 @@ class TesseractCommand {
 	 *
 	 * @return string The TSV text, '' when tesseract fails
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-1.1
 	 */
 	public function words(string $filePath, string $languages, int $dpi): string {
 		$output = [];

@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-1.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -69,7 +69,7 @@ class SearchablePdfWriter {
 	 * @SuppressWarnings(PHPMD.StaticAccess) OcrPage's named constructors build a value object from OCR
 	 * output; an instance would add nothing.
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-1.1
 	 */
 	public function fromPdf(string $pdfPath, string $languages, int $dpi): array {
 		$pdf   = new InvisibleTextPdf();
@@ -120,7 +120,7 @@ class SearchablePdfWriter {
 	 * @SuppressWarnings(PHPMD.ErrorControlOperator) The call reports failure through its return value,
 	 * which is checked right after; the PHP warning it would also raise adds nothing.
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#task-1.1
 	 */
 	public function fromImage(string $imagePath, string $mimeType, string $languages, int $dpi): array {
 		if (isset(self::IMAGE_TYPES[$mimeType]) === false) {

@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/finish-half-built-capabilities/specs/consent-management/spec.md
+ * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/specs/consent-management/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -39,7 +39,7 @@ use Throwable;
  * nothing could be sent, why. A request that cannot be sent leaves the record
  * open.
  *
- * @spec openspec/changes/finish-half-built-capabilities/specs/consent-management/spec.md
+ * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/specs/consent-management/spec.md
  */
 class ConsentRequestSender {
 
@@ -78,7 +78,7 @@ class ConsentRequestSender {
 	 *                              `notificationChannel`, `notificationSentAt` and `objectionDeadline`
 	 *                              when it went, or `notificationError` when it did not.
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/specs/consent-management/spec.md
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/specs/consent-management/spec.md
 	 */
 	public function send(array $record, array $context): array {
 		$email   = trim((string)($context['contactEmail'] ?? ''));
