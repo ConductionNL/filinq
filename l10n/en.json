@@ -3335,7 +3335,23 @@
         "Retention period as an ISO 8601 duration, such as `P7Y`.": "Retention period as an ISO 8601 duration, such as `P7Y`.",
         "Reference to the selectielijst category (Archiefwet 1995) that applies to this type.": "Reference to the selectielijst category (Archiefwet 1995) that applies to this type.",
         "Default confidentiality designation for documents of this type.": "Default confidentiality designation for documents of this type.",
-        "Whether the type can still be chosen for new documents.": "Whether the type can still be chosen for new documents."
+        "Whether the type can still be chosen for new documents.": "Whether the type can still be chosen for new documents.",
+        "Name the recipient: register, schema and id.": "Name the recipient: register, schema and id.",
+        "The recipient was not found or you may not read it.": "The recipient was not found or you may not read it.",
+        "This recipient has no email address.": "This recipient has no email address.",
+        "This instance has no mail server, so letters cannot be sent by email.": "This instance has no mail server, so letters cannot be sent by email.",
+        "The letter was not sent: the mail server did not accept it.": "The letter was not sent: the mail server did not accept it.",
+        "Send by email": "Send by email",
+        "Sent to {address}": "Sent to {address}",
+        "Send the letter by email": "Send the letter by email",
+        "Looking up the recipient…": "Looking up the recipient…",
+        "Attach the letter as PDF": "Attach the letter as PDF",
+        "Send": "Send",
+        "The recipient could not be looked up.": "The recipient could not be looked up.",
+        "Sent to": "Sent to",
+        "When the letter was sent by email (ISO 8601).": "When the letter was sent by email (ISO 8601).",
+        "The email address the letter was sent to.": "The email address the letter was sent to.",
+        "Nextcloud user ID of the officer who sent the letter.": "Nextcloud user ID of the officer who sent the letter."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
