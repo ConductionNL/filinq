@@ -33,6 +33,8 @@ import {
 	fetchUrlAsArrayBuffer,
 } from '../../services/fileViewerService.js'
 import { applyDomHighlights } from '../../services/highlightDom.js'
+import { applyRegionOverlays } from '../../services/regionOverlayDom.js'
+import { fileViewerStore } from '../../store/store.js'
 
 let pdfjsLibPromise = null
 
@@ -73,6 +75,26 @@ export default {
 			pdfDoc: null,
 			pageRefs: {},
 		}
+	},
+
+	computed: {
+		/**
+		 * The image-region overlays the sidebar pushed for this review.
+		 *
+		 * @return {Array<object>} Overlays from `regionOverlays()`.
+		 */
+		imageRegions() {
+			return fileViewerStore.imageRegions || []
+		},
+	},
+
+	watch: {
+		imageRegions: {
+			deep: true,
+			handler() {
+				this.$nextTick(() => this.applyRegions())
+			},
+		},
 	},
 
 	beforeUnmount() {
@@ -195,6 +217,25 @@ export default {
 			// so highlights stream in with the pages instead of waiting for the
 			// whole document.
 			this.applyHighlightsTo(textLayerDiv)
+
+			// Image-region overlays above the text layer, placed in page
+			// percentages; they show the table's decisions (REQ-DDIMR-005).
+			const regionLayerDiv = document.createElement('div')
+			regionLayerDiv.className = 'pdf-viewer__region-layer'
+			wrapper.appendChild(regionLayerDiv)
+			applyRegionOverlays(regionLayerDiv, this.imageRegions, pageNumber)
+		},
+
+		/**
+		 * Redraw the image-region overlays of every rendered page.
+		 *
+		 * @spec openspec/changes/image-redaction/tasks.md#task-4.1
+		 */
+		applyRegions() {
+			for (const [page, wrapper] of Object.entries(this.pageRefs)) {
+				const layer = wrapper?.querySelector('.pdf-viewer__region-layer')
+				applyRegionOverlays(layer || null, this.imageRegions, Number(page))
+			}
 		},
 
 		/**
@@ -363,5 +404,36 @@ export default {
 .pdf-viewer__page :deep(.pdf-viewer__text-layer ::selection) {
 	color: transparent;
 	background: rgba(0, 100, 255, 0.4);
+}
+
+/*
+ * Image-region overlays (REQ-DDIMR-005), drawn by applyRegionOverlays() above
+ * the text layer. They let clicks and selections through, so the text layer
+ * keeps working; a region to be redacted is filled, a region the reviewer
+ * kept visible is only outlined.
+ */
+.pdf-viewer__page :deep(.pdf-viewer__region-layer) {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	z-index: 2;
+}
+
+.pdf-viewer__page :deep(.dd-region) {
+	position: absolute;
+	box-sizing: border-box;
+	border: 2px solid var(--color-error);
+	border-radius: var(--border-radius-small, 2px);
+}
+
+.pdf-viewer__page :deep(.dd-region--redact) {
+	background: var(--color-error);
+	opacity: 0.45;
+}
+
+.pdf-viewer__page :deep(.dd-region--keep) {
+	border-style: dashed;
+	border-color: var(--color-success);
+	background: transparent;
 }
 </style>
