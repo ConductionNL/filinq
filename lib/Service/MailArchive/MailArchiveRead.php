@@ -102,6 +102,8 @@ final class MailArchiveRead {
 	 * Where the previous unit stopped.
 	 *
 	 * @return array<string, int> The cursor; [] to start.
+	 *
+	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-1
 	 */
 	public function cursor(): array {
 		return $this->cursor;
@@ -112,6 +114,8 @@ final class MailArchiveRead {
 	 * Whether the message bytes are returned.
 	 *
 	 * @return bool True to return them.
+	 *
+	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-2
 	 */
 	public function withContent(): bool {
 		return $this->withContent;

@@ -1,0 +1,200 @@
+{
+	"menu": [
+		{
+			"id": "DigitisationProjects",
+			"label": "Digitisation",
+			"icon": "Scanner",
+			"route": "DigitisationProjects",
+			"order": 28
+		},
+		{
+			"id": "ScanChecks",
+			"label": "Scan checks",
+			"icon": "ClipboardCheckOutline",
+			"route": "ScanChecks",
+			"order": 29
+		}
+	],
+	"pages": [
+		{
+			"id": "DigitisationProjects",
+			"route": "/digitisation",
+			"type": "index",
+			"title": "Digitisation projects",
+			"config": {
+				"register": "filinq",
+				"schema": "digitisationProject",
+				"columns": ["name", "archiveDescription", "scanProfile", "checkShare", "status"],
+				"rowRoute": "DigitisationProjectDetail",
+				"sidebar": {"enabled": true, "showMetadata": true},
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"addLabel": "New digitisation project",
+				"emptyText": "No digitisation projects yet"
+			},
+			"_note": "intake-paper-archive-digitisation REQ-PAD-001: OpenRegister lists the digitisationProject objects directly; create and edit are the object API's own dialog over the schema (name, archive, boxes, scan profile, target record, check share). A row opens the project page."
+		},
+		{
+			"id": "DigitisationProjectDetail",
+			"route": "/digitisation/:id",
+			"type": "detail",
+			"title": "Digitisation project",
+			"config": {
+				"register": "filinq",
+				"schema": "digitisationProject",
+				"documentationUrl": "https://filinq.conduction.nl",
+				"actions": [
+					{
+						"id": "import-box-list",
+						"label": "Import box list",
+						"icon": "FileDocumentMultipleOutline",
+						"type": "open-form",
+						"formTitle": "Import a box list",
+						"formSubtitle": "Paste the CSV with the columns box, shelfMark, description, dateFrom and dateTo. Rows that cannot be imported are listed with their reason.",
+						"formConfirmLabel": "Import",
+						"size": "large",
+						"endpoint": {"url": "/apps/filinq/api/digitisation/projects/@objectId/originals/import", "method": "POST"},
+						"formProperties": {"csv": {"type": "string", "title": "Box list (CSV)", "format": "textarea"}},
+						"successMessage": "Box list imported."
+					}
+				],
+				"widgets": [
+					{"id": "project-data", "type": "data", "title": "Project", "icon": "Scanner", "content": {"title": "Project", "columns": 2}},
+					{
+						"id": "project-boxes",
+						"type": "object-table",
+						"title": "Boxes",
+						"icon": "FormatListBulleted",
+						"content": {
+							"endpointSource": {"url": "/apps/filinq/api/digitisation/projects/@objectId/boxes"},
+							"columns": [
+								{"key": "box", "label": "Box"},
+								{"key": "registered", "label": "Registered"},
+								{"key": "scanned", "label": "Scanned"},
+								{"key": "checked", "label": "Checked"},
+								{"key": "rejected", "label": "Rejected"},
+								{"key": "total", "label": "Total"}
+							],
+							"actions": [
+								{
+									"id": "print-box-separators",
+									"label": "Print separators for this box",
+									"icon": "Printer",
+									"type": "navigate",
+									"target": "/index.php/apps/filinq/api/digitisation/projects/@object.project/separators?box=@object.box"
+								}
+							],
+							"borderless": true,
+							"emptyText": "No boxes yet"
+						}
+					},
+					{
+						"id": "project-originals",
+						"type": "object-list",
+						"title": "Paper originals",
+						"icon": "FileDocument",
+						"content": {
+							"register": "filinq",
+							"schema": "paperOriginal",
+							"filter": {"project": "@objectId"},
+							"sort": {"field": "shelfMark", "dir": "asc"},
+							"limit": 25,
+							"columns": [
+								{"key": "box", "label": "Box"},
+								{"key": "shelfMark", "label": "Shelf mark"},
+								{"key": "description", "label": "Description"},
+								{"key": "status", "label": "Status"}
+							],
+							"rowRoute": "PaperOriginalDetail",
+							"emptyText": "No paper originals yet"
+						}
+					}
+				],
+				"layout": [
+					{"id": "1", "widgetId": "project-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 4, "showTitle": false},
+					{"id": "2", "widgetId": "project-boxes", "gridX": 0, "gridY": 4, "gridWidth": 12, "gridHeight": 5},
+					{"id": "3", "widgetId": "project-originals", "gridX": 0, "gridY": 9, "gridWidth": 12, "gridHeight": 7}
+				],
+				"lifecycleActions": {"field": "status"},
+				"sidebar": {"enabled": true, "showMetadata": true, "tabs": [{"id": "audit", "label": "History", "icon": "History", "widgets": [{"type": "audit"}]}]}
+			},
+			"_note": "intake-paper-archive-digitisation REQ-PAD-001/002: the project with its originals counted per box (GET api/digitisation/projects/{id}/boxes, read with the caller's own OpenRegister rights) and, per box, 'Print separators for this box', which opens GET api/digitisation/projects/{id}/separators?box= and downloads one sheet per original. 'Import box list' posts a CSV to the import endpoint, which answers 422 with the failed lines and their reasons. The status moves through the declared lifecycle."
+		},
+		{
+			"id": "ScanChecks",
+			"route": "/scan-checks",
+			"type": "index",
+			"title": "Scan checks",
+			"config": {
+				"register": "filinq",
+				"schema": "paperOriginal",
+				"filter": {"status": "scanned"},
+				"columns": ["project", "box", "shelfMark", "description", "scannedAt"],
+				"rowRoute": "PaperOriginalDetail",
+				"sidebar": {"enabled": true, "showMetadata": true},
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"actionToggles": {"showAdd": false},
+				"emptyText": "No scans wait for a check"
+			},
+			"_note": "intake-paper-archive-digitisation REQ-PAD-004: the checking queue is the originals the sample drew, which wait in `scanned`. A row opens the original, where the checker compares the scan with the paper and passes or rejects it."
+		},
+		{
+			"id": "PaperOriginalDetail",
+			"route": "/paper-originals/:id",
+			"type": "detail",
+			"title": "Paper original",
+			"config": {
+				"register": "filinq",
+				"schema": "paperOriginal",
+				"documentationUrl": "https://filinq.conduction.nl",
+				"actions": [
+					{
+						"id": "open-scan",
+						"label": "Open scan",
+						"icon": "FilePdfBox",
+						"type": "navigate",
+						"target": "/index.php/f/@object.document",
+						"visibleWhen": {"field": "status", "in": ["scanned", "checked"]}
+					},
+					{
+						"id": "pass-scan",
+						"label": "Pass",
+						"icon": "FileCheckOutline",
+						"type": "api-call",
+						"url": "/apps/filinq/api/digitisation/originals/@objectId/check",
+						"method": "POST",
+						"payload": {"result": "passed"},
+						"confirm": true,
+						"confirmMessage": "The scan matches the paper original.",
+						"visibleWhen": {"field": "status", "in": ["scanned"]},
+						"successMessage": "Scan passed.",
+						"errorMessage": "The check could not be saved."
+					},
+					{
+						"id": "reject-scan",
+						"label": "Reject",
+						"icon": "AlertCircleOutline",
+						"type": "open-form",
+						"variant": "error",
+						"formTitle": "Reject the scan",
+						"formSubtitle": "Say what is wrong. The original goes back to registered to be scanned again.",
+						"formConfirmLabel": "Reject",
+						"endpoint": {"url": "/apps/filinq/api/digitisation/originals/@objectId/check?result=rejected", "method": "POST"},
+						"formProperties": {"note": {"type": "string", "title": "Note", "format": "textarea"}},
+						"visibleWhen": {"field": "status", "in": ["scanned"]},
+						"successMessage": "Scan rejected; the original is back to registered."
+					}
+				],
+				"widgets": [
+					{"id": "original-data", "type": "data", "title": "Paper original", "icon": "FileDocument", "content": {"title": "Paper original", "columns": 2}}
+				],
+				"layout": [
+					{"id": "1", "widgetId": "original-data", "gridX": 0, "gridY": 0, "gridWidth": 12, "gridHeight": 6, "showTitle": false}
+				],
+				"sidebar": {"enabled": true, "showMetadata": true, "tabs": [{"id": "audit", "label": "History", "icon": "History", "widgets": [{"type": "audit"}]}]}
+			},
+			"_note": "intake-paper-archive-digitisation REQ-PAD-004: the original's shelf mark, description, date range, box and check beside 'Open scan', which opens the filed scan in Files. Pass and Reject post to api/digitisation/originals/{id}/check with the caller's own OpenRegister rights; a rejection needs a note and sends the original back to registered for a rescan. No lifecycleActions here: the check writes the note with the transition, which a bare lifecycle button cannot."
+		}
+	]
+}

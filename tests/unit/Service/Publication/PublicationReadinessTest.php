@@ -119,7 +119,7 @@ class PublicationReadinessTest extends TestCase {
 	 *
 	 * @return PublicationReadiness The readiness.
 	 */
-	private function readiness(?AccessibilityConformanceService $conformance = null): PublicationReadiness {
+	private function readiness(?AccessibilityConformanceService $conformance = null, ?array $withheld = null): PublicationReadiness {
 		$consents = $this->createMock(ConsentService::class);
 		$consents->method('isDocumentConsentClear')->willReturn(['clear' => true, 'reasons' => []]);
 		$consents->method('getConsentsByDocument')->willReturn([]);
@@ -129,6 +129,7 @@ class PublicationReadinessTest extends TestCase {
 		$marks->method('findFor')->willReturn(['by' => 'petra']);
 		$store = $this->createMock(PublicationStore::class);
 		$store->method('findRedactedCopy')->willReturn(self::COPY);
+		$store->method('findWithheldLink')->willReturn($withheld);
 		$root = $this->createMock(IRootFolder::class);
 		$root->method('getFirstNodeById')->willReturnCallback(
 			function (int $id): ?File {
@@ -175,6 +176,34 @@ class PublicationReadinessTest extends TestCase {
 		$this->config['validation.profiles'] = (string) json_encode(['default' => ['severities' => [DocumentValidationService::CHECK_PDFUA_CONFORMANCE => $severity]]]);
 
 	}//end severity()
+
+	/**
+	 * @spec openspec/changes/image-redaction/specs/image-redaction/spec.md#requirement-a-page-a-page-range-or-a-whole-document-is-redacted-in-one-action-req-ddimr-009
+	 */
+	public function testAWithheldDocumentIsNotForPublication(): void {
+		$this->checked(fileId: 701, report: 'pdfua1-conformant.json');
+		$this->checked(fileId: 702, report: 'pdfua1-conformant.json');
+		$readiness = $this->readiness(withheld: ['sourceFileId' => 701, 'withheld' => true, 'withheldBases' => ['5.1.1.c']]);
+
+		$record = $readiness->evaluate(record: ['documentFileRef' => self::DOCUMENT], now: new DateTimeImmutable('2026-11-14T12:00:00+00:00'));
+
+		$this->assertTrue($record['withheld']);
+		$this->assertSame(['Document 701 is withheld in full on 5.1.1.c, so it is not for publication'], $record['readinessReasons']);
+		$this->assertTrue($record['entitiesReviewed'] && $record['consentClear'] && $record['prohibitionsClear'], 'Every other check passes.');
+		$this->assertFalse($readiness->isReady(record: $record));
+
+	}//end testAWithheldDocumentIsNotForPublication()
+
+	public function testADocumentNotWithheldIsMarkedSo(): void {
+		$this->checked(fileId: 701, report: 'pdfua1-conformant.json');
+		$this->checked(fileId: 702, report: 'pdfua1-conformant.json');
+
+		$record = $this->evaluate();
+
+		$this->assertArrayNotHasKey('withheld', $record, 'A record that is not withheld keeps its shape.');
+		$this->assertTrue($this->readiness()->isReady(record: $record));
+
+	}//end testADocumentNotWithheldIsMarkedSo()
 
 	public function testAFailedPdfUaVerdictIsAReason(): void {
 		$this->checked(fileId: 701, report: 'pdfua1-conformant.json');
