@@ -24,6 +24,8 @@ Acceptance criteria:
 - [x] Express edits as text-to-match, never as offsets
 - [x] Fail loudly and specifically when the target text is not found
 - [ ] Relay the edit from the companion, which already runs on the editor's page
+- [x] Send fixed connector commands that read their texts from `Asc.scope`, never command source built from the texts
+- [ ] Needs live verification against a document server: flush, count and replace through the connector on a Euro-Office server, confirming the commands receive `Asc.scope` set from the host page
 
 Acceptance criteria:
 - ⚠️ ADR-087 §5 bans a per-suite DEPENDENCY. Divergence is unavoidable here (connector object vs `postMessage`, no common API), so the line is: no adapter decides WHAT changes. An adapter that computes an edit has crossed it — assert the manipulation code contains no suite reference.
