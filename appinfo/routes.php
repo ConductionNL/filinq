@@ -167,6 +167,10 @@ $extra = [
         ['name' => 'anonymization#extract', 'url' => 'api/anonymization/extract/{fileId}', 'verb' => 'POST'],
         ['name' => 'anonymization#anonymize', 'url' => 'api/anonymization/anonymize/{fileId}', 'verb' => 'POST'],
         ['name' => 'anonymization#updateRelation', 'url' => 'api/anonymization/relations/{id}', 'verb' => 'PATCH', 'requirements' => ['id' => '\\d+']],
+        // A page, a range of pages or a whole document redacted in one action (image-redaction REQ-DDIMR-009).
+        ['name' => 'scopeRedaction#show', 'url' => 'api/anonymization/scope/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'scopeRedaction#decide', 'url' => 'api/anonymization/scope/{fileId}', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
+        ['name' => 'scopeRedaction#commit', 'url' => 'api/anonymization/scope/{fileId}/commit', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
 
         // Original-EML preview (renders the source message to a PDF for the viewer).
         ['name' => 'emlPreview#preview', 'url' => 'api/anonymization/eml-preview/{fileId}', 'verb' => 'GET'],
@@ -263,6 +267,14 @@ $extra = [
         ['name' => 'emailIngestion#settings', 'url' => 'api/email-ingestion/settings', 'verb' => 'GET'],
         ['name' => 'emailIngestion#updateSettings', 'url' => 'api/email-ingestion/settings', 'verb' => 'PUT'],
         ['name' => 'emailIngestion#retry', 'url' => 'api/email-ingestion/{uuid}/convert', 'verb' => 'POST'],
+        // Mail archive import (intake-mailbox-archive-import): start an import from a file the user can read, read their own, map the folders and start, cancel; the per-run limit and readpst status for admins.
+        ['name' => 'mailArchiveImport#settings', 'url' => 'api/mail-archive-imports/settings', 'verb' => 'GET'],
+        ['name' => 'mailArchiveImport#updateSettings', 'url' => 'api/mail-archive-imports/settings', 'verb' => 'PUT'],
+        ['name' => 'mailArchiveImport#index', 'url' => 'api/mail-archive-imports', 'verb' => 'GET'],
+        ['name' => 'mailArchiveImport#create', 'url' => 'api/mail-archive-imports', 'verb' => 'POST'],
+        ['name' => 'mailArchiveImport#show', 'url' => 'api/mail-archive-imports/{uuid}', 'verb' => 'GET'],
+        ['name' => 'mailArchiveImport#start', 'url' => 'api/mail-archive-imports/{uuid}/start', 'verb' => 'POST'],
+        ['name' => 'mailArchiveImport#cancel', 'url' => 'api/mail-archive-imports/{uuid}/cancel', 'verb' => 'POST'],
         // Guided document wizard (guided-document-wizard): author the wizard of a template, find the wizards for an object, prefill a run. Generation stays on api/documents/generate.
         ['name' => 'wizard#index', 'url' => 'api/wizards', 'verb' => 'GET'],
         ['name' => 'wizard#create', 'url' => 'api/wizards', 'verb' => 'POST'],
@@ -276,6 +288,10 @@ $extra = [
         ['name' => 'classification#confirm', 'url' => 'api/classification/{fileId}/confirm', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'classification#reject', 'url' => 'api/classification/{fileId}/reject', 'verb' => 'POST', 'requirements' => ['fileId' => '\\d+']],
         ['name' => 'classification#show', 'url' => 'api/classification/{fileId}', 'verb' => 'GET', 'requirements' => ['fileId' => '\\d+']],
+        // MDTO metadata (tmlo-mdto-metadata): completeness verdict, sidecar download, e-depot transfer through OpenRegister.
+        ['name' => 'mdto#status', 'url' => 'api/mdto/{id}', 'verb' => 'GET'],
+        ['name' => 'mdto#export', 'url' => 'api/mdto/{id}/export', 'verb' => 'GET'],
+        ['name' => 'mdto#transfer', 'url' => 'api/mdto/{id}/transfer', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#index', 'url' => 'api/legal-holds', 'verb' => 'GET'],
         ['name' => 'legalHoldCase#create', 'url' => 'api/legal-holds', 'verb' => 'POST'],
         ['name' => 'legalHoldCase#status', 'url' => 'api/legal-holds/status/{objectId}', 'verb' => 'GET'],
@@ -341,6 +357,9 @@ $extra = [
         // Correspondence routes.
         ['name' => 'correspondence#generate', 'url' => 'api/correspondence/generate', 'verb' => 'POST'],
         ['name' => 'correspondence#generateBatch', 'url' => 'api/correspondence/generate/batch', 'verb' => 'POST'],
+        // letter-email-sending: send a composed letter by email, and the dialog's preview of it.
+        ['name' => 'correspondence#send', 'url' => 'api/correspondence/send', 'verb' => 'POST'],
+        ['name' => 'correspondence#sendPreview', 'url' => 'api/correspondence/send/preview', 'verb' => 'POST'],
         ['name' => 'correspondence#jobStatus', 'url' => 'api/correspondence/jobs/{jobId}', 'verb' => 'GET'],
 
         // Template routes.
