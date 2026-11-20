@@ -1082,6 +1082,7 @@ async function resolveFaithfulMarkers(store, entry) {
  * @param {Error} err The failure.
  * @return {void}
  * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
  */
 function applyAnonymizeFailure(entry, err) {
 	console.error(`Failed to anonymise ${entry.name}:`, err)

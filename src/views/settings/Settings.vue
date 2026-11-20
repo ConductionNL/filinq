@@ -1234,7 +1234,7 @@ export default {
 		 * The four-eyes choices (REQ-SET-12), the default first.
 		 *
 		 * @return {Array<{value: string, label: string}>} The radio options.
-		 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-4
 		 */
 		fourEyesOptions() {
 			return [

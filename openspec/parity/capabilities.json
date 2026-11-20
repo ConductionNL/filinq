@@ -4890,26 +4890,26 @@
 			"area": "redact",
 			"name": "Have a second person mark a redacted document as checked.",
 			"source": "own-code",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "planned",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): a person can mark the check, but nothing stops the same person from anonymising afterwards (REQ-RWB-09 and REQ-SET-12, no task ticked). Planned in openspec/changes/redaction-four-eyes-setting. Built so far: Re-read 2026-10-30 on development: reachable since change anonymise-asks-for-the-review-mark (10/10 ticked). ReviewMarkCard.vue records the mark through POST api/redaction/documents/{fileId}/checked; RedactionOutputController::markChecked takes checkedBy from the session user and checks the caller can open the file first; GET api/redaction/documents/checked (routes.php:132, checkedStatus) feeds My documents' Status column ('Checked by {user} on {date}'). RedactionReviewGate::refuse() refuses a mark without checkedBy or for an older detection run. Partial: nothing requires the checker to be a different person from the one who ran the detection or the anonymise (no comparison of checkedBy with the runner in lib/Service/Redaction/), so a second person CAN check, but one person can also do both.",
-				"change": "openspec/changes/redaction-four-eyes-setting",
+				"evidence": "Four eyes are enforced in the service (REQ-RWB-09): RedactionReviewGate refuses a run whose acting user is the checkedBy of the document's review mark with reason same_person (409, a sentence asking for a colleague), and a run with no acting user with anonymiser_unknown, through RedactionOutputGuard::assertMayWrite(), so the API, BatchAnonymizeService (per document), FolderExtractionJob and cross-app callers are all covered. A run is a Woo run when the caller passes wooCase or the scope is dossier (AnonymizeRun::isWooRun()). The admin setting redaction_four_eyes (SettingsService::getFourEyesMode(), woo by default, always, off; an unknown value is refused with 400, REQ-SET-12) is the radio group 'Four eyes when anonymising' in the Anonymisation section of Settings.vue. ReviewMarkCard says 'A colleague must anonymise this document' and FileViewerSidebar disables anonymise (src/services/fourEyes.js); a same_person 409 keeps the mark (src/store/modules/anonymization.js). dossiq passes wooCase (ConductionNL/dossiq#6513). Tests: RedactionReviewGateTest, RedactionOutputGuardTest, BatchAnonymizeServiceTest, SettingsServiceTest, vitest redactionFourEyesSetting.spec.js and redactionFourEyesCard.spec.js; e2e tests/e2e/spec-coverage/redaction-four-eyes-setting.spec.ts written, not yet run live. Still true from before: ReviewMarkCard records the mark through POST api/redaction/documents/{fileId}/checked and My documents shows who checked.",
+				"change": "openspec/changes/archive/2026-11-20-redaction-four-eyes-setting",
 				"requirement": [
 					"openspec/specs/redaction-output-guarantee :: The screens record the check before they anonymise (REQ-RWB-06)",
 					"openspec/specs/redaction-output-guarantee :: My documents shows who checked a file (REQ-RWB-08)",
-					"openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee :: The person who anonymises differs from the person who checked (REQ-RWB-09)",
-					"openspec/changes/redaction-four-eyes-setting/specs/admin-settings :: The admin chooses when four eyes are required (REQ-SET-12)"
+					"openspec/specs/redaction-output-guarantee :: The person who anonymises differs from the person who checked (REQ-RWB-09)",
+					"openspec/specs/admin-settings :: The admin chooses when four eyes are required (REQ-SET-12)"
 				],
-				"plan": "openspec/changes/redaction-four-eyes-setting"
+				"readOn": "2026-11-20"
 			},
-			"reachedOn": "ReviewMarkCard in the file viewer sidebar; Status column on My documents",
+			"reachedOn": "ReviewMarkCard in the file viewer sidebar; Status column on My documents; the Four eyes radio group in the Anonymisation section of the admin settings",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "anonymization-entity-review",
 			"featureConfidence": "medium",
-			"note": "Four eyes is not enforced yet: the checker may be the person who anonymises. Decided 2026-10-30 (DECISIONS row 266): an admin setting, on by default for Woo cases, makes the checker differ from the anonymiser; planned in change redaction-four-eyes-setting.",
+			"note": "Built 2026-11-20 (change redaction-four-eyes-setting, REQ-RWB-09, REQ-SET-12): an admin setting, Woo cases by default, makes the checker differ from the anonymiser.",
 			"zylab": "yes",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",

@@ -550,7 +550,7 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	public function updateSettings(array $data): array {
 		$this->assertValidSubfolderName(data: $data);
@@ -650,7 +650,7 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @throws RuntimeException With code 400 when the value is not woo, always or off.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	private function assertValidFourEyesMode(array $data): void {
 		if (array_key_exists(self::FOUR_EYES_KEY, $data) === false) {
@@ -678,7 +678,7 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @return string One of woo, always or off.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	public function getFourEyesMode(): string {
 		$mode = trim($this->config->getValueString($this->appName, self::FOUR_EYES_KEY, self::FOUR_EYES_DEFAULT));

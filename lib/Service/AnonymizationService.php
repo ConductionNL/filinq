@@ -776,7 +776,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 *
 	 * @throws Exception If anonymization fails.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-3
 	 */
 	public function anonymizeDocumentAs(int $fileId, array $entities, string $userId): array {
 		return $this->anonymizeDocument(
@@ -840,7 +840,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-3
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-2
 	 */
 	private function runAnonymize(AnonymizeRun $run): array {
 		$fileId = $run->fileId;

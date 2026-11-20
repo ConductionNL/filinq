@@ -478,7 +478,7 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	 *
 	 * @return bool True when `wooCase` is set.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-2
 	 */
 	private function isWooCase(array $params): bool {
 		$flag = ($params['wooCase'] ?? false);
