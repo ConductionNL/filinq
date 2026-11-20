@@ -32,6 +32,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Service\Extraction\UnattendedThresholdSetting;
 use OCA\Filinq\Service\Support\RegisterSetup;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -80,6 +81,7 @@ class SettingsService implements SettingsServiceInterface {
 		'signing_request_expiry_days'                => ['30', 'int'],
 		'signing_guardian_consent_age'               => ['16', 'text'],
 		'filinq.anonymisation.default_output_format' => ['pdf-only', 'text'],
+		'extraction_unattended_threshold'            => ['0.9', 'text'],
 		self::FOUR_EYES_KEY                          => [self::FOUR_EYES_DEFAULT, 'text'],
 	];
 
@@ -507,6 +509,7 @@ class SettingsService implements SettingsServiceInterface {
 		'libresign_qualified',
 		'signing_request_expiry_days',
 		'signing_guardian_consent_age',
+		'extraction_unattended_threshold',
 		'ocr_enabled',
 		'ocr_languages',
 		'ocr_dpi',
@@ -541,6 +544,7 @@ class SettingsService implements SettingsServiceInterface {
 	 */
 	public function updateSettings(array $data): array {
 		$this->assertValidSubfolderName(data: $data);
+		(new UnattendedThresholdSetting())->assertValid(data: $data);
 		$this->assertValidFourEyesMode(data: $data);
 
 		try {

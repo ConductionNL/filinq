@@ -65,6 +65,7 @@ class SigningConcludedEvent extends Event {
 	 *                               for the native SES provider today; broker-resolved
 	 *                               assurance is populated into the SAME field by the
 	 *                               `signer-identity-rails` change.
+	 * @param array<int, string> $accepted The accept-only recipients, never listed among the signers (signing-accept-only-recipient D3)
 	 *
 	 * @return void
 	 */
@@ -76,6 +77,7 @@ class SigningConcludedEvent extends Event {
 		private readonly ?string $signedAt,
 		private readonly SigningProvenance $provenance,
 		private readonly string $assuranceLevel = 'low',
+		private readonly array $accepted = [],
 	) {
 		parent::__construct();
 
@@ -212,4 +214,16 @@ class SigningConcludedEvent extends Event {
 	public function getAssuranceLevel(): string {
 		return $this->assuranceLevel;
 	}//end getAssuranceLevel()
+
+	/**
+	 * Get the accept-only recipients who accepted, apart from the signers
+	 * (signing-accept-only-recipient D3).
+	 *
+	 * @return array<int, string> Their recipient ids.
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-backend
+	 */
+	public function getAccepted(): array {
+		return $this->accepted;
+	}//end getAccepted()
 }//end class

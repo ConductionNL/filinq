@@ -30,7 +30,10 @@ namespace OCA\Filinq\EventListener;
 use OCA\Filinq\Event\DocumentGenerationRequestedEvent;
 use OCA\Filinq\Event\DocumentStampRequestedEvent;
 use OCA\Filinq\Flow\FilinqFlowNodeListener;
+use OCA\Filinq\Flow\RegisterFlowOperationsListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\WorkflowEngine\Events\LoadSettingsScriptsEvent;
+use OCP\WorkflowEngine\Events\RegisterOperationsEvent;
 
 /**
  * Registers the flow-node listener and the generation command listener.
@@ -84,6 +87,17 @@ class DocumentGenerationRegistrar {
 		$context->registerEventListener(
 			event: DocumentStampRequestedEvent::class,
 			listener: DocumentStampRequestedListener::class
+		);
+
+		// Nextcloud Flow (flow-operations): the four file operations, and the
+		// script that renders their options in the Flow rule builder.
+		$context->registerEventListener(
+			event: RegisterOperationsEvent::class,
+			listener: RegisterFlowOperationsListener::class
+		);
+		$context->registerEventListener(
+			event: LoadSettingsScriptsEvent::class,
+			listener: RegisterFlowOperationsListener::class
 		);
 
 	}//end register()

@@ -36,6 +36,7 @@ describe('defaultSettings', () => {
 			['signing_default_level', 'SES'],
 			['signing_request_expiry_days', 30],
 			['signing_guardian_consent_age', 16],
+			['extraction_unattended_threshold', '0.9'],
 			['filinq.anonymisation.default_output_format', 'pdf-only'],
 			['anonymisation.output_subfolder_name', 'anonymised'],
 			['redaction_four_eyes', 'woo'],

@@ -254,7 +254,7 @@ class RegistryEnrichmentServiceTest extends TestCase {
 		$apps->method('getInstalledApps')->willReturn($installed === true ? ['files', 'openregister'] : ['files']);
 
 		$rules = $this->createMock(IntakeDefaultRuleService::class);
-		$rules->method('find')->willReturnCallback(
+		$rules->method('findRule')->willReturnCallback(
 			static fn (string $uuid): ?array => ($uuid === 'rule-1' ? $rule : null)
 		);
 

@@ -273,6 +273,7 @@
 			"<!--v-if-->",
 			"<!--v-if-->",
 			"<!--v-if-->",
+			"<!--v-if-->",
 			"<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->",
 			"<!--v-if-->",
 			"<!-- Entity detection provider (llm-entity-detection-provider): its own admin endpoint -->",
@@ -289,7 +290,10 @@
 			"</x-ncbutton>",
 			"</div>",
 			"</x-slot>",
-			"</x-cnadminsettingsshell>"
+			"</x-cnadminsettingsshell>",
+			"<!-- Finality rules (finish-half-built-capabilities 3.2): the caller of POST /api/document-finality-rules -->",
+			"<!-- Waarmerk organisation certificate (document-waarmerk-certification): its own admin endpoint -->",
+			"<x-nctextfield modelvalue=\"0.9\" type=\"number\" min=\"0.6\" max=\"1\" step=\"0.01\" label=\"Confidence for unattended receipts and invoices\" error=\"false\" helpertext=\"A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.\" data-testid=\"settings-unattended-threshold\" data-on-onupdate:modelvalue=\"\">"
 		],
 		"switches": [
 			{
@@ -723,6 +727,8 @@
 			"</x-documentwebhookssection>",
 			"<x-emailingestionsettings>",
 			"</x-emailingestionsettings>",
+			"<x-modelfillingsettings>",
+			"</x-modelfillingsettings>",
 			"<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->",
 			"<x-pagelayoutsettings>",
 			"</x-pagelayoutsettings>",
@@ -808,7 +814,17 @@
 			"</x-ncbutton>",
 			"</div>",
 			"</x-slot>",
-			"</x-cnadminsettingsshell>"
+			"</x-cnadminsettingsshell>",
+			"<x-documentfinalityrulesettings>",
+			"</x-documentfinalityrulesettings>",
+			"<x-waarmerksettings>",
+			"</x-waarmerksettings>",
+			"<!-- Finality rules (finish-half-built-capabilities 3.2): the caller of POST /api/document-finality-rules -->",
+			"<x-nctextfield modelvalue=\"0.9\" type=\"number\" min=\"0.6\" max=\"1\" step=\"0.01\" label=\"Confidence for unattended receipts and invoices\" error=\"false\" helpertext=\"A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.\" data-testid=\"settings-unattended-threshold\" data-on-onupdate:modelvalue=\"\">",
+			"<x-integrityscansection>",
+			"</x-integrityscansection>",
+			"<x-mailarchiveimportsettings>",
+			"</x-mailarchiveimportsettings>"
 		],
 		"switches": [
 			{
@@ -1237,6 +1253,7 @@
 			"<!--v-if-->",
 			"<!--v-if-->",
 			"<!--v-if-->",
+			"<!--v-if-->",
 			"<!-- Page layouts (documents-from-a-template REQ-DFT-01): their own endpoints -->",
 			"<!--v-if-->",
 			"<!-- Entity detection provider (llm-entity-detection-provider): its own admin endpoint -->",
@@ -1253,7 +1270,10 @@
 			"</x-ncbutton>",
 			"</div>",
 			"</x-slot>",
-			"</x-cnadminsettingsshell>"
+			"</x-cnadminsettingsshell>",
+			"<!-- Finality rules (finish-half-built-capabilities 3.2): the caller of POST /api/document-finality-rules -->",
+			"<!-- Waarmerk organisation certificate (document-waarmerk-certification): its own admin endpoint -->",
+			"<x-nctextfield modelvalue=\"0.9\" type=\"number\" min=\"0.6\" max=\"1\" step=\"0.01\" label=\"Confidence for unattended receipts and invoices\" error=\"false\" helpertext=\"A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.\" data-testid=\"settings-unattended-threshold\" data-on-onupdate:modelvalue=\"\">"
 		],
 		"switches": [
 			{
@@ -1679,6 +1699,8 @@
 			"</x-documentwebhookssection>",
 			"<x-emailingestionsettings>",
 			"</x-emailingestionsettings>",
+			"<x-modelfillingsettings>",
+			"</x-modelfillingsettings>",
 			"<!-- Signer identity rails (signer-identity-rails): its own admin endpoint -->",
 			"<x-pagelayoutsettings>",
 			"</x-pagelayoutsettings>",
@@ -1705,7 +1727,17 @@
 			"</x-ncbutton>",
 			"</div>",
 			"</x-slot>",
-			"</x-cnadminsettingsshell>"
+			"</x-cnadminsettingsshell>",
+			"<x-documentfinalityrulesettings>",
+			"</x-documentfinalityrulesettings>",
+			"<x-waarmerksettings>",
+			"</x-waarmerksettings>",
+			"<!-- Finality rules (finish-half-built-capabilities 3.2): the caller of POST /api/document-finality-rules -->",
+			"<x-nctextfield modelvalue=\"0.9\" type=\"number\" min=\"0.6\" max=\"1\" step=\"0.01\" label=\"Confidence for unattended receipts and invoices\" error=\"false\" helpertext=\"A read receipt or invoice passes without a person only when every field it needs is read at least this sure. Between 0.6 and 1.0; 0.9 by default.\" data-testid=\"settings-unattended-threshold\" data-on-onupdate:modelvalue=\"\">",
+			"<x-integrityscansection>",
+			"</x-integrityscansection>",
+			"<x-mailarchiveimportsettings>",
+			"</x-mailarchiveimportsettings>"
 		],
 		"switches": [
 			{

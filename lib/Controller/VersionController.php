@@ -30,6 +30,7 @@ namespace OCA\Filinq\Controller;
 use OCA\Filinq\Exception\ComparisonException;
 use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Kernel\Contracts\DocumentVersionServiceInterface;
+use OCA\Filinq\Service\Audit\DocumentDownloadLog;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -63,6 +64,7 @@ class VersionController extends Controller {
 	 * @param DocumentVersionServiceInterface $service The version service.
 	 * @param IL10N $l10n Localisation.
 	 * @param IUserSession $userSession User session.
+	 * @param DocumentDownloadLog|null $downloads Records each served version in its trail (REQ-DIO-06); null records nothing.
 	 *
 	 * @return void
 	 */
@@ -73,6 +75,7 @@ class VersionController extends Controller {
 		private readonly DocumentVersionServiceInterface $service,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
+		private readonly ?DocumentDownloadLog $downloads = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -140,6 +143,7 @@ class VersionController extends Controller {
 		try {
 			$bytes = $this->service->readVersion(fileId: $fileId, versionTimestamp: $versionTimestamp);
 			$filename = 'version-' . $fileId . '-' . $versionTimestamp;
+			$this->downloads?->downloaded(fileId: $fileId, version: (string) $versionTimestamp, route: DocumentDownloadLog::ROUTE_UI);
 			return new DataDownloadResponse(data: $bytes, filename: $filename, contentType: 'application/octet-stream');
 		} catch (ComparisonException $e) {
 			return $this->errorResponse(exception: $e);

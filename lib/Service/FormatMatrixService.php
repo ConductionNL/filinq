@@ -100,12 +100,28 @@ class FormatMatrixService implements FormatMatrixServiceInterface {
 	 *
 	 * @return array<string, array{available: bool, reason?: string}>
 	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The template decides nothing until office templates exist.
+	 * An office template's DOCX is its own filled file, so it needs no
+	 * LibreOffice; its HTML is made from that DOCX by LibreOffice, so HTML
+	 * does (office-template-authoring REQ-DDMFO-007).
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.3
+	 * @spec openspec/changes/office-template-authoring/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function forTemplate(array $template): array {
-		return $this->forInstance(flow: 'documents');
+		$matrix = $this->forInstance(flow: 'documents');
+		if (($template['templateType'] ?? 'twig') !== 'office') {
+			return $matrix;
+		}
+
+		if (isset($matrix['docx']) === true) {
+			$matrix['docx'] = ['available' => true];
+		}
+
+		if (isset($matrix['html']) === true && $this->libreOfficeAvailable() === false) {
+			$matrix['html'] = ['available' => false, 'reason' => LibreOfficeHeadlessBackend::UNAVAILABLE_REASON];
+		}
+
+		return $matrix;
 
 	}//end forTemplate()
 

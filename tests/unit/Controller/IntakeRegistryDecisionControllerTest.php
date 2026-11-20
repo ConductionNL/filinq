@@ -23,6 +23,7 @@ use OCA\Filinq\Controller\IntakeController;
 use OCA\Filinq\Controller\Support\IntakeHandling;
 use OCA\Filinq\Exception\IntakeRefusedException;
 use OCA\Filinq\Service\Intake\IntakeNotificationReach;
+use OCA\Filinq\Service\Intake\IntakeOverdueList;
 use OCA\Filinq\Service\Intake\RegistrySuggestionDecision;
 use OCA\Filinq\Service\IntakeDetachmentService;
 use OCA\Filinq\Service\IntakeRoutingService;
@@ -67,6 +68,7 @@ class IntakeRegistryDecisionControllerTest extends TestCase {
 				intake: $this->createMock(IntakeService::class),
 				detachment: $this->createMock(IntakeDetachmentService::class),
 				routing: $this->createMock(IntakeRoutingService::class),
+				overdue: $this->createMock(IntakeOverdueList::class),
 				registry: $registry
 			),
 			$this->createMock(PartySuggestionService::class),

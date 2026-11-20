@@ -413,7 +413,7 @@ class RegistryEnrichmentService {
 	 * @return string The purpose, or '' when the rule declares none or is gone.
 	 */
 	private function purposeFor(array $document): string {
-		$rule = $this->rules->find(uuid: (string)($document['defaultRule'] ?? ''));
+		$rule = $this->rules->findRule(uuid: (string)($document['defaultRule'] ?? ''));
 		if ($rule === null || is_string($rule['brpPurpose'] ?? null) === false) {
 			return '';
 		}

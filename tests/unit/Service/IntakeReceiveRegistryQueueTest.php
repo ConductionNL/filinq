@@ -18,6 +18,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\Intake\ContentHasher;
+use OCA\Filinq\Service\Intake\IntakeDeadlines;
+use OCA\Filinq\Service\Support\IntakeSignals;
 use OCA\Filinq\Event\IntakeDocumentReceivedEvent;
 use OCA\Filinq\Event\Support\IntakeArrival;
 use OCA\Filinq\Service\Intake\IntakeOcrQueue;
@@ -87,10 +90,25 @@ class IntakeReceiveRegistryQueueTest extends TestCase {
 			new IntakeFiling(placement: $this->createMock(IntakeFilePlacement::class), ocrQueue: $ocr, registryQueue: $registry),
 			new IntakeRouting(defaults: $defaults, routing: $this->createMock(IntakeRoutingService::class), parties: $this->createMock(PartySuggestionService::class)),
 			$this->createMock(IUserSession::class),
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->noSignals()
 		);
 
 	}//end service()
+
+	/**
+	 * Signals that set a fixed deadline and hash nothing.
+	 *
+	 * @return IntakeSignals
+	 */
+	private function noSignals(): IntakeSignals {
+		$deadlines = $this->createMock(IntakeDeadlines::class);
+		$deadlines->method('deadlineFor')->willReturn('2026-11-13');
+		$hasher = $this->createMock(ContentHasher::class);
+		$hasher->method('hashOf')->willReturn(null);
+
+		return new IntakeSignals(deadlines: $deadlines, hasher: $hasher);
+	}//end noSignals()
 
 	/**
 	 * The arrival event for one mailed letter.
