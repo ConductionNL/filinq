@@ -30,7 +30,6 @@
 phpmetrics/
 # Claude Code
 /.claude/
-/CLAUDE.md
 # Intermediate SBOM files. The merged sbom.cdx.json at the root is committed.
 bom-php.cdx.json
 bom-npm.cdx.json
