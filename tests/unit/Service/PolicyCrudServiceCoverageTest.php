@@ -202,7 +202,7 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 	public function testListProhibitionsSerialisesEntitiesAndKeepsArrays(): void {
 		$this->objectService->expects($this->once())
 			->method('searchObjectsBySlug')
-			->with('filinq', 'publicationProhibition', $this->anything(), false, false)
+			->with('filinq', 'publicationProhibition', $this->anything(), true, true)
 			->willReturn([$this->entity(['id' => 'a']), ['id' => 'b'], 'garbage', 42]);
 
 		$this->assertSame([['id' => 'a'], ['id' => 'b']], $this->service()->listProhibitions());
@@ -230,7 +230,7 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 	public function testListStandingConsentsKeepsOnlyEntityScope(): void {
 		$this->objectService->expects($this->once())
 			->method('searchObjectsBySlug')
-			->with('filinq', 'publicationConsent', $this->anything(), false, false)
+			->with('filinq', 'publicationConsent', $this->anything(), true, true)
 			->willReturn(
 				[
 					['id' => '1', 'scope' => 'document'],
@@ -259,8 +259,8 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 					'id' => 'u-1',
 					'register' => 'filinq',
 					'schema' => 'publicationProhibition',
-					'_rbac' => false,
-					'_multitenancy' => false,
+					'_rbac' => true,
+					'_multitenancy' => true,
 				]))
 			->willReturn($this->entity(['id' => 'u-1', 'active' => true]));
 
@@ -300,10 +300,10 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 	public function testGetStandingConsentAssertsEntityScope(): void {
 		$this->objectService->method('find')->willReturnCallback(LegacyObjectArgs::returnMap(method: 'find', map: 
 			[
-				['e', 'filinq', 'publicationConsent', false, false, true, true, ['id' => 'e', 'scope' => 'entity']],
-				['d', 'filinq', 'publicationConsent', false, false, true, true, ['id' => 'd', 'scope' => 'document']],
-				['n', 'filinq', 'publicationConsent', false, false, true, true, ['id' => 'n']],
-				['x', 'filinq', 'publicationConsent', false, false, true, true, null],
+				['e', 'filinq', 'publicationConsent', true, true, true, true, ['id' => 'e', 'scope' => 'entity']],
+				['d', 'filinq', 'publicationConsent', true, true, true, true, ['id' => 'd', 'scope' => 'document']],
+				['n', 'filinq', 'publicationConsent', true, true, true, true, ['id' => 'n']],
+				['x', 'filinq', 'publicationConsent', true, true, true, true, null],
 			]
 		));
 
@@ -331,8 +331,8 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 					'register' => 'filinq',
 					'schema' => 'publicationProhibition',
 					'uuid' => null,
-					'_rbac' => false,
-					'_multitenancy' => false,
+					'_rbac' => true,
+					'_multitenancy' => true,
 				]))
 			->willReturn($this->saved(['id' => 'new', 'entityText' => 'Jan']));
 
@@ -417,8 +417,8 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 					'register' => 'filinq',
 					'schema' => 'publicationProhibition',
 					'uuid' => 'u-9',
-					'_rbac' => false,
-					'_multitenancy' => false,
+					'_rbac' => true,
+					'_multitenancy' => true,
 				]))
 			->willReturn($this->saved(['id' => 'u-9', 'entityText' => 'Piet']));
 
@@ -469,8 +469,8 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 					'uuid' => 'u-3',
 					'register' => 'filinq',
 					'schema' => 'publicationProhibition',
-					'_rbac' => false,
-					'_multitenancy' => false,
+					'_rbac' => true,
+					'_multitenancy' => true,
 				]));
 
 		$this->service()->deleteProhibition('u-3');
@@ -513,8 +513,8 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 					'register' => 'filinq',
 					'schema' => 'publicationConsent',
 					'uuid' => null,
-					'_rbac' => false,
-					'_multitenancy' => false,
+					'_rbac' => true,
+					'_multitenancy' => true,
 				]))
 			->willReturn($this->saved(['id' => 'sc-1']));
 
@@ -592,8 +592,8 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 					'id' => 'sc-1',
 					'register' => 'filinq',
 					'schema' => 'publicationConsent',
-					'_rbac' => false,
-					'_multitenancy' => false,
+					'_rbac' => true,
+					'_multitenancy' => true,
 				]))
 			->willReturn(['id' => 'sc-1', 'scope' => 'entity', 'consentMethod' => 'mail', 'active' => true]);
 
@@ -606,8 +606,8 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 					'register' => 'filinq',
 					'schema' => 'publicationConsent',
 					'uuid' => 'sc-1',
-					'_rbac' => false,
-					'_multitenancy' => false,
+					'_rbac' => true,
+					'_multitenancy' => true,
 				]))
 			->willReturn($this->saved($expected));
 
@@ -650,8 +650,8 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 					'uuid' => 'sc-2',
 					'register' => 'filinq',
 					'schema' => 'publicationConsent',
-					'_rbac' => false,
-					'_multitenancy' => false,
+					'_rbac' => true,
+					'_multitenancy' => true,
 				]));
 
 		$this->service()->deleteStandingConsent('sc-2');

@@ -27,8 +27,10 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use Exception;
 use OCA\Filinq\Service\BatchReportService;
 use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\ReportOrganisationLabel;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 
 /**
  * Unit tests for BatchReportService
@@ -57,7 +59,7 @@ class BatchReportServiceTest extends TestCase {
 		parent::setUp();
 
 		$this->mockStateService = $this->createMock(BatchStateService::class);
-		$this->service = new BatchReportService(stateService: $this->mockStateService);
+		$this->service = new BatchReportService(stateService: $this->mockStateService, organisationLabel: new ReportOrganisationLabel(container: $this->createMock(ContainerInterface::class)));
 
 	}//end setUp()
 
@@ -146,4 +148,68 @@ class BatchReportServiceTest extends TestCase {
 		$this->assertStringContainsString('status', $lines[0]);
 
 	}//end testGenerateReportCsvHasHeaders()
+	/**
+	 * Every row names the organisation the batch is stamped with, by name and UUID.
+	 *
+	 * @return void
+	 */
+	public function testEveryRowNamesTheBatchOrganisation(): void {
+		$organisation = new class {
+			/**
+			 * The UUID.
+			 *
+			 * @return string
+			 */
+			public function getUuid(): string {
+				return 'org-a-uuid';
+			}
+
+			/**
+			 * The name.
+			 *
+			 * @return string
+			 */
+			public function getName(): string {
+				return 'Gemeente A';
+			}
+		};
+		$organisations = new class ($organisation) {
+			/**
+			 * Constructor.
+			 *
+			 * @param object $organisation The caller's organisation.
+			 */
+			public function __construct(private object $organisation) {
+			}
+
+			/**
+			 * The caller's organisations.
+			 *
+			 * @return array<int, object>
+			 */
+			public function getUserOrganisations(): array {
+				return [$this->organisation];
+			}
+		};
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($organisations);
+		$service = new BatchReportService(
+			stateService: $this->mockStateService,
+			organisationLabel: new ReportOrganisationLabel(container: $container)
+		);
+		$this->mockStateService->method('getBatch')->willReturn(
+			[
+				'status' => 'completed',
+				'createdAt' => 1750000000,
+				'organisation' => 'org-a-uuid',
+				'files' => [['fileName' => 'a.pdf', 'fileId' => 1, 'status' => 'completed']],
+			]
+		);
+
+		$rows = array_map('str_getcsv', explode("\n", trim($service->generateReport('abc'))));
+
+		$this->assertSame(['organisationName', 'organisationUuid'], array_slice($rows[0], -2));
+		$this->assertSame(['Gemeente A', 'org-a-uuid'], array_slice($rows[1], -2));
+	}//end testEveryRowNamesTheBatchOrganisation()
+
 }//end class

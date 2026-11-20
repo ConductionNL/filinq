@@ -186,4 +186,31 @@ class ServiceWrittenCreateTest extends TestCase {
 		$this->assertNotContains(needle: 'consent', haystack: $schemas['publicationProhibition']['authorization']['read']);
 
 	}//end testConsentAndIntakeAreNotOpenToEveryUser()
+
+	/**
+	 * Saving a prohibition gives its writers no reach into consent records.
+	 *
+	 * The retroactive pass that resolves in-flight document consents when a
+	 * prohibition is saved runs as the system through `SystemContextSeam`, so
+	 * the prohibition admins need, and get, no grant on `publicationConsent`.
+	 *
+	 * @return void
+	 */
+	public function testProhibitionWritersHoldNoGrantOnConsents(): void {
+		$schemas = $this->schemas();
+		$consent = $schemas['publicationConsent']['authorization'];
+
+		$this->assertContains(needle: 'filinq-prohibition-admins', haystack: $schemas['publicationProhibition']['authorization']['update']);
+		foreach ($consent as $action => $entries) {
+			foreach ($entries as $entry) {
+				$group = $entry;
+				if (is_array($entry) === true) {
+					$group = ($entry['group'] ?? '');
+				}
+
+				$this->assertNotSame(expected: 'filinq-prohibition-admins', actual: $group, message: 'publicationConsent ' . $action);
+			}
+		}
+
+	}//end testProhibitionWritersHoldNoGrantOnConsents()
 }//end class

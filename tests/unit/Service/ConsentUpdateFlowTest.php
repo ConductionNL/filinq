@@ -133,14 +133,14 @@ class ConsentUpdateFlowTest extends TestCase {
 
 		$this->assertSame(
 			expected: [
-				['find' => ['c-1', 'filinq', 'publicationConsent', false]],
+				['find' => ['c-1', 'filinq', 'publicationConsent', true]],
 				[
 					'save' => [
 						['consentStatus' => 'pending', 'notificationStatus' => 'sent', 'documentId' => 'd-1', 'policyMatch' => null, 'objectionReason' => 'privacy'],
 						'filinq',
 						'publicationConsent',
 						null,
-						false,
+						true,
 					],
 				],
 				[
@@ -189,7 +189,7 @@ class ConsentUpdateFlowTest extends TestCase {
 		$this->assertSame(expected: 'Consent record not found: c-1', actual: $caught->getPrevious()?->getMessage());
 		$this->assertSame(
 			expected: [
-				['find' => ['c-1', 'filinq', 'publicationConsent', false]],
+				['find' => ['c-1', 'filinq', 'publicationConsent', true]],
 				[
 					'log error' => 'Failed to update consent status: Consent record not found: c-1',
 					'context'   => ['consentId' => 'c-1', 'exception' => 'Consent record not found: c-1'],
@@ -224,7 +224,7 @@ class ConsentUpdateFlowTest extends TestCase {
 		$caught = $this->failure(handler: $this->handler(stored: ['policyMatch' => null]), data: ['policyMatch' => 'p-1']);
 
 		$this->assertSame(expected: InvalidArgumentException::class, actual: get_class($caught));
-		$this->assertSame(expected: [['find' => ['c-1', 'filinq', 'publicationConsent', false]]], actual: $this->calls);
+		$this->assertSame(expected: [['find' => ['c-1', 'filinq', 'publicationConsent', true]]], actual: $this->calls);
 	}//end testGuardRefusalPassesThrough()
 
 	/**

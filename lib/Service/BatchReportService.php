@@ -41,15 +41,17 @@ class BatchReportService implements BatchReportServiceInterface {
 	/**
 	 * Constructor for BatchReportService
 	 *
-	 * @param BatchStateService     $stateService Service that exposes stored batch state.
-	 * @param BatchReportAggregator $aggregator   The read-time summary of a batch.
-	 * @param BatchQaOutcomes|null  $qaOutcomes   Reads each QA sample's outcome from its review; null
-	 *                                            reports the stored outcome.
+	 * @param BatchStateService       $stateService      Service that exposes stored batch state.
+	 * @param ReportOrganisationLabel $organisationLabel Names the organisation the batch belongs to.
+	 * @param BatchReportAggregator   $aggregator        The read-time summary of a batch.
+	 * @param BatchQaOutcomes|null    $qaOutcomes        Reads each QA sample's outcome from its review;
+	 *                                                   null reports the stored outcome.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly BatchStateService $stateService,
+		private readonly ReportOrganisationLabel $organisationLabel,
 		private readonly BatchReportAggregator $aggregator = new BatchReportAggregator(),
 		private readonly ?BatchQaOutcomes $qaOutcomes = null,
 	) {
@@ -61,11 +63,14 @@ class BatchReportService implements BatchReportServiceInterface {
 	 *
 	 * @param string $batchId Identifier of the batch to report on.
 	 *
-	 * @return string CSV document (header row + one row per file).
+	 * @return string CSV document (header row + one row per file). Every row
+	 *                names the organisation the batch belongs to, by name and
+	 *                UUID, so the report states its scope (REQ-DDMTH-005).
 	 *
 	 * @throws Exception When the batch cannot be found or is not yet completed.
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-completion-report
+	 * @spec openspec/changes/multi-tenant-hardening/tasks.md#3-backend-per-organisation-behaviour
 	 */
 	public function generateReport(string $batchId): string {
 		$batch = $this->stateService->getBatch($batchId);
@@ -77,6 +82,7 @@ class BatchReportService implements BatchReportServiceInterface {
 			throw new Exception('Batch is not yet completed', 409);
 		}
 
+		$organisation = $this->organisationLabel->describe(uuid: $batch['organisation'] ?? null);
 		if ($this->qaOutcomes !== null) {
 			$batch = $this->qaOutcomes->refresh(batch: $batch);
 		}
@@ -94,11 +100,13 @@ class BatchReportService implements BatchReportServiceInterface {
 				'timestamp',
 				'reason',
 				'qaOutcome',
+				'organisationName',
+				'organisationUuid',
 			]
 		);
 		$timestamp = date('c', $batch['createdAt'] ?? time());
 		foreach ($batch['files'] as $f) {
-			fputcsv($output, $this->fileRow(file: $f, timestamp: $timestamp));
+			fputcsv($output, $this->fileRow(file: $f, timestamp: $timestamp, organisation: $organisation));
 		}
 
 		$summary = $this->aggregator->summarise(batch: $batch);
@@ -118,12 +126,13 @@ class BatchReportService implements BatchReportServiceInterface {
 	/**
 	 * One file's row of the report, in the header's column order.
 	 *
-	 * @param array<string, mixed> $file      The per-file entry.
-	 * @param string               $timestamp The batch's creation time, ISO 8601.
+	 * @param array<string, mixed>                $file         The per-file entry.
+	 * @param string                              $timestamp    The batch's creation time, ISO 8601.
+	 * @param array{name: string, uuid: string} $organisation The organisation the batch belongs to.
 	 *
 	 * @return array<int, mixed>
 	 */
-	private function fileRow(array $file, string $timestamp): array {
+	private function fileRow(array $file, string $timestamp, array $organisation): array {
 		return [
 			$file['fileName'] ?? '',
 			$file['fileId'] ?? '',
@@ -134,6 +143,8 @@ class BatchReportService implements BatchReportServiceInterface {
 			$timestamp,
 			$this->reasonColumn(file: $file),
 			$file['qaOutcome'] ?? '',
+			$organisation['name'],
+			$organisation['uuid'],
 		];
 	}//end fileRow()
 

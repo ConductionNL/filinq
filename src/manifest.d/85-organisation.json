@@ -1,0 +1,22 @@
+{
+	"menu": [
+		{
+			"id": "OrganisationSettings",
+			"label": "Organisation settings",
+			"icon": "OfficeBuildingCog",
+			"route": "OrganisationSettings",
+			"section": "settings",
+			"order": 97
+		}
+	],
+	"pages": [
+		{
+			"id": "OrganisationSettings",
+			"route": "/organisation-settings",
+			"type": "custom",
+			"title": "Organisation settings",
+			"component": "OrganisationSettings",
+			"_note": "The active organisation's overrides of the objection period, the anonymisation profile and the default huisstijl (multi-tenant-hardening REQ-DDMTH-007/-008). type:custom because the save goes through filinq's api/organisation-settings, which admits only an admin of the active organisation or an instance admin; the schema itself grants writes to instance admins only. Every member sees the page read-only."
+		}
+	]
+}

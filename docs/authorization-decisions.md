@@ -85,6 +85,7 @@ ahead of the content-hash skip, so they exist on every instance.
 | `filinq-woo-officers` | Woo redaction review: confirming a human looked at the detected entities before a redacted copy may be written. Introduced by the redaction change (#1124); recorded here because a misspelt group denies everyone and logs nothing, so it is indistinguishable from a working access control. |
 | `filinq-intake-clerks` | the intake inbox: reading waiting documents, assigning them to a record, rejecting them |
 | `filinq-standing-consent-admins` | standing consents (publish-always rules for a recurring person) |
+| `filinq-prohibition-admins` | prohibitions (publish-never rules), beside the policy admins. The prohibition endpoints admitted it already; since multi-tenant-hardening the `publicationProhibition` cascade names it too. |
 | `filinq-final-document-admins` | unfreezing a final document, and declaring which record-type states freeze one |
 
 **They ship empty on purpose.** An empty group denies everyone except admins and
@@ -101,6 +102,7 @@ deliberately.
 | `textFragment` | authenticated | template-editors | template-editors | A fragment is rendered into every template that names it, so everyone who generates must read it; writing one changes many documents at once, which is a managed act. |
 | `templateImportJob` | template-editors | template-editors | template-editors | An import run and its report are the working state of whoever migrates a template estate; nobody else needs to see or change it. |
 | `huisstijl` | authenticated | template-editors | template-editors | Branding must be readable or nothing renders; changing the organisation's house style is a managed act. |
+| `organisationSettings` | authenticated | admin | admin | Every member reads the effective settings of their organisation; overriding them is an admin act. The organisation-admin check (`OrganisationService::isOrganisationAdmin()`) belongs at the single service write path, added with the settings surface; until then only instance admins write. |
 | `correspondence` | authenticated | authenticated | template-editors | Audit row written as a side effect of generating, so `create` follows the generator. |
 | `generatedDocument` | authenticated | authenticated | template-editors | Same. |
 | `batchCorrespondenceJob` | authenticated | authenticated | authenticated / template-editors | Job state is advanced by the worker running **as the submitting user**, so `update` must stay open; deletion is not part of running a job. |
@@ -124,8 +126,8 @@ deliberately.
 | `redactionReviewMark` | authenticated | **woo-officers + policy-admins** | policy-admins | The mark is the evidence a person looked at the detected entities before a redacted copy was written, so `create` is the act being evidenced and belongs to the officers who perform it. `read` stays open because the mark is what lets anybody else trust the redacted copy, and a review nobody can see proves nothing. |
 | `documentReview` | authenticated | **woo-officers + policy-admins** | policy-admins | The checked mark of the anonymisation review workbench: evidence that a person reviewed a document's findings before it is anonymised, so it takes the cascade of `redactionReviewMark`, the same kind of evidence one level up. `create` is the act being evidenced and belongs to the officers who perform it; `read` stays open because the mark is what lets anybody else trust the anonymised copy. Added with the schema rather than omitted, because an omitted cascade is OPEN. |
 | `downloadAgreement` | authenticated | authenticated | policy-admins | `create` is deliberately open: the agreement records that THIS person accepted these terms, so the person accepting has to be able to write it. Restricting it would mean somebody else recording an acceptance on their behalf, which is the one thing the record exists to rule out. `update` and `delete` are restricted, because an acceptance that can be edited afterwards is not evidence of anything. |
-| `publicationConsent` | **policy-admins** | authenticated for `scope: document` only; standing-consent-admins | policy-admins | GDPR consent records about identified people. A data subject's document consent is created by a signed-in user; a standing consent (`scope: entity`, "publish always") only by `filinq-standing-consent-admins`, so nobody can grant themselves a publish-always rule through the OpenRegister API. |
-| `publicationProhibition` | **policy-admins** | policy-admins | policy-admins | Publish-never rules. Read was declared for a group named `consent`, which no setup creates; it now names the policy admins who maintain the rules. Matching reads them past the cascade (see `PolicyMatchService`). |
+| `publicationConsent` | **policy-admins**; standing-consent-admins for `scope: entity` | authenticated for `scope: document` only; standing-consent-admins | policy-admins; standing-consent-admins for `scope: entity` | GDPR consent records about identified people. A data subject's document consent is created by a signed-in user; a standing consent (`scope: entity`, "publish always") only by `filinq-standing-consent-admins`, so nobody can grant themselves a publish-always rule through the OpenRegister API. The standing-consent admins read, update and delete standing consents only: `PolicyCrudService` admits them on those endpoints and passes the cascade without bypass flags since multi-tenant-hardening, so the reads stay inside the active organisation. |
+| `publicationProhibition` | **policy-admins + prohibition-admins** | policy-admins + prohibition-admins | policy-admins + prohibition-admins | Publish-never rules. Read was declared for a group named `consent`, which no setup creates; it now names the policy admins who maintain the rules, and the prohibition admins the prohibition endpoints admit. Matching loads them as the system through `SystemContextSeam` (see `PolicyMatchService`), because every user's anonymisation must apply them. |
 | `prohibitionOverrideAudit` | **policy-admins** | **nobody** (server only) | nobody | The trace of a publish-never rule overridden. `ProhibitionOverrideCommitter` writes it past the cascade with the system as owner, so the fail-closed override path no longer depends on the acting user holding `create`, and nobody can add or edit an entry by hand. |
 | `signingRequest` | initiator (`initiatorUserId` = `$userId`) + **signing-admins** | **nobody** (server only) | nobody | A signing request names its signers and drives the signature evidence. Only `SigningService` and its jobs write it, past the cascade and owned by the system, after their own checks (initiator can read the file, signer record belongs to the caller). The initiator reads their own requests through the match rule. |
 | `signerRecord` | the signer (`userId` = `$userId`) + **signing-admins** | **nobody** (server only) | nobody | Identifies an individual signer and holds their identity evidence. Written only by `SigningService`, owned by the system; a signer reads their own record through the match rule. |
@@ -190,14 +192,29 @@ deliberately.
 ## Deliberate RBAC bypasses
 
 A cascade only guards callers that go through it. `ObjectService::find()` and
-`findAll()` accept `_rbac: false`, and Filinq passes it at **87 call sites in 37
-files**. Each is paired with a compensating control rather than being an oversight,
+`findAll()` accept `_rbac: false`, and Filinq passes it at the call sites listed below. Each is paired with a compensating control rather than being an oversight,
 and the coverage test pins the set: **a new bypass fails the test until it is added
 here with a reason.**
 
+Removed by multi-tenant-hardening (D2): `Service/BasesResolverService.php` (a user reading
+the dossiers of a folder; dossier read is open to every user) and
+`Service/PolicyRetroactiveService.php`. OpenRegister now scopes `BasesResolverService` to the
+user and the active organisation. The retroactive pass of `PolicyRetroactiveService` (saving a
+prohibition force-resolves the matching in-flight document consents) runs through
+`SystemContextSeam` with a logged reason instead of bypass flags, as the rule load in
+`PolicyMatchService` does: a prohibition applies to every anonymisation, and the prohibition
+admins who may save one get no direct read or update of document consents. Also removed: `Service/PolicyCrudService.php` (the
+prohibition and standing-consent endpoints; the cascade now names the groups
+`requirePolicyPermission()` admits, so OpenRegister checks the same people and keeps the
+reads inside the active organisation), `Service/ConsentUpdateHandler.php` (reached only
+after `ConsentController::update()` read the record under the cascade, so the caller is an
+admin, a policy admin or the record's owner, whom the cascade or the owner rule admits) and
+`Service/PolicyMatchService.php` (the rule load runs as the system through
+`SystemContextSeam`, the one logged place that relaxes enforcement, because every user's
+anonymisation must apply every prohibition and standing consent).
+
 | File | Sites | Compensating control |
 |---|---|---|
-| `Service/PolicyCrudService.php` | 5 | `requirePolicyPermission()` asserts membership in `filinq-policy-admins` / `filinq-standing-consent-admins` for **every** action including `read`, before the lookup runs. |
 | `Service/CustomDictionaryRepository.php` | 4 | Recogniser lists are read during anonymisation, which runs on behalf of a user who may not hold the maintainer group. Read-only; no caller-supplied id reaches it. |
 | `Service/DossierObjectRepository.php` | 3 | Dossier contents are governed by Nextcloud folder permissions, which are checked before the repository is reached. |
 | `Service/MailArchive/MailArchiveImportRepository.php` | 3 | The mail archive import job drains imports as the system from a cron tick, with no user to check, and the schema lets nobody write an import through the REST API. The `api/mail-archive-imports` routes reach the repository only through `MailArchiveImportService`, which answers an import only to the user in its `requestedBy` (404 otherwise), starts one only on a file that user can read, and refuses a mapping to a dossier they may not write to. No caller-supplied filter reaches OpenRegister beyond the session user's id. |
@@ -208,11 +225,8 @@ here with a reason.**
 | `Service/CaseSystemDeliveredFiles.php` | 1 | One read of the written-back deliveries for a list of file ids, so the documents list can mark which files are in the case system. Reached only through `CaseSystemFileStatusController::index()`, which first drops every id the caller cannot open in their own Nextcloud files (`AnonymizeRequestService::verifyFileAccess()`) and caps the list. Nothing of a delivery is returned: only which of the caller's own readable file ids have one, which the caller could already see on each document. |
 | `Service/Classification/ClassificationResultRepository.php` | 2 | The suggestion is written from the enrichment path, which runs as the system inside another app's save, and the one-active-record-per-file read must see every record of a file. The schema grants admins only; the people who decide reach a record through `ClassificationDecisionService` alone, which first resolves the file in the caller's own folder and answers 404 for a file they cannot open, the same answer as for a file without a suggestion. |
 | `Service/Classification/ClassificationSources.php` | 1 | Reads the dossier names to propose a dossier on an exact name match. Only the matched dossier's uuid is stored on the suggestion, never its content, and confirming one moves the file only into a dossier folder the reviewer can open themselves; otherwise the filing is recorded, not done. |
-| `Service/PolicyMatchService.php` | 2 | Matching must see every prohibition regardless of the acting user, or an anonymisation silently under-redacts. Fail-closed by design. |
 | `Service/ConsentPolicyReferentValidator.php` | 1 | Validation-only; returns a boolean, never record content. |
-| `Service/PolicyRetroactiveService.php` | 2 | Background re-application over records the triggering user may not own. |
 | `Service/BaseLabelResolver.php` | 1 | Resolves a legal-basis label for display; `base` is organisation-readable anyway. |
-| `Service/BasesResolverService.php` | 1 | Same. |
 | `Service/LegalBasisCatalog.php` | 1 | Static Woo Art. 5 catalogue. |
 | `Service/LegalHold/LegalHoldCaseRepository.php` | 2 | The schema grants admins only. The app reads and writes cases only from `LegalHoldCaseService`, and every public method there starts with `LegalHoldAuthority::assertAuthority()` (admins plus `legal_hold_authority_groups`; a setting that does not parse refuses everyone). The status route reads cases only to name the matter to someone who passed the same check. |
 | `Service/Extraction/ExtractionDuplicateLookup.php` | 1 | Reads `financialExtraction` rows that mention an invoice number, during an extraction the caller is already allowed to run, to tell whether the same supplier sent the same invoice before. Only a yes or no leaves the lookup, as the reason code `possible-duplicate`; no other extraction's fields reach the caller or a response. A lookup that cannot run counts as a duplicate, so the extraction goes to a person. |
@@ -223,6 +237,7 @@ here with a reason.**
 | `Service/SigningEnvelope/SigningEnvelopeRepository.php` | 3 | The schema grants the sender and admins only. The repository reads an envelope (find, list) and stores it, including the roll-up a signer's visit writes back, for SigningEnvelopeService alone, which lets the sender, a signer the envelope names or an admin read, only a named signer sign through it and only the sender or an admin cancel; anybody else gets 404. The member requests are read and signed through SigningService with their own checks. |
 | `Service/Redaction/AnonymizationLinkReader.php` | 1 | `storedObject()` reads one anonymisation link only for its OpenRegister ids (id, uuid, register, schema), which `PseudonymRestoreAudit` writes the restore entry on. The object never reaches a caller or a response, so no link data is disclosed; reading past RBAC is what lets a denied caller's attempt land on the same object as a granted one. |
 | `Service/SubjectErasure/SubjectErasureStore.php` | 3 | The `subjectErasureRequest` and `erasureCertificate` schemas grant the erasure groups only. Every call follows `SubjectErasureAuthority::assertMayErase()` (admins plus `subject_erasure_groups`, default the two groups the schemas grant, fail closed on an unreadable setting), and each refusal is audited. `storedRequest()` reads the request only for the ids an audit entry sits on. |
+| `Service/OrganisationSettingsService.php` | 1 | The one write of an `organisationSettings` object. The schema grants writes to instance admins; organisation admins write their own organisation's settings through this path only, after `mayEdit()` (an instance admin, or `OrganisationService::isOrganisationAdmin()` for the active organisation; a failing lookup refuses). The organisation filter stays on, so a new object is stamped with the active organisation and an existing one is found only inside it; only the schema's own fields are saved (`OrganisationSettingsInput`). |
 | `Service/Waarmerk/WaarmerkStore.php` | 2 | The `waarmerk` schema grants writes to nobody. The store creates a seal only from `WaarmerkService::record()`, after the caller could read the sealed file (or, for a processing certificate or signing evidence, the anonymised file or the signing request scoped to initiator, signer or admin); it never overwrites one (create refuses a uuid). It revokes only from `WaarmerkService::revoke()`, after the admin-or-sealer guard, and changes nothing but the revocation fields. The search serves listing scoped to the sealer (all for an admin) and the public verification lookup by a high-entropy code, which returns only status, organisation, time and document name. |
 | `Service/ProcessingCertificateService.php` | 1 | Reads one `anonymizationLink` by id to certify a run, and only continues when the caller can read the anonymised file the link names (one 404 otherwise). Only the recorded fields, type counts and no value reach the certificate. |
 | `Service/SigningEvidenceService.php` | 1 | Reads the signer records of a signing request that `SigningService::getRequest()` already returned for the caller (initiator, signer or admin, one 404 otherwise). Names, method, assurance and outcome reach the evidence document; IP addresses and signature data do not. |
@@ -250,9 +265,32 @@ here with a reason.**
 | `Service/DocumentCopyService.php` | 1 | Reads the source and target records only to bind the copy's audit entries to them, after the caller proved read on the source record and file and write on the target (`IntakeAuthorizationGate::mayFileOnto`). |
 | `Service/SignatureVerificationLinkService.php` | 2 | `mint()` writes the record at signing completion, after the sign act `SigningService` authorised, with the system as owner. `findByToken()` reads for an anonymous verifier holding only the token: it refuses anything but 32 hex characters, returns a row only on an exact token match, and `PublicVerificationController` shows only the outcome (file name, hash, per-signature status), rate-limited and throttled on every unknown token. |
 | `Service/Editing/DocumentGuard.php` | 1 | Looks for a live signing request or anonymisation link on a file to REFUSE an edit; it must see every row whoever asks, or the guard fails open. Returns a refusal sentence only. |
-| `Service/ConsentUpdateHandler.php` | 2 | Reads and saves a consent record only after `ConsentController::update()` found it readable for the caller and confirmed a consent officer, policy admin or admin. Every status change must be a declared move and is appended to `statusEvents` with who, when and the evidence (`ConsentStatusEvents`). The whitelist of mutable fields and the policy pre-emption lock still apply. |
 | `Service/ConsentRecordWriter.php` | 1 | The idempotent re-request path updates an existing consent record for the same document and entity, which another user may have opened; it writes only operator fields and keeps every workflow field (`PRESERVED_FIELDS`). |
 | `Controller/PortalSigningReceiverController.php` | 1 | The signer portal is anonymous by design and binds a `signerRecord` to a token **and** an email **and** a signing-request id, refusing with the same `null` for a wrong email, a wrong request, and an unresolvable register — so no new signal is exposed. |
+
+### Organisation filter bypasses (`_multitenancy: false`)
+
+Since multi-tenant-hardening, `SystemContextSeam` is the place that relaxes the organisation
+filter: it runs an operation as the system through OpenRegister's `runAsSystem()`, with a literal
+reason, and logs reason and caller on every use. The services the change cleared
+(`BasesResolverService`, `ConsentService`, `PolicyCrudService`, `PolicyMatchService`,
+`PolicyRetroactiveService`) pass no bypass flag at all.
+
+`tests/unit/Service/MultiTenantGuardrailsTest.php` pins both: a bypass flag in a cleared service
+fails it, and so does any change to the set of `_multitenancy: false` call sites outside the seam.
+That set predates the change, and every site in it is a row of the table above with its
+compensating control, plus one schema lookup: `EventListener/DocumentRegistrationWriteGuard.php`
+resolves a schema id to its slug through `SchemaMapper`, which reads schema metadata, not an
+object, and returns only the slug; and `Repair/RepointRefusalGrounds.php` (grondslagen-read-from-dossiq),
+a repair step that runs at upgrade with no user session and rewrites only the `bases` of Filinq's
+own objects to dossiq's codes, in every organisation. The set may only shrink: a new cross-organisation read goes
+through the seam.
+
+Lines that reached development while this change was open added sites of their own; they are
+recorded as found rather than moved, and each is a row of the table above except
+`Flow/FlowOperationRunRepository.php`: it stores and reads the `flowOperationRun` processing log,
+which only the background job that runs a Flow operation writes, as the file owner it acts for
+(see the `flowOperationRun` schema row). Moving these sites into the seam is follow-up work.
 
 `Service/ConsentCrudService.php` contains the string `_rbac: false` in a comment that
 **forbids** the bypass, and is not a bypass. It ends:

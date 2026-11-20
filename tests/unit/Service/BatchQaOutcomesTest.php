@@ -26,9 +26,11 @@ use OCA\Filinq\Service\BatchQaOutcomes;
 use OCA\Filinq\Service\BatchReportService;
 use OCA\Filinq\Service\BatchStateService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\ReportOrganisationLabel;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
@@ -162,7 +164,11 @@ class BatchQaOutcomesTest extends TestCase {
 			],
 			['batchId' => 'b', 'status' => 'completed', 'createdAt' => 0, 'qaSampleRate' => 0, 'files' => [['fileId' => 2, 'fileName' => 'a.pdf', 'status' => 'anonymized']]]
 		);
-		$report = new BatchReportService(stateService: $state, qaOutcomes: $this->outcomes);
+		$report = new BatchReportService(
+			stateService: $state,
+			organisationLabel: new ReportOrganisationLabel(container: $this->createMock(ContainerInterface::class)),
+			qaOutcomes: $this->outcomes
+		);
 
 		$sampled = $report->generateReport(batchId: 'b');
 		$this->assertStringContainsString("qaSample,2,confirmed\n", $sampled);

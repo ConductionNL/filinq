@@ -457,6 +457,11 @@ $extra = [
         // reference-only; admin gated by #[AuthorizedAdminSetting].
         ['name' => 'signerIdentity#start', 'url' => 'api/signing/requests/{id}/identity', 'verb' => 'POST'],
         ['name' => 'signerIdentity#callback', 'url' => 'api/signing/identity/callback', 'verb' => 'GET'],
+        // Organisation settings (multi-tenant-hardening REQ-DDMTH-007): every
+        // member reads their own organisation's; the service lets only an
+        // admin of that organisation or an instance admin write.
+        ['name' => 'organisationSettings#index', 'url' => 'api/organisation-settings', 'verb' => 'GET'],
+        ['name' => 'organisationSettings#update', 'url' => 'api/organisation-settings', 'verb' => 'PUT'],
         ['name' => 'signerIdentitySettings#index', 'url' => 'api/settings/signer-identity', 'verb' => 'GET'],
         ['name' => 'signerIdentitySettings#update', 'url' => 'api/settings/signer-identity', 'verb' => 'PUT'],
         // one-signing-rail-for-the-fleet REQ-DDSRC-004: which apps raise signing requests, admin only.

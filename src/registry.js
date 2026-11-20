@@ -89,6 +89,7 @@ import IntakeChannels from './views/intakeChannels/IntakeChannels.vue'
 import LegalHolds from './views/legalHolds/LegalHolds.vue'
 import MailArchiveImport from './views/mailArchiveImport/MailArchiveImport.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
+import OrganisationSettings from './views/organisation/OrganisationSettings.vue'
 import SharedLinksIndex from './views/myDocuments/SharedLinksIndex.vue'
 import PolicyRuleIndex from './views/policy/PolicyRuleIndex.vue'
 import PrintJobs from './views/printJobs/PrintJobs.vue'
@@ -131,6 +132,7 @@ export default {
 	ContractPipeline: { kind: 'page', component: ContractPipeline },
 	SubjectErasures: { kind: 'page', component: SubjectErasures },
 	EmailIngestion: { kind: 'page', component: EmailIngestion },
+	OrganisationSettings: { kind: 'page', component: OrganisationSettings },
 	IntakeChannels: { kind: 'page', component: IntakeChannels },
 	MailArchiveImport: { kind: 'page', component: MailArchiveImport },
 	ClassificationPending: { kind: 'page', component: ClassificationPending },

@@ -25,7 +25,9 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\BatchReportAggregator;
 use OCA\Filinq\Service\BatchReportService;
 use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\ReportOrganisationLabel;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 
 /**
  * Failures are grouped by reason, throughput and phase durations are computed
@@ -117,12 +119,13 @@ class BatchReportAggregatorTest extends TestCase {
 		$state = $this->createMock(BatchStateService::class);
 		$state->method('getBatch')->with('b-480')->willReturn(self::batch());
 
-		$csv = (new BatchReportService($state))->generateReport('b-480');
+		$label = new ReportOrganisationLabel(container: $this->createMock(ContainerInterface::class));
+		$csv   = (new BatchReportService(stateService: $state, organisationLabel: $label))->generateReport('b-480');
 		$lines = explode("\n", trim($csv));
 
-		$this->assertSame('fileName,originalFileId,anonymizedFileId,entityCount,replacementCount,status,timestamp,reason,qaOutcome', $lines[0]);
-		$this->assertStringEndsWith(',error,' . date('c', 1792000000) . ',conversion-failed,', $lines[477]);
-		$this->assertStringEndsWith(',anonymized,' . date('c', 1792000000) . ',,corrected', $lines[3]);
+		$this->assertSame('fileName,originalFileId,anonymizedFileId,entityCount,replacementCount,status,timestamp,reason,qaOutcome,organisationName,organisationUuid', $lines[0]);
+		$this->assertStringEndsWith(',error,' . date('c', 1792000000) . ',conversion-failed,,,', $lines[477]);
+		$this->assertStringEndsWith(',anonymized,' . date('c', 1792000000) . ',,corrected,,', $lines[3]);
 		$this->assertContains('summary,documentsPerHour,79.3', $lines);
 		$this->assertContains('failures,conversion-failed,3', $lines);
 		$this->assertContains('failures,"Extraction failed: no text layer",1', $lines);
