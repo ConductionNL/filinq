@@ -143,7 +143,7 @@ class DocumentActionAudit {
 	 *
 	 * @param int $fileId The Nextcloud file id.
 	 *
-	 * @return list<array{action: string, user: string, userName: string, created: string}> The entries; empty without a record.
+	 * @return list<array{id: string, action: string, user: string, userName: string, created: string}> The entries; empty without a record.
 	 *
 	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
 	 */
@@ -181,7 +181,9 @@ class DocumentActionAudit {
 	 *
 	 * @param array<string, mixed> $data The serialised audit row.
 	 *
-	 * @return array{action: string, user: string, userName: string, created: string}
+	 * @return array{id: string, action: string, user: string, userName: string, created: string}
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
 	 */
 	private function entry(array $data): array {
 		$created = $data['created'] ?? '';
@@ -190,6 +192,7 @@ class DocumentActionAudit {
 		}
 
 		return [
+			'id' => (string) ($data['uuid'] ?? $data['id'] ?? ''),
 			'action' => (string) ($data['action'] ?? ''),
 			'user' => (string) ($data['user'] ?? ''),
 			'userName' => (string) ($data['userName'] ?? ''),

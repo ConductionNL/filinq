@@ -74,6 +74,17 @@ class ListenerRegistrar {
 			$context->registerEventListener($fileEvent, 'OCA\Filinq\EventListener\DocumentFileActionListener');
 		}
 
+		// A person's download of a document, and a completed signing of one,
+		// go into the same trail (REQ-SCR-007).
+		$context->registerEventListener(
+			'OCP\Files\Events\BeforeDirectFileDownloadEvent',
+			'OCA\Filinq\EventListener\DocumentDownloadedListener'
+		);
+		$context->registerEventListener(
+			'OCA\Filinq\Event\Webhook\DocumentSignedEvent',
+			'OCA\Filinq\EventListener\DocumentSignedAuditListener'
+		);
+
 	}//end register()
 
 	/**

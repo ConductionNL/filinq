@@ -1,6 +1,18 @@
 OC.L10N.register(
     "filinq",
     {
+        "Activity": "Aktivität",
+        "No activity recorded for this document yet": "Für dieses Dokument wurde noch keine Aktivität erfasst",
+        "The activity of this document could not be loaded": "Die Aktivität dieses Dokuments konnte nicht geladen werden",
+        "Record changed": "Datensatz geändert",
+        "Opened": "Geöffnet",
+        "Downloaded": "Heruntergeladen",
+        "Edited": "Bearbeitet",
+        "Version restored": "Version wiederhergestellt",
+        "Shared": "Geteilt",
+        "Deleted": "Gelöscht",
+        "Copied to another record": "In einen anderen Datensatz kopiert",
+        "Copied from another record": "Aus einem anderen Datensatz kopiert",
         "A new publication starts with this publisher.": "Eine neue Veröffentlichung beginnt mit diesem Herausgeber.",
         "Metadata incomplete": "Metadaten unvollständig",
         "Set metadata": "Metadaten festlegen",

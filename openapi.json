@@ -15374,6 +15374,48 @@
                 ]
             }
         },
+        "/documents/{fileId}/opened": {
+            "post": {
+                "operationId": "document-audit-opened",
+                "summary": "Record that filinq's viewer opened a document the caller may read.",
+                "description": "Writes one `opened` entry into the audit trail of a document the caller may read. A file the caller may not read answers 404 and nothing is written.",
+                "tags": [
+                    "document-audit"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Whether an entry was written (`recorded`).",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The fileId.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/publications/active": {
             "get": {
                 "operationId": "publication-active",
