@@ -4120,7 +4120,9 @@ OC.L10N.register(
         "Only an archivist can read destruction certificates.": "Only an archivist can read destruction certificates.",
         "Legal hold": "Legal hold",
         "Under a legal hold": "Under a legal hold",
-        "Under a legal hold: {cases}": "Under a legal hold: {cases}"
+        "Under a legal hold: {cases}": "Under a legal hold: {cases}",
+        "Transferred to the e-depot. This record is read only: it can no longer be changed.": "Transferred to the e-depot. This record is read only: it can no longer be changed.",
+        "This dossier was transferred to the e-depot and is read only.": "This dossier was transferred to the e-depot and is read only."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -56,7 +56,10 @@
 				<LegalHoldBadge
 					:objectId="dossierId"
 					@held="underLegalHold = $event" />
-				<MdtoPanel :objectId="dossierId" objectType="dossier" />
+				<MdtoPanel
+					:objectId="dossierId"
+					objectType="dossier"
+					@transferred="transferred = $event" />
 				<NcNoteCard v-if="folderWarning" type="warning">
 					{{ folderWarning }}
 				</NcNoteCard>
@@ -76,7 +79,7 @@
 						v-for="target in offeredTransitions"
 						:key="target"
 						variant="secondary"
-						:disabled="dossierStore.saving"
+						:disabled="dossierStore.saving || transferred"
 						@click="transition(target)">
 						{{ transitionLabel(target) }}
 					</NcButton>
@@ -137,7 +140,10 @@
 			<section class="dossier-section dossier-documents">
 				<div class="dossier-section-head">
 					<h3>{{ t('filinq', 'Documents') }}</h3>
-					<NcButton variant="secondary" @click="addDocument">
+					<NcButton
+						variant="secondary"
+						:disabled="transferred"
+						@click="addDocument">
 						<template #icon>
 							<Plus :size="20" />
 						</template>
@@ -197,15 +203,8 @@
 								</template>
 								<NcActionButton
 									closeAfterClick
-									:disabled="underLegalHold"
-									:title="
-										underLegalHold
-											? t(
-													'filinq',
-													'This dossier is under a legal hold.',
-												)
-											: ''
-									"
+									:disabled="underLegalHold || transferred"
+									:title="removeTitle()"
 									@click="confirmRemove(doc)">
 									<template #icon>
 										<Delete :size="20" />
@@ -357,6 +356,10 @@ export default {
 			// e-discovery-legal-hold: set by LegalHoldBadge; removing (which can
 			// trash a file) is switched off while the dossier is held.
 			underLegalHold: false,
+			// archiefwet-retention-engine: set by MdtoPanel; a dossier
+			// transferred to the e-depot is read only, and OpenRegister
+			// refuses every write to it with 409 OBJECT_TRANSFERRED.
+			transferred: false,
 			statusColorMap: dossierStatusColors(),
 		}
 	},
@@ -480,10 +483,35 @@ export default {
 			return labels[target] || target
 		},
 
+		/**
+		 * Start renaming, unless the dossier was transferred to the e-depot.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-transfer-to-archive-state-for-permanent-records-req-ddare-006
+		 */
 		startRename() {
+			if (this.transferred) {
+				return
+			}
 			this.draftName = this.dossierStore.dossier.name
 			this.renaming = true
 			this.$nextTick(() => this.$refs.titleInput?.focus())
+		},
+
+		/**
+		 * Why removing a document is switched off, or empty when it is not.
+		 *
+		 * @return {string} The reason, shown as the action's title.
+		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-transfer-to-archive-state-for-permanent-records-req-ddare-006
+		 */
+		removeTitle() {
+			if (this.transferred) {
+				return t('filinq', 'This dossier was transferred to the e-depot and is read only.')
+			}
+			if (this.underLegalHold) {
+				return t('filinq', 'This dossier is under a legal hold.')
+			}
+			return ''
 		},
 
 		cancelRename() {

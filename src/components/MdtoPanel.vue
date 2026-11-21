@@ -31,6 +31,13 @@ overbrengen actions.
 				</template>
 			</dl>
 
+			<NcNoteCard
+				v-if="transferred"
+				type="info"
+				data-testid="mdto-transferred">
+				{{ t('filinq', 'Transferred to the e-depot. This record is read only: it can no longer be changed.') }}
+			</NcNoteCard>
+
 			<dl class="mdto-panel__supplement" data-testid="mdto-supplement">
 				<template v-for="row in supplementRows" :key="row.key">
 					<dt>{{ row.label }}</dt>
@@ -56,14 +63,14 @@ overbrengen actions.
 					<span>{{ proposal.label }}: {{ proposal.value }}</span>
 					<NcButton
 						variant="tertiary"
-						:disabled="busy"
+						:disabled="busy || transferred"
 						:data-testid="`mdto-accept-${proposal.field}`"
 						@click="accept(proposal)">
 						{{ t('filinq', 'Accept') }}
 					</NcButton>
 					<NcButton
 						variant="tertiary"
-						:disabled="busy"
+						:disabled="busy || transferred"
 						@click="editing = true">
 						{{ t('filinq', 'Edit') }}
 					</NcButton>
@@ -76,14 +83,14 @@ overbrengen actions.
 					<span>{{ restrictionLabel(restriction) }}</span>
 					<NcButton
 						variant="tertiary"
-						:disabled="busy"
+						:disabled="busy || transferred"
 						data-testid="mdto-restriction-accept"
 						@click="decide(restriction, true)">
 						{{ t('filinq', 'Accept') }}
 					</NcButton>
 					<NcButton
 						variant="tertiary"
-						:disabled="busy"
+						:disabled="busy || transferred"
 						data-testid="mdto-restriction-reject"
 						@click="decide(restriction, false)">
 						{{ t('filinq', 'Reject') }}
@@ -127,7 +134,7 @@ overbrengen actions.
 			</NcNoteCard>
 
 			<div class="mdto-panel__actions">
-				<NcButton :disabled="busy" @click="editing = true">
+				<NcButton :disabled="busy || transferred" @click="editing = true">
 					{{ t('filinq', 'Edit MDTO metadata') }}
 				</NcButton>
 				<template v-if="status.mayTransfer">
@@ -142,7 +149,7 @@ overbrengen actions.
 					<NcButton
 						v-if="status.transportConfigured"
 						variant="primary"
-						:disabled="busy || !status.complete"
+						:disabled="busy || !status.complete || transferred"
 						data-testid="mdto-transfer"
 						@click="transfer">
 						{{ t('filinq', 'Transfer to e-depot') }}
@@ -170,6 +177,7 @@ import {
 	acceptProposal,
 	decideRestriction,
 	fetchMdtoStatus,
+	isTransferred,
 	openRestrictionProposals,
 	saveSupplement,
 	sidecarUrl,
@@ -193,6 +201,8 @@ export default {
 		objectType: { type: String, default: 'document' },
 	},
 
+	emits: ['transferred'],
+
 	data() {
 		return {
 			status: null,
@@ -204,6 +214,17 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Whether the record was transferred to the e-depot. OpenRegister
+		 * refuses every change to it, so the panel offers none.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-transfer-to-archive-state-for-permanent-records-req-ddare-006
+		 */
+		transferred() {
+			return isTransferred(this.status?.retention)
+		},
+
 		/**
 		 * The record the supplement describes.
 		 *
@@ -331,10 +352,13 @@ export default {
 		t,
 
 		/**
-		 * Load the status; a stale answer for another record is dropped.
+		 * Load the status; a stale answer for another record is dropped. The
+		 * parent hears whether the record was transferred, so it can switch
+		 * its own changes off too.
 		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-transfer-to-archive-state-for-permanent-records-req-ddare-006
 		 */
 		async load() {
 			const objectId = this.objectId
@@ -347,6 +371,7 @@ export default {
 			}
 			this.loadError = result.ok ? '' : result.error
 			this.status = result.ok ? result.data : null
+			this.$emit('transferred', this.transferred)
 		},
 
 		/**
