@@ -86,8 +86,9 @@ class RetentionArchitectureTest extends TestCase {
 			}
 
 			// Code, not prose: a docblock may say what OpenRegister's job does.
-			$code = '/use\s+[^;]*\\\\(DestructionCheckJob|DestructionService)\s*;|\b(DestructionCheckJob|DestructionService)::|->(generateCertificate|executeDestruction)\s*\(/';
-			if (preg_match($code, $source) === 1) {
+			$imports = '/use\s+[^;]*\\\\(DestructionCheckJob|DestructionService)\s*;/';
+			$calls = '/\b(DestructionCheckJob|DestructionService)::|->(generateCertificate|executeDestruction)\s*\(/';
+			if (preg_match($imports, $source) === 1 || preg_match($calls, $source) === 1) {
 				$found[] = $path . ': OpenRegister destruction machinery';
 			}
 		}

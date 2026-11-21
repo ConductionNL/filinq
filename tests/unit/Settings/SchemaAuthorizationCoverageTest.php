@@ -88,7 +88,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/Audit/DocumentActionAudit.php' => 1,
 		'lib/Service/BaseLabelResolver.php' => 1,
 		'lib/Service/BatchStateRepository.php' => 4,
-		'lib/Service/BridgeSourceBadges.php' => 1,
+		'lib/Service/BridgeRecordReader.php' => 1,
 		'lib/Service/CaseSystemDeliveredFiles.php' => 1,
 		'lib/Service/CaseSystemDeliveryService.php' => 2,
 		'lib/Service/Classification/ClassificationResultRepository.php' => 2,

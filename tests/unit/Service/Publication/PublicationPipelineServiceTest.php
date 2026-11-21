@@ -36,6 +36,7 @@ use OCA\Filinq\Service\Publication\OpenCatalogiPublicationMap;
 use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\DiwooMissingFields;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
+use OCA\Filinq\Service\Publication\PublicationPipelineSources;
 use OCA\Filinq\Service\RetentionSurfaceService;
 use OCA\Filinq\Service\Publication\PublicationReadiness;
 use OCA\Filinq\Service\Publication\PublicationStore;
@@ -340,8 +341,7 @@ class PublicationPipelineServiceTest extends TestCase {
 			map: new OpenCatalogiPublicationMap(),
 			platform: new OpenCatalogiPlatform(appManager: $apps, container: $container, rootFolder: $root),
 			clock: $clock,
-			config: $appConfig,
-			retention: $this->retentionSurface()
+			sources: new PublicationPipelineSources(config: $appConfig, retention: $this->retentionSurface())
 		);
 
 	}//end pipeline()
@@ -1024,7 +1024,15 @@ class PublicationPipelineServiceTest extends TestCase {
 		$platform = $this->rows['publication'][$record['endpointPublicationRef']];
 		$this->assertSame(expected: '2033-10-01T00:00:00+00:00', actual: $platform['retentionExpiresAt']);
 		$this->assertSame(
-			expected: ['created', 'readiness_evaluated', 'metadata_assembled', 'readiness_evaluated', 'handed_off', 'destruction_date_propagated', 'published'],
+			expected: [
+				'created',
+				'readiness_evaluated',
+				'metadata_assembled',
+				'readiness_evaluated',
+				'handed_off',
+				'destruction_date_propagated',
+				'published',
+			],
 			actual: array_column($this->rows['publicationLogEntry'], 'action')
 		);
 

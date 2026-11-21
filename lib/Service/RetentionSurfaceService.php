@@ -101,7 +101,7 @@ class RetentionSurfaceService {
 	 *
 	 * @param IRootFolder                   $rootFolder     The file tree, read as the server.
 	 * @param LegalHoldRecordFreeze         $records        Loads the record that holds a file, without the caller's rights.
-	 * @param DocumentObjectServiceResolver $objectResolver OpenRegister's ObjectService, for the bridge records.
+	 * @param BridgeRecordReader            $bridge         The bridge records, read as the server.
 	 * @param LoggerInterface               $logger         Where an unreadable source is noted.
 	 *
 	 * @return void
@@ -109,7 +109,7 @@ class RetentionSurfaceService {
 	public function __construct(
 		private readonly IRootFolder $rootFolder,
 		private readonly LegalHoldRecordFreeze $records,
-		private readonly DocumentObjectServiceResolver $objectResolver,
+		private readonly BridgeRecordReader $bridge,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -142,7 +142,7 @@ class RetentionSurfaceService {
 	 */
 	private function fromBridge(int $fileId): ?array {
 		try {
-			foreach ($this->search(schema: BridgeService::SCHEMA_DOCUMENT, filters: ['stagedFileRef' => $fileId]) as $document) {
+			foreach ($this->bridge->rows(schema: BridgeService::SCHEMA_DOCUMENT, filters: ['stagedFileRef' => $fileId]) as $document) {
 				if ((int) ($document['stagedFileRef'] ?? 0) !== $fileId) {
 					continue;
 				}
@@ -168,7 +168,7 @@ class RetentionSurfaceService {
 	 * @return string Its name, its vendor, or "zaaksysteem" when it has neither.
 	 */
 	private function sourceName(string $sourceId): string {
-		foreach ($this->search(schema: BridgeService::SCHEMA_SOURCE, filters: []) as $source) {
+		foreach ($this->bridge->rows(schema: BridgeService::SCHEMA_SOURCE, filters: []) as $source) {
 			if ($sourceId === '' || (string) ($source['uuid'] ?? '') !== $sourceId) {
 				continue;
 			}
@@ -249,34 +249,6 @@ class RetentionSurfaceService {
 		}//end try
 
 	}//end retentionOf()
-
-	/**
-	 * Search one bridge schema as the server.
-	 *
-	 * @param string               $schema  The schema slug.
-	 * @param array<string, mixed> $filters The filters.
-	 *
-	 * @return array<int, array<string, mixed>> The rows as flat fields.
-	 */
-	private function search(string $schema, array $filters): array {
-		$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-			registerSlug: BridgeService::REGISTER,
-			schemaSlug: $schema,
-			filters: $filters,
-			_rbac: false
-		);
-		if (is_array($results) === false) {
-			return [];
-		}
-
-		$rows = [];
-		foreach ($results as $result) {
-			$rows[] = (new StoredRecordFields())->read(row: $result);
-		}
-
-		return $rows;
-
-	}//end search()
 
 	/**
 	 * Note a source that could not be read; the date then counts as absent.

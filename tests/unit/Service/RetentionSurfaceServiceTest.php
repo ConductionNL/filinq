@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\BridgeRecordReader;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\LegalHold\LegalHoldRecordFreeze;
 use OCA\Filinq\Service\RetentionSurfaceService;
@@ -38,6 +39,7 @@ use RuntimeException;
  *
  * @covers \OCA\Filinq\Service\RetentionSurfaceService
  * @uses   \OCA\Filinq\Service\StoredRecordFields
+ * @uses   \OCA\Filinq\Service\BridgeRecordReader
  */
 class RetentionSurfaceServiceTest extends TestCase {
 
@@ -114,7 +116,11 @@ class RetentionSurfaceServiceTest extends TestCase {
 					throw new RuntimeException(message: 'storage offline');
 				}
 
-				return ($id === 42) ? $file : null;
+				if ($id !== 42) {
+					return null;
+				}
+
+				return $file;
 			}
 		);
 
@@ -149,7 +155,7 @@ class RetentionSurfaceServiceTest extends TestCase {
 			}
 		);
 
-		return new RetentionSurfaceService(rootFolder: $root, records: $records, objectResolver: $resolver, logger: $logger);
+		return new RetentionSurfaceService(rootFolder: $root, records: $records, bridge: new BridgeRecordReader(objectResolver: $resolver), logger: $logger);
 	}//end service()
 
 	/**

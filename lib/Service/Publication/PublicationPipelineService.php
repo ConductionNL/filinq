@@ -24,9 +24,7 @@ use DateTimeInterface;
 use InvalidArgumentException;
 use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Kernel\Contracts\PublicationPipelineServiceInterface;
-use OCA\Filinq\Service\RetentionSurfaceService;
 use OCP\AppFramework\Utility\ITimeFactory;
-use OCP\IAppConfig;
 use RuntimeException;
 
 /**
@@ -96,8 +94,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 * @param OpenCatalogiPublicationMap $map        The platform's field names
 	 * @param OpenCatalogiPlatform       $platform   Whether it is there, its categories, attachments
 	 * @param ITimeFactory               $clock      The moment
-	 * @param IAppConfig|null            $config     App settings; the default publisher is read from them
-	 * @param RetentionSurfaceService|null $retention Where a handed-off document's destruction date is read from
+	 * @param PublicationPipelineSources|null $sources The default publisher's settings and the retention surface
 	 *
 	 * @return void
 	 */
@@ -107,8 +104,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 		private readonly OpenCatalogiPublicationMap $map,
 		private readonly OpenCatalogiPlatform $platform,
 		private readonly ITimeFactory $clock,
-		private readonly ?IAppConfig $config = null,
-		private readonly ?RetentionSurfaceService $retention = null,
+		private readonly ?PublicationPipelineSources $sources = null,
 	) {
 
 	}//end __construct()
@@ -311,11 +307,12 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-new-records-start-with-the-organisations-publisher-req-wmw-003
 	 */
 	private function defaultPublisher(): array {
-		if ($this->config === null) {
+		$config = $this->sources?->config;
+		if ($config === null) {
 			return [];
 		}
 
-		$publisher = trim($this->config->getValueString('filinq', self::CFG_DEFAULT_PUBLISHER, ''));
+		$publisher = trim($config->getValueString('filinq', self::CFG_DEFAULT_PUBLISHER, ''));
 		if ($publisher === '') {
 			return [];
 		}
@@ -430,7 +427,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-destruction-dates-propagate-to-the-publication-pipeline-with-source-precedence-req-ddare-007
 	 */
 	private function propagateDestructionDate(array $record, string $actor): array {
-		$found = $this->retention?->destructionDateFor(record: $record);
+		$found = $this->sources?->retention?->destructionDateFor(record: $record);
 		if ($found === null) {
 			return $record;
 		}
