@@ -73,7 +73,10 @@ class BridgeSourceBadgesTest extends TestCase {
 		$root = $this->createMock(IRootFolder::class);
 		$root->method('getUserFolder')->with('clerk')->willReturn($folder);
 
-		return new BridgeSourceBadges(bridge: new BridgeRecordReader(objectResolver: $resolver), files: new SessionUserFile(rootFolder: $root, userSession: $session));
+		return new BridgeSourceBadges(
+			bridge: new BridgeRecordReader(objectResolver: $resolver),
+			files: new SessionUserFile(rootFolder: $root, userSession: $session)
+		);
 	}//end badges()
 
 	/**
