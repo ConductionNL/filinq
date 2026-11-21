@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\OfficeTemplate;
 
 use Exception;
+use OCA\Filinq\Service\Office\OfficeChartFiller;
+use OCA\Filinq\Service\Office\OfficeImageFiller;
 use PhpOffice\PhpWord\Settings;
 use PhpOffice\PhpWord\TemplateProcessor;
 use Throwable;
@@ -61,6 +63,25 @@ class OfficeTemplateFiller {
 	public const MISSING_FRAGMENT = '[ontbrekende bouwsteen: %s]';
 
 	/**
+	 * Constructor.
+	 *
+	 * Without the chart or image filler a `${chart:key}` or `${image:key}`
+	 * tag is an ordinary merge tag: left empty and named in the warnings.
+	 *
+	 * @param OfficeChartFiller|null $charts Fills `${chart:key}` with a native chart from the `charts` data entry.
+	 * @param OfficeImageFiller|null $images Fills `${image:key}` with an image from the `images` data entry.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
+	 */
+	public function __construct(
+		private readonly ?OfficeChartFiller $charts = null,
+		private readonly ?OfficeImageFiller $images = null,
+	) {
+	}//end __construct()
+
+	/**
 	 * Fill a DOCX.
 	 *
 	 * @param string                $docx      The DOCX to fill.
@@ -74,9 +95,11 @@ class OfficeTemplateFiller {
 	 * @throws Exception When the DOCX cannot be read (422).
 	 *
 	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
 	 */
 	public function fill(string $docx, array $data, array $fragments=[], array $fieldMap=[]): array {
 		$run = new OfficeFillRun(processor: $this->open(docx: $docx), data: $data, fragments: $fragments, fieldMap: $fieldMap);
+		$this->fillChartsAndImages(run: $run);
 		$this->fillFragments(run: $run);
 		$this->fillBlocks(run: $run);
 		$this->fillRows(run: $run);
@@ -96,6 +119,45 @@ class OfficeTemplateFiller {
 			'fragments' => $run->fragmentsUsed,
 		];
 	}//end fill()
+
+	/**
+	 * Place the native charts and the images before the plain tags are filled.
+	 *
+	 * They go first because they replace their own `${chart:key}` and
+	 * `${image:key}` tags; the plain pass would otherwise empty them.
+	 *
+	 * @param OfficeFillRun $run The fill in progress.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
+	 */
+	private function fillChartsAndImages(OfficeFillRun $run): void {
+		if ($this->charts !== null) {
+			array_push($run->warnings, ...$this->charts->fill(processor: $run->processor, charts: self::entry(data: $run->data, key: 'charts')));
+		}
+
+		if ($this->images !== null) {
+			array_push($run->warnings, ...$this->images->fill(processor: $run->processor, images: self::entry(data: $run->data, key: 'images')));
+		}
+	}//end fillChartsAndImages()
+
+	/**
+	 * One keyed entry of the data context, or none.
+	 *
+	 * @param array<string, mixed> $data The data context.
+	 * @param string               $key  The entry.
+	 *
+	 * @return array<string, mixed> The entry when it is a map, else empty.
+	 */
+	private static function entry(array $data, string $key): array {
+		$entry = ($data[$key] ?? []);
+		if (is_array($entry) === false) {
+			return [];
+		}
+
+		return $entry;
+	}//end entry()
 
 	/**
 	 * The fragment slugs a set of tags references.
