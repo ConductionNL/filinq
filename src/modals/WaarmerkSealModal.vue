@@ -100,29 +100,6 @@ export default {
 		return { busy: false, error: '', result: null, sanitized: null }
 	},
 
-	watch: {
-		show: {
-			immediate: true,
-			/**
-			 * Read whether the file to seal is a sanitized copy each time the dialog opens on one.
-			 *
-			 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
-			 */
-			handler() {
-				this.readSanitized()
-			},
-		},
-
-		/**
-		 * The dialog can be reopened on another file.
-		 *
-		 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
-		 */
-		fileId() {
-			this.readSanitized()
-		},
-	},
-
 	computed: {
 		/**
 		 * The modal title.
@@ -148,6 +125,29 @@ export default {
 			return this.mode === 'certificate'
 				? t('filinq', 'Creates a PDF certificate of this anonymisation: what was replaced per type of data, when, by which method and by whom. It contains no personal data from the document. The certificate gets the organisation waarmerk.')
 				: t('filinq', 'Adds a waarmerk page with a verification code and QR code to a copy of {name}. Anyone holding the document can check it.', { name: this.fileName })
+		},
+	},
+
+	watch: {
+		show: {
+			immediate: true,
+			/**
+			 * Read whether the file to seal is a sanitized copy each time the dialog opens on one.
+			 *
+			 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
+			 */
+			handler() {
+				this.readSanitized()
+			},
+		},
+
+		/**
+		 * The dialog can be reopened on another file.
+		 *
+		 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
+		 */
+		fileId() {
+			this.readSanitized()
 		},
 	},
 
