@@ -18,6 +18,7 @@ const {
 	acceptProposal,
 	decideRestriction,
 	fetchMdtoStatus,
+	isTransferred,
 	openRestrictionProposals,
 	saveSupplement,
 	sidecarUrl,
@@ -138,5 +139,17 @@ describe('proposals', () => {
 
 		expect(openRestrictionProposals(status)).toEqual([woo])
 		expect(openRestrictionProposals(null)).toEqual([])
+	})
+})
+
+describe('isTransferred', () => {
+	// @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-transfer-to-archive-state-for-permanent-records-req-ddare-006
+	it('reads overgebracht, in either spelling OpenRegister accepts, as transferred', () => {
+		expect(isTransferred({ archiefstatus: 'overgebracht' })).toBe(true)
+		expect(isTransferred({ archiefstatus: ' Transferred ' })).toBe(true)
+		expect(isTransferred({ archiefstatus: 'nog_te_archiveren' })).toBe(false)
+		expect(isTransferred({ archiefstatus: 7 })).toBe(false)
+		expect(isTransferred({})).toBe(false)
+		expect(isTransferred(null)).toBe(false)
 	})
 })

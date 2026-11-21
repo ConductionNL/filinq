@@ -188,3 +188,18 @@ export function openRestrictionProposals(status) {
 			),
 	)
 }
+
+/** The archival statuses OpenRegister treats as transferred to the e-depot; it refuses every write to such a record with 409 `OBJECT_TRANSFERRED`. */
+export const TRANSFERRED_STATUSES = Object.freeze(['overgebracht', 'transferred'])
+
+/**
+ * Whether a record's retention block says it was transferred to the e-depot.
+ *
+ * @param {object|null|undefined} retention The record's retention block.
+ * @return {boolean} True once the archival status is `overgebracht`.
+ * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-transfer-to-archive-state-for-permanent-records-req-ddare-006
+ */
+export function isTransferred(retention) {
+	const archiefstatus = retention?.archiefstatus
+	return typeof archiefstatus === 'string' && TRANSFERRED_STATUSES.includes(archiefstatus.trim().toLowerCase())
+}

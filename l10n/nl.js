@@ -4249,7 +4249,9 @@ OC.L10N.register(
         "Only an archivist can read destruction certificates.": "Alleen een archivaris kan verklaringen van vernietiging lezen.",
         "Legal hold": "Juridische bewaring",
         "Under a legal hold": "Onder juridische bewaring",
-        "Under a legal hold: {cases}": "Onder juridische bewaring: {cases}"
+        "Under a legal hold: {cases}": "Onder juridische bewaring: {cases}",
+        "Transferred to the e-depot. This record is read only: it can no longer be changed.": "Overgebracht naar het e-depot. Dit record is alleen-lezen: het kan niet meer worden gewijzigd.",
+        "This dossier was transferred to the e-depot and is read only.": "Dit dossier is overgebracht naar het e-depot en is alleen-lezen."
     },
     "nplurals=2; plural=(n != 1);"
 )
