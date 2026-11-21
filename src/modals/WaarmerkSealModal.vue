@@ -14,6 +14,21 @@ SPDX-License-Identifier: EUPL-1.2
 			<h2>{{ title }}</h2>
 			<template v-if="!result">
 				<p>{{ explanation }}</p>
+				<NcNoteCard
+					v-if="mode === 'seal' && sanitized === false"
+					type="warning"
+					data-testid="waarmerk-seal-not-sanitized">
+					{{ t('filinq', 'This file is not a sanitized copy: comments, tracked changes or author names may still be hidden in it. Sanitize it first and add the waarmerk to the clean copy, because a sanitized copy of a sealed file carries no seal.') }}
+					<NcButton variant="tertiary" data-testid="waarmerk-seal-sanitize-first" @click="sanitizeFirst">
+						{{ t('filinq', 'Sanitize first') }}
+					</NcButton>
+				</NcNoteCard>
+				<NcNoteCard
+					v-else-if="mode === 'seal' && sanitized === true"
+					type="success"
+					data-testid="waarmerk-seal-sanitized">
+					{{ t('filinq', 'This is a sanitized copy, the one to seal.') }}
+				</NcNoteCard>
 				<p class="waarmerk-seal__muted">
 					{{ t('filinq', 'A waarmerk is an organisation seal, not a qualified electronic seal.') }}
 				</p>
@@ -57,6 +72,7 @@ SPDX-License-Identifier: EUPL-1.2
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcLoadingIcon, NcModal, NcNoteCard } from '@nextcloud/vue'
+import { sanitizationStatus } from '../services/sanitization.js'
 import { certifyRun, sealFile } from '../services/waarmerk.js'
 
 // "Waarmerk toevoegen" and the anonymisation certificate (document-waarmerk-certification
@@ -78,10 +94,10 @@ export default {
 		fileName: { type: String, default: '' },
 	},
 
-	emits: ['close', 'sealed'],
+	emits: ['close', 'sealed', 'sanitize'],
 
 	data() {
-		return { busy: false, error: '', result: null }
+		return { busy: false, error: '', result: null, sanitized: null }
 	},
 
 	computed: {
@@ -112,6 +128,29 @@ export default {
 		},
 	},
 
+	watch: {
+		show: {
+			immediate: true,
+			/**
+			 * Read whether the file to seal is a sanitized copy each time the dialog opens on one.
+			 *
+			 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
+			 */
+			handler() {
+				this.readSanitized()
+			},
+		},
+
+		/**
+		 * The dialog can be reopened on another file.
+		 *
+		 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
+		 */
+		fileId() {
+			this.readSanitized()
+		},
+	},
+
 	methods: {
 		t,
 
@@ -135,6 +174,40 @@ export default {
 			} finally {
 				this.busy = false
 			}
+		},
+
+		/**
+		 * Whether the file to seal is a sanitized copy. Null while unknown or
+		 * unreadable: then nothing is said, and sealing is never blocked.
+		 *
+		 * @return {Promise<void>}
+		 *
+		 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
+		 */
+		async readSanitized() {
+			this.sanitized = null
+			if (!this.show || this.mode !== 'seal' || !(this.fileId > 0)) {
+				return
+			}
+
+			const fileId = this.fileId
+			const answer = await sanitizationStatus(fileId)
+			if (answer.ok && fileId === this.fileId) {
+				this.sanitized = answer.data?.sanitized === true
+			}
+		},
+
+		/**
+		 * Hand the file to the sanitize action and close this dialog.
+		 *
+		 * @return {void}
+		 *
+		 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
+		 */
+		sanitizeFirst() {
+			const fileId = this.fileId
+			this.close()
+			this.$emit('sanitize', fileId)
 		},
 
 		/**

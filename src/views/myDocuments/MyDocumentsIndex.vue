@@ -325,6 +325,7 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 			:fileId="waarmerk.fileId"
 			:fileName="waarmerk.fileName"
 			@sealed="onSealed"
+			@sanitize="sanitizeDocument({ fileId: $event })"
 			@close="waarmerk.show = false" />
 		<ValidationResultModal
 			:show="validation.show"

@@ -4285,7 +4285,11 @@
         "Filinq's register or its selectielijst and destruction list schemas are not imported, so there is nothing to link yet.": "Het register van filinq of de schema's voor de selectielijst en vernietigingslijsten zijn niet geïmporteerd, dus er is nog niets te koppelen.",
         "Point OpenRegister's selectielijst, destruction lists and archival register at filinq's register?": "De selectielijst, vernietigingslijsten en het archiefregister van OpenRegister naar het register van filinq laten wijzen?",
         "Link the archive register": "Koppel archiefregister",
-        "OpenRegister did not store the archival settings.": "OpenRegister heeft de archiefinstellingen niet opgeslagen."
+        "OpenRegister did not store the archival settings.": "OpenRegister heeft de archiefinstellingen niet opgeslagen.",
+        "This file is not a sanitized copy: comments, tracked changes or author names may still be hidden in it. Sanitize it first and add the waarmerk to the clean copy, because a sanitized copy of a sealed file carries no seal.": "Dit bestand is geen opgeschoonde kopie: er kunnen nog opmerkingen, bijgehouden wijzigingen of auteursnamen in verborgen zitten. Schoon het eerst op en zet het waarmerk op de schone kopie, want een opgeschoonde kopie van een gewaarmerkt bestand heeft geen waarmerk.",
+        "Sanitize first": "Eerst opschonen",
+        "This is a sanitized copy, the one to seal.": "Dit is een opgeschoonde kopie, de kopie om te waarmerken.",
+        "Sanitized": "Opgeschoond"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
