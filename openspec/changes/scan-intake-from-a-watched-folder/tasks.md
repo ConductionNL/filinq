@@ -19,9 +19,10 @@ Every test named here fails on `development` today: no listener for the event ex
 
 ## 1. One intake path
 
-- [ ] 1.1 Add `ScanBatchService::take(File $file, array $profile): array` holding the find-or-receive-then-split flow of `ScanIntakeController::split()`, and make the controller call it (REQ-SCW-001, REQ-SCW-003). Files: `lib/Service/ScanBatchService.php`, `lib/Controller/ScanIntakeController.php`.
+- [x] 1.1 Add `ScanBatchService::take(File $file, array $profile): array` holding the find-or-receive-then-split flow of `ScanIntakeController::split()`, and make the controller call it (REQ-SCW-001, REQ-SCW-003). Files: `lib/Service/ScanBatchService.php`, `lib/Controller/ScanIntakeController.php`.
   - GIVEN a stored batch for the file WHEN taken THEN it is not received again.
   - Test: PHPUnit `ScanBatchServiceTest::testTakeReceivesOnceAndSplits`, `::testTakeReusesAStoredBatch`; new `ScanIntakeControllerTest::testSplitStillWorksThroughTake` with the controller calling `take()`, beside the existing controller tests, which stay green.
+  - Built: `ScanBatchService::take()` (on `ScanBatchServiceInterface`) asks the file for its folder first, finds the stored batch by file id or receives it, then splits; `ScanIntakeController::split()` calls it and no longer holds the batch store, and the `ScanBatchCut` carrier is gone. The controller's unreachable "no folder" branch is dropped: `getParent()` is typed `Folder` and throws when there is none, which still answers 500 before anything is stored. Pinned by `ScanBatchServiceTest::testTakeReceivesOnceAndSplits`, `::testTakeReusesAStoredBatch`, `::testTakeReceivesNothingWhenTheFolderCannotBeRead`, `ScanIntakeControllerTest::testSplitStillWorksThroughTake` and the re-recorded `ScanIntakeSplitTraceTest` golden (same statuses, `take` in place of `findByFile`/`receive`/`split`).
 
 ## 2. The listener
 
