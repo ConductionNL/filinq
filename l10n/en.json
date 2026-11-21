@@ -4150,7 +4150,11 @@
         "Filinq's register or its selectielijst and destruction list schemas are not imported, so there is nothing to link yet.": "Filinq's register or its selectielijst and destruction list schemas are not imported, so there is nothing to link yet.",
         "Point OpenRegister's selectielijst, destruction lists and archival register at filinq's register?": "Point OpenRegister's selectielijst, destruction lists and archival register at filinq's register?",
         "Link the archive register": "Link the archive register",
-        "OpenRegister did not store the archival settings.": "OpenRegister did not store the archival settings."
+        "OpenRegister did not store the archival settings.": "OpenRegister did not store the archival settings.",
+        "This file is not a sanitized copy: comments, tracked changes or author names may still be hidden in it. Sanitize it first and add the waarmerk to the clean copy, because a sanitized copy of a sealed file carries no seal.": "This file is not a sanitized copy: comments, tracked changes or author names may still be hidden in it. Sanitize it first and add the waarmerk to the clean copy, because a sanitized copy of a sealed file carries no seal.",
+        "Sanitize first": "Sanitize first",
+        "This is a sanitized copy, the one to seal.": "This is a sanitized copy, the one to seal.",
+        "Sanitized": "Sanitized"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
