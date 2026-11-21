@@ -22,6 +22,13 @@
 			"order": 58
 		},
 		{
+			"id": "DestructionLists",
+			"label": "Destruction lists",
+			"icon": "ClipboardCheckOutline",
+			"route": "DestructionLists",
+			"order": 58
+		},
+		{
 			"id": "SubjectErasures",
 			"label": "Erasure requests",
 			"icon": "AccountRemove",
@@ -63,6 +70,14 @@
 			"title": "Legal holds",
 			"component": "LegalHolds",
 			"_note": "The hold register (e-discovery-legal-hold): legal matters and the records they freeze, with placement per record, retry and release. type:custom because it reads GET api/legal-holds, which serves hold authority only (admins plus legal_hold_authority_groups); the legalHoldCase schema itself is admin-only in OpenRegister."
+		},
+		{
+			"id": "DestructionLists",
+			"route": "/destruction-lists/:id?",
+			"type": "custom",
+			"title": "Destruction lists",
+			"component": "DestructionLists",
+			"_note": "The archivist's review of OpenRegister's destruction lists (archiefwet-retention-engine, REQ-DDARE-004): the lists with status, record count and date, one list with its proposed records, approval in full or in part with a reason per kept record, and rejection with a reason. type:custom because it reads and writes OpenRegister's own api/archival/destruction-lists routes, which check the archivist role; filinq adds no route of its own."
 		},
 		{
 			"id": "SubjectErasures",

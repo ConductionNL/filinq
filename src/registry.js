@@ -78,6 +78,7 @@ import CorrespondenceIndex from './views/correspondence/CorrespondenceIndex.vue'
 import CustomDictionaryDetail from './views/customDictionary/CustomDictionaryDetail.vue'
 import CustomDictionaryIndex from './views/customDictionary/CustomDictionaryIndex.vue'
 import DashboardIndex from './views/dashboard/DashboardIndex.vue'
+import DestructionLists from './views/destructionLists/DestructionLists.vue'
 import DossierDetail from './views/dossier/DossierDetail.vue'
 import DossierIndex from './views/dossier/DossierIndex.vue'
 import DraftEditor from './views/drafts/DraftEditor.vue'
@@ -128,6 +129,7 @@ export default {
 	MyDocumentsIndex: { kind: 'page', component: MyDocumentsIndex },
 	SharedLinksIndex: { kind: 'page', component: SharedLinksIndex },
 	PrintJobs: { kind: 'page', component: PrintJobs },
+	DestructionLists: { kind: 'page', component: DestructionLists },
 	LegalHolds: { kind: 'page', component: LegalHolds },
 	ContractDetail: { kind: 'page', component: ContractDetail },
 	BatchOperationDetail: { kind: 'section', component: BatchOperationDetail },
