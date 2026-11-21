@@ -27,6 +27,8 @@ use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
 use RuntimeException;
 use stdClass;
+use OCA\OpenRegister\Contract\ObjectFindOptions as PublishedObjectFindOptions;
+use OCA\OpenRegister\Contract\ObjectSaveOptions as PublishedObjectSaveOptions;
 
 /**
  * In-memory OpenRegister for mailArchiveImport rows, validating every save
@@ -58,16 +60,16 @@ class MailArchiveObjectStore extends ObjectService {
 	/**
 	 * Find a row.
 	 *
-	 * @param string                 $id            Id
-	 * @param ObjectFindOptions|null $options       Register, schema and read options
-	 * @param bool                   $_rbac         RBAC
-	 * @param bool                   $_multitenancy Multitenancy
+	 * @param string                                            $id            Id
+	 * @param ObjectFindOptions|PublishedObjectFindOptions|null $options       Register, schema and read options
+	 * @param bool                                              $_rbac         RBAC
+	 * @param bool                                              $_multitenancy Multitenancy
 	 *
 	 * @return array<string, mixed>|null
 	 */
 	public function find(
 		string $id = '',
-		?ObjectFindOptions $options = null,
+		ObjectFindOptions|PublishedObjectFindOptions|null $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true
 	) {
@@ -92,7 +94,7 @@ class MailArchiveObjectStore extends ObjectService {
 	 */
 	public function saveObject(
 		array $object = [],
-		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		ObjectSaveOptions|PublishedObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true
 	) {

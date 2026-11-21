@@ -56,6 +56,9 @@ use Stringable;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Contract\ObjectDeletion as PublishedObjectDeletion;
+use OCA\OpenRegister\Contract\ObjectFindOptions as PublishedObjectFindOptions;
+use OCA\OpenRegister\Contract\ObjectSaveOptions as PublishedObjectSaveOptions;
 
 /**
  * A cache that discards everything, exactly like `OC\Memcache\NullCache`.
@@ -304,7 +307,7 @@ class InMemoryObjectServiceFake extends ObjectService {
 	 */
 	public function find(
 		string $id = '',
-		?ObjectFindOptions $options = null,
+		ObjectFindOptions|PublishedObjectFindOptions|null $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true
 	) {
@@ -334,7 +337,7 @@ class InMemoryObjectServiceFake extends ObjectService {
 	 */
 	public function saveObject(
 		array $object = [],
-		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		ObjectSaveOptions|PublishedObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true
 	) {
@@ -370,7 +373,7 @@ class InMemoryObjectServiceFake extends ObjectService {
 	 * @return bool Always true.
 	 */
 	public function deleteObject(
-		ObjectDeletion $deletion,
+		ObjectDeletion|PublishedObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_retentionSweep = false
@@ -453,7 +456,7 @@ class FixedResultObjectServiceFake extends ObjectService {
 	 */
 	public function find(
 		string $id = '',
-		?ObjectFindOptions $options = null,
+		ObjectFindOptions|PublishedObjectFindOptions|null $options = null,
 		bool $_rbac = true,
 		bool $_multitenancy = true
 	) {
@@ -507,7 +510,7 @@ class RefusingObjectServiceFake extends ObjectService {
 	 */
 	public function saveObject(
 		array $object = [],
-		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		ObjectSaveOptions|PublishedObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true
 	) {
@@ -533,7 +536,7 @@ class RefusingObjectServiceFake extends ObjectService {
 	 * @throws RuntimeException Always.
 	 */
 	public function deleteObject(
-		ObjectDeletion $deletion,
+		ObjectDeletion|PublishedObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
 		bool $_retentionSweep = false
