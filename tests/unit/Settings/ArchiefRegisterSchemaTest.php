@@ -57,7 +57,7 @@ class ArchiefRegisterSchemaTest extends TestCase {
 	 */
 	private function register(): array {
 		$parsed = json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json'), true);
-		$this->assertIsArray($parsed);
+		$this->assertIsArray(actual: $parsed);
 
 		return $parsed;
 
@@ -125,12 +125,12 @@ class ArchiefRegisterSchemaTest extends TestCase {
 	public function testTheRegisterCarriesTheThreeSchemas(): void {
 		$register = $this->register();
 
-		$this->assertTrue(version_compare($register['info']['version'], '8.99.0', '>='));
-		$this->assertArrayNotHasKey('archief', $register['components']['registers']);
+		$this->assertTrue(condition: version_compare($register['info']['version'], '8.99.0', '>='));
+		$this->assertArrayNotHasKey(key: 'archief', array: $register['components']['registers']);
 		foreach (['selectielijstEntry', 'destructionList', 'destructionCertificate'] as $slug) {
-			$this->assertContains($slug, $register['components']['registers']['filinq']['schemas']);
-			$this->assertTrue($register['components']['schemas'][$slug]['hardValidation'], $slug . ' validates hard');
-			$this->assertArrayNotHasKey('x-openregister-archival', $register['components']['schemas'][$slug]);
+			$this->assertContains(needle: $slug, haystack: $register['components']['registers']['filinq']['schemas']);
+			$this->assertTrue(condition: $register['components']['schemas'][$slug]['hardValidation'], message: $slug . ' validates hard');
+			$this->assertArrayNotHasKey(key: 'x-openregister-archival', array: $register['components']['schemas'][$slug]);
 		}
 
 	}//end testTheRegisterCarriesTheThreeSchemas()
@@ -141,8 +141,8 @@ class ArchiefRegisterSchemaTest extends TestCase {
 	 * @return void
 	 */
 	public function testListsAndCertificatesAreKept(): void {
-		$this->assertSame('bewaren', $this->schema(slug: 'destructionList')['archive']['defaultNominatie']);
-		$this->assertSame('bewaren', $this->schema(slug: 'destructionCertificate')['archive']['defaultNominatie']);
+		$this->assertSame(expected: 'bewaren', actual: $this->schema(slug: 'destructionList')['archive']['defaultNominatie']);
+		$this->assertSame(expected: 'bewaren', actual: $this->schema(slug: 'destructionCertificate')['archive']['defaultNominatie']);
 
 	}//end testListsAndCertificatesAreKept()
 
@@ -155,11 +155,11 @@ class ArchiefRegisterSchemaTest extends TestCase {
 		$schema = $this->schema(slug: 'selectielijstEntry');
 
 		foreach (self::SELECTIELIJST_FIELDS as $field) {
-			$this->assertArrayHasKey($field, $schema['properties'], $field . ' is read by OpenRegister');
+			$this->assertArrayHasKey(key: $field, array: $schema['properties'], message: $field . ' is read by OpenRegister');
 		}
 
-		$this->assertSame(['bewaren', 'vernietigen'], $schema['properties']['archiefnominatie']['enum']);
-		$this->assertSame(['categorie', 'archiefnominatie'], $schema['required']);
+		$this->assertSame(expected: ['bewaren', 'vernietigen'], actual: $schema['properties']['archiefnominatie']['enum']);
+		$this->assertSame(expected: ['categorie', 'archiefnominatie'], actual: $schema['required']);
 
 	}//end testTheSelectielijstEntryHoldsEveryFieldOpenRegisterReads()
 
@@ -178,10 +178,10 @@ class ArchiefRegisterSchemaTest extends TestCase {
 			'selectielijstVersie' => '2020-1',
 		];
 
-		$this->assertNull($this->violation(slug: 'selectielijstEntry', payload: $row));
-		$this->assertNull($this->violation(slug: 'selectielijstEntry', payload: ['categorie' => '1.2', 'archiefnominatie' => 'bewaren']));
-		$this->assertNotNull($this->violation(slug: 'selectielijstEntry', payload: array_merge($row, ['bewaartermijn' => '7 jaar'])));
-		$this->assertNotNull($this->violation(slug: 'selectielijstEntry', payload: array_merge($row, ['archiefnominatie' => 'misschien'])));
+		$this->assertNull(actual: $this->violation(slug: 'selectielijstEntry', payload: $row));
+		$this->assertNull(actual: $this->violation(slug: 'selectielijstEntry', payload: ['categorie' => '1.2', 'archiefnominatie' => 'bewaren']));
+		$this->assertNotNull(actual: $this->violation(slug: 'selectielijstEntry', payload: array_merge($row, ['bewaartermijn' => '7 jaar'])));
+		$this->assertNotNull(actual: $this->violation(slug: 'selectielijstEntry', payload: array_merge($row, ['archiefnominatie' => 'misschien'])));
 
 	}//end testAnImportedRowValidatesAndAProseTermDoesNot()
 
@@ -191,7 +191,7 @@ class ArchiefRegisterSchemaTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheDestructionListKnowsEveryStatus(): void {
-		$this->assertSame(self::LIST_STATUSES, $this->schema(slug: 'destructionList')['properties']['status']['enum']);
+		$this->assertSame(expected: self::LIST_STATUSES, actual: $this->schema(slug: 'destructionList')['properties']['status']['enum']);
 
 	}//end testTheDestructionListKnowsEveryStatus()
 
@@ -234,10 +234,10 @@ class ArchiefRegisterSchemaTest extends TestCase {
 		);
 
 		foreach ([$drawnUp, $reviewed, $executed] as $list) {
-			$this->assertNull($this->violation(slug: 'destructionList', payload: $list));
+			$this->assertNull(actual: $this->violation(slug: 'destructionList', payload: $list));
 		}
 
-		$this->assertNotNull($this->violation(slug: 'destructionList', payload: array_merge($drawnUp, ['status' => 'shredded'])));
+		$this->assertNotNull(actual: $this->violation(slug: 'destructionList', payload: array_merge($drawnUp, ['status' => 'shredded'])));
 
 	}//end testAListThroughItsLifeValidates()
 
@@ -260,10 +260,10 @@ class ArchiefRegisterSchemaTest extends TestCase {
 			'immutable'           => true,
 		];
 
-		$this->assertNull($this->violation(slug: 'destructionList', payload: $certificate));
-		$this->assertNull($this->violation(slug: 'destructionCertificate', payload: $certificate));
-		$this->assertNull($this->violation(slug: 'destructionCertificate', payload: array_merge($certificate, ['destructionListUuid' => null])));
-		$this->assertNotNull($this->violation(slug: 'destructionCertificate', payload: array_diff_key($certificate, ['destructionDate' => true])));
+		$this->assertNull(actual: $this->violation(slug: 'destructionList', payload: $certificate));
+		$this->assertNull(actual: $this->violation(slug: 'destructionCertificate', payload: $certificate));
+		$this->assertNull(actual: $this->violation(slug: 'destructionCertificate', payload: array_merge($certificate, ['destructionListUuid' => null])));
+		$this->assertNotNull(actual: $this->violation(slug: 'destructionCertificate', payload: array_diff_key($certificate, ['destructionDate' => true])));
 
 	}//end testTheCertificateValidatesInBothHomes()
 
@@ -277,15 +277,15 @@ class ArchiefRegisterSchemaTest extends TestCase {
 		$parsed = json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_mock_register.json'), true);
 		foreach (['selectielijstEntry', 'destructionList', 'destructionCertificate'] as $slug) {
 			$rows = array_values(array_filter($parsed['components']['objects'], static fn (array $row): bool => ($row['@self']['schema'] ?? '') === $slug));
-			$this->assertCount(3, $rows, $slug);
+			$this->assertCount(expectedCount: 3, haystack: $rows, message: $slug);
 			foreach ($rows as $row) {
-				$this->assertSame('filinq', $row['@self']['register']);
+				$this->assertSame(expected: 'filinq', actual: $row['@self']['register']);
 				if ($slug === 'selectielijstEntry') {
-					$this->assertStringStartsWith('DEMO-', $row['categorie']);
+					$this->assertStringStartsWith(prefix: 'DEMO-', string: $row['categorie']);
 				}
 
 				unset($row['@self']);
-				$this->assertNull($this->violation(slug: $slug, payload: $row), $slug);
+				$this->assertNull(actual: $this->violation(slug: $slug, payload: $row), message: $slug);
 			}
 		}
 
@@ -300,14 +300,15 @@ class ArchiefRegisterSchemaTest extends TestCase {
 	public function testTheImportKeysMatchOpenRegistersSource(): void {
 		$source = __DIR__ . '/../../../../openregister/lib/Service/Archival/SelectielijstImportService.php';
 		if (is_file($source) === false) {
-			$this->markTestSkipped('No OpenRegister checkout beside the app; the literals above stand in for it.');
+			$this->markTestSkipped(message: 'No OpenRegister checkout beside the app; the literals above stand in for it.');
 		}
 
 		$code = (string) file_get_contents($source);
 		$properties = $this->schema(slug: 'selectielijstEntry')['properties'];
 		foreach (['VERSION_KEY', 'CATEGORY_KEY'] as $constant) {
-			$this->assertSame(1, preg_match('/const ' . $constant . " = '([^']+)'/", $code, $match), $constant . ' is in the source');
-			$this->assertArrayHasKey($match[1], $properties);
+			$found = preg_match('/const ' . $constant . " = '([^']+)'/", $code, $match);
+			$this->assertSame(expected: 1, actual: $found, message: $constant . ' is in the source');
+			$this->assertArrayHasKey(key: $match[1], array: $properties);
 		}
 
 	}//end testTheImportKeysMatchOpenRegistersSource()
