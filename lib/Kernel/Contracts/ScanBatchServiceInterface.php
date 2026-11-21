@@ -111,6 +111,17 @@ interface ScanBatchServiceInterface {
 	public function take(File $file, array $profile): array;
 
 	/**
+	 * The batch already stored for a file, whatever state it is in.
+	 *
+	 * @param int $fileId The Nextcloud file id of the batch PDF.
+	 *
+	 * @return array<string, mixed>|null The batch, or null when the file is none.
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-accepts-only-what-it-stored-and-each-file-once-req-scw-002
+	 */
+	public function storedFor(int $fileId): ?array;
+
+	/**
 	 * Cut one batch into documents and announce every one of them.
 	 *
 	 * @param array<string, mixed> $batch The batch, as received.

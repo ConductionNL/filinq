@@ -38,15 +38,20 @@ use ReflectionNamedType;
  */
 class WatchedFileArrivedContractTest extends TestCase {
 
+	/**
+	 * The constructor, the six getters, accept() and the result keys, as integriq's spec names them.
+	 *
+	 * @return void
+	 */
 	public function testTheEventMatchesIntegriqsSpec(): void {
-		self::assertSame(WatchedFileArrivedEvent::class, WatchedFileArrivedListener::ARRIVED_EVENT);
+		self::assertSame(expected: WatchedFileArrivedEvent::class, actual: WatchedFileArrivedListener::ARRIVED_EVENT);
 
-		$class = new ReflectionClass(WatchedFileArrivedEvent::class);
+		$class = new ReflectionClass(objectOrClass: WatchedFileArrivedEvent::class);
 
 		$constructor = $class->getConstructor();
-		self::assertNotNull($constructor);
+		self::assertNotNull(actual: $constructor);
 		self::assertSame(
-			[
+			expected: [
 				'synchronizationId' => 'string',
 				'sourceId' => 'string',
 				'intakeApp' => 'string',
@@ -54,7 +59,7 @@ class WatchedFileArrivedContractTest extends TestCase {
 				'path' => 'string',
 				'ownerUid' => 'string',
 			],
-			$this->parameters(method: $constructor)
+			actual: $this->parameters(method: $constructor)
 		);
 
 		foreach (
@@ -68,17 +73,27 @@ class WatchedFileArrivedContractTest extends TestCase {
 				'getResult' => 'array',
 			] as $getter => $type
 		) {
-			$method = $class->getMethod($getter);
-			self::assertSame([], $this->parameters(method: $method), $getter);
-			self::assertSame($type, $this->typeName(type: $method->getReturnType()), $getter);
+			$method = $class->getMethod(name: $getter);
+			self::assertSame(expected: [], actual: $this->parameters(method: $method), message: $getter);
+			self::assertSame(expected: $type, actual: $this->typeName(type: $method->getReturnType()), message: $getter);
 		}
 
-		$accept = $class->getMethod('accept');
-		self::assertSame(['appId' => 'string', 'reference' => 'string'], $this->parameters(method: $accept));
-		self::assertSame('bool', $this->typeName(type: $accept->getReturnType()));
+		$accept = $class->getMethod(name: 'accept');
+		self::assertSame(
+			expected: ['appId' => 'string', 'reference' => 'string'],
+			actual: $this->parameters(method: $accept)
+		);
+		self::assertSame(expected: 'bool', actual: $this->typeName(type: $accept->getReturnType()));
 
-		$event = new WatchedFileArrivedEvent('sync', 'source', 'filinq', 7, 'Scans/a.pdf', 'alice');
-		self::assertSame(['accepted', 'intakeApp', 'reference'], array_keys($event->getResult()));
+		$event = new WatchedFileArrivedEvent(
+			synchronizationId: 'sync',
+			sourceId: 'source',
+			intakeApp: 'filinq',
+			fileId: 7,
+			path: 'Scans/a.pdf',
+			ownerUid: 'alice'
+		);
+		self::assertSame(expected: ['accepted', 'intakeApp', 'reference'], actual: array_keys(array: $event->getResult()));
 	}//end testTheEventMatchesIntegriqsSpec()
 
 	/**

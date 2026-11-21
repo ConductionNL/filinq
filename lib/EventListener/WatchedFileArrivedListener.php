@@ -26,7 +26,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
 use OCA\Integriq\Event\WatchedFileArrivedEvent;
@@ -63,17 +62,15 @@ class WatchedFileArrivedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param IRootFolder                  $rootFolder Resolves the file in its owner's folder.
-	 * @param ScanProfileServiceInterface  $profiles   The profile that watches the file's folder.
-	 * @param ScanBatchServiceInterface    $batches    Receives and cuts the batch.
-	 * @param ScanBatchRepositoryInterface $stored     The batch already stored for the file, if any.
-	 * @param LoggerInterface              $logger     Logs what was not accepted.
+	 * @param IRootFolder                 $rootFolder Resolves the file in its owner's folder.
+	 * @param ScanProfileServiceInterface $profiles   The profile that watches the file's folder.
+	 * @param ScanBatchServiceInterface   $batches    The stored batch of a file; receives and cuts a new one.
+	 * @param LoggerInterface             $logger     Logs what was not accepted.
 	 */
 	public function __construct(
 		private readonly IRootFolder $rootFolder,
 		private readonly ScanProfileServiceInterface $profiles,
 		private readonly ScanBatchServiceInterface $batches,
-		private readonly ScanBatchRepositoryInterface $stored,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -130,7 +127,7 @@ class WatchedFileArrivedListener implements IEventListener {
 				return null;
 			}
 
-			$existing = $this->stored->findByFile(fileId: (int)$file->getId());
+			$existing = $this->batches->storedFor(fileId: (int)$file->getId());
 			if ($existing !== null) {
 				// Once per file: the batch that already owns it is the answer,
 				// and it is not received or cut again.

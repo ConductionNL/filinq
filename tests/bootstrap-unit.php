@@ -289,7 +289,7 @@ if (interface_exists('\\OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === false)
 	require_once __DIR__ . '/stubs/openregister-flow.stub.php';
 }
 
-// integriq's watched-folder hand-over event (scan-intake-from-a-watched-folder).
+// The watched-folder hand-over event of integriq (scan-intake-from-a-watched-folder):
 // integriq's own class when the sibling app sits next to this one, so the
 // listener and the contract test run against the real surface; the verbatim
 // copy in tests/stubs otherwise.
