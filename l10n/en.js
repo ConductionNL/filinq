@@ -4110,7 +4110,14 @@ OC.L10N.register(
         "This list proposes no records.": "This list proposes no records.",
         "Why is the list rejected?": "Why is the list rejected?",
         "Why is this record kept?": "Why is this record kept?",
-        "Only an archivist can review destruction lists.": "Only an archivist can review destruction lists."
+        "Only an archivist can review destruction lists.": "Only an archivist can review destruction lists.",
+        "Destruction certificates": "Destruction certificates",
+        "Records destroyed": "Records destroyed",
+        "Per schema and selection list category": "Per schema and selection list category",
+        "Approved by": "Approved by",
+        "Selection list": "Selection list",
+        "Statement": "Statement",
+        "Only an archivist can read destruction certificates.": "Only an archivist can read destruction certificates."
     },
     "nplurals=2; plural=(n != 1);"
 )

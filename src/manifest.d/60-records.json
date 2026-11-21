@@ -29,6 +29,13 @@
 			"order": 58
 		},
 		{
+			"id": "DestructionCertificates",
+			"label": "Destruction certificates",
+			"icon": "FileCheckOutline",
+			"route": "DestructionCertificates",
+			"order": 58
+		},
+		{
 			"id": "SubjectErasures",
 			"label": "Erasure requests",
 			"icon": "AccountRemove",
@@ -128,6 +135,34 @@
 				]
 			},
 			"_note": "One destruction list as a type:detail page over OpenRegister's GET api/archival/destruction-lists/{id}. The review is a bodyWidgets section (DestructionListReview): the proposed records with title, schema, register, archiefactiedatum and selectielijst category, keeping a record off the list with a reason, approval in full or of the rest (one POST .../approve carrying every kept record and its reason, which no per-row action can send) and rejection with a reason (POST .../reject). Every call is OpenRegister's."
+		},
+		{
+			"id": "DestructionCertificates",
+			"route": "/destruction-certificates",
+			"type": "index",
+			"title": "Destruction certificates",
+			"config": {
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/openregister/api/archival/certificates",
+					"rowsPath": "results",
+					"refusedText": "Only an archivist can read destruction certificates."
+				},
+				"columns": [
+					{"key": "destructionDate", "label": "Destroyed on", "formatter": "date"},
+					{"key": "totalDestroyed", "label": "Records destroyed"},
+					{
+						"key": "groupedBySchema",
+						"label": "Per schema and selection list category",
+						"formatter": "groupCounts",
+						"formatterOptions": {"keys": ["schema", "classification"]}
+					},
+					{"key": "approvedBy", "label": "Approved by", "formatter": "joinedList"},
+					{"key": "selectielijstBron", "label": "Selection list", "formatter": "joinedList"},
+					{"key": "complianceStatement", "label": "Statement"}
+				]
+			},
+			"_note": "The verklaringen van vernietiging (archiefwet-retention-engine, REQ-DDARE-005) as an ordinary index over the endpoint source: OpenRegister's own GET api/archival/certificates, newest first, which checks the archivist role. Read only: a certificate is a permanent record and filinq adds no route. The per-schema totals and the approvers are written by the app's groupCounts and joinedList cell formatters."
 		},
 		{
 			"id": "SubjectErasures",

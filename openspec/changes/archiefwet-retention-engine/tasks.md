@@ -42,6 +42,7 @@
 
 - [ ] 3.3 Certificates view + overbrenging view + retention block on document detail (REQ-DDARE-005, REQ-DDARE-006)
   - Certificates from OR `/api/archival/certificates`; bewaren records past actiedatum listed for transfer; `overgebracht` records rendered read-only with a transfer indicator; NC CSS variables only (ADR-003).
+  - Built so far (2026-11-21): the certificates view. **Destruction certificates** (`/destruction-certificates`, `src/manifest.d/60-records.json`) is an `index` over the `endpoint` source on OpenRegister's `GET api/archival/certificates` (newest first; a 403 reads "Only an archivist can read destruction certificates."): destruction date, records destroyed, the totals per schema and selectielijst category, the approvers, the selectielijst source and the compliance statement. Read only; filinq adds no route. The totals and the approvers are written by the app's `groupCounts` and `joinedList` cell formatters (`src/services/cellFormatters.js`, handed to `CnAppRoot` in `src/App.vue`). Pinned by `tests/vitest/cellFormatters.spec.js`. Left: the overbrenging view and the retention block on the document detail. OpenRegister has no read of the `bewaren` records whose archiefactiedatum has passed (its `api/transfers` lists e-depot transfer lists, not the records due for one), so the overbrenging list waits for that read or for `tmlo-mdto-metadata`, which owns the e-depot hand-off.
 
 ## 4. Quality
 

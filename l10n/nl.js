@@ -4239,7 +4239,14 @@ OC.L10N.register(
         "This list proposes no records.": "Deze lijst stelt geen records voor.",
         "Why is the list rejected?": "Waarom wordt de lijst afgewezen?",
         "Why is this record kept?": "Waarom wordt dit record bewaard?",
-        "Only an archivist can review destruction lists.": "Alleen een archivaris kan vernietigingslijsten beoordelen."
+        "Only an archivist can review destruction lists.": "Alleen een archivaris kan vernietigingslijsten beoordelen.",
+        "Destruction certificates": "Verklaringen van vernietiging",
+        "Records destroyed": "Vernietigde records",
+        "Per schema and selection list category": "Per schema en selectielijstcategorie",
+        "Approved by": "Goedgekeurd door",
+        "Selection list": "Selectielijst",
+        "Statement": "Verklaring",
+        "Only an archivist can read destruction certificates.": "Alleen een archivaris kan verklaringen van vernietiging lezen."
     },
     "nplurals=2; plural=(n != 1);"
 )
