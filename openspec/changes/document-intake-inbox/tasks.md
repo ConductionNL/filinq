@@ -12,9 +12,10 @@
 
 - [x] 2.1 Add `lib/Event/IntakeDocumentReceivedEvent.php` and `lib/Service/IntakeService.php` with `receive`, `assign`, `reject` (REQ-DII-02, REQ-DII-03)
   - Server-side write checks on the intake register and on the assign target.
-- [ ] 2.2 Point the OCR folder watch at `IntakeService::receive()` with channel `scan`
+- [x] 2.2 Point the OCR folder watch at `IntakeService::receive()` with channel `scan`
   - Replaced by `scan-intake-from-a-watched-folder` (integriq's watcher hands files over), which waits on integriq's `WatchedFileArrivedEvent` (not on integriq `development`, checked 2026-10-09).
   - The event and its listener are in place, so a feeder is one dispatch away. The folder watch itself is wired in `scan-intake-with-separator-sheets`, which owns paper intake.
+  - Done through `scan-intake-from-a-watched-folder`: integriq's watched folder hands a scanned batch to `WatchedFileArrivedListener`, which takes it through `ScanBatchService::take()`; every cut segment reaches `IntakeService::receive()` with channel `scan`.
 
 ## 3. Page and leaf
 

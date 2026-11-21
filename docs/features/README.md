@@ -78,6 +78,7 @@ Features that are fully implemented and available in the current release.
 | [PDF Generation](./pdf-generation.md) | pdf-generation.md | Outputmanagementcomponent | TEC-DMS-1 | Done |
 | [Template Management](./template-management.md) | template-management.md | Documentcreatiecomponent | TEC-DMS-1 | Done |
 | [Prometheus Metrics](./prometheus-metrics.md) | prometheus-metrics.md | — | TEC-DMS-10 | Done |
+| [Scan intake](./scan-intake.md) | scan-intake.md | Scanning-en-imagingcomponent | TEC-DMS-2 | Done |
 | [OCR Document Scanning](./ocr-document-scanning.md) | ocr-document-scanning.md | Scanning-en-imagingcomponent | TEC-DMS-2 | Done |
 | [Text Extraction](./text-extraction.md) | text-extraction.md | Scanning-en-imagingcomponent | TEC-DMS-2 | Done |
 | [Entity Management](./entity-management.md) | entity-management.md | Media-behandelingcomponent | TEC-DMS-2 | Done |
