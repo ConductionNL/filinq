@@ -201,6 +201,13 @@
 		</NcSettingsSection>
 
 		<NcSettingsSection
+			v-if="isAdmin"
+			:name="t('filinq', 'Archiefbeheer')"
+			:description="t('filinq', 'Where OpenRegister looks up selectielijst categories and keeps its destruction lists.')">
+			<ArchivalWiringSettings :registers="availableRegisters" />
+		</NcSettingsSection>
+
+		<NcSettingsSection
 			:name="t('filinq', 'Woo refusal grounds')"
 			:description="t('filinq', 'Where the Woo refusal grounds used for redaction come from.')">
 			<RefusalGroundsSource />
@@ -996,6 +1003,7 @@ import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
+import ArchivalWiringSettings from './ArchivalWiringSettings.vue'
 import BridgeSourcesSettings from './BridgeSourcesSettings.vue'
 import CaseSystemDeliverySettings from './CaseSystemDeliverySettings.vue'
 import DetectionProviderSettings from './DetectionProviderSettings.vue'
@@ -1126,6 +1134,7 @@ export default {
 		DocumentWebhooksSection,
 		IntegrityScanSection,
 		RefusalGroundsSource,
+		ArchivalWiringSettings,
 		NcSettingsSection,
 		NcNoteCard,
 		NcSelect,
