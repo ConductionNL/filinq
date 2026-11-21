@@ -228,6 +228,13 @@ wave-1 publication pipeline:
 3. No date → `destructionDate` stays empty; publication is not blocked
    (destruction dates are propagation metadata, not a readiness gate).
 
+Where the values are read (built 2026-11-21): the zaaksysteem's date is the
+optional `vernietigingsdatum` on the bridge's `externalDocument` whose
+`stagedFileRef` is the published document, and the source is that record's
+`bridgeSource` name; the engine's date is the `retention` block of the record
+whose object folder holds the file. `PublicationPipelineService::handoff()`
+applies the result through `setDestructionDate()`.
+
 The wave-1 field names and the RET-003 `retentionNote` behaviour toward
 OpenCatalogi are reused verbatim — this change only supplies the value that
 wave-1 expected an operator to type.
