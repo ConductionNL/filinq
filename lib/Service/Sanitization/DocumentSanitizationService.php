@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-sanitization/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -73,8 +73,8 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 	 *
 	 * @throws InvalidArgumentException 404 unreachable, 415 unsupported, 422 encrypted, 500 engine failure.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-1
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-5
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-5
 	 */
 	public function sanitize(int $fileId, string $userId, string $trigger='manual'): array {
 		$file = $this->resolve(fileId: $fileId, userId: $userId);
@@ -215,7 +215,7 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 	 *
 	 * @return array<string, mixed> The record report.
 	 *
-	 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-pdf-sanitization-removes-hidden-payload-through-a-full-re-save-req-ddsan-002
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#requirement-pdf-sanitization-removes-hidden-payload-through-a-full-re-save-req-ddsan-002
 	 */
 	private static function pdfReport(array $report): array {
 		$preserved = [];

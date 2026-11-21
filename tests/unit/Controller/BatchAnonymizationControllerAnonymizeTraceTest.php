@@ -137,7 +137,7 @@ class BatchAnonymizationControllerAnonymizeTraceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	public function testSanitizeReachesTheService(): void {
 		$this->anon->expects($this->once())->method('anonymizeBatch')
@@ -155,7 +155,7 @@ class BatchAnonymizationControllerAnonymizeTraceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	public function testANonBooleanSanitizeAnswers400(): void {
 		$this->anon->expects($this->never())->method('anonymizeBatch');

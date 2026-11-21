@@ -423,7 +423,7 @@ export default {
 		 * The colour of the sanitized badge.
 		 *
 		 * @return {object} The badge colour by label.
-		 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-publication-hand-off-consults-the-sanitized-signal-req-ddsan-004
+		 * @spec openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#requirement-publication-hand-off-consults-the-sanitized-signal-req-ddsan-004
 		 */
 		sanitizedColors() {
 			return { [t('filinq', 'Sanitized')]: 'success' }
@@ -669,7 +669,7 @@ export default {
 		 *
 		 * @param {object} record The record
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/document-sanitization/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#4-2
 		 */
 		async readSanitized(record) {
 			this.sanitized = null

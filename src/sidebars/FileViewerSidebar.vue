@@ -812,7 +812,7 @@ export default {
 		 * What OpenRegister's office sanitiser removed from the anonymised copy.
 		 *
 		 * @return {Array<object>} Label and count per category.
-		 * @spec openspec/changes/document-sanitization/tasks.md#3-3
+		 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-3
 		 */
 		sanitizationRows() {
 			return reportRows(this.entry?.sanitizationReport)

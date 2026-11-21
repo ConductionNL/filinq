@@ -286,7 +286,7 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	public function testSanitizeTrueIsForwarded(): void {
 		$this->mockRequest->method('getParams')->willReturn(
@@ -312,7 +312,7 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	public function testAbsentSanitizeLeavesItOff(): void {
 		$this->mockRequest->method('getParams')->willReturn(
@@ -333,7 +333,7 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	public function testReturns400ForNonBooleanSanitize(): void {
 		$this->mockRequest->method('getParams')->willReturn(

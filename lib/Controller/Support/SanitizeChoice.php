@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-sanitization/tasks.md#3-4
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,7 +36,7 @@ use OCP\IAppConfig;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/document-sanitization/tasks.md#3-4
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
  */
 final class SanitizeChoice {
 
@@ -69,7 +69,7 @@ final class SanitizeChoice {
 	 *
 	 * @return bool|null The flag, or null when an invalid value was supplied.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	public function resolve(array $params): ?bool {
 		if (array_key_exists('sanitize', $params) === true) {

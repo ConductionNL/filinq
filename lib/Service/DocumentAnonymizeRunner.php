@@ -386,7 +386,7 @@ class DocumentAnonymizeRunner {
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-2
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	private function finaliseResult(array $resultInfo, array $context): array {
 		if ($context['appendBasisSummary'] === true) {
@@ -423,7 +423,7 @@ class DocumentAnonymizeRunner {
 	 *
 	 * @return array<string, mixed> The result with the sanitization outcome.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	private function sanitizeFinalArtifact(array $resultInfo, array $context): array {
 		if ($this->finalSanitizer !== null) {

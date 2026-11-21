@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/document-sanitization/tasks.md#4-1
+@spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#4-1
 -->
 
 <template>
@@ -94,7 +94,7 @@ import { reportRows } from '../services/sanitization.js'
  * The outcome of one sanitization run: where the clean file went and how
  * many items were removed per category, or why nothing was done.
  *
- * @spec openspec/changes/document-sanitization/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#4-1
  */
 export default {
 	name: 'SanitizationReportModal',
@@ -112,7 +112,7 @@ export default {
 		 * The report rows.
 		 *
 		 * @return {Array<object>}
-		 * @spec openspec/changes/document-sanitization/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#4-1
 		 */
 		rows() {
 			return reportRows(this.result?.report)

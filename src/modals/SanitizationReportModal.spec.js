@@ -5,7 +5,7 @@
  * The sanitization report: a clean copy of a sealed original warns that the
  * copy needs a new seal; any other run shows no such warning.
  *
- * @spec openspec/changes/document-sanitization/tasks.md#4-2
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#4-2
  */
 
 jest.mock('@nextcloud/l10n', () => ({

@@ -202,7 +202,7 @@ final class AnonymizeOptions {
 	 *
 	 * @return self
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	public function sanitized(): self {
 		$copy = clone $this;

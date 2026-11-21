@@ -5,7 +5,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-publication-hand-off-consults-the-sanitized-signal-req-ddsan-004
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#requirement-publication-hand-off-consults-the-sanitized-signal-req-ddsan-004
  */
 
 import PublicationsPage from './PublicationsPage.vue'

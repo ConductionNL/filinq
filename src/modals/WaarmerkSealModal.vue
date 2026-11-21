@@ -134,7 +134,7 @@ export default {
 			/**
 			 * Read whether the file to seal is a sanitized copy each time the dialog opens on one.
 			 *
-			 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
+			 * @spec openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
 			 */
 			handler() {
 				this.readSanitized()
@@ -144,7 +144,7 @@ export default {
 		/**
 		 * The dialog can be reopened on another file.
 		 *
-		 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
+		 * @spec openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
 		 */
 		fileId() {
 			this.readSanitized()
@@ -182,7 +182,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
+		 * @spec openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
 		 */
 		async readSanitized() {
 			this.sanitized = null
@@ -202,7 +202,7 @@ export default {
 		 *
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
+		 * @spec openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
 		 */
 		sanitizeFirst() {
 			const fileId = this.fileId
