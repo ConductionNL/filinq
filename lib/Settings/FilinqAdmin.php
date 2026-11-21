@@ -32,7 +32,7 @@
 
 namespace OCA\Filinq\Settings;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\AppFramework\Services\IInitialState;
@@ -90,7 +90,7 @@ class FilinqAdmin implements IDelegatedSettings {
 	 * @spec openspec/specs/admin-settings/spec.md
 	 */
 	public function getForm(): TemplateResponse {
-		$version = $this->appManager->getAppVersion(Application::APP_ID);
+		$version = $this->appManager->getAppVersion(AppIdentity::APP_ID);
 
 		$this->initialState->provideInitialState('version', $version);
 

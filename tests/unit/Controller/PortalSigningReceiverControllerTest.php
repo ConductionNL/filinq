@@ -37,6 +37,7 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\PortalSigningReceiverController;
 use OCA\Filinq\Portal\PortalAssertionVerifier;
+use OCA\Filinq\Exception\SigningFieldsRefusedException;
 use OCA\Filinq\Service\OpenRegisterResolver;
 use OCA\Filinq\Service\PortalSigningDocumentResolver;
 use OCA\Filinq\Service\SettingsService;
@@ -52,6 +53,7 @@ use OCP\Security\Bruteforce\IThrottler;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use OCA\Filinq\Exception\StepUpRequiredException;
 
 /**
  * Tests for PortalSigningReceiverController.
@@ -150,11 +152,11 @@ class PortalSigningReceiverControllerTest extends TestCase {
 	 *
 	 * @return PortalSigningReceiverController
 	 */
-	private function controller(): PortalSigningReceiverController {
+	private function controller(?IThrottler $throttler = null): PortalSigningReceiverController {
 		return new PortalSigningReceiverController(
 			appName: 'filinq',
 			request: $this->mockRequest,
-			verifier: new PortalAssertionVerifier(config: null, secretOverride: self::SECRET),
+			verifier: new PortalAssertionVerifier(secretOverride: self::SECRET),
 			signingService: $this->mockSigningService,
 			settingsService: $this->mockSettingsService,
 			// A REAL resolver over the stubbed SettingsService, not a mock: it
@@ -164,7 +166,7 @@ class PortalSigningReceiverControllerTest extends TestCase {
 			registerResolver: new OpenRegisterResolver(settingsService: $this->mockSettingsService),
 			logger: $this->mockLogger,
 			documentResolver: new PortalSigningDocumentResolver(rootFolder: $this->mockRootFolder),
-			throttler: $this->createMock(IThrottler::class)
+			throttler: ($throttler ?? $this->createMock(IThrottler::class))
 		);
 
 	}//end controller()
@@ -493,6 +495,114 @@ class PortalSigningReceiverControllerTest extends TestCase {
 	}//end testSignDocumentHappyPath()
 
 	/**
+	 * The portal sign act passes `fields` on; a refused value answers 422 with
+	 * the message per field and no value (signing-field-validation D7).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 */
+	public function testSignDocumentPassesTheFieldsAndAnswers422OnARefusedValue(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(
+			assertion: $this->mintAssertion(),
+			params: [
+				'signingRequestId' => 'request-uuid-1',
+				'consent' => true,
+				'fields' => ['0' => 'NL91 ABNA 0417 1643 01'],
+			]
+		);
+
+		$this->mockSigningService->expects($this->once())
+			->method('sign')
+			->with('request-uuid-1', 'signer-uuid-1', $this->isType('array'), ['consent' => true], ['0' => 'NL91 ABNA 0417 1643 01'])
+			->willThrowException(new SigningFieldsRefusedException(fieldErrors: [0 => 'Type a valid Dutch IBAN, for example NL91 ABNA 0417 1643 00']));
+
+		$result = $this->controller()->signDocument();
+
+		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $result->getStatus());
+		$this->assertSame(
+			['error' => 'fields_refused', 'fieldErrors' => [0 => 'Type a valid Dutch IBAN, for example NL91 ABNA 0417 1643 00']],
+			$result->getData()
+		);
+
+	}//end testSignDocumentPassesTheFieldsAndAnswers422OnARefusedValue()
+
+	/**
+	 * A portal act passes the typed text values on and drops non-text ones.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 */
+	public function testSignDocumentWithoutFieldsSendsAnEmptyMap(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(
+			assertion: $this->mintAssertion(),
+			params: ['signingRequestId' => 'request-uuid-1', 'consent' => true, 'fields' => ['0' => ['x'], '1' => 'ok']]
+		);
+
+		$this->mockSigningService->expects($this->once())
+			->method('sign')
+			->with('request-uuid-1', 'signer-uuid-1', $this->isType('array'), ['consent' => true], ['1' => 'ok'])
+			->willReturn(['status' => 'SIGNED']);
+
+		$this->assertSame(Http::STATUS_OK, $this->controller()->signDocument()->getStatus());
+
+	}//end testSignDocumentWithoutFieldsSendsAnEmptyMap()
+
+	/**
+	 * Without `fields` the act carries an empty map, and any failure that is
+	 * not a field refusal is still a downstream failure.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 */
+	public function testSignDocumentWithNoFieldsAtAllSendsAnEmptyMap(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(
+			assertion: $this->mintAssertion(),
+			params: ['signingRequestId' => 'request-uuid-1', 'consent' => true]
+		);
+		$this->mockSigningService->expects($this->once())
+			->method('sign')
+			->with('request-uuid-1', 'signer-uuid-1', $this->isType('array'), ['consent' => true], [])
+			->willThrowException(new \RuntimeException('Not a field refusal', 500));
+
+		$result = $this->controller()->signDocument();
+		$this->assertSame(Http::STATUS_BAD_GATEWAY, $result->getStatus());
+		$this->assertSame(['error' => 'downstream_failure'], $result->getData());
+
+	}//end testSignDocumentWithNoFieldsAtAllSendsAnEmptyMap()
+
+	/**
+	 * The portal answer names the assurance the signature recorded, so the
+	 * signer sees AES or SES and never QES (portal-signing-surface REQ-DDPSS-005).
+	 *
+	 * @return void
+	 */
+	public function testSignDocumentExposesTheRecordedAssurance(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(
+			assertion: $this->mintAssertion(),
+			params: [
+				'signingRequestId' => 'request-uuid-1',
+				'consent' => true,
+			]
+		);
+
+		$this->mockSigningService->method('sign')
+			->willReturn(['status' => 'SIGNED', 'signatureAssurance' => 'SES']);
+
+		$result = $this->controller()->signDocument();
+
+		$this->assertSame(Http::STATUS_OK, $result->getStatus());
+		$this->assertSame('SES', $result->getData()['assurance'] ?? null);
+
+	}//end testSignDocumentExposesTheRecordedAssurance()
+
+	/**
 	 * Happy-path declineDocument: reason recorded, drives
 	 * `SigningService::decline()` with the verified actor.
 	 *
@@ -548,6 +658,30 @@ class PortalSigningReceiverControllerTest extends TestCase {
 		$this->assertStringNotContainsString('already responded', (string)$body);
 
 	}//end testDownstreamFailureReturns502()
+
+	/**
+	 * A guardian-consent refusal is a refused act, not a downstream failure
+	 * (signer-identity-rails REQ-DDSIR-008/009): 403, a generic body, and no
+	 * rejected-assertion count, because the assertion itself was valid.
+	 *
+	 * @return void
+	 */
+	public function testAGuardianConsentRefusalReturns403(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1']);
+
+		$this->mockSigningService->method('sign')->willThrowException(
+			new \RuntimeException('A signer under 16 signs only with a guardian, and this request names no guardian for them', 403)
+		);
+		$throttler = $this->createMock(IThrottler::class);
+		$throttler->expects($this->never())->method('registerAttempt');
+
+		$result = $this->controller(throttler: $throttler)->signDocument();
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $result->getStatus());
+		$this->assertSame(['error' => 'signing_refused'], $result->getData());
+
+	}//end testAGuardianConsentRefusalReturns403()
 
 	/**
 	 * viewDocument happy path: returns the target document as base64 JSON,
@@ -606,4 +740,158 @@ class PortalSigningReceiverControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_FORBIDDEN, $result->getStatus());
 
 	}//end testViewDocumentNullRequestReturns403()
+	/**
+	 * A portal signer below the request's assurance is refused with 403, not 502, and is not
+	 * counted as a rejected assertion (REQ-DDSIR-007 part b).
+	 *
+	 * @return void
+	 */
+	public function testAPortalSignerBelowTheRequestAssuranceIsRefused(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1']);
+		$refusal = new StepUpRequiredException(reason: 'insufficient', requiredAssurance: 'high', heldAssurance: 'substantial', provider: 'nextcloud-session');
+		$this->mockSigningService->method('sign')->willThrowException($refusal);
+		$this->mockSigningService->method('decline')->willThrowException($refusal);
+		$throttler = $this->createMock(IThrottler::class);
+		$throttler->expects($this->never())->method('registerAttempt');
+
+		$signed = $this->controller(throttler: $throttler)->signDocument();
+		$declined = $this->controller(throttler: $throttler)->declineDocument();
+
+		foreach ([$signed, $declined] as $result) {
+			$this->assertSame(Http::STATUS_FORBIDDEN, $result->getStatus());
+			$this->assertSame(['error' => 'signing_refused'], $result->getData());
+		}
+
+	}//end testAPortalSignerBelowTheRequestAssuranceIsRefused()
+
+	/**
+	 * acceptDocument happy path: an accept-only recipient accepts through
+	 * `SigningService::accept()` with the verified actor, and the answer
+	 * carries the recorded status (signing-accept-only-recipient REQ-SAO-004).
+	 *
+	 * @return void
+	 */
+	public function testAcceptDocumentAcceptsAsTheVerifiedRecipient(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1']);
+
+		$this->mockSigningService->expects($this->never())->method('sign');
+		$this->mockSigningService->expects($this->once())
+			->method('accept')
+			// Positional: the real signature is accept(requestId, signerId, verifiedActor).
+			->with(
+				'request-uuid-1',
+				'signer-uuid-1',
+				$this->callback(
+					static fn (array $actor): bool => ($actor['email'] ?? null) === 'alice@example.com'
+						&& ($actor['trust'] ?? null) === 'substantial'
+						&& ($actor['jti'] ?? null) === 'jti-0000000000000000000000000000'
+				)
+			)
+			->willReturn(['status' => 'ACCEPTED']);
+
+		$result = $this->controller()->acceptDocument();
+
+		$this->assertSame(Http::STATUS_OK, $result->getStatus());
+		$this->assertSame(['status' => 'ACCEPTED'], $result->getData());
+
+	}//end testAcceptDocumentAcceptsAsTheVerifiedRecipient()
+
+	/**
+	 * A recipient who must sign cannot accept instead: the service's 422
+	 * refusal is answered 422 with its message, and it is not counted as a
+	 * rejected assertion (REQ-SAO-004).
+	 *
+	 * @return void
+	 */
+	public function testAcceptDocumentBySignerAnswers422(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1']);
+
+		$this->mockSigningService->method('accept')->willThrowException(
+			new \RuntimeException(SigningService::SIGN_NOT_ACCEPT, 422)
+		);
+		$throttler = $this->createMock(IThrottler::class);
+		$throttler->expects($this->never())->method('registerAttempt');
+
+		$result = $this->controller(throttler: $throttler)->acceptDocument();
+
+		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $result->getStatus());
+		$this->assertSame(
+			['error' => 'wrong_act', 'message' => 'This document asks you to sign it, not to accept it'],
+			$result->getData()
+		);
+
+	}//end testAcceptDocumentBySignerAnswers422()
+
+	/**
+	 * An accept-only recipient who sends the sign act gets 422, not 502
+	 * (signing-accept-only-recipient D5).
+	 *
+	 * @return void
+	 */
+	public function testSignDocumentByAccepterAnswers422(): void {
+		$this->withInvitedSigner();
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1', 'consent' => true]);
+
+		$this->mockSigningService->method('sign')->willThrowException(
+			new \RuntimeException(SigningService::ACCEPT_NOT_SIGN, 422)
+		);
+
+		$result = $this->controller()->signDocument();
+
+		$this->assertSame(Http::STATUS_UNPROCESSABLE_ENTITY, $result->getStatus());
+		$this->assertSame(
+			['error' => 'wrong_act', 'message' => 'This document asks you to accept it, not to sign it'],
+			$result->getData()
+		);
+
+	}//end testSignDocumentByAccepterAnswers422()
+
+	/**
+	 * A recipient on another request, or with another e-mail, cannot accept:
+	 * the scope check refuses with 403 and `accept()` never runs.
+	 *
+	 * @return void
+	 */
+	public function testAcceptDocumentForAForeignRecipientIsRefused(): void {
+		$this->mockSigningService->expects($this->never())->method('accept');
+		$this->mockObjectService->method('findAll')->willReturn(
+			[
+				[
+					'id' => 'someone-elses-signer',
+					'email' => 'mallory@example.com',
+					'signingRequestId' => 'request-uuid-1',
+					'status' => 'PENDING',
+					'role' => 'accept',
+				],
+			]
+		);
+		$this->withRequest(assertion: $this->mintAssertion(), params: ['signingRequestId' => 'request-uuid-1']);
+
+		$result = $this->controller()->acceptDocument();
+
+		$this->assertSame(Http::STATUS_FORBIDDEN, $result->getStatus());
+
+	}//end testAcceptDocumentForAForeignRecipientIsRefused()
+
+	/**
+	 * Without the portal assertion the accept act answers 401, counts as a
+	 * rejected assertion, and `accept()` never runs.
+	 *
+	 * @return void
+	 */
+	public function testAcceptDocumentWithoutAssertionAnswers401(): void {
+		$this->mockSigningService->expects($this->never())->method('accept');
+		$this->withRequest(assertion: null, params: ['signingRequestId' => 'request-uuid-1']);
+		$throttler = $this->createMock(IThrottler::class);
+		$throttler->expects($this->once())->method('registerAttempt');
+
+		$result = $this->controller(throttler: $throttler)->acceptDocument();
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $result->getStatus());
+
+	}//end testAcceptDocumentWithoutAssertionAnswers401()
+
 }//end class

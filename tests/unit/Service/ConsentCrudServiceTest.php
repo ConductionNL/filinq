@@ -20,9 +20,11 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Kernel\ConsentUpdate;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\SettingsService;
+use OCP\IUser;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -290,5 +292,24 @@ class ConsentCrudServiceTest extends TestCase {
 		);
 
 	}//end testCreateFromRequestForwardsLegitimateExtraFields()
+
+	/**
+	 * A status update hands the consent service the record and payload as one
+	 * update, and the session user as its own argument: a user id inside the
+	 * payload stays payload and never becomes the acting user.
+	 *
+	 * @return void
+	 */
+	public function testUpdateConsentStatusPassesTheSessionUserApart(): void {
+		$user = $this->createMock(IUser::class);
+		$data = ['consentStatus' => 'consent_withdrawn', 'actor' => 'mallory'];
+		$this->mockConsentService->expects($this->once())
+			->method('validateAndUpdateConsent')
+			->with(new ConsentUpdate(consentId: 'c-1', register: 'reg-1', schema: 'schema-1', data: $data), $this->identicalTo($user))
+			->willReturn(['id' => 'c-1']);
+
+		$this->assertSame(['id' => 'c-1'], $this->service->updateConsentStatus('c-1', 'reg-1', 'schema-1', $data, $user));
+
+	}//end testUpdateConsentStatusPassesTheSessionUserApart()
 
 }//end class

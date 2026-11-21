@@ -61,9 +61,9 @@ so the rule is visible rather than discovered by being refused.
 
 ## Legal bases
 
-Legal bases are stored as slugs referencing `base` objects — the six canonical
-Woo Art. 5 uitzonderingsgronden, seeded on install, plus any a tenant adds. The
-index and detail resolve each slug to its label.
+Legal bases are stored as slugs referencing `base` objects: the 19 Woo Art. 5
+uitzonderingsgronden seeded on install (`art-5-1-1-a` to `art-5-2-2`), plus any a
+tenant adds. The index and detail resolve each slug to its label.
 
 A slug that is **not** in the vocabulary is shown in a warning colour with the
 raw slug as its label, rather than dropped. A legal basis that silently
@@ -117,18 +117,22 @@ Reads and writes go through OpenRegister with its RBAC engaged, so whatever the
 `dossier` schema's cascade declares is what is enforced. That cascade currently
 declares `read: ["authenticated"]`, so the read guard resolves to an existence
 test for any authenticated user in the organisation. `update` and `delete` are
-restricted to `docudesk-policy-admins` plus OpenRegister's owner bypass, so an
+restricted to `filinq-policy-admins` plus OpenRegister's owner bypass, so an
 operator can always manage the dossiers they created.
 
 The **file** half is real regardless: every document listing runs through the
 caller's own Nextcloud view, so a file the operator cannot see never enters a
 response. Tightening the object cascade is tracked in ConductionNL/filinq#441.
 
-## Not yet built
+## The wish-set behaviours (GH #47, #48, #50, #51)
 
-- The **+ Add document** button routes to Folder Analysis, which already owns
-  upload and folder selection, rather than uploading or picking in place. The
-  link and unlink API it would call ships and is covered by tests.
-- The **auto-dossier modal** on multi-upload (create a dossier when several
-  documents are uploaded at once) is not wired. `DossierFormModal` already
-  accepts the prefilled name and the select-all-bases toggle that flow needs.
+| Wish | What the app does |
+|---|---|
+| #47 Auto-dossier on multi-upload | The anonymisation upload dialog asks for a dossier title only when two or more documents are uploaded at once; one document gets no dossier question. A title creates a dossier from the upload; no title keeps the documents separate. One dialog serves both cases (decision 130). |
+| #48 "Add document" | The documents section carries an **Add document** button. It routes to Folder Analysis, which owns upload and folder selection; the dossier board draws no in-page uploader or picker (decision 130). Adding an existing file by reference goes through `POST /api/dossiers/{id}/documents`. |
+| #50 Switch documents without a reload | Selecting a document in the list swaps the preview beside it through store state, not a route change, so the page does not reload. Each row has a mini-menu whose action is **Remove from dossier**, confirmed as trash or unlink per the table above, and disabled while the dossier is under a legal hold. |
+| #51 Inline rename | Clicking the title makes it editable; Enter or leaving the field saves, Escape cancels. The save renames the bound folder too, with the warning described under Renaming. |
+
+A missing reference is listed as **Missing document** with an *Unavailable*
+badge and cannot be selected; a file that belongs to the dossier by reference
+rather than through the home folder carries a *Linked* badge.

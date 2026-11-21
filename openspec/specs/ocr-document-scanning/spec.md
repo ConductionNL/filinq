@@ -7,7 +7,7 @@ status: in-progress
 **Status**: in-progress
 **Scope**: filinq
 **OpenSpec changes**:
-- [ocr-trigger-surface](../../changes/ocr-trigger-surface/) _(active)_ — wires the engine: OCR API route + Run-OCR UI action + anonymisation-pipeline fallback; REQ-OCR-05 corrected from the file-listing MIME heuristic to persisted per-file `ocrResult` objects (kind: code)
+- [ocr-trigger-surface](../../changes/archive/2026-09-29-ocr-trigger-surface/) _(archived 2026-09-29)_ — wires the engine: OCR API route + Run-OCR UI action + anonymisation-pipeline fallback; REQ-OCR-05 corrected from the file-listing MIME heuristic to persisted per-file `ocrResult` objects (kind: code)
 
 ## Purpose
 
@@ -102,41 +102,28 @@ The system SHALL continue to function normally when the Tesseract binary is not 
 
 **Priority:** MUST
 
-The system SHALL report OCR confidence scores and track an ocrProcessed flag per file.
+The system SHALL report OCR confidence scores and track an ocrProcessed flag per file, derived from a persisted per-file `ocrResult` OpenRegister object written by every completed OCR run (manual trigger or anonymisation-pipeline fallback — see `ocr-trigger-surface` REQ-DDOCR-005). The file listing SHALL NOT infer OCR status from MIME type or processing status: `ocrProcessed` SHALL be true only when an `ocrResult` exists for the file, and `ocrConfidence` SHALL be the recorded Tesseract mean confidence (0-100) from that object. OCR-candidate files without an `ocrResult` SHALL report `ocrProcessed: false` with no confidence score and `ocrAvailable: true`.
 
 #### Scenario: Report confidence score
 - GIVEN OCR was performed on a file
 - WHEN the file listing is queried
-- THEN a confidence score (0-100) reflecting Tesseract mean confidence SHALL be reported
+- THEN a confidence score (0-100) reflecting Tesseract mean confidence SHALL be reported from the file's persisted `ocrResult`
 - AND the ocrProcessed flag SHALL be true
+- @e2e tests/e2e/spec-coverage/ocr-trigger.spec.ts
 
 #### Scenario: Non-OCR files
 - GIVEN a file that did not require OCR
 - WHEN the file listing is queried
 - THEN ocrProcessed SHALL be false
 - AND no confidence score SHALL be reported
+- @e2e exclude listing-shape contract; covered by PHPUnit (tests/unit/Service/FileListingServiceTest.php)
 
-| ID | Requirement | Priority | Status |
-|----|------------|----------|--------|
-| OCR-001 | Extract text from image-based documents (scanned PDFs, TIFF, PNG, JPG) using Tesseract OCR | MUST | Implemented |
-| OCR-002 | All OCR processing runs locally on the server with no external cloud service calls | MUST | Implemented |
-| OCR-003 | OCR extracts text from scanned PDFs by converting each page to an image via Imagick and running Tesseract | MUST | Implemented |
-| OCR-004 | OCR extracts text from image files (PNG, JPG, TIFF) directly via Tesseract | MUST | Implemented |
-| OCR-005 | OCR is skipped for digital-born PDFs that already contain embedded text | MUST | Implemented |
-| OCR-010 | Automatically detect whether a file requires OCR based on MIME type and text content | MUST | Implemented |
-| OCR-011 | Image MIME types (image/png, image/jpeg, image/tiff) always trigger OCR | MUST | Implemented |
-| OCR-012 | PDF files fall back to OCR when TextExtractionService returns empty text | MUST | Implemented |
-| OCR-013 | Non-image non-PDF files skip OCR and use standard text extraction | MUST | Implemented |
-| OCR-020 | Support configurable Tesseract language models, defaulting to Dutch and English (nld+eng) | MUST | Implemented |
-| OCR-021 | Support configurable DPI for PDF-to-image conversion, defaulting to 300 | MUST | Implemented |
-| OCR-022 | Custom language configuration passed to Tesseract for all OCR operations | MUST | Implemented |
-| OCR-023 | Custom DPI configuration used for all PDF-to-image conversions | MUST | Implemented |
-| OCR-030 | Continue to function normally when Tesseract binary is not installed | MUST | Implemented |
-| OCR-031 | Skip OCR processing with a warning log when Tesseract is unavailable | MUST | Implemented |
-| OCR-032 | Display Tesseract installation status and version in admin settings | MUST | Implemented |
-| OCR-040 | Report OCR confidence scores (0-100) indicating Tesseract mean confidence | MUST | Implemented |
-| OCR-041 | Track ocrProcessed boolean flag per file in file listing | MUST | Implemented |
-| OCR-042 | Non-OCR files show ocrProcessed: false with no confidence score | MUST | Implemented |
+#### Scenario: OCR candidate not yet processed is not faked
+- GIVEN a scanned PDF that has been uploaded but never OCR'd
+- WHEN the file listing is queried
+- THEN ocrProcessed SHALL be false and ocrAvailable SHALL be true
+- AND no confidence score SHALL be reported
+- @e2e exclude listing-shape contract; covered by PHPUnit (tests/unit/Service/FileListingServiceTest.php)
 
 ## Data Model
 
@@ -154,3 +141,30 @@ The system SHALL report OCR confidence scores and track an ocrProcessed flag per
 - **Integration**: Called by `AnonymizationService::extractAndDetectEntities()` as a pre-processing step before OpenRegister's TextExtractionService
 - **Config**: OCR settings stored in IAppConfig (`ocr_enabled`, `ocr_languages`, `ocr_dpi`)
 - **Dependencies**: Tesseract binary on system, PHP Imagick extension for PDF conversion
+
+<!-- Added by finish-half-built-capabilities (archived 2026-11-20-finish-half-built-capabilities). -->
+
+### Requirement: An OCR run makes the file itself searchable (REQ-FHB-01)
+
+When OCR recognises text in a scanned PDF, Filinq SHALL write that text into the file as an invisible text layer behind the page images, so a search in Nextcloud or OpenRegister finds the file by its words. The page images SHALL stay unchanged and the file before the run SHALL stay available as a file version. An image file (PNG, JPEG, TIFF) SHALL get a searchable PDF beside it.
+
+#### Scenario: A scanned letter is found by a word on its page
+
+- **GIVEN** a scanned PDF without a text layer that reads "Bezwaar tegen besluit"
+- **WHEN** OCR runs on the file
+- **THEN** the file has a text layer with "Bezwaar tegen besluit"
+- **AND** a search for "bezwaar" finds the file
+- **AND** the previous version of the file is still in its version history
+
+#### Scenario: A photographed page gets a searchable copy
+
+- **GIVEN** a JPEG of a printed page
+- **WHEN** OCR runs on the file
+- **THEN** a PDF with the image and its text layer is stored beside the JPEG
+
+#### Scenario: A final or signed PDF keeps its bytes
+
+- **GIVEN** a scanned PDF that is final, under signature, or the source of an anonymised copy
+- **WHEN** OCR runs on the file, by hand or as the automatic extraction fallback
+- **THEN** the PDF is not rewritten, so its frozen checksum and its signature still match
+- **AND** the run reports the text layer as `protected`

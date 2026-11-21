@@ -1,0 +1,55 @@
+# Tasks: grondslagen-read-from-dossiq
+
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 6.
+     Acceptance criteria are plain bullets, not checkboxes. -->
+
+Supporting change for Woo rows 12.29 and 13.28; decisions D3 and D12. Wave 2,
+after `dossiq/woo-refusal-grounds-list` has merged and its task 1 has settled
+the law. Every test named here fails on `development` today: no resolver,
+snapshot, `GET /api/grounds`, mapping file or repair step exists, and the
+pickers read `base` objects.
+
+- [x] 1 The resolver and the vendored snapshot (REQ-GRD-001). Files: `lib/Service/Grounds/RefusalGroundsResolver.php`, `lib/Settings/woo-refusal-grounds.snapshot.json` (copied verbatim from the dossiq release that ships it; record the dossiq version in the PR body).
+  - GIVEN dossiq enabled and the class present WHEN `list()` runs THEN `source: dossiq`.
+  - GIVEN dossiq absent, disabled, or throwing `WooRefusalGroundsUnavailable` WHEN `list()` runs THEN `source: snapshot` with its version.
+  - GIVEN the snapshot unreadable WHEN `list()` runs THEN it throws; it never returns an empty list.
+  - Test: PHPUnit `RefusalGroundsResolverTest::testWithDossiqTheListComesFromDossiq`, `::testWithoutDossiqTheSnapshotAnswers`, `::testAnUnavailableDossiqFallsBackToTheSnapshot`, `::testAnUnreadableSnapshotThrows`, `::testTheSnapshotHasTheListShape` (every ground carries the ten keys of design D-3). Read `OCA\Dossiq\Woo\WooRefusalGrounds` on dossiq `development` before writing the double; a dynamic call to a renamed method compiles, only the read catches it.
+- [x] 2 Every reader through the resolver (REQ-GRD-002). Files: `lib/Controller/GroundsController.php` (`GET /api/grounds`, `#[NoAdminRequired]`, read only), `appinfo/routes.php`, `src/services/bases.js` (call `/api/grounds`; keep `WOO_BASES` only as the display while loading, never as data), `lib/Service/BaseLabelResolver.php`, `lib/Service/LegalBasisCatalog.php`, `lib/Service/LegalBasisProposalService.php`, `lib/Service/DossierSummaryDataService.php`, `lib/Service/DossierEntityCollector.php`.
+  - GIVEN a changed label in dossiq WHEN the summary renders THEN the new label prints.
+  - GIVEN an unknown code WHEN rendered THEN "unknown ground" with the code.
+  - Test: PHPUnit `BaseLabelResolverTest::testLabelsComeFromTheResolver`, `GroundsControllerTest::testTheEndpointAnswersTheResolver`, `GroundsReadersTest::testNoClassReadsWooGroundsFromTheBaseSchema` (a scan of `lib/` for `base` schema reads outside the resolver); Vitest for `src/services/bases.js`.
+  - Wiring: `GroundsControllerTest` goes through the route name in `appinfo/routes.php`, and the Playwright spec opens the review table's picker, so the claim is proven from the screen a reviewer uses.
+  - Partly: `GET /api/grounds` (`GroundsController`, route, OpenAPI) and `BaseLabelResolver` (Woo grounds from the resolver by code or old slug, "unknown ground" with the code, a tenant's own basis still from `base`), wired in `DossierSummaryDataService` and so in `DossierEntityCollector`. Left: `src/services/bases.js`, `LegalBasisCatalog`, `LegalBasisProposalService` and `GroundsReadersTest`; the picker switches to codes together with the repair (task 3), so stored slugs and offered codes never mix.
+  - Built (c3): `RefusalGroundLabels` (labels and picker options through the resolver, fail-soft) used by `BaseLabelResolver`, `LegalBasisCatalog` (and so `LegalBasisProposalService`) and `DossierContextService`; a tenant's own bases still come from `base`, Woo `base` records are no longer offered. `src/services/bases.js` reads `/api/grounds` and stores the code; `WOO_BASES` holds the codes. `GroundsReadersTest` scans `lib/`. Left: the Playwright picker check (live).
+- [x] 3 The mapping file and the repair (REQ-GRD-003). Files: `lib/Settings/refusal-grounds-legacy-map.json` (filinq's 19 slugs, each to one dossiq code or `unmapped`, from dossiq's settled mapping in `woo-refusal-grounds-list/design.md`), `lib/Repair/RepointRefusalGrounds.php` (registered post-migration in `appinfo/info.xml`).
+  - GIVEN `art-5-1-2-e` mapped to `5.1.2.e` WHEN the repair runs THEN every reference is rewritten and a second run changes nothing.
+  - GIVEN an `unmapped` slug WHEN the repair runs THEN references stay and the report names each.
+  - GIVEN the map WHEN tested THEN it holds exactly the 19 slugs of the current seed and every mapped code exists in the snapshot.
+  - Test: PHPUnit `RepointRefusalGroundsTest::testAOneToOneSlugIsRewritten`, `::testAnUnmappedSlugIsReported`, `::testTheRepairIsIdempotent`; `RefusalGroundsLegacyMapTest::testTheMapCoversTheSeedAndTheSnapshot`. Show `testAOneToOneSlugIsRewritten` failing on `development` first; paste the line in the PR body.
+  - Partly: `lib/Settings/refusal-grounds-legacy-map.json` (19 slugs, one to one per dossiq's design §3) and its reader `RefusalGroundsLegacyMap`, with `RefusalGroundsLegacyMapTest`. Left: the repair `RepointRefusalGrounds`.
+  - Built (c3): `lib/Repair/RepointRefusalGrounds.php`, registered post-migration: re-points dossier, publication consent and prohibition `bases` and `filinq.grondslagen.entity_type_bases`, reports each unmapped reference, idempotent, deletes nothing; `RepointRefusalGroundsTest`. Left: entity relation `bases`. OpenRegister's `EntityRelationMapper` can only list relations per file, so re-pointing them needs a mapper method that lists relations with bases; until then `BaseLabelResolver` labels their old slugs through the legacy map.
+  - Built (c4): entity relation `bases`. OpenRegister gains `EntityRelationMapper::findWithBases()` (OpenRegister PR #10584, base main), a paged read of the relations that carry bases in id order; `RepointRefusalGrounds` walks it page by page and writes a changed list through `updateDecisionMetadata()`, OpenRegister's audited write for `bases`, reports each unmapped slug as `entity relation <id> (<slug>)`, logs a refused write and goes on, and is idempotent. Without that read (an older OpenRegister) the relations are left and the upgrade log says so; their old slugs keep their labels through the legacy map. `RepointRefusalGroundsTest` (rewrite, paging, refused write, older OpenRegister).
+- [x] 4 Retire filinq's list (REQ-GRD-003). Files: `lib/Settings/filinq_register.json` (remove the 19 Woo `base` seed objects; the `base` schema description says Woo grounds come from dossiq; register version bump), the `base` save path (refuse a new Woo ground).
+  - GIVEN a fresh install WHEN the seed runs THEN no Woo `base` object is created.
+  - GIVEN an existing install WHEN upgraded THEN existing `base` objects stay readable.
+  - Test: PHPUnit `RegisterSeedTest::testNoWooBaseIsSeeded`, `BaseSchemaGuardTest::testANewWooGroundIsRefused`.
+  - Built (c3): the 19 Woo `base` seeds are gone from `filinq_register.json` (register 8.56.0, `base` 1.3.0 says the Woo grounds come from dossiq); `BaseRefusalGroundGuard` stops the creation of a `base` object whose slug is a Woo code or old slug (`ObjectCreatingEvent`). Existing `base` objects are untouched. The seed check is `DossierRegisterConfigTest::testNoWooBaseIsSeeded`.
+- [ ] 5 The admin page (REQ-GRD-004). Files: the grondslagen settings section, `l10n/en.json`, `l10n/nl.json`.
+  - GIVEN the snapshot WHEN the page opens THEN read-only, version shown, no add or edit action, and the line naming dossiq.
+  - GIVEN dossiq WHEN the page opens THEN a link to dossiq's grounds page and no editor.
+  - Test: Playwright `tests/e2e/spec-coverage/grondslagen-read-from-dossiq.spec.ts` (both states; the dossiq-absent state on an instance with dossiq disabled).
+  - Built (c3): the read-only **Woo refusal grounds** section (`src/views/settings/RefusalGroundsSource.vue` over `src/services/groundsSource.js`, reading `/api/grounds`): with dossiq a link to dossiq's grounds page, without it the snapshot's version and grounds; no editor. Strings in en and nl; Vitest `groundsSource.spec.js`; the settings golden re-recorded. Left: the Playwright spec (live, both states).
+- [x] 6 Docs. Files: `docs/features/grondslagen.md` (one list in dossiq, the snapshot for redaction only, the repair report).
+  - Test: the docs build.
+  - Built (c3): `docs/features/grondslagen.md`, linked from `docs/features/README.md`.
+
+Verification (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
+
+- Own clone, `git checkout --no-track -b <branch> origin/development`, `TMPDIR` a sibling outside the clone.
+- PHPUnit judged by the `Tests:` line, or with `--no-coverage`; a green suite exits 1 without a coverage driver.
+- `run-hydra-gates.sh --base origin/development`, counting the gates that ran.
+- Once before push: `COMPOSER_PROCESS_TIMEOUT=0 composer check:strict`, `npm run lint`, and every check `code-quality.yml` requires, read from `package.json`.
+- CI runs the gates on the full tree; the coverage guard needs a test for every added statement.
+- `openspec validate grondslagen-read-from-dossiq --type change --strict` passes.
+- One PR, `--base development`; merge `development` in, never rebase; no `Co-Authored-By` trailer.
+- Done means merged on `development` with CI green. Rows 12.29 and 13.28 move with dossiq's change.

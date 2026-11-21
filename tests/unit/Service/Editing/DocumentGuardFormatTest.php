@@ -13,6 +13,9 @@
  * @link https://filinq.app
  *
  * @spec openspec/changes/multi-format-editing-tools/tasks.md#3-refusals
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -21,6 +24,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Editing;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\Editing\DocumentGuard;
+use OCA\Filinq\Service\FinalDocumentService;
 use OCP\Files\File;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -38,7 +42,8 @@ class DocumentGuardFormatTest extends TestCase {
 	protected function setUp(): void {
 		$this->guard = new DocumentGuard(
 			$this->createMock(DocumentObjectServiceResolver::class),
-			$this->createMock(LoggerInterface::class)
+			$this->createMock(LoggerInterface::class),
+			$this->createMock(FinalDocumentService::class)
 		);
 	}//end setUp()
 

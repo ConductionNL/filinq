@@ -3,6 +3,9 @@
 /**
  * Coverage ratchet for the `consumer-schema-authorization-audit` change.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * OpenRegister treats an UNCONFIGURED authorization cascade as OPEN:
  * `PermissionHandler::resolveAuthorization()` returns null and every caller is
  * admitted. `_rbac: true` means "apply the cascade"; it does not mean "a cascade
@@ -32,7 +35,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/consumer-schema-authorization-audit/specs/consumer-schema-authorization-audit/spec.md
+ * @spec openspec/changes/archive/2026-10-09-consumer-schema-authorization-audit/specs/consumer-schema-authorization-audit/spec.md
  */
 
 declare(strict_types=1);
@@ -81,16 +84,60 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 	 */
 	private const RECORDED_BYPASSES = [
 		'lib/Controller/PortalSigningReceiverController.php' => 1,
+		'lib/Service/AnonymizationPersistenceService.php' => 3,
+		'lib/Service/Audit/DocumentActionAudit.php' => 1,
 		'lib/Service/BaseLabelResolver.php' => 1,
-		'lib/Service/BasesResolverService.php' => 1,
-		'lib/Service/BatchStateRepository.php' => 3,
-		'lib/Service/ConsentPolicyReferentValidator.php' => 2,
+		'lib/Service/BatchStateRepository.php' => 4,
+		'lib/Service/BridgeSourceBadges.php' => 1,
+		'lib/Service/CaseSystemDeliveredFiles.php' => 1,
+		'lib/Service/CaseSystemDeliveryService.php' => 2,
+		'lib/Service/Classification/ClassificationResultRepository.php' => 2,
+		'lib/Service/Classification/ClassificationSources.php' => 1,
+		'lib/Service/ConsentPolicyReferentValidator.php' => 1,
+		'lib/Service/ConsentRecordWriter.php' => 1,
 		'lib/Service/CustomDictionaryRepository.php' => 4,
 		'lib/Service/DossierObjectRepository.php' => 3,
+		'lib/Service/Editing/DocumentGuard.php' => 1,
+		'lib/Service/EmailIngestion/EmailDocumentRepository.php' => 3,
+		'lib/Service/EntitySearch/EntitySearchLog.php' => 1,
+		'lib/Service/Extraction/ExtractionDuplicateLookup.php' => 1,
+		'lib/Service/FinalDocumentRepository.php' => 1,
+		'lib/Service/IntegrityScanService.php' => 2,
+		'lib/Service/HuisstijlProfileSync.php' => 2,
 		'lib/Service/LegalBasisCatalog.php' => 1,
-		'lib/Service/PolicyCrudService.php' => 5,
-		'lib/Service/PolicyMatchService.php' => 2,
-		'lib/Service/PolicyRetroactiveService.php' => 2,
+		'lib/Service/LegalHold/LegalHoldCaseRepository.php' => 2,
+		'lib/Service/LegalHold/LegalHoldRecordFreeze.php' => 1,
+		'lib/Service/PaperOriginalFiling.php' => 2,
+		'lib/Service/MailArchive/MailArchiveImportRepository.php' => 3,
+		'lib/Service/OrganisationSettingsService.php' => 1,
+		'lib/Service/PrintJobRepository.php' => 3,
+		'lib/Service/ProcessingCertificateService.php' => 1,
+		'lib/Service/Review/ScopeDecisionStore.php' => 1,
+		'lib/Service/ProhibitionOverrideCommitter.php' => 1,
+		'lib/Service/Pseudonymisation/PseudonymMapRepository.php' => 5,
+		'lib/Service/Publication/OpenCatalogiPlatform.php' => 1,
+		'lib/Service/Publication/PublicationStore.php' => 1,
+		'lib/Service/Redaction/AnonymizationLinkReader.php' => 1,
+		'lib/Service/Review/DocumentReviewRepository.php' => 1,
+		'lib/Service/Review/ReviewRenditionRepository.php' => 1,
+		'lib/Service/Sanitization/SanitizationRecordRepository.php' => 1,
+		'lib/Service/Share/DocumentShareStore.php' => 2,
+		'lib/Service/SignerAuth/PhoneCodeProvider.php' => 1,
+		'lib/Service/DocumentCopyService.php' => 1,
+		'lib/Service/DocumentReleaseService.php' => 2,
+		'lib/Service/Signing/GuardianConsentGuard.php' => 1,
+		'lib/Service/Signing/LibreSignCompletion.php' => 4,
+		'lib/Service/Signing/NativeSigningProvider.php' => 2,
+		'lib/Service/SignatureVerificationLinkService.php' => 2,
+		'lib/Service/SigningActorResolver.php' => 5,
+		'lib/Service/SigningAuditService.php' => 1,
+		'lib/Service/SigningEnvelope/SigningEnvelopeRepository.php' => 3,
+		'lib/Service/SigningEvidenceService.php' => 1,
+		'lib/Service/SigningService.php' => 19,
+		'lib/Service/SigningSourceTally.php' => 1,
+		'lib/Service/SubjectErasure/SubjectErasureStore.php' => 3,
+		'lib/Service/Vendor/VendorRenderSources.php' => 1,
+		'lib/Service/Waarmerk/WaarmerkStore.php' => 2,
 	];
 
 	/**
@@ -167,7 +214,28 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 			}
 
 			foreach (self::ACTIONS as $action) {
-				if (isset($auth[$action]) === false || $auth[$action] === []) {
+				// 🔑 A DECLARED EMPTY LIST IS A DECISION, NOT AN ABSENCE, AND
+				// THIS TEST USED TO CONFLATE THEM.
+				//
+				// `"update": []` says "no group may do this", and OpenRegister
+				// reads it exactly that way: `MagicRbacHandler::hasPermission()`
+				// returns FALSE on an empty rule list, fail-closed, with only
+				// the admin and owner bypasses surviving. That is the strongest
+				// statement a cascade can make, and it is precisely what this
+				// test's own message asks for — stated explicitly rather than
+				// left to be read out of an absence.
+				//
+				// Flagging it pushed toward the damaging fix: naming a group to
+				// satisfy the guard, which GRANTS the action the schema was
+				// written to forbid. `erasureCertificate` is the case that
+				// found this: its change is titled "a certificate cannot be
+				// amended", and it declares update and delete as empty for that
+				// reason.
+				//
+				// A MISSING key is still flagged, because that really is an
+				// absence: nobody wrote anything, and the reader cannot tell
+				// whether the author meant to.
+				if (array_key_exists($action, $auth) === false) {
 					$incomplete[] = $slug . '.' . $action;
 				}
 			}
@@ -304,7 +372,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 	 *
 	 * A substring test is not good enough, and this was measured: planting the
 	 * typo `docudesk-template-editor` (singular) PASSED a `str_contains()` check,
-	 * because it is a prefix of the real `docudesk-template-editors`. A near-miss
+	 * because it is a prefix of the real `filinq-template-editors`. A near-miss
 	 * group name is the single failure mode this assertion exists for, so a check
 	 * that cannot see it is worse than no check — it reports a control that is not
 	 * there.

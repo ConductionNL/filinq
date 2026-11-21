@@ -3,6 +3,9 @@
 /**
  * Batch State Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Persists anonymization batch state in OpenRegister, with Nextcloud's
  * distributed cache in front of it as a read fast path. Each batch is keyed by
  * UUID; the cached copy is refreshed on every read so an active batch never
@@ -28,15 +31,13 @@
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -57,7 +58,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
  */
-class BatchStateService {
+class BatchStateService implements BatchStateServiceInterface {
 	private const CACHE_TTL = 7200;
 	private const DEFAULT_MAX_FILES = 100;
 	private const CACHE_PREFIX = 'filinq_batch_';
@@ -266,12 +267,71 @@ class BatchStateService {
 	 * @spec openspec/specs/batch-anonymization/spec.md
 	 */
 	public function updateBatch(string $batchId, array $batch): void {
+		// Every write carries the next state version, and the cached copy is
+		// dropped before the store is written: a reader that races the write
+		// falls through to OpenRegister rather than being served the old
+		// state (REQ-DDRAS-001).
+		$batch['stateVersion'] = ((int)($batch['stateVersion'] ?? 0) + 1);
+		// The progress figures the operations view lists, computed from the
+		// files in this same write (REQ-DDRAS-003).
+		$batch = array_merge($batch, (new BatchProgress())->figuresFor(batch: $batch, now: time()));
+		$this->cache->remove(self::CACHE_PREFIX . $batchId);
 		// Store of record first, cache second — so a cache that accepted the
 		// write can never be the only place the new state exists.
 		$this->repository->save(batchId: $batchId, batch: $batch);
 		$this->cache->set(self::CACHE_PREFIX . $batchId, json_encode($batch), $this->getCacheTtl());
 
 	}//end updateBatch()
+
+	/**
+	 * The batches the current user may see: their own, or every batch for an admin.
+	 *
+	 * @return array<int, array<string, mixed>> The batches, oldest first; none without a user.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
+	 */
+	public function listBatches(): array {
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return [];
+		}
+
+		$uid = $user->getUID();
+		if ($this->groupManager->isAdmin($uid) === true) {
+			return $this->repository->findAll();
+		}
+
+		// Filtered in the query and checked again here: a store that ignored
+		// the filter must still not hand out another user's batch.
+		return array_values(
+			array_filter(
+				$this->repository->findAll(filters: ['userId' => $uid]),
+				static fn (array $batch): bool => (string)($batch['userId'] ?? '') === $uid
+			)
+		);
+
+	}//end listBatches()
+
+	/**
+	 * The background batches with work left, oldest first, for the cron coordinator.
+	 *
+	 * Not scoped to a user: it runs without a session.
+	 *
+	 * @return array<int, array<string, mixed>> Batches in `extracting`, `anonymizing` or `cancelling`.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-chunked-background-processing-under-cron-req-ddras-002
+	 */
+	public function listActiveBackground(): array {
+		$active = ['extracting', 'anonymizing', 'cancelling'];
+		return array_values(
+			array_filter(
+				$this->repository->findAll(filters: ['background' => true]),
+				static fn (array $batch): bool => ($batch['background'] ?? false) === true
+					&& in_array((string)($batch['status'] ?? ''), $active, true) === true
+			)
+		);
+
+	}//end listActiveBackground()
 
 	/**
 	 * Remove a batch record from the store.

@@ -1,0 +1,20 @@
+{
+	"calls": [
+		[
+			"unfreezeDocument",
+			7,
+			"because"
+		],
+		[
+			"listVersions",
+			7
+		],
+		[
+			"readFinalState",
+			7
+		]
+	],
+	"emitted": [],
+	"prompt": "",
+	"error": ""
+}

@@ -4,7 +4,9 @@
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
+    "prestart": "node -e \"const fs=require('fs');if(fs.existsSync('../openapi.json')){fs.copyFileSync('../openapi.json','static/oas/filinq-api.json')}\"",
     "start": "docusaurus start",
+    "prebuild": "node -e \"const fs=require('fs');if(fs.existsSync('../openapi.json')){fs.copyFileSync('../openapi.json','static/oas/filinq-api.json')}\"",
     "build": "docusaurus build",
     "postbuild": "validate-ai-baseline",
     "validate:ai-baseline": "validate-ai-baseline",

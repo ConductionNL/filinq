@@ -3,6 +3,9 @@
 /**
  * Filinq Portal Contribution Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Filinq's contribution to the shared Portaliq external portal (hydra
  * ADR-046, contribution contract v2.1, extended by v2.2 `rowActions`).
  * Portaliq — the ONE shared portal for people WITHOUT Nextcloud accounts —
@@ -53,9 +56,6 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @spec openspec/changes/portal-contribution/specs/portal-contribution/spec.md
  * @spec openspec/specs/portal-signing-surface/spec.md
  * @spec openspec/specs/portal-signing-actions/spec.md
@@ -64,6 +64,11 @@
 declare(strict_types=1);
 
 namespace OCA\Filinq\Portal;
+
+use OCA\Filinq\Kernel\Contracts\DownloadAgreementGateInterface;
+use OCA\Filinq\Kernel\Contracts\DocumentReleaseServiceInterface;
+use OCP\L10N\IFactory;
+use Throwable;
 
 /**
  * Declares what an external portal subject may see in Filinq.
@@ -141,6 +146,16 @@ class PortalContributionProvider {
 	private const DECLINE_ENDPOINT = '/apps/filinq/api/portal/signing/decline';
 
 	/**
+	 * Instance-local relative endpoint the `accept` rowAction resolves to.
+	 *
+	 * Targets the receiver's `acceptDocument` act: an accept-only recipient
+	 * accepts the document without signing it (signing-accept-only-recipient D5).
+	 *
+	 * @var string
+	 */
+	private const ACCEPT_ENDPOINT = '/apps/filinq/api/portal/signing/accept';
+
+	/**
 	 * Instance-local relative endpoint the `viewDocument` A6 action resolves to.
 	 *
 	 * Targets the `portal-signing-actions` receiver's `viewDocument` act
@@ -165,6 +180,85 @@ class PortalContributionProvider {
 	 * @var string
 	 */
 	private const SIGNING_MIN_TRUST = 'substantial';
+
+	/**
+	 * Constructor.
+	 *
+	 * Optional, so the provider still builds plain. Labels are translated
+	 * when a contribution is asked for, in the language portaliq sets for
+	 * that call.
+	 *
+	 * @param IFactory|null                       $l10nFactory Resolves Filinq's translator.
+	 * @param DocumentReleaseServiceInterface|null          $releases    The documents released to a requester.
+	 * @param DownloadAgreementGateInterface|null $agreements  The download conditions a released document carries.
+	 */
+	public function __construct(
+		private readonly ?IFactory $l10nFactory = null,
+		private readonly ?DocumentReleaseServiceInterface $releases = null,
+		private readonly ?DownloadAgreementGateInterface $agreements = null,
+	) {
+	}//end __construct()
+
+	/**
+	 * The documents of one release, for portaliq's `documents` provider call.
+	 *
+	 * Portaliq calls this only with the id of a `subjectDocuments` row it has
+	 * proven is the person's own, keeps the `file` reference on the server
+	 * and streams the file only for an id this method returned. A withdrawn
+	 * release lists nothing, and without the release service nothing is
+	 * listed at all.
+	 *
+	 * @param string $releaseId The release (a `documentRelease` id).
+	 *
+	 * @return array<int, array<string, mixed>> The entry, or none.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+	 */
+	public function releasedDocuments(string $releaseId): array {
+		if ($this->releases === null) {
+			return [];
+		}
+
+		return $this->releases->portalEntries(releaseId: $releaseId);
+	}//end releasedDocuments()
+
+	/**
+	 * Portaliq's `opened` hook: whether a released document may be streamed now.
+	 *
+	 * A document that carries download conditions is served only once this
+	 * portal subject accepted the version in force; anything that cannot be
+	 * decided (no gate, no subject, an unknown document, a failure) refuses.
+	 *
+	 * @param string               $releaseId  The release.
+	 * @param string               $documentId The listed entry's id.
+	 * @param array<string, mixed> $subject    The session's subject, as portaliq passes it.
+	 *
+	 * @return bool True only when the download may go ahead.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	public function releasedDocumentOpened(string $releaseId, string $documentId, array $subject): bool {
+		$person = trim((string)($subject['subjectRef'] ?? ''));
+		if ($this->releases === null || $this->agreements === null || $person === '') {
+			return false;
+		}
+
+		foreach ($this->releases->portalEntries(releaseId: $releaseId) as $entry) {
+			if ($entry['id'] !== $documentId) {
+				continue;
+			}
+
+			try {
+				$decision = $this->agreements->check(document: (string)$entry['file']['fileId'], person: 'portal:' . $person);
+			} catch (Throwable) {
+				return false;
+			}
+
+			return ($decision['mayDownload'] ?? false) === true;
+		}
+
+		return false;
+	}//end releasedDocumentOpened()
 
 	/**
 	 * The audiences this provider contributes to (contract v2, preferred).
@@ -251,7 +345,7 @@ class PortalContributionProvider {
 					'schema' => 'publicationConsent',
 					'scopeField' => 'contactRef',
 					'scopeClaim' => 'contactId',
-					'label' => 'My publication consents',
+					'label' => $this->translate(text: 'My publication consents'),
 					'listable' => true,
 					'minTrust' => 'substantial',
 					'fields' => [
@@ -269,12 +363,53 @@ class PortalContributionProvider {
 						'active',
 					],
 				],
+				$this->subjectDocumentsCollection(),
 			],
 			'actions' => [],
 			'notifications' => [],
 		];
 
 	}//end dataSubjectContribution()
+
+	/**
+	 * The documents released to the requester of a record, one row per document.
+	 *
+	 * Scoped by `documentRelease.contactRef` through the same `contactId`
+	 * claim as the consents, at `substantial` trust because a decision on a
+	 * request is personal. A withdrawn release keeps its row but lists no
+	 * document. Each row's document is served through portaliq's documents
+	 * call (`releasedDocuments`) and its `opened` hook
+	 * (`releasedDocumentOpened`), which refuses a download whose conditions
+	 * the person has not accepted.
+	 *
+	 * @return array<string, mixed> The collection.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+	 */
+	private function subjectDocumentsCollection(): array {
+		return [
+			'id' => 'subjectDocuments',
+			'register' => self::REGISTER_CONSENT,
+			'schema' => 'documentRelease',
+			'scopeField' => 'contactRef',
+			'scopeClaim' => 'contactId',
+			'label' => $this->translate(text: 'My documents'),
+			'listable' => true,
+			'minTrust' => 'substantial',
+			'fields' => [
+				'documentName',
+				'kind',
+				'releasedAt',
+				'withdrawnAt',
+			],
+			'documents' => [
+				'label' => $this->translate(text: 'Documents'),
+				'provider' => 'releasedDocuments',
+				'opened' => 'releasedDocumentOpened',
+			],
+		];
+
+	}//end subjectDocumentsCollection()
 
 	/**
 	 * Manifest for the `signer` audience (an external document signer).
@@ -317,8 +452,8 @@ class PortalContributionProvider {
 	 * pure-data manifest can express.
 	 *
 	 * The manifest's top-level `actions` array additionally declares the
-	 * SAME three acts as contract-v2 A6 `endpoint`-type actions — `sign`,
-	 * `decline`, `viewDocument` (REQ-DDPSA-001) — for the A6
+	 * SAME acts as contract-v2 A6 `endpoint`-type actions — `sign`,
+	 * `decline`, `accept`, `viewDocument` (REQ-DDPSA-001) — for the A6
 	 * `POST /portal/api/actions/{appId}/{actionId}` forward mechanism, which
 	 * is a distinct rendering path from the per-row `rowActions` above (both
 	 * ultimately hit the SAME `PortalSigningReceiverController` endpoints).
@@ -336,94 +471,186 @@ class PortalContributionProvider {
 		return [
 			'label' => self::LABEL,
 			'collections' => [
-				[
-					'id' => 'signerRecords',
-					'register' => self::REGISTER_SIGNING,
-					'schema' => 'signerRecord',
-					'scopeField' => 'email',
-					'scopeClaim' => 'signerEmail',
-					'label' => 'My signatures',
-					'listable' => true,
-					'fields' => [
-						'displayName',
-						'status',
-						'order',
-						'signedAt',
-						'declineReason',
-					],
-				],
-				[
-					'id' => 'signerSigningRequests',
-					'register' => self::REGISTER_SIGNING,
-					'schema' => 'signingRequest',
-					'scopeField' => '',
-					'scopeClaim' => 'signerEmail',
-					'via' => [
-						'register' => self::REGISTER_SIGNING,
-						'schema' => 'signerRecord',
-						'scopeField' => 'email',
-						'targetField' => 'signingRequestId',
-					],
-					'label' => 'Documents awaiting my signature',
-					'listable' => true,
-					'minTrust' => 'substantial',
-					'fields' => [
-						'documentName',
-						'signatureLevel',
-						'signingMode',
-						'status',
-						'deadline',
-						'provider',
-					],
-					'rowActions' => [
-						[
-							'id' => 'sign',
-							'label' => 'Sign',
-							'endpoint' => self::SIGN_ENDPOINT,
-							'method' => 'POST',
-							'minTrust' => self::SIGNING_MIN_TRUST,
-						],
-						[
-							'id' => 'decline',
-							'label' => 'Decline to sign',
-							'endpoint' => self::DECLINE_ENDPOINT,
-							'method' => 'POST',
-							'minTrust' => self::SIGNING_MIN_TRUST,
-						],
-					],
-				],
+				$this->signerRecordsCollection(),
+				$this->signerSigningRequestsCollection(),
 			],
-			// Contract-v2 A6 endpoint-forward actions (REQ-DDPSA-001): the
-			// ONLY three actions on the `signer` manifest, all instance-local
-			// relative endpoints under `/apps/filinq/api/portal/signing/`,
-			// all gated `minTrust: substantial`. Handled by
-			// `PortalSigningReceiverController` +
-			// `Portal\PortalAssertionVerifier`.
-			'actions' => [
-				[
-					'id' => 'sign',
-					'label' => 'Sign',
-					'endpoint' => self::SIGN_ENDPOINT,
-					'method' => 'POST',
-					'minTrust' => self::SIGNING_MIN_TRUST,
-				],
-				[
-					'id' => 'decline',
-					'label' => 'Decline to sign',
-					'endpoint' => self::DECLINE_ENDPOINT,
-					'method' => 'POST',
-					'minTrust' => self::SIGNING_MIN_TRUST,
-				],
-				[
-					'id' => 'viewDocument',
-					'label' => 'View document',
-					'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
-					'method' => 'GET',
-					'minTrust' => self::SIGNING_MIN_TRUST,
-				],
-			],
+			'actions' => $this->signerActions(),
 			'notifications' => [],
 		];
 
 	}//end signerContribution()
+
+	/**
+	 * The signer's own `signerRecord` rows, scoped by the invited email.
+	 *
+	 * @return array<string, mixed> The collection.
+	 *
+	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 */
+	private function signerRecordsCollection(): array {
+		return [
+			'id' => 'signerRecords',
+			'register' => self::REGISTER_SIGNING,
+			'schema' => 'signerRecord',
+			'scopeField' => 'email',
+			'scopeClaim' => 'signerEmail',
+			'label' => $this->translate(text: 'My signatures'),
+			'listable' => true,
+			'fields' => [
+				'displayName',
+				'status',
+				'order',
+				'signedAt',
+				'declineReason',
+			],
+		];
+
+	}//end signerRecordsCollection()
+
+	/**
+	 * The `signingRequest` rows awaiting the signer, reached through their
+	 * own `signerRecord` rows, with the sign and decline row actions.
+	 *
+	 * @return array<string, mixed> The collection.
+	 *
+	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 */
+	private function signerSigningRequestsCollection(): array {
+		return [
+			'id' => 'signerSigningRequests',
+			'register' => self::REGISTER_SIGNING,
+			'schema' => 'signingRequest',
+			'scopeField' => '',
+			'scopeClaim' => 'signerEmail',
+			'via' => [
+				'register' => self::REGISTER_SIGNING,
+				'schema' => 'signerRecord',
+				'scopeField' => 'email',
+				'targetField' => 'signingRequestId',
+			],
+			'label' => $this->translate(text: 'Documents awaiting my signature'),
+			'listable' => true,
+			'minTrust' => 'substantial',
+			'fields' => [
+				'documentName',
+				'signatureLevel',
+				'signingMode',
+				'status',
+				'deadline',
+				'provider',
+			],
+			'rowActions' => $this->signingActs(),
+		];
+
+	}//end signerSigningRequestsCollection()
+
+	/**
+	 * The sign, decline, accept and viewDocument acts: id, label, endpoint,
+	 * method, minimum trust and the body fields portaliq forwards.
+	 *
+	 * `fields` is the whitelist portaliq rebuilds the forwarded body from:
+	 * the signing dialog sends `consent`, the decline dialog `reason`, and
+	 * viewing the document and accepting send nothing but the row.
+	 * `viewDocument` is a row action too, so portaliq's signing dialog can
+	 * fetch the document of the row being signed and show it before the
+	 * resident signs (portaliq REQ-SGN-004); the portal shows it inside that
+	 * dialog, not as a button.
+	 *
+	 * Sign, decline and accept are declared on every row: the collection
+	 * lists `signingRequest` fields and the recipient's role sits on the
+	 * `signerRecord` it is reached through, so the receiver answers the
+	 * wrong act for a role with 422 (signing-accept-only-recipient D5).
+	 * Accepting needs the same trust as signing, because the acceptance is
+	 * attributed to a named person.
+	 *
+	 * @return array<int, array<string, mixed>> The four acts.
+	 *
+	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 * @spec openspec/specs/portal-signing-actions/spec.md
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#3-portal
+	 */
+	private function signingActs(): array {
+		return [
+			[
+				'id' => 'sign',
+				'label' => $this->translate(text: 'Sign'),
+				'endpoint' => self::SIGN_ENDPOINT,
+				'method' => 'POST',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+				'fields' => ['consent'],
+			],
+			[
+				'id' => 'decline',
+				'label' => $this->translate(text: 'Decline to sign'),
+				'endpoint' => self::DECLINE_ENDPOINT,
+				'method' => 'POST',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+				'fields' => ['reason'],
+			],
+			[
+				'id' => 'accept',
+				'label' => $this->translate(text: 'Accept'),
+				'endpoint' => self::ACCEPT_ENDPOINT,
+				'method' => 'POST',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+				'fields' => [],
+			],
+			[
+				'id' => 'viewDocument',
+				'label' => $this->translate(text: 'View document'),
+				'endpoint' => self::VIEW_DOCUMENT_ENDPOINT,
+				'method' => 'GET',
+				'minTrust' => self::SIGNING_MIN_TRUST,
+				'fields' => [],
+			],
+		];
+
+	}//end signingActs()
+
+	/**
+	 * The actions on the `signer` manifest.
+	 *
+	 * Contract-v2 A6 endpoint-forward actions (REQ-DDPSA-001): the
+	 * ONLY four actions on the `signer` manifest, all instance-local
+	 * relative endpoints under `/apps/filinq/api/portal/signing/`,
+	 * all gated `minTrust: substantial`. Handled by
+	 * `PortalSigningReceiverController` +
+	 * `Portal\PortalAssertionVerifier`.
+	 *
+	 * All four are endpoint ROW actions in portaliq's
+	 * contract (portaliq#804 / #833): `rowField` is the body key the
+	 * portal stamps the proven row's id under, and `scopeClaim` rides
+	 * in the signed X-Portal-Subject assertion. The receiver reads
+	 * exactly `signingRequestId` and `signerEmail`; without these two
+	 * keys portaliq drops the row buttons and the receiver refuses.
+	 *
+	 * @return array<int, array<string, mixed>> The actions.
+	 *
+	 * @spec openspec/specs/portal-signing-actions/spec.md
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#3-portal
+	 */
+	private function signerActions(): array {
+		$actions = [];
+		foreach ($this->signingActs() as $act) {
+			$actions[] = $act + ['rowField' => 'signingRequestId', 'scopeClaim' => 'signerEmail'];
+		}
+
+		return $actions;
+
+	}//end signerActions()
+
+	/**
+	 * A label in the language of the current call, or as written without a translator.
+	 *
+	 * @param string $text The English source label.
+	 *
+	 * @return string The label.
+	 */
+	private function translate(string $text): string {
+		if ($this->l10nFactory === null) {
+			return $text;
+		}
+
+		return $this->l10nFactory->get('filinq')->t($text);
+	}//end translate()
 }//end class

@@ -5,9 +5,10 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `archief` register with `selectielijstEntry`, `destructionList` and `destructionCertificate` schemas to `lib/Settings/filinq_register.json` (REQ-DDARE-001, REQ-DDARE-005)
+- [x] 1.1 Add the `archief` register with `selectielijstEntry`, `destructionList` and `destructionCertificate` schemas to `lib/Settings/filinq_register.json` (REQ-DDARE-001, REQ-DDARE-005)
   - Field contracts exactly per design.md D2; `hardValidation: true`; `archive.defaultNominatie: bewaren` on the two workflow schemas; register version bump.
   - Unit drift-pin: every field OR's `lookupSelectielijstEntry()` reads exists on `selectielijstEntry`; verify against OR HEAD, not against this spec's snapshot.
+  - Built (2026-11-21): the three schemas are in the consolidated `filinq` register (register 8.99.0), not in a separate `archief` register, which `DossierRegisterConfigTest` refuses (design D2, amended). Read on OpenRegister `development`: `selectielijstEntry` holds `categorie`, `archiefnominatie`, `bewaartermijn` (ISO-8601 pattern), `bron`, `toelichting`, `omschrijving` and `selectielijstVersie`, the key the import writes, and stays open for further imported columns; `destructionList` knows all seven statuses and every key `DestructionService`, `DestructionReviewService` and `DestructionListRun` write, and the certificate's fields, because OpenRegister stores the certificate in the destruction-list schema; `destructionCertificate` holds the certificate on its own. Both carry `archive.defaultNominatie: bewaren`. Three demo rows each in the mock register (`DEMO-` categories, not real ones). Pinned by `ArchiefRegisterSchemaTest`, which validates OpenRegister's payloads closed and, with an OpenRegister checkout beside the app, reads the import's keys from its source.
 
 - [ ] 1.2 Seed representative VNG selectielijst 2020 entries (design.md Seed Data)
   - `TODO-*` placeholder category codes during authoring only; one `bewaren` and at least one `vernietigen` entry; validates on import. Placeholders MUST be replaced with real codes before apply — see task 1.4 (apply-blocker).
@@ -15,8 +16,9 @@
 - [ ] 1.4 APPLY-BLOCKER — replace every `TODO-*` placeholder with a real VNG selectielijst-manager-approved category number before apply/done (REQ-DDARE-009)
   - Obtain the real category codes with matching `archiefnominatie` + `bewaartermijn` from the responsible selectielijst-manager (records-appraisal sign-off); this change MUST NOT be marked done while any `TODO-*` categorie remains. Add a PHPUnit seed-lint test that FAILS on any `TODO-` categorie so the gate enforces it (production-enablement gate, same posture as flow-operations E3 retention).
 
-- [ ] 1.3 Add `archive` configuration to the record schemas `correspondence`, `generatedDocument`, `publicationRecord` (REQ-DDARE-020) and remove `x-openregister-archival` from record classes; rewrite the `batchCorrespondenceJob` annotation to `{"retention": {"default": "P1Y"}}` (REQ-DDARE-008, REQ-DREG-01/02)
+- [x] 1.3 Add `archive` configuration to the record schemas `correspondence`, `generatedDocument`, `publicationRecord` (REQ-DDARE-020) and remove `x-openregister-archival` from record classes; rewrite the `batchCorrespondenceJob` annotation to `{"retention": {"default": "P1Y"}}` (REQ-DDARE-008, REQ-DREG-01/02)
   - Import-pin unit test proves the `archive` key survives `ConfigurationService::importFromApp()`; file an OpenRegister issue if it is dropped (degradation: OR schema UI configuration, never Filinq-side retention code).
+  - Built (2026-11-21): `correspondence` 1.5.0, `generatedDocument` 1.12.0 and `publicationRecord` 1.5.0 carry `archive` in the keys OpenRegister `development` reads (`enabled`, `classification` — not `classificatie` —, `afleidingswijze` with `closureField: generatedAt` or `bronEigenschap: publicatiedatum`); correspondence keeps its term as `defaultNominatie: vernietigen`, `defaultBewaartermijn: P7Y` and loses `x-openregister-archival`, so it leaves only through an approved destruction list. The categories are `TODO-` placeholders for task 1.4. `batchCorrespondenceJob` already had the object shape `{"retention": {"default": "P1Y"}}`. Register 8.100.0. Pinned by `RecordArchiveConfigurationTest` (the archive blocks, the REQ-DDARE-008 lint over every schema, and, with an OpenRegister checkout beside the app, that `Schema` has the `archive` column `hydrate()` fills on import and the calculator's trigger keys). The import was read in OpenRegister's source, not run; no issue needed.
 
 ## 2. Backend
 
@@ -55,3 +57,8 @@
 
 - [ ] 4.5 Gates + validation
   - `composer check:strict` zero new violations; `openspec validate archiefwet-retention-engine --strict` exits 0; the REQ-DDARE-009 seed-lint passes (no `TODO-*` categorie remains); fix pre-existing quality issues encountered on touched files.
+
+## 5. Moved in from e-discovery-legal-hold
+
+- [ ] 5.1 Name the legal hold case behind each hold-excluded record on the vernietigingslijst detail
+  - Moved here from e-discovery-legal-hold task 3.2 (2026-09-29): the Archiefbeheer surface is built by this change. A record whose `retention.legalHold.reason` is `filinq-hold-case:<uuid>` resolves to that case's name through `GET api/legal-holds/{uuid}` for hold authority; everybody else sees "under a legal hold" without the name.

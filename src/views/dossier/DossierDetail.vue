@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="dossier-detail">
 		<NcEmptyContent
@@ -49,6 +53,10 @@
 					{{ dossierStore.dossier.description }}
 				</p>
 
+				<LegalHoldBadge
+					:objectId="dossierId"
+					@held="underLegalHold = $event" />
+				<MdtoPanel :objectId="dossierId" objectType="dossier" />
 				<NcNoteCard v-if="folderWarning" type="warning">
 					{{ folderWarning }}
 				</NcNoteCard>
@@ -83,12 +91,24 @@
 						{{ t('filinq', 'Generate legal-bases PDF') }}
 					</NcButton>
 
+					<NcButton
+						v-if="leafSidebarAvailable"
+						variant="tertiary"
+						@click="toggleLeafSidebar">
+						{{ t('filinq', 'Linked apps') }}
+					</NcButton>
+
 					<NcButton variant="secondary" @click="startBatch">
 						<template #icon>
 							<EyeOffOutline :size="20" />
 						</template>
 						{{ t('filinq', 'Anonymise this dossier') }}
 					</NcButton>
+
+					<WizardEntryActions
+						register="filinq"
+						schema="dossier"
+						:objectId="dossierId" />
 				</div>
 			</header>
 
@@ -177,6 +197,15 @@
 								</template>
 								<NcActionButton
 									closeAfterClick
+									:disabled="underLegalHold"
+									:title="
+										underLegalHold
+											? t(
+													'filinq',
+													'This dossier is under a legal hold.',
+												)
+											: ''
+									"
 									@click="confirmRemove(doc)">
 									<template #icon>
 										<Delete :size="20" />
@@ -196,6 +225,13 @@
 						<p v-else class="dossier-muted">
 							{{ t('filinq', 'Select a document to preview it.') }}
 						</p>
+						<!-- The selected document's own notes: its Nextcloud file comments (work-document-notes D3). -->
+						<CnNotesCard
+							v-if="notesFileId"
+							:key="notesFileId"
+							class="dossier-viewer-notes"
+							:fileId="notesFileId"
+							data-testid="dossier-document-notes" />
 					</div>
 				</div>
 			</section>
@@ -239,18 +275,19 @@
 			</section>
 		</template>
 
-		<ConfirmActionDialog
+		<CnConfirmDialog
 			v-if="removeTarget"
-			:name="t('filinq', 'Remove document')"
+			:dialogTitle="t('filinq', 'Remove document')"
 			:message="removeMessage"
-			:busy="dossierStore.saving"
+			:confirmLabel="t('filinq', 'Delete')"
+			variant="error"
 			@confirm="executeRemove"
-			@cancel="removeTarget = null" />
+			@close="removeTarget = null" />
 	</div>
 </template>
 
 <script>
-import { CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnConfirmDialog, CnNotesCard, CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
@@ -267,8 +304,12 @@ import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
-import ConfirmActionDialog from '../../dialogs/ConfirmActionDialog.vue'
+import LegalHoldBadge from '../../components/LegalHoldBadge.vue'
+import MdtoPanel from '../../components/MdtoPanel.vue'
+import WizardEntryActions from '../../components/WizardEntryActions.vue'
+import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { dossierStore } from '../../store/store.js'
+import { dossierStatusColors, dossierStatusLabel } from './dossierStatus.js'
 
 /**
  * Dossier detail.
@@ -282,20 +323,27 @@ import { dossierStore } from '../../store/store.js'
 export default {
 	name: 'DossierDetail',
 	components: {
+		CnNotesCard,
 		CnStatusBadge,
-		ConfirmActionDialog,
+		CnConfirmDialog,
 		Delete,
 		DotsHorizontal,
 		EyeOffOutline,
 		FilePdfBox,
 		FolderAccount,
+		LegalHoldBadge,
+		MdtoPanel,
 		NcActionButton,
 		NcActions,
 		NcButton,
 		NcEmptyContent,
 		NcNoteCard,
 		Plus,
+		WizardEntryActions,
 	},
+
+	// leaf-integrations: the registry's leaves (Files, Deck) for this dossier.
+	mixins: [recordLeafSidebarMixin({ schema: 'dossier', record: (vm) => vm.dossierStore.dossier, title: (dossier) => dossier.name })],
 
 	data() {
 		return {
@@ -306,13 +354,10 @@ export default {
 			generatingPdf: false,
 			removeTarget: null,
 			removeMode: 'unlink',
-			statusColorMap: {
-				[t('filinq', 'Open')]: 'default',
-				[t('filinq', 'In review')]: 'warning',
-				[t('filinq', 'Processed')]: 'primary',
-				[t('filinq', 'Published')]: 'success',
-				[t('filinq', 'Closed')]: 'default',
-			},
+			// e-discovery-legal-hold: set by LegalHoldBadge; removing (which can
+			// trash a file) is switched off while the dossier is held.
+			underLegalHold: false,
+			statusColorMap: dossierStatusColors(),
 		}
 	},
 
@@ -349,6 +394,20 @@ export default {
 				return targets
 			}
 			return targets.filter((target) => target !== 'published')
+		},
+
+		/**
+		 * The file whose notes show under the viewer: the selected document.
+		 *
+		 * @return {string|null} The file id, or null when nothing is open.
+		 * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
+		 */
+		notesFileId() {
+			const doc = this.dossierStore.selectedDocument
+			if (!doc || doc.missing || !doc.id) {
+				return null
+			}
+			return String(doc.id)
 		},
 
 		/**
@@ -407,14 +466,7 @@ export default {
 		n,
 
 		statusLabel(status) {
-			const labels = {
-				open: t('filinq', 'Open'),
-				'in-review': t('filinq', 'In review'),
-				processed: t('filinq', 'Processed'),
-				published: t('filinq', 'Published'),
-				closed: t('filinq', 'Closed'),
-			}
-			return labels[status] || t('filinq', 'Open')
+			return dossierStatusLabel(status)
 		},
 
 		transitionLabel(target) {
@@ -627,8 +679,14 @@ export default {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 	display: flex;
+	flex-direction: column;
 	align-items: center;
 	justify-content: center;
+}
+
+.dossier-viewer-notes {
+	align-self: stretch;
+	border-top: 1px solid var(--color-border);
 }
 
 .dossier-viewer-frame {

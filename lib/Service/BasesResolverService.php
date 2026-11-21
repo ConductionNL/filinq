@@ -3,6 +3,9 @@
 /**
  * Bases Resolver Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Resolves the union of Woo Art. 5 grondslagen (`bases[]`) for a batch of
  * files by locating the dossier(s) the files belong to via OpenRegister.
  *
@@ -247,6 +250,10 @@ class BasesResolverService {
 	 * `$folderId`. Returns an empty array when no dossier is found or when
 	 * the dossier's `bases` field is absent or empty.
 	 *
+	 * A user-request path (multi-tenant-hardening D2): no RBAC or
+	 * multitenancy bypass, so OpenRegister scopes the dossiers to what the
+	 * user may read in the active organisation.
+	 *
 	 * @param mixed $objectService OpenRegister ObjectService instance.
 	 * @param int $folderId Nextcloud folder node ID.
 	 *
@@ -262,7 +269,6 @@ class BasesResolverService {
 						'folder' => (string)$folderId,
 					],
 				],
-				_rbac: false
 			);
 		} catch (\Throwable $e) {
 			$this->logger->debug(

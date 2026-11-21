@@ -19,6 +19,9 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -26,6 +29,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
+use OCA\Filinq\Service\Grounds\RefusalGroundLabels;
+use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -54,12 +60,17 @@ class BaseLabelResolver {
 	 *
 	 * @param DossierObjectRepository $repository OpenRegister object access.
 	 * @param LoggerInterface $logger Structured logger.
+	 * @param RefusalGroundsResolver|null $grounds The Woo refusal grounds (dossiq or the snapshot); when
+	 *                                             given, Woo grounds are labelled from it, never from `base`.
+	 * @param RefusalGroundsLegacyMap|null $legacy Re-points an old Woo `base` slug the repair has not reached yet.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DossierObjectRepository $repository,
 		private readonly LoggerInterface $logger,
+		private readonly ?RefusalGroundsResolver $grounds = null,
+		private readonly ?RefusalGroundsLegacyMap $legacy = null,
 	) {
 
 	}//end __construct()
@@ -84,10 +95,16 @@ class BaseLabelResolver {
 	 *                                                                 reference to its
 	 *                                                                 display name and
 	 *                                                                 Woo Art. 5 toelichting.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	public function resolve(array $baseRefs): array {
 		if (count($baseRefs) === 0) {
 			return [];
+		}
+
+		if ($this->grounds !== null) {
+			return $this->resolveThroughGrounds(baseRefs: $baseRefs);
 		}
 
 		$objectService = $this->repository->objectService();
@@ -108,6 +125,56 @@ class BaseLabelResolver {
 
 		return $labels;
 	}//end resolve()
+
+	/**
+	 * Label references from the Woo refusal grounds: a dossiq code directly,
+	 * an old Woo slug through the legacy map. A Woo reference that resolves
+	 * to nothing reads "unknown ground" with the code. Anything else is not a
+	 * Woo ground and is looked up as a `base` object (a tenant's own basis),
+	 * falling back to the raw reference as before.
+	 *
+	 * @param array<int, string> $baseRefs The references.
+	 *
+	 * @return array<string, array{name: string, description: string}> Map from each reference to its label.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 */
+	private function resolveThroughGrounds(array $baseRefs): array {
+		$woo = new RefusalGroundLabels(grounds: $this->grounds, legacy: $this->legacy, logger: $this->logger);
+
+		$labels = [];
+		$lookups = null;
+		foreach ($baseRefs as $ref) {
+			$refString = (string)$ref;
+			$label = $woo->labelFor(ref: $refString);
+			if ($label !== null) {
+				$labels[$refString] = $label;
+				continue;
+			}
+
+			// A tenant's own basis: its `base` object, or the raw reference.
+			$lookups = ($lookups ?? $this->tenantBaseLookups());
+			$labels[$refString] = $this->labelFor(refString: $refString, lookups: $lookups);
+		}
+
+		return $labels;
+	}//end resolveThroughGrounds()
+
+	/**
+	 * The `base` lookups for a tenant's own (non-Woo) bases; empty without OpenRegister.
+	 *
+	 * @return array<string, array<string,string>> The lookups.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 */
+	private function tenantBaseLookups(): array {
+		$objectService = $this->repository->objectService();
+		if ($objectService === null) {
+			return ['slugToName' => [], 'uuidToName' => [], 'slugToDesc' => [], 'uuidToDesc' => []];
+		}
+
+		return $this->loadBaseLookups(objectService: $objectService);
+	}//end tenantBaseLookups()
 
 	/**
 	 * Group resolved base labels by display name for the report legend.
@@ -254,6 +321,8 @@ class BaseLabelResolver {
 	 * @param array<string, array<string,string>> $lookups The lookups.
 	 *
 	 * @return array{name: string, description: string} The label.
+	 *
+	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private function labelFor(string $refString, array $lookups): array {
 		if (isset($lookups['slugToName'][$refString]) === true) {

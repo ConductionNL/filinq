@@ -328,13 +328,17 @@ fi
 # Verify against OpenRegister directly, and require exactly the slugs declared
 # in `lib/Settings/filinq_register.json` — so this check cannot drift away
 # from what the app actually ships.
+#
+# Both lists are read to the end, page by page: OpenRegister caps a page and
+# returns no total, so a single `_limit=1000` read dropped every schema past
+# the cap on a crowded instance and reported filinq's own schemas as missing.
 REG_BODY="$(mktemp)"
-curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/openregister/api/registers?_limit=300" -o "$REG_BODY"
+bash "${SCRIPT_DIR}/lib/fetch-all-pages.sh" \
+	"${BASE}/index.php/apps/openregister/api/registers" "$REG_BODY" "${USER_NAME}:${USER_PASS}"
 
 SCH_BODY="$(mktemp)"
-curl -sS -u "${USER_NAME}:${USER_PASS}" -H 'OCS-APIRequest: true' \
-	"${BASE}/index.php/apps/openregister/api/schemas?_limit=1000" -o "$SCH_BODY"
+bash "${SCRIPT_DIR}/lib/fetch-all-pages.sh" \
+	"${BASE}/index.php/apps/openregister/api/schemas" "$SCH_BODY" "${USER_NAME}:${USER_PASS}"
 
 # Emits `KEY<TAB>VALUE` lines for the app-config bindings, on stdout, after
 # verifying. Anything diagnostic goes to stderr so the two never mix.
@@ -475,6 +479,21 @@ php "${NC_ROOT}/occ" config:app:set filinq signing_verification_secret \
 	--value="$SIGNING_SECRET" --output=plain > /dev/null
 echo "[ci-seed] provisioned signing_verification_secret (${#SIGNING_SECRET} chars, ephemeral)."
 
+# Filinq refuses to anonymise while OpenRegister's entity recognition is off,
+# and a fresh OpenRegister has it off. Switch it on with the regex detector,
+# the one backend a runner has without an ExApp, as an administrator would.
+# The anonymisation specs state that mode as their precondition.
+DETECTION_CODE="$(curl -sS -o /dev/null -w '%{http_code}' \
+	-u "${USER_NAME}:${USER_PASS}" -X PATCH \
+	-H 'Content-Type: application/json' -H 'OCS-APIRequest: true' \
+	--data '{"entityRecognitionEnabled":true,"entityRecognitionMethod":"regex"}' \
+	"${BASE}/index.php/apps/openregister/api/settings/files" || echo 000)"
+echo "[ci-seed] PATCH openregister settings/files (entity recognition on, regex) -> HTTP ${DETECTION_CODE}"
+if [ "$DETECTION_CODE" != "200" ]; then
+	echo "::error::Could not switch on OpenRegister entity recognition (HTTP ${DETECTION_CODE}); every anonymisation spec would meet a refusal."
+	exit 1
+fi
+
 # ── 4. Verify the bindings through the app's own settings endpoint ───────────
 # `SettingsController::index` is the exact read path `OpenRegisterResolver`
 # consumes, so verifying HERE proves the binding is visible to the code that
@@ -520,15 +539,15 @@ echo "[ci-seed] Filinq registers, schemas and object-type bindings provisioned."
 # The policy surface is group-gated, not admin-gated, and THREE group names are
 # in play across two enforcement layers:
 #
-#   PolicyCrudService::PROHIBITION_GROUP      = docudesk-prohibition-admins
-#   PolicyCrudService::STANDING_CONSENT_GROUP = docudesk-standing-consent-admins
+#   PolicyCrudService::PROHIBITION_GROUP      = filinq-prohibition-admins
+#   PolicyCrudService::STANDING_CONSENT_GROUP = filinq-standing-consent-admins
 #   filinq_register.json RBAC on publicationProhibition
-#                          (create/update/delete) = docudesk-policy-admins
+#                          (create/update/delete) = filinq-policy-admins
 #
 # ⚠️ The first and third DISAGREE, and they gate the same operation at two
-# different layers. A member of `docudesk-policy-admins` clears OpenRegister's
+# different layers. A member of `filinq-policy-admins` clears OpenRegister's
 # schema RBAC and is then rejected by the service check; a member of
-# `docudesk-prohibition-admins` clears the service check and is then rejected by
+# `filinq-prohibition-admins` clears the service check and is then rejected by
 # OpenRegister. So NO non-admin group can write a prohibition today — only the
 # admin flag can, via the short-circuit in assertProhibitionPermission(). Which
 # name is canonical is a product decision, so this script seeds all three rather
@@ -543,7 +562,7 @@ echo "[ci-seed] Filinq registers, schemas and object-type bindings provisioned."
 # depended on the seed. The whole "Detection-time outcomes" folder could report
 # green having exercised nothing. Creating the groups here is what makes those
 # assertions able to run — and able to fail.
-for _dd_group in docudesk-policy-admins docudesk-prohibition-admins docudesk-standing-consent-admins; do
+for _dd_group in filinq-policy-admins filinq-prohibition-admins filinq-standing-consent-admins; do
 	php "${NC_ROOT}/occ" group:add "${_dd_group}" 2>&1 | tail -1 || true
 	php "${NC_ROOT}/occ" group:adduser "${_dd_group}" "${USER_NAME}" 2>&1 | tail -1 || true
 done
@@ -551,7 +570,7 @@ done
 # Fail loudly if the memberships did not take: a silent 403 later reads like an
 # authorization bug in the app rather than an unseeded fixture.
 _dd_groups_actual=$(php "${NC_ROOT}/occ" user:info "${USER_NAME}" --output=json 2>/dev/null || echo '{}')
-for _dd_group in docudesk-policy-admins docudesk-prohibition-admins docudesk-standing-consent-admins; do
+for _dd_group in filinq-policy-admins filinq-prohibition-admins filinq-standing-consent-admins; do
 	case "${_dd_groups_actual}" in
 		*"${_dd_group}"*) echo "[ci-seed] ${USER_NAME} is in ${_dd_group}." ;;
 		*) echo "::error::${USER_NAME} is NOT in ${_dd_group} — every policy write will 403."; exit 1 ;;
@@ -727,14 +746,13 @@ echo "[ci-seed] done."
 # Installing would push the app's whole demo dataset into every list the suite
 # asserts on. `demo-data-setup-step.spec.ts` exercises the install deliberately.
 #
-# Uses the workflow's own exported credentials rather than this script's, so it
-# does not depend on where in the file it sits.
+# Targets the same resolved ${BASE} and credentials as every other write above,
+# so off CI it can never fall through to the shared localhost:8080 container.
 #
 # Tolerant on purpose: an app whose wizard has no demo-data step answers 400
 # here, and that is not a seeding failure.
-DEMO_BASE="${BASE_URL:-${NEXTCLOUD_URL:-http://localhost:8080}}"
 DEMO_CODE="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 300 \
-	-u "${ADMIN_USER:-admin}:${ADMIN_PASSWORD:-admin}" -X POST \
+	-u "${USER_NAME}:${USER_PASS}" -X POST \
 	-H 'Content-Type: application/json' -H 'OCS-APIRequest: true' --data '{}' \
-	"${DEMO_BASE}/index.php/apps/filinq/api/setup/action/skip-demo-data" || echo 000)"
+	"${BASE}/index.php/apps/filinq/api/setup/action/skip-demo-data" || echo 000)"
 echo "[ci-seed] POST setup/action/skip-demo-data -> HTTP ${DEMO_CODE}"

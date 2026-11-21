@@ -49,6 +49,14 @@ use Throwable;
  * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-5
  */
 class ProhibitionPolicyService {
+
+	/**
+	 * The warning logged for each un-redacted absolute match the backstop catches.
+	 *
+	 * @var string
+	 */
+	private const BACKSTOP_CAUGHT = 'Prohibition backstop caught an un-redacted absolute match';
+
 	/**
 	 * Constructor for ProhibitionPolicyService
 	 *
@@ -111,8 +119,11 @@ class ProhibitionPolicyService {
 	 *    (`{ruleId, ruleName, highConfidence}`) for the review UI and is never
 	 *    auto-skipped.
 	 *
-	 * Every returned entity gains a `prohibitionMatch` key (null when none).
-	 * Best-effort: policy failures are logged and never block detection.
+	 * Every returned entity gains a `prohibitionMatch` and a `standingConsentMatch`
+	 * key (null when none). A standing-consent winner is pre-set `included: false`,
+	 * a prohibition winner `included: true`; a matched rule's `bases` fill an empty
+	 * grondslag decision. Best-effort: policy failures are logged and never block
+	 * detection.
 	 *
 	 * @param array<int, array<string, mixed>> $entities Normalized entities.
 	 * @param mixed $entityRelationMapper OpenRegister EntityRelationMapper (DI).
@@ -120,12 +131,14 @@ class ProhibitionPolicyService {
 	 * @return array<int, array<string, mixed>> Entities with `prohibitionMatch` attached.
 	 *
 	 * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-7
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.1
 	 */
 	public function applyPolicyDecisions(array $entities, mixed $entityRelationMapper): array {
 		$policy = $this->resolvePolicyMatcher();
 		if ($policy === null) {
 			foreach ($entities as &$plain) {
 				$plain['prohibitionMatch'] = ($plain['prohibitionMatch'] ?? null);
+				$plain['standingConsentMatch'] = ($plain['standingConsentMatch'] ?? null);
 			}
 
 			unset($plain);
@@ -186,57 +199,133 @@ class ProhibitionPolicyService {
 	 * @spec openspec/changes/anonymisation-prohibition-gate/tasks.md#task-7
 	 */
 	public function absoluteProhibitionViolations(int $fileId): array {
+		$matcher = $this->backstopMatcher();
+		if ($matcher === null) {
+			return [];
+		}
+
+		return $this->backstopScan(matcher: $matcher, fileId: $fileId);
+	}//end absoluteProhibitionViolations()
+
+	/**
+	 * The policy matcher for the backstop, or null (with a warning) when it cannot be resolved.
+	 *
+	 * @return mixed The PolicyMatchService, or null.
+	 */
+	private function backstopMatcher(): mixed {
 		try {
-			$matcher = $this->container->get('OCA\Filinq\Service\PolicyMatchService');
+			return $this->container->get('OCA\Filinq\Service\PolicyMatchService');
 		} catch (Exception $e) {
 			$this->logger->warning(
 				'Policy matcher unavailable; prohibition backstop is a no-op',
 				['exception' => $e->getMessage()]
 			);
-			return [];
+			return null;
 		}
 
+	}//end backstopMatcher()
+
+	/**
+	 * Every confident prohibition match among the file's un-redacted occurrences, each logged.
+	 *
+	 * @param mixed $matcher The PolicyMatchService.
+	 * @param int   $fileId  The Nextcloud file id.
+	 *
+	 * @return array<int, array<string, mixed>> Absolute-tier violations (may be empty).
+	 */
+	private function backstopScan(mixed $matcher, int $fileId): array {
 		$mapper = $this->locator->get(className: 'OCA\OpenRegister\Db\EntityRelationMapper');
 		$threshold = (float)$matcher->highConfidenceThreshold();
-		$redactIds = $this->collectRedactionRelationIds(mapper: $mapper, fileId: $fileId);
-
 		$violations = [];
-		foreach ($mapper->findEntitiesForFile($fileId) as $row) {
-			// Being redacted — fine.
-			if (isset($redactIds[(int)($row['relation_id'] ?? 0)]) === true) {
-				continue;
-			}
-
-			$value = (string)($row['entity_value'] ?? '');
-			if ($value === '') {
-				continue;
-			}
-
-			$match = $matcher->matchProhibition(
-				entityText: $value,
-				entityType: (string)($row['entity_type'] ?? 'OTHER')
-			);
+		foreach ($this->unredactedOccurrences(mapper: $mapper, fileId: $fileId) as $row) {
+			$match = $this->prohibitionMatchOf(matcher: $matcher, row: $row);
 			if ($match === null || ((float)($row['confidence'] ?? 0.0)) < $threshold) {
 				continue;
 			}
 
-			$this->logger->warning(
-				'Prohibition backstop caught an un-redacted absolute match',
-				['ruleId' => $match['uuid'], 'entityId' => (int)($row['entity_id'] ?? 0), 'fileId' => $fileId]
-			);
-
-			$violations[] = [
-				'entityId' => (int)($row['entity_id'] ?? 0),
-				'entityName' => $value,
-				'ruleId' => $match['uuid'],
-				'ruleName' => $match['primaryName'],
-				'confidence' => (float)($row['confidence'] ?? 0.0),
-				'absolute' => true,
-			];
-		}//end foreach
+			$this->logger->warning(self::BACKSTOP_CAUGHT, $this->caughtContext(rule: $match, row: $row) + ['fileId' => $fileId]);
+			$violations[] = $this->backstopViolation(rule: $match, row: $row);
+		}
 
 		return $violations;
-	}//end absoluteProhibitionViolations()
+
+	}//end backstopScan()
+
+	/**
+	 * The file's detected occurrences that are left un-redacted and carry a value.
+	 *
+	 * "Skipped" = detected for the file but absent from the anonymise set
+	 * (`findEntitiesForAnonymization`, which already excludes skipAnonymization).
+	 *
+	 * @param mixed $mapper OpenRegister EntityRelationMapper.
+	 * @param int   $fileId The Nextcloud file id.
+	 *
+	 * @return array<int, array<string, mixed>> The rows, in detection order.
+	 */
+	private function unredactedOccurrences(mixed $mapper, int $fileId): array {
+		$redactIds = $this->collectRedactionRelationIds(mapper: $mapper, fileId: $fileId);
+		$rows = [];
+		foreach ($mapper->findEntitiesForFile($fileId) as $row) {
+			// Being redacted — fine; and an occurrence without a value proves nothing.
+			if (isset($redactIds[(int)($row['relation_id'] ?? 0)]) === true || (string)($row['entity_value'] ?? '') === '') {
+				continue;
+			}
+
+			$rows[] = $row;
+		}
+
+		return $rows;
+
+	}//end unredactedOccurrences()
+
+	/**
+	 * The prohibition matching one occurrence, at any confidence.
+	 *
+	 * @param mixed                $matcher The PolicyMatchService.
+	 * @param array<string, mixed> $row     The detected occurrence.
+	 *
+	 * @return array<string, mixed>|null The matching rule, or null.
+	 */
+	private function prohibitionMatchOf(mixed $matcher, array $row): ?array {
+		return $matcher->matchProhibition(
+			entityText: (string)($row['entity_value'] ?? ''),
+			entityType: (string)($row['entity_type'] ?? 'OTHER')
+		);
+
+	}//end prohibitionMatchOf()
+
+	/**
+	 * The log context of a caught occurrence, without the file.
+	 *
+	 * @param array<string, mixed> $rule  The matching rule.
+	 * @param array<string, mixed> $row   The detected occurrence.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function caughtContext(array $rule, array $row): array {
+		return ['ruleId' => $rule['uuid'], 'entityId' => (int)($row['entity_id'] ?? 0)];
+
+	}//end caughtContext()
+
+	/**
+	 * The violation record of a caught occurrence.
+	 *
+	 * @param array<string, mixed> $rule  The matching rule.
+	 * @param array<string, mixed> $row   The detected occurrence.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function backstopViolation(array $rule, array $row): array {
+		return [
+			'entityId' => (int)($row['entity_id'] ?? 0),
+			'entityName' => (string)($row['entity_value'] ?? ''),
+			'ruleId' => $rule['uuid'],
+			'ruleName' => $rule['primaryName'],
+			'confidence' => (float)($row['confidence'] ?? 0.0),
+			'absolute' => true,
+		];
+
+	}//end backstopViolation()
 
 	/**
 	 * Check unredacted entities against publication-prohibition rules.
@@ -263,13 +352,13 @@ class ProhibitionPolicyService {
 			$entityText = (string)($entry['entityText'] ?? '');
 
 			try {
-				$match = $policyService->matchProhibition(
+				$match = $policyService->matchProhibitionHint(
 					entityType: (string)($entry['entityType'] ?? ''),
 					entityValue: $entityText
 				);
 			} catch (Throwable $e) {
 				$this->logger->debug(
-					'PolicyMatchService::matchProhibition threw during unredacted check; skipping',
+					'PolicyMatchService::matchProhibitionHint threw during unredacted check; skipping',
 					['exception' => $e->getMessage()]
 				);
 				continue;
@@ -348,6 +437,7 @@ class ProhibitionPolicyService {
 	 */
 	private function applyPolicyToEntity(array $entity, array $policy, mixed $entityRelationMapper): array {
 		$entity['prohibitionMatch'] = null;
+		$entity['standingConsentMatch'] = null;
 		$value = (string)($entity['value'] ?? '');
 		if ($value === '') {
 			return $entity;
@@ -373,10 +463,17 @@ class ProhibitionPolicyService {
 				'ruleName' => $match['primaryName'],
 				'highConfidence' => (((float)($entity['confidence'] ?? 0.0)) >= $policy['threshold']),
 			];
-			return $entity;
+			$entity['included'] = true;
+			return $this->withRuleBases(entity: $entity, match: $match);
 		}
 
 		if ($match['kind'] === PolicyMatchService::KIND_STANDING_CONSENT) {
+			$entity['standingConsentMatch'] = [
+				'ruleId' => $match['uuid'],
+				'ruleName' => $match['primaryName'],
+			];
+			$entity['included'] = false;
+			$entity = $this->withRuleBases(entity: $entity, match: $match);
 			return $this->autoSkipStandingConsent(
 				entity: $entity,
 				entityRelationMapper: $entityRelationMapper
@@ -385,6 +482,35 @@ class ProhibitionPolicyService {
 
 		return $entity;
 	}//end applyPolicyToEntity()
+
+	/**
+	 * Pre-fill the matched rule's grondslagen when the entity has none (fill-only-when-empty).
+	 *
+	 * A reviewer's or a proposal's bases already on the entity always win; the
+	 * rule's `bases` only fill an empty decision. `basesSource` marks the fill so
+	 * the review UI can show it as proposed.
+	 *
+	 * @param array<string, mixed> $entity The normalized entity.
+	 * @param array<string, mixed> $match The matcher result.
+	 *
+	 * @return array<string, mixed> The entity, with the rule's bases when they filled an empty decision.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.1
+	 */
+	private function withRuleBases(array $entity, array $match): array {
+		$ruleBases = ($match['bases'] ?? []);
+		$current = ($entity['bases'] ?? null);
+		if (is_array($ruleBases) === false || count($ruleBases) === 0
+			|| (is_array($current) === true && count($current) > 0)
+		) {
+			return $entity;
+		}
+
+		$entity['bases'] = array_values($ruleBases);
+		$entity['basesSource'] = 'rule';
+		return $entity;
+
+	}//end withRuleBases()
 
 	/**
 	 * Auto-skip a standing-consent occurrence unless it is already skipped.

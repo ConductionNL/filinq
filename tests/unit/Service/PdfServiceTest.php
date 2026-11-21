@@ -13,6 +13,9 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
@@ -212,5 +215,93 @@ class PdfServiceTest extends TestCase {
 		);
 
 	}//end testBuildPrintCssPaginatesLargeTables()
+
+	/**
+	 * A house style's fonts set the families of the body and the headings,
+	 * with filinq's font after them (templates-house-style-from-thematiq 2.1).
+	 *
+	 * @return void
+	 */
+	public function testApplyHouseStyleSetsTheFontFamilies(): void {
+		$html = $this->service->applyHouseStyle(
+			html: '<p>Brief</p>',
+			options: ['fonts' => ['heading' => ['family' => 'Fira Sans', 'url' => null], 'body' => ['family' => 'Rijksoverheid Serif', 'url' => '/x']]]
+		);
+
+		$this->assertSame(
+			expected: '<style>body { font-family: "Rijksoverheid Serif", dejavusans, sans-serif; }'
+				. 'h1, h2, h3, h4, h5, h6 { font-family: "Fira Sans", dejavusans, sans-serif; }</style><p>Brief</p>',
+			actual: $html
+		);
+
+	}//end testApplyHouseStyleSetsTheFontFamilies()
+
+	/**
+	 * A family name cannot close the CSS declaration it sits in, and a role
+	 * without a family adds nothing.
+	 *
+	 * @return void
+	 */
+	public function testApplyHouseStyleStripsUnsafeFamilyCharacters(): void {
+		$html = $this->service->applyHouseStyle(
+			html: '<p>x</p>',
+			options: ['fonts' => ['body' => ['family' => 'Evil"; } body { color: red'], 'heading' => ['family' => '  ']]]
+		);
+
+		$this->assertSame(
+			expected: '<style>body { font-family: "Evil  body  color red", dejavusans, sans-serif; }</style><p>x</p>',
+			actual: $html
+		);
+
+	}//end testApplyHouseStyleStripsUnsafeFamilyCharacters()
+
+	/**
+	 * A cover image gets a page of its own before the content, its URL escaped.
+	 *
+	 * @return void
+	 */
+	public function testApplyHouseStylePutsTheCoverOnItsOwnPage(): void {
+		$html = $this->service->applyHouseStyle(
+			html: '<p>Brief</p>',
+			options: ['coverImage' => 'https://example.org/cover.png?a=1&b="2"']
+		);
+
+		$this->assertSame(
+			expected: '<div class="filinq-cover" style="page-break-after: always; text-align: center;">'
+				. '<img src="https://example.org/cover.png?a=1&amp;b=&quot;2&quot;" alt="" style="max-width: 100%;" /></div><p>Brief</p>',
+			actual: $html
+		);
+
+	}//end testApplyHouseStylePutsTheCoverOnItsOwnPage()
+
+	/**
+	 * Without house style assets the HTML is unchanged.
+	 *
+	 * @return void
+	 */
+	public function testApplyHouseStyleLeavesHtmlAloneWithoutAssets(): void {
+		$this->assertSame(expected: '<p>x</p>', actual: $this->service->applyHouseStyle(html: '<p>x</p>', options: []));
+		$this->assertSame(
+			expected: '<p>x</p>',
+			actual: $this->service->applyHouseStyle(html: '<p>x</p>', options: ['fonts' => 'Arial', 'coverImage' => ' '])
+		);
+
+	}//end testApplyHouseStyleLeavesHtmlAloneWithoutAssets()
+
+	/**
+	 * A PDF rendered with a house style's fonts and cover still renders.
+	 *
+	 * @return void
+	 */
+	public function testRenderPdfWithHouseStyleAssetsGeneratesAPdf(): void {
+		$pdf = $this->service->renderPdf(
+			templateContent: '<h1>Besluit</h1><p>Tekst</p>',
+			data: [],
+			options: ['fonts' => ['heading' => ['family' => 'DejaVu Sans'], 'body' => ['family' => 'Unknown Family']]]
+		);
+
+		$this->assertStringStartsWith(prefix: '%PDF', string: $pdf);
+
+	}//end testRenderPdfWithHouseStyleAssetsGeneratesAPdf()
 
 }//end class

@@ -118,6 +118,18 @@ documents and duplicates OR's authz/audit path.
 
 ### D2 — Selectielijst + workflow storage in a new `archief` register (ADR-001)
 
+**Amended at build (task 1.1, 2026-11-21).** The three schemas live in the
+app's one consolidated `filinq` register, not in a new `archief` register:
+since this design was written the app's five registers were consolidated into
+one, and `DossierRegisterConfigTest` refuses a second register because objects
+written through it would be invisible to an app that addresses `filinq`.
+Read on OpenRegister `development`: the selectielijst import writes
+`selectielijstVersie` (and any further column of the file) onto a row, and
+`DestructionListRun::saveCertificate()` stores the certificate in the
+`destructionListSchema`, so `destructionList` also declares the certificate's
+fields. `destructionCertificate` is the home for an instance that keeps
+certificates apart once OpenRegister names a schema for them.
+
 Three schemas, no custom tables:
 
 - **`selectielijstEntry`** — exactly the field contract

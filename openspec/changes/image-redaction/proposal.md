@@ -4,6 +4,16 @@ kind: code
 
 # Proposal: image-redaction
 
+## Summary
+
+A reviewer redacts a whole page, a range of pages or a whole document in one action, as one decision with its grounds, with OpenRegister's image seam doing the burn.
+
+- Rows: 4.24.
+- Wave 2.
+- Dependencies: `openregister/anonymisation-image-seam` (https://github.com/ConductionNL/openregister/issues/4380). The archive of this delta waits on `filinq/anonymization-main-spec-valid` (repairs the main `anonymization` spec).
+- Decisions: D2 (the guarantees live in the engine), D5 (an OCR text layer over the burned raster is allowed, built by opencatalogi) and D6 (object detection belongs to anonymiq behind the seam).
+- Build rules: openspec/woo-build-rules.md
+
 ## Why
 
 Robert's project branch (merged into `development`, PR #314) is the new
@@ -110,3 +120,63 @@ redaction as a headline feature (spectr `image-redaction` canonical feature).
 - **No external services**: Presidio (image mode) and any signature model run
   as local/ExApp backends exactly like today's text backends; processing
   stays 100% local (algoritmeregister/EDPB posture).
+
+## Amendment 2026-10-05: a page, a range of pages or a whole document in one action (Woo row 4.24)
+
+Woo capability row 4.24, "A whole page, a range of pages, or a whole document
+is redacted in one action". Our column reads `no`: "PdfTextReplacer takes a
+substitution map keyed by entity text. No page, page-range or whole-document
+redaction scope exists, and POST /api/files/{fileId}/anonymize acts on the
+entity set, not on a region". The gap register names the missing half: "Add
+page, page-range and whole-document scopes to the region model, so one action
+burns or withholds them, with the OR burn path doing the pixel work." Build
+plan: amend this change, wave 2, size M. Depends on
+`openregister/anonymisation-image-seam`.
+
+### What moved since this change was written
+
+- `openregister/anonymisation-image-seam` now specifies the seam this change's
+  task 2.1 asked for: `ImageRedactionService::detectImage()` and
+  `redactImage()` in OpenRegister, regions stored as `EntityRelation` rows
+  with `page` and `box` (REQ-AIS-001), and the burn plus the PDF and office
+  reassembly done in OpenRegister (REQ-AIS-003, REQ-AIS-004). Task 2.1 is
+  therefore met by that change, and filinq builds no burner or reassembly of
+  its own (decision D2: the guarantees live in the engine). Task 3.1 shrinks
+  to submission and review plumbing.
+- Decision D6 gave object detection (signatures, faces, number plates) to
+  anonymiq behind that seam. The non-goal "no face detection" still holds for
+  filinq: filinq detects nothing, and its review shows whatever regions the
+  seam stores, faces included.
+- Decision D5 lifts the non-goal "no searchable-PDF authoring" for row 4.15:
+  an OCR text layer over the burned raster, taken after the burn, is allowed.
+  filinq does not build it (opencatalogi's `woo-redaction-scans-and-text-layer`
+  does) and must not block it.
+
+### What this amendment adds
+
+1. Three scopes beside the region: `page` (one page), `pageRange` (from and
+   to, inclusive) and `document`. Each is one decision row in the shared
+   review model, with its grounds, made by one action in the workbench.
+2. `page` and `pageRange` burn every page in scope completely. filinq turns
+   the decision into one full-page region per page (`box` 0, 0, 1, 1) on the
+   seam, so OpenRegister does the pixel work and removes the text on those
+   pages. The output page carries a short notice naming the ground, so a
+   reader sees a page was withheld and why.
+3. `document` withholds the file. No redacted output is written for it, the
+   `anonymizationLink` records `withheld: true` with the grounds, and the
+   publication readiness treats it as not for publication.
+
+### Fail closed
+
+- A page scope whose burn the seam cannot verify fails the run; no output is
+  reported as redacted.
+- A whole-document scope never produces a black PDF that could be mistaken for
+  a document. It produces no file.
+- Every scope needs at least one ground, as every redaction does.
+
+### App absent
+
+OpenRegister without `anonymisation-image-seam`: page and range scopes are
+offered but the commit refuses with "page redaction needs OpenRegister's image
+seam", and nothing is written. The whole-document scope still works, because
+withholding writes no pixels.

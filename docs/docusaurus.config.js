@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 // @ts-check
 
 /**
@@ -82,7 +86,7 @@ const config = createConfig({
       {
         specs: [
           {
-            spec: 'static/oas/filinq-api.yaml',
+            spec: 'static/oas/filinq-api.json',
             route: '/api',
           },
         ],

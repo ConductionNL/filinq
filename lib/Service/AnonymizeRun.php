@@ -1,0 +1,72 @@
+<?php
+
+/**
+ * Anonymize Run
+ *
+ * The file, entities, overrides and run options of one anonymisation.
+ *
+ * @category  Service
+ * @package   OCA\Filinq\Service
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Filinq\Service;
+
+/**
+ * What one anonymisation runs on: the file, the entities, the acknowledged overrides and the runner's options.
+ *
+ * The acting user is the `userId` run option.
+ *
+ * @spec openspec/specs/anonymization/spec.md
+ */
+class AnonymizeRun {
+
+	/**
+	 * @param int                              $fileId    The Nextcloud file ID
+	 * @param array<array<string, mixed>>      $entities  The entities to anonymize
+	 * @param array<int, array<string, mixed>> $overrides Acknowledged override entries {ruleId, entityId, reason?}
+	 * @param array<string, mixed>             $options   Run options forwarded to the runner (appendBasisSummary,
+	 *                                                    outputFormat, unredactedEntities, scope, dossierKey,
+	 *                                                    reversible, userId, wooCase)
+	 */
+	public function __construct(
+		public readonly int $fileId,
+		public readonly array $entities,
+		public readonly array $overrides,
+		public readonly array $options,
+	) {
+	}//end __construct()
+
+	/**
+	 * The acting user's UID.
+	 *
+	 * @return string The UID, '' when none.
+	 *
+	 * @spec openspec/specs/anonymization/spec.md
+	 */
+	public function userId(): string {
+		return (string)($this->options['userId'] ?? '');
+	}//end userId()
+
+	/**
+	 * Whether this is a Woo run: the caller flagged a Woo case, or it runs with dossier scope.
+	 *
+	 * Filinq dossiers are Woo dossiers, so a dossier-scoped run counts without a flag.
+	 *
+	 * @return bool True for a Woo run.
+	 *
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-2
+	 */
+	public function isWooRun(): bool {
+		return ($this->options['wooCase'] ?? false) === true || ($this->options['scope'] ?? '') === 'dossier';
+	}//end isWooRun()
+}//end class

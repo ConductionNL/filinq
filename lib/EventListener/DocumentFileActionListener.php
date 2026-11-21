@@ -1,0 +1,172 @@
+<?php
+
+/**
+ * Writes a document's file actions into its audit trail
+ *
+ * @category  EventListener
+ * @package   OCA\Filinq\EventListener
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Filinq\EventListener;
+
+use OCA\Filinq\Event\Webhook\DocumentSignedEvent;
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
+use OCP\EventDispatcher\Event;
+use OCP\EventDispatcher\IEventListener;
+use OCP\Files\Events\Node\AbstractNodeEvent;
+use OCP\Files\Events\Node\BeforeNodeDeletedEvent;
+use OCP\Files\Events\Node\NodeWrittenEvent;
+use OCP\Files\File;
+use OCP\Share\Events\ShareCreatedEvent;
+use Psr\Log\LoggerInterface;
+use Throwable;
+
+/**
+ * Turns Nextcloud's file events into document actions: a written file is
+ * edited, a file about to be deleted is deleted, a new share is shared. A
+ * completed signing request is signed: every signing provider ends in the
+ * request's `complete` transition, which filinq turns into
+ * {@see DocumentSignedEvent} whatever path wrote it, so one listener writes
+ * one entry per completed signing.
+ *
+ * Reads are not listened to: Nextcloud raises a read for every preview,
+ * thumbnail and sync, which would bury the trail. Opening and downloading are
+ * written by the endpoints that serve them.
+ *
+ * @category EventListener
+ * @package  OCA\Filinq\EventListener
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ *
+ * @template-implements IEventListener<Event>
+ *
+ * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+ */
+class DocumentFileActionListener implements IEventListener {
+
+	/**
+	 * Constructor.
+	 *
+	 * @param DocumentActionAudit $audit  The document trail.
+	 * @param LoggerInterface     $logger Logger.
+	 *
+	 * @return void
+	 */
+	public function __construct(
+		private readonly DocumentActionAudit $audit,
+		private readonly LoggerInterface $logger,
+	) {
+
+	}//end __construct()
+
+	/**
+	 * Write the action of this event on the file it is about, when that file is a document.
+	 *
+	 * @param Event $event The event.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 */
+	public function handle(Event $event): void {
+		try {
+			[$fileId, $action, $context] = $this->actionOf(event: $event);
+			if ($fileId > 0) {
+				$this->audit->record(fileId: $fileId, action: $action, context: $context);
+			}
+		} catch (Throwable $e) {
+			// A file action must never fail because its trail could not be written.
+			$this->logger->warning(
+				message: '[DocumentFileActionListener] a file action could not be audited',
+				context: ['event' => $event::class, 'error' => $e->getMessage()]
+			);
+		}
+
+	}//end handle()
+
+	/**
+	 * The file id, action and context of an event; file id 0 for an event about no file.
+	 *
+	 * @param Event $event The event.
+	 *
+	 * @return array{0: int, 1: string, 2: array<string, mixed>}
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 */
+	private function actionOf(Event $event): array {
+		if ($event instanceof DocumentSignedEvent) {
+			return $this->signedOf(event: $event);
+		}
+
+		if ($event instanceof ShareCreatedEvent) {
+			$share = $event->getShare();
+			if ($share->getNodeType() !== 'file') {
+				return [0, '', []];
+			}
+
+			return [$share->getNodeId(), 'shared', []];
+		}
+
+		if (($event instanceof AbstractNodeEvent) === false) {
+			return [0, '', []];
+		}
+
+		$action = '';
+		if ($event instanceof NodeWrittenEvent) {
+			$action = 'edited';
+		}
+
+		if ($event instanceof BeforeNodeDeletedEvent) {
+			$action = 'deleted';
+		}
+
+		if ($action === '') {
+			return [0, '', []];
+		}
+
+		$node = $event->getNode();
+		if (($node instanceof File) === false) {
+			return [0, '', []];
+		}
+
+		return [(int) $node->getId(), $action, []];
+
+	}//end actionOf()
+
+	/**
+	 * The signed file of a completed signing request, with the request and level.
+	 *
+	 * @param DocumentSignedEvent $event The signed event.
+	 *
+	 * @return array{0: int, 1: string, 2: array<string, mixed>}
+	 *
+	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 */
+	private function signedOf(DocumentSignedEvent $event): array {
+		$payload = $event->getPayload();
+		$fileId  = ($payload['document']['fileId'] ?? null);
+		if (is_numeric($fileId) === false) {
+			return [0, '', []];
+		}
+
+		return [
+			(int) $fileId,
+			'signed',
+			['signingRequestId' => ($payload['signingRequestId'] ?? null), 'signatureLevel' => ($payload['signatureLevel'] ?? null)],
+		];
+
+	}//end signedOf()
+}//end class

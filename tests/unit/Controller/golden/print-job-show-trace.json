@@ -1,0 +1,117 @@
+{
+    "nobody logged in": {
+        "status": 401,
+        "data": {
+            "error": "Not authenticated"
+        },
+        "calls": [],
+        "logs": []
+    },
+    "no such job": {
+        "status": 404,
+        "data": {
+            "error": "Job not found"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ]
+        ],
+        "logs": []
+    },
+    "somebody else": {
+        "status": 403,
+        "data": {
+            "error": "Not authorized"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "bob"
+            ]
+        ],
+        "logs": []
+    },
+    "somebody else naming the owner": {
+        "status": 403,
+        "data": {
+            "error": "Not authorized"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "bob"
+            ]
+        ],
+        "logs": []
+    },
+    "an admin": {
+        "status": 200,
+        "data": {
+            "id": "job-1",
+            "requestedBy": "anna",
+            "status": "ready"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "root"
+            ]
+        ],
+        "logs": []
+    },
+    "the owner": {
+        "status": 200,
+        "data": {
+            "id": "job-1",
+            "requestedBy": "anna",
+            "status": "ready"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ],
+            [
+                "isAdmin",
+                "anna"
+            ]
+        ],
+        "logs": []
+    },
+    "the lookup fails": {
+        "status": 500,
+        "data": {
+            "error": "Operation failed"
+        },
+        "calls": [
+            [
+                "getJob",
+                "job-1"
+            ]
+        ],
+        "logs": [
+            [
+                "error",
+                "Print job show failed: repository offline",
+                {
+                    "jobId": "job-1",
+                    "exception": "Exception"
+                }
+            ]
+        ]
+    }
+}

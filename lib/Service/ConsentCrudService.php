@@ -19,6 +19,9 @@
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/specs/consent-management/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -26,6 +29,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\ConsentUpdate;
+use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -39,7 +45,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/consent-management/spec.md
  */
-class ConsentCrudService {
+class ConsentCrudService implements ConsentCrudServiceInterface {
 	/**
 	 * Constructor for ConsentCrudService
 	 *
@@ -161,8 +167,7 @@ class ConsentCrudService {
 		$objectService = $this->settingsService->getObjectService();
 		$object = $objectService->find(
 			id: $consentId,
-			register: $register,
-			schema: $schema
+			options: new ObjectFindOptions(register: $register, schema: $schema)
 		);
 
 		if ($object === null) {
@@ -337,6 +342,7 @@ class ConsentCrudService {
 	 * @param string $schema The schema ID
 	 * @param array<string, mixed> $data The data to update
 	 * @param \OCP\IUser|null $user The acting user, or null for system context
+	 * @param string $via How: `mcp` for an agent through Hermiq's gate, '' in Filinq itself
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
@@ -352,7 +358,11 @@ class ConsentCrudService {
 		string $schema,
 		array $data,
 		?\OCP\IUser $user = null,
+		string $via = '',
 	): array {
-		return $this->consentService->validateAndUpdateConsent($consentId, $register, $schema, $data, $user);
+		return $this->consentService->validateAndUpdateConsent(
+			new ConsentUpdate(consentId: $consentId, register: $register, schema: $schema, data: $data, via: $via),
+			$user
+		);
 	}//end updateConsentStatus()
 }//end class

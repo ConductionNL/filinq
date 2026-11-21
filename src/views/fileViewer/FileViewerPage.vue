@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="file-viewer-page">
 		<DdFileViewerHeader :title="pageTitle">
@@ -25,77 +29,176 @@
 							: t('filinq', 'Show anonymised')
 					}}
 				</NcButton>
+				<span
+					v-if="sourceVendor"
+					class="file-viewer-page__ocr-badge"
+					data-testid="file-viewer-source-badge"
+					:title="t('filinq', 'The master record of this document is in the case system')">
+					{{ sourceBadgeLabel(sourceVendor) }}
+				</span>
+				<span
+					v-if="ocrBadge"
+					class="file-viewer-page__ocr-badge"
+					:title="
+						t('filinq', 'Text recognised by OCR, with its confidence')
+					">
+					{{ ocrBadge }}
+				</span>
+				<NcButton
+					v-if="ocrOffered"
+					variant="secondary"
+					:disabled="ocrRunning"
+					@click="runOcrNow">
+					<template #icon>
+						<NcLoadingIcon v-if="ocrRunning" :size="18" />
+						<TextRecognition v-else :size="18" />
+					</template>
+					{{
+						ocrRunning
+							? t('filinq', 'Running OCR…')
+							: t('filinq', 'Run OCR')
+					}}
+				</NcButton>
+				<NcButton
+					v-if="pdfaOffered"
+					variant="secondary"
+					data-testid="open-conformance-report"
+					@click="conformanceOpen = true">
+					<template #icon>
+						<FileCheckOutline :size="18" />
+					</template>
+					{{ t('filinq', 'PDF/A report') }}
+				</NcButton>
+				<NcButton
+					v-if="pdfaOffered"
+					variant="secondary"
+					data-testid="open-pdfua-report"
+					@click="pdfUaOpen = true">
+					<template #icon>
+						<FileCheckOutline :size="18" />
+					</template>
+					{{ t('filinq', 'PDF/UA report') }}
+				</NcButton>
+				<NcButton
+					v-if="fileViewerStore.currentFile?.fileId"
+					variant="secondary"
+					:disabled="publishing"
+					@click="publish">
+					{{ t('filinq', 'Publish') }}
+				</NcButton>
 			</template>
 		</DdFileViewerHeader>
 
-		<div class="file-viewer-page__body">
-			<component
-				:is="viewerComponent"
-				v-if="viewerComponent && fileViewerStore.currentFile"
-				v-bind="viewerProps" />
-			<div
-				v-else-if="fileViewerStore.currentFile"
-				class="file-viewer-page__unsupported">
-				<FileAlertOutline :size="48" />
-				<p>{{ t('filinq', 'This file type cannot be previewed.') }}</p>
-				<NcButton variant="primary" @click="downloadCurrent">
-					<template #icon>
-						<Download :size="18" />
-					</template>
-					{{ t('filinq', 'Download') }}
-				</NcButton>
+		<div class="file-viewer-page__main">
+			<div class="file-viewer-page__body">
+				<component
+					:is="viewerComponent"
+					v-if="viewerComponent && fileViewerStore.currentFile"
+					v-bind="viewerProps" />
+				<div
+					v-else-if="fileViewerStore.currentFile"
+					class="file-viewer-page__unsupported">
+					<FileAlertOutline :size="48" />
+					<p>{{ t('filinq', 'This file type cannot be previewed.') }}</p>
+					<NcButton variant="primary" @click="downloadCurrent">
+						<template #icon>
+							<Download :size="18" />
+						</template>
+						{{ t('filinq', 'Download') }}
+					</NcButton>
+				</div>
 			</div>
+			<!-- Notes for colleagues: the file's Nextcloud comments, so the same notes show in Files (work-document-notes D1, D3). -->
+			<aside
+				v-if="notesFileId"
+				class="file-viewer-page__notes"
+				data-testid="file-viewer-notes">
+				<CnNotesCard :key="notesFileId" :fileId="notesFileId" />
+				<!-- What happened to this document: its trail in OpenRegister (specify-capability-rows REQ-SCR-007). -->
+				<CnAuditTrailCard
+					:key="`activity-${notesFileId}`"
+					:objectId="notesFileId"
+					:endpoint="activityEndpoint"
+					:actionLabels="activityLabels"
+					:title="t('filinq', 'Activity')"
+					:noEntriesLabel="t('filinq', 'No activity recorded for this document yet')"
+					:failedLabel="t('filinq', 'The activity of this document could not be loaded')"
+					:maxDisplay="20"
+					order="newest"
+					layout="stacked"
+					data-testid="file-viewer-activity" />
+			</aside>
 		</div>
+		<AccessibilityPublishWarningModal
+			:show="publishWarning.show"
+			:checked="publishWarning.checked"
+			:findings="publishWarning.findings"
+			:blocking="publishWarning.blocking"
+			@close="publishWarning.show = false"
+			@confirm="startPublishing" />
+		<ConformanceReportModal
+			:show="conformanceOpen"
+			:fileId="Number(fileViewerStore.currentFile?.fileId || 0)"
+			@close="conformanceOpen = false" />
+		<AccessibilityConformanceModal
+			:show="pdfUaOpen"
+			:fileId="Number(fileViewerStore.currentFile?.fileId || 0)"
+			@close="pdfUaOpen = false" />
 	</div>
 </template>
 
 <script>
+import { CnAuditTrailCard, CnNotesCard } from '@conduction/nextcloud-vue'
+import { showError } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { NcButton } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon } from '@nextcloud/vue'
 import Download from 'vue-material-design-icons/Download.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOffOutline from 'vue-material-design-icons/EyeOffOutline.vue'
 import FileAlertOutline from 'vue-material-design-icons/FileAlertOutline.vue'
+import FileCheckOutline from 'vue-material-design-icons/FileCheckOutline.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FileWordBox from 'vue-material-design-icons/FileWordBox.vue'
+import TextRecognition from 'vue-material-design-icons/TextRecognition.vue'
 import DdFileViewerHeader from '../../components/DdFileViewerHeader.vue'
 import OdtViewer from '../../components/viewers/OdtViewer.vue'
 import PdfViewer from '../../components/viewers/PdfViewer.vue'
 import TextViewer from '../../components/viewers/TextViewer.vue'
 import WordViewer from '../../components/viewers/WordViewer.vue'
-import { emlPreviewUrl } from '../../services/fileViewerService.js'
+import AccessibilityConformanceModal from '../../modals/AccessibilityConformanceModal.vue'
+import AccessibilityPublishWarningModal from '../../modals/AccessibilityPublishWarningModal.vue'
+import ConformanceReportModal from '../../modals/ConformanceReportModal.vue'
+import { ocrRun } from '../../mixins/ocrRun.js'
+import { fetchSourceBadges, sourceBadgeLabel } from '../../services/bridge.js'
+import { DOCUMENT_ACTIVITY_ENDPOINT, documentActivityLabels, recordDocumentOpened } from '../../services/documentActivity.js'
+import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
+import { startPublication } from '../../services/publications.js'
+import { publicationReadiness } from '../../services/validationService.js'
+import {
+	detectViewer,
+	viewerComponentFor,
+	viewerPropsFor,
+} from '../../services/viewerRouting.js'
 import { fileViewerStore } from '../../store/store.js'
 
 /**
- * Match a file (by MIME + name) to one of the supported in-app viewers.
- *
- * @param {object} file Current file descriptor from the store.
- * @return {string|null} 'pdf' | 'word' | 'odt' | 'text' | 'eml' | null when unsupported.
+ * Header icon per viewer kind; any other kind shows the generic document icon.
  */
-function detectViewer(file) {
-	if (!file) return null
-	const name = (file.fileName || '').toLowerCase()
-	const mime = (file.mimeType || '').toLowerCase()
-	if (mime.includes('pdf') || name.endsWith('.pdf')) return 'pdf'
-	if (
-		mime
-			=== 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-		|| name.endsWith('.docx')
-	)
-		return 'word'
-	if (mime === 'application/vnd.oasis.opendocument.text' || name.endsWith('.odt'))
-		return 'odt'
-	if (mime === 'message/rfc822' || name.endsWith('.eml')) return 'eml'
-	if (mime.startsWith('text/') || name.match(/\.(txt|md|markdown|log|csv)$/))
-		return 'text'
-	return null
-}
+const FILE_TYPE_ICONS = new Map([
+	['pdf', 'FilePdfBox'],
+	['word', 'FileWordBox'],
+	['odt', 'FileWordBox'],
+])
 
 export default {
 	name: 'FileViewerPage',
 	components: {
+		CnAuditTrailCard,
+		CnNotesCard,
+		NcLoadingIcon,
+		TextRecognition,
 		NcButton,
 		Eye,
 		EyeOffOutline,
@@ -104,6 +207,10 @@ export default {
 		FileWordBox,
 		FileDocumentOutline,
 		FileAlertOutline,
+		FileCheckOutline,
+		AccessibilityPublishWarningModal,
+		AccessibilityConformanceModal,
+		ConformanceReportModal,
 		DdFileViewerHeader,
 		PdfViewer,
 		WordViewer,
@@ -111,13 +218,80 @@ export default {
 		TextViewer,
 	},
 
+	mixins: [ocrRun],
+
 	data() {
 		return {
 			fileViewerStore,
+			activityEndpoint: DOCUMENT_ACTIVITY_ENDPOINT,
+			activityLabels: documentActivityLabels(),
+			publishing: false,
+			ocrAvailable: false,
+			ocrResult: null,
+			ocrRunning: false,
+			sourceVendor: '',
+			conformanceOpen: false,
+			pdfUaOpen: false,
+			publishWarning: {
+				show: false,
+				checked: true,
+				findings: [],
+				blocking: false,
+			},
 		}
 	},
 
 	computed: {
+		/**
+		 * The file whose notes show beside the viewer: the file as opened, never
+		 * the anonymised copy toggled into view, which carries no notes of its own
+		 * (work-document-notes D5).
+		 *
+		 * @return {string|null} The file id, or null when nothing is open.
+		 * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
+		 */
+		notesFileId() {
+			const fileId = fileViewerStore.currentFile?.fileId
+			return fileId ? String(fileId) : null
+		},
+
+		/**
+		 * Whether the PDF/A report is offered: a stored PDF.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/archive/2026-09-29-verapdf-validation/tasks.md#task-3.1
+		 */
+		pdfaOffered() {
+			const file = fileViewerStore.currentFile
+			return Boolean(file?.fileId) && detectViewer(file) === 'pdf'
+		},
+
+		/**
+		 * Whether Run OCR is offered: an image or PDF, and OCR can run here.
+		 * The server checks again when it is pressed.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		ocrOffered() {
+			const file = fileViewerStore.currentFile
+			return (
+				Boolean(file?.fileId)
+				&& isOcrCandidate(file.mimeType)
+				&& this.ocrAvailable
+			)
+		},
+
+		/**
+		 * The OCR badge, when the file was OCR'd.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		ocrBadge() {
+			return ocrBadgeLabel(this.ocrResult)
+		},
+
 		/**
 		 * Page title — current file name with a generic fallback.
 		 *
@@ -143,23 +317,10 @@ export default {
 		 * Map viewer kind to the actual component name.
 		 *
 		 * @return {string|null}
+		 * @spec openspec/changes/archive/2026-10-09-eml-viewer-preview/tasks.md#task-10
 		 */
 		viewerComponent() {
-			switch (this.viewerKind) {
-				case 'pdf':
-					return 'PdfViewer'
-				case 'word':
-					return 'WordViewer'
-				case 'odt':
-					return 'OdtViewer'
-				case 'text':
-					return 'TextViewer'
-				// EML is rendered as a server-side PDF preview via PdfViewer.
-				case 'eml':
-					return 'PdfViewer'
-				default:
-					return null
-			}
+			return viewerComponentFor(this.viewerKind)
 		},
 
 		/**
@@ -168,14 +329,10 @@ export default {
 		 * endpoint (keyed by file id) rather than the WebDAV path.
 		 *
 		 * @return {object}
+		 * @spec openspec/changes/archive/2026-10-09-eml-viewer-preview/tasks.md#task-10
 		 */
 		viewerProps() {
-			const file = fileViewerStore.currentFile
-			if (!file) return {}
-			if (this.viewerKind === 'eml') {
-				return { path: file.path, url: emlPreviewUrl(file.fileId) }
-			}
-			return { path: file.path }
+			return viewerPropsFor(fileViewerStore.currentFile, this.viewerKind)
 		},
 
 		/**
@@ -184,16 +341,7 @@ export default {
 		 * @return {string}
 		 */
 		fileTypeIcon() {
-			switch (this.viewerKind) {
-				case 'pdf':
-					return 'FilePdfBox'
-				case 'word':
-					return 'FileWordBox'
-				case 'odt':
-					return 'FileWordBox'
-				default:
-					return 'FileDocumentOutline'
-			}
+			return FILE_TYPE_ICONS.get(this.viewerKind) ?? 'FileDocumentOutline'
 		},
 
 		/**
@@ -224,8 +372,132 @@ export default {
 		},
 	},
 
+	watch: {
+		'fileViewerStore.currentFile.fileId': {
+			immediate: true,
+			/**
+			 * Read the OCR status when the files on screen change.
+			 *
+			 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+			 */
+			handler() {
+				this.loadOcrStatus()
+				this.loadSourceBadge()
+				recordDocumentOpened(this.notesFileId)
+			},
+		},
+	},
+
 	methods: {
 		t,
+		sourceBadgeLabel,
+
+		/**
+		 * Read whether this file came in from a case system, for the header badge
+		 * (zgw-document-bridge REQ-DDZGW-009).
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/zgw-document-bridge/tasks.md#3-2
+		 */
+		async loadSourceBadge() {
+			const fileId = fileViewerStore.currentFile?.fileId
+			this.sourceVendor = ''
+			if (!fileId) {
+				return
+			}
+			try {
+				this.sourceVendor = (await fetchSourceBadges([fileId]))[String(fileId)] || ''
+			} catch {
+				// No answer: no badge. The file itself still shows.
+			}
+		},
+
+		/**
+		 * Read whether OCR can run and this file's last result.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		async loadOcrStatus() {
+			const file = fileViewerStore.currentFile
+			this.ocrResult = null
+			this.ocrAvailable = false
+			if (!file?.fileId || !isOcrCandidate(file.mimeType)) {
+				return
+			}
+			try {
+				const status = await fetchOcrStatus([file.fileId])
+				this.ocrAvailable = status.capability?.available === true
+				this.ocrResult = status.results?.[String(file.fileId)] ?? null
+			} catch {
+				// No status: no button. The file itself still shows.
+			}
+		},
+
+		/**
+		 * Run OCR on the open file and show the new badge without a reload.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-ocr-trigger-surface/tasks.md#task-3.1
+		 */
+		async runOcrNow() {
+			this.ocrRunning = true
+			try {
+				const result = await this.runOcrAndReport(
+					fileViewerStore.currentFile.fileId,
+				)
+				if (result) {
+					this.ocrResult = result
+				}
+			} finally {
+				this.ocrRunning = false
+			}
+		},
+
+		/**
+		 * Publish: first the document's open accessibility findings, as a
+		 * warning; without any, straight on.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-3.2
+		 */
+		async publish() {
+			this.publishing = true
+			const readiness = await publicationReadiness(
+				fileViewerStore.currentFile.fileId,
+			)
+			this.publishing = false
+			if (readiness.checked && readiness.findings.length === 0) {
+				await this.startPublishing()
+				return
+			}
+			this.publishWarning = { show: true, ...readiness }
+		},
+
+		/**
+		 * Start a Woo publication for this document and open it.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.2
+		 */
+		async startPublishing() {
+			this.publishWarning.show = false
+			this.publishing = true
+			try {
+				const record = await startPublication(
+					fileViewerStore.currentFile.fileId,
+				)
+				this.$router.push({
+					name: 'Publications',
+					params: { id: record.uuid },
+				})
+			} catch {
+				showError(t('filinq', 'The publication could not be started.'))
+			} finally {
+				this.publishing = false
+			}
+		},
+
 		/** Download the currently previewed file via Nextcloud's file URL. */
 		downloadCurrent() {
 			const file = fileViewerStore.currentFile
@@ -244,12 +516,49 @@ export default {
 	min-height: 0;
 }
 
+.file-viewer-page__main {
+	display: flex;
+	flex: 1;
+	min-height: 0;
+}
+
+.file-viewer-page__notes {
+	width: 320px;
+	flex-shrink: 0;
+	overflow: auto;
+	padding: 8px;
+	border-top: 1px solid var(--color-border);
+	border-inline-start: 1px solid var(--color-border);
+	background: var(--color-main-background);
+}
+
+@media (max-width: 1024px) {
+	.file-viewer-page__main {
+		flex-direction: column;
+	}
+
+	.file-viewer-page__notes {
+		width: auto;
+		max-height: 40vh;
+		border-inline-start: 0;
+	}
+}
+
 .file-viewer-page__body {
 	flex: 1;
 	min-height: 0;
 	overflow: auto;
 	background: var(--color-background-dark);
 	border-top: 1px solid var(--color-border);
+}
+
+.file-viewer-page__ocr-badge {
+	align-self: center;
+	padding: 2px 8px;
+	border-radius: var(--border-radius-pill);
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+	font-size: 0.9em;
 }
 
 .file-viewer-page__unsupported {

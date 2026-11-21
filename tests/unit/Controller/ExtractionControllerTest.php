@@ -21,6 +21,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\ExtractionController;
+use OCA\Filinq\Exception\ReceiptCaptureRefusedException;
+use OCA\Filinq\Exception\UploadRefusedException;
+use OCA\Filinq\Service\Extraction\ReceiptCaptureService;
 use OCA\Filinq\Service\FinancialExtractionService;
 use OCA\Filinq\Service\GlAccountSuggestionService;
 use OCP\AppFramework\Http\JSONResponse;
@@ -50,6 +53,8 @@ class ExtractionControllerTest extends TestCase {
 
 	private IUserSession|MockObject $userSession;
 
+	private ReceiptCaptureService|MockObject $receiptCapture;
+
 	/**
 	 * @return void
 	 */
@@ -59,6 +64,7 @@ class ExtractionControllerTest extends TestCase {
 		$this->request = $this->createMock(IRequest::class);
 		$this->extractionService = $this->createMock(FinancialExtractionService::class);
 		$this->suggestionService = $this->createMock(GlAccountSuggestionService::class);
+		$this->receiptCapture = $this->createMock(ReceiptCaptureService::class);
 
 		$l10n = $this->createMock(IL10N::class);
 		$l10n->method('t')->willReturnCallback(static fn ($text, $params = []): string => vsprintf($text, $params));
@@ -72,13 +78,13 @@ class ExtractionControllerTest extends TestCase {
 		$logger = $this->createMock(LoggerInterface::class);
 
 		$this->controller = new ExtractionController(
-			'filinq',
 			$this->request,
 			$this->extractionService,
 			$this->suggestionService,
 			$this->userSession,
 			$l10n,
 			$logger,
+			$this->receiptCapture,
 		);
 
 	}//end setUp()
@@ -139,13 +145,13 @@ class ExtractionControllerTest extends TestCase {
 		$l10n->method('t')->willReturnCallback(static fn ($text, $params = []): string => vsprintf($text, $params));
 
 		$controller = new ExtractionController(
-			'filinq',
 			$this->request,
 			$this->extractionService,
 			$this->suggestionService,
 			$this->userSession,
 			$l10n,
 			$this->createMock(LoggerInterface::class),
+			$this->receiptCapture,
 		);
 
 		$this->extractionService->expects($this->never())->method('extractFinancial');
@@ -249,4 +255,68 @@ class ExtractionControllerTest extends TestCase {
 		$this->assertSame(200, $result->getStatus());
 
 	}//end testCorrectionsToleratesRecordBookingFailure()
+
+	/**
+	 * A photo sent as the file field is stored for the signed-in user and answers 201.
+	 *
+	 * @return void
+	 */
+	public function testACapturedPhotoAnswersCreated(): void {
+		$path = (string)tempnam(sys_get_temp_dir(), 'receipt');
+		file_put_contents($path, 'jpeg-bytes');
+		$this->request->method('getUploadedFile')->with('file')->willReturn(['name' => 'IMG_0042.JPG', 'tmp_name' => $path, 'error' => UPLOAD_ERR_OK]);
+		$this->request->method('getParams')->willReturn(['docType' => 'receipt', 'sourceApp' => 'shillinq']);
+		$this->receiptCapture->expects($this->once())->method('capture')
+			->with('annemarie', 'IMG_0042.JPG', 'jpeg-bytes', ['docType' => 'receipt', 'sourceApp' => 'shillinq'])
+			->willReturn(['id' => 'ext-1', 'capturedFileId' => 4711]);
+
+		$response = $this->controller->capture();
+		unlink($path);
+
+		$this->assertSame(201, $response->getStatus());
+		$this->assertSame(['id' => 'ext-1', 'capturedFileId' => 4711], $response->getData());
+	}//end testACapturedPhotoAnswersCreated()
+
+	/**
+	 * A refused photo answers its status with the reason the user acts on.
+	 *
+	 * @return void
+	 */
+	public function testARefusedPhotoAnswersItsReason(): void {
+		$path = (string)tempnam(sys_get_temp_dir(), 'receipt');
+		file_put_contents($path, 'heic');
+		$this->request->method('getUploadedFile')->willReturn(['name' => 'IMG.HEIC', 'tmp_name' => $path, 'error' => UPLOAD_ERR_OK]);
+		$this->request->method('getParams')->willReturn([]);
+		$this->receiptCapture->method('capture')->willReturnOnConsecutiveCalls(
+			$this->throwException(new ReceiptCaptureRefusedException('This photo format cannot be read on this server. Take the photo as JPEG.', 415)),
+			$this->throwException(new UploadRefusedException(message: 'This file type is not allowed.'))
+		);
+
+		$heic = $this->controller->capture();
+		$policy = $this->controller->capture();
+		unlink($path);
+
+		$this->assertSame([415, ['error' => 'This photo format cannot be read on this server. Take the photo as JPEG.']], [$heic->getStatus(), $heic->getData()]);
+		$this->assertSame([400, ['error' => 'This file type is not allowed.']], [$policy->getStatus(), $policy->getData()]);
+	}//end testARefusedPhotoAnswersItsReason()
+
+	/**
+	 * Without a file field, or without a user, nothing is captured.
+	 *
+	 * @return void
+	 */
+	public function testWithoutAFileOrAUserNothingIsCaptured(): void {
+		$this->receiptCapture->expects($this->never())->method('capture');
+		$this->request->method('getUploadedFile')->willReturn(null);
+
+		$response = $this->controller->capture();
+		$this->assertSame([400, ['error' => 'Send the photo as the file field.']], [$response->getStatus(), $response->getData()]);
+
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+		$anonymous = new ExtractionController($this->request, $this->extractionService, $this->suggestionService, $session, $l10n, $this->createMock(LoggerInterface::class), $this->receiptCapture);
+		$this->assertSame(401, $anonymous->capture()->getStatus());
+	}//end testWithoutAFileOrAUserNothingIsCaptured()
 }//end class

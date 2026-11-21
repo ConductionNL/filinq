@@ -9,7 +9,7 @@
  * manifest's top-level `widgets[]` arrays. Each entry is
  * `{ kind, component }`.
  *
- * Recognised kinds: page, modal, widget, form-field, cell-renderer.
+ * Recognised kinds: page, modal, widget, section, form-field, cell-renderer.
  *
  * Resolution paths at runtime:
  *   - `pages[].type === 'custom'` → CnPageRenderer resolves
@@ -18,6 +18,9 @@
  *   - `pages[].widgets[].widgetKey` (v2 uniform widget array) →
  *     CnWidgetGrid resolves against the `registry` prop and mounts the
  *     matching `kind:"widget"` entry's component.
+ *   - `pages[].config.bodyWidgets[].component` (a detail page's body
+ *     section) → CnDetailPage resolves it against the `registry` prop and
+ *     mounts the `kind:"section"` entry's component.
  *   - Future `kind:"modal"` entries are looked up directly from the
  *     `registry` prop by CnAppRoot.
  *
@@ -49,41 +52,58 @@
  *
  * Restoration additions (openspec/changes/orphaned-surface-restoration):
  * `CorrespondenceIndex`, `SigningRequestForm`, `SignatureVerification`,
- * `ProhibitionIndex`, `StandingConsentIndex` (kind:"page") and
- * `ProhibitionFormModal`, `StandingConsentFormModal` (kind:"modal") were
- * built (backends live at HEAD) but never registered, so they 404'd
- * through the manifest router while their only wiring was the dead
- * `src/router/index.js` (also removed by this change). See
- * openspec/changes/orphaned-surface-restoration/design.md D3–D5.
+ * `ProhibitionIndex`, `StandingConsentIndex` (kind:"page") were built
+ * (backends live at HEAD) but never registered, so they 404'd through the
+ * manifest router while their only wiring was the dead `src/router/index.js`
+ * (also removed by this change). See
+ * openspec/changes/orphaned-surface-restoration/design.md D3–D5. Both keys
+ * now load PolicyRuleIndex, which mounts its own PolicyRuleFormModal.
  *
  * @type {Record<string, { kind: string, component: object }>}
  */
 
 import PrintPreview from './components/PrintPreview.vue'
 import DossierFormModal from './dialogs/DossierFormModal.vue'
-import ProhibitionFormModal from './dialogs/ProhibitionFormModal.vue'
-import StandingConsentFormModal from './dialogs/StandingConsentFormModal.vue'
 import AnonymizationIndex from './views/anonymization/AnonymizationIndex.vue'
 import FolderAnonymizationView from './views/anonymization/FolderAnonymizationView.vue'
+import ReviewWorkbench from './views/anonymization/ReviewWorkbench.vue'
+import BatchOperationDetail from './views/batchOperations/BatchOperationDetail.vue'
+import ClassificationPending from './views/classification/ClassificationPending.vue'
 import ComparisonView from './views/comparison/ComparisonView.vue'
 import ConsentDetail from './views/consent/ConsentDetail.vue'
 import ConsentIndex from './views/consent/ConsentIndex.vue'
+import ContractDetail from './views/contracts/ContractDetail.vue'
+import ContractPipeline from './views/contracts/ContractPipeline.vue'
 import CorrespondenceIndex from './views/correspondence/CorrespondenceIndex.vue'
 import CustomDictionaryDetail from './views/customDictionary/CustomDictionaryDetail.vue'
 import CustomDictionaryIndex from './views/customDictionary/CustomDictionaryIndex.vue'
 import DashboardIndex from './views/dashboard/DashboardIndex.vue'
 import DossierDetail from './views/dossier/DossierDetail.vue'
 import DossierIndex from './views/dossier/DossierIndex.vue'
+import DraftEditor from './views/drafts/DraftEditor.vue'
+import EmailIngestion from './views/emailIngestion/EmailIngestion.vue'
+import EntitySearch from './views/entitySearch/EntitySearch.vue'
 import FlowDetailSidebar from './views/flows/FlowDetailSidebar.vue'
 import ComponentGallery from './views/gallery/ComponentGallery.vue'
+import IntakeIndex from './views/intake/IntakeIndex.vue'
+import IntakeChannels from './views/intakeChannels/IntakeChannels.vue'
+import LegalHolds from './views/legalHolds/LegalHolds.vue'
+import MailArchiveImport from './views/mailArchiveImport/MailArchiveImport.vue'
 import MyDocumentsIndex from './views/myDocuments/MyDocumentsIndex.vue'
-import ProhibitionIndex from './views/policy/ProhibitionIndex.vue'
-import StandingConsentIndex from './views/policy/StandingConsentIndex.vue'
+import SharedLinksIndex from './views/myDocuments/SharedLinksIndex.vue'
+import OrganisationSettings from './views/organisation/OrganisationSettings.vue'
+import PolicyRuleIndex from './views/policy/PolicyRuleIndex.vue'
+import PrintJobs from './views/printJobs/PrintJobs.vue'
+import PublicationsPage from './views/publications/PublicationsPage.vue'
 import SignatureVerification from './views/signing/SignatureVerification.vue'
+import SigningFolder from './views/signing/SigningFolder.vue'
 import SigningRequestDetail from './views/signing/SigningRequestDetail.vue'
 import SigningRequestForm from './views/signing/SigningRequestForm.vue'
+import SubjectErasures from './views/subjectErasures/SubjectErasures.vue'
 import TemplateDetail from './views/templates/TemplateDetail.vue'
+import TemplateImport from './views/templates/TemplateImport.vue'
 import VersionsView from './views/versions/VersionsView.vue'
+import WizardRunner from './views/wizard/WizardRunner.vue'
 
 export default {
 	// --- Flows (ADR-110 Decision 4). Only the SIDEBAR is an app component;
@@ -96,24 +116,42 @@ export default {
 	ConsentIndex: { kind: 'page', component: ConsentIndex },
 	ConsentDetail: { kind: 'page', component: ConsentDetail },
 	AnonymizationIndex: { kind: 'page', component: AnonymizationIndex },
+	ReviewWorkbench: { kind: 'page', component: ReviewWorkbench },
 	FolderAnonymizationView: { kind: 'page', component: FolderAnonymizationView },
 	TemplateDetail: { kind: 'page', component: TemplateDetail },
+	TemplateImport: { kind: 'page', component: TemplateImport },
+	WizardRunner: { kind: 'page', component: WizardRunner },
+	SigningFolder: { kind: 'page', component: SigningFolder },
 	SigningRequestDetail: { kind: 'page', component: SigningRequestDetail },
 	SigningRequestForm: { kind: 'page', component: SigningRequestForm },
 	SignatureVerification: { kind: 'page', component: SignatureVerification },
 	MyDocumentsIndex: { kind: 'page', component: MyDocumentsIndex },
+	SharedLinksIndex: { kind: 'page', component: SharedLinksIndex },
+	PrintJobs: { kind: 'page', component: PrintJobs },
+	LegalHolds: { kind: 'page', component: LegalHolds },
+	ContractDetail: { kind: 'page', component: ContractDetail },
+	BatchOperationDetail: { kind: 'section', component: BatchOperationDetail },
+	ContractPipeline: { kind: 'page', component: ContractPipeline },
+	SubjectErasures: { kind: 'page', component: SubjectErasures },
+	EmailIngestion: { kind: 'page', component: EmailIngestion },
+	OrganisationSettings: { kind: 'page', component: OrganisationSettings },
+	IntakeChannels: { kind: 'page', component: IntakeChannels },
+	MailArchiveImport: { kind: 'page', component: MailArchiveImport },
+	ClassificationPending: { kind: 'page', component: ClassificationPending },
+	EntitySearch: { kind: 'page', component: EntitySearch },
+	PublicationsPage: { kind: 'page', component: PublicationsPage },
 	PrintPreview: { kind: 'page', component: PrintPreview },
 	ComparisonView: { kind: 'page', component: ComparisonView },
 	VersionsView: { kind: 'page', component: VersionsView },
 	ComponentGallery: { kind: 'page', component: ComponentGallery },
 	CorrespondenceIndex: { kind: 'page', component: CorrespondenceIndex },
-	ProhibitionIndex: { kind: 'page', component: ProhibitionIndex },
-	ProhibitionFormModal: { kind: 'modal', component: ProhibitionFormModal },
-	StandingConsentIndex: { kind: 'page', component: StandingConsentIndex },
-	StandingConsentFormModal: { kind: 'modal', component: StandingConsentFormModal },
+	DraftEditor: { kind: 'page', component: DraftEditor },
+	ProhibitionIndex: { kind: 'page', component: PolicyRuleIndex },
+	StandingConsentIndex: { kind: 'page', component: PolicyRuleIndex },
 	CustomDictionaryIndex: { kind: 'page', component: CustomDictionaryIndex },
 	DossierIndex: { kind: 'page', component: DossierIndex },
 	DossierDetail: { kind: 'page', component: DossierDetail },
 	DossierFormModal: { kind: 'modal', component: DossierFormModal },
+	IntakeIndex: { kind: 'page', component: IntakeIndex },
 	CustomDictionaryDetail: { kind: 'page', component: CustomDictionaryDetail },
 }

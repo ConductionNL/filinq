@@ -27,8 +27,13 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\VersionController;
 use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Exception\DocumentFinalException;
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
+use OCA\Filinq\Service\Audit\DocumentDownloadLog;
+use OCA\Filinq\Service\DocumentDownloadRecorder;
 use OCA\Filinq\Service\DocumentVersionService;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -193,6 +198,24 @@ class VersionControllerTest extends TestCase {
 	}//end testRestoreReportsVersionsUnavailable()
 
 	/**
+	 * A final document refuses the restore with a 409 carrying the refusal.
+	 *
+	 * @return void
+	 */
+	public function testRestoreOfFinalDocumentAnswersConflict(): void {
+		$this->service->method('restoreVersion')
+			->willThrowException(new DocumentFinalException(message: 'This document is final.'));
+
+		$response = $this->controller->restore(1234, 1700000000);
+
+		$this->assertSame(Http::STATUS_CONFLICT, $response->getStatus());
+		$data = $response->getData();
+		$this->assertSame('This document is final.', $data['error']);
+		$this->assertSame('document-final', $data['reason']);
+
+	}//end testRestoreOfFinalDocumentAnswersConflict()
+
+	/**
 	 * Any other failure is contained as a localised 500 body — the Throwable
 	 * must not escape to the framework's raw error page.
 	 *
@@ -208,5 +231,75 @@ class VersionControllerTest extends TestCase {
 		$this->assertSame(['error' => 'Could not restore version'], $response->getData());
 
 	}//end testRestoreContainsUnexpectedFailure()
+
+	/**
+	 * A controller whose downloads are written to the given trail, as alice.
+	 *
+	 * @param DocumentActionAudit $audit The trail.
+	 *
+	 * @return VersionController The controller.
+	 */
+	private function recordingController(DocumentActionAudit $audit): VersionController {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('alice');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+
+		return new VersionController(
+			'filinq',
+			$this->createMock(IRequest::class),
+			$this->createMock(LoggerInterface::class),
+			$this->service,
+			$this->l10n,
+			$session,
+			new DocumentDownloadLog(new DocumentDownloadRecorder(), $audit, $session, $this->createMock(LoggerInterface::class))
+		);
+
+	}//end recordingController()
+
+	/**
+	 * A served version download writes one download record naming the version, the route and the handler.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md#requirement-a-download-is-recorded-with-its-route-and-its-identity-req-dio-06
+	 */
+	public function testAVersionDownloadIsRecordedOnce(): void {
+		$this->service->method('readVersion')->willReturn('bytes');
+		$audit = $this->createMock(DocumentActionAudit::class);
+		$audit->expects($this->once())->method('record')->with(
+			1234,
+			'downloaded',
+			$this->callback(
+				static fn (array $context): bool => $context['version'] === '1700000000'
+					&& $context['route'] === 'ui'
+					&& $context['identity'] === 'alice'
+			)
+		)->willReturn(true);
+
+		$response = $this->recordingController(audit: $audit)->download(1234, 1700000000);
+
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$this->assertSame('bytes', $response->getData());
+
+	}//end testAVersionDownloadIsRecordedOnce()
+
+	/**
+	 * A version that cannot be read is not recorded as downloaded.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md#requirement-a-download-is-recorded-with-its-route-and-its-identity-req-dio-06
+	 */
+	public function testAFailedVersionDownloadIsNotRecorded(): void {
+		$this->service->method('readVersion')->willThrowException(new RuntimeException('gone'));
+		$audit = $this->createMock(DocumentActionAudit::class);
+		$audit->expects($this->never())->method('record');
+
+		$response = $this->recordingController(audit: $audit)->download(1234, 1700000000);
+
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+
+	}//end testAFailedVersionDownloadIsNotRecorded()
 
 }//end class

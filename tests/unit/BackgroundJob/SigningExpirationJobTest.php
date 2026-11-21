@@ -17,6 +17,9 @@
  * @link https://conduction.nl
  *
  * @spec openspec/changes/document-signing/tasks.md#task-3
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -24,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\BackgroundJob;
 
 use OCA\Filinq\BackgroundJob\SigningExpirationJob;
+use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Service\SettingsService;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningService;
@@ -34,6 +38,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for SigningExpirationJob deadline enforcement
@@ -143,24 +148,20 @@ class SigningExpirationJobTest extends TestCase {
 
 		$this->objectService->expects($this->once())
 			->method('saveObject')
-			->with(
-				$this->callback(
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->callback(
 					function (array $obj): bool {
 						return $obj['status'] === 'EXPIRED';
 					}
 				),
-				$this->anything(),
-				$this->anything()
-			);
+					'register' => $this->anything(),
+					'schema' => $this->anything(),
+				]));
 
 		$this->auditService->expects($this->once())
 			->method('logEvent')
 			->with(
-				$this->equalTo('req-expired'),
-				$this->equalTo('EXPIRED'),
-				$this->anything(),
-				$this->anything(),
-				$this->anything()
+				$this->callback(static fn (SigningAuditEvent $event): bool => $event->request->id === 'req-expired' && $event->action === 'EXPIRED')
 			);
 
 		// Invoke via reflection to call the protected run() method.

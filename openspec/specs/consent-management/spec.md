@@ -7,7 +7,9 @@ status: implemented
 ## Purpose
 
 Provides GDPR-compliant publication consent tracking for entities (persons and organizations) detected in documents. When a document is destined for publication under the Wet Open Overheid (WOO), affected entities must be notified and given an objection period (minimum 4 weeks per WOO). This feature manages the full consent lifecycle: creation, notification tracking, objection handling, and publication decision-making. All consent records are stored as OpenRegister objects using the PublicationConsent schema.
+
 ## Requirements
+
 ### Requirement: Consent Record Creation (REQ-CONS-01)
 
 **Priority:** MUST
@@ -789,6 +791,37 @@ For detected entities that match no policy rule, the existing consent-management
 - **AND** the existing notification dispatch logic runs unchanged
 - **AND** `policyMatch: null`
 
+### Requirement: A consent status change is a recorded event
+
+A change of `consentStatus` or `notificationStatus` MUST be one of the declared
+moves, MUST be made by a consent officer, a policy admin or an admin, and MUST
+be appended to the record's `statusEvents` with who made it, when, the old and
+new value and the evidence. Recording `consent_given` or `objection_received`
+MUST carry evidence.
+
+#### Scenario: an officer records a consent with evidence
+- GIVEN a consent record with `consentStatus` pending
+- AND a user in `filinq-woo-officers`
+- WHEN they set `consentStatus` to consent_given with evidence "Signed form received by post on 20 October"
+- THEN the record's status is consent_given
+- AND `statusEvents` ends with that change, the officer, the time and the evidence
+
+#### Scenario: consent without evidence
+- GIVEN the same record
+- WHEN an officer sets `consentStatus` to consent_given without evidence
+- THEN the change is refused with 400 and the record is unchanged
+
+#### Scenario: the person who opened the request
+- GIVEN a consent record opened by a user who is not an officer, policy admin or admin
+- WHEN that user tries to set `consentStatus` to consent_given
+- THEN the change is refused
+- AND they can still read the record
+
+#### Scenario: an undeclared move
+- GIVEN a consent record with `consentStatus` objection_received
+- WHEN an officer sets it to pending
+- THEN the change is refused with 400
+
 ## Data Model
 
 ### PublicationConsent Schema
@@ -852,3 +885,22 @@ Defined in `lib/Settings/filinq_register.json` and stored in OpenRegister.
 - **GDPR/AVG Articles 6, 7, 21**: Consent management and right to object
 - **WOO (Wet open overheid) Article 4.4**: Minimum 4-week objection period
 - **ISO 8601**: Objection deadline datetime format
+
+<!-- Added by finish-half-built-capabilities (archived 2026-11-20-finish-half-built-capabilities). -->
+
+### Requirement: A consent request reaches the third party (REQ-FHB-02)
+
+When a consent request is created for a third party with a known email or postal address, Filinq SHALL send that party the request: what will be published, the objection period and how to respond. It SHALL go by email when an email address is known and as a letter from the correspondence composer otherwise. The consent record SHALL record the channel, the moment it was sent and the end of the objection period counted from that moment. A request that cannot be sent SHALL keep the record open and say why on the consent screen.
+
+#### Scenario: A third party with an email address is asked
+
+- **GIVEN** a document to be published that names a third party with email address `info@bakkerij-jansen.nl`
+- **WHEN** a consent request is created for that party
+- **THEN** one message goes to `info@bakkerij-jansen.nl` naming the document and the objection period
+- **AND** the consent record says "email" and the time it was sent
+
+#### Scenario: A third party without any address
+
+- **GIVEN** a third party with no email and no postal address
+- **WHEN** a consent request is created
+- **THEN** nothing is sent and the consent screen says the party has no address

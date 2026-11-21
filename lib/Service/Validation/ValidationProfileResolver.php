@@ -62,6 +62,23 @@ class ValidationProfileResolver {
 		DocumentValidationService::CHECK_PDF_ENCRYPTED,
 		DocumentValidationService::CHECK_TEXT_LAYER_MISSING,
 		DocumentValidationService::CHECK_METADATA_INCOMPLETE,
+		DocumentValidationService::CHECK_PDFA_CONFORMANCE,
+		DocumentValidationService::CHECK_PDFA_FONTS,
+		DocumentValidationService::CHECK_PDF_NOT_TAGGED,
+		DocumentValidationService::CHECK_PDF_LANGUAGE_MISSING,
+		DocumentValidationService::CHECK_PDF_TITLE_MISSING,
+		DocumentValidationService::CHECK_PDFUA_IDENTIFIER_MISSING,
+		DocumentValidationService::CHECK_PDFUA_CONFORMANCE,
+	];
+
+	/**
+	 * The validator-backed checks: off until an admin switches them on, so
+	 * an instance without veraPDF sees no "not checked" noise.
+	 */
+	private const ARCHIVAL_CHECKS = [
+		DocumentValidationService::CHECK_PDFA_CONFORMANCE,
+		DocumentValidationService::CHECK_PDFA_FONTS,
+		DocumentValidationService::CHECK_PDFUA_CONFORMANCE,
 	];
 
 	/**
@@ -129,6 +146,21 @@ class ValidationProfileResolver {
 		];
 
 	}//end resolve()
+
+	/**
+	 * The document types a profile is configured for, `default` always among them.
+	 *
+	 * @return array<int, string> The profile keys.
+	 *
+	 * @spec openspec/changes/flow-operations/tasks.md#task-2.2
+	 */
+	public function documentTypes(): array {
+		$types = array_map('strval', array_keys($this->loadProfiles()));
+		$types[] = 'default';
+
+		return array_values(array_unique($types));
+
+	}//end documentTypes()
 
 	/**
 	 * Pick the raw profile entry for a document type, or the 'default' entry.
@@ -204,6 +236,9 @@ class ValidationProfileResolver {
 		$severities = [];
 		foreach (self::ALL_CHECKS as $check) {
 			$severities[$check] = DocumentValidationService::SEVERITY_WARNING;
+			if (in_array($check, self::ARCHIVAL_CHECKS, true) === true) {
+				$severities[$check] = DocumentValidationService::SEVERITY_OFF;
+			}
 		}
 
 		return [

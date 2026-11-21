@@ -3,6 +3,9 @@
 /**
  * Dossier Management Service
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Index and detail aggregation for the dossier surface, plus the membership
  * operations behind it: create, rename (with bound-folder sync), link and
  * unlink documents, and lifecycle transitions.
@@ -28,15 +31,17 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\DossierManagementServiceInterface;
+use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 use Throwable;
@@ -50,7 +55,7 @@ use Throwable;
  *     wires existing capabilities (bases, folder enumeration, batch state,
  *     anonymisation links) rather than reimplementing any of them.
  */
-class DossierManagementService {
+class DossierManagementService implements DossierManagementServiceInterface {
 
 	/**
 	 * The register every filinq schema lives in.
@@ -106,6 +111,7 @@ class DossierManagementService {
 	 * @param DossierContextService $context The live context a dossier is shown with.
 	 * @param DossierObjectReader $reader Object-shape reading.
 	 * @param LoggerInterface $logger Logger.
+	 * @param LegalHoldFanOut $holds Whether the dossier is under a legal hold.
 	 */
 	public function __construct(
 		private readonly DossierObjectRepository $repository,
@@ -113,6 +119,7 @@ class DossierManagementService {
 		private readonly DossierContextService $context,
 		private readonly DossierObjectReader $reader,
 		private readonly LoggerInterface $logger,
+		private readonly LegalHoldFanOut $holds,
 	) {
 
 	}//end __construct()
@@ -240,8 +247,7 @@ class DossierManagementService {
 				// came back 409 "No transition allows moving from ''".
 				'status' => self::DEFAULT_STATUS,
 			],
-			register: self::REGISTER,
-			schema: self::SCHEMA
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA))
 		);
 
 		$payload = $this->reader->payloadOf(object: $saved);
@@ -379,12 +385,15 @@ class DossierManagementService {
 	 *
 	 * @return array<string, mixed> The refreshed detail shape.
 	 *
-	 * @throws RuntimeException When the caller cannot read the dossier.
+	 * @throws RuntimeException When the caller cannot read the dossier, or with 423 while it is under a legal hold.
 	 *
 	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function removeDocument(string $dossierId, int $fileId): array {
 		$object = $this->requireReadable(dossierId: $dossierId);
+		if ($this->holds->heldAsSeenBy(ref: $dossierId) === true) {
+			throw new RuntimeException('This dossier is under a legal hold; its documents cannot be removed.', 423);
+		}
 		$payload = $this->reader->payloadOf(object: $object);
 
 		$documents = $this->reader->documentRefs(payload: $payload);
@@ -475,8 +484,7 @@ class DossierManagementService {
 
 		$object = $objectService->find(
 			id: $dossierId,
-			register: self::REGISTER,
-			schema: self::SCHEMA
+			options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA)
 		);
 
 		if ($object === null) {
@@ -541,8 +549,7 @@ class DossierManagementService {
 		try {
 			$objectService->saveObject(
 				object: $next,
-				register: self::REGISTER,
-				schema: self::SCHEMA
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA))
 			);
 		} catch (Throwable $e) {
 			// A lifecycle refusal arrives here. Surfacing the message keeps

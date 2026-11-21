@@ -64,6 +64,13 @@ class DocumentSigningRequestedEvent extends Event {
 	private bool $handled = false;
 
 	/**
+	 * Why Filinq refused the request, when it did (result slot).
+	 *
+	 * @var string|null
+	 */
+	private ?string $refusal = null;
+
+	/**
 	 * Construct the request event.
 	 *
 	 * The six provenance fields (sourceApp, subjectRegister, subjectSchema,
@@ -79,11 +86,22 @@ class DocumentSigningRequestedEvent extends Event {
 	 * @param SigningProvenance $provenance Who asked, and about which object.
 	 * @param string $subjectLabel Human display label for the subject
 	 * @param string $documentReference NC Files file id / path or document content reference
-	 * @param array<int, mixed> $signers Ordered signers list (userId/displayName/email/order)
+	 * @param array<int, mixed> $signers Ordered signers list (userId/displayName/email/order).
+	 *                                   A learner-facing consumer (learniq OPP and POK,
+	 *                                   portaliq toestemmingsformulieren) may add, per
+	 *                                   entry: `birthDate` (YYYY-MM-DD), `role`
+	 *                                   (signer|guardian), `guardianFor` (the userId or
+	 *                                   email of another entry), `guardianAct`
+	 *                                   (co-sign|consent), `consentStatement` and
+	 *                                   `guardianRef`. A signer under the guardian consent
+	 *                                   age then signs only with a guardian beside them
+	 *                                   (signer-identity-rails REQ-DDSIR-008 to 011).
 	 * @param string $signatureLevel Signature level (SES|AdES|QES)
 	 * @param string $signingMode Signing mode (sequential|parallel)
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function __construct(
 		private readonly SigningProvenance $provenance,
@@ -246,4 +264,39 @@ class DocumentSigningRequestedEvent extends Event {
 		$this->handled = $handled;
 
 	}//end setHandled()
+
+	/**
+	 * The noun the request signs, derived from the subject schema.
+	 *
+	 * @return string The subject noun, empty without a subject schema.
+	 *
+	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-a-signing-request-records-the-noun-it-signs-req-ddsrc-002
+	 */
+	public function getSubjectNoun(): string {
+		return $this->provenance->getSubjectNoun();
+	}//end getSubjectNoun()
+
+	/**
+	 * Why Filinq refused the request, or null when it did not.
+	 *
+	 * @return string|null The refusal, naming what was missing.
+	 *
+	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
+	 */
+	public function getRefusal(): ?string {
+		return $this->refusal;
+	}//end getRefusal()
+
+	/**
+	 * Record why Filinq refused the request (written by Filinq's listener).
+	 *
+	 * @param string $refusal The refusal.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
+	 */
+	public function setRefusal(string $refusal): void {
+		$this->refusal = $refusal;
+	}//end setRefusal()
 }//end class

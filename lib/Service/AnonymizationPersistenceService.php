@@ -31,8 +31,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Audit\DocumentActionAudit;
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -54,6 +59,7 @@ class AnonymizationPersistenceService {
 	 * @param OpenRegisterServiceLocator $locator Resolver for OpenRegister services and mappers.
 	 * @param ConsentCrudService $consentCrud Consent CRUD service for register/schema config.
 	 * @param ConsentService $consentService Consent service for creating publication consents.
+	 * @param DocumentActionAudit|null $audit Writes the anonymisation into the source document's trail; null writes nothing.
 	 *
 	 * @return void
 	 */
@@ -62,6 +68,7 @@ class AnonymizationPersistenceService {
 		private readonly OpenRegisterServiceLocator $locator,
 		private readonly ConsentCrudService $consentCrud,
 		private readonly ConsentService $consentService,
+		private readonly ?DocumentActionAudit $audit = null,
 	) {
 
 	}//end __construct()
@@ -106,13 +113,25 @@ class AnonymizationPersistenceService {
 
 			$saved = $objectService->saveObject(
 				object: $object,
-				register: 'filinq',
-				schema: 'anonymizationLink'
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: 'filinq', schema: 'anonymizationLink'),
+					actor: new SaveActor(unowned: true)
+				),
+				_rbac: false
 			);
 			$linkId = $this->extractSavedObjectId(saved: $saved);
 			if ($linkId !== null) {
 				$resultInfo['anonymizationLinkId'] = $linkId;
 			}
+
+			// The source document's own trail says it was anonymised
+			// (specify-capability-rows REQ-SCR-007). Best-effort like the
+			// link: the audit never throws for a failed write.
+			$this->audit?->record(
+				fileId: $fileId,
+				action: 'anonymised',
+				context: ['anonymizedFileId' => $object['anonymizedFileId'], 'runCount' => $object['runCount']]
+			);
 
 			$this->logger->info(
 				'Anonymisation link recorded',
@@ -131,6 +150,87 @@ class AnonymizationPersistenceService {
 
 		return $resultInfo;
 	}//end recordAnonymizationLink()
+
+	/**
+	 * Point a source file's anonymisation link at the key its last run kept.
+	 *
+	 * A second write after recordAnonymizationLink(), because the key names the
+	 * link and so can only be stored once the link has a uuid. The existing
+	 * record is written back whole with its `@self`, which is OpenRegister's
+	 * update path, so nothing else on the link changes and `runCount` does not
+	 * move. An empty `$mappingRef` says the last run kept no key.
+	 *
+	 * Unlike recordAnonymizationLink() this one throws: a link that points at a
+	 * deleted key, or at none while one exists, is exactly the drift the caller
+	 * has to report rather than swallow.
+	 *
+	 * @param int $fileId The source Nextcloud file id.
+	 * @param string $mappingRef The pseudonymMap uuid, or '' for none.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the link cannot be found or written.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 */
+	public function setMappingRef(int $fileId, string $mappingRef): void {
+		$objectService = $this->locator->get(className: 'OCA\OpenRegister\Service\ObjectService');
+		$existing = $this->existingLink(objectService: $objectService, fileId: $fileId);
+
+		if ($existing === [] || (int) ($existing['sourceFileId'] ?? 0) !== $fileId) {
+			throw new RuntimeException('No anonymisation link for file ' . $fileId . ' to point at its key.');
+		}
+
+		$existing['mappingRef'] = $mappingRef;
+		$objectService->saveObject(
+			object: $existing,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'anonymizationLink')),
+			_rbac: false
+		);
+
+	}//end setMappingRef()
+
+	/**
+	 * Record what the run did to the file's image content on its link.
+	 *
+	 * Only `imageRedactionPending` and `burnedRegionCount` are written, on the
+	 * link the run just wrote. Best-effort like the link itself: the run's own
+	 * result already carries the flag, so a failed write is logged, never
+	 * turned into a clean success.
+	 *
+	 * @param int                  $fileId The source Nextcloud file id.
+	 * @param array<string, mixed> $fields `imageRedactionPending` and `burnedRegionCount`.
+	 *
+	 * @return bool True when the link was updated.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.3
+	 */
+	public function recordImageRedaction(int $fileId, array $fields): bool {
+		$fields = array_intersect_key($fields, ['imageRedactionPending' => true, 'burnedRegionCount' => true]);
+		try {
+			$objectService = $this->locator->get(className: 'OCA\OpenRegister\Service\ObjectService');
+			$existing = $this->existingLink(objectService: $objectService, fileId: $fileId);
+			if ($fields === [] || (int) ($existing['sourceFileId'] ?? 0) !== $fileId) {
+				return false;
+			}
+
+			$objectService->saveObject(
+				object: array_merge($existing, $fields),
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'anonymizationLink')),
+				_rbac: false
+			);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'[AnonymizationPersistenceService] could not record the image redaction state on the link',
+				['fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+
+			return false;
+		}//end try
+
+		return true;
+
+	}//end recordImageRedaction()
 
 	/**
 	 * Create publicationConsent records for each unredacted entity after a successful anonymise run.
@@ -242,37 +342,96 @@ class AnonymizationPersistenceService {
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	private function buildLinkObject(mixed $objectService, int $fileId, array $resultInfo): array {
-		$results = $objectService->searchObjects(
-			query: [
+		$object = $this->linkForRun(
+			fileId: $fileId,
+			existing: $this->existingLink(objectService: $objectService, fileId: $fileId)
+		);
+		$object = $this->applyRunResult(object: $object, resultInfo: $resultInfo);
+		$object = $this->applyVerification(
+			object: $object,
+			verification: ($resultInfo['redactionVerification'] ?? null)
+		);
+
+		// Tag counts, loss reasons and per-type entity counts only, never an entity value; absent when the run recorded none.
+		// The review rendition names the reviewed PDF (REQ-DDARW-012); absent when none was prepared.
+		return array_merge($object, array_intersect_key($resultInfo, ['structurePreservation' => true, 'entityTypeCounts' => true, 'reviewRendition' => true]));
+	}//end buildLinkObject()
+
+	/**
+	 * The stored link of a source file, read by slug.
+	 *
+	 * @param mixed $objectService OpenRegister's ObjectService.
+	 * @param int $fileId The source file id.
+	 *
+	 * @return array<string, mixed> The first matching link's data including its `@self`, or [] when there is none.
+	 */
+	private function existingLink(mixed $objectService, int $fileId): array {
+		// 🔴 SLUGS GO THROUGH `searchObjectsBySlug`, NEVER `searchObjects`.
+		// `searchObjects` answers `filinq` / `anonymizationLink` with zero
+		// rows and no error, so `$existing` was always empty: `runCount`
+		// stayed 1 and re-anonymising the same source file wrote a new link
+		// row every time instead of updating the one already there.
+		//
+		// The `@self` literal in linkForRun() belongs to the SAVED OBJECT,
+		// not to a query, and must stay.
+		$results = $objectService->searchObjectsBySlug(
+			registerSlug: 'filinq',
+			schemaSlug: 'anonymizationLink',
+			filters: ['sourceFileId' => $fileId]
+		);
+
+		$candidate = null;
+		if (is_array($results) === true) {
+			$candidate = ($results[0] ?? null);
+		}
+
+		if (is_array($candidate) === true) {
+			return $candidate;
+		}
+
+		if (is_object($candidate) === true) {
+			return $this->extractObjectPayload(candidate: $candidate);
+		}
+
+		return [];
+	}//end existingLink()
+
+	/**
+	 * The link to update with this run: the stored link of this file with its run count raised, or a new one.
+	 *
+	 * @param int $fileId The source file id.
+	 * @param array<string, mixed> $existing The stored link, or [] when there is none.
+	 *
+	 * @return array<string, mixed> The link object before this run's fields are set.
+	 */
+	private function linkForRun(int $fileId, array $existing): array {
+		// An empty link, or one without a file id, never matches a file id.
+		if ((int) ($existing['sourceFileId'] ?? -1) !== $fileId) {
+			return [
 				'@self' => [
 					'register' => 'filinq',
 					'schema' => 'anonymizationLink',
 				],
 				'sourceFileId' => $fileId,
-			]
-		);
-
-		$existing = [];
-		if (is_array($results) === true && empty($results) === false) {
-			$existing = $this->extractLinkObjectData(candidate: $results[0]);
+				'runCount' => 1,
+			];
 		}
 
-		$object = [
-			'@self' => [
-				'register' => 'filinq',
-				'schema' => 'anonymizationLink',
-			],
-			'sourceFileId' => $fileId,
-			'runCount' => 1,
-		];
+		$existing['runCount'] = ((int)($existing['runCount'] ?? 0) + 1);
+		return $existing;
+	}//end linkForRun()
 
-		if (empty($existing) === false) {
-			$object = $existing;
-			$object['runCount'] = ((int)($existing['runCount'] ?? 0) + 1);
-		}
-
-		// Anonymised-side metadata + run stats. Only successful runs
-		// reach this method, so status is always 'anonymized'.
+	/**
+	 * Set the anonymised file's metadata and the run stats on the link.
+	 *
+	 * Only successful runs reach this method, so status is always 'anonymized'.
+	 *
+	 * @param array<string, mixed> $object The link object.
+	 * @param array<string, mixed> $resultInfo The run result.
+	 *
+	 * @return array<string, mixed> The link object with the run's fields set.
+	 */
+	private function applyRunResult(array $object, array $resultInfo): array {
 		$anonymizedName = (string)($resultInfo['anonymizedFileName'] ?? '');
 		$object['anonymizedFileId'] = (int)$resultInfo['anonymizedFileId'];
 		$object['anonymizedFileName'] = $anonymizedName;
@@ -287,7 +446,35 @@ class AnonymizationPersistenceService {
 		}
 
 		return $object;
-	}//end buildLinkObject()
+	}//end applyRunResult()
+
+	/**
+	 * Set the redaction verification verdict on the link.
+	 *
+	 * @param array<string, mixed> $object The link object.
+	 * @param mixed $verification The run's redactionVerification, when it has one.
+	 *
+	 * @return array<string, mixed> The link object, with the verdict fields when a verification is present.
+	 */
+	private function applyVerification(array $object, mixed $verification): array {
+		// 🔴 THE VERDICT IS WRITTEN EVEN WHEN IT IS `unverifiable`. An empty
+		// field and a clean verdict look the same to anything that filters on
+		// "was this copy checked", and one of them means nobody looked.
+		if (is_array($verification) === false) {
+			return $object;
+		}
+
+		$object['verificationVerdict'] = (string)($verification['verdict'] ?? '');
+		$object['verificationOutputMode'] = (string)($verification['outputMode'] ?? '');
+		$object['verificationRoutes'] = implode(',', (array)($verification['routesChecked'] ?? []));
+		$object['verificationLeakRoutes'] = implode(
+			',',
+			array_column((array)($verification['findings'] ?? []), 'route')
+		);
+		$object['verifiedAt'] = date(format: 'c');
+
+		return $object;
+	}//end applyVerification()
 
 	/**
 	 * Apply best-effort source-node metadata (name, path, owner) to a link object.
@@ -307,19 +494,9 @@ class AnonymizationPersistenceService {
 			return $object;
 		}
 
-		if (method_exists(object_or_class: $sourceNode, method: 'getName') === true) {
-			$object['sourceFileName'] = (string)$sourceNode->getName();
-		}
+		$object = $this->withSourceNames(object: $object, sourceNode: $sourceNode);
 
-		if (method_exists(object_or_class: $sourceNode, method: 'getPath') === true) {
-			$object['sourceFilePath'] = (string)$sourceNode->getPath();
-		}
-
-		$owner = null;
-		if (method_exists(object_or_class: $sourceNode, method: 'getOwner') === true) {
-			$owner = $sourceNode->getOwner();
-		}
-
+		$owner = $this->ownerOf(sourceNode: $sourceNode);
 		if ($owner !== null && method_exists(object_or_class: $owner, method: 'getUID') === true) {
 			$object['anonymizedBy'] = (string)$owner->getUID();
 		}
@@ -328,25 +505,39 @@ class AnonymizationPersistenceService {
 	}//end applySourceNodeMetadata()
 
 	/**
-	 * Normalise a searchObjects() candidate to a plain array including its `@self`.
+	 * Apply the source node's name and path, where the node offers them.
 	 *
-	 * @param mixed $candidate A search result entry (array, or an OR entity object).
+	 * @param array<string, mixed> $object     The link object being built.
+	 * @param object               $sourceNode The source file node.
 	 *
-	 * @return array<string, mixed> The object data, or an empty array if it could not be read.
-	 *
-	 * @spec openspec/specs/anonymization/spec.md
+	 * @return array<string, mixed> The object with the name and path applied.
 	 */
-	private function extractLinkObjectData(mixed $candidate): array {
-		if (is_array($candidate) === true) {
-			return $candidate;
+	private function withSourceNames(array $object, object $sourceNode): array {
+		if (method_exists(object_or_class: $sourceNode, method: 'getName') === true) {
+			$object['sourceFileName'] = (string)$sourceNode->getName();
 		}
 
-		if (is_object($candidate) === true) {
-			return $this->extractObjectPayload(candidate: $candidate);
+		if (method_exists(object_or_class: $sourceNode, method: 'getPath') === true) {
+			$object['sourceFilePath'] = (string)$sourceNode->getPath();
 		}
 
-		return [];
-	}//end extractLinkObjectData()
+		return $object;
+	}//end withSourceNames()
+
+	/**
+	 * The source node's owner, where the node offers one.
+	 *
+	 * @param object $sourceNode The source file node.
+	 *
+	 * @return mixed The owner, or null.
+	 */
+	private function ownerOf(object $sourceNode): mixed {
+		if (method_exists(object_or_class: $sourceNode, method: 'getOwner') === true) {
+			return $sourceNode->getOwner();
+		}
+
+		return null;
+	}//end ownerOf()
 
 	/**
 	 * Read an OR entity object's payload, restoring its `@self` id when absent.
@@ -358,30 +549,7 @@ class AnonymizationPersistenceService {
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	private function extractObjectPayload(object $candidate): array {
-		if (method_exists(object_or_class: $candidate, method: 'getObject') === true) {
-			$payload = $candidate->getObject();
-			if (is_array($payload) === true) {
-				if (isset($payload['@self']) === false
-					&& method_exists(object_or_class: $candidate, method: 'getUuid') === true
-				) {
-					$uuid = $candidate->getUuid();
-					if ($uuid !== null) {
-						$payload['@self'] = ['id' => $uuid];
-					}
-				}
-
-				return $payload;
-			}
-		}
-
-		if (method_exists(object_or_class: $candidate, method: 'jsonSerialize') === true) {
-			$payload = $candidate->jsonSerialize();
-			if (is_array($payload) === true) {
-				return $payload;
-			}
-		}
-
-		return [];
+		return (new ObjectResultExtractor())->extractRow(candidate: $candidate);
 	}//end extractObjectPayload()
 
 	/**
@@ -394,34 +562,6 @@ class AnonymizationPersistenceService {
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	private function extractSavedObjectId(mixed $saved): ?string {
-		if (is_object($saved) === true) {
-			if (method_exists(object_or_class: $saved, method: 'getUuid') === true) {
-				$uuid = $saved->getUuid();
-				if (empty($uuid) === false) {
-					return (string)$uuid;
-				}
-			}
-
-			if (method_exists(object_or_class: $saved, method: 'getId') === true) {
-				$id = $saved->getId();
-				if (empty($id) === false) {
-					return (string)$id;
-				}
-			}
-
-			if (method_exists(object_or_class: $saved, method: 'jsonSerialize') === true) {
-				$saved = $saved->jsonSerialize();
-			}
-		}
-
-		if (is_array($saved) === true) {
-			$self = ($saved['@self'] ?? []);
-			$id = ($self['id'] ?? ($self['uuid'] ?? ($saved['id'] ?? null)));
-			if (empty($id) === false) {
-				return (string)$id;
-			}
-		}
-
-		return null;
+		return (new SavedObjectReader())->savedId(saved: $saved);
 	}//end extractSavedObjectId()
 }//end class

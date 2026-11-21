@@ -202,3 +202,62 @@ The system SHALL provide `GET /api/anonymization/batch/{batchId}/entities` retur
 - **THEN** only entities with highestConfidence >= 0.7 are included
 - **AND** the `complete` and `filesProcessed` fields are still present
 
+### Requirement: The batch anonymise endpoint MUST accept `outputFormat: "pdf-only"` and default to it
+
+The batch anonymise endpoint MUST accept `outputFormat` value `"pdf-only"` in addition to `"pdf"` and `"preserve"`. `BatchAnonymizationController::VALID_OUTPUT_FORMATS` MUST be exactly `["pdf-only", "pdf", "preserve"]`. When `outputFormat` is omitted, the batch resolves the tenant default `filinq.anonymisation.default_output_format`, whose default value MUST be `"pdf-only"`. Any value outside the allowed set MUST be rejected with HTTP 400 citing the three allowed values.
+
+#### Scenario: Batch default mode is pdf-only
+- **GIVEN** a batch anonymise request with no `outputFormat`
+- **AND** the tenant default resolves to `pdf-only`
+- **WHEN** the batch processes non-PDF inputs
+- **THEN** each resolved mode is `pdf-only`
+- **AND** each converted output is a PDF/A-3b with no native intermediate left behind
+
+#### Scenario: Batch rejects an invalid value
+- **GIVEN** a batch anonymise request with `outputFormat: "rtf"`
+- **WHEN** the endpoint processes the request
+- **THEN** the response is HTTP 400
+- **AND** the body cites the allowed values: `"pdf-only"`, `"pdf"`, `"preserve"`
+
+### Requirement: Batch `pdf-only` MUST apply per-file delete-after-convert semantics
+
+When the resolved mode is `pdf-only`, every file in the batch that is converted MUST have its native-format intermediate deleted after a successful conversion, per the single-file `pdf-only` requirement. Per-file deletion MUST be best-effort: a cleanup failure for one file MUST NOT fail that file's outcome nor abort the rest of the batch. Already-converted files (and their deletions) are independent across the batch.
+
+#### Scenario: Batch pdf-only deletes each native intermediate
+- **GIVEN** a batch with DOCX and ODT inputs resolved to `pdf-only`
+- **AND** conversion backends are available for both
+- **WHEN** the batch completes
+- **THEN** both files are written as PDF/A-3b
+- **AND** neither native-format intermediate remains in Nextcloud Files
+- **AND** each `anonymizationLink` relation points at its converted PDF
+
+#### Scenario: One file's cleanup failure does not affect the others
+- **GIVEN** a batch resolved to `pdf-only` where one file's native-intermediate delete throws after a successful conversion
+- **WHEN** the batch completes
+- **THEN** the affected file still reports a successful outcome with its PDF metadata
+- **AND** the delete failure is logged at warning level
+- **AND** the remaining files are processed and cleaned up normally
+
+### Requirement: WOO Profile Update Endpoint Declares An Explicit Auth Attribute
+
+`BatchAnonymizationController::updateProfiles()` MUST carry an explicit auth
+attribute matching its intended audience, routed as
+`PUT api/anonymization/profiles` (`@NoAdminRequired` + `@NoCSRFRequired`, or
+`#[AuthorizedAdminSetting(...)]`). It MUST NOT rely on Nextcloud's implicit
+"no annotation = admin-only" default.
+
+#### Scenario: The method declares an explicit attribute
+
+- GIVEN `lib/Controller/BatchAnonymizationController.php`
+- WHEN the docblock/attributes immediately preceding `updateProfiles()` are
+  inspected
+- THEN at least one of `@NoAdminRequired`, `@PublicPage`, `@NoCSRFRequired`,
+  or `#[AuthorizedAdminSetting]` SHALL be present
+
+#### Scenario: Access level is consistent with the sibling read endpoint
+
+- GIVEN `getProfiles()` is `@NoAdminRequired` (operator-level read access)
+- WHEN `updateProfiles()`'s access level is decided
+- THEN the write endpoint's access level SHALL be an explicit, documented
+  decision (either matching operator-level read access, or explicitly
+  narrowed to admin-only) — not an accidental default

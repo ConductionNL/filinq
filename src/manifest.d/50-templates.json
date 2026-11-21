@@ -1,0 +1,192 @@
+{
+	"menu": [
+		{
+			"id": "Templates",
+			"label": "Templates",
+			"icon": "FileReplaceOutline",
+			"route": "Templates",
+			"order": 50
+		},
+		{
+			"id": "TextFragments",
+			"label": "Text fragments",
+			"icon": "TextBoxOutline",
+			"route": "TextFragments",
+			"order": 51
+		},
+		{
+			"id": "TemplateImport",
+			"label": "Import Word templates",
+			"icon": "Upload",
+			"route": "TemplateImport",
+			"order": 52
+		},
+		{
+			"id": "Correspondence",
+			"label": "Letters & correspondence",
+			"icon": "EmailOutline",
+			"route": "Correspondence",
+			"order": 55
+		},
+		{
+			"id": "Drafts",
+			"label": "Drafts",
+			"icon": "FileEdit",
+			"route": "Drafts",
+			"order": 54
+		}
+	],
+	"pages": [
+		{
+			"id": "Templates",
+			"route": "/templates",
+			"type": "index",
+			"title": "Templates",
+			"config": {
+				"register": "filinq",
+				"schema": "template",
+				"columns": [
+					"name",
+					"templateType",
+					"category",
+					"format",
+					"namespace",
+					"description"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"addLabel": "New template",
+				"emptyText": "No templates found"
+			},
+			"_note": "Decomposed to type:index (Phase 8): the template schema is OR-registered, so CnIndexPage lists the template objects directly. The bespoke lock/unlock/editor lives on TemplateDetail. `register` MUST be a register SLUG from lib/Settings/filinq_register.json — it was `filinq` from Phase 8 until 2026-08-03, a register Filinq has never shipped (the definition has declared `templates` since before Phase 8 landed), so this page listed a register that holds nothing while TemplatesController wrote to the `templates` register resolved from app config `template_register`.",
+			"primaryAction": {
+				"id": "ImportTemplates",
+				"label": "Import Word templates",
+				"icon": "Upload",
+				"route": "TemplateImport"
+			}
+		},
+		{
+			"id": "TemplateDetail",
+			"route": "/templates/:id",
+			"type": "custom",
+			"title": "Template Detail",
+			"component": "TemplateDetail",
+			"_note": "Template detail view with lock/unlock, editor, and preview. Hybrid data path via templateStore."
+		},
+		{
+			"id": "TextFragments",
+			"route": "/text-fragments",
+			"type": "index",
+			"title": "Text fragments",
+			"config": {
+				"register": "filinq",
+				"schema": "textFragment",
+				"columns": [
+					"name",
+					"slug",
+					"category",
+					"language",
+					"namespace"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"showTitle": true,
+				"addLabel": "New text fragment",
+				"emptyText": "No text fragments found"
+			},
+			"_note": "Text fragments (bouwstenen), office-template-authoring REQ-DDOTA-004: textFragment objects listed and edited by CnIndexPage straight from the schema. A template inserts one with ${fragment:slug}; the slug-per-namespace check runs in TextFragmentService behind /api/text-fragments for the import, while this page writes through OpenRegister under the schema's template-editor authorisation."
+		},
+		{
+			"id": "TemplateImport",
+			"route": "/templates-import",
+			"type": "custom",
+			"title": "Import Word templates",
+			"component": "TemplateImport",
+			"_note": "Upload one Word template, or import a ZIP or Files folder of them with their text fragments, follow the background job and map unknown merge tags (office-template-authoring REQ-DDOTA-001/005). type:custom because it posts multipart files to api/templates/office and api/templates/import and polls api/templates/import/{jobId}, filinq endpoints rather than object operations."
+		},
+		{
+			"id": "WizardRunner",
+			"route": "/templates/:id/wizard",
+			"type": "custom",
+			"title": "Guided document wizard",
+			"component": "WizardRunner",
+			"_note": "The guided document wizard of a template (guided-document-wizard): one question per step with skip logic, a review step, then one call to api/documents/generate, which checks the answers again. type:custom because it reads the wizard through api/templates/{id}/wizard and prefills through api/wizards/{id}/prefill, filinq endpoints rather than object operations."
+		},
+		{
+			"id": "Correspondence",
+			"route": "/correspondence",
+			"type": "custom",
+			"title": "Letters & correspondence",
+			"component": "CorrespondenceIndex",
+			"_note": "Letter/correspondence generation from templates with merge data (single or batch), via correspondenceStore + CorrespondenceController (generate/generateBatch/jobStatus). Hybrid data path; type:custom preserves it. Restored reachability — openspec/changes/orphaned-surface-restoration (REQ-DDOSR-003); the component and backend already existed, only the manifest/registry/menu wiring was missing."
+		},
+		{
+			"id": "Drafts",
+			"route": "/drafts",
+			"type": "index",
+			"title": "Drafts",
+			"config": {
+				"register": "filinq",
+				"schema": "documentDraft",
+				"columns": [
+					{
+						"key": "templateName",
+						"label": "Template"
+					},
+					{
+						"key": "@self.updated",
+						"label": "Last change"
+					},
+					{
+						"key": "stage",
+						"label": "Stage"
+					},
+					{
+						"key": "origin",
+						"label": "Started from"
+					}
+				],
+				"defaultFilters": {
+					"stage": [
+						"answering",
+						"editing"
+					]
+				},
+				"defaultSort": [
+					{
+						"field": "expiresAt",
+						"order": "desc"
+					}
+				],
+				"rowRoute": "DraftEditor",
+				"showAdd": false,
+				"showTitle": true,
+				"emptyText": "No drafts. Choose Open for editing on Letters & correspondence, or Save and finish later in a guided document."
+			},
+			"_note": "generate-draft-and-attended-edit REQ-GDA-003: the session user's drafts still being answered or edited. documentDraft declares authorization.scope private, so OpenRegister lists only the user's own (an administrator sees all). Sorted on expiresAt, which every save sets 30 days on, so the newest change comes first. A row opens DraftEditor, which sends a wizard run still being answered back into the wizard at its saved step."
+		},
+		{
+			"id": "DraftEditor",
+			"route": "/drafts/:id",
+			"type": "custom",
+			"title": "Draft",
+			"component": "DraftEditor",
+			"_note": "generate-draft-and-attended-edit: edit the rendered document before it is stored, then Finish (api/documents/drafts/{id}/finish files and logs it through the direct path) or Discard. type:custom because finishing is a filinq route and the editing surface is HtmlDocumentEditor, shared with TemplateDetail (design D7)."
+		},
+		{
+			"id": "PrintPreview",
+			"route": "/print-preview/:templateId?",
+			"type": "custom",
+			"title": "Print Preview",
+			"component": "PrintPreview",
+			"_note": "Standalone print-preview page; no nav item; launched programmatically."
+		}
+	]
+}

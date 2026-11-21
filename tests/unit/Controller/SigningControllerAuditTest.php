@@ -28,6 +28,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\SigningController;
+use OCA\Filinq\Controller\Support\SigningServices;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningService;
 use OCA\Filinq\Service\SigningVerificationService;
@@ -118,11 +119,8 @@ class SigningControllerAuditTest extends TestCase {
 		$groupManager->method('isAdmin')->willReturn($isAdmin);
 
 		return new SigningController(
-			'filinq',
 			$this->createMock(IRequest::class),
-			$this->signingService,
-			$this->auditService,
-			$this->createMock(SigningVerificationService::class),
+			new SigningServices(signing: $this->signingService, audit: $this->auditService, verification: $this->createMock(SigningVerificationService::class)),
 			$session,
 			$this->createMock(LoggerInterface::class),
 			$this->l10n,

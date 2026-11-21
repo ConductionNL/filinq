@@ -401,4 +401,65 @@ class TemplateVersionServiceTest extends TestCase {
 
 	}//end testRestoreVersionCreatesSnapshotAndUpdatesTemplate()
 
+	/**
+	 * An office template's snapshot names its source file and checksum, and
+	 * restoring it re-points the template at both
+	 * (office-template-authoring REQ-DDOTA-006).
+	 *
+	 * @return void
+	 */
+	public function testAnOfficeVersionKeepsAndRestoresItsSource(): void {
+		$saved = [];
+		$target = ['id' => 'ver-1', 'templateId' => 'tmpl-1', 'version' => 1, 'content' => 'oud', 'name' => 'Brief', 'sourceFileId' => 11, 'contentHash' => 'aaa'];
+		$targetEntity = $this->createMock(ObjectEntity::class);
+		$targetEntity->method('jsonSerialize')->willReturn($target);
+		$mockObjectService = $this->createMock(ObjectService::class);
+		$mockObjectService->method('find')->willReturn($targetEntity);
+		$mockObjectService->method('buildSearchQuery')->willReturn([]);
+		$mockObjectService->method('searchObjectsPaginated')->willReturn(['results' => [], 'total' => 1]);
+		$mockObjectService->method('saveObject')->willReturnCallback(
+			static function (array $object=[]) use (&$saved): array {
+				$saved[] = $object;
+				return $object;
+			}
+		);
+		$this->setUpWithOpenRegister($mockObjectService);
+		$this->mockResolver->method('getVersionRegisterAndSchema')->willReturn(['register' => 'reg', 'schema' => 'templateVersion']);
+
+		$templates = $this->createMock(TemplateService::class);
+		$templates->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'content' => 'nieuw', 'name' => 'Brief', 'templateType' => 'office', 'sourceFileId' => 22, 'contentHash' => 'bbb']);
+		$templates->expects($this->once())->method('updateTemplateWithoutVersion')
+			->with('tmpl-1', ['content' => 'oud', 'name' => 'Brief', 'description' => '', 'format' => 'A4', 'orientation' => 'P', 'sourceFileId' => 11, 'contentHash' => 'aaa'])
+			->willReturn(['id' => 'tmpl-1', 'sourceFileId' => 11]);
+
+		$result = $this->versionService->restoreVersion(templateId: 'tmpl-1', versionId: 'ver-1', editor: 'admin', service: $templates);
+
+		$this->assertSame(['id' => 'tmpl-1', 'sourceFileId' => 11], $result);
+		$this->assertSame([22, 'bbb'], [$saved[0]['sourceFileId'], $saved[0]['contentHash']]);
+	}//end testAnOfficeVersionKeepsAndRestoresItsSource()
+
+	/**
+	 * A Twig snapshot carries no source fields.
+	 *
+	 * @return void
+	 */
+	public function testATwigSnapshotHasNoSourceFields(): void {
+		$saved = [];
+		$mockObjectService = $this->createMock(ObjectService::class);
+		$mockObjectService->method('buildSearchQuery')->willReturn([]);
+		$mockObjectService->method('searchObjectsPaginated')->willReturn(['results' => [], 'total' => 0]);
+		$mockObjectService->method('saveObject')->willReturnCallback(
+			static function (array $object=[]) use (&$saved): array {
+				$saved[] = $object;
+				return $object;
+			}
+		);
+		$this->setUpWithOpenRegister($mockObjectService);
+		$this->mockResolver->method('getVersionRegisterAndSchema')->willReturn(['register' => 'reg', 'schema' => 'templateVersion']);
+
+		$this->versionService->createVersion(templateId: 't', templateState: ['content' => '{{ x }}', 'sourceFileId' => null], editor: 'admin');
+
+		$this->assertArrayNotHasKey('sourceFileId', $saved[0]);
+		$this->assertArrayNotHasKey('contentHash', $saved[0]);
+	}//end testATwigSnapshotHasNoSourceFields()
 }//end class

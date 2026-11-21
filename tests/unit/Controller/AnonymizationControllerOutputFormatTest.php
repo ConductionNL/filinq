@@ -23,17 +23,22 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\AnonymizationController;
 use OCA\Filinq\Controller\BatchAnonymizationController;
+use OCA\Filinq\Controller\Support\AnonymizationServices;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeOptions;
+use OCA\Filinq\Service\AnonymizeRequestService;
 use OCA\Filinq\Service\BatchAnonymizeService;
 use OCA\Filinq\Service\BatchExtractionService;
 use OCA\Filinq\Service\BatchReportService;
+use OCA\Filinq\Service\BatchRequestService;
 use OCA\Filinq\Service\BatchStateService;
 use OCA\Filinq\Service\BatchUploadService;
 use OCA\Filinq\Service\EntityConsolidationService;
 use OCA\Filinq\Service\FileListingService;
 use OCA\Filinq\Service\FolderBatchService;
 use OCA\Filinq\Service\WooProfileService;
+use OCA\Filinq\Tests\Unit\Service\ReadsAnonymizeOptions;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
@@ -62,6 +67,8 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.TooManyPublicMethods)
  */
 class AnonymizationControllerOutputFormatTest extends TestCase {
+	use ReadsAnonymizeOptions;
+
 
 	/**
 	 * @var IRequest|MockObject
@@ -226,9 +233,13 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocument')
 			->with(
-				fileId: 1,
-				entities: $this->anything(),
-				outputFormat: 'pdf'
+				1,
+				$this->anything(),
+				$this->optionsWith(
+					[
+						'outputFormat' => 'pdf',
+					]
+				)
 			)
 			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'x']);
 
@@ -255,9 +266,13 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocument')
 			->with(
-				fileId: 2,
-				entities: $this->anything(),
-				outputFormat: 'preserve'
+				2,
+				$this->anything(),
+				$this->optionsWith(
+					[
+						'outputFormat' => 'preserve',
+					]
+				)
 			)
 			->willReturn(['replacementCount' => 0, 'anonymizedFileId' => 'y']);
 
@@ -265,6 +280,72 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 		$this->assertSame(200, $response->getStatus());
 
 	}//end testAcceptsPreserveLowercase()
+
+	/**
+	 * `sanitize: true` reaches the service as the sanitize option.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 */
+	public function testSanitizeTrueIsForwarded(): void {
+		$this->mockRequest->method('getParams')->willReturn(
+			[
+				'entities' => [['type' => 'PERSON', 'text' => 'Test']],
+				'outputFormat' => 'pdf',
+				'sanitize' => true,
+			]
+		);
+
+		$this->mockAnonService->expects($this->once())
+			->method('anonymizeDocument')
+			->with(3, $this->anything(), $this->callback(static fn (AnonymizeOptions $o): bool => $o->runFor(fileId: 3, entities: [])->options['sanitize'] === true))
+			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'z']);
+
+		$response = $this->controller->anonymize(fileId: 3);
+		$this->assertSame(200, $response->getStatus());
+
+	}//end testSanitizeTrueIsForwarded()
+
+	/**
+	 * Without `sanitize` (and no tenant default) the run does not sanitize.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 */
+	public function testAbsentSanitizeLeavesItOff(): void {
+		$this->mockRequest->method('getParams')->willReturn(
+			['entities' => [['type' => 'PERSON', 'text' => 'Test']], 'outputFormat' => 'pdf']
+		);
+
+		$this->mockAnonService->expects($this->once())
+			->method('anonymizeDocument')
+			->with(4, $this->anything(), $this->callback(static fn (AnonymizeOptions $o): bool => array_key_exists('sanitize', $o->runFor(fileId: 4, entities: [])->options) === false))
+			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'z']);
+
+		$this->assertSame(200, $this->controller->anonymize(fileId: 4)->getStatus());
+
+	}//end testAbsentSanitizeLeavesItOff()
+
+	/**
+	 * A `sanitize` that is not a boolean answers 400 before any service call.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 */
+	public function testReturns400ForNonBooleanSanitize(): void {
+		$this->mockRequest->method('getParams')->willReturn(
+			['entities' => [['type' => 'PERSON', 'text' => 'Test']], 'sanitize' => 'true']
+		);
+		$this->mockAnonService->expects($this->never())->method('anonymizeDocument');
+
+		$response = $this->controller->anonymize(fileId: 5);
+		$this->assertSame(400, $response->getStatus());
+		$this->assertSame(['error' => 'Invalid sanitize: must be a boolean'], $response->getData());
+
+	}//end testReturns400ForNonBooleanSanitize()
 
 	// -----------------------------------------------------------------------
 	// Task 2: Tenant default resolution
@@ -291,9 +372,13 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocument')
 			->with(
-				fileId: 5,
-				entities: $this->anything(),
-				outputFormat: 'preserve'
+				5,
+				$this->anything(),
+				$this->optionsWith(
+					[
+						'outputFormat' => 'preserve',
+					]
+				)
 			)
 			->willReturn(['replacementCount' => 0, 'anonymizedFileId' => 'z']);
 
@@ -323,9 +408,13 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocument')
 			->with(
-				fileId: 6,
-				entities: $this->anything(),
-				outputFormat: 'pdf'
+				6,
+				$this->anything(),
+				$this->optionsWith(
+					[
+						'outputFormat' => 'pdf',
+					]
+				)
 			)
 			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'a']);
 
@@ -358,9 +447,13 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 		$this->mockAnonService->expects($this->once())
 			->method('anonymizeDocument')
 			->with(
-				fileId: 7,
-				entities: $this->anything(),
-				outputFormat: 'pdf'
+				7,
+				$this->anything(),
+				$this->optionsWith(
+					[
+						'outputFormat' => 'pdf',
+					]
+				)
 			)
 			->willReturn(['replacementCount' => 1, 'anonymizedFileId' => 'b']);
 
@@ -468,7 +561,8 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 			$this->createMock(FolderBatchService::class),
 			$this->mockL10n,
 			$this->mockAppConfig,
-			$this->mockUserSession
+			$this->mockUserSession,
+			new BatchRequestService(l10n: $this->mockL10n)
 		);
 		// phpcs:enable
 
@@ -578,16 +672,14 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 	 */
 	private function buildController(): AnonymizationController {
 		// phpcs:disable CustomSn.Functions.NamedParameters
+		$logger = $this->createMock(LoggerInterface::class);
 		return new AnonymizationController(
-			'filinq',
 			$this->mockRequest,
-			$this->createMock(LoggerInterface::class),
-			$this->mockAnonService,
-			$this->createMock(FileListingService::class),
+			$logger,
+			new AnonymizationServices(anonymization: $this->mockAnonService, files: $this->createMock(FileListingService::class)),
 			$this->mockL10n,
 			$this->mockAppConfig,
-			$this->mockUserSession,
-			$this->mockRootFolder
+			new AnonymizeRequestService(logger: $logger, anonymizationService: $this->mockAnonService, l10n: $this->mockL10n, rootFolder: $this->mockRootFolder, userSession: $this->mockUserSession)
 		);
 		// phpcs:enable
 
@@ -626,7 +718,8 @@ class AnonymizationControllerOutputFormatTest extends TestCase {
 			$this->createMock(FolderBatchService::class),
 			$this->mockL10n,
 			$this->mockAppConfig,
-			$this->mockUserSession
+			$this->mockUserSession,
+			new BatchRequestService(l10n: $this->mockL10n)
 		);
 		// phpcs:enable
 
