@@ -8,7 +8,8 @@
  * integriq sibling app sits next to this one, and this copy otherwise, so the
  * listener and the contract test run against the published surface either way.
  * WatchedFileArrivedContractTest asserts that surface by its literals: a
- * rename in integriq fails that test once the sibling is present.
+ * rename in integriq fails that test once the sibling is present. Only the
+ * @spec tags differ from integriq's file: they name filinq's requirement.
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +36,7 @@ use OCP\EventDispatcher\Event;
  * file by mistake; it is not a security boundary against code in the same
  * process.
  *
- * @spec openspec/changes/sources-sftp-adapter-intake-hand-over/specs/data-infra-connectors/spec.md#requirement-a-watched-folder-hands-a-file-to-a-named-intake-through-a-typed-event-req-sftp-005
+ * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-takes-a-scanned-batch-that-integriqs-watched-folder-hands-over-req-scw-001
  */
 class WatchedFileArrivedEvent extends Event {
 
@@ -56,7 +57,7 @@ class WatchedFileArrivedEvent extends Event {
 	 * @param string $path              The file's path, relative to the owner's user folder.
 	 * @param string $ownerUid          The owner of the watched folder.
 	 *
-	 * @spec openspec/changes/sources-sftp-adapter-intake-hand-over/specs/data-infra-connectors/spec.md#requirement-a-watched-folder-hands-a-file-to-a-named-intake-through-a-typed-event-req-sftp-005
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-takes-a-scanned-batch-that-integriqs-watched-folder-hands-over-req-scw-001
 	 */
 	public function __construct(
 		private readonly string $synchronizationId,
@@ -74,7 +75,7 @@ class WatchedFileArrivedEvent extends Event {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/sources-sftp-adapter-intake-hand-over/specs/data-infra-connectors/spec.md#requirement-a-watched-folder-hands-a-file-to-a-named-intake-through-a-typed-event-req-sftp-005
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-takes-a-scanned-batch-that-integriqs-watched-folder-hands-over-req-scw-001
 	 */
 	public function getSynchronizationId(): string {
 		return $this->synchronizationId;
@@ -85,7 +86,7 @@ class WatchedFileArrivedEvent extends Event {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/sources-sftp-adapter-intake-hand-over/specs/data-infra-connectors/spec.md#requirement-a-watched-folder-hands-a-file-to-a-named-intake-through-a-typed-event-req-sftp-005
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-takes-a-scanned-batch-that-integriqs-watched-folder-hands-over-req-scw-001
 	 */
 	public function getSourceId(): string {
 		return $this->sourceId;
@@ -96,7 +97,7 @@ class WatchedFileArrivedEvent extends Event {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/sources-sftp-adapter-intake-hand-over/specs/data-infra-connectors/spec.md#requirement-a-watched-folder-hands-a-file-to-a-named-intake-through-a-typed-event-req-sftp-005
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-takes-a-scanned-batch-that-integriqs-watched-folder-hands-over-req-scw-001
 	 */
 	public function getIntakeApp(): string {
 		return $this->intakeApp;
@@ -107,7 +108,7 @@ class WatchedFileArrivedEvent extends Event {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/sources-sftp-adapter-intake-hand-over/specs/data-infra-connectors/spec.md#requirement-a-watched-folder-hands-a-file-to-a-named-intake-through-a-typed-event-req-sftp-005
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-takes-a-scanned-batch-that-integriqs-watched-folder-hands-over-req-scw-001
 	 */
 	public function getFileId(): int {
 		return $this->fileId;
@@ -118,7 +119,7 @@ class WatchedFileArrivedEvent extends Event {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/sources-sftp-adapter-intake-hand-over/specs/data-infra-connectors/spec.md#requirement-a-watched-folder-hands-a-file-to-a-named-intake-through-a-typed-event-req-sftp-005
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-takes-a-scanned-batch-that-integriqs-watched-folder-hands-over-req-scw-001
 	 */
 	public function getPath(): string {
 		return $this->path;
@@ -129,7 +130,7 @@ class WatchedFileArrivedEvent extends Event {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/sources-sftp-adapter-intake-hand-over/specs/data-infra-connectors/spec.md#requirement-a-watched-folder-hands-a-file-to-a-named-intake-through-a-typed-event-req-sftp-005
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-takes-a-scanned-batch-that-integriqs-watched-folder-hands-over-req-scw-001
 	 */
 	public function getOwnerUid(): string {
 		return $this->ownerUid;
@@ -143,7 +144,7 @@ class WatchedFileArrivedEvent extends Event {
 	 *
 	 * @return bool Whether the acceptance was recorded.
 	 *
-	 * @spec openspec/changes/sources-sftp-adapter-intake-hand-over/specs/data-infra-connectors/spec.md#requirement-a-watched-folder-hands-a-file-to-a-named-intake-through-a-typed-event-req-sftp-005
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-takes-a-scanned-batch-that-integriqs-watched-folder-hands-over-req-scw-001
 	 */
 	public function accept(string $appId, string $reference): bool {
 		$reference = trim($reference);
@@ -160,7 +161,7 @@ class WatchedFileArrivedEvent extends Event {
 	 *
 	 * @return array{accepted: bool, intakeApp: string, reference: string|null}
 	 *
-	 * @spec openspec/changes/sources-sftp-adapter-intake-hand-over/specs/data-infra-connectors/spec.md#requirement-a-watched-folder-hands-a-file-to-a-named-intake-through-a-typed-event-req-sftp-005
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-takes-a-scanned-batch-that-integriqs-watched-folder-hands-over-req-scw-001
 	 */
 	public function getResult(): array {
 		return ['accepted' => $this->reference !== null, 'intakeApp' => $this->intakeApp, 'reference' => $this->reference];
