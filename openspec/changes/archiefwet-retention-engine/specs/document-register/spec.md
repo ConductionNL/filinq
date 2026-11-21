@@ -18,8 +18,8 @@ validates.
 
 The document register MUST declare, on its record schemas
 `correspondence`, `generatedDocument` and `publicationRecord`, an `archive`
-configuration block
-(`enabled: true`, a placeholder selectielijst `classificatie` pending
+configuration block in the keys OpenRegister reads
+(`enabled: true`, a placeholder selectielijst `classification` pending
 selectielijst-manager confirmation, and an `afleidingswijze` with its
 trigger field: `closureField: generatedAt` for correspondence and
 generatedDocument, `bronEigenschap: publicatiedatum` for
@@ -35,7 +35,7 @@ retention implementation).
 
 - GIVEN a fresh install after `ConfigurationService::importFromApp()` runs
 - WHEN the `correspondence` schema is loaded from OpenRegister
-- THEN its `archive` configuration carries `enabled: true`, the placeholder `classificatie` and `closureField: generatedAt`
+- THEN its `archive` configuration carries `enabled: true`, the placeholder `classification` and `closureField: generatedAt`
 - @e2e exclude boot-time register import with no UI surface — covered by PHPUnit import-pin tests (tests/unit/Settings/)
 
 #### Scenario: New correspondence records are stamped
