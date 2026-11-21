@@ -16,8 +16,8 @@ so the reason typed is not lost.
 		:item="{ reason: '' }"
 		:dialogTitle="dialogTitle"
 		data-testid="required-reason-modal"
-		@confirm="onConfirm"
-		@close="$emit('close')" />
+		@confirm="submitReason"
+		@close="close" />
 </template>
 
 <script>
@@ -93,13 +93,23 @@ export default {
 		t,
 
 		/**
+		 * Close without a reason.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
+		 */
+		close() {
+			this.$emit('close')
+		},
+
+		/**
 		 * Refuse an empty reason before anything is sent; otherwise submit it.
 		 *
 		 * @param {object} formData The form values.
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
 		 */
-		async onConfirm(formData) {
+		async submitReason(formData) {
 			const reason = reasonOf(formData)
 			if (reason === '') {
 				this.$refs.formDialog?.setResult({

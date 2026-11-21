@@ -73,11 +73,61 @@
 		},
 		{
 			"id": "DestructionLists",
-			"route": "/destruction-lists/:id?",
-			"type": "custom",
+			"route": "/destruction-lists",
+			"type": "index",
 			"title": "Destruction lists",
-			"component": "DestructionLists",
-			"_note": "The archivist's review of OpenRegister's destruction lists (archiefwet-retention-engine, REQ-DDARE-004): the lists with status, record count and date, one list with its proposed records, approval in full or in part with a reason per kept record, and rejection with a reason. type:custom because it reads and writes OpenRegister's own api/archival/destruction-lists routes, which check the archivist role; filinq adds no route of its own."
+			"config": {
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/openregister/api/archival/destruction-lists",
+					"rowsPath": "results",
+					"searchFields": {"status": {"param": "status", "single": true}},
+					"refusedText": "Only an archivist can review destruction lists."
+				},
+				"rowRoute": "DestructionListDetail",
+				"columns": [
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "valueMap",
+						"formatterOptions": {
+							"map": {
+								"in_review": "In review",
+								"awaiting_second_approval": "Awaiting second approval",
+								"approved": "Approved",
+								"rejected": "Rejected",
+								"completed": "Completed",
+								"executing": "Executing",
+								"executed": "Executed"
+							}
+						}
+					},
+					{"key": "entryCount", "label": "Records"},
+					{"key": "createdAt", "label": "Created", "formatter": "date"}
+				]
+			},
+			"_note": "The destruction lists OpenRegister draws up (archiefwet-retention-engine, REQ-DDARE-004), as an ordinary index over the endpoint source: OpenRegister's own GET api/archival/destruction-lists, which checks the archivist role and answers 403 to anybody else. filinq adds no route. rowRoute opens DestructionListDetail."
+		},
+		{
+			"id": "DestructionListDetail",
+			"route": "/destruction-lists/:id",
+			"type": "detail",
+			"title": "Destruction list",
+			"config": {
+				"entitySource": "endpoint",
+				"sourceConfig": {"url": "/apps/openregister/api/archival/destruction-lists/{id}"},
+				"bodyWidgets": [
+					{
+						"id": "destruction-list-review",
+						"component": "DestructionListReview",
+						"placement": "before-body",
+						"props": {
+							"objectId": "@objectId"
+						}
+					}
+				]
+			},
+			"_note": "One destruction list as a type:detail page over OpenRegister's GET api/archival/destruction-lists/{id}. The review is a bodyWidgets section (DestructionListReview): the proposed records with title, schema, register, archiefactiedatum and selectielijst category, keeping a record off the list with a reason, approval in full or of the rest (one POST .../approve carrying every kept record and its reason, which no per-row action can send) and rejection with a reason (POST .../reject). Every call is OpenRegister's."
 		},
 		{
 			"id": "SubjectErasures",

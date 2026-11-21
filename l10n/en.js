@@ -4085,7 +4085,6 @@ OC.L10N.register(
         "This is a sanitized copy, the one to seal.": "This is a sanitized copy, the one to seal.",
         "Sanitized": "Sanitized",
         "A reason is required.": "A reason is required.",
-        "All destruction lists": "All destruction lists",
         "Approve list": "Approve list",
         "Approve the rest": "Approve the rest",
         "Archive action date": "Archive action date",
@@ -4093,18 +4092,14 @@ OC.L10N.register(
         "Destruction list": "Destruction list",
         "Destruction list: {status}": "Destruction list: {status}",
         "Destruction lists": "Destruction lists",
-        "Every status": "Every status",
         "Executed": "Executed",
         "Executing": "Executing",
         "Keep {title}": "Keep {title}",
         "Keep this record": "Keep this record",
         "Kept: {reason}": "Kept: {reason}",
-        "No destruction lists.": "No destruction lists.",
         "Nothing on a rejected list is destroyed.": "Nothing on a rejected list is destroyed.",
-        "OpenRegister has no register for destruction lists yet. An administrator links it under Archiefbeheer in the settings.": "OpenRegister has no register for destruction lists yet. An administrator links it under Archiefbeheer in the settings.",
         "Put back on the list": "Put back on the list",
         "Records proposed for destruction": "Records proposed for destruction",
-        "Records whose retention period has ended are proposed for destruction here. Nothing is destroyed until an archivist approves the list.": "Records whose retention period has ended are proposed for destruction here. Nothing is destroyed until an archivist approves the list.",
         "Reject destruction list": "Reject destruction list",
         "Reject list": "Reject list",
         "Selection list category": "Selection list category",
@@ -4114,7 +4109,8 @@ OC.L10N.register(
         "This could not be saved. Try again later.": "This could not be saved. Try again later.",
         "This list proposes no records.": "This list proposes no records.",
         "Why is the list rejected?": "Why is the list rejected?",
-        "Why is this record kept?": "Why is this record kept?"
+        "Why is this record kept?": "Why is this record kept?",
+        "Only an archivist can review destruction lists.": "Only an archivist can review destruction lists."
     },
     "nplurals=2; plural=(n != 1);"
 )

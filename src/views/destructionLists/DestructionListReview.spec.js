@@ -2,9 +2,9 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * The destruction lists page: the overview from OpenRegister, one list with
- * its proposed records, keeping records with a reason, the partial approval
- * that carries them, and the rejection.
+ * The review of one destruction list: its proposed records from OpenRegister,
+ * keeping records with a reason, the partial approval that carries them, and
+ * the rejection.
  *
  * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
  */
@@ -12,7 +12,10 @@
 import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { createApp, nextTick } from 'vue'
-import DestructionLists, { destructionStatusLabel } from './DestructionLists.vue'
+import DestructionListReview, {
+	destructionStatusLabel,
+	localDate,
+} from './DestructionListReview.vue'
 
 jest.mock('@nextcloud/axios', () => ({
 	__esModule: true,
@@ -32,16 +35,14 @@ jest.mock('@nextcloud/router', () => ({ generateUrl: (url) => '/index.php' + url
 jest.mock('@conduction/nextcloud-vue', () => ({
 	CnDataTable: { name: 'CnDataTable', render: () => null },
 	CnFormDialog: { name: 'CnFormDialog', render: () => null },
-	CnIndexPage: { name: 'CnIndexPage', render: () => null },
 }))
 jest.mock('@nextcloud/vue', () => ({
 	NcButton: { name: 'NcButton', render: () => null },
 	NcLoadingIcon: { name: 'NcLoadingIcon', render: () => null },
 	NcNoteCard: { name: 'NcNoteCard', render: () => null },
-	NcSelect: { name: 'NcSelect', render: () => null },
 }))
 
-const LISTS = '/index.php/apps/openregister/api/archival/destruction-lists'
+const LIST_URL = '/index.php/apps/openregister/api/archival/destruction-lists/l-1'
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
 const LIST = {
 	id: 'l-1',
@@ -74,20 +75,17 @@ afterEach(() => {
 })
 
 /**
- * Mount the page on a route.
+ * Mount the section.
  *
- * @param {string} id The list uuid in the route, empty for the overview.
- * @param {object} router The router double.
- * @return {Promise<object>} The rendered page.
+ * @param {object} props The section's props.
+ * @param {object} route The route double.
+ * @return {Promise<object>} `{ vm, unmount }`.
  */
-async function mountPage(id = '', router = { push: jest.fn() }) {
+async function mountReview(props = { objectId: 'l-1' }, route = { params: {} }) {
 	const el = document.createElement('div')
 	document.body.appendChild(el)
-	const app = createApp(DestructionLists)
-	Object.assign(app.config.globalProperties, {
-		$route: { params: { id } },
-		$router: router,
-	})
+	const app = createApp(DestructionListReview, props)
+	app.config.globalProperties.$route = route
 	const vm = app.mount(el)
 	await nextTick()
 	await flush()
@@ -101,57 +99,47 @@ async function mountPage(id = '', router = { push: jest.fn() }) {
 	return rendered
 }
 
-describe('DestructionLists', () => {
+describe('DestructionListReview', () => {
 	it('labels every status OpenRegister gives a list', () => {
 		expect(destructionStatusLabel('in_review')).toBe('In review')
 		expect(destructionStatusLabel('awaiting_second_approval')).toBe(
 			'Awaiting second approval',
 		)
+		expect(destructionStatusLabel('approved')).toBe('Approved')
+		expect(destructionStatusLabel('rejected')).toBe('Rejected')
+		expect(destructionStatusLabel('completed')).toBe('Completed')
+		expect(destructionStatusLabel('executing')).toBe('Executing')
 		expect(destructionStatusLabel('executed')).toBe('Executed')
 		expect(destructionStatusLabel('something')).toBe('something')
 		expect(destructionStatusLabel('')).toBe('Unknown')
 	})
 
-	it("lists OpenRegister's destruction lists and opens one by its uuid", async () => {
-		axios.get.mockResolvedValue({
-			data: {
-				results: [
-					{
-						uuid: 'l-1',
-						status: 'in_review',
-						entryCount: 2,
-						createdAt: '2026-11-01',
-					},
-				],
-				configured: true,
-			},
-		})
-		const router = { push: jest.fn() }
-		await mountPage('', router)
-
-		expect(axios.get).toHaveBeenCalledWith(LISTS, { params: {} })
-		expect(rendered.vm.rows).toEqual([
-			{
-				uuid: 'l-1',
-				status: 'in_review',
-				createdAt: '2026-11-01',
-				objectCount: 2,
-			},
-		])
-		expect(rendered.vm.configured).toBe(true)
-
-		rendered.vm.open({ uuid: 'l-1' })
-		expect(router.push).toHaveBeenCalledWith({
-			name: 'DestructionLists',
-			params: { id: 'l-1' },
-		})
+	it("writes a date the way the user's locale does and leaves a missing one empty", () => {
+		expect(localDate('')).toBe('')
+		expect(localDate('not a date')).toBe('')
+		expect(localDate('2026-01-01')).toBe(
+			new Date('2026-01-01').toLocaleDateString(),
+		)
 	})
 
-	it('says when OpenRegister has no destruction list register', async () => {
-		axios.get.mockResolvedValue({ data: { results: [], configured: false } })
-		await mountPage()
+	it('reads the list the detail page names and lets the archivist decide', async () => {
+		axios.get.mockResolvedValue({ data: LIST })
+		await mountReview()
 
-		expect(rendered.vm.configured).toBe(false)
+		expect(axios.get).toHaveBeenCalledWith(LIST_URL)
+		expect(rendered.vm.entries.map((row) => row.uuid)).toEqual(['o-1', 'o-2'])
+		expect(rendered.vm.entries[0].actionDate).toBe(
+			new Date('2026-01-01').toLocaleDateString(),
+		)
+		expect(rendered.vm.decidable).toBe(true)
+		expect(rendered.vm.approveLabel).toBe('Approve list')
+	})
+
+	it("falls back to the route's id", async () => {
+		axios.get.mockResolvedValue({ data: LIST })
+		await mountReview({}, { params: { id: 'l-1' } })
+
+		expect(axios.get).toHaveBeenCalledWith(LIST_URL)
 	})
 
 	it("shows OpenRegister's refusal of a non-archivist as it comes", async () => {
@@ -161,40 +149,18 @@ describe('DestructionLists', () => {
 				data: { error: 'Onvoldoende rechten: archivaris rol is vereist' },
 			},
 		})
-		await mountPage()
+		await mountReview()
 
+		expect(rendered.vm.list).toBe(null)
 		expect(rendered.vm.error).toBe(
 			'Onvoldoende rechten: archivaris rol is vereist',
 		)
-		expect(rendered.vm.rows).toEqual([])
-	})
-
-	it('filters the overview by status', async () => {
-		axios.get.mockResolvedValue({ data: { results: [], configured: true } })
-		await mountPage()
-
-		rendered.vm.statusFilter = 'rejected'
-		await rendered.vm.load()
-
-		expect(axios.get).toHaveBeenLastCalledWith(LISTS, {
-			params: { status: 'rejected' },
-		})
-	})
-
-	it('shows one list with its proposed records and lets the archivist decide', async () => {
-		axios.get.mockResolvedValue({ data: LIST })
-		await mountPage('l-1')
-
-		expect(axios.get).toHaveBeenCalledWith(LISTS + '/l-1')
-		expect(rendered.vm.entries.map((row) => row.uuid)).toEqual(['o-1', 'o-2'])
-		expect(rendered.vm.decidable).toBe(true)
-		expect(rendered.vm.approveLabel).toBe('Approve list')
 	})
 
 	it('approves the rest with the kept record and its reason, and shows the new status', async () => {
 		axios.get.mockResolvedValue({ data: LIST })
 		axios.post.mockResolvedValue({ data: { status: 'approved' } })
-		await mountPage('l-1')
+		await mountReview()
 
 		rendered.vm.excluding = LIST.objects[1]
 		expect(await rendered.vm.exclude('Beroep loopt')).toEqual({ ok: true })
@@ -202,7 +168,7 @@ describe('DestructionLists', () => {
 
 		await rendered.vm.approve()
 
-		expect(axios.post).toHaveBeenCalledWith(LISTS + '/l-1/approve', {
+		expect(axios.post).toHaveBeenCalledWith(LIST_URL + '/approve', {
 			action: 'approve_partial',
 			excluded: ['o-2'],
 			exclusionReasons: { 'o-2': 'Beroep loopt' },
@@ -216,14 +182,14 @@ describe('DestructionLists', () => {
 	it('puts a kept record back so the list is approved in full', async () => {
 		axios.get.mockResolvedValue({ data: LIST })
 		axios.post.mockResolvedValue({ data: { status: 'approved' } })
-		await mountPage('l-1')
+		await mountReview()
 
 		rendered.vm.excluding = LIST.objects[0]
 		await rendered.vm.exclude('Beroep loopt')
 		rendered.vm.include('o-1')
 		await rendered.vm.approve()
 
-		expect(axios.post).toHaveBeenCalledWith(LISTS + '/l-1/approve', {
+		expect(axios.post).toHaveBeenCalledWith(LIST_URL + '/approve', {
 			action: 'approve_all',
 			excluded: [],
 			exclusionReasons: {},
@@ -240,7 +206,7 @@ describe('DestructionLists', () => {
 				},
 			},
 		})
-		await mountPage('l-1')
+		await mountReview()
 
 		await rendered.vm.approve()
 
@@ -253,11 +219,11 @@ describe('DestructionLists', () => {
 	it('rejects the list with the reason and shows it rejected', async () => {
 		axios.get.mockResolvedValue({ data: LIST })
 		axios.post.mockResolvedValue({ data: { status: 'rejected' } })
-		await mountPage('l-1')
+		await mountReview()
 
 		const result = await rendered.vm.reject('Lijst onvolledig')
 
-		expect(axios.post).toHaveBeenCalledWith(LISTS + '/l-1/reject', {
+		expect(axios.post).toHaveBeenCalledWith(LIST_URL + '/reject', {
 			reason: 'Lijst onvolledig',
 		})
 		expect(result.ok).toBe(true)
@@ -272,7 +238,7 @@ describe('DestructionLists', () => {
 				data: { error: 'Een reden voor afwijzing is verplicht' },
 			},
 		})
-		await mountPage('l-1')
+		await mountReview()
 
 		const result = await rendered.vm.reject('x')
 
@@ -282,27 +248,5 @@ describe('DestructionLists', () => {
 			error: 'Een reden voor afwijzing is verplicht',
 		})
 		expect(rendered.vm.status).toBe('in_review')
-	})
-
-	it('goes back to the overview', async () => {
-		axios.get.mockResolvedValue({ data: LIST })
-		const router = { push: jest.fn() }
-		await mountPage('l-1', router)
-
-		rendered.vm.back()
-
-		expect(router.push).toHaveBeenCalledWith({ name: 'DestructionLists' })
-		expect(rendered.vm.list).toBe(null)
-	})
-
-	it("writes a date the way the user's locale does and leaves a missing one empty", async () => {
-		axios.get.mockResolvedValue({ data: { results: [] } })
-		await mountPage()
-
-		expect(rendered.vm.formatDate('')).toBe('')
-		expect(rendered.vm.formatDate('not a date')).toBe('')
-		expect(rendered.vm.formatDate('2026-01-01')).toBe(
-			new Date('2026-01-01').toLocaleDateString(),
-		)
 	})
 })

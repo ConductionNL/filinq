@@ -4291,7 +4291,6 @@
         "This is a sanitized copy, the one to seal.": "Dit is een opgeschoonde kopie, de kopie om te waarmerken.",
         "Sanitized": "Opgeschoond",
         "A reason is required.": "Een reden is verplicht.",
-        "All destruction lists": "Alle vernietigingslijsten",
         "Approve list": "Lijst goedkeuren",
         "Approve the rest": "De rest goedkeuren",
         "Archive action date": "Archiefactiedatum",
@@ -4299,18 +4298,14 @@
         "Destruction list": "Vernietigingslijst",
         "Destruction list: {status}": "Vernietigingslijst: {status}",
         "Destruction lists": "Vernietigingslijsten",
-        "Every status": "Elke status",
         "Executed": "Uitgevoerd",
         "Executing": "Wordt uitgevoerd",
         "Keep {title}": "{title} bewaren",
         "Keep this record": "Dit record bewaren",
         "Kept: {reason}": "Bewaard: {reason}",
-        "No destruction lists.": "Geen vernietigingslijsten.",
         "Nothing on a rejected list is destroyed.": "Van een afgewezen lijst wordt niets vernietigd.",
-        "OpenRegister has no register for destruction lists yet. An administrator links it under Archiefbeheer in the settings.": "OpenRegister heeft nog geen register voor vernietigingslijsten. Een beheerder koppelt het onder Archiefbeheer in de instellingen.",
         "Put back on the list": "Terugzetten op de lijst",
         "Records proposed for destruction": "Records voorgesteld voor vernietiging",
-        "Records whose retention period has ended are proposed for destruction here. Nothing is destroyed until an archivist approves the list.": "Records waarvan de bewaartermijn is verstreken worden hier voorgesteld voor vernietiging. Er wordt niets vernietigd voordat een archivaris de lijst goedkeurt.",
         "Reject destruction list": "Vernietigingslijst afwijzen",
         "Reject list": "Lijst afwijzen",
         "Selection list category": "Selectielijstcategorie",
@@ -4320,7 +4315,8 @@
         "This could not be saved. Try again later.": "Dit kon niet worden opgeslagen. Probeer het later opnieuw.",
         "This list proposes no records.": "Deze lijst stelt geen records voor.",
         "Why is the list rejected?": "Waarom wordt de lijst afgewezen?",
-        "Why is this record kept?": "Waarom wordt dit record bewaard?"
+        "Why is this record kept?": "Waarom wordt dit record bewaard?",
+        "Only an archivist can review destruction lists.": "Alleen een archivaris kan vernietigingslijsten beoordelen."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

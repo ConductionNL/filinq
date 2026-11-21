@@ -22,15 +22,11 @@ const {
 	approvalBody,
 	approveDestructionList,
 	DECIDABLE_STATUSES,
-	DESTRUCTION_LIST_STATUSES,
 	entryRows,
 	exclusionsWithoutReason,
 	isDecidable,
-	listRows,
-	listsConfigured,
 	listStatus,
 	loadDestructionList,
-	loadDestructionLists,
 	rejectDestructionList,
 } = await import('../../src/services/destructionLists.js')
 
@@ -42,36 +38,14 @@ describe('destruction lists', () => {
 		post.mockReset()
 	})
 
-	it('knows the statuses OpenRegister gives a list and which still wait for a decision', () => {
-		expect(DESTRUCTION_LIST_STATUSES).toEqual([
-			'in_review',
-			'awaiting_second_approval',
-			'approved',
-			'rejected',
-			'completed',
-			'executing',
-			'executed',
-		])
+	it('knows which statuses still wait for a decision', () => {
 		expect(DECIDABLE_STATUSES).toEqual(['in_review', 'awaiting_second_approval'])
 		expect(isDecidable('in_review')).toBe(true)
 		expect(isDecidable('awaiting_second_approval')).toBe(true)
 		expect(isDecidable('approved')).toBe(false)
 		expect(isDecidable('rejected')).toBe(false)
+		expect(isDecidable('executed')).toBe(false)
 		expect(isDecidable('')).toBe(false)
-	})
-
-	it('reads the lists from OpenRegister, filtered only by a known status', async () => {
-		get.mockResolvedValue({ data: { results: [], total: 0, configured: true } })
-
-		await loadDestructionLists('in_review')
-		await loadDestructionLists('nonsense')
-		await loadDestructionLists()
-
-		expect(get).toHaveBeenNthCalledWith(1, LISTS, {
-			params: { status: 'in_review' },
-		})
-		expect(get).toHaveBeenNthCalledWith(2, LISTS, { params: {} })
-		expect(get).toHaveBeenNthCalledWith(3, LISTS, { params: {} })
 	})
 
 	it('reads one list by its uuid', async () => {
@@ -94,46 +68,13 @@ describe('destruction lists', () => {
 			},
 		})
 
-		const result = await loadDestructionLists()
+		const result = await loadDestructionList('l-1')
 
 		expect(result).toEqual({
 			ok: false,
 			status: 403,
 			error: 'Onvoldoende rechten: archivaris rol is vereist',
 		})
-	})
-
-	it('turns list summaries into overview rows and drops what is not a list', () => {
-		const rows = listRows({
-			results: [
-				{
-					uuid: 'l-1',
-					status: 'in_review',
-					createdAt: '2026-11-01T10:00:00+00:00',
-					entryCount: 3,
-				},
-				{ uuid: 'l-2', status: null, entryCount: 'x' },
-				{ status: 'approved' },
-				null,
-			],
-		})
-
-		expect(rows).toEqual([
-			{
-				uuid: 'l-1',
-				status: 'in_review',
-				createdAt: '2026-11-01T10:00:00+00:00',
-				objectCount: 3,
-			},
-			{ uuid: 'l-2', status: '', createdAt: '', objectCount: 0 },
-		])
-		expect(listRows(null)).toEqual([])
-	})
-
-	it('says when OpenRegister has no destruction list register', () => {
-		expect(listsConfigured({ results: [], configured: false })).toBe(false)
-		expect(listsConfigured({ results: [], configured: true })).toBe(true)
-		expect(listsConfigured({ results: [] })).toBe(true)
 	})
 
 	it('lists each proposed object with title, schema, register, action date and category', () => {

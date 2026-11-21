@@ -1,7 +1,8 @@
 /**
  * Destruction lists (vernietigingslijsten): the archivist's review of what
  * OpenRegister proposes to destroy, and the approve, partial-approve and
- * reject calls behind it.
+ * reject calls behind it. The overview is a manifest index over the same
+ * OpenRegister route (`entitySource: endpoint`), so it needs nothing here.
  *
  * Every call goes to OpenRegister's own `api/archival/destruction-lists*`
  * routes. filinq adds no route of its own and keeps no copy; who may review
@@ -19,18 +20,7 @@ import { answer } from './apiAnswer.js'
 
 const LISTS = '/apps/openregister/api/archival/destruction-lists'
 
-/** The statuses OpenRegister gives a destruction list, in process order. */
-export const DESTRUCTION_LIST_STATUSES = Object.freeze([
-	'in_review',
-	'awaiting_second_approval',
-	'approved',
-	'rejected',
-	'completed',
-	'executing',
-	'executed',
-])
-
-/** The statuses in which a list still waits for the archivist's decision. */
+/** The statuses in which a list still waits for the archivist's decision; OpenRegister knows approved, rejected, completed, executing and executed besides. */
 export const DECIDABLE_STATUSES = Object.freeze([
 	'in_review',
 	'awaiting_second_approval',
@@ -55,18 +45,6 @@ function listUrl(id = '', action = '') {
 }
 
 /**
- * The destruction lists, optionally of one status.
- *
- * @param {string} [status] A status from DESTRUCTION_LIST_STATUSES; empty for every list.
- * @return {Promise<{ok: boolean, data?: object, status?: number, error?: string}>} The lists, or the refusal.
- * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
- */
-export function loadDestructionLists(status = '') {
-	const params = DESTRUCTION_LIST_STATUSES.includes(status) ? { status } : {}
-	return answer(axios.get(listUrl(), { params }))
-}
-
-/**
  * One destruction list with its proposed objects.
  *
  * @param {string} id The list's uuid.
@@ -75,41 +53,6 @@ export function loadDestructionLists(status = '') {
  */
 export function loadDestructionList(id) {
 	return answer(axios.get(listUrl(id)))
-}
-
-/**
- * The rows the overview shows, from OpenRegister's list summaries.
- *
- * @param {object} data The answer of loadDestructionLists().
- * @return {Array<{uuid: string, status: string, createdAt: string, objectCount: number}>} One row per list.
- * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
- */
-export function listRows(data) {
-	const results = Array.isArray(data?.results) ? data.results : []
-	return results
-		.filter(
-			(row) =>
-				row !== null
-				&& typeof row === 'object'
-				&& typeof row.uuid === 'string',
-		)
-		.map((row) => ({
-			uuid: row.uuid,
-			status: typeof row.status === 'string' ? row.status : '',
-			createdAt: typeof row.createdAt === 'string' ? row.createdAt : '',
-			objectCount: Number.isInteger(row.entryCount) ? row.entryCount : 0,
-		}))
-}
-
-/**
- * Whether OpenRegister has a destruction list register and schema to read.
- *
- * @param {object} data The answer of loadDestructionLists().
- * @return {boolean} False when OpenRegister says the lists are not configured.
- * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
- */
-export function listsConfigured(data) {
-	return data?.configured !== false
 }
 
 /**

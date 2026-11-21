@@ -2,108 +2,43 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-Destruction lists (vernietigingslijsten): the lists OpenRegister draws up of
-records whose retention has run out, and the archivist's review of one list.
-The archivist approves a list in full, takes objects off it with a reason
-each and approves the rest, or rejects it with a reason.
+The archivist's review of one destruction list (vernietigingslijst): the
+records OpenRegister proposes to destroy, and the decision. The archivist
+approves the list in full, keeps records off it with a reason each and
+approves the rest, or rejects it with a reason.
 
-Everything is read and written through OpenRegister's own
-`api/archival/destruction-lists*` routes; who may review is OpenRegister's
-archivist check, so a 403 is shown as it comes, not hidden by the page.
+Every call is OpenRegister's own `api/archival/destruction-lists*`; who may
+review is OpenRegister's archivist check, so a 403 is shown as it comes.
 
 @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
-@visual exclude No pixel baseline yet: the page needs a destruction list drawn up by OpenRegister on a
-	seeded instance; tests/e2e/workflows/archiefwet-retention.spec.ts drives it there.
 -->
 
 <template>
-	<div class="destruction-lists">
-		<CnIndexPage
-			v-if="!listId"
-			:title="t('filinq', 'Destruction lists')"
-			:description="
-				t(
-					'filinq',
-					'Records whose retention period has ended are proposed for destruction here. Nothing is destroyed until an archivist approves the list.',
-				)
-			"
-			:showTitle="true"
-			:objects="rows"
-			:columns="indexColumns"
-			:loading="loading"
-			v-bind="$options.listOnlyIndexPage"
-			:showAdd="false"
-			:rowClickToView="true"
-			rowKey="uuid"
-			:emptyText="t('filinq', 'No destruction lists.')"
-			data-testid="destruction-lists-index"
-			@rowClick="open"
-			@refresh="load">
-			<template #below-header>
-				<NcNoteCard v-if="error" type="error">
-					{{ error }}
-				</NcNoteCard>
-				<NcNoteCard v-else-if="!configured" type="warning">
-					{{
-						t(
-							'filinq',
-							'OpenRegister has no register for destruction lists yet. An administrator links it under Archiefbeheer in the settings.',
-						)
-					}}
-				</NcNoteCard>
-				<NcSelect
-					v-model="statusFilter"
-					class="destruction-lists__filter"
-					:inputLabel="t('filinq', 'Status')"
-					:options="statusOptions"
-					label="label"
-					:reduce="(option) => option.id"
-					@update:modelValue="load" />
-			</template>
-
-			<template #column-status="{ row }">
-				{{ statusLabel(row.status) }}
-			</template>
-
-			<template #column-createdAt="{ row }">
-				{{ formatDate(row.createdAt) }}
-			</template>
-		</CnIndexPage>
-
-		<section
-			v-else
-			class="destruction-lists__detail"
-			:aria-label="t('filinq', 'Destruction list')"
-			data-testid="destruction-list-detail">
-			<NcButton variant="tertiary" @click="back">
-				{{ t('filinq', 'All destruction lists') }}
-			</NcButton>
-			<h2>{{ t('filinq', 'Destruction list') }}</h2>
+	<section
+		class="destruction-list-review"
+		:aria-label="t('filinq', 'Destruction list')"
+		data-testid="destruction-list-review">
+		<NcLoadingIcon v-if="loading && !list" :size="32" />
+		<NcNoteCard v-else-if="!list" type="error">
+			{{ error || t('filinq', 'The destruction lists could not be read.') }}
+		</NcNoteCard>
+		<template v-else>
 			<p data-testid="destruction-list-status">
 				{{
 					t('filinq', 'Status: {status}', { status: statusLabel(status) })
 				}}
 			</p>
 
-			<NcNoteCard v-if="error" type="error">
-				{{ error }}
-			</NcNoteCard>
-			<NcLoadingIcon v-if="loading" :size="32" />
-
 			<CnDataTable
-				v-else
 				:columns="entryColumns"
 				:rows="entries"
 				rowKey="uuid"
 				:tableLabel="t('filinq', 'Records proposed for destruction')"
 				:emptyText="t('filinq', 'This list proposes no records.')"
 				data-testid="destruction-list-entries">
-				<template #column-archiefactiedatum="{ row }">
-					{{ formatDate(row.archiefactiedatum) }}
-				</template>
 				<template #column-exclusion="{ row }">
 					<template v-if="exclusions[row.uuid]">
-						<span class="destruction-lists__excluded">
+						<span class="destruction-list-review__kept">
 							{{
 								t('filinq', 'Kept: {reason}', {
 									reason: exclusions[row.uuid],
@@ -113,7 +48,6 @@ archivist check, so a 403 is shown as it comes, not hidden by the page.
 						<NcButton
 							v-if="decidable"
 							variant="tertiary"
-							:data-testid="'destruction-list-include-' + row.uuid"
 							@click="include(row.uuid)">
 							{{ t('filinq', 'Put back on the list') }}
 						</NcButton>
@@ -121,14 +55,13 @@ archivist check, so a 403 is shown as it comes, not hidden by the page.
 					<NcButton
 						v-else-if="decidable"
 						variant="secondary"
-						:data-testid="'destruction-list-exclude-' + row.uuid"
 						@click="excluding = row">
 						{{ t('filinq', 'Keep this record') }}
 					</NcButton>
 				</template>
 			</CnDataTable>
 
-			<div v-if="decidable && !loading" class="destruction-lists__actions">
+			<div v-if="decidable" class="destruction-list-review__actions">
 				<NcButton
 					variant="primary"
 					:disabled="saving"
@@ -144,7 +77,7 @@ archivist check, so a 403 is shown as it comes, not hidden by the page.
 					{{ t('filinq', 'Reject list') }}
 				</NcButton>
 			</div>
-		</section>
+		</template>
 
 		<RequiredReasonModal
 			v-if="excluding"
@@ -163,26 +96,21 @@ archivist check, so a 403 is shown as it comes, not hidden by the page.
 			:submit="reject"
 			@done="rejecting = false"
 			@close="rejecting = false" />
-	</div>
+	</section>
 </template>
 
 <script>
-import { CnDataTable, CnIndexPage } from '@conduction/nextcloud-vue'
+import { CnDataTable } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
-import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
+import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import RequiredReasonModal from '../../modals/RequiredReasonModal.vue'
-import { LIST_ONLY_INDEX_PAGE } from '../../constants/indexPage.js'
 import {
 	approveDestructionList,
-	DESTRUCTION_LIST_STATUSES,
 	entryRows,
 	isDecidable,
-	listRows,
-	listsConfigured,
 	listStatus,
 	loadDestructionList,
-	loadDestructionLists,
 	rejectDestructionList,
 } from '../../services/destructionLists.js'
 
@@ -206,25 +134,41 @@ export function destructionStatusLabel(status) {
 	return labels[status] || status || t('filinq', 'Unknown')
 }
 
+/**
+ * A date as the user's locale writes it.
+ *
+ * @param {string} value An ISO date or date-time.
+ * @return {string} The date, or empty.
+ * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
+ */
+export function localDate(value) {
+	const date = value ? new Date(value) : null
+	return date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString() : ''
+}
+
 export default {
-	name: 'DestructionLists',
+	name: 'DestructionListReview',
 	components: {
 		CnDataTable,
-		CnIndexPage,
 		NcButton,
 		NcLoadingIcon,
 		NcNoteCard,
-		NcSelect,
 		RequiredReasonModal,
 	},
 
-	listOnlyIndexPage: LIST_ONLY_INDEX_PAGE,
+	props: {
+		/**
+		 * The list's uuid, handed in by the detail page (`@objectId`).
+		 * Falls back to the route's `:id` when mounted without it.
+		 */
+		objectId: {
+			type: String,
+			default: '',
+		},
+	},
 
 	data() {
 		return {
-			rows: [],
-			configured: true,
-			statusFilter: '',
 			list: null,
 			exclusions: {},
 			excluding: null,
@@ -237,27 +181,15 @@ export default {
 
 	computed: {
 		/**
-		 * @return {string} The uuid of the list on screen, empty on the overview.
+		 * @return {string} The uuid of the list under review.
 		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
 		 */
 		listId() {
-			return this.$route?.params?.id || ''
+			return this.objectId || this.$route?.params?.id || ''
 		},
 
 		/**
-		 * @return {Array<object>} The overview's columns.
-		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
-		 */
-		indexColumns() {
-			return [
-				{ key: 'status', label: t('filinq', 'Status') },
-				{ key: 'objectCount', label: t('filinq', 'Records') },
-				{ key: 'createdAt', label: t('filinq', 'Created') },
-			]
-		},
-
-		/**
-		 * @return {Array<object>} The detail's columns.
+		 * @return {Array<object>} The columns of the proposed records.
 		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
 		 */
 		entryColumns() {
@@ -265,10 +197,7 @@ export default {
 				{ key: 'title', label: t('filinq', 'Title') },
 				{ key: 'schema', label: t('filinq', 'Schema') },
 				{ key: 'register', label: t('filinq', 'Register') },
-				{
-					key: 'archiefactiedatum',
-					label: t('filinq', 'Archive action date'),
-				},
+				{ key: 'actionDate', label: t('filinq', 'Archive action date') },
 				{
 					key: 'classification',
 					label: t('filinq', 'Selection list category'),
@@ -278,29 +207,18 @@ export default {
 		},
 
 		/**
-		 * @return {Array<object>} The status filter's choices, every status first.
-		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
-		 */
-		statusOptions() {
-			return [
-				{ id: '', label: t('filinq', 'Every status') },
-				...DESTRUCTION_LIST_STATUSES.map((id) => ({
-					id,
-					label: destructionStatusLabel(id),
-				})),
-			]
-		},
-
-		/**
-		 * @return {Array<object>} The proposed records of the list on screen.
+		 * @return {Array<object>} The proposed records, the action date in the user's locale.
 		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
 		 */
 		entries() {
-			return entryRows(this.list)
+			return entryRows(this.list).map((row) => ({
+				...row,
+				actionDate: localDate(row.archiefactiedatum),
+			}))
 		},
 
 		/**
-		 * @return {string} The status of the list on screen.
+		 * @return {string} The status of the list.
 		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
 		 */
 		status() {
@@ -327,6 +245,12 @@ export default {
 	},
 
 	watch: {
+		/**
+		 * Read the list again when the page moves to another one.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
+		 */
 		listId() {
 			this.load()
 		},
@@ -341,21 +265,7 @@ export default {
 		statusLabel: destructionStatusLabel,
 
 		/**
-		 * A date as the user's locale writes it.
-		 *
-		 * @param {string} value An ISO date or date-time.
-		 * @return {string} The date, or empty.
-		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
-		 */
-		formatDate(value) {
-			const date = value ? new Date(value) : null
-			return date && !Number.isNaN(date.getTime())
-				? date.toLocaleDateString()
-				: ''
-		},
-
-		/**
-		 * Read the overview, or the list the route names.
+		 * Read the list under review.
 		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
@@ -363,53 +273,23 @@ export default {
 		async load() {
 			this.loading = true
 			this.error = ''
-			const result = this.listId
-				? await loadDestructionList(this.listId)
-				: await loadDestructionLists(this.statusFilter)
+			const result = await loadDestructionList(this.listId)
 			this.loading = false
+			this.exclusions = {}
 			if (!result.ok) {
-				this.error =
-					result.error
-					|| t('filinq', 'The destruction lists could not be read.')
+				this.list = null
+				this.error = result.error
 				return
 			}
-			if (this.listId) {
-				this.list = result.data
-				this.exclusions = {}
-				return
-			}
-			this.configured = listsConfigured(result.data)
-			this.rows = listRows(result.data)
-		},
-
-		/**
-		 * Open one list.
-		 *
-		 * @param {object} row The overview row.
-		 * @return {void}
-		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
-		 */
-		open(row) {
-			this.$router.push({ name: 'DestructionLists', params: { id: row.uuid } })
-		},
-
-		/**
-		 * Back to the overview.
-		 *
-		 * @return {void}
-		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
-		 */
-		back() {
-			this.list = null
-			this.$router.push({ name: 'DestructionLists' })
+			this.list = result.data
 		},
 
 		/**
 		 * Keep one record off the list, with its reason. Nothing is sent yet;
-		 * the exclusions go with the approval.
+		 * the kept records go with the approval.
 		 *
 		 * @param {string} reason Why the record is kept.
-		 * @return {Promise<{ok: boolean}>} Always ok: the reason is required by the dialog.
+		 * @return {Promise<{ok: boolean}>} Always ok: the dialog requires the reason.
 		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
 		 */
 		async exclude(reason) {
@@ -479,20 +359,12 @@ export default {
 </script>
 
 <style scoped>
-.destruction-lists__detail {
-	padding: calc(var(--default-grid-baseline) * 4);
-}
-
-.destruction-lists__filter {
-	max-width: 320px;
-}
-
-.destruction-lists__excluded {
+.destruction-list-review__kept {
 	color: var(--color-text-maxcontrast);
 	margin-inline-end: calc(var(--default-grid-baseline) * 2);
 }
 
-.destruction-lists__actions {
+.destruction-list-review__actions {
 	display: flex;
 	gap: calc(var(--default-grid-baseline) * 2);
 	margin-top: calc(var(--default-grid-baseline) * 4);

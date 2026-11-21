@@ -69,7 +69,7 @@ describe('RequiredReasonModal', () => {
 		const submit = jest.fn()
 		await mountModal(submit)
 
-		await rendered.vm.onConfirm({ reason: '   ' })
+		await rendered.vm.submitReason({ reason: '   ' })
 
 		expect(submit).not.toHaveBeenCalled()
 		expect(mockSetResult).toHaveBeenCalledWith({
@@ -84,7 +84,7 @@ describe('RequiredReasonModal', () => {
 		const onDone = jest.fn()
 		await mountModal(submit, onDone)
 
-		await rendered.vm.onConfirm({ reason: ' Lijst onvolledig ' })
+		await rendered.vm.submitReason({ reason: ' Lijst onvolledig ' })
 
 		expect(submit).toHaveBeenCalledWith('Lijst onvolledig')
 		expect(mockSetResult).toHaveBeenCalledWith({ success: true })
@@ -101,16 +101,33 @@ describe('RequiredReasonModal', () => {
 			onDone,
 		)
 
-		await rendered.vm.onConfirm({ reason: 'Lijst onvolledig' })
+		await rendered.vm.submitReason({ reason: 'Lijst onvolledig' })
 
 		expect(onDone).not.toHaveBeenCalled()
 		expect(mockSetResult).toHaveBeenCalledWith({ error: 'Onvoldoende rechten' })
 	})
 
+	it('closes without a reason', async () => {
+		const onClose = jest.fn()
+		rendered = await renderStubbed(RequiredReasonModal, {
+			props: {
+				dialogTitle: 'Keep',
+				label: 'Why?',
+				submit: jest.fn(),
+				onClose,
+			},
+			keep: ['CnFormDialog'],
+		})
+
+		rendered.vm.close()
+
+		expect(onClose).toHaveBeenCalled()
+	})
+
 	it('says it could not save when the refusal names nothing', async () => {
 		await mountModal(jest.fn().mockResolvedValue({ ok: false, error: '' }))
 
-		await rendered.vm.onConfirm({ reason: 'Lijst onvolledig' })
+		await rendered.vm.submitReason({ reason: 'Lijst onvolledig' })
 
 		expect(mockSetResult).toHaveBeenCalledWith({
 			error: 'This could not be saved. Try again later.',
