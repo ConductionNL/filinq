@@ -205,10 +205,10 @@ class DocumentControllerTest extends TestCase {
 
 		$result = $this->controller->generate();
 
-		$this->assertInstanceOf(JSONResponse::class, $result);
-		$this->assertSame(202, $result->getStatus());
+		$this->assertInstanceOf(expected: JSONResponse::class, actual: $result);
+		$this->assertSame(expected: 202, actual: $result->getStatus());
 		$this->assertSame(
-			[
+			expected: [
 				'status' => 'pending',
 				'engine' => 'vendor:smartdocuments',
 				'vendorJobId' => 'job-42',
@@ -216,7 +216,7 @@ class DocumentControllerTest extends TestCase {
 				'metadata' => ['id' => 'doc-1', 'status' => 'pending'],
 				'warnings' => [],
 			],
-			$result->getData()
+			actual: $result->getData()
 		);
 
 	}//end testAVendorRenderAnswers202Pending()

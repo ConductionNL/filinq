@@ -46,17 +46,17 @@ class TemplateEnginesController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest            $request     The request.
-	 * @param VendorRenderSources $sources     integriq's document generation sources.
 	 * @param IUserSession        $userSession The signed-in user.
+	 * @param VendorRenderSources $sources     integriq's document generation sources.
 	 * @param RenderEngine        $engine      Names each vendor engine.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly VendorRenderSources $sources,
 		private readonly IUserSession $userSession,
+		private readonly VendorRenderSources $sources,
 		private readonly RenderEngine $engine = new RenderEngine(),
 	) {
-		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
+		parent::__construct(request: $request, appName: AppIdentity::APP_ID);
 
 	}//end __construct()
 
@@ -72,7 +72,8 @@ class TemplateEnginesController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
+		$signedIn = ($this->userSession->getUser() !== null);
+		if ($signedIn === false) {
 			return $this->notAuthenticated(message: 'Not authenticated');
 		}
 
