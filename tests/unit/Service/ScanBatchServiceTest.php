@@ -834,7 +834,7 @@ class ScanBatchServiceTest extends TestCase {
 	 * @return File The double.
 	 */
 	private function batchFileIn(Folder $parent): File {
-		$file = $this->createMock(File::class);
+		$file = $this->createMock(originalClassName: File::class);
 		$file->method('getId')->willReturn(4711);
 		$file->method('getName')->willReturn('batch.pdf');
 		$file->method('getContent')->willReturn('%PDF-1.4 fixture');
@@ -859,15 +859,15 @@ class ScanBatchServiceTest extends TestCase {
 			profile: ['id' => 'postkamer', 'separatorMode' => 'none']
 		);
 
-		$this->assertSame([4711], $this->lookedUp);
-		$this->assertCount(2, $this->stored, 'received once, then stored split');
-		$this->assertSame('received', $this->stored[0]['status']);
-		$this->assertSame(4711, $this->stored[0]['file']);
-		$this->assertSame('postkamer', $this->stored[0]['scannerId']);
-		$this->assertSame('split', $batch['status']);
-		$this->assertSame('batch-1', $batch['uuid']);
-		$this->assertCount(1, $this->written);
-		$this->assertCount(1, $this->dispatched);
+		$this->assertSame(expected: [4711], actual: $this->lookedUp);
+		$this->assertCount(expectedCount: 2, haystack: $this->stored, message: 'received once, then stored split');
+		$this->assertSame(expected: 'received', actual: $this->stored[0]['status']);
+		$this->assertSame(expected: 4711, actual: $this->stored[0]['file']);
+		$this->assertSame(expected: 'postkamer', actual: $this->stored[0]['scannerId']);
+		$this->assertSame(expected: 'split', actual: $batch['status']);
+		$this->assertSame(expected: 'batch-1', actual: $batch['uuid']);
+		$this->assertCount(expectedCount: 1, haystack: $this->written);
+		$this->assertCount(expectedCount: 1, haystack: $this->dispatched);
 	}//end testTakeReceivesOnceAndSplits()
 
 	/**
@@ -886,10 +886,10 @@ class ScanBatchServiceTest extends TestCase {
 			profile: ['id' => 'postkamer', 'separatorMode' => 'none']
 		);
 
-		$this->assertCount(1, $this->stored, 'only the split is stored; nothing is received');
-		$this->assertSame('batch-7', $this->stored[0]['uuid']);
-		$this->assertSame('split', $batch['status']);
-		$this->assertSame('batch-7', $batch['uuid']);
+		$this->assertCount(expectedCount: 1, haystack: $this->stored, message: 'only the split is stored; nothing is received');
+		$this->assertSame(expected: 'batch-7', actual: $this->stored[0]['uuid']);
+		$this->assertSame(expected: 'split', actual: $batch['status']);
+		$this->assertSame(expected: 'batch-7', actual: $batch['uuid']);
 	}//end testTakeReusesAStoredBatch()
 
 	/**
@@ -901,19 +901,19 @@ class ScanBatchServiceTest extends TestCase {
 	 */
 	public function testTakeReceivesNothingWhenTheFolderCannotBeRead(): void {
 		$service = $this->service(texts: ['aanvraag 1']);
-		$file = $this->createMock(File::class);
+		$file = $this->createMock(originalClassName: File::class);
 		$file->method('getId')->willReturn(4711);
 		$file->method('getParent')->willThrowException(new \RuntimeException('no parent'));
 
 		try {
 			$service->take(file: $file, profile: ['id' => 'postkamer', 'separatorMode' => 'none']);
-			$this->fail('a batch without a readable folder was taken');
+			$this->fail(message: 'a batch without a readable folder was taken');
 		} catch (\RuntimeException $e) {
-			$this->assertSame('no parent', $e->getMessage());
+			$this->assertSame(expected: 'no parent', actual: $e->getMessage());
 		}
 
-		$this->assertSame([], $this->lookedUp);
-		$this->assertSame([], $this->stored);
-		$this->assertSame([], $this->dispatched);
+		$this->assertSame(expected: [], actual: $this->lookedUp);
+		$this->assertSame(expected: [], actual: $this->stored);
+		$this->assertSame(expected: [], actual: $this->dispatched);
 	}//end testTakeReceivesNothingWhenTheFolderCannotBeRead()
 }//end class

@@ -213,20 +213,20 @@ class ScanIntakeControllerTest extends TestCase {
 	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md
 	 */
 	public function testSplitStillWorksThroughTake(): void {
-		$file = $this->createMock(File::class);
+		$file = $this->createMock(originalClassName: File::class);
 		$file->method('getPath')->willReturn('/beheerder/files/Scans/batch.pdf');
 		$file->method('getId')->willReturn(42);
 
-		$userFolder = $this->createMock(Folder::class);
+		$userFolder = $this->createMock(originalClassName: Folder::class);
 		$userFolder->method('getById')->with(42)->willReturn([$file]);
-		$root = $this->createMock(IRootFolder::class);
+		$root = $this->createMock(originalClassName: IRootFolder::class);
 		$root->method('getUserFolder')->with('beheerder')->willReturn($userFolder);
 
 		$profiles = $this->profiles();
 		$profile = ['id' => 'scan-a', 'watchedFolder' => 'Scans'];
 		$profiles->expects($this->once())->method('forPath')->with('/Scans/batch.pdf')->willReturn($profile);
 
-		$batches = $this->getMockBuilder(ScanBatchService::class)
+		$batches = $this->getMockBuilder(className: ScanBatchService::class)
 			->disableOriginalConstructor()
 			->onlyMethods(['receive', 'split', 'take'])
 			->getMock();
@@ -235,22 +235,22 @@ class ScanIntakeControllerTest extends TestCase {
 		$batches->expects($this->once())->method('take')->with($file, $profile)
 			->willReturn(['uuid' => 'batch-1', 'status' => 'split']);
 
-		$user = $this->createMock(IUser::class);
+		$user = $this->createMock(originalClassName: IUser::class);
 		$user->method('getUID')->willReturn('beheerder');
-		$session = $this->createMock(IUserSession::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
 		$controller = new ScanIntakeController(
-			$this->createMock(IRequest::class),
-			new ScanSetupServices(sheets: $this->sheets(), profiles: $profiles),
-			$batches,
-			$root,
-			$session
+			request: $this->createMock(originalClassName: IRequest::class),
+			setup: new ScanSetupServices(sheets: $this->sheets(), profiles: $profiles),
+			batches: $batches,
+			rootFolder: $root,
+			userSession: $session
 		);
 
 		$response = $controller->split(fileId: 42);
 
-		$this->assertSame(Http::STATUS_OK, $response->getStatus());
-		$this->assertSame(['uuid' => 'batch-1', 'status' => 'split'], $response->getData());
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['uuid' => 'batch-1', 'status' => 'split'], actual: $response->getData());
 	}//end testSplitStillWorksThroughTake()
 }//end class
