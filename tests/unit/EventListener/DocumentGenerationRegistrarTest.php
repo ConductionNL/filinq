@@ -19,6 +19,7 @@ namespace OCA\Filinq\Tests\Unit\EventListener;
 
 use OCA\Filinq\Event\DocumentGenerationRequestedEvent;
 use OCA\Filinq\EventListener\DocumentGenerationRegistrar;
+use OCA\Filinq\EventListener\VendorRenderedListener;
 use OCA\Filinq\EventListener\DocumentGenerationRequestedListener;
 use OCA\Filinq\EventListener\DocumentStampRequestedListener;
 use OCA\Filinq\Event\DocumentStampRequestedEvent;
@@ -44,7 +45,7 @@ class DocumentGenerationRegistrarTest extends TestCase {
 	public function testRegisterWiresTheFlowNodeAndGenerationListenersInOrder(): void {
 		$registered = [];
 		$context = $this->createMock(IRegistrationContext::class);
-		$context->expects(self::exactly(5))->method('registerEventListener')->willReturnCallback(
+		$context->expects(self::exactly(6))->method('registerEventListener')->willReturnCallback(
 			static function (string $event, string $listener) use (&$registered): void {
 				$registered[] = [$event, $listener];
 			}
@@ -59,6 +60,7 @@ class DocumentGenerationRegistrarTest extends TestCase {
 				[DocumentStampRequestedEvent::class, DocumentStampRequestedListener::class],
 				[RegisterOperationsEvent::class, RegisterFlowOperationsListener::class],
 				[LoadSettingsScriptsEvent::class, RegisterFlowOperationsListener::class],
+				['OCA\Integriq\Event\DocumentRenderedEvent', VendorRenderedListener::class],
 			],
 			$registered
 		);
