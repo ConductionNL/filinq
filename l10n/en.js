@@ -4117,7 +4117,10 @@ OC.L10N.register(
         "Approved by": "Approved by",
         "Selection list": "Selection list",
         "Statement": "Statement",
-        "Only an archivist can read destruction certificates.": "Only an archivist can read destruction certificates."
+        "Only an archivist can read destruction certificates.": "Only an archivist can read destruction certificates.",
+        "Legal hold": "Legal hold",
+        "Under a legal hold": "Under a legal hold",
+        "Under a legal hold: {cases}": "Under a legal hold: {cases}"
     },
     "nplurals=2; plural=(n != 1);"
 )

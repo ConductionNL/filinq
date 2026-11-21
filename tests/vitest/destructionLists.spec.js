@@ -17,6 +17,12 @@ vi.mock('@nextcloud/axios', () => ({
 	default: { get: (...args) => get(...args), post: (...args) => post(...args) },
 }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (url) => '/index.php' + url }))
+vi.mock('@nextcloud/l10n', () => ({
+	translate: (app, text, vars) =>
+		text.replace(/{(\w+)}/g, (match, key) =>
+			vars && key in vars ? vars[key] : match,
+		),
+}))
 
 const {
 	approvalBody,
@@ -24,9 +30,11 @@ const {
 	DECIDABLE_STATUSES,
 	entryRows,
 	exclusionsWithoutReason,
+	holdLabel,
 	isDecidable,
 	listStatus,
 	loadDestructionList,
+	loadHolds,
 	rejectDestructionList,
 } = await import('../../src/services/destructionLists.js')
 
@@ -183,5 +191,57 @@ describe('destruction lists', () => {
 			reason: 'Lijst onvolledig',
 		})
 		expect(result).toEqual({ ok: true, data: { status: 'rejected' } })
+	})
+
+	// @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1
+	it("asks filinq's hold register about each proposed record once", async () => {
+		get.mockImplementation((url) =>
+			Promise.resolve({
+				data: url.endsWith('/o-1')
+					? { held: true, cases: [{ name: 'Beroep Jansen' }] }
+					: { held: false, cases: [] },
+			}),
+		)
+
+		const holds = await loadHolds(['o-1', 'o-2', 'o-1', '', 7])
+
+		expect(get).toHaveBeenCalledTimes(2)
+		expect(get).toHaveBeenCalledWith(
+			'/index.php/apps/filinq/api/legal-holds/status/o-1',
+		)
+		expect(holds).toEqual({
+			'o-1': { held: true, cases: [{ name: 'Beroep Jansen' }] },
+			'o-2': { held: false, cases: [] },
+		})
+	})
+
+	// @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1
+	it('leaves out a record whose hold status could not be read', async () => {
+		const read = vi.fn((uuid) =>
+			uuid === 'o-1'
+				? Promise.reject(new Error('down'))
+				: Promise.resolve(uuid === 'o-2' ? null : { held: true }),
+		)
+
+		expect(await loadHolds(['o-1', 'o-2', 'o-3'], read)).toEqual({
+			'o-3': { held: true },
+		})
+		expect(await loadHolds(null, read)).toEqual({})
+	})
+
+	// @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1
+	it('names the holding case to hold authority and only says "held" to everybody else', () => {
+		expect(holdLabel(undefined)).toBe('')
+		expect(holdLabel({ held: false, cases: [{ name: 'x' }] })).toBe('')
+		expect(holdLabel({ held: true })).toBe('Under a legal hold')
+		expect(
+			holdLabel({ held: true, cases: [{ uuid: 'c-1' }, { name: ' ' }] }),
+		).toBe('Under a legal hold')
+		expect(
+			holdLabel({
+				held: true,
+				cases: [{ name: 'Beroep Jansen' }, { name: 'Audit 2026' }],
+			}),
+		).toBe('Under a legal hold: Beroep Jansen, Audit 2026')
 	})
 })

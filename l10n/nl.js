@@ -4246,7 +4246,10 @@ OC.L10N.register(
         "Approved by": "Goedgekeurd door",
         "Selection list": "Selectielijst",
         "Statement": "Verklaring",
-        "Only an archivist can read destruction certificates.": "Alleen een archivaris kan verklaringen van vernietiging lezen."
+        "Only an archivist can read destruction certificates.": "Alleen een archivaris kan verklaringen van vernietiging lezen.",
+        "Legal hold": "Juridische bewaring",
+        "Under a legal hold": "Onder juridische bewaring",
+        "Under a legal hold: {cases}": "Onder juridische bewaring: {cases}"
     },
     "nplurals=2; plural=(n != 1);"
 )

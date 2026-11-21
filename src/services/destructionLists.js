@@ -15,8 +15,10 @@
  */
 
 import axios from '@nextcloud/axios'
+import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { answer } from './apiAnswer.js'
+import { holdStatus } from './legalHolds.js'
 
 const LISTS = '/apps/openregister/api/archival/destruction-lists'
 
@@ -193,4 +195,61 @@ export function rejectDestructionList(id, reason) {
 		})
 	}
 	return answer(axios.post(listUrl(id, 'reject'), { reason: text }))
+}
+
+/**
+ * The legal hold status of each proposed record, read through filinq's hold
+ * register. The server names the holding case only to hold authority; for
+ * everybody else a status carries `held` without the case names.
+ *
+ * @param {Array<string>} uuids The uuids of the proposed records.
+ * @param {(uuid: string) => Promise<object|null>} [read] The status read; filinq's hold register by default.
+ * @return {Promise<object>} The status per uuid; a record whose status could not be read is left out.
+ * @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1
+ */
+export async function loadHolds(uuids, read = holdStatus) {
+	const unique = [
+		...new Set(
+			(Array.isArray(uuids) ? uuids : []).filter(
+				(uuid) => typeof uuid === 'string' && uuid !== '',
+			),
+		),
+	]
+	const statuses = await Promise.all(
+		unique.map((uuid) => read(uuid).catch(() => null)),
+	)
+	const holds = {}
+	unique.forEach((uuid, index) => {
+		const status = statuses[index]
+		if (status !== null && typeof status === 'object') {
+			holds[uuid] = status
+		}
+	})
+	return holds
+}
+
+/**
+ * What the destruction list says about a record's legal hold: nothing when it
+ * is not held, the holding cases by name when the server gave them, and
+ * "Under a legal hold" without a name otherwise.
+ *
+ * @param {object|null|undefined} status The record's hold status.
+ * @return {string} The label, or empty.
+ * @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1
+ */
+export function holdLabel(status) {
+	if (status?.held !== true) {
+		return ''
+	}
+	const names = (Array.isArray(status.cases) ? status.cases : [])
+		.map((holdCase) =>
+			typeof holdCase?.name === 'string' ? holdCase.name.trim() : '',
+		)
+		.filter((name) => name !== '')
+	if (names.length === 0) {
+		return t('filinq', 'Under a legal hold')
+	}
+	return t('filinq', 'Under a legal hold: {cases}', {
+		cases: names.join(', '),
+	})
 }
