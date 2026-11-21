@@ -29,7 +29,6 @@ use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Service\Vendor\RenderEngine;
 use OCA\Filinq\Service\Vendor\VendorRenderSources;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -41,6 +40,7 @@ use OCP\IUserSession;
  * @spec openspec/changes/template-engine-renders-through-a-vendor/specs/document-creatie-sjablonen/spec.md#requirement-the-engines-an-instance-offers-are-listed-req-tev-004
  */
 class TemplateEnginesController extends Controller {
+	use AnswersNotAuthenticated;
 
 	/**
 	 * Constructor.
@@ -73,19 +73,19 @@ class TemplateEnginesController extends Controller {
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(data: ['error' => 'Not authenticated'], statusCode: Http::STATUS_UNAUTHORIZED);
+			return $this->notAuthenticated(message: 'Not authenticated');
 		}
 
-		$engines = [['id' => RenderEngine::FILINQ, 'name' => 'Filinq', 'type' => 'filinq']];
-		foreach ($this->sources->active() as $source) {
-			$engines[] = [
+		$vendors = array_map(
+			fn (array $source): array => [
 				'id' => $this->engine->forVendor(slug: $source['slug']),
 				'name' => $source['name'],
 				'type' => 'vendor',
-			];
-		}
+			],
+			$this->sources->active()
+		);
 
-		return new JSONResponse(data: ['results' => $engines], statusCode: Http::STATUS_OK);
+		return new JSONResponse(data: ['results' => array_merge([['id' => RenderEngine::FILINQ, 'name' => 'Filinq', 'type' => 'filinq']], $vendors)]);
 
 	}//end index()
 }//end class

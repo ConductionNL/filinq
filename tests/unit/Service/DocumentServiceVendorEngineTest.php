@@ -70,7 +70,7 @@ class DocumentServiceVendorEngineTest extends TestCase {
 	 * @return VendorRenderService&MockObject The double.
 	 */
 	private function vendorMock(): VendorRenderService&MockObject {
-		$vendor = $this->createMock(VendorRenderService::class);
+		$vendor = $this->createMock(originalClassName: VendorRenderService::class);
 		$vendor->method('vendorSlug')->willReturnCallback(
 			static fn (mixed $engine): ?string => (new RenderEngine())->vendorSlug(engine: $engine)
 		);
@@ -87,24 +87,24 @@ class DocumentServiceVendorEngineTest extends TestCase {
 	 * @return DocumentService The service.
 	 */
 	private function service(?VendorRenderService $vendor): DocumentService {
-		$log = $this->createMock(ObjectService::class);
+		$log = $this->createMock(originalClassName: ObjectService::class);
 		$log->method('saveObject')->willReturnCallback(function (array $object): array {
 			$this->logged[] = $object;
 			return $object;
 		});
-		$logResolver = $this->createMock(DocumentObjectServiceResolver::class);
+		$logResolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
 		$logResolver->method('resolve')->willReturn($log);
 
-		$templates = $this->createMock(TemplateService::class);
+		$templates = $this->createMock(originalClassName: TemplateService::class);
 		$templates->method('getPublishedTemplate')->willReturn(
 			['name' => 'Besluit', 'content' => '<p>{{ besluit }}</p>', 'version' => 2, 'vendorTemplateId' => 'besluit-standaard']
 		);
-		$resolver = $this->createMock(DataResolverService::class);
+		$resolver = $this->createMock(originalClassName: DataResolverService::class);
 		$resolver->method('resolve')->willReturn(['data' => ['besluit' => 'toegewezen'], 'errors' => [], 'warnings' => ['one ref was empty']]);
-		$this->renderer = $this->createMock(TemplateRenderer::class);
+		$this->renderer = $this->createMock(originalClassName: TemplateRenderer::class);
 		$this->renderer->method('renderTemplate')->willReturn('<p>toegewezen</p>');
-		$logger     = $this->createMock(LoggerInterface::class);
-		$rasterizer = $this->createMock(SvgRasterizer::class);
+		$logger     = $this->createMock(originalClassName: LoggerInterface::class);
+		$rasterizer = $this->createMock(originalClassName: SvgRasterizer::class);
 		$rasterizer->method('rasterizeInlineSvg')->willReturnCallback(
 			static fn (string $html, string $format): array => ['html' => $html, 'warnings' => []]
 		);
@@ -112,11 +112,19 @@ class DocumentServiceVendorEngineTest extends TestCase {
 		return new DocumentService(
 			sources: new TemplateSources(templates: $templates, data: $resolver),
 			production: new DocumentProduction(
-				pipeline: new DocumentRenderPipeline(new PdfRendering(renderer: $this->renderer, pdf: $this->createMock(PdfService::class)), $logResolver, $logger, $rasterizer),
-				jobs: $this->createMock(DocumentJobStore::class),
+				pipeline: new DocumentRenderPipeline(
+					rendering: new PdfRendering(renderer: $this->renderer, pdf: $this->createMock(originalClassName: PdfService::class)),
+					objectResolver: $logResolver,
+					logger: $logger,
+					svgRasterizer: $rasterizer
+				),
+				jobs: $this->createMock(originalClassName: DocumentJobStore::class),
 				vendor: $vendor
 			),
-			output: new DocumentOutput(storage: $this->createMock(DocumentStorageService::class), log: new GeneratedDocumentLogger($logResolver, $logger)),
+			output: new DocumentOutput(
+				storage: $this->createMock(originalClassName: DocumentStorageService::class),
+				log: new GeneratedDocumentLogger(objectResolver: $logResolver, logger: $logger)
+			),
 		);
 
 	}//end service()
@@ -130,15 +138,15 @@ class DocumentServiceVendorEngineTest extends TestCase {
 		$vendor = $this->vendorMock();
 		$vendor->expects($this->never())->method('render');
 		$service = $this->service(vendor: $vendor);
-		$this->renderer->expects($this->exactly(2))->method('renderTemplate');
+		$this->renderer->expects($this->exactly(count: 2))->method('renderTemplate');
 
 		foreach ([['format' => 'html', 'userId' => 'alice'], ['format' => 'html', 'userId' => 'alice', 'engine' => 'filinq']] as $options) {
 			$result = $service->generateDocument(templateId: 'tpl-1', dataRefs: [], options: $options);
-			$this->assertSame('html', $result['format']);
-			$this->assertStringContainsString('toegewezen', $result['content']);
+			$this->assertSame(expected: 'html', actual: $result['format']);
+			$this->assertStringContainsString(needle: 'toegewezen', haystack: $result['content']);
 		}
 
-		$this->assertSame(['generated', 'generated'], array_column($this->logged, 'status'));
+		$this->assertSame(expected: ['generated', 'generated'], actual: array_column($this->logged, 'status'));
 
 	}//end testWithoutAnEngineFilinqRenders()
 
@@ -153,13 +161,13 @@ class DocumentServiceVendorEngineTest extends TestCase {
 
 		try {
 			$service->generateDocument(templateId: 'tpl-1', dataRefs: [], options: ['format' => 'pdf', 'engine' => 'docmosis']);
-			$this->fail('The unknown engine was accepted.');
+			$this->fail(message: 'The unknown engine was accepted.');
 		} catch (Exception $e) {
-			$this->assertSame(400, $e->getCode());
-			$this->assertStringContainsString('"docmosis"', $e->getMessage());
+			$this->assertSame(expected: 400, actual: $e->getCode());
+			$this->assertStringContainsString(needle: '"docmosis"', haystack: $e->getMessage());
 		}
 
-		$this->assertSame([], $this->logged);
+		$this->assertSame(expected: [], actual: $this->logged);
 
 	}//end testAnUnknownEngineIsRefusedAndNothingRenders()
 
@@ -172,11 +180,11 @@ class DocumentServiceVendorEngineTest extends TestCase {
 		$vendor = $this->vendorMock();
 		$vendor->expects($this->once())->method('render')->willReturnCallback(
 			function (string $slug, array $run, array $data): array {
-				$this->assertSame('smartdocuments', $slug);
-				$this->assertSame('besluit-standaard', $run['template']['vendorTemplateId']);
-				$this->assertSame('tpl-1', $run['templateId']);
-				$this->assertSame('pdf', $run['format']);
-				$this->assertSame(['besluit' => 'toegewezen'], $data);
+				$this->assertSame(expected: 'smartdocuments', actual: $slug);
+				$this->assertSame(expected: 'besluit-standaard', actual: $run['template']['vendorTemplateId']);
+				$this->assertSame(expected: 'tpl-1', actual: $run['templateId']);
+				$this->assertSame(expected: 'pdf', actual: $run['format']);
+				$this->assertSame(expected: ['besluit' => 'toegewezen'], actual: $data);
 				return ['status' => 'pending', 'vendorJobId' => 'job-1', 'warnings' => ['vendor note']];
 			}
 		);
@@ -189,9 +197,9 @@ class DocumentServiceVendorEngineTest extends TestCase {
 			options: ['format' => 'pdf', 'userId' => 'alice', 'engine' => 'vendor:smartdocuments']
 		);
 
-		$this->assertSame('pending', $result['status']);
-		$this->assertSame(['one ref was empty', 'vendor note'], $result['warnings']);
-		$this->assertSame([], $this->logged);
+		$this->assertSame(expected: 'pending', actual: $result['status']);
+		$this->assertSame(expected: ['one ref was empty', 'vendor note'], actual: $result['warnings']);
+		$this->assertSame(expected: [], actual: $this->logged);
 
 	}//end testAVendorEngineHandsOffAndFilinqRendersNothing()
 
@@ -203,10 +211,11 @@ class DocumentServiceVendorEngineTest extends TestCase {
 	public function testWithoutTheVendorRenderAVendorEngineIsRefused(): void {
 		$service = $this->service(vendor: null);
 		$this->renderer->expects($this->once())->method('renderTemplate');
-		$this->assertSame('html', $service->generateDocument(templateId: 'tpl-1', dataRefs: [], options: ['format' => 'html', 'engine' => 'filinq'])['format']);
+		$filinq = $service->generateDocument(templateId: 'tpl-1', dataRefs: [], options: ['format' => 'html', 'engine' => 'filinq']);
+		$this->assertSame(expected: 'html', actual: $filinq['format']);
 
-		$this->expectExceptionCode(400);
-		$this->expectExceptionMessage('"vendor:smartdocuments" cannot be rendered on this instance');
+		$this->expectExceptionCode(code: 400);
+		$this->expectExceptionMessage(message: '"vendor:smartdocuments" cannot be rendered on this instance');
 		$service->generateDocument(templateId: 'tpl-1', dataRefs: [], options: ['format' => 'pdf', 'engine' => 'vendor:smartdocuments']);
 
 	}//end testWithoutTheVendorRenderAVendorEngineIsRefused()

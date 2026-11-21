@@ -36,7 +36,7 @@ class VendorRenderRegisterTest extends TestCase {
 	 */
 	private function register(): array {
 		$parsed = json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json'), true);
-		$this->assertIsArray($parsed);
+		$this->assertIsArray(actual: $parsed);
 
 		return $parsed;
 
@@ -52,12 +52,12 @@ class VendorRenderRegisterTest extends TestCase {
 		$template = $schemas['template'];
 		$document = $schemas['generatedDocument'];
 
-		$this->assertSame('string', $template['properties']['vendorTemplateId']['type']);
-		$this->assertNotContains('vendorTemplateId', $template['required']);
-		$this->assertSame(['generated', 'failed', 'pending'], $document['properties']['status']['enum']);
-		$this->assertSame('string', $document['properties']['vendorJobId']['type']);
-		$this->assertSame('string', $document['properties']['engine']['type']);
-		$this->assertNotContains('vendorJobId', $document['required']);
+		$this->assertSame(expected: 'string', actual: $template['properties']['vendorTemplateId']['type']);
+		$this->assertNotContains(needle: 'vendorTemplateId', haystack: $template['required']);
+		$this->assertSame(expected: ['generated', 'failed', 'pending'], actual: $document['properties']['status']['enum']);
+		$this->assertSame(expected: 'string', actual: $document['properties']['vendorJobId']['type']);
+		$this->assertSame(expected: 'string', actual: $document['properties']['engine']['type']);
+		$this->assertNotContains(needle: 'vendorJobId', haystack: $document['required']);
 
 	}//end testTheSchemasCarryTheVendorFields()
 
@@ -73,17 +73,17 @@ class VendorRenderRegisterTest extends TestCase {
 		}
 
 		$template = $bySlug['template/besluit-via-documentleverancier'];
-		$this->assertSame('besluit-standaard', $template['vendorTemplateId']);
+		$this->assertSame(expected: 'besluit-standaard', actual: $template['vendorTemplateId']);
 
 		$entry = $bySlug['generatedDocument/demo-besluit-bij-documentleverancier'];
-		$this->assertSame('pending', $entry['status']);
-		$this->assertSame('besluit-via-documentleverancier', $entry['templateId']);
-		$this->assertStringStartsWith('vendor:', $entry['engine']);
-		$this->assertNotSame('', $entry['vendorJobId']);
+		$this->assertSame(expected: 'pending', actual: $entry['status']);
+		$this->assertSame(expected: 'besluit-via-documentleverancier', actual: $entry['templateId']);
+		$this->assertStringStartsWith(prefix: 'vendor:', string: $entry['engine']);
+		$this->assertNotSame(expected: '', actual: $entry['vendorJobId']);
 
 		$required = $this->register()['components']['schemas']['generatedDocument']['required'];
 		foreach ($required as $field) {
-			$this->assertArrayHasKey($field, $entry);
+			$this->assertArrayHasKey(key: $field, array: $entry);
 		}
 
 	}//end testTheDemoDataHoldsAVendorTemplateAndAPendingEntry()

@@ -47,12 +47,17 @@ class TemplateEnginesControllerTest extends TestCase {
 	 * @return TemplateEnginesController The controller.
 	 */
 	private function controller(array $sources, bool $user = true): TemplateEnginesController {
-		$vendor = $this->createMock(VendorRenderSources::class);
+		$vendor = $this->createMock(originalClassName: VendorRenderSources::class);
 		$vendor->method('active')->willReturn($sources);
-		$session = $this->createMock(IUserSession::class);
-		$session->method('getUser')->willReturn($user ? $this->createMock(IUser::class) : null);
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$signedIn = null;
+		if ($user === true) {
+			$signedIn = $this->createMock(originalClassName: IUser::class);
+		}
 
-		return new TemplateEnginesController(request: $this->createMock(IRequest::class), sources: $vendor, userSession: $session);
+		$session->method('getUser')->willReturn($signedIn);
+
+		return new TemplateEnginesController(request: $this->createMock(originalClassName: IRequest::class), sources: $vendor, userSession: $session);
 
 	}//end controller()
 
@@ -64,8 +69,8 @@ class TemplateEnginesControllerTest extends TestCase {
 	public function testWithoutIntegriqOnlyFilinqIsOffered(): void {
 		$response = $this->controller(sources: [])->index();
 
-		$this->assertSame(200, $response->getStatus());
-		$this->assertSame(['results' => [['id' => 'filinq', 'name' => 'Filinq', 'type' => 'filinq']]], $response->getData());
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertSame(expected: ['results' => [['id' => 'filinq', 'name' => 'Filinq', 'type' => 'filinq']]], actual: $response->getData());
 
 	}//end testWithoutIntegriqOnlyFilinqIsOffered()
 
@@ -78,11 +83,11 @@ class TemplateEnginesControllerTest extends TestCase {
 		$response = $this->controller(sources: [['id' => 'src-1', 'slug' => 'smartdocuments', 'name' => 'SmartDocuments']])->index();
 
 		$this->assertSame(
-			[
+			expected: [
 				['id' => 'filinq', 'name' => 'Filinq', 'type' => 'filinq'],
 				['id' => 'vendor:smartdocuments', 'name' => 'SmartDocuments', 'type' => 'vendor'],
 			],
-			$response->getData()['results']
+			actual: $response->getData()['results']
 		);
 
 	}//end testEachActiveSourceIsAnEngine()
@@ -93,8 +98,9 @@ class TemplateEnginesControllerTest extends TestCase {
 	 * @return void
 	 */
 	public function testASignedInUserIsNeeded(): void {
-		$this->assertSame(401, $this->controller(sources: [], user: false)->index()->getStatus());
-		$this->assertNotSame([], (new ReflectionMethod(TemplateEnginesController::class, 'index'))->getAttributes(NoAdminRequired::class));
+		$this->assertSame(expected: 401, actual: $this->controller(sources: [], user: false)->index()->getStatus());
+		$attributes = (new ReflectionMethod(TemplateEnginesController::class, 'index'))->getAttributes(NoAdminRequired::class);
+		$this->assertNotSame(expected: [], actual: $attributes);
 
 	}//end testASignedInUserIsNeeded()
 
@@ -108,9 +114,9 @@ class TemplateEnginesControllerTest extends TestCase {
 		$engines = strpos($routes, "'templateEngines#index', 'url' => 'api/templates/engines', 'verb' => 'GET'");
 		$byId    = strpos($routes, "'templates#show', 'url' => 'api/templates/{id}'");
 
-		$this->assertIsInt($engines);
-		$this->assertIsInt($byId);
-		$this->assertLessThan($byId, $engines);
+		$this->assertIsInt(actual: $engines);
+		$this->assertIsInt(actual: $byId);
+		$this->assertLessThan(expected: $byId, actual: $engines);
 
 	}//end testTheRouteComesBeforeTheTemplateIdRoute()
 }//end class
