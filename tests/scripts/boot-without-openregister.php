@@ -181,6 +181,7 @@ $expectedGeneration = [
 	'OCP\\WorkflowEngine\\Events\\RegisterOperationsEvent',
 	'OCP\\WorkflowEngine\\Events\\LoadSettingsScriptsEvent',
 	'OCA\\Integriq\\Event\\DocumentRenderedEvent',
+	'OCA\\Integriq\\Event\\WatchedFileArrivedEvent',
 ];
 if ($context->events !== $expectedGeneration) {
 	bootProofFail('unexpected document-generation registrations: ' . implode(', ', $context->events));
