@@ -53,11 +53,15 @@ const PAGES_BEFORE = [
 const PAGES_ADDED = [
 	// generate-draft-and-attended-edit
 	['Drafts', '/drafts'], ['DraftEditor', '/drafts/:id'],
+	// archiefwet-retention-engine 3.2
+	['DestructionLists', '/destruction-lists'], ['DestructionListDetail', '/destruction-lists/:id'],
 ]
 
 const MENU_ADDED = [
 	// generate-draft-and-attended-edit
 	['Drafts', 54],
+	// archiefwet-retention-engine 3.2
+	['DestructionLists', 58],
 ]
 
 const MENU_BEFORE = [
