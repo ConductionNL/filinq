@@ -74,14 +74,19 @@ class OpenApiCoverageTest extends TestCase {
 	/**
 	 * The docs site renders the same document, and no hand-written one.
 	 *
+	 * The release version is left out of the comparison: the release bump
+	 * writes it into openapi.json only, and the docs build copies openapi.json
+	 * over the docs copy before it renders, so a copy one release behind on
+	 * the version alone still renders the current document.
+	 *
 	 * @return void
 	 */
 	public function testTheDocsSiteRendersTheSameDocument(): void {
 		$root = self::root();
 
 		$this->assertSame(
-			expected: self::decode(file: $root.'/openapi.json'),
-			actual: self::decode(file: $root.'/docs/static/oas/filinq-api.json'),
+			expected: self::withoutVersion(document: self::decode(file: $root.'/openapi.json')),
+			actual: self::withoutVersion(document: self::decode(file: $root.'/docs/static/oas/filinq-api.json')),
 			message: 'docs/static/oas/filinq-api.json differs from openapi.json: copy openapi.json over it'
 		);
 		$this->assertFileDoesNotExist(filename: $root.'/docs/static/oas/filinq-api.yaml');
@@ -90,6 +95,38 @@ class OpenApiCoverageTest extends TestCase {
 			haystack: (string) file_get_contents($root.'/docs/docusaurus.config.js')
 		);
 	}//end testTheDocsSiteRendersTheSameDocument()
+
+	/**
+	 * A release bump alone keeps the docs copy current; any other difference does not.
+	 *
+	 * @return void
+	 */
+	public function testOnlyTheReleaseVersionMayDiffer(): void {
+		$document = ['openapi' => '3.0.3', 'info' => ['title' => 'Filinq', 'version' => '0.2.16'], 'paths' => ['/a' => []]];
+		$bumped   = $document;
+		$bumped['info']['version'] = '0.2.17';
+		$moved = $document;
+		$moved['paths'] = ['/b' => []];
+
+		$this->assertSame(expected: self::withoutVersion(document: $document), actual: self::withoutVersion(document: $bumped));
+		$this->assertNotSame(expected: self::withoutVersion(document: $document), actual: self::withoutVersion(document: $moved));
+		$this->assertSame(expected: ['paths' => []], actual: self::withoutVersion(document: ['paths' => []]));
+	}//end testOnlyTheReleaseVersionMayDiffer()
+
+	/**
+	 * A document without its release version.
+	 *
+	 * @param array<string,mixed> $document The decoded document.
+	 *
+	 * @return array<string,mixed>
+	 */
+	private static function withoutVersion(array $document): array {
+		if (isset($document['info']) === true && is_array($document['info']) === true) {
+			unset($document['info']['version']);
+		}
+
+		return $document;
+	}//end withoutVersion()
 
 	/**
 	 * The repository root.
