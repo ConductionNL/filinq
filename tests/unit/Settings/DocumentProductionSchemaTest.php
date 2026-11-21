@@ -135,8 +135,9 @@ class DocumentProductionSchemaTest extends TestCase {
 		// once both 1.7.0 lines were on one schema; 1.9.0 since
 		// `generate-draft-and-attended-edit` (optional draftId and editedBy) and, separately,
 		// once both 1.8.0 lines were; 1.10.0 once both 1.9.0 lines are on one schema;
-		// 1.11.0 since `template-engine-renders-through-a-vendor` (state pending, vendorJobId, engine).
-		$this->assertSame(expected: '1.11.0', actual: $document['version']);
+		// 1.11.0 since `template-engine-renders-through-a-vendor` (state pending, vendorJobId, engine);
+		// 1.12.0 since `archiefwet-retention-engine` (the archive block).
+		$this->assertSame(expected: '1.12.0', actual: $document['version']);
 		$this->assertSame(['twig', 'office'], $document['properties']['templateType']['enum']);
 		$this->assertSame('array', $document['properties']['fragments']['type']);
 		$this->assertArrayHasKey('caseSystemDeliveryId', $document['properties']);
