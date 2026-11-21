@@ -36,6 +36,14 @@ review is OpenRegister's archivist check, so a 403 is shown as it comes.
 				:tableLabel="t('filinq', 'Records proposed for destruction')"
 				:emptyText="t('filinq', 'This list proposes no records.')"
 				data-testid="destruction-list-entries">
+				<template #column-hold="{ row }">
+					<span
+						v-if="holdText(row.uuid)"
+						class="destruction-list-review__hold"
+						data-testid="destruction-list-hold">
+						{{ holdText(row.uuid) }}
+					</span>
+				</template>
 				<template #column-exclusion="{ row }">
 					<template v-if="exclusions[row.uuid]">
 						<span class="destruction-list-review__kept">
@@ -108,9 +116,11 @@ import RequiredReasonModal from '../../modals/RequiredReasonModal.vue'
 import {
 	approveDestructionList,
 	entryRows,
+	holdLabel,
 	isDecidable,
 	listStatus,
 	loadDestructionList,
+	loadHolds,
 	rejectDestructionList,
 } from '../../services/destructionLists.js'
 
@@ -164,6 +174,7 @@ export default {
 	data() {
 		return {
 			list: null,
+			holds: {},
 			exclusions: {},
 			excluding: null,
 			rejecting: false,
@@ -185,6 +196,7 @@ export default {
 		/**
 		 * @return {Array<object>} The columns of the proposed records.
 		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
+		 * @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1
 		 */
 		entryColumns() {
 			return [
@@ -196,6 +208,7 @@ export default {
 					key: 'classification',
 					label: t('filinq', 'Selection list category'),
 				},
+				{ key: 'hold', label: t('filinq', 'Legal hold') },
 				{ key: 'exclusion', label: t('filinq', 'Decision') },
 			]
 		},
@@ -263,6 +276,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
+		 * @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1
 		 */
 		async load() {
 			this.loading = true
@@ -270,12 +284,41 @@ export default {
 			const result = await loadDestructionList(this.listId)
 			this.loading = false
 			this.exclusions = {}
+			this.holds = {}
 			if (!result.ok) {
 				this.list = null
 				this.error = result.error
 				return
 			}
 			this.list = result.data
+			await this.loadHolds()
+		},
+
+		/**
+		 * Ask, for every proposed record, whether a legal hold keeps it. The
+		 * answer belongs to the list that was read: a list the page moved
+		 * away from in the meantime does not overwrite the new one's holds.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1
+		 */
+		async loadHolds() {
+			const list = this.list
+			const holds = await loadHolds(entryRows(list).map((row) => row.uuid))
+			if (this.list === list) {
+				this.holds = holds
+			}
+		},
+
+		/**
+		 * The legal hold line of one proposed record.
+		 *
+		 * @param {string} uuid The record's uuid.
+		 * @return {string} The holding cases by name for hold authority, "Under a legal hold" for everybody else, or empty.
+		 * @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1
+		 */
+		holdText(uuid) {
+			return holdLabel(this.holds[uuid])
 		},
 
 		/**
@@ -356,6 +399,11 @@ export default {
 .destruction-list-review__kept {
 	color: var(--color-text-maxcontrast);
 	margin-inline-end: calc(var(--default-grid-baseline) * 2);
+}
+
+.destruction-list-review__hold {
+	color: var(--color-warning-text, var(--color-text-maxcontrast));
+	font-weight: bold;
 }
 
 .destruction-list-review__actions {

@@ -64,5 +64,6 @@
 
 ## 5. Moved in from e-discovery-legal-hold
 
-- [ ] 5.1 Name the legal hold case behind each hold-excluded record on the vernietigingslijst detail
+- [x] 5.1 Name the legal hold case behind each hold-excluded record on the vernietigingslijst detail
   - Moved here from e-discovery-legal-hold task 3.2 (2026-09-29): the Archiefbeheer surface is built by this change. A record whose `retention.legalHold.reason` is `filinq-hold-case:<uuid>` resolves to that case's name through `GET api/legal-holds/{uuid}` for hold authority; everybody else sees "under a legal hold" without the name.
+  - Built (2026-11-21): the **Destruction list** review (`DestructionListReview.vue`) has a **Legal hold** column. OpenRegister's list entries carry no hold state and its run only counts the held records it skips (`skippedHolds`), so for each proposed record the page asks filinq's own hold register (`GET api/legal-holds/status/{uuid}`, `loadHolds()` in `src/services/destructionLists.js`), which names the holding case only to hold authority. `holdLabel()` writes "Under a legal hold: <case>" when the server named it and "Under a legal hold" otherwise; a record whose status cannot be read shows nothing, and a late answer for a list the page left does not overwrite the new one. Strings in en and nl. Pinned by `tests/vitest/destructionLists.spec.js` and `src/views/destructionLists/DestructionListReview.spec.js`.

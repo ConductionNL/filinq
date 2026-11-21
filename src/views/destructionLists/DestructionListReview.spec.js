@@ -249,4 +249,67 @@ describe('DestructionListReview', () => {
 		})
 		expect(rendered.vm.status).toBe('in_review')
 	})
+
+	// @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1
+	it('shows which proposed records a legal hold keeps, naming the case when the server does', async () => {
+		axios.get.mockImplementation((url) => {
+			if (url === LIST_URL) {
+				return Promise.resolve({ data: LIST })
+			}
+			return Promise.resolve({
+				data: url.endsWith('/status/o-1')
+					? { held: true, cases: [{ name: 'Beroep Jansen' }] }
+					: { held: false, cases: [] },
+			})
+		})
+		await mountReview()
+		await flush()
+
+		expect(axios.get).toHaveBeenCalledWith(
+			'/index.php/apps/filinq/api/legal-holds/status/o-1',
+		)
+		expect(axios.get).toHaveBeenCalledWith(
+			'/index.php/apps/filinq/api/legal-holds/status/o-2',
+		)
+		expect(rendered.vm.entryColumns.map((column) => column.key)).toContain(
+			'hold',
+		)
+		expect(rendered.vm.holdText('o-1')).toBe('Under a legal hold: Beroep Jansen')
+		expect(rendered.vm.holdText('o-2')).toBe('')
+	})
+
+	// @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1
+	it('says "Under a legal hold" without a name to somebody without hold authority', async () => {
+		axios.get.mockImplementation((url) =>
+			Promise.resolve({
+				data: url === LIST_URL ? LIST : { held: true, cases: [] },
+			}),
+		)
+		await mountReview()
+		await flush()
+
+		expect(rendered.vm.holdText('o-2')).toBe('Under a legal hold')
+	})
+
+	// @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1
+	it('keeps the holds of the list on screen when an older read answers late', async () => {
+		axios.get.mockResolvedValue({ data: LIST })
+		await mountReview()
+		await flush()
+
+		const answers = []
+		axios.get.mockImplementation(
+			() =>
+				new Promise((resolve) => {
+					answers.push(resolve)
+				}),
+		)
+		const late = rendered.vm.loadHolds()
+		rendered.vm.list = { ...LIST }
+		rendered.vm.holds = {}
+		answers.forEach((answer) => answer({ data: { held: true } }))
+		await late
+
+		expect(rendered.vm.holds).toEqual({})
+	})
 })
