@@ -157,14 +157,8 @@ export default {
 	},
 
 	props: {
-		/**
-		 * The list's uuid, handed in by the detail page (`@objectId`).
-		 * Falls back to the route's `:id` when mounted without it.
-		 */
-		objectId: {
-			type: String,
-			default: '',
-		},
+		/** The uuid of the list under review (`@objectId`); empty reads the route's `:id`. */
+		objectId: { type: String, default: '' },
 	},
 
 	data() {
