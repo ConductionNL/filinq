@@ -16,6 +16,7 @@
 		:customComponents="customComponents"
 		:pageTypes="pageTypes"
 		:registry="registry"
+		:formatters="$options.cellFormatters"
 		appId="filinq"
 		:translate="translateForApp"
 		:permissions="permissions">
@@ -49,10 +50,12 @@ import Dialogs from './dialogs/Dialogs.vue'
 import Modals from './modals/Modals.vue'
 import RecordLeafSidebar from './sidebars/RecordLeafSidebar.vue'
 import SideBars from './sidebars/SideBars.vue'
+import { CELL_FORMATTERS } from './services/cellFormatters.js'
 import { mayUseEntitySearch } from './services/entitySearch.js'
 
 export default {
 	name: 'App',
+	cellFormatters: CELL_FORMATTERS,
 
 	components: {
 		CnAppRoot,
