@@ -29,6 +29,7 @@ use OCA\Filinq\EventListener\ListenerRegistrar;
 use OCA\Filinq\EventListener\PdfUaAttachListener;
 use OCA\Filinq\EventListener\SigningTaskListener;
 use OCA\Filinq\Flow\FilinqFlowNodeListener;
+use OCA\Filinq\EventListener\VendorRenderedListener;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -93,7 +94,7 @@ class ListenerRegistrarTest extends TestCase {
 
 		(new ListenerRegistrar())->register($context);
 
-		self::assertCount(expectedCount: 36, haystack: $registered);
+		self::assertCount(expectedCount: 37, haystack: $registered);
 		self::assertSame(['OCA\Filinq\Event\IntakeDocumentReceivedEvent', 'OCA\Filinq\EventListener\IntakeDocumentReceivedListener'], $registered[0]);
 		self::assertSame(
 			[
@@ -115,15 +116,16 @@ class ListenerRegistrarTest extends TestCase {
 				[DocumentStampRequestedEvent::class, DocumentStampRequestedListener::class],
 				[RegisterOperationsEvent::class, RegisterFlowOperationsListener::class],
 				[LoadSettingsScriptsEvent::class, RegisterFlowOperationsListener::class],
+				['OCA\Integriq\Event\DocumentRenderedEvent', VendorRenderedListener::class],
 			],
-			array_slice($registered, 24, 5)
+			array_slice($registered, 24, 6)
 		);
 		self::assertSame(
 			[
 				['OCP\Files\Events\Node\NodeCreatedEvent', PdfUaAttachListener::class],
 				['OCP\Files\Events\Node\NodeWrittenEvent', PdfUaAttachListener::class],
 			],
-			array_slice($registered, 29, 2)
+			array_slice($registered, 30, 2)
 		);
 		self::assertSame(
 			[
@@ -133,7 +135,7 @@ class ListenerRegistrarTest extends TestCase {
 				['OCA\Filinq\Event\Webhook\DocumentSignedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
 				['OCP\Files\Events\BeforeDirectFileDownloadEvent', 'OCA\Filinq\EventListener\DocumentDownloadedListener'],
 			],
-			array_slice($registered, 31)
+			array_slice($registered, 32)
 		);
 	}//end testRegisterDelegatesToEveryAreaInOrder()
 

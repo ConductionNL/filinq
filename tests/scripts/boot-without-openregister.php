@@ -180,6 +180,7 @@ $expectedGeneration = [
 	'OCA\\Filinq\\Event\\DocumentStampRequestedEvent',
 	'OCP\\WorkflowEngine\\Events\\RegisterOperationsEvent',
 	'OCP\\WorkflowEngine\\Events\\LoadSettingsScriptsEvent',
+	'OCA\\Integriq\\Event\\DocumentRenderedEvent',
 ];
 if ($context->events !== $expectedGeneration) {
 	bootProofFail('unexpected document-generation registrations: ' . implode(', ', $context->events));
