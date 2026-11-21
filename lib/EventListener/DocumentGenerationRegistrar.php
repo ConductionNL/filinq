@@ -69,6 +69,7 @@ class DocumentGenerationRegistrar {
 	 * @return void
 	 *
 	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-filinq-registers-its-node-and-still-boots-without-openregister
+	 * @spec openspec/changes/template-engine-renders-through-a-vendor/tasks.md#2-backend
 	 */
 	public function register(IRegistrationContext $context): void {
 		$context->registerEventListener(
@@ -98,6 +99,14 @@ class DocumentGenerationRegistrar {
 		$context->registerEventListener(
 			event: LoadSettingsScriptsEvent::class,
 			listener: RegisterFlowOperationsListener::class
+		);
+
+		// Vendor renders (template-engine-renders-through-a-vendor): integriq
+		// reports how a render it handed to a vendor ended; keyed by name so
+		// filinq boots without integriq.
+		$context->registerEventListener(
+			event: VendorRenderedListener::RENDERED_EVENT,
+			listener: VendorRenderedListener::class
 		);
 
 	}//end register()
