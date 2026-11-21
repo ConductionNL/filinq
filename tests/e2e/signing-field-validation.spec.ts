@@ -207,7 +207,7 @@ test.describe('A field filled in while signing is checked and sealed', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/signing-field-validation/specs/signing-field-validation/spec.md#an-employee-asks-for-a-bank-account
+	// @e2e signing-field-validation::an-employee-asks-for-a-bank-account
 	test('the placement editor saves a required Dutch IBAN field', async ({
 		page,
 	}) => {
@@ -266,7 +266,7 @@ test.describe('A field filled in while signing is checked and sealed', () => {
 		expect(text?.validation).toBe('iban-nl')
 	})
 
-	// @e2e openspec/changes/signing-field-validation/specs/signing-field-validation/spec.md#a-typing-error-is-caught
+	// @e2e signing-field-validation::a-typing-error-is-caught
 	test('a wrong check digit is named on the field and nothing is signed', async ({
 		page,
 	}) => {
@@ -304,7 +304,7 @@ test.describe('A field filled in while signing is checked and sealed', () => {
 		).toEqual(['PENDING'])
 	})
 
-	// @e2e openspec/changes/signing-field-validation/specs/signing-field-validation/spec.md#not-in-a-folder-selection
+	// @e2e signing-field-validation::not-in-a-folder-selection
 	test('a request with fields stays out of a folder selection', async ({
 		page,
 	}) => {
@@ -360,7 +360,7 @@ test.describe('A field filled in while signing is checked and sealed', () => {
 		)
 	})
 
-	// @e2e openspec/changes/signing-field-validation/specs/signing-field-validation/spec.md#the-account-is-on-the-signed-agreement
+	// @e2e signing-field-validation::the-account-is-on-the-signed-agreement
 	test('a valid IBAN is signed and stored normalised on the signer record', async ({
 		page,
 	}) => {

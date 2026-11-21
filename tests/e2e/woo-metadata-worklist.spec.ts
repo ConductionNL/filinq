@@ -174,7 +174,7 @@ test.describe('The Woo metadata worklist', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#a-woo-coordinator-finds-the-incomplete-records
+	// @e2e woo-metadata-worklist::a-woo-coordinator-finds-the-incomplete-records
 	test('the incomplete filter lists the two records that miss fields and names them', async ({
 		page,
 	}) => {
@@ -229,7 +229,7 @@ test.describe('The Woo metadata worklist', () => {
 		await expect(missing).toContainText('documentsoort')
 	})
 
-	// @e2e openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#one-publisher-for-forty-records
+	// @e2e woo-metadata-worklist::one-publisher-for-forty-records
 	test('one publisher set on forty selected records fills them all and logs each', async ({
 		page,
 	}) => {
@@ -293,7 +293,7 @@ test.describe('The Woo metadata worklist', () => {
 		await expect(history).toContainText(process.env.NC_ADMIN_USER ?? 'admin')
 	})
 
-	// @e2e openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#an-admin-sets-the-default-publisher
+	// @e2e woo-metadata-worklist::an-admin-sets-the-default-publisher
 	test('a default publisher set by the admin fills a new record', async ({
 		page,
 	}) => {

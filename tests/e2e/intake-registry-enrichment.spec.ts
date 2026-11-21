@@ -127,7 +127,7 @@ test.describe('Registry suggestions on an arriving document', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#a-registrar-sees-the-company-behind-a-letterhead
+	// @e2e intake-registry-enrichment::a-registrar-sees-the-company-behind-a-letterhead
 	test('the assign dialog shows the company the Handelsregister named, as a suggestion', async ({
 		page,
 	}) => {
@@ -161,7 +161,7 @@ test.describe('Registry suggestions on an arriving document', () => {
 		await expect(card.getByTestId('intake-suggestion-accept')).toBeVisible()
 	})
 
-	// @e2e openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#kvk-is-not-configured
+	// @e2e intake-registry-enrichment::kvk-is-not-configured
 	test('without a KvK source the dialog says so and still offers the party suggestion', async ({
 		page,
 	}) => {
@@ -195,7 +195,7 @@ test.describe('Registry suggestions on an arriving document', () => {
 		)
 	})
 
-	// @e2e openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#a-registrar-accepts-a-corrected-address
+	// @e2e intake-registry-enrichment::a-registrar-accepts-a-corrected-address
 	test('a corrected address is accepted and the suggestion reads as written', async ({
 		page,
 	}) => {
@@ -255,7 +255,7 @@ test.describe('Registry suggestions on an arriving document', () => {
 		expect(suggestion.decidedBy, 'the session user is named').toBeTruthy()
 	})
 
-	// @e2e openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#an-admin-leaves-the-brp-off
+	// @e2e intake-registry-enrichment::an-admin-leaves-the-brp-off
 	test('the BRP lookup switch is off on the admin settings', async ({ page }) => {
 		await page.goto('/index.php/apps/filinq/')
 		const settings = await page.request.get(

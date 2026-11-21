@@ -45,7 +45,7 @@ const HOST = { register: 'filinq', schema: 'dossier' }
 test.describe('The intake leaf on a host record', () => {
 	test.setTimeout(120_000)
 
-	// @e2e openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md#dossiq-places-the-leaf-on-a-case
+	// @e2e document-intake-inbox::dossiq-places-the-leaf-on-a-case
 	test('the widget lists waiting documents and files one on the host record', async ({
 		page,
 	}) => {

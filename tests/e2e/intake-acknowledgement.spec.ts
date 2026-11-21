@@ -110,7 +110,7 @@ function rowOf(page: Page, subject: string) {
 }
 
 test.describe('The intake inbox shows who was told a document arrived', () => {
-	// @e2e openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#a-mailed-letter-is-acknowledged
+	// @e2e intake-acknowledgement::a-mailed-letter-is-acknowledged
 	test('a mailed letter that was acknowledged reads Sent on its row', async ({
 		page,
 	}) => {
@@ -132,7 +132,7 @@ test.describe('The intake inbox shows who was told a document arrived', () => {
 		await expect(badge).toHaveAttribute('title', 'j.devries@example.nl')
 	})
 
-	// @e2e openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#a-paper-letter-gets-a-letter-back
+	// @e2e intake-acknowledgement::a-paper-letter-gets-a-letter-back
 	test('a scanned letter from a sender without an address reads Queued as letter', async ({
 		page,
 	}) => {
@@ -152,7 +152,7 @@ test.describe('The intake inbox shows who was told a document arrived', () => {
 		)
 	})
 
-	// @e2e openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#a-registrar-prints-a-stamped-scan
+	// @e2e intake-acknowledgement::a-registrar-prints-a-stamped-scan
 	test('Open stamped copy opens the stamped rendition, not the arrived scan', async ({
 		page,
 	}) => {
@@ -202,7 +202,7 @@ test.describe('The intake inbox shows who was told a document arrived', () => {
 		}
 	})
 
-	// @e2e openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#a-registrar-sees-who-was-not-told
+	// @e2e intake-acknowledgement::a-registrar-sees-who-was-not-told
 	test('the column reads Sent, Refused and nothing for three waiting documents', async ({
 		page,
 	}) => {

@@ -143,7 +143,7 @@ test.describe('Mail archive import', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#an-archivist-imports-a-departing-official-s-mailbox
+	// @e2e mailbox-archive-import::an-archivist-imports-a-departing-officials-mailbox
 	test('an import of an MBOX waits for the mapping and lists its folders', async ({
 		page,
 	}) => {
@@ -185,7 +185,7 @@ test.describe('Mail archive import', () => {
 		expect(cancelled.status()).toBeLessThan(300)
 	})
 
-	// @e2e openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#a-pst-without-the-tool
+	// @e2e mailbox-archive-import::a-pst-without-the-tool
 	test('a PST on a server without readpst fails at once and says why', async ({
 		page,
 	}) => {
@@ -223,7 +223,7 @@ test.describe('Mail archive import', () => {
 		)
 	})
 
-	// @e2e openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#one-folder-filed-one-folder-to-the-inbox
+	// @e2e mailbox-archive-import::one-folder-filed-one-folder-to-the-inbox
 	test('a mapped folder goes to its dossier and the other to the intake inbox', async ({
 		page,
 	}) => {
@@ -327,7 +327,7 @@ test.describe('Mail archive import', () => {
 		)
 	})
 
-	// @e2e openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#the-same-archive-imported-twice
+	// @e2e mailbox-archive-import::the-same-archive-imported-twice
 	test('a second import of the same archive counts every message as already there', async ({
 		page,
 	}) => {

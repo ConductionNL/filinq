@@ -173,7 +173,7 @@ test.describe('Digitising a paper archive', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#an-archivist-loads-a-box-list
+	// @e2e paper-archive-digitisation::an-archivist-loads-a-box-list
 	test('a box list of 40 originals shows box 117 with 40 registered', async ({
 		page,
 	}) => {
@@ -207,7 +207,7 @@ test.describe('Digitising a paper archive', () => {
 		})
 	})
 
-	// @e2e openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#a-scan-operator-prints-the-sheets-for-a-box
+	// @e2e paper-archive-digitisation::a-scan-operator-prints-the-sheets-for-a-box
 	test('the separators of box 117 are a PDF of 40 pages, one per original', async ({
 		page,
 	}) => {
@@ -238,7 +238,7 @@ test.describe('Digitising a paper archive', () => {
 		expect(pages).toHaveLength(ORIGINALS)
 	})
 
-	// @e2e openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#a-checker-sends-a-scan-back
+	// @e2e paper-archive-digitisation::a-checker-sends-a-scan-back
 	test('a rejected scan goes back to registered with its note and counts as rejected', async ({
 		page,
 	}) => {

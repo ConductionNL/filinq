@@ -64,7 +64,7 @@ async function openSection(page: Page) {
 }
 
 test.describe('The admin settings name the apps that use the signing rail', () => {
-	// @e2e openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#the-surface-names-the-consumers
+	// @e2e signing-rail-consolidation::the-surface-names-the-consumers
 	test('both consumer apps are listed with their request counts', async ({
 		page,
 	}) => {
@@ -86,7 +86,7 @@ test.describe('The admin settings name the apps that use the signing rail', () =
 		expect(guard.errors, guard.errors.join('\n')).toEqual([])
 	})
 
-	// @e2e openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#no-requests-is-not-an-error
+	// @e2e signing-rail-consolidation::no-requests-is-not-an-error
 	test('no request raised says so and shows no error', async ({ page }) => {
 		const guard = attachConsoleGuard(page)
 		await answerSources(page, { sources: [], truncated: false })

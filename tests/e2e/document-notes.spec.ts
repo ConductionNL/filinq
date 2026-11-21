@@ -259,7 +259,7 @@ test.describe('Notes on a document are its Nextcloud comments', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/work-document-notes/specs/document-notes/spec.md#a-note-written-in-filinq-shows-in-files
+	// @e2e document-notes::a-note-written-in-filinq-shows-in-files
 	test('a note written beside the viewer shows in the Files comments', async ({
 		page,
 		browser,
@@ -308,7 +308,7 @@ test.describe('Notes on a document are its Nextcloud comments', () => {
 		}
 	})
 
-	// @e2e openspec/changes/work-document-notes/specs/document-notes/spec.md#a-registrar-leaves-a-line-on-the-intake-worklist
+	// @e2e document-notes::a-registrar-leaves-a-line-on-the-intake-worklist
 	test('a note left on an intake row is read with its author and time', async ({
 		page,
 		browser,
@@ -365,7 +365,7 @@ test.describe('Notes on a document are its Nextcloud comments', () => {
 		}
 	})
 
-	// @e2e openspec/changes/work-document-notes/specs/document-notes/spec.md#each-document-of-a-dossier-has-its-own-notes
+	// @e2e document-notes::each-document-of-a-dossier-has-its-own-notes
 	test('each document of a dossier shows only its own notes', async ({ page }) => {
 		const note = `${TEST_PREFIX} only on the letter`
 		const made = await page.request.post(`${API}/dossiers`, {
@@ -408,7 +408,7 @@ test.describe('Notes on a document are its Nextcloud comments', () => {
 		).toHaveCount(0)
 	})
 
-	// @e2e openspec/changes/work-document-notes/specs/document-notes/spec.md#the-anonymised-copy-starts-clean
+	// @e2e document-notes::the-anonymised-copy-starts-clean
 	test('the anonymised copy carries no notes', async ({ page }) => {
 		test.skip(
 			ANALYSED_FILE_ID === '',
@@ -441,7 +441,7 @@ test.describe('Notes on a document are its Nextcloud comments', () => {
 		)
 	})
 
-	// @e2e openspec/changes/work-document-notes/specs/document-notes/spec.md#a-clerk-spots-the-documents-with-notes
+	// @e2e document-notes::a-clerk-spots-the-documents-with-notes
 	test('My documents counts the notes of a document on its row', async ({
 		page,
 	}) => {

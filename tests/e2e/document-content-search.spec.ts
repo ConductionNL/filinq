@@ -99,7 +99,7 @@ async function seed(
 test.describe('Documents are found by the words in them', () => {
 	test.setTimeout(120_000)
 
-	// @e2e openspec/changes/work-content-search/specs/document-content-search/spec.md#a-woo-coordinator-finds-a-letter-by-a-street-name
+	// @e2e document-content-search::a-woo-coordinator-finds-a-letter-by-a-street-name
 	test('My documents finds a letter by a word in its text, with the word marked', async ({
 		page,
 	}) => {
@@ -129,7 +129,7 @@ test.describe('Documents are found by the words in them', () => {
 		)
 	})
 
-	// @e2e openspec/changes/work-content-search/specs/document-content-search/spec.md#a-clerk-searches-the-documents-of-a-record
+	// @e2e document-content-search::a-clerk-searches-the-documents-of-a-record
 	test("a record's documents are searched by content", async ({ page }) => {
 		test.fixme(true, NOT_BUILT)
 		await page.goto('/index.php/apps/filinq/')
@@ -152,7 +152,7 @@ test.describe('Documents are found by the words in them', () => {
 		expect(String(body.results[0].snippet ?? '')).toContain(unique)
 	})
 
-	// @e2e openspec/changes/work-content-search/specs/document-content-search/spec.md#unread-documents-are-named-not-hidden
+	// @e2e document-content-search::unread-documents-are-named-not-hidden
 	test('a content search names the documents that were never read', async ({
 		page,
 	}) => {
@@ -183,7 +183,7 @@ test.describe('Documents are found by the words in them', () => {
 		).toBeVisible()
 	})
 
-	// @e2e openspec/changes/work-content-search/specs/document-content-search/spec.md#a-colleague-s-private-document-stays-out
+	// @e2e document-content-search::a-colleagues-private-document-stays-out
 	test("a colleague's private document never shows in the results", async ({
 		browser,
 		page,

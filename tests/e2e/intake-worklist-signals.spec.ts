@@ -185,7 +185,7 @@ test.describe('Deadlines and duplicates on the intake worklist', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#a-letter-gets-ten-working-days
+	// @e2e intake-worklist-signals::a-letter-gets-ten-working-days
 	test('a letter that arrived on Monday 5 October is due Monday 19 October, 10 days left', async ({
 		page,
 	}) => {
@@ -228,7 +228,7 @@ test.describe('Deadlines and duplicates on the intake worklist', () => {
 		await expect(row.getByTestId('intake-countdown')).toHaveText(/10 days left/)
 	})
 
-	// @e2e openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#a-registrar-moves-a-deadline
+	// @e2e intake-worklist-signals::a-registrar-moves-a-deadline
 	test('a registrar moves a deadline to next week and the reason stays on the document', async ({
 		page,
 	}) => {
@@ -277,7 +277,7 @@ test.describe('Deadlines and duplicates on the intake worklist', () => {
 		expect(stored.deadlineReason).toBe('waiting for the attachment')
 	})
 
-	// @e2e openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#a-team-lead-sees-the-late-post
+	// @e2e intake-worklist-signals::a-team-lead-sees-the-late-post
 	test('Overdue lists the waiting late document and not the assigned one', async ({
 		page,
 	}) => {
@@ -311,7 +311,7 @@ test.describe('Deadlines and duplicates on the intake worklist', () => {
 		await expect(rowOf(page, handled)).toHaveCount(0)
 	})
 
-	// @e2e openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#the-same-letter-by-scan-and-by-mail
+	// @e2e intake-worklist-signals::the-same-letter-by-scan-and-by-mail
 	test('the second arrival of the same letter is waiting and marked as a possible duplicate of the first', async ({
 		page,
 	}) => {
@@ -336,7 +336,7 @@ test.describe('Deadlines and duplicates on the intake worklist', () => {
 		)
 	})
 
-	// @e2e openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#a-registrar-rejects-the-second-copy
+	// @e2e intake-worklist-signals::a-registrar-rejects-the-second-copy
 	test('Reject as duplicate takes the copy off the list with a reason naming the first', async ({
 		page,
 	}) => {

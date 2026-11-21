@@ -219,7 +219,7 @@ test.describe('A recipient signs or only accepts', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md#an-employee-asks-one-party-to-sign-and-another-to-accept
+	// @e2e signing-accept-only::an-employee-asks-one-party-to-sign-and-another-to-accept
 	test('the form sends one signer and one accept-only recipient, and the detail page lists both roles', async ({
 		page,
 	}) => {
@@ -237,7 +237,7 @@ test.describe('A recipient signs or only accepts', () => {
 		await expect(recipientRow(page, OFFICER.name)).toContainText('Waiting')
 	})
 
-	// @e2e openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md#nobody-to-sign
+	// @e2e signing-accept-only::nobody-to-sign
 	test('a request with only accept-only recipients is refused', async ({
 		page,
 	}) => {
@@ -272,7 +272,7 @@ test.describe('A recipient signs or only accepts', () => {
 		expect(refused.status(), await refused.text()).toBe(400)
 	})
 
-	// @e2e openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md#the-housing-officer-accepts-from-the-signing-folder
+	// @e2e signing-accept-only::the-housing-officer-accepts-from-the-signing-folder
 	test('the officer accepts from the signing folder and the audit trail reads Accepted', async ({
 		browser,
 		page,
@@ -318,7 +318,7 @@ test.describe('A recipient signs or only accepts', () => {
 		expect(trail).toContain(OFFICER.userid)
 	})
 
-	// @e2e openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md#a-signature-and-an-acceptance-complete-the-lease
+	// @e2e signing-accept-only::a-signature-and-an-acceptance-complete-the-lease
 	test('one signature and one acceptance complete the lease', async ({
 		browser,
 		page,

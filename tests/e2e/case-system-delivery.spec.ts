@@ -120,7 +120,7 @@ test.describe('case-system delivery in the admin settings', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#an-admin-sends-hr-documents-to-the-dms
+	// @e2e case-system-delivery::an-admin-sends-hr-documents-to-the-dms
 	test('an admin adds a destination through the form', async ({ page }) => {
 		await openCaseSystem(page)
 
@@ -148,7 +148,7 @@ test.describe('case-system delivery in the admin settings', () => {
 		created.push({ schema: 'caseSystemDestination', id: String(destination?.id) })
 	})
 
-	// @e2e openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#an-admin-retries-a-failed-delivery
+	// @e2e case-system-delivery::an-admin-retries-a-failed-delivery
 	test('a failed delivery is retried and waits again; any other state answers 409', async ({ page, playwright, baseURL }) => {
 		await openCaseSystem(page)
 		const destinationId = created.find((c) => c.schema === 'caseSystemDestination')?.id ?? STAMP
@@ -201,7 +201,7 @@ test.describe('case-system delivery in the admin settings', () => {
 		expect(stored.body.errorMessage ?? '').toBe('')
 	})
 
-	// @e2e openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#an-hr-contract-is-queued-for-the-dms
+	// @e2e case-system-delivery::an-hr-contract-is-queued-for-the-dms
 	test('a document stored with a case-system destination is queued for the case system', async ({ page }) => {
 		await page.goto(`${APP}/`, { waitUntil: 'domcontentloaded' })
 
@@ -257,7 +257,7 @@ test.describe('case-system delivery in the admin settings', () => {
 		expect(metadata.vertrouwelijkheidaanduiding).toBe('vertrouwelijk')
 	})
 
-	// @e2e openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#a-delivered-document-shows-where-it-went
+	// @e2e case-system-delivery::a-delivered-document-shows-where-it-went
 	test('a written-back document shows "In the case system" on My documents', async ({ page }) => {
 		await page.goto(`${APP}/`, { waitUntil: 'domcontentloaded' })
 		const name = `${STAMP}-delivered.txt`

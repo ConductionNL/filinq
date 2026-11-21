@@ -181,7 +181,7 @@ test.describe('Removing the password of a locked PDF', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/intake-pdf-password-removal/specs/pdf-password-removal/spec.md#a-wrong-password-writes-nothing
+	// @e2e pdf-password-removal::a-wrong-password-writes-nothing
 	test('a wrong password says so and writes no file', async ({ page }) => {
 		test.skip(
 			LOCKED_PDF === '',
@@ -209,7 +209,7 @@ test.describe('Removing the password of a locked PDF', () => {
 		).toBe(0)
 	})
 
-	// @e2e openspec/changes/intake-pdf-password-removal/specs/pdf-password-removal/spec.md#a-clerk-unlocks-a-supplier-s-pdf-from-my-documents
+	// @e2e pdf-password-removal::a-clerk-unlocks-a-suppliers-pdf-from-my-documents
 	test('the right password writes the unlocked copy beside an unchanged original', async ({
 		page,
 	}) => {
@@ -251,7 +251,7 @@ test.describe('Removing the password of a locked PDF', () => {
 		).toBe(true)
 	})
 
-	// @e2e openspec/changes/intake-pdf-password-removal/specs/pdf-password-removal/spec.md#the-copy-shows-its-own-findings
+	// @e2e pdf-password-removal::the-copy-shows-its-own-findings
 	test('the copy of a scan shows Missing text layer and no Encrypted PDF', async ({
 		page,
 	}) => {
@@ -335,7 +335,7 @@ test.describe('Removing the password of a locked PDF', () => {
 		}
 	})
 
-	// @e2e openspec/changes/intake-pdf-password-removal/specs/pdf-password-removal/spec.md#the-admin-sees-that-the-tool-is-missing
+	// @e2e pdf-password-removal::the-admin-sees-that-the-tool-is-missing
 	test('without qpdf the admin settings say so and the action answers it', async ({
 		page,
 	}) => {
@@ -385,7 +385,7 @@ test.describe('Removing the password of a locked PDF', () => {
 		}
 	})
 
-	// @e2e openspec/changes/intake-pdf-password-removal/specs/pdf-password-removal/spec.md#a-registrar-unlocks-a-document-in-the-intake-worklist
+	// @e2e pdf-password-removal::a-registrar-unlocks-a-document-in-the-intake-worklist
 	test('a registrar unlocks a waiting document and the row then names the copy', async ({
 		page,
 	}) => {
