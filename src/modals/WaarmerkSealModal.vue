@@ -101,13 +101,13 @@ export default {
 	},
 
 	watch: {
-		/**
-		 * Read whether the file to seal is a sanitized copy each time the dialog opens on one.
-		 *
-		 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
-		 */
 		show: {
 			immediate: true,
+			/**
+			 * Read whether the file to seal is a sanitized copy each time the dialog opens on one.
+			 *
+			 * @spec openspec/changes/document-sanitization/specs/document-sanitization/spec.md#requirement-sanitize-then-seal-ordering-is-enforced-on-the-action-surface-req-ddsan-005
+			 */
 			handler() {
 				this.readSanitized()
 			},

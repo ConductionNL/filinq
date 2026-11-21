@@ -7,8 +7,8 @@
 
 import WaarmerkSealModal from './WaarmerkSealModal.vue'
 import { renderStubbed } from '../../tests/jest/renderGolden.js'
-import { certifyRun, sealFile } from '../services/waarmerk.js'
 import { sanitizationStatus } from '../services/sanitization.js'
+import { certifyRun, sealFile } from '../services/waarmerk.js'
 
 jest.mock('../services/waarmerk.js', () => ({ certifyRun: jest.fn(), sealFile: jest.fn() }))
 jest.mock('../services/sanitization.js', () => ({ sanitizationStatus: jest.fn() }))
