@@ -30,13 +30,14 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\ScanIntakeController;
 use OCA\Filinq\Controller\Support\ScanSetupServices;
-use OCA\Filinq\Service\ScanBatchRepository;
 use OCA\Filinq\Service\ScanBatchService;
 use OCA\Filinq\Service\ScanProfileService;
 use OCA\Filinq\Service\SeparatorSheetService;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\Files\File;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IRequest;
 use OCP\IUser;
@@ -106,11 +107,7 @@ class ScanIntakeControllerTest extends TestCase {
 			new ScanSetupServices(sheets: $sheets, profiles: $profiles),
 			$this->getMockBuilder(ScanBatchService::class)
 				->disableOriginalConstructor()
-				->onlyMethods(['receive', 'split'])
-				->getMock(),
-			$this->getMockBuilder(ScanBatchRepository::class)
-				->disableOriginalConstructor()
-				->onlyMethods(['findByFile'])
+				->onlyMethods(['receive', 'split', 'take'])
 				->getMock(),
 			$this->createMock(IRootFolder::class),
 			$session
@@ -208,4 +205,52 @@ class ScanIntakeControllerTest extends TestCase {
 		$this->assertInstanceOf(JSONResponse::class, $response);
 		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
 	}//end testNoSheetIsPrintedForNobody()
+	/**
+	 * A split goes through the service's one intake path, `take()`, with the resolved file and profile.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md
+	 */
+	public function testSplitStillWorksThroughTake(): void {
+		$file = $this->createMock(originalClassName: File::class);
+		$file->method('getPath')->willReturn('/beheerder/files/Scans/batch.pdf');
+		$file->method('getId')->willReturn(42);
+
+		$userFolder = $this->createMock(originalClassName: Folder::class);
+		$userFolder->method('getById')->with(42)->willReturn([$file]);
+		$root = $this->createMock(originalClassName: IRootFolder::class);
+		$root->method('getUserFolder')->with('beheerder')->willReturn($userFolder);
+
+		$profiles = $this->profiles();
+		$profile = ['id' => 'scan-a', 'watchedFolder' => 'Scans'];
+		$profiles->expects($this->once())->method('forPath')->with('/Scans/batch.pdf')->willReturn($profile);
+
+		$batches = $this->getMockBuilder(className: ScanBatchService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['receive', 'split', 'take'])
+			->getMock();
+		$batches->expects($this->never())->method('receive');
+		$batches->expects($this->never())->method('split');
+		$batches->expects($this->once())->method('take')->with($file, $profile)
+			->willReturn(['uuid' => 'batch-1', 'status' => 'split']);
+
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('beheerder');
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+
+		$controller = new ScanIntakeController(
+			request: $this->createMock(originalClassName: IRequest::class),
+			setup: new ScanSetupServices(sheets: $this->sheets(), profiles: $profiles),
+			batches: $batches,
+			rootFolder: $root,
+			userSession: $session
+		);
+
+		$response = $controller->split(fileId: 42);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['uuid' => 'batch-1', 'status' => 'split'], actual: $response->getData());
+	}//end testSplitStillWorksThroughTake()
 }//end class

@@ -24,7 +24,6 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\ScanIntakeController;
 use OCA\Filinq\Controller\Support\ScanSetupServices;
-use OCA\Filinq\Service\ScanBatchRepository;
 use OCA\Filinq\Service\ScanBatchService;
 use OCA\Filinq\Service\ScanProfileService;
 use OCA\Filinq\Service\SeparatorSheetService;
@@ -71,11 +70,7 @@ class ScanIntakeControllerDeclareProfilesTest extends TestCase {
 			new ScanSetupServices(sheets: $sheets, profiles: $this->profiles),
 			$this->getMockBuilder(ScanBatchService::class)
 				->disableOriginalConstructor()
-				->onlyMethods(['receive', 'split'])
-				->getMock(),
-			$this->getMockBuilder(ScanBatchRepository::class)
-				->disableOriginalConstructor()
-				->onlyMethods(['findByFile'])
+				->onlyMethods(['receive', 'split', 'take'])
 				->getMock(),
 			$this->createMock(IRootFolder::class),
 			$this->createMock(IUserSession::class)

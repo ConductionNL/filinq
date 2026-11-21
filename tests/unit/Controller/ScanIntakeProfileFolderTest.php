@@ -26,7 +26,6 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\ScanIntakeController;
 use OCA\Filinq\Controller\Support\ScanSetupServices;
-use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
 use OCA\Filinq\Service\ScanProfileService;
@@ -88,15 +87,12 @@ class ScanIntakeProfileFolderTest extends TestCase {
 		);
 		$profiles = new ScanProfileService(config: $config, logger: $this->createMock(originalClassName: LoggerInterface::class));
 
-		$store = $this->createMock(originalClassName: ScanBatchRepositoryInterface::class);
-		$store->expects(matcher: $this->any())->method(constraint: 'findByFile')->willReturn(value: ['id' => 'batch-1', 'status' => 'received']);
-
 		$batches = $this->createMock(originalClassName: ScanBatchServiceInterface::class);
-		$batches->expects(matcher: $this->any())->method(constraint: 'split')->willReturnCallback(
-			function (array $batch, array $profile): array {
+		$batches->expects(matcher: $this->any())->method(constraint: 'take')->willReturnCallback(
+			function (File $file, array $profile): array {
 				$this->cutWith = $profile;
 
-				return ['batch' => $batch['id'], 'segments' => 2];
+				return ['batch' => 'batch-1', 'segments' => 2];
 			}
 		);
 
@@ -104,7 +100,6 @@ class ScanIntakeProfileFolderTest extends TestCase {
 			request: $this->createMock(originalClassName: IRequest::class),
 			setup: new ScanSetupServices(sheets: $this->createMock(originalClassName: SeparatorSheetServiceInterface::class), profiles: $profiles),
 			batches: $batches,
-			store: $store,
 			rootFolder: $root,
 			userSession: $session
 		);

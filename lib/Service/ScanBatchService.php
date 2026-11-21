@@ -111,6 +111,33 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	}//end receive()
 
 	/**
+	 * Take one batch in and cut it: receive it when it is new, then split it into its own folder.
+	 *
+	 * The one intake path every caller goes through, the split route and a
+	 * watched folder alike. A batch already stored for the file is cut again
+	 * from that record, so the same scan is never received twice.
+	 *
+	 * @param File $file The PDF the scanner wrote.
+	 * @param array<string, mixed> $profile The scan profile to cut it with.
+	 *
+	 * @return array<string, mixed> The batch, `split` or `failed`.
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md
+	 */
+	public function take(File $file, array $profile): array {
+		// Asked first: a node that cannot name its folder throws here, before
+		// anything is received, so a batch is never stored without a place to cut it to.
+		$target = $file->getParent();
+
+		$batch = $this->batches->findByFile(fileId: (int)$file->getId());
+		if ($batch === null) {
+			$batch = $this->receive(file: $file, profile: $profile);
+		}
+
+		return $this->split(batch: $batch, profile: $profile, file: $file, target: $target);
+	}//end take()
+
+	/**
 	 * Cut one batch into documents and announce every one of them.
 	 *
 	 * @param array<string, mixed> $batch The batch, as received.
