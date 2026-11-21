@@ -151,7 +151,9 @@ class DocumentService implements DocumentServiceInterface {
 	 * @param array $dataRefs Data references: [{register, schema, id}, ...]
 	 * @param array $options Options: format (pdf|odf|html|docx), huisstijlId,
 	 *                       zaakId, adHocData, listRefs, pdfOptions, userId,
-	 *                       filename, output, templateVersion (render that stored version, not the head).
+	 *                       filename, output, templateVersion (render that stored version, not the head),
+	 *                       engine (absent or `filinq`: this app renders; `vendor:<sourceSlug>`: the
+	 *                       integriq source of that slug renders and the answer is a `pending` entry).
 	 *                       listRefs: [{register, schema, filter?, limit?,
 	 *                       order?, as?}, ...] — each resolves to an array
 	 *                       of objects under the Twig context key 'as'
@@ -176,6 +178,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md
 	 * @spec openspec/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/changes/template-engine-renders-through-a-vendor/specs/document-creatie-sjablonen/spec.md#requirement-a-render-names-its-engine-req-tev-001
 	 */
 	public function generateDocument(
 		string $templateId,
@@ -190,6 +193,7 @@ class DocumentService implements DocumentServiceInterface {
 		$format = $options['format'] ?? self::DEFAULT_FORMAT;
 		$this->validateFormat(format: $format);
 		$this->resolveOutputMode(options: $options);
+		$vendorSlug = $this->vendorSlugOf(options: $options);
 
 		$template = null;
 		if (isset($options['templateVersion']) === true) {
@@ -206,6 +210,20 @@ class DocumentService implements DocumentServiceInterface {
 			$recordFields = array_merge($recordFields, $wizardFields);
 		}
 
+		if ($vendorSlug !== null) {
+			return $this->renderThroughVendor(
+				slug: $vendorSlug,
+				run: [
+					'templateId' => $templateId,
+					'template' => $template,
+					'dataRefs' => $dataRefs,
+					'options' => $options,
+					'recordFields' => $recordFields,
+					'format' => $format,
+				]
+			);
+		}
+
 		return $this->generateFromTemplate(
 			templateId: $templateId,
 			template: $template,
@@ -215,6 +233,60 @@ class DocumentService implements DocumentServiceInterface {
 		);
 
 	}//end generateDocument()
+
+	/**
+	 * The vendor source slug `options.engine` names, or null when filinq renders.
+	 *
+	 * Without a vendor render on this instance every engine but filinq's own
+	 * is refused, so a vendor render can never land on filinq's engine.
+	 *
+	 * @param array<string, mixed> $options The generation options.
+	 *
+	 * @return string|null The source slug, or null for filinq's own render.
+	 *
+	 * @throws Exception 400 naming the value when it is no engine this instance can render with.
+	 *
+	 * @spec openspec/changes/template-engine-renders-through-a-vendor/specs/document-creatie-sjablonen/spec.md#requirement-a-render-names-its-engine-req-tev-001
+	 */
+	private function vendorSlugOf(array $options): ?string {
+		$engine = ($options['engine'] ?? null);
+		if ($this->production->vendor !== null) {
+			return $this->production->vendor->vendorSlug(engine: $engine);
+		}
+
+		if (in_array($engine, [null, '', 'filinq'], true) === true) {
+			return null;
+		}
+
+		throw new Exception(
+			message: 'options.engine ' . json_encode($engine) . ' cannot be rendered on this instance: no vendor render is configured.',
+			code: 400
+		);
+
+	}//end vendorSlugOf()
+
+	/**
+	 * Hand a render to the integriq source of a slug; never to filinq's own engine.
+	 *
+	 * @param string               $slug The source slug from `vendor:<slug>`.
+	 * @param array<string, mixed> $run  The generation run: templateId, template, dataRefs, options,
+	 *                                   recordFields and format.
+	 *
+	 * @return array<string, mixed> The pending generation result.
+	 *
+	 * @throws Exception The vendor refusal; nothing is rendered by filinq's engine.
+	 *
+	 * @spec openspec/changes/template-engine-renders-through-a-vendor/specs/document-creatie-sjablonen/spec.md#requirement-a-vendor-render-goes-to-integriq-and-never-falls-back-req-tev-002
+	 */
+	private function renderThroughVendor(string $slug, array $run): array {
+		$resolved = $this->resolveTemplateData(run: $run);
+
+		$result = $this->production->vendor->render(slug: $slug, run: $run, data: $resolved['data']);
+		$result['warnings'] = array_merge($resolved['warnings'], $result['warnings']);
+
+		return $result;
+
+	}//end renderThroughVendor()
 
 	/**
 	 * Generate a document from a template the caller already holds.

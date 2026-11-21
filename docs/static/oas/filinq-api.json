@@ -3539,13 +3539,29 @@
             "post": {
                 "operationId": "document-generate",
                 "summary": "Generate a single document from a template",
-                "description": "Generate a single document from a template.  POST /api/documents/generate  Request body: - templateId (string, required): UUID of the template - dataRefs (array, required): [{register, schema, id}, ...] - options (object, optional): format, huisstijlId, zaakId, adHocData, listRefs, pdfOptions, output - listRefs (array, optional): [{register, schema, filter?, limit?, order?, as?}, ...], each resolves to an array of objects in the Twig context under key 'as' (default: schema + '_list') - output (object, optional): {mode?: 'return'|'files'|'both', targetPath?}, defaults to mode 'return' (byte-identical to omitting it). 'files' stores the document in the requesting user's Files and returns JSON refs instead of a binary; 'both' stores AND returns the binary, with the stored file identified via X-Docudesk-File-Id/X-Docudesk-File-Path response headers. - filename (string, optional): Download filename (also used as the stored filename's basename when output.mode is 'files'/'both')",
+                "description": "Generate a single document from a template.  POST /api/documents/generate  Request body: - templateId (string, required): UUID of the template - dataRefs (array, required): [{register, schema, id}, ...] - options (object, optional): format, huisstijlId, zaakId, adHocData, listRefs, pdfOptions, output, engine - engine (string, optional): 'filinq' (the default) or 'vendor:<sourceSlug>' to render through an integriq document generation source (see GET /templates/engines); a vendor render answers 202 with a pending entry and the vendor's job id, and never falls back to filinq's engine - listRefs (array, optional): [{register, schema, filter?, limit?, order?, as?}, ...], each resolves to an array of objects in the Twig context under key 'as' (default: schema + '_list') - output (object, optional): {mode?: 'return'|'files'|'both', targetPath?}, defaults to mode 'return' (byte-identical to omitting it). 'files' stores the document in the requesting user's Files and returns JSON refs instead of a binary; 'both' stores AND returns the binary, with the stored file identified via X-Docudesk-File-Id/X-Docudesk-File-Path response headers. - filename (string, optional): Download filename (also used as the stored filename's basename when output.mode is 'files'/'both')",
                 "tags": [
                     "document"
                 ],
                 "responses": {
                     "200": {
                         "description": "Generated document binary, \t *                                           stored-file JSON refs, or error",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "202": {
+                        "description": "A vendor engine took the render: status pending, engine, vendorJobId and the pending generatedDocument entry",
                         "headers": {
                             "API-Version": {
                                 "$ref": "#/components/headers/API-Version"
@@ -12778,6 +12794,37 @@
                         }
                     }
                 ]
+            }
+        },
+        "/templates/engines": {
+            "get": {
+                "operationId": "template-engines-index",
+                "summary": "The engines a template can render with: filinq, and one vendor:<slug> per active integriq document generation source",
+                "description": "The engines a template can render with: `filinq` always, and one `vendor:<slug>` per active document generation source integriq holds. Without integriq the answer is `filinq` alone. Pass an engine as `options.engine` to `POST /documents/generate`.",
+                "tags": [
+                    "templates"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "JSON response with the results array: [{id, name, type}]",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                }
             }
         },
         "/grounds": {

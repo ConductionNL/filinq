@@ -382,6 +382,8 @@ $extra = [
         ['name' => 'templates#index', 'url' => 'api/templates', 'verb' => 'GET'],
         // template-library-leaf 2.2: the templates that apply to one host object, for the generate-document leaf. Before api/templates/{id}.
         ['name' => 'templates#forObject', 'url' => 'api/templates/for-object', 'verb' => 'GET'],
+        // template-engine-renders-through-a-vendor 2.4: the engines a template can render with. Before api/templates/{id}.
+        ['name' => 'templateEngines#index', 'url' => 'api/templates/engines', 'verb' => 'GET'],
         ['name' => 'templates#create', 'url' => 'api/templates', 'verb' => 'POST'],
         ['name' => 'officeTemplates#create', 'url' => 'api/templates/office', 'verb' => 'POST'],
         // Bulk import of office templates and fragments (office-template-authoring REQ-DDOTA-005).

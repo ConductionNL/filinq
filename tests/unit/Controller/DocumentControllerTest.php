@@ -176,6 +176,52 @@ class DocumentControllerTest extends TestCase {
 	}//end testGenerateReturnsFileRefsForFilesMode()
 
 	/**
+	 * A render a vendor engine took answers 202 with the job id and the pending entry, no document.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/template-engine-renders-through-a-vendor/tasks.md
+	 */
+	public function testAVendorRenderAnswers202Pending(): void {
+		$this->request->method('getParam')
+			->willReturnMap([
+				['templateId', null, 'tmpl-1'],
+				['dataRefs', [], []],
+				['options', [], ['engine' => 'vendor:smartdocuments']],
+				['filename', 'document', 'besluit'],
+			]);
+
+		$this->documentSvc->method('generateDocument')
+			->willReturn([
+				'status' => 'pending',
+				'engine' => 'vendor:smartdocuments',
+				'vendorJobId' => 'job-42',
+				'content' => '',
+				'format' => 'pdf',
+				'metadata' => ['id' => 'doc-1', 'status' => 'pending'],
+				'warnings' => [],
+				'output' => ['mode' => 'files', 'fileId' => null],
+			]);
+
+		$result = $this->controller->generate();
+
+		$this->assertInstanceOf(JSONResponse::class, $result);
+		$this->assertSame(202, $result->getStatus());
+		$this->assertSame(
+			[
+				'status' => 'pending',
+				'engine' => 'vendor:smartdocuments',
+				'vendorJobId' => 'job-42',
+				'format' => 'pdf',
+				'metadata' => ['id' => 'doc-1', 'status' => 'pending'],
+				'warnings' => [],
+			],
+			$result->getData()
+		);
+
+	}//end testAVendorRenderAnswers202Pending()
+
+	/**
 	 * A multi-format request answers with a manifest: one entry per format,
 	 * the WebDAV address to download it, and a failed format's error.
 	 *
