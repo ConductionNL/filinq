@@ -22,9 +22,10 @@
 
 ## 2. Backend
 
-- [ ] 2.1 Implement `lib/Service/RetentionSurfaceService.php` (REQ-DDARE-003, REQ-DDARE-007)
+- [x] 2.1 Implement `lib/Service/RetentionSurfaceService.php` (REQ-DDARE-003, REQ-DDARE-007)
   - Read-only retention state for UI; destruction-date propagation with the D6 precedence matrix (bridge-supplied date > archiefactiedatum > empty, never blocking); appends `destruction_date_propagated` to `publicationLogEntry`.
   - No date arithmetic, no eligibility scanning, no destruction execution anywhere in `lib/` (architecture test).
+  - Built (2026-11-21): `RetentionSurfaceService::destructionDateFor()` picks the date by D6: the `vernietigingsdatum` on the bridge's `externalDocument` for the file (new optional date field, `externalDocument` 1.1.0, register 8.101.0), named after the `bridgeSource` (name, else vendor, else "zaaksysteem"); else `retention.archiefactiedatum` of the record whose object folder holds the file when it is appraised `vernietigen`, named "Archiefwet 1995, selectielijst categorie {classificatie}"; else none. Every unreadable source is logged and reads as no date. `PublicationPipelineService::handoff()` hands the date on through `setDestructionDate()` (so OpenCatalogi's `retentionExpiresAt`/`retentionNote` and the `destruction_date_propagated` log entry), and skips an unchanged date. The read for display needs no filinq method: the retention block on the document detail (task 3.3) reads the block OpenRegister renders on the object (D8). Pinned by `RetentionSurfaceServiceTest` (the precedence matrix), `PublicationPipelineServiceTest::testAHandoffCarriesTheDestructionDateTheRetentionSurfaceFinds`, `::testAHandoffWithoutADestructionDateIsNotBlocked`, `::testAnUnchangedDestructionDateIsNotPropagatedAgain` and `tests/unit/Architecture/RetentionArchitectureTest.php` (no `archiefactiedatum` written, no bewaartermijn arithmetic, no destruction machinery called in `lib/`).
 
 - [ ] 2.2 Verify the per-object classificatie override surface against OR HEAD (design.md D4 uncertainty)
   - If OR exposes no per-object override endpoint, file the OR issue and ship schema-level categories + `extendArchiefactiedatum` only; record the decision on tracking issue #231.

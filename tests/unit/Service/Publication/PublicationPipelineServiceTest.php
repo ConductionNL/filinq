@@ -36,6 +36,7 @@ use OCA\Filinq\Service\Publication\OpenCatalogiPublicationMap;
 use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\DiwooMissingFields;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
+use OCA\Filinq\Service\RetentionSurfaceService;
 use OCA\Filinq\Service\Publication\PublicationReadiness;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository;
@@ -137,6 +138,13 @@ class PublicationPipelineServiceTest extends TestCase {
 	 * @var string
 	 */
 	private string $defaultPublisher = '';
+
+	/**
+	 * What the retention surface answers for the document; false gives the pipeline no retention surface.
+	 *
+	 * @var array{date: string, source: string}|null|false
+	 */
+	private array|null|false $destruction = false;
 
 	/**
 	 * The pipeline over the in-memory world.
@@ -332,10 +340,28 @@ class PublicationPipelineServiceTest extends TestCase {
 			map: new OpenCatalogiPublicationMap(),
 			platform: new OpenCatalogiPlatform(appManager: $apps, container: $container, rootFolder: $root),
 			clock: $clock,
-			config: $appConfig
+			config: $appConfig,
+			retention: $this->retentionSurface()
 		);
 
 	}//end pipeline()
+
+	/**
+	 * The retention surface double, or none.
+	 *
+	 * @return RetentionSurfaceService|null
+	 */
+	private function retentionSurface(): ?RetentionSurfaceService {
+		if ($this->destruction === false) {
+			return null;
+		}
+
+		$surface = $this->createMock(originalClassName: RetentionSurfaceService::class);
+		$surface->method('destructionDateFor')->willReturnCallback(fn (array $record): ?array => $this->destruction);
+
+		return $surface;
+
+	}//end retentionSurface()
 
 	/**
 	 * Called by the fake schema mapper.
@@ -980,4 +1006,66 @@ class PublicationPipelineServiceTest extends TestCase {
 		$this->assertSame('draft', $this->rows['publicationRecord'][$draft['uuid']]['status']);
 
 	}//end testADestroyedSourceWithdrawsItsPublication()
+	/**
+	 * A hand-off carries the destruction date the retention surface finds to the platform, and logs it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-destruction-dates-propagate-to-the-publication-pipeline-with-source-precedence-req-ddare-007
+	 */
+	public function testAHandoffCarriesTheDestructionDateTheRetentionSurfaceFinds(): void {
+		$this->destruction = ['date' => '2033-10-01', 'source' => 'Archiefwet 1995, selectielijst categorie 11.1.2'];
+		$pipeline = $this->pipeline();
+
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+
+		$this->assertSame(expected: '2033-10-01', actual: $record['destructionDate']);
+		$this->assertSame(expected: 'Archiefwet 1995, selectielijst categorie 11.1.2', actual: $record['destructionDateSource']);
+		$platform = $this->rows['publication'][$record['endpointPublicationRef']];
+		$this->assertSame(expected: '2033-10-01T00:00:00+00:00', actual: $platform['retentionExpiresAt']);
+		$this->assertSame(
+			expected: ['created', 'readiness_evaluated', 'metadata_assembled', 'readiness_evaluated', 'handed_off', 'destruction_date_propagated', 'published'],
+			actual: array_column($this->rows['publicationLogEntry'], 'action')
+		);
+
+	}//end testAHandoffCarriesTheDestructionDateTheRetentionSurfaceFinds()
+
+	/**
+	 * Without a date the hand-off goes on and nothing about destruction is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-destruction-dates-propagate-to-the-publication-pipeline-with-source-precedence-req-ddare-007
+	 */
+	public function testAHandoffWithoutADestructionDateIsNotBlocked(): void {
+		$this->destruction = null;
+		$pipeline = $this->pipeline();
+
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+
+		$this->assertSame(expected: 'published', actual: $record['status']);
+		$this->assertSame(expected: '', actual: (string) ($record['destructionDate'] ?? ''));
+		$this->assertNotContains(needle: 'destruction_date_propagated', haystack: array_column($this->rows['publicationLogEntry'], 'action'));
+
+	}//end testAHandoffWithoutADestructionDateIsNotBlocked()
+
+	/**
+	 * The same date from the same source is not written or logged a second time.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-destruction-dates-propagate-to-the-publication-pipeline-with-source-precedence-req-ddare-007
+	 */
+	public function testAnUnchangedDestructionDateIsNotPropagatedAgain(): void {
+		$this->destruction = ['date' => '2033-10-01', 'source' => 'Zaaksysteem'];
+		$pipeline = $this->pipeline();
+		$record = $this->readyRecord(pipeline: $pipeline);
+		$record['destructionDate'] = '2033-10-01';
+		$record['destructionDateSource'] = 'Zaaksysteem';
+
+		$pipeline->handoff(record: $record, actor: 'anna');
+
+		$this->assertNotContains(needle: 'destruction_date_propagated', haystack: array_column($this->rows['publicationLogEntry'], 'action'));
+
+	}//end testAnUnchangedDestructionDateIsNotPropagatedAgain()
 }//end class
