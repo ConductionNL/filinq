@@ -43,6 +43,8 @@
         -->
         <file name="tests/stubs/openregister-flow.stub.php" />
         <file name="tests/stubs/openregister-integration.stub.php" />
+        <!-- integriq's watched-folder hand-over event, read by WatchedFileArrivedListener. -->
+        <file name="tests/stubs/integriq-watched-file.stub.php" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>

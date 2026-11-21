@@ -893,6 +893,22 @@ class ScanBatchServiceTest extends TestCase {
 	}//end testTakeReusesAStoredBatch()
 
 	/**
+	 * The batch stored for a file is read from the store, and a file without one answers null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-accepts-only-what-it-stored-and-each-file-once-req-scw-002
+	 */
+	public function testStoredForAnswersTheStoredBatch(): void {
+		$service = $this->service(texts: ['aanvraag 1']);
+		$this->assertNull(actual: $service->storedFor(fileId: 4711));
+
+		$this->existing = ['uuid' => 'batch-7', 'file' => 4711, 'status' => 'failed'];
+		$this->assertSame(expected: 'batch-7', actual: $service->storedFor(fileId: 4711)['uuid'] ?? null);
+		$this->assertCount(expectedCount: 0, haystack: $this->stored, message: 'reading the batch stores nothing');
+	}//end testStoredForAnswersTheStoredBatch()
+
+	/**
 	 * A batch whose folder cannot be read is refused before anything is received or cut.
 	 *
 	 * @return void

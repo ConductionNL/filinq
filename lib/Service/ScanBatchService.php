@@ -129,13 +129,26 @@ class ScanBatchService implements ScanBatchServiceInterface {
 		// anything is received, so a batch is never stored without a place to cut it to.
 		$target = $file->getParent();
 
-		$batch = $this->batches->findByFile(fileId: (int)$file->getId());
+		$batch = $this->storedFor(fileId: (int)$file->getId());
 		if ($batch === null) {
 			$batch = $this->receive(file: $file, profile: $profile);
 		}
 
 		return $this->split(batch: $batch, profile: $profile, file: $file, target: $target);
 	}//end take()
+
+	/**
+	 * The batch already stored for a file, whatever state it is in.
+	 *
+	 * @param int $fileId The Nextcloud file id of the batch PDF.
+	 *
+	 * @return array<string, mixed>|null The batch, or null when the file is none.
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-accepts-only-what-it-stored-and-each-file-once-req-scw-002
+	 */
+	public function storedFor(int $fileId): ?array {
+		return $this->batches->findByFile(fileId: $fileId);
+	}//end storedFor()
 
 	/**
 	 * Cut one batch into documents and announce every one of them.

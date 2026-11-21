@@ -289,6 +289,19 @@ if (interface_exists('\\OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === false)
 	require_once __DIR__ . '/stubs/openregister-flow.stub.php';
 }
 
+// The watched-folder hand-over event of integriq (scan-intake-from-a-watched-folder):
+// integriq's own class when the sibling app sits next to this one, so the
+// listener and the contract test run against the real surface; the verbatim
+// copy in tests/stubs otherwise.
+if (class_exists('\\OCA\\Integriq\\Event\\WatchedFileArrivedEvent') === false) {
+	$integriqWatchedFileEvent = __DIR__ . '/../../integriq/lib/Event/WatchedFileArrivedEvent.php';
+	if (is_file($integriqWatchedFileEvent) === false) {
+		$integriqWatchedFileEvent = __DIR__ . '/stubs/integriq-watched-file.stub.php';
+	}
+
+	require_once $integriqWatchedFileEvent;
+}
+
 // Shared test-only trait. The composer PSR-4 dev prefix maps
 // OCA\Filinq\Tests\ to tests/, which cannot resolve the lower-cased
 // tests/unit/ directory segment, so non-test helper classes under tests/unit

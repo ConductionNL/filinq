@@ -17,8 +17,9 @@
 ## 3. Batch split
 
 - [x] 3.1 Add `lib/Service/ScanBatchService.php` with `receive` and `split` over FPDI, QR and blank-page detection, and the intake event per segment (REQ-SCI-03)
-- [ ] 3.2 Point the watched-folder job at `ScanBatchService::receive()` for profile folders; the OCR watch keeps its own folders (D2)
+- [x] 3.2 Point the watched-folder job at `ScanBatchService::receive()` for profile folders; the OCR watch keeps its own folders (D2)
   - Replaced by `scan-intake-from-a-watched-folder` (D4: integriq's watcher hands the file over); that change ticks this box. It waits on integriq's `WatchedFileArrivedEvent`, which is not on integriq `development` (checked 2026-10-09).
+  - Done in `scan-intake-from-a-watched-folder` (tasks 2.1 and 2.2): `WatchedFileArrivedListener` hands a PDF in a profile folder to `ScanBatchService::take()`, the one find-or-receive-then-split path, after integriq's `WatchedFileArrivedEvent` landed on integriq `development`.
 
 ## 4. Inbox
 

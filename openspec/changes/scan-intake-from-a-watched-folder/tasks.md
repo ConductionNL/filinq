@@ -26,22 +26,26 @@ Every test named here fails on `development` today: no listener for the event ex
 
 ## 2. The listener
 
-- [ ] 2.1 Add `lib/EventListener/WatchedFileArrivedListener.php` and register it for `\OCA\Integriq\Event\WatchedFileArrivedEvent::class` in the registrar that holds the other cross-app listeners (`lib/AppInfo/IntegrationLeafRegistrar.php` or its sibling), with the `class_exists` guard (REQ-SCW-001, REQ-SCW-003).
+- [x] 2.1 Add `lib/EventListener/WatchedFileArrivedListener.php` and register it for `\OCA\Integriq\Event\WatchedFileArrivedEvent::class` in the registrar that holds the other cross-app listeners (`lib/AppInfo/IntegrationLeafRegistrar.php` or its sibling), with the `class_exists` guard (REQ-SCW-001, REQ-SCW-003).
   - GIVEN an event whose `getIntakeApp()` is `filinq` and a PDF in a profile folder WHEN dispatched THEN a batch is taken and the listener calls `accept('filinq', <uuid>)`, which answers `true`.
   - GIVEN `accept()` answers `false` WHEN the listener has stored the batch THEN it logs the refusal and does not retry or accept under another app id.
   - GIVEN an event for another app WHEN dispatched THEN nothing is written and nothing accepted.
   - Test: PHPUnit `WatchedFileArrivedListenerTest::testABatchIsTakenAndAccepted`, `::testAnotherIntakesFileIsIgnored`, `::testAnUnrelatedEventIsIgnored`, `::testARefusedAcceptIsLoggedNotRetried` (an event already accepted, so `accept()` answers `false`), constructing the REAL integriq event class (autoload it from integriq's source in the test bootstrap, or skip with a stated reason when integriq is not available, and say so in the PR body).
-- [ ] 2.2 Fail closed and once per file (REQ-SCW-002).
+  - Built: `lib/EventListener/WatchedFileArrivedListener.php`, registered by name in `DocumentGenerationRegistrar` beside integriq's other event (integriq sorts after filinq, so a `class_exists` probe at register time would answer false on a healthy instance); the listener does the `class_exists` check before it reads the event. The unit bootstrap loads integriq's own `lib/Event/WatchedFileArrivedEvent.php` when the sibling app is next to filinq, and the verbatim copy `tests/stubs/integriq-watched-file.stub.php` otherwise (also read by PHPStan and psalm). The tests ran against integriq `development` 9a4e574.
+- [x] 2.2 Fail closed and once per file (REQ-SCW-002).
   - Test: PHPUnit `WatchedFileArrivedListenerTest::testWithoutAProfileNothingIsAccepted`, `::testAFolderIdIsNotAccepted`, `::testAMissingFileIsNotAccepted`, `::testANonPdfIsNotAccepted`, `::testAStoreFailureIsNotAccepted`, `::testAFailedCutIsAcceptedWithItsBatch`, `::testASecondHandOverIsAcceptedWithTheSameBatch`. Double `IRootFolder` and `ScanBatchRepository` after reading their real signatures; `findByFile()` answers null, it does not throw.
+  - Built: the listener resolves the file in the owner's folder, refuses a missing node, a folder and a non-PDF, answers a file that already has a batch with that batch's uuid without taking it again, logs and does not accept when the store throws, and accepts a `failed` batch. Tests as named, plus `testAnUnknownOwnerIsNotAccepted` and `testABatchWithoutAUuidIsNotAccepted`.
 - [ ] 2.3 Through the caller: dispatch the real event through a real `IEventDispatcher` wired by `Application::register()` (REQ-SCW-001).
   - Test: PHPUnit `tests/integration/WatchedFolderScanIntakeTest.php::testTheDispatcherReachesTheListener` asserts `getResult()` is `['accepted' => true, 'intakeApp' => 'filinq', 'reference' => <uuid>]`.
-- [ ] 2.4 Contract test on filinq's side (REQ-SCW-001).
+- [x] 2.4 Contract test on filinq's side (REQ-SCW-001).
   - Test: PHPUnit `WatchedFileArrivedContractTest::testTheEventMatchesIntegriqsSpec` asserts by reflection the constructor parameter names and types `(string $synchronizationId, string $sourceId, string $intakeApp, int $fileId, string $path, string $ownerUid)`, the six getters with their return types, `accept(string $appId, string $reference): bool` and the three `getResult()` keys, as the literals of integriq's REQ-SFTP-005. integriq's `WatchedFileArrivedEventTest::testThePublicSurfaceIsTheContract` asserts the same literals; name it and `WatchedFileIngestJobTest::testAnAcceptedHandOverMarksTheFile` in the PR body.
+  - Built: `tests/unit/EventListener/WatchedFileArrivedContractTest.php`. Its integriq counterparts are `WatchedFileArrivedEventTest::testThePublicSurfaceIsTheContract` and `WatchedFileIngestJobTest::testAnAcceptedHandOverMarksTheFile`.
 
 ## 3. Bookkeeping and docs
 
-- [ ] 3.1 Tick task 3.2 of `scan-intake-with-separator-sheets` with a pointer to this change, and update its design D2 to say integriq's watcher replaces the `FolderExtractionJob` walk (D4). Add `docs/features/scan-intake.md` a section on the watched folder: set up a synchronization in integriq with `target: intake` and `intakeApp: filinq` on the profile's folder.
+- [x] 3.1 Tick task 3.2 of `scan-intake-with-separator-sheets` with a pointer to this change, and update its design D2 to say integriq's watcher replaces the `FolderExtractionJob` walk (D4). Add `docs/features/scan-intake.md` a section on the watched folder: set up a synchronization in integriq with `target: intake` and `intakeApp: filinq` on the profile's folder.
   - Test: `openspec validate scan-intake-with-separator-sheets --strict` and `openspec validate scan-intake-from-a-watched-folder --strict` pass.
+  - Built: task 3.2 of `scan-intake-with-separator-sheets` ticked, its design D2 rewritten, and `docs/features/scan-intake.md` added with the watched-folder section, linked from `docs/features/README.md`.
 - [ ] 3.2 Live after merge on the dev instance with integriq carrying the hand-over: configure the synchronization, drop a two-document batch with one separator sheet in the folder, and paste the `scanBatch`, the two intake documents and the synchronization log line (accepted, reference) in the PR body.
   - Test: the pasted evidence. Set `appstoreenabled=false` before any `occ upgrade` on a mounted clone.
 
