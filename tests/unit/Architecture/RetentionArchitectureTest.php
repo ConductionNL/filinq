@@ -96,4 +96,27 @@ class RetentionArchitectureTest extends TestCase {
 		$this->assertSame(expected: [], actual: $found);
 
 	}//end testNoClassDoesRetentionArithmeticOrDestruction()
+	/**
+	 * Nothing on the server writes OpenRegister's archival settings: no repair
+	 * step, boot hook or service. Only the admin's "Link the archive register"
+	 * action in the browser does (REQ-DDARE-002).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-or-archival-settings-are-wired-through-an-explicit-admin-action-req-ddare-002
+	 */
+	public function testNoServerCodeWritesTheArchivalSettings(): void {
+		$writes = '/updateArchivalSettings|settings\/archival|setValue\w*\(\s*[\'"]openregister[\'"]\s*,\s*[\'"]archival[\'"]/';
+		$found = [];
+		foreach (self::lib() as $path => $source) {
+			if (preg_match($writes, $source) === 1) {
+				$found[] = $path;
+			}
+		}
+
+		$this->assertSame(expected: [], actual: $found);
+
+		$info = (string) file_get_contents(filename: dirname(__DIR__, 3) . '/appinfo/info.xml');
+		$this->assertDoesNotMatchRegularExpression(pattern: '/<step>[^<]*Archiv/i', string: $info);
+	}//end testNoServerCodeWritesTheArchivalSettings()
 }//end class

@@ -32,8 +32,9 @@
 
 ## 3. Frontend
 
-- [ ] 3.1 Archiefbeheer admin settings section with "Koppel archiefregister" (REQ-DDARE-002)
+- [x] 3.1 Archiefbeheer admin settings section with "Koppel archiefregister" (REQ-DDARE-002)
   - Reads/writes OR `GET/PUT /api/settings/archival` directly; shows current owner; never writes without the explicit admin action (no repair step, no boot hook).
+  - Built (2026-11-21): the admin-only **Archiefbeheer** section on the settings page (`src/views/settings/ArchivalWiringSettings.vue` over `src/services/archivalWiring.js`) reads OpenRegister's `GET /api/settings/archival` and says whether nothing is wired, filinq's register is wired, or the settings point at another register (named). "Link the archive register" (nl "Koppel archiefregister") asks to confirm, then PUTs the five ids of the `filinq` register and its `selectielijstEntry` and `destructionList` schemas, resolved from the registers the settings page already lists; the other archival settings are sent back as read, because OpenRegister resets every key a write leaves out. Without filinq's schemas imported it offers nothing to link. Strings in en and nl. Pinned by `tests/vitest/archivalWiring.spec.js`, `src/views/settings/ArchivalWiringSettings.spec.js`, the re-recorded settings golden and `RetentionArchitectureTest::testNoServerCodeWritesTheArchivalSettings` (no repair step, boot hook or service writes the settings). The Playwright scenario is task 4.2.
 
 - [ ] 3.2 Vernietigingslijsten index + detail with approve/partial/reject (REQ-DDARE-004)
   - `CnIndexPage`/`CnDataTable`/`CnFormDialog`; frontend calls OR `/api/archival/destruction-lists*` directly — zero Filinq pass-through controllers; mandatory reasons for exclusion and rejection; modals in `src/modals/`.

@@ -4274,7 +4274,18 @@
         "This photo is larger than 20 MB. Take it again at a lower resolution.": "Deze foto is groter dan 20 MB. Maak hem opnieuw met een lagere resolutie.",
         "Only a JPEG, PNG or HEIC photo or a PDF can be captured.": "Alleen een JPEG-, PNG- of HEIC-foto of een pdf kan worden vastgelegd.",
         "This photo format cannot be read on this server. Take the photo as JPEG.": "Dit fotoformaat kan deze server niet lezen. Maak de foto als JPEG.",
-        "Failed to capture the receipt": "De bon kon niet worden vastgelegd"
+        "Failed to capture the receipt": "De bon kon niet worden vastgelegd",
+        "Archiefbeheer": "Archiefbeheer",
+        "Where OpenRegister looks up selectielijst categories and keeps its destruction lists.": "Waar OpenRegister selectielijstcategorieën opzoekt en zijn vernietigingslijsten bewaart.",
+        "OpenRegister's archival settings cannot be read.": "De archiefinstellingen van OpenRegister kunnen niet worden gelezen.",
+        "OpenRegister reads the selectielijst and keeps its destruction lists in filinq's register.": "OpenRegister leest de selectielijst en bewaart zijn vernietigingslijsten in het register van filinq.",
+        "The archival settings point at the register {owner}. Another app may own them; they change only when you link filinq's register here.": "De archiefinstellingen wijzen naar het register {owner}. Een andere app kan ze beheren; ze veranderen pas als u hier het register van filinq koppelt.",
+        "another register": "een ander register",
+        "OpenRegister has no archival register yet, so it cannot look up a selectielijst category or draw up a destruction list.": "OpenRegister heeft nog geen archiefregister, dus het kan geen selectielijstcategorie opzoeken en geen vernietigingslijst opstellen.",
+        "Filinq's register or its selectielijst and destruction list schemas are not imported, so there is nothing to link yet.": "Het register van filinq of de schema's voor de selectielijst en vernietigingslijsten zijn niet geïmporteerd, dus er is nog niets te koppelen.",
+        "Point OpenRegister's selectielijst, destruction lists and archival register at filinq's register?": "De selectielijst, vernietigingslijsten en het archiefregister van OpenRegister naar het register van filinq laten wijzen?",
+        "Link the archive register": "Koppel archiefregister",
+        "OpenRegister did not store the archival settings.": "OpenRegister heeft de archiefinstellingen niet opgeslagen."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

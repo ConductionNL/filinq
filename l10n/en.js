@@ -4068,7 +4068,18 @@ OC.L10N.register(
         "This photo is larger than 20 MB. Take it again at a lower resolution.": "This photo is larger than 20 MB. Take it again at a lower resolution.",
         "Only a JPEG, PNG or HEIC photo or a PDF can be captured.": "Only a JPEG, PNG or HEIC photo or a PDF can be captured.",
         "This photo format cannot be read on this server. Take the photo as JPEG.": "This photo format cannot be read on this server. Take the photo as JPEG.",
-        "Failed to capture the receipt": "Failed to capture the receipt"
+        "Failed to capture the receipt": "Failed to capture the receipt",
+        "Archiefbeheer": "Archiefbeheer",
+        "Where OpenRegister looks up selectielijst categories and keeps its destruction lists.": "Where OpenRegister looks up selectielijst categories and keeps its destruction lists.",
+        "OpenRegister's archival settings cannot be read.": "OpenRegister's archival settings cannot be read.",
+        "OpenRegister reads the selectielijst and keeps its destruction lists in filinq's register.": "OpenRegister reads the selectielijst and keeps its destruction lists in filinq's register.",
+        "The archival settings point at the register {owner}. Another app may own them; they change only when you link filinq's register here.": "The archival settings point at the register {owner}. Another app may own them; they change only when you link filinq's register here.",
+        "another register": "another register",
+        "OpenRegister has no archival register yet, so it cannot look up a selectielijst category or draw up a destruction list.": "OpenRegister has no archival register yet, so it cannot look up a selectielijst category or draw up a destruction list.",
+        "Filinq's register or its selectielijst and destruction list schemas are not imported, so there is nothing to link yet.": "Filinq's register or its selectielijst and destruction list schemas are not imported, so there is nothing to link yet.",
+        "Point OpenRegister's selectielijst, destruction lists and archival register at filinq's register?": "Point OpenRegister's selectielijst, destruction lists and archival register at filinq's register?",
+        "Link the archive register": "Link the archive register",
+        "OpenRegister did not store the archival settings.": "OpenRegister did not store the archival settings."
     },
     "nplurals=2; plural=(n != 1);"
 )
