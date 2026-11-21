@@ -5,9 +5,10 @@
 
 ## 1. Register + seed data
 
-- [ ] 1.1 Add the `archief` register with `selectielijstEntry`, `destructionList` and `destructionCertificate` schemas to `lib/Settings/filinq_register.json` (REQ-DDARE-001, REQ-DDARE-005)
+- [x] 1.1 Add the `archief` register with `selectielijstEntry`, `destructionList` and `destructionCertificate` schemas to `lib/Settings/filinq_register.json` (REQ-DDARE-001, REQ-DDARE-005)
   - Field contracts exactly per design.md D2; `hardValidation: true`; `archive.defaultNominatie: bewaren` on the two workflow schemas; register version bump.
   - Unit drift-pin: every field OR's `lookupSelectielijstEntry()` reads exists on `selectielijstEntry`; verify against OR HEAD, not against this spec's snapshot.
+  - Built (2026-11-21): the three schemas are in the consolidated `filinq` register (register 8.99.0), not in a separate `archief` register, which `DossierRegisterConfigTest` refuses (design D2, amended). Read on OpenRegister `development`: `selectielijstEntry` holds `categorie`, `archiefnominatie`, `bewaartermijn` (ISO-8601 pattern), `bron`, `toelichting`, `omschrijving` and `selectielijstVersie`, the key the import writes, and stays open for further imported columns; `destructionList` knows all seven statuses and every key `DestructionService`, `DestructionReviewService` and `DestructionListRun` write, and the certificate's fields, because OpenRegister stores the certificate in the destruction-list schema; `destructionCertificate` holds the certificate on its own. Both carry `archive.defaultNominatie: bewaren`. Three demo rows each in the mock register (`DEMO-` categories, not real ones). Pinned by `ArchiefRegisterSchemaTest`, which validates OpenRegister's payloads closed and, with an OpenRegister checkout beside the app, reads the import's keys from its source.
 
 - [ ] 1.2 Seed representative VNG selectielijst 2020 entries (design.md Seed Data)
   - `TODO-*` placeholder category codes during authoring only; one `bewaren` and at least one `vernietigen` entry; validates on import. Placeholders MUST be replaced with real codes before apply — see task 1.4 (apply-blocker).
