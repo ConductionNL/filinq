@@ -18,6 +18,8 @@
  *   task 3.1 "adds a destination and retries a failed delivery"
  *   task 2.3 the retry answers 409 for a delivery in any other state
  *   task 3.2 the waiting and failed counts on /reports/documents
+ *   REQ-GSC-002 a generation stored with a case-system destination is queued
+ *   REQ-GSC-003 a written-back delivery shows its badge on /my-documents
  *
  * @spec openspec/changes/generate-store-in-case-system/specs
  */
@@ -25,6 +27,7 @@ import type { Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
 import { APP, dismissOverlays, waitForNcContentReady } from './spec-coverage/_helpers.ts'
+import { createDavFile, createDavFolder, deleteDavPath, harvestToken } from './workflows/_fixtures.ts'
 
 /** Distinctive enough that finding it proves the read, not a coincidence. */
 const STAMP = `e2e-case-system-${Date.now()}`
@@ -117,6 +120,7 @@ test.describe('case-system delivery in the admin settings', () => {
 		await page.close()
 	})
 
+	// @e2e openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#an-admin-sends-hr-documents-to-the-dms
 	test('an admin adds a destination through the form', async ({ page }) => {
 		await openCaseSystem(page)
 
@@ -144,6 +148,7 @@ test.describe('case-system delivery in the admin settings', () => {
 		created.push({ schema: 'caseSystemDestination', id: String(destination?.id) })
 	})
 
+	// @e2e openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#an-admin-retries-a-failed-delivery
 	test('a failed delivery is retried and waits again; any other state answers 409', async ({ page, playwright, baseURL }) => {
 		await openCaseSystem(page)
 		const destinationId = created.find((c) => c.schema === 'caseSystemDestination')?.id ?? STAMP
@@ -194,6 +199,96 @@ test.describe('case-system delivery in the admin settings', () => {
 		const stored = await api(page, 'GET', `${OBJECTS}/caseSystemDelivery/${failed}`)
 		expect(stored.body.deliveryStatus).toBe('ready_for_writeback')
 		expect(stored.body.errorMessage ?? '').toBe('')
+	})
+
+	// @e2e openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#an-hr-contract-is-queued-for-the-dms
+	test('a document stored with a case-system destination is queued for the case system', async ({ page }) => {
+		await page.goto(`${APP}/`, { waitUntil: 'domcontentloaded' })
+
+		// The request names its destination, so no active destination of this
+		// instance is touched (REQ-GSC-002 allows either).
+		const destination = {
+			sourceId: `source-${STAMP}`,
+			informatieobjecttype: `https://zaken.example/catalogi/${STAMP}`,
+			vertrouwelijkheidaanduiding: 'vertrouwelijk',
+			bronorganisatie: '002220647',
+		}
+		const template = await api(page, 'POST', '/index.php/apps/filinq/api/templates', {
+			name: `${STAMP}-contract`,
+			content: 'Employment contract for {{name}}.',
+			namespace: 'filinq',
+		})
+		expect(template.status, JSON.stringify(template.body).slice(0, 300)).toBe(200)
+		const templateId = String(template.body.id)
+		created.push({ schema: 'template', id: templateId })
+
+		const generated = await page.evaluate(
+			async ({ templateId, destination, stamp }) => {
+				const res = await fetch('/index.php/apps/filinq/api/documents/generate', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+						requesttoken:
+							document.querySelector('head[data-requesttoken]')?.getAttribute('data-requesttoken') ?? '',
+					},
+					body: JSON.stringify({
+						templateId,
+						filename: `${stamp}-contract`,
+						dataRefs: { name: 'A. Employee' },
+						options: { format: 'pdf', output: { mode: 'both', caseSystem: destination } },
+					}),
+				})
+				return { status: res.status, fileId: res.headers.get('X-Docudesk-File-Id') ?? '' }
+			},
+			{ templateId, destination, stamp: STAMP },
+		)
+		expect(generated.status).toBe(200)
+		expect(Number(generated.fileId), 'mode both stores the document in Files').toBeGreaterThan(0)
+
+		const found = await api(page, 'GET', `${OBJECTS}/caseSystemDelivery?fileId=${generated.fileId}&_limit=5`)
+		expect(found.status).toBeLessThan(400)
+		const deliveries = (found.body.results ?? []) as Array<Record<string, unknown>>
+		expect(deliveries, 'one delivery for the stored file').toHaveLength(1)
+		const delivery = deliveries[0]
+		created.push({ schema: 'caseSystemDelivery', id: String(delivery.id ?? (delivery['@self'] as Record<string, unknown>)?.id) })
+		expect(delivery.deliveryStatus).toBe('ready_for_writeback')
+		const metadata = (delivery.metadata ?? {}) as Record<string, unknown>
+		expect(metadata.informatieobjecttype).toBe(destination.informatieobjecttype)
+		expect(metadata.vertrouwelijkheidaanduiding).toBe('vertrouwelijk')
+	})
+
+	// @e2e openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#a-delivered-document-shows-where-it-went
+	test('a written-back document shows "In the case system" on My documents', async ({ page }) => {
+		await page.goto(`${APP}/`, { waitUntil: 'domcontentloaded' })
+		const name = `${STAMP}-delivered.txt`
+		const token = await harvestToken(page)
+		expect([201, 405]).toContain(await createDavFolder(page.request, token, 'DocuDesk'))
+		const stored = await createDavFile(page.request, token, `DocuDesk/${name}`, 'Delivered to the case system.')
+		expect(stored.status).toBeLessThan(300)
+		const fileId = Number(stored.fileId)
+		expect(fileId, 'the stored file has an id').toBeGreaterThan(0)
+
+		// Only integriq's write-back sets written_back, so the delivery is seeded.
+		const delivered = await seed(page, 'caseSystemDelivery', {
+			generatedDocumentId: `doc-delivered-${STAMP}`,
+			sourceId: `source-${STAMP}`,
+			fileId,
+			deliveryStatus: 'written_back',
+			externalUrl: `https://zaken.example/documenten/${STAMP}`,
+			metadata: { bestandsnaam: name },
+		})
+		created.push({ schema: 'caseSystemDelivery', id: delivered })
+
+		try {
+			await page.goto(`${APP}/my-documents`, { waitUntil: 'domcontentloaded' })
+			await waitForNcContentReady(page)
+			await dismissOverlays(page)
+			const row = page.locator('tr').filter({ hasText: `${STAMP}-delivered` }).first()
+			await expect(row).toBeVisible({ timeout: 30_000 })
+			await expect(row.getByTestId('my-documents-case-system-badge')).toHaveText('In the case system')
+		} finally {
+			await deleteDavPath(page.request, token, `DocuDesk/${name}`)
+		}
 	})
 
 	test('the documents report counts the waiting and failed deliveries', async ({ page }) => {
