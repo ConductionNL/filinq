@@ -69,11 +69,8 @@ class BridgeRecordReader {
 			return [];
 		}
 
-		$rows = [];
-		foreach ($results as $result) {
-			$rows[] = (new StoredRecordFields())->read(row: $result);
-		}
+		$fields = new StoredRecordFields();
 
-		return $rows;
+		return array_values(array_map(static fn (mixed $result): array => $fields->read(row: $result), $results));
 	}//end rows()
 }//end class

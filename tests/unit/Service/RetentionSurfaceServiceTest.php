@@ -155,7 +155,12 @@ class RetentionSurfaceServiceTest extends TestCase {
 			}
 		);
 
-		return new RetentionSurfaceService(rootFolder: $root, records: $records, bridge: new BridgeRecordReader(objectResolver: $resolver), logger: $logger);
+		return new RetentionSurfaceService(
+			rootFolder: $root,
+			records: $records,
+			bridge: new BridgeRecordReader(objectResolver: $resolver),
+			logger: $logger
+		);
 	}//end service()
 
 	/**
