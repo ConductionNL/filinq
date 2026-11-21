@@ -96,7 +96,15 @@ class OfficeTemplateFillerChartsTest extends TestCase {
 		$png->method('getMimeType')->willReturn('image/png');
 		$png->method('getContent')->willReturn((string) base64_decode(self::PNG));
 		$folder = $this->createMock(originalClassName: Folder::class);
-		$folder->method('getFirstNodeById')->willReturnCallback(fn (int $id): ?File => ($id === 42 ? $png : null));
+		$folder->method('getFirstNodeById')->willReturnCallback(
+			static function (int $id) use ($png): ?File {
+				if ($id !== 42) {
+					return null;
+				}
+
+				return $png;
+			}
+		);
 		$root = $this->createMock(originalClassName: IRootFolder::class);
 		$root->method('getUserFolder')->willReturn($folder);
 
@@ -116,9 +124,11 @@ class OfficeTemplateFillerChartsTest extends TestCase {
 			}
 		);
 
+		$resolver = new TemplateImageResolver(rootFolder: $root, userSession: $session, appConfig: $config);
+
 		return new OfficeTemplateFiller(
 			charts: new OfficeChartFiller(normalizer: new ChartDataNormalizer()),
-			images: new OfficeImageFiller(resolver: new TemplateImageResolver($root, $session, $config), tempManager: $temp)
+			images: new OfficeImageFiller(resolver: $resolver, tempManager: $temp)
 		);
 	}//end filler()
 
@@ -172,7 +182,8 @@ class OfficeTemplateFillerChartsTest extends TestCase {
 		$this->assertStringNotContainsString(needle: 'chart:bezwaren', haystack: $parts['word/document.xml']);
 		$this->assertStringNotContainsString(needle: 'image:logo', haystack: $parts['word/document.xml']);
 		$this->assertStringContainsString(needle: 'Z-2026-1', haystack: $parts['word/document.xml']);
-		$this->assertSame(expected: [], actual: array_values(array_filter($result['warnings'], static fn (string $w): bool => str_contains($w, 'chart') || str_contains($w, 'image'))));
+		$placed = array_filter($result['warnings'], static fn (string $w): bool => str_contains($w, 'chart') || str_contains($w, 'image'));
+		$this->assertSame(expected: [], actual: array_values($placed));
 	}//end testAChartAndAnImageArePlacedBeforeThePlainTags()
 
 	/**
@@ -188,7 +199,8 @@ class OfficeTemplateFillerChartsTest extends TestCase {
 
 		$document = self::parts(docx: $result['docx'])['word/document.xml'];
 		$this->assertStringContainsString(needle: 'image unavailable', haystack: $document);
-		$this->assertCount(expectedCount: 1, haystack: array_filter($result['warnings'], static fn (string $w): bool => str_contains($w, 'image unavailable')));
+		$unavailable = array_filter($result['warnings'], static fn (string $w): bool => str_contains($w, 'image unavailable'));
+		$this->assertCount(expectedCount: 1, haystack: $unavailable);
 		$this->assertNotSame(expected: [], actual: array_filter($result['warnings'], static fn (string $w): bool => str_contains(strtolower($w), 'chart')));
 	}//end testBadDataBecomesAMarkerWithAWarning()
 

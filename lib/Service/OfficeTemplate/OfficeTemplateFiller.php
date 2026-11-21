@@ -134,15 +134,30 @@ class OfficeTemplateFiller {
 	 */
 	private function fillChartsAndImages(OfficeFillRun $run): void {
 		if ($this->charts !== null) {
-			$charts = $run->data['charts'] ?? [];
-			array_push($run->warnings, ...$this->charts->fill(processor: $run->processor, charts: is_array($charts) === true ? $charts : []));
+			array_push($run->warnings, ...$this->charts->fill(processor: $run->processor, charts: self::entry(data: $run->data, key: 'charts')));
 		}
 
 		if ($this->images !== null) {
-			$images = $run->data['images'] ?? [];
-			array_push($run->warnings, ...$this->images->fill(processor: $run->processor, images: is_array($images) === true ? $images : []));
+			array_push($run->warnings, ...$this->images->fill(processor: $run->processor, images: self::entry(data: $run->data, key: 'images')));
 		}
 	}//end fillChartsAndImages()
+
+	/**
+	 * One keyed entry of the data context, or none.
+	 *
+	 * @param array<string, mixed> $data The data context.
+	 * @param string               $key  The entry.
+	 *
+	 * @return array<string, mixed> The entry when it is a map, else empty.
+	 */
+	private static function entry(array $data, string $key): array {
+		$entry = ($data[$key] ?? []);
+		if (is_array($entry) === false) {
+			return [];
+		}
+
+		return $entry;
+	}//end entry()
 
 	/**
 	 * The fragment slugs a set of tags references.
