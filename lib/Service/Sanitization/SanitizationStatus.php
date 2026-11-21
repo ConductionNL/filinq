@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-sanitization/tasks.md#3-5
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-5
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -62,7 +62,7 @@ class SanitizationStatus implements SanitizationStatusInterface {
 	 *
 	 * @throws InvalidArgumentException 404 when the user cannot read the file.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-5
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-5
 	 */
 	public function forFile(int $fileId, string $userId): array {
 		try {
@@ -104,7 +104,7 @@ class SanitizationStatus implements SanitizationStatusInterface {
 	 *
 	 * @return bool True when a record names it as the sanitized file.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-5
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-5
 	 */
 	public function isSanitized(int $fileId): bool {
 		foreach ($this->records->forSanitizedFile(fileId: $fileId) as $record) {

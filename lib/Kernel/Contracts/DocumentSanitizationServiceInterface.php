@@ -57,7 +57,7 @@ interface DocumentSanitizationServiceInterface {
 	 *
 	 * @throws InvalidArgumentException 404 unreachable, 415 unsupported, 422 encrypted, 500 engine failure.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-1
 	 */
 	public function sanitize(int $fileId, string $userId, string $trigger = 'manual'): array;
 }//end interface

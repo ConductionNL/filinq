@@ -590,7 +590,7 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 *
 	 * @return array<string, mixed> The entry with the derivative's new path.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	private function relocateSanitized(array $entry, string $userId): array {
 		$sanitizedId = ($entry['sanitization']['sanitizedFileId'] ?? null);

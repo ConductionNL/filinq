@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-sanitization/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -56,7 +56,7 @@ class SanitizationRecordRepository {
 	 *
 	 * @return array<string, mixed> The stored record with its uuid.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-1
 	 */
 	public function save(array $record): array {
 		$stored = $this->objectResolver->resolve()->saveObject(
@@ -79,7 +79,7 @@ class SanitizationRecordRepository {
 	 *
 	 * @return list<array<string, mixed>> The records.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-5
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-5
 	 */
 	public function forSanitizedFile(int $fileId): array {
 		return $this->search(filters: ['sanitizedFileId' => $fileId]);
@@ -93,7 +93,7 @@ class SanitizationRecordRepository {
 	 *
 	 * @return list<array<string, mixed>> The records.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-1
 	 */
 	public function forSourceFile(int $fileId): array {
 		return $this->search(filters: ['fileId' => $fileId]);

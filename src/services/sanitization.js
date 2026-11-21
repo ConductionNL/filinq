@@ -5,7 +5,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/document-sanitization/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#4-1
  */
 
 import axios from '@nextcloud/axios'
@@ -28,7 +28,7 @@ function url(fileId) {
  * @param {number} status The HTTP status.
  * @param {string} reason The server's reason.
  * @return {string} The sentence.
- * @spec openspec/changes/document-sanitization/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#4-1
  */
 export function refusalMessage(status, reason) {
 	if (reason === 'encrypted') {
@@ -51,7 +51,7 @@ export function refusalMessage(status, reason) {
  *
  * @param {number|string} fileId The file.
  * @return {Promise<object>} { ok, data } or { ok: false, status, error }.
- * @spec openspec/changes/document-sanitization/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#4-1
  */
 export async function sanitizeFile(fileId) {
 	try {
@@ -72,7 +72,7 @@ export async function sanitizeFile(fileId) {
  *
  * @param {number|string} fileId The file.
  * @return {Promise<object>} { ok, data } or { ok: false, status, error }.
- * @spec openspec/changes/document-sanitization/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#4-1
  */
 export async function sanitizationStatus(fileId) {
 	try {
@@ -93,7 +93,7 @@ export async function sanitizationStatus(fileId) {
  *
  * @param {object} report The report.
  * @return {Array<{key: string, label: string, count: number}>} The rows.
- * @spec openspec/changes/document-sanitization/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#4-1
  */
 export function reportRows(report) {
 	const labels = {

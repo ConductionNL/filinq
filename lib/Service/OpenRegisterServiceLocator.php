@@ -167,7 +167,7 @@ class OpenRegisterServiceLocator {
 	 *
 	 * @return array<string, mixed>|null The report's counts, or null.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-3
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-3
 	 */
 	public function lastSanitizationReport(mixed $fileService): ?array {
 		$source = $fileService;

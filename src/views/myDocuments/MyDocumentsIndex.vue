@@ -1087,7 +1087,7 @@ export default {
 		 *
 		 * @param {object} row Document row.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/document-sanitization/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#4-1
 		 */
 		async sanitizeDocument(row) {
 			if (!row || !row.fileId) return

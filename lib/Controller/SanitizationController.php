@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-sanitization/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -72,7 +72,7 @@ class SanitizationController extends Controller {
 	 *
 	 * @return JSONResponse The run, a fail-flagged skip, or 401/404/415/422/500.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-2
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-2
 	 */
 	#[NoAdminRequired]
 	public function sanitize(int $fileId): JSONResponse {
@@ -87,7 +87,7 @@ class SanitizationController extends Controller {
 	 *
 	 * @return JSONResponse The status, or 401/404.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-5
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-5
 	 */
 	#[NoAdminRequired]
 	public function status(int $fileId): JSONResponse {

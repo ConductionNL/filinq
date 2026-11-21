@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-sanitization/tasks.md#3-3
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -262,7 +262,7 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-3
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-3
 	 */
 	public function testAnOfficeRunKeepsWhatTheSanitiserRemoved(): void {
 		$this->entityRows = ['Jan Jansen' => ['id' => 41, 'type' => 'PERSON']];
@@ -282,7 +282,7 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-3
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-3
 	 */
 	public function testARunWithoutAReportRecordsNothing(): void {
 		$this->entityRows = ['Jan Jansen' => ['id' => 41, 'type' => 'PERSON']];
@@ -299,7 +299,7 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	public function testTheSanitizeFlagCleansTheDeliveredCopyAfterTheSummary(): void {
 		$order = [];
@@ -337,7 +337,7 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	public function testWithoutTheFlagNoPassRuns(): void {
 		$service = $this->createMock(DocumentSanitizationServiceInterface::class);
@@ -357,7 +357,7 @@ class DocumentAnonymizeRunnerSanitizationTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	public function testTheFlagWithoutAPassWarnsAndKeepsTheCopy(): void {
 		$this->entityRows = ['Jan Jansen' => ['id' => 41, 'type' => 'PERSON']];
