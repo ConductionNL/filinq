@@ -20,7 +20,7 @@ Built in this pass: the register moves to 8.52.0 with `financialExtraction` 1.1.
 - [x] 3.1 Add `lib/Service/Extraction/UnattendedVerdict.php` with the checks and reason codes of D3, and call it from `extractFinancial()` before the save (REQ-ERP-003). Verify: PHPUnit per reason code, the clean pass, and a verdict unchanged after a threshold change.
 - [x] 3.2 Add `lib/Event/ExtractionVerdictEvent.php` and dispatch it after the completed event, logging and continuing on failure (D4) (REQ-ERP-004). Verify: PHPUnit snapshot of both payloads; the completed payload is byte-identical to before.
 - [x] 3.3 Add the threshold setting `extraction_unattended_threshold` with its bounds to the settings service and `Settings.vue` (D5) (REQ-ERP-005). Verify: Playwright `tests/e2e/extraction-verdict-settings.spec.ts`.
-  Saved through `SettingsService` (refused outside 0.6-1.0 by `UnattendedThresholdSetting`) and on the admin page next to inbound classification. The Playwright spec needs a live instance and is not written.
+  Saved through `SettingsService` (refused outside 0.6-1.0 by `UnattendedThresholdSetting`) and on the admin page next to inbound classification. The Playwright spec `tests/e2e/extraction-verdict-settings.spec.ts` is written (0.95 kept over a reload, 0.5 refused on the page and by the server, the original value restored); not run, it needs a live instance.
 
 ## 4. Cross-app, strings, tests and docs
 
