@@ -90,6 +90,40 @@ class FlatFileListService implements FlatFileListServiceInterface {
 	}//end listFor()
 
 	/**
+	 * Which of the given files hold the words, among those the caller may read.
+	 *
+	 * For a list that is not one object's (My documents). Every id the caller
+	 * may not read is left out before OpenRegister is asked, so a hit or an
+	 * unread entry never names a file the caller cannot open (REQ-WCS-003).
+	 *
+	 * @param string           $words   The words.
+	 * @param array<int, mixed> $fileIds The files of the caller's list, at most MAX_SEARCH_FILES.
+	 *
+	 * @return array{available: bool, hits: array<int, array{fileId: int, rank: float, snippet: string}>, unread: array<int, int>} The answer.
+	 *
+	 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+	 */
+	public function searchFiles(string $words, array $fileIds): array {
+		$readable = [];
+		foreach ($fileIds as $fileId) {
+			if (is_numeric($fileId) === false || (int) $fileId <= 0 || isset($readable[(int) $fileId]) === true) {
+				continue;
+			}
+
+			if ($this->files->node(fileId: (int) $fileId) !== null) {
+				$readable[(int) $fileId] = (int) $fileId;
+			}
+		}
+
+		if ($this->content === null) {
+			return ['available' => false, 'hits' => [], 'unread' => []];
+		}
+
+		return $this->content->search(words: trim($words), fileIds: array_values($readable));
+
+	}//end searchFiles()
+
+	/**
 	 * Every file on one object whose name or content holds the words, one page of it.
 	 *
 	 * The page lists the name matches first (`match: name`), then the files

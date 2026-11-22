@@ -126,6 +126,38 @@ class CaseDocumentsController extends Controller {
 	}//end files()
 
 	/**
+	 * Which of the caller's listed files hold the words (My documents).
+	 *
+	 * Only files the caller may read are asked about; the service leaves any
+	 * other id out before OpenRegister is asked.
+	 *
+	 * @param string            $words   The words to find.
+	 * @param array<int, mixed> $fileIds The files of the caller's list.
+	 *
+	 * @return JSONResponse `{available, hits: [{fileId, rank, snippet}], unread: [fileId]}`;
+	 *                      400 without words or with too many files; 401 without a session.
+	 *
+	 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+	 */
+	#[NoAdminRequired]
+	public function searchFiles(string $words = '', array $fileIds = []): JSONResponse {
+		$unauthenticated = $this->requireUser();
+		if ($unauthenticated !== null) {
+			return $unauthenticated;
+		}
+
+		if (trim($words) === '' || count($fileIds) > FlatFileListServiceInterface::MAX_SEARCH_FILES) {
+			return new JSONResponse(
+				data: ['error' => 'Give the words to find and at most '.FlatFileListServiceInterface::MAX_SEARCH_FILES.' files'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		return new JSONResponse(data: $this->flatList->searchFiles(words: $words, fileIds: $fileIds), statusCode: Http::STATUS_OK);
+
+	}//end searchFiles()
+
+	/**
 	 * Link one document record to one domain.
 	 *
 	 * @param string $uuid The document record.

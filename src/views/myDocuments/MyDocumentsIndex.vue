@@ -596,6 +596,13 @@ export default {
 			]
 		},
 
+		/**
+		 * The listed documents that match the search: by name, or in content
+		 * mode the answer of the content search.
+		 *
+		 * @return {Array<object>} The documents.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+		 */
 		filteredDocuments() {
 			const query = this.searchQuery.trim().toLowerCase()
 			const docs = myDocumentsStore.visibleDocuments
@@ -784,6 +791,11 @@ export default {
 		window.addEventListener('keydown', this.onKeydown)
 	},
 
+	/**
+	 * Stop a pending content search and the keyboard listener.
+	 *
+	 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+	 */
 	beforeUnmount() {
 		clearTimeout(this.contentTimer)
 		window.removeEventListener('keydown', this.onKeydown)

@@ -116,7 +116,7 @@ $extra = [
         ['name' => 'documentRelease#withdraw', 'url' => 'api/document-releases/{releaseId}', 'verb' => 'DELETE'],
         ['name' => 'waitingWork#index', 'url' => 'api/documents/waiting', 'verb' => 'GET'],
         // Which of the caller's listed documents hold some words (My documents, REQ-WCS-001).
-        ['name' => 'documentContentSearch#search', 'url' => 'api/documents/content-search', 'verb' => 'POST'],
+        ['name' => 'caseDocuments#searchFiles', 'url' => 'api/documents/content-search', 'verb' => 'POST'],
         ['name' => 'personalDataReport#index', 'url' => 'api/reports/personal-data', 'verb' => 'GET'],
         ['name' => 'documentAudit#index', 'url' => 'api/documents/{fileId}/audit', 'verb' => 'GET'],
         ['name' => 'documentAudit#opened', 'url' => 'api/documents/{fileId}/opened', 'verb' => 'POST'],

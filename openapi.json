@@ -358,10 +358,6 @@
         {
             "name": "text-fragments",
             "description": "Text fragments (bouwstenen) reused across templates"
-        },
-        {
-            "name": "document-content-search",
-            "description": "Find which of the caller's documents hold some words."
         }
     ],
     "paths": {
@@ -15337,11 +15333,11 @@
         },
         "/documents/content-search": {
             "post": {
-                "operationId": "document-content-search-search",
+                "operationId": "case-documents-search-files",
                 "summary": "Which of the given files hold the words",
                 "description": "Which of the caller's listed files hold the words. Only files the caller may read are asked about; any other id is left out before OpenRegister is asked. `available` is false when OpenRegister offers no scoped content query; `unread` lists the asked files that have no extracted text yet.",
                 "tags": [
-                    "document-content-search"
+                    "case-documents"
                 ],
                 "responses": {
                     "200": {
