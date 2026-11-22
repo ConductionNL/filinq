@@ -164,7 +164,7 @@
 </template>
 
 <script>
-import { translate as t, translatePlural as n } from '@nextcloud/l10n'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import { contentSearchQuery, contentUnavailable, markedSnippet, readFiles, unreadFileIds } from './documentContentSearch.js'
 import { changeDomainLink, copyToRecord, linkTarget } from './documentDomainLinks.js'
