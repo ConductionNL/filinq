@@ -49,6 +49,20 @@ interface FlatFileListServiceInterface {
 	public function listFor(array $domain, int $page = 1, int $limit = 50, string $search = ''): array;
 
 	/**
+	 * Every file on one object whose name or content holds the words, one page of it.
+	 *
+	 * @param array<string, mixed> $domain The object, as register, schema and id.
+	 * @param string $search The words.
+	 * @param int $page The page to read, from 1.
+	 * @param int $limit How many rows a page holds.
+	 *
+	 * @return array<string, mixed> The page: results, total, page, pages, and content as {available, unread}.
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 */
+	public function searchContent(array $domain, string $search, int $page = 1, int $limit = 50): array;
+
+	/**
 	 * Every document record of one object, readable file or not.
 	 *
 	 * The flat list leaves out a record whose file this reader cannot see,

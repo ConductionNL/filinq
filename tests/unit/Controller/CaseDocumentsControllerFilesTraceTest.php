@@ -59,10 +59,14 @@ class CaseDocumentsControllerFilesTraceTest extends TestCase {
 	 * The controller, with or without a session user.
 	 *
 	 * @param bool $signedIn Whether somebody is logged in.
+	 * @param string $mode The `mode` query parameter.
 	 *
 	 * @return CaseDocumentsController The controller.
 	 */
-	private function controller(bool $signedIn = true): CaseDocumentsController {
+	private function controller(bool $signedIn = true, string $mode = 'name'): CaseDocumentsController {
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->method('getParam')->willReturnMap(valueMap: [['mode', 'name', $mode]]);
+
 		$session = $this->createMock(IUserSession::class);
 		if ($signedIn === true) {
 			$session->method('getUser')->willReturn($this->createMock(IUser::class));
@@ -72,7 +76,7 @@ class CaseDocumentsControllerFilesTraceTest extends TestCase {
 
 		return new CaseDocumentsController(
 			'filinq',
-			$this->createMock(IRequest::class),
+			$request,
 			$this->flatList,
 			$this->createMock(DocumentDomainServiceInterface::class),
 			$this->createMock(UploadPolicyServiceInterface::class),
@@ -106,6 +110,42 @@ class CaseDocumentsControllerFilesTraceTest extends TestCase {
 		$this->assertSame($page, $response->getData());
 
 	}//end testFilesHandsTheDomainAndPagingToTheFlatList()
+
+	/**
+	 * The content mode with words asks the content search, not the name list.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 */
+	public function testFilesInContentModeSearchesTheContent(): void {
+		$page = ['results' => [], 'total' => 0, 'page' => 1, 'pages' => 0, 'content' => ['available' => false, 'unread' => 0]];
+		$this->flatList->expects($this->never())->method(constraint: 'listFor');
+		$this->flatList->expects($this->once())
+			->method(constraint: 'searchContent')
+			->with(['register' => 'zaken', 'schema' => 'zaak', 'id' => 'z-1'], 'Lindenlaan', 1, 50)
+			->willReturn(value: $page);
+
+		$response = $this->controller(mode: 'content')->files(register: 'zaken', schema: 'zaak', id: 'z-1', search: 'Lindenlaan');
+
+		$this->assertSame(expected: $page, actual: $response->getData());
+
+	}//end testFilesInContentModeSearchesTheContent()
+
+	/**
+	 * The content mode without words is the plain list.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 */
+	public function testFilesInContentModeWithoutWordsListsByName(): void {
+		$this->flatList->expects($this->never())->method(constraint: 'searchContent');
+		$this->flatList->expects($this->once())->method(constraint: 'listFor')->willReturn(value: ['results' => []]);
+
+		$this->controller(mode: 'content')->files(register: 'zaken', schema: 'zaak', id: 'z-1');
+
+	}//end testFilesInContentModeWithoutWordsListsByName()
 
 	/**
 	 * No session: 401 before the list is read.

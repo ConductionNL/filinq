@@ -22,6 +22,7 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\ContentSearchClient;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\FinalDocumentRepository;
 use OCA\Filinq\Service\FlatFileListService;
@@ -59,10 +60,18 @@ class FlatFileListServiceTest extends TestCase {
 	 * @param array<int, array<string, mixed>> $dossiers The stored dossiers.
 	 * @param array<int, string> $objectFiles File id to file name, for files in an object's folder this user may read through the object.
 	 * @param array<int, int> $parents File id to the id of the folder it is in.
+	 * @param ContentSearchClient|null $content The content query, for the content mode.
 	 *
 	 * @return FlatFileListService The service under test.
 	 */
-	private function service(array $records, array $files, array $dossiers=[], array $objectFiles=[], array $parents=[]): FlatFileListService {
+	private function service(
+		array $records,
+		array $files,
+		array $dossiers=[],
+		array $objectFiles=[],
+		array $parents=[],
+		?ContentSearchClient $content=null
+	): FlatFileListService {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
 			function (string $registerSlug, string $schemaSlug) use ($records, $dossiers): array {
@@ -158,6 +167,7 @@ class FlatFileListServiceTest extends TestCase {
 				locator: $locator,
 				logger: $this->createMock(originalClassName: LoggerInterface::class)
 			),
+			$content,
 		);
 
 	}//end service()
@@ -394,4 +404,133 @@ class FlatFileListServiceTest extends TestCase {
 		$this->assertSame(expected: 'record-1', actual: $page['results'][0]['record']['uuid']);
 
 	}//end testAFileInTheFolderOfAReadableObjectIsListed()
+	/**
+	 * Four records on the case, one of which has "lindenlaan" in its name.
+	 *
+	 * @return array{0: array<int, array<string, mixed>>, 1: array<int, string>} The records and their files.
+	 */
+	private function caseWithFourFiles(): array {
+		$records = [];
+		$files   = [
+			4801 => 'besluit.pdf',
+			4802 => 'brief.pdf',
+			4803 => 'lindenlaan-situatie.pdf',
+			4804 => 'notitie.pdf',
+		];
+		foreach (array_keys($files) as $fileId) {
+			$records[] = $this->record(uuid: 'record-' . $fileId, fileId: $fileId);
+		}
+
+		return [$records, $files];
+
+	}//end caseWithFourFiles()
+
+	/**
+	 * In content mode, name matches come first, then content matches by rank with their snippet.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 */
+	public function testContentModeListsNameMatchesThenContentMatchesByRank(): void {
+		[$records, $files] = $this->caseWithFourFiles();
+		$content = $this->createMock(originalClassName: ContentSearchClient::class);
+		$content->expects($this->once())->method(constraint: 'search')
+			->with('Lindenlaan', [4801, 4802, 4803, 4804])
+			->willReturn(
+				[
+					'available' => true,
+					'hits' => [
+						['fileId' => 4802, 'rank' => 0.9, 'snippet' => 'aan de <mark>Lindenlaan</mark>'],
+						['fileId' => 4803, 'rank' => 0.8, 'snippet' => 'already a name match'],
+						['fileId' => 4801, 'rank' => 0.3, 'snippet' => 'de <mark>Lindenlaan</mark> 4'],
+					],
+					'unread' => [4804],
+				]
+			);
+
+		$page = $this->service(records: $records, files: $files, content: $content)->searchContent(
+			domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1'],
+			search: 'Lindenlaan'
+		);
+
+		$this->assertSame(expected: ['lindenlaan-situatie.pdf', 'brief.pdf', 'besluit.pdf'], actual: array_column($page['results'], 'name'));
+		$this->assertSame(expected: ['name', 'content', 'content'], actual: array_column($page['results'], 'match'));
+		$this->assertArrayNotHasKey(key: 'snippet', array: $page['results'][0]);
+		$this->assertSame(expected: 'aan de <mark>Lindenlaan</mark>', actual: $page['results'][1]['snippet']);
+		$this->assertSame(expected: 3, actual: $page['total']);
+		$this->assertSame(expected: ['available' => true, 'unread' => 1], actual: $page['content']);
+
+	}//end testContentModeListsNameMatchesThenContentMatchesByRank()
+
+	/**
+	 * A file the query does not return is not listed as a content match, and a hit outside the list never appears.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 */
+	public function testAFileTheQueryLeavesOutNeverAppears(): void {
+		[$records, $files] = $this->caseWithFourFiles();
+		$content = $this->createMock(originalClassName: ContentSearchClient::class);
+		$content->method('search')->willReturn(
+			[
+				'available' => true,
+				'hits' => [['fileId' => 9999, 'rank' => 1.0, 'snippet' => 'a file of another case']],
+				'unread' => [],
+			]
+		);
+
+		$page = $this->service(records: $records, files: $files, content: $content)->searchContent(
+			domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1'],
+			search: 'kapvergunning'
+		);
+
+		$this->assertSame(expected: [], actual: $page['results']);
+		$this->assertSame(expected: 0, actual: $page['total']);
+		$this->assertSame(expected: ['available' => true, 'unread' => 0], actual: $page['content']);
+
+	}//end testAFileTheQueryLeavesOutNeverAppears()
+
+	/**
+	 * Without the content query the content mode keeps the name search and says it is not available.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 */
+	public function testContentModeWithoutTheQueryKeepsTheNameSearch(): void {
+		[$records, $files] = $this->caseWithFourFiles();
+
+		$page = $this->service(records: $records, files: $files)->searchContent(
+			domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1'],
+			search: 'lindenlaan'
+		);
+
+		$this->assertSame(expected: ['lindenlaan-situatie.pdf'], actual: array_column($page['results'], 'name'));
+		$this->assertSame(expected: ['available' => false, 'unread' => 0], actual: $page['content']);
+
+	}//end testContentModeWithoutTheQueryKeepsTheNameSearch()
+
+	/**
+	 * The name mode asks no content query and carries no content block.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 */
+	public function testNameModeAsksNoContentQuery(): void {
+		[$records, $files] = $this->caseWithFourFiles();
+		$content = $this->createMock(originalClassName: ContentSearchClient::class);
+		$content->expects($this->never())->method(constraint: 'search');
+
+		$page = $this->service(records: $records, files: $files, content: $content)->listFor(
+			domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1'],
+			search: 'brief'
+		);
+
+		$this->assertSame(expected: ['brief.pdf'], actual: array_column($page['results'], 'name'));
+		$this->assertArrayNotHasKey(key: 'content', array: $page);
+
+	}//end testNameModeAsksNoContentQuery()
 }//end class
