@@ -4210,7 +4210,11 @@
         "Read them now": "Read them now",
         "Reading documents": "Reading documents",
         "%n documents have not been read yet and cannot be found by content": "%n documents have not been read yet and cannot be found by content",
-        "%n documents could not be read": "%n documents could not be read"
+        "%n documents could not be read": "%n documents could not be read",
+        "Search by name and content": "Search by name and content",
+        "Search in": "Search in",
+        "Name and content": "Name and content",
+        "The content could not be searched; only names were matched.": "The content could not be searched; only names were matched."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

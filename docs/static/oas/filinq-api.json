@@ -358,6 +358,10 @@
         {
             "name": "text-fragments",
             "description": "Text fragments (bouwstenen) reused across templates"
+        },
+        {
+            "name": "document-content-search",
+            "description": "Find which of the caller's documents hold some words."
         }
     ],
     "paths": {
@@ -15329,6 +15333,92 @@
                     }
                 ],
                 "security": []
+            }
+        },
+        "/documents/content-search": {
+            "post": {
+                "operationId": "document-content-search-search",
+                "summary": "Which of the given files hold the words",
+                "description": "Which of the caller's listed files hold the words. Only files the caller may read are asked about; any other id is left out before OpenRegister is asked. `available` is false when OpenRegister offers no scoped content query; `unread` lists the asked files that have no extracted text yet.",
+                "tags": [
+                    "document-content-search"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The hits, best rank first, and the unread files.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "available": {
+                                            "type": "boolean"
+                                        },
+                                        "hits": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "fileId": {
+                                                        "type": "integer"
+                                                    },
+                                                    "rank": {
+                                                        "type": "number"
+                                                    },
+                                                    "snippet": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "unread": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "words"
+                                ],
+                                "properties": {
+                                    "words": {
+                                        "type": "string"
+                                    },
+                                    "fileIds": {
+                                        "type": "array",
+                                        "maxItems": 500,
+                                        "items": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/documents/waiting": {

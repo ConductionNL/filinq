@@ -44,8 +44,40 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 					<DdSearchBar
 						v-model="searchQuery"
 						class="my-documents-search"
-						:placeholder="t('filinq', 'Search by name')"
+						:placeholder="searchMode === 'content' ? t('filinq', 'Search by name and content') : t('filinq', 'Search by name')"
 						:clearLabel="t('filinq', 'Clear search')" />
+					<div
+						class="my-documents-search-mode"
+						role="group"
+						:aria-label="t('filinq', 'Search in')"
+						data-testid="my-documents-search-mode">
+						<button
+							v-for="mode in searchModes"
+							:key="mode.key"
+							type="button"
+							class="my-documents-search-mode__button"
+							:aria-pressed="searchMode === mode.key ? 'true' : 'false'"
+							:data-testid="'my-documents-search-mode-' + mode.key"
+							@click="setSearchMode(mode.key)">
+							{{ mode.label }}
+						</button>
+					</div>
+					<p
+						v-if="contentSearchNote"
+						class="my-documents-search-note"
+						role="status"
+						data-testid="my-documents-search-note">
+						{{ contentSearchNote }}
+						<button
+							v-if="contentAnswer && contentAnswer.unread.length > 0"
+							type="button"
+							class="my-documents-search-mode__button"
+							:disabled="contentReading"
+							data-testid="my-documents-read-now"
+							@click="readUnreadDocuments">
+							{{ contentReading ? t('filinq', 'Reading documents') : t('filinq', 'Read them now') }}
+						</button>
+					</p>
 				</template>
 
 				<template #column-fileName="{ row }">
@@ -96,6 +128,13 @@ import { fileViewerStore, myDocumentsStore } from '../../store/store.js'
 							:title="t('filinq', 'The master record of this document is in the case system')">
 							{{ sourceBadgeLabel(sourceBadges[String(row.fileId)]) }}
 						</span>
+						<span
+							v-if="snippetFor(row).length > 0"
+							class="my-documents-snippet"
+							:data-testid="'my-documents-snippet-' + row.fileId"><component
+							:is="part.marked ? 'mark' : 'span'"
+							v-for="(part, index) in snippetFor(row)"
+							:key="index">{{ part.text }}</component></span>
 					</div>
 				</template>
 
@@ -404,12 +443,14 @@ import SanitizationReportModal from '../../modals/SanitizationReportModal.vue'
 import ShareByLinkDialog from '../../modals/ShareByLinkDialog.vue'
 import ValidationResultModal from '../../modals/ValidationResultModal.vue'
 import WaarmerkSealModal from '../../modals/WaarmerkSealModal.vue'
+import { markedSnippet } from '../../integrations/documentContentSearch.js'
 import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import { ocrRun } from '../../mixins/ocrRun.js'
 import { fetchSourceBadges, sourceBadgeLabel } from '../../services/bridge.js'
 import { fetchCaseSystemFiles } from '../../services/caseSystemFiles.js'
 import { openLinkedFile } from '../../services/fileDeepLink.js'
 import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
+import { nameThenContent, readListFiles, searchListContent } from '../../services/listContentSearch.js'
 import { fetchReviewMarks } from '../../services/reviewMark.js'
 import { sanitizeFile } from '../../services/sanitization.js'
 import { validateFile } from '../../services/validationService.js'
@@ -483,6 +524,14 @@ export default {
 			currentPage: 1,
 			pageSize: 20,
 			searchQuery: '',
+			// Search the names only, or the names and the content.
+			searchMode: 'name',
+			// The last content search's answer, for `contentWords`.
+			contentAnswer: null,
+			contentWords: '',
+			contentReading: false,
+			contentReadFailed: 0,
+			contentTimer: null,
 			viewMode: loadPersistedViewMode(),
 			bulkSelect: false,
 			selectedIds: [],
@@ -551,9 +600,66 @@ export default {
 			const query = this.searchQuery.trim().toLowerCase()
 			const docs = myDocumentsStore.visibleDocuments
 			if (!query) return docs
+			if (this.contentMatches) {
+				return this.contentMatches.rows
+			}
 			return docs.filter((d) =>
 				(d.fileName || '').toLowerCase().includes(query),
 			)
+		},
+
+		/**
+		 * The two search modes, with their labels.
+		 *
+		 * @return {Array<{key: string, label: string}>} The modes.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+		 */
+		searchModes() {
+			return [
+				{ key: 'name', label: t('filinq', 'Name') },
+				{ key: 'content', label: t('filinq', 'Name and content') },
+			]
+		},
+
+		/**
+		 * In content mode, the rows of the answer to the words now typed:
+		 * name matches first, then content matches; null otherwise.
+		 *
+		 * @return {{rows: Array<object>, snippets: object}|null} The matches.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+		 */
+		contentMatches() {
+			const words = this.searchQuery.trim()
+			if (this.searchMode !== 'content' || words === '' || !this.contentAnswer || this.contentWords !== words) {
+				return null
+			}
+			return nameThenContent(myDocumentsStore.visibleDocuments, words, this.contentAnswer.hits)
+		},
+
+		/**
+		 * What the page says about the content search: not available, could
+		 * not be asked, or how many documents have not been read yet.
+		 *
+		 * @return {string} The sentence, or empty.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+		 */
+		contentSearchNote() {
+			if (!this.contentMatches) {
+				return ''
+			}
+			if (this.contentReadFailed > 0) {
+				return n('filinq', '%n document could not be read', '%n documents could not be read', this.contentReadFailed)
+			}
+			if (this.contentAnswer.failed) {
+				return t('filinq', 'The content could not be searched; only names were matched.')
+			}
+			if (!this.contentAnswer.available) {
+				return t('filinq', 'The content of documents cannot be searched here; only names were matched.')
+			}
+			const unread = this.contentAnswer.unread.length
+			return unread > 0
+				? n('filinq', '%n document has not been read yet and cannot be found by content', '%n documents have not been read yet and cannot be found by content', unread)
+				: ''
 		},
 
 		/**
@@ -634,6 +740,15 @@ export default {
 	 */
 	watch: {
 		/**
+		 * Search the content again, shortly after the words change.
+		 *
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+		 */
+		searchQuery() {
+			this.scheduleContentSearch()
+		},
+
+		/**
 		 * Open the document a changed `file` route parameter names.
 		 *
 		 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md#requirement-unified-search-finds-document-content-through-openregister-req-wcs-004
@@ -670,10 +785,85 @@ export default {
 	},
 
 	beforeUnmount() {
+		clearTimeout(this.contentTimer)
 		window.removeEventListener('keydown', this.onKeydown)
 	},
 
 	methods: {
+		/**
+		 * Search the names only, or the names and the content.
+		 *
+		 * @param {string} mode `name` or `content`.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+		 */
+		setSearchMode(mode) {
+			this.searchMode = mode === 'content' ? 'content' : 'name'
+			this.currentPage = 1
+			this.scheduleContentSearch()
+		},
+
+		/**
+		 * Run the content search a moment after the last keystroke, so one
+		 * search goes out per pause, not one per letter.
+		 *
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+		 */
+		scheduleContentSearch() {
+			clearTimeout(this.contentTimer)
+			if (this.searchMode !== 'content' || this.searchQuery.trim() === '') {
+				return
+			}
+			this.contentTimer = setTimeout(() => this.runContentSearch(), 400)
+		},
+
+		/**
+		 * Ask which listed documents hold the words now typed.
+		 *
+		 * @return {Promise<void>} Resolves once the answer is kept.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+		 */
+		async runContentSearch() {
+			const words = this.searchQuery.trim()
+			if (this.searchMode !== 'content' || words === '') {
+				return
+			}
+			const answer = await searchListContent(words, myDocumentsStore.visibleDocuments)
+			if (this.searchQuery.trim() !== words) {
+				return
+			}
+			this.contentAnswer = answer
+			this.contentWords = words
+			this.contentReadFailed = 0
+			this.currentPage = 1
+		},
+
+		/**
+		 * Have the documents read that have no extracted text yet, then
+		 * search again so they can be found by content.
+		 *
+		 * @return {Promise<void>} Resolves once the search ran again.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+		 */
+		async readUnreadDocuments() {
+			this.contentReading = true
+			const outcome = await readListFiles(this.contentAnswer ? this.contentAnswer.unread : [])
+			this.contentReading = false
+			await this.runContentSearch()
+			this.contentReadFailed = outcome.failed
+		},
+
+		/**
+		 * The snippet of a content match, split so the searched words are marked.
+		 *
+		 * @param {object} row One listed document.
+		 * @return {Array<{text: string, marked: boolean}>} The parts, or none for a name match.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+		 */
+		snippetFor(row) {
+			const snippet = this.contentMatches ? this.contentMatches.snippets[String(row.fileId)] : undefined
+			return snippet ? markedSnippet(snippet, this.contentWords) : []
+		},
+
 		/**
 		 * Open the viewer on the document the `file` route parameter names
 		 * (`/apps/filinq/my-documents?file=<id>`), the deep link of a document
@@ -1414,6 +1604,43 @@ export default {
 </script>
 
 <style scoped>
+.my-documents-search-mode {
+	display: inline-flex;
+	gap: 4px;
+}
+
+.my-documents-search-mode__button {
+	padding: 4px 10px;
+	border: 1px solid var(--color-border-dark);
+	border-radius: var(--border-radius-element, 8px);
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	cursor: pointer;
+}
+
+.my-documents-search-mode__button[aria-pressed='true'] {
+	background: var(--color-primary-element);
+	border-color: var(--color-primary-element);
+	color: var(--color-primary-element-text);
+}
+
+.my-documents-search-note {
+	margin: 0;
+	color: var(--color-text-maxcontrast);
+}
+
+.my-documents-snippet {
+	display: block;
+	flex-basis: 100%;
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9em;
+}
+
+.my-documents-snippet mark {
+	background-color: var(--color-primary-element-light);
+	color: var(--color-main-text);
+}
+
 .my-documents-wrapper {
 	padding: 0;
 }

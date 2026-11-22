@@ -4345,7 +4345,11 @@
         "Read them now": "Lees ze nu",
         "Reading documents": "Documenten worden gelezen",
         "%n documents have not been read yet and cannot be found by content": "%n documenten zijn nog niet gelezen en kunnen niet op inhoud gevonden worden",
-        "%n documents could not be read": "%n documenten konden niet gelezen worden"
+        "%n documents could not be read": "%n documenten konden niet gelezen worden",
+        "Search by name and content": "Zoek op naam en inhoud",
+        "Search in": "Zoek in",
+        "Name and content": "Naam en inhoud",
+        "The content could not be searched; only names were matched.": "De inhoud kon niet doorzocht worden; alleen namen zijn vergeleken."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
