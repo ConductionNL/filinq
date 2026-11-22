@@ -64,7 +64,14 @@ class FlatFileListServiceTest extends TestCase {
 	 *
 	 * @return FlatFileListService The service under test.
 	 */
-	private function service(array $records, array $files, array $dossiers=[], array $objectFiles=[], array $parents=[], ?ContentSearchClient $content=null): FlatFileListService {
+	private function service(
+		array $records,
+		array $files,
+		array $dossiers=[],
+		array $objectFiles=[],
+		array $parents=[],
+		?ContentSearchClient $content=null
+	): FlatFileListService {
 		$objectService = $this->createMock(ObjectService::class);
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
 			function (string $registerSlug, string $schemaSlug) use ($records, $dossiers): array {
@@ -427,8 +434,8 @@ class FlatFileListServiceTest extends TestCase {
 	 */
 	public function testContentModeListsNameMatchesThenContentMatchesByRank(): void {
 		[$records, $files] = $this->caseWithFourFiles();
-		$content = $this->createMock(ContentSearchClient::class);
-		$content->expects($this->once())->method('search')
+		$content = $this->createMock(originalClassName: ContentSearchClient::class);
+		$content->expects($this->once())->method(constraint: 'search')
 			->with('Lindenlaan', [4801, 4802, 4803, 4804])
 			->willReturn(
 				[
@@ -447,12 +454,12 @@ class FlatFileListServiceTest extends TestCase {
 			search: 'Lindenlaan'
 		);
 
-		$this->assertSame(['lindenlaan-situatie.pdf', 'brief.pdf', 'besluit.pdf'], array_column($page['results'], 'name'));
-		$this->assertSame(['name', 'content', 'content'], array_column($page['results'], 'match'));
-		$this->assertArrayNotHasKey('snippet', $page['results'][0]);
-		$this->assertSame('aan de <mark>Lindenlaan</mark>', $page['results'][1]['snippet']);
-		$this->assertSame(3, $page['total']);
-		$this->assertSame(['available' => true, 'unread' => 1], $page['content']);
+		$this->assertSame(expected: ['lindenlaan-situatie.pdf', 'brief.pdf', 'besluit.pdf'], actual: array_column($page['results'], 'name'));
+		$this->assertSame(expected: ['name', 'content', 'content'], actual: array_column($page['results'], 'match'));
+		$this->assertArrayNotHasKey(key: 'snippet', array: $page['results'][0]);
+		$this->assertSame(expected: 'aan de <mark>Lindenlaan</mark>', actual: $page['results'][1]['snippet']);
+		$this->assertSame(expected: 3, actual: $page['total']);
+		$this->assertSame(expected: ['available' => true, 'unread' => 1], actual: $page['content']);
 
 	}//end testContentModeListsNameMatchesThenContentMatchesByRank()
 
@@ -465,7 +472,7 @@ class FlatFileListServiceTest extends TestCase {
 	 */
 	public function testAFileTheQueryLeavesOutNeverAppears(): void {
 		[$records, $files] = $this->caseWithFourFiles();
-		$content = $this->createMock(ContentSearchClient::class);
+		$content = $this->createMock(originalClassName: ContentSearchClient::class);
 		$content->method('search')->willReturn(
 			[
 				'available' => true,
@@ -479,9 +486,9 @@ class FlatFileListServiceTest extends TestCase {
 			search: 'kapvergunning'
 		);
 
-		$this->assertSame([], $page['results']);
-		$this->assertSame(0, $page['total']);
-		$this->assertSame(['available' => true, 'unread' => 0], $page['content']);
+		$this->assertSame(expected: [], actual: $page['results']);
+		$this->assertSame(expected: 0, actual: $page['total']);
+		$this->assertSame(expected: ['available' => true, 'unread' => 0], actual: $page['content']);
 
 	}//end testAFileTheQueryLeavesOutNeverAppears()
 
@@ -500,8 +507,8 @@ class FlatFileListServiceTest extends TestCase {
 			search: 'lindenlaan'
 		);
 
-		$this->assertSame(['lindenlaan-situatie.pdf'], array_column($page['results'], 'name'));
-		$this->assertSame(['available' => false, 'unread' => 0], $page['content']);
+		$this->assertSame(expected: ['lindenlaan-situatie.pdf'], actual: array_column($page['results'], 'name'));
+		$this->assertSame(expected: ['available' => false, 'unread' => 0], actual: $page['content']);
 
 	}//end testContentModeWithoutTheQueryKeepsTheNameSearch()
 
@@ -514,16 +521,16 @@ class FlatFileListServiceTest extends TestCase {
 	 */
 	public function testNameModeAsksNoContentQuery(): void {
 		[$records, $files] = $this->caseWithFourFiles();
-		$content = $this->createMock(ContentSearchClient::class);
-		$content->expects($this->never())->method('search');
+		$content = $this->createMock(originalClassName: ContentSearchClient::class);
+		$content->expects($this->never())->method(constraint: 'search');
 
 		$page = $this->service(records: $records, files: $files, content: $content)->listFor(
 			domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1'],
 			search: 'brief'
 		);
 
-		$this->assertSame(['brief.pdf'], array_column($page['results'], 'name'));
-		$this->assertArrayNotHasKey('content', $page);
+		$this->assertSame(expected: ['brief.pdf'], actual: array_column($page['results'], 'name'));
+		$this->assertArrayNotHasKey(key: 'content', array: $page);
 
 	}//end testNameModeAsksNoContentQuery()
 }//end class
