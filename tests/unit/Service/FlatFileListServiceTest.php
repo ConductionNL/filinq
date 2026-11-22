@@ -533,4 +533,43 @@ class FlatFileListServiceTest extends TestCase {
 		$this->assertArrayNotHasKey(key: 'content', array: $page);
 
 	}//end testNameModeAsksNoContentQuery()
+	/**
+	 * A search of the caller's list asks about the readable files only, each once.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+	 */
+	public function testSearchFilesAsksAboutTheReadableFilesOnly(): void {
+		$answer  = ['available' => true, 'hits' => [], 'unread' => [4802]];
+		$content = $this->createMock(originalClassName: ContentSearchClient::class);
+		$content->expects($this->once())->method(constraint: 'search')
+			->with('Lindenlaan', [4801, 4802])
+			->willReturn($answer);
+
+		$service = $this->service(records: [], files: [4801 => 'a.pdf', 4802 => 'b.pdf'], content: $content);
+
+		$this->assertSame(
+			expected: $answer,
+			actual: $service->searchFiles(words: ' Lindenlaan ', fileIds: [4801, '4802', 4801, 9999, 'x', 0])
+		);
+
+	}//end testSearchFilesAsksAboutTheReadableFilesOnly()
+
+	/**
+	 * Without the content query a search of the list says it is not available.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+	 */
+	public function testSearchFilesWithoutTheQueryIsNotAvailable(): void {
+		$service = $this->service(records: [], files: [4801 => 'a.pdf']);
+
+		$this->assertSame(
+			expected: ['available' => false, 'hits' => [], 'unread' => []],
+			actual: $service->searchFiles(words: 'a', fileIds: [4801])
+		);
+
+	}//end testSearchFilesWithoutTheQueryIsNotAvailable()
 }//end class

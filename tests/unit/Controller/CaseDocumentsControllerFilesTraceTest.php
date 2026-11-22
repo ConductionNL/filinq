@@ -176,4 +176,41 @@ class CaseDocumentsControllerFilesTraceTest extends TestCase {
 		$this->assertSame(['error' => 'register unreachable'], $response->getData());
 
 	}//end testAFailingListIsA500()
+	/**
+	 * A search of the caller's list hands the words and the file ids to the service.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+	 */
+	public function testSearchFilesAsksTheServiceAboutTheListedFiles(): void {
+		$answer = ['available' => true, 'hits' => [['fileId' => 11, 'rank' => 0.5, 'snippet' => 'x']], 'unread' => []];
+		$this->flatList->expects($this->once())
+			->method(constraint: 'searchFiles')
+			->with('vergunning', [11, 12])
+			->willReturn(value: $answer);
+
+		$response = $this->controller()->searchFiles(words: 'vergunning', fileIds: [11, 12]);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: $answer, actual: $response->getData());
+
+	}//end testSearchFilesAsksTheServiceAboutTheListedFiles()
+
+	/**
+	 * Without a session, without words or with too many files nothing is asked.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+	 */
+	public function testSearchFilesRefusesWhatItCannotAnswer(): void {
+		$this->flatList->expects($this->never())->method(constraint: 'searchFiles');
+		$tooMany = range(start: 1, end: FlatFileListServiceInterface::MAX_SEARCH_FILES + 1);
+
+		$this->assertSame(expected: 401, actual: $this->controller(signedIn: false)->searchFiles(words: 'a', fileIds: [1])->getStatus());
+		$this->assertSame(expected: 400, actual: $this->controller()->searchFiles(words: '  ', fileIds: [1])->getStatus());
+		$this->assertSame(expected: 400, actual: $this->controller()->searchFiles(words: 'a', fileIds: $tooMany)->getStatus());
+
+	}//end testSearchFilesRefusesWhatItCannotAnswer()
 }//end class
