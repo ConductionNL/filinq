@@ -4,6 +4,37 @@
   -->
 <template>
 	<div v-if="!summarised" class="filinq-documents-leaf">
+		<form
+			v-if="rows.length > 0 || searchedWords !== ''"
+			class="filinq-documents-leaf__search"
+			role="search"
+			data-testid="documents-content-search"
+			@submit.prevent="searchContent">
+			<label>
+				{{ t('filinq', 'Find in name and content') }}
+				<input
+					v-model="searchWords"
+					type="search"
+					data-testid="documents-content-search-input">
+			</label>
+			<button type="submit" class="filinq-documents-leaf__sort-button">
+				{{ t('filinq', 'Search') }}
+			</button>
+			<button
+				v-if="searchedWords !== ''"
+				type="button"
+				class="filinq-documents-leaf__sort-button"
+				data-testid="documents-content-search-clear"
+				@click="clearSearch">
+				{{ t('filinq', 'Show all documents') }}
+			</button>
+		</form>
+		<p
+			v-if="searchedWords !== '' && contentNotSearched"
+			class="filinq-documents-leaf__state"
+			role="status">
+			{{ t('filinq', 'The content of documents cannot be searched here; only names were matched.') }}
+		</p>
 		<p v-if="loading" class="filinq-documents-leaf__state">
 			{{ t('filinq', 'Looking up documents') }}
 		</p>
@@ -11,6 +42,11 @@
 			v-else-if="error"
 			class="filinq-documents-leaf__state filinq-documents-leaf__state--error">
 			{{ t('filinq', 'The documents could not be loaded') }}
+		</p>
+		<p
+			v-else-if="rows.length === 0 && searchedWords !== ''"
+			class="filinq-documents-leaf__state">
+			{{ t('filinq', 'No document matches {words}', { words: searchedWords }) }}
 		</p>
 		<p
 			v-else-if="rows.length === 0 && !carded"
@@ -44,6 +80,13 @@
 					row.name
 				}}</a>
 				<span v-if="row.mtime" class="filinq-documents-leaf__date">{{ asDate(row.mtime) }}</span>
+				<span
+					v-if="row.match === 'content' && row.snippet"
+					class="filinq-documents-leaf__snippet"
+					:data-testid="'documents-snippet-' + row.fileId"><component
+					:is="part.marked ? 'mark' : 'span'"
+					v-for="(part, index) in snippetParts(row)"
+					:key="index">{{ part.text }}</component></span>
 				<span
 					v-if="row.record && row.record.status"
 					class="filinq-documents-leaf__status">
@@ -106,6 +149,7 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
+import { contentSearchQuery, contentUnavailable, markedSnippet } from './documentContentSearch.js'
 import { changeDomainLink, copyToRecord, linkTarget } from './documentDomainLinks.js'
 import { documentLinkRows } from './documentLinkRows.js'
 import { nextSort, sortDocumentRows } from './documentRowSort.js'
@@ -137,6 +181,9 @@ export default {
 			linkForm: { register: '', schema: '', id: '' },
 			linkMessage: '',
 			busy: false,
+			searchWords: '',
+			searchedWords: '',
+			contentNotSearched: false,
 		}
 	},
 
@@ -335,6 +382,55 @@ export default {
 		},
 
 		/**
+		 * Find the documents of this record whose name or content holds the
+		 * typed words: name matches first, then content matches with their
+		 * snippet. Nothing typed shows the whole list again.
+		 *
+		 * @return {Promise<void>} Resolves once `rows` reflects the answer.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.2
+		 */
+		searchContent() {
+			const query = contentSearchQuery(this.searchWords)
+			if (query === null) {
+				return this.clearSearch()
+			}
+			this.loading = true
+			this.error = false
+			this.searchedWords = query.search
+			this.contentNotSearched = false
+			return this.loadForHostObject('/apps/filinq/api/case-documents/files', (body) => {
+				this.rows = Array.isArray(body.results) ? body.results : []
+				this.contentNotSearched = contentUnavailable(body)
+			}, query)
+		},
+
+		/**
+		 * Leave the search and show every document of this record again.
+		 *
+		 * @return {Promise<void>} Resolves once `rows` reflects the answer.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.2
+		 */
+		clearSearch() {
+			this.searchWords = ''
+			this.searchedWords = ''
+			this.contentNotSearched = false
+			this.loading = true
+			this.error = false
+			return this.load()
+		},
+
+		/**
+		 * The snippet of a content match, split so the searched words are marked.
+		 *
+		 * @param {object} row One flat-list row in content mode.
+		 * @return {Array<{text: string, marked: boolean}>} The parts.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.2
+		 */
+		snippetParts(row) {
+			return markedSnippet(row.snippet, this.searchedWords)
+		},
+
+		/**
 		 * Read the flat list for the host object.
 		 *
 		 * @return {Promise<void>} Resolves once `rows` reflects the answer.
@@ -408,6 +504,25 @@ export default {
 .filinq-documents-leaf__status {
 	color: var(--color-text-maxcontrast);
 	font-size: 0.9em;
+}
+
+.filinq-documents-leaf__search {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 4px;
+	margin-bottom: 8px;
+}
+
+.filinq-documents-leaf__snippet {
+	display: block;
+	flex-basis: 100%;
+	color: var(--color-text-maxcontrast);
+}
+
+.filinq-documents-leaf__snippet mark {
+	background-color: var(--color-primary-element-light);
+	color: var(--color-main-text);
 }
 
 .filinq-documents-leaf__state {

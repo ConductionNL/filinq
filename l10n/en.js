@@ -1,6 +1,7 @@
 OC.L10N.register(
     "filinq",
     {
+        "The linked document could not be found, or you do not have access to it.": "The linked document could not be found, or you do not have access to it.",
         "Activity": "Activity",
         "No activity recorded for this document yet": "No activity recorded for this document yet",
         "The activity of this document could not be loaded": "The activity of this document could not be loaded",
@@ -4122,7 +4123,11 @@ OC.L10N.register(
         "Under a legal hold": "Under a legal hold",
         "Under a legal hold: {cases}": "Under a legal hold: {cases}",
         "Transferred to the e-depot. This record is read only: it can no longer be changed.": "Transferred to the e-depot. This record is read only: it can no longer be changed.",
-        "This dossier was transferred to the e-depot and is read only.": "This dossier was transferred to the e-depot and is read only."
+        "This dossier was transferred to the e-depot and is read only.": "This dossier was transferred to the e-depot and is read only.",
+        "Find in name and content": "Find in name and content",
+        "Show all documents": "Show all documents",
+        "The content of documents cannot be searched here; only names were matched.": "The content of documents cannot be searched here; only names were matched.",
+        "No document matches {words}": "No document matches {words}"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -4194,7 +4194,11 @@
         "Under a legal hold": "Under a legal hold",
         "Under a legal hold: {cases}": "Under a legal hold: {cases}",
         "Transferred to the e-depot. This record is read only: it can no longer be changed.": "Transferred to the e-depot. This record is read only: it can no longer be changed.",
-        "This dossier was transferred to the e-depot and is read only.": "This dossier was transferred to the e-depot and is read only."
+        "This dossier was transferred to the e-depot and is read only.": "This dossier was transferred to the e-depot and is read only.",
+        "Find in name and content": "Find in name and content",
+        "Show all documents": "Show all documents",
+        "The content of documents cannot be searched here; only names were matched.": "The content of documents cannot be searched here; only names were matched.",
+        "No document matches {words}": "No document matches {words}"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
