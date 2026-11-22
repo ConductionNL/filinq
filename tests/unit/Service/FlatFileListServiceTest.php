@@ -442,10 +442,9 @@ class FlatFileListServiceTest extends TestCase {
 				]
 			);
 
-		$page = $this->service(records: $records, files: $files, content: $content)->listFor(
+		$page = $this->service(records: $records, files: $files, content: $content)->searchContent(
 			domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1'],
-			search: 'Lindenlaan',
-			mode: 'content'
+			search: 'Lindenlaan'
 		);
 
 		$this->assertSame(['lindenlaan-situatie.pdf', 'brief.pdf', 'besluit.pdf'], array_column($page['results'], 'name'));
@@ -475,10 +474,9 @@ class FlatFileListServiceTest extends TestCase {
 			]
 		);
 
-		$page = $this->service(records: $records, files: $files, content: $content)->listFor(
+		$page = $this->service(records: $records, files: $files, content: $content)->searchContent(
 			domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1'],
-			search: 'kapvergunning',
-			mode: 'content'
+			search: 'kapvergunning'
 		);
 
 		$this->assertSame([], $page['results']);
@@ -497,10 +495,9 @@ class FlatFileListServiceTest extends TestCase {
 	public function testContentModeWithoutTheQueryKeepsTheNameSearch(): void {
 		[$records, $files] = $this->caseWithFourFiles();
 
-		$page = $this->service(records: $records, files: $files)->listFor(
+		$page = $this->service(records: $records, files: $files)->searchContent(
 			domain: ['register' => 'zaken', 'schema' => 'zaak', 'id' => 'zaak-1'],
-			search: 'lindenlaan',
-			mode: 'content'
+			search: 'lindenlaan'
 		);
 
 		$this->assertSame(['lindenlaan-situatie.pdf'], array_column($page['results'], 'name'));

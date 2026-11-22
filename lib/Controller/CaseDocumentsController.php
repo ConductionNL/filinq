@@ -82,7 +82,6 @@ class CaseDocumentsController extends Controller {
 	 * @param int $page The page to read.
 	 * @param int $limit How many rows a page holds.
 	 * @param string $search A file-name filter.
-	 * @param string $mode `name`, or `content` to also find the words in the files.
 	 *
 	 * @return JSONResponse The page of files.
 	 *
@@ -97,22 +96,24 @@ class CaseDocumentsController extends Controller {
 		int $page = 1,
 		int $limit = 50,
 		string $search = '',
-		string $mode = 'name',
 	): JSONResponse {
 		$unauthenticated = $this->requireUser();
 		if ($unauthenticated !== null) {
 			return $unauthenticated;
 		}
 
+		$domain = ['register' => $register, 'schema' => $schema, 'id' => $id];
 		try {
+			// The `mode` query parameter `content` also finds the words in the files.
+			if ($this->request->getParam(key: 'mode', default: 'name') === 'content' && trim($search) !== '') {
+				return new JSONResponse(
+					data: $this->flatList->searchContent(domain: $domain, search: $search, page: $page, limit: $limit),
+					statusCode: Http::STATUS_OK
+				);
+			}
+
 			return new JSONResponse(
-				data: $this->flatList->listFor(
-					domain: ['register' => $register, 'schema' => $schema, 'id' => $id],
-					page: $page,
-					limit: $limit,
-					search: $search,
-					mode: $mode
-				),
+				data: $this->flatList->listFor(domain: $domain, page: $page, limit: $limit, search: $search),
 				statusCode: Http::STATUS_OK
 			);
 		} catch (Throwable $e) {

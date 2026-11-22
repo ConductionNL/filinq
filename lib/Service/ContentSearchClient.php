@@ -26,9 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
-use OCP\App\IAppManager;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCP\IUserSession;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -45,6 +44,9 @@ use Throwable;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+ *
+ * @psalm-type ContentHit = array{fileId: int, rank: float, snippet: string}
+ * @psalm-type ContentAnswer = array{available: bool, hits: array<int, ContentHit>, unread: array<int, int>}
  */
 class ContentSearchClient {
 
@@ -61,18 +63,16 @@ class ContentSearchClient {
 	/**
 	 * Constructor.
 	 *
-	 * @param IAppManager        $apps      Says whether OpenRegister is installed.
-	 * @param ContainerInterface $container Hands out OpenRegister's query service.
-	 * @param IUserSession       $session   The caller the query is scoped to.
-	 * @param LoggerInterface    $logger    Logs a query that failed.
+	 * @param OpenRegisterAccess $openRegister Says whether OpenRegister is there and hands out its query service.
+	 * @param IUserSession       $session      The caller the query is scoped to.
+	 * @param LoggerInterface    $logger       Logs a query that failed.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
 	 */
 	public function __construct(
-		private readonly IAppManager $apps,
-		private readonly ContainerInterface $container,
+		private readonly OpenRegisterAccess $openRegister,
 		private readonly IUserSession $session,
 		private readonly LoggerInterface $logger,
 	) {
@@ -90,35 +90,31 @@ class ContentSearchClient {
 	 * @param string          $words   The words to find.
 	 * @param array<int, int> $fileIds The files of the list, the scope of the query.
 	 *
-	 * @return array{available: bool, hits: array<int, array{fileId: int, rank: float, snippet: string}>, unread: array<int, int>} The answer; `available` false when OpenRegister offers no scoped query.
+	 * @return array The answer; `available` false when OpenRegister offers no scoped query.
+	 *
+	 * @psalm-return ContentAnswer
 	 *
 	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
 	 */
 	public function search(string $words, array $fileIds): array {
-		$answer = ['available' => false, 'hits' => [], 'unread' => []];
-		$query  = $this->query();
-		$user   = $this->session->getUser();
+		$query = $this->query();
+		$user  = $this->session->getUser();
 		if ($query === null || $user === null) {
-			return $answer;
+			return ['available' => false, 'hits' => [], 'unread' => []];
 		}
 
-		$answer['available'] = true;
 		$scope = array_values(array_unique(array_map(intval(...), $fileIds)));
-		if (trim($words) === '' || $scope === []) {
-			return $answer;
+		$raw   = [];
+		if (trim($words) !== '' && $scope !== []) {
+			$raw = $this->ask(query: $query, words: $words, scope: $scope, userId: $user->getUID());
 		}
 
-		try {
-			$raw = $query->{self::QUERY_METHOD}($words, $scope, $user->getUID());
-		} catch (Throwable $e) {
-			$this->logger->warning(
-				'filinq: content search failed: ' . $e->getMessage(),
-				['exception' => $e]
-			);
-			return $answer;
-		}
-
-		return $this->normalise(raw: is_array($raw) === true ? $raw : [], scope: $scope, answer: $answer);
+		$inScope = array_flip($scope);
+		return [
+			'available' => true,
+			'hits' => $this->hits(rows: $raw['results'] ?? $raw, inScope: $inScope),
+			'unread' => $this->unread(fileIds: $raw['unextracted'] ?? [], inScope: $inScope),
+		];
 
 	}//end search()
 
@@ -140,13 +136,13 @@ class ContentSearchClient {
 	 * @return object|null
 	 */
 	private function query(): ?object {
-		if ($this->apps->isEnabledForUser('openregister') === false) {
+		if ($this->openRegister->apps->isEnabledForUser('openregister') === false) {
 			return null;
 		}
 
 		// An OpenRegister without the service makes the container throw.
 		try {
-			$service = $this->container->get(self::QUERY_SERVICE);
+			$service = $this->openRegister->container->get(self::QUERY_SERVICE);
 		} catch (Throwable) {
 			return null;
 		}
@@ -160,52 +156,91 @@ class ContentSearchClient {
 	}//end query()
 
 	/**
-	 * The query's answer as hits and unread files, within the scope.
+	 * The query's raw answer; an empty answer when the query fails.
 	 *
-	 * The answer is either a list of hits or `{results, unextracted}`; a hit
-	 * carries `fileId` (or `file_id`), `rank` and `snippet`. Hits are ordered
-	 * by rank, highest first, one per file.
+	 * @param object          $query  OpenRegister's query service.
+	 * @param string          $words  The words.
+	 * @param array<int, int> $scope  The files asked about.
+	 * @param string          $userId The caller.
 	 *
-	 * @param array<mixed>                                                                                            $raw    The query's answer.
-	 * @param array<int, int>                                                                                         $scope  The files asked about.
-	 * @param array{available: bool, hits: array<int, array{fileId: int, rank: float, snippet: string}>, unread: array<int, int>} $answer The answer so far.
-	 *
-	 * @return array{available: bool, hits: array<int, array{fileId: int, rank: float, snippet: string}>, unread: array<int, int>}
+	 * @return array<mixed>
 	 */
-	private function normalise(array $raw, array $scope, array $answer): array {
-		$inScope = array_flip($scope);
-		$rows    = $raw['results'] ?? $raw;
-		$hits    = [];
-		foreach (is_array($rows) === true ? $rows : [] as $row) {
-			if (is_array($row) === false) {
-				continue;
-			}
+	private function ask(object $query, string $words, array $scope, string $userId): array {
+		try {
+			$raw = $query->{self::QUERY_METHOD}($words, $scope, $userId);
+		} catch (Throwable $e) {
+			$this->logger->warning('filinq: content search failed: ' . $e->getMessage(), ['exception' => $e]);
+			return [];
+		}
 
-			$fileId = (int) ($row['fileId'] ?? $row['file_id'] ?? 0);
-			if (isset($inScope[$fileId]) === false) {
-				continue;
-			}
+		if (is_array($raw) === false) {
+			return [];
+		}
 
-			$rank = (float) ($row['rank'] ?? 0.0);
-			if (isset($hits[$fileId]) === true && $hits[$fileId]['rank'] >= $rank) {
-				continue;
-			}
+		return $raw;
 
-			$hits[$fileId] = ['fileId' => $fileId, 'rank' => $rank, 'snippet' => (string) ($row['snippet'] ?? '')];
+	}//end ask()
+
+	/**
+	 * The hits inside the scope, one per file, best rank first.
+	 *
+	 * A hit carries `fileId` (or `file_id`), `rank` and `snippet`.
+	 *
+	 * @param mixed           $rows    The query's hits.
+	 * @param array<int, int> $inScope The files asked about, as keys.
+	 *
+	 * @return array<int, array{fileId: int, rank: float, snippet: string}>
+	 */
+	private function hits(mixed $rows, array $inScope): array {
+		$hits = [];
+		foreach ($this->rows(value: $rows) as $row) {
+			$hit = [
+				'fileId' => (int) ($row['fileId'] ?? $row['file_id'] ?? 0),
+				'rank' => (float) ($row['rank'] ?? 0.0),
+				'snippet' => (string) ($row['snippet'] ?? ''),
+			];
+			$known = $hits[$hit['fileId']]['rank'] ?? null;
+			if (isset($inScope[$hit['fileId']]) === true && ($known === null || $known < $hit['rank'])) {
+				$hits[$hit['fileId']] = $hit;
+			}
 		}
 
 		usort($hits, static fn (array $left, array $right): int => $right['rank'] <=> $left['rank']);
-		$answer['hits'] = $hits;
+		return $hits;
 
-		$unread = $raw['unextracted'] ?? [];
-		foreach (is_array($unread) === true ? $unread : [] as $fileId) {
-			if (isset($inScope[(int) $fileId]) === true) {
-				$answer['unread'][] = (int) $fileId;
-			}
+	}//end hits()
+
+	/**
+	 * The rows of a value that are arrays; none when it is not a list.
+	 *
+	 * @param mixed $value The value.
+	 *
+	 * @return array<int, array<mixed>>
+	 */
+	private function rows(mixed $value): array {
+		if (is_array($value) === false) {
+			return [];
 		}
 
-		$answer['unread'] = array_values(array_unique($answer['unread']));
-		return $answer;
+		return array_values(array_filter($value, is_array(...)));
 
-	}//end normalise()
+	}//end rows()
+
+	/**
+	 * The unread files inside the scope.
+	 *
+	 * @param mixed           $fileIds The files the query says have no extracted text.
+	 * @param array<int, int> $inScope The files asked about, as keys.
+	 *
+	 * @return array<int, int>
+	 */
+	private function unread(mixed $fileIds, array $inScope): array {
+		if (is_array($fileIds) === false) {
+			return [];
+		}
+
+		$unread = array_map(intval(...), $fileIds);
+		return array_values(array_unique(array_filter($unread, static fn (int $fileId): bool => isset($inScope[$fileId]))));
+
+	}//end unread()
 }//end class
