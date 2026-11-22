@@ -90,7 +90,7 @@ class CaseDocumentsControllerFilesTraceTest extends TestCase {
 		$page = ['results' => [['fileId' => 7]], 'total' => 1, 'page' => 2];
 		$this->flatList->expects($this->once())
 			->method('listFor')
-			->with(['register' => 'zaken', 'schema' => 'zaak', 'id' => 'z-1'], 2, 25, 'brief')
+			->with(['register' => 'zaken', 'schema' => 'zaak', 'id' => 'z-1'], 2, 25, 'brief', 'name')
 			->willReturn($page);
 
 		$response = $this->controller()->files(
@@ -106,6 +106,26 @@ class CaseDocumentsControllerFilesTraceTest extends TestCase {
 		$this->assertSame($page, $response->getData());
 
 	}//end testFilesHandsTheDomainAndPagingToTheFlatList()
+
+	/**
+	 * The content mode passes through to the flat list.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 */
+	public function testFilesPassesTheContentMode(): void {
+		$page = ['results' => [], 'total' => 0, 'page' => 1, 'pages' => 0, 'content' => ['available' => false, 'unread' => 0]];
+		$this->flatList->expects($this->once())
+			->method('listFor')
+			->with(['register' => 'zaken', 'schema' => 'zaak', 'id' => 'z-1'], 1, 50, 'Lindenlaan', 'content')
+			->willReturn($page);
+
+		$response = $this->controller()->files(register: 'zaken', schema: 'zaak', id: 'z-1', search: 'Lindenlaan', mode: 'content');
+
+		$this->assertSame($page, $response->getData());
+
+	}//end testFilesPassesTheContentMode()
 
 	/**
 	 * No session: 401 before the list is read.

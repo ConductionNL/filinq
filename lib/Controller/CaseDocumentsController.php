@@ -82,10 +82,12 @@ class CaseDocumentsController extends Controller {
 	 * @param int $page The page to read.
 	 * @param int $limit How many rows a page holds.
 	 * @param string $search A file-name filter.
+	 * @param string $mode `name`, or `content` to also find the words in the files.
 	 *
 	 * @return JSONResponse The page of files.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
 	 */
 	#[NoAdminRequired]
 	public function files(
@@ -95,6 +97,7 @@ class CaseDocumentsController extends Controller {
 		int $page = 1,
 		int $limit = 50,
 		string $search = '',
+		string $mode = 'name',
 	): JSONResponse {
 		$unauthenticated = $this->requireUser();
 		if ($unauthenticated !== null) {
@@ -107,7 +110,8 @@ class CaseDocumentsController extends Controller {
 					domain: ['register' => $register, 'schema' => $schema, 'id' => $id],
 					page: $page,
 					limit: $limit,
-					search: $search
+					search: $search,
+					mode: $mode
 				),
 				statusCode: Http::STATUS_OK
 			);

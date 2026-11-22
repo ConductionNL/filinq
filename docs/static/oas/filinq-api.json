@@ -1668,6 +1668,20 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "mode",
+                        "in": "query",
+                        "required": false,
+                        "description": "`name` matches the file name; `content` also finds the words in the files through OpenRegister's content query, scoped to the caller.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "name",
+                                "content"
+                            ],
+                            "default": "name"
+                        }
                     }
                 ]
             }

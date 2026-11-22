@@ -41,12 +41,14 @@ interface FlatFileListServiceInterface {
 	 * @param int $page The page to read, from 1.
 	 * @param int $limit How many rows a page holds.
 	 * @param string $search A name filter, matched case-insensitively on the file name.
+	 * @param string $mode `name` (the default) or `content`, which also searches the words in the files.
 	 *
-	 * @return array{results: array<int, array<string, mixed>>, total: int, page: int, pages: int} The page.
+	 * @return array{results: array<int, array<string, mixed>>, total: int, page: int, pages: int, content?: array{available: bool, unread: int}} The page.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
 	 */
-	public function listFor(array $domain, int $page = 1, int $limit = 50, string $search = ''): array;
+	public function listFor(array $domain, int $page = 1, int $limit = 50, string $search = '', string $mode = 'name'): array;
 
 	/**
 	 * Every document record of one object, readable file or not.

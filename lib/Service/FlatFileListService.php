@@ -51,12 +51,16 @@ class FlatFileListService implements FlatFileListServiceInterface {
 	 *
 	 * @param FinalDocumentRepository $repository The document record store.
 	 * @param ReadableFileResolver $files The file behind an id, as the reader may read it.
+	 * @param ContentSearchClient|null $content OpenRegister's content query, for the content mode.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
 	 */
 	public function __construct(
 		private readonly FinalDocumentRepository $repository,
 		private readonly ReadableFileResolver $files,
+		private readonly ?ContentSearchClient $content=null,
 	) {
 
 	}//end __construct()
@@ -64,30 +68,31 @@ class FlatFileListService implements FlatFileListServiceInterface {
 	/**
 	 * Every file on one object, one page of it.
 	 *
+	 * In mode `content` with a search, the page lists the name matches first,
+	 * then the files OpenRegister finds the words in, best rank first, each
+	 * with its snippet; `content` says whether the query was there and how
+	 * many listed files have no extracted text yet (REQ-WCS-001, REQ-WCS-002).
+	 *
 	 * @param array<string, mixed> $domain The object, as register, schema and id.
 	 * @param int $page The page to read, from 1.
 	 * @param int $limit How many rows a page holds.
 	 * @param string $search A name filter, matched case-insensitively on the file name.
+	 * @param string $mode `name` (the default) or `content`, which also searches the words in the files.
 	 *
-	 * @return array{results: array<int, array<string, mixed>>, total: int, page: int, pages: int} The page.
+	 * @return array{results: array<int, array<string, mixed>>, total: int, page: int, pages: int, content?: array{available: bool, unread: int}} The page.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
 	 */
-	public function listFor(array $domain, int $page = 1, int $limit = 50, string $search = ''): array {
+	public function listFor(array $domain, int $page = 1, int $limit = 50, string $search = '', string $mode = 'name'): array {
 		$rows     = [];
 		$dossiers = null;
 		foreach ($this->repository->findByDomain(domain: $domain) as $record) {
 			$dossiers ??= $this->repository->dossierIndex();
 			$row        = $this->row(record: $record, dossiers: $dossiers);
-			if ($row === null) {
-				continue;
+			if ($row !== null) {
+				$rows[] = $row;
 			}
-
-			if ($search !== '' && stripos((string)$row['name'], $search) === false) {
-				continue;
-			}
-
-			$rows[] = $row;
 		}
 
 		usort(
@@ -95,19 +100,83 @@ class FlatFileListService implements FlatFileListServiceInterface {
 			static fn (array $left, array $right): int => strcasecmp((string)$left['name'], (string)$right['name'])
 		);
 
+		$content = null;
+		if ($mode === 'content' && trim($search) !== '') {
+			[$rows, $content] = $this->withContent(rows: $rows, search: $search);
+		} else if ($search !== '') {
+			$rows = array_values(
+				array_filter($rows, static fn (array $row): bool => stripos((string)$row['name'], $search) !== false)
+			);
+		}
+
 		$total = count($rows);
 		$limit = max(1, $limit);
 		$pages = (int)ceil(($total / $limit));
 		$page = max(1, $page);
 
-		return [
+		$answer = [
 			'results' => array_slice($rows, (($page - 1) * $limit), $limit),
 			'total' => $total,
 			'page' => $page,
 			'pages' => $pages,
 		];
+		if ($content !== null) {
+			$answer['content'] = $content;
+		}
+
+		return $answer;
 
 	}//end listFor()
+
+	/**
+	 * The name matches, then the content matches with their snippets.
+	 *
+	 * Only the files of this list are asked about, and a file the query does
+	 * not return is not listed as a content match (REQ-WCS-003).
+	 *
+	 * @param array<int, array<string, mixed>> $rows The readable rows, in name order.
+	 * @param string $search The words.
+	 *
+	 * @return array{0: array<int, array<string, mixed>>, 1: array{available: bool, unread: int}} The rows, and what the content query said.
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 */
+	private function withContent(array $rows, string $search): array {
+		$byName = [];
+		$byFile = [];
+		foreach ($rows as $row) {
+			if (stripos((string)$row['name'], $search) !== false) {
+				$byName[] = $row + ['match' => 'name'];
+				continue;
+			}
+
+			$byFile[(int)$row['fileId']] = $row;
+		}
+
+		if ($this->content === null) {
+			return [$byName, ['available' => false, 'unread' => 0]];
+		}
+
+		$answer = $this->content->search(
+			words: $search,
+			fileIds: array_map(static fn (array $row): int => (int)$row['fileId'], $rows)
+		);
+
+		$byContent = [];
+		foreach ($answer['hits'] as $hit) {
+			if (isset($byFile[$hit['fileId']]) === false) {
+				continue;
+			}
+
+			$byContent[] = $byFile[$hit['fileId']] + ['match' => 'content', 'snippet' => $hit['snippet']];
+		}
+
+		return [
+			array_merge($byName, $byContent),
+			['available' => $answer['available'], 'unread' => count($answer['unread'])],
+		];
+
+	}//end withContent()
 
 	/**
 	 * Every document record of one object, readable file or not.
