@@ -29,6 +29,7 @@
 
 - [ ] 2.2 Verify the per-object classificatie override surface against OR HEAD (design.md D4 uncertainty)
   - If OR exposes no per-object override endpoint, file the OR issue and ship schema-level categories + `extendArchiefactiedatum` only; record the decision on tracking issue #231.
+  - Read (2026-11-22, OpenRegister `development` 70e5570): OpenRegister now has the per-object override, as schema data rather than an endpoint. A schema names a record property in `archive.classificationProperty` (or `categoryProperty` in an `x-openregister-archival` block); `ClassificationOverride` makes that property's value the record's category, `RetentionService::guardClassificationOverride()` refuses on save a value that is not text or matches no selectielijst row, and `applyClassificationOnUpdate()` re-derives a live record and refuses the change on a record already nominated, pointing to `POST /api/archival/objects/{id}/nomination/recompute` (reason required, recorded). So the degradation path and the OpenRegister issue are not needed. Left open: which filinq schemas let a record deviate from the schema's category (none declares `classificationProperty` yet), which is a records-appraisal decision, not a code one.
 
 ## 3. Frontend
 
