@@ -35,6 +35,23 @@
 			role="status">
 			{{ t('filinq', 'The content of documents cannot be searched here; only names were matched.') }}
 		</p>
+		<p
+			v-if="searchedWords !== '' && unread.length > 0"
+			class="filinq-documents-leaf__state"
+			data-testid="documents-unread">
+			{{ n('filinq', '%n document has not been read yet and cannot be found by content', '%n documents have not been read yet and cannot be found by content', unread.length) }}
+			<button
+				type="button"
+				class="filinq-documents-leaf__sort-button"
+				:disabled="reading"
+				data-testid="documents-read-now"
+				@click="readUnread">
+				{{ reading ? t('filinq', 'Reading documents') : t('filinq', 'Read them now') }}
+			</button>
+		</p>
+		<p v-if="readMessage" class="filinq-documents-leaf__state" role="status">
+			{{ readMessage }}
+		</p>
 		<p v-if="loading" class="filinq-documents-leaf__state">
 			{{ t('filinq', 'Looking up documents') }}
 		</p>
@@ -147,9 +164,9 @@
 </template>
 
 <script>
-import { translate as t } from '@nextcloud/l10n'
+import { translate as t, translatePlural as n } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
-import { contentSearchQuery, contentUnavailable, markedSnippet } from './documentContentSearch.js'
+import { contentSearchQuery, contentUnavailable, markedSnippet, readFiles, unreadFileIds } from './documentContentSearch.js'
 import { changeDomainLink, copyToRecord, linkTarget } from './documentDomainLinks.js'
 import { documentLinkRows } from './documentLinkRows.js'
 import { nextSort, sortDocumentRows } from './documentRowSort.js'
@@ -184,6 +201,9 @@ export default {
 			searchWords: '',
 			searchedWords: '',
 			contentNotSearched: false,
+			unread: [],
+			reading: false,
+			readMessage: '',
 		}
 	},
 
@@ -234,6 +254,8 @@ export default {
 	},
 
 	methods: {
+		n,
+
 		/**
 		 * Sort on a column; choosing it again flips the order.
 		 *
@@ -398,10 +420,31 @@ export default {
 			this.error = false
 			this.searchedWords = query.search
 			this.contentNotSearched = false
+			this.unread = []
 			return this.loadForHostObject('/apps/filinq/api/case-documents/files', (body) => {
 				this.rows = Array.isArray(body.results) ? body.results : []
 				this.contentNotSearched = contentUnavailable(body)
+				this.unread = unreadFileIds(body)
 			}, query)
+		},
+
+		/**
+		 * Have the documents read that have no extracted text yet, then
+		 * search again so they can be found by content.
+		 *
+		 * @return {Promise<void>} Resolves once the search is run again.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.3
+		 */
+		async readUnread() {
+			this.reading = true
+			this.readMessage = ''
+			const outcome = await readFiles(this.unread, this.requestToken())
+			this.reading = false
+			this.readMessage = outcome.failed > 0
+				? n('filinq', '%n document could not be read', '%n documents could not be read', outcome.failed)
+				: ''
+			this.searchWords = this.searchedWords
+			await this.searchContent()
 		},
 
 		/**
@@ -414,6 +457,8 @@ export default {
 			this.searchWords = ''
 			this.searchedWords = ''
 			this.contentNotSearched = false
+			this.unread = []
+			this.readMessage = ''
 			this.loading = true
 			this.error = false
 			return this.load()

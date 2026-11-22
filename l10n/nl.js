@@ -4256,7 +4256,13 @@ OC.L10N.register(
         "Find in name and content": "Zoek in naam en inhoud",
         "Show all documents": "Toon alle documenten",
         "The content of documents cannot be searched here; only names were matched.": "De inhoud van documenten kan hier niet doorzocht worden; alleen namen zijn vergeleken.",
-        "No document matches {words}": "Geen document komt overeen met {words}"
+        "No document matches {words}": "Geen document komt overeen met {words}",
+        "%n document has not been read yet and cannot be found by content": ["%n document is nog niet gelezen en kan niet op inhoud gevonden worden","%n documenten zijn nog niet gelezen en kunnen niet op inhoud gevonden worden"],
+        "%n document could not be read": ["%n document kon niet gelezen worden","%n documenten konden niet gelezen worden"],
+        "Read them now": "Lees ze nu",
+        "Reading documents": "Documenten worden gelezen",
+        "%n documents have not been read yet and cannot be found by content": "%n documenten zijn nog niet gelezen en kunnen niet op inhoud gevonden worden",
+        "%n documents could not be read": "%n documenten konden niet gelezen worden"
     },
     "nplurals=2; plural=(n != 1);"
 )
