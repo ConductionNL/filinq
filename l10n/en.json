@@ -4198,7 +4198,19 @@
         "Find in name and content": "Find in name and content",
         "Show all documents": "Show all documents",
         "The content of documents cannot be searched here; only names were matched.": "The content of documents cannot be searched here; only names were matched.",
-        "No document matches {words}": "No document matches {words}"
+        "No document matches {words}": "No document matches {words}",
+        "%n document has not been read yet and cannot be found by content": [
+            "%n document has not been read yet and cannot be found by content",
+            "%n documents have not been read yet and cannot be found by content"
+        ],
+        "%n document could not be read": [
+            "%n document could not be read",
+            "%n documents could not be read"
+        ],
+        "Read them now": "Read them now",
+        "Reading documents": "Reading documents",
+        "%n documents have not been read yet and cannot be found by content": "%n documents have not been read yet and cannot be found by content",
+        "%n documents could not be read": "%n documents could not be read"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

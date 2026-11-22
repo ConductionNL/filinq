@@ -459,7 +459,7 @@ class FlatFileListServiceTest extends TestCase {
 		$this->assertArrayNotHasKey(key: 'snippet', array: $page['results'][0]);
 		$this->assertSame(expected: 'aan de <mark>Lindenlaan</mark>', actual: $page['results'][1]['snippet']);
 		$this->assertSame(expected: 3, actual: $page['total']);
-		$this->assertSame(expected: ['available' => true, 'unread' => 1], actual: $page['content']);
+		$this->assertSame(expected: ['available' => true, 'unread' => 1, 'unreadFileIds' => [4804]], actual: $page['content']);
 
 	}//end testContentModeListsNameMatchesThenContentMatchesByRank()
 
@@ -488,7 +488,7 @@ class FlatFileListServiceTest extends TestCase {
 
 		$this->assertSame(expected: [], actual: $page['results']);
 		$this->assertSame(expected: 0, actual: $page['total']);
-		$this->assertSame(expected: ['available' => true, 'unread' => 0], actual: $page['content']);
+		$this->assertSame(expected: ['available' => true, 'unread' => 0, 'unreadFileIds' => []], actual: $page['content']);
 
 	}//end testAFileTheQueryLeavesOutNeverAppears()
 
@@ -508,7 +508,7 @@ class FlatFileListServiceTest extends TestCase {
 		);
 
 		$this->assertSame(expected: ['lindenlaan-situatie.pdf'], actual: array_column($page['results'], 'name'));
-		$this->assertSame(expected: ['available' => false, 'unread' => 0], actual: $page['content']);
+		$this->assertSame(expected: ['available' => false, 'unread' => 0, 'unreadFileIds' => []], actual: $page['content']);
 
 	}//end testContentModeWithoutTheQueryKeepsTheNameSearch()
 

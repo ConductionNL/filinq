@@ -94,8 +94,9 @@ class FlatFileListService implements FlatFileListServiceInterface {
 	 *
 	 * The page lists the name matches first (`match: name`), then the files
 	 * OpenRegister finds the words in, best rank first, each with its snippet
-	 * (`match: content`). `content` says whether the query was there and how
-	 * many listed files have no extracted text yet. Only the files of this
+	 * (`match: content`). `content` says whether the query was there, how
+	 * many listed files have no extracted text yet, and which ones, so the
+	 * reader can have them read (`unreadFileIds`). Only the files of this
 	 * list are asked about, and a file the query does not return is not
 	 * listed as a content match (REQ-WCS-001, REQ-WCS-002, REQ-WCS-003).
 	 *
@@ -104,9 +105,10 @@ class FlatFileListService implements FlatFileListServiceInterface {
 	 * @param int $page The page to read, from 1.
 	 * @param int $limit How many rows a page holds.
 	 *
-	 * @return array<string, mixed> The page: results, total, page, pages, and content as {available, unread}.
+	 * @return array<string, mixed> The page: results, total, page, pages, and content as {available, unread, unreadFileIds}.
 	 *
 	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 * @spec openspec/changes/work-content-search/tasks.md#task-2.3
 	 */
 	public function searchContent(array $domain, string $search, int $page = 1, int $limit = 50): array {
 		$byName  = [];
@@ -134,7 +136,11 @@ class FlatFileListService implements FlatFileListServiceInterface {
 		}
 
 		$result = $this->page(rows: array_merge($byName, $byContent), page: $page, limit: $limit);
-		$result['content'] = ['available' => $answer['available'], 'unread' => count($answer['unread'])];
+		$result['content'] = [
+			'available'     => $answer['available'],
+			'unread'        => count($answer['unread']),
+			'unreadFileIds' => array_values($answer['unread']),
+		];
 		return $result;
 
 	}//end searchContent()
