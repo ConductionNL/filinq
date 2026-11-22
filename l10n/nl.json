@@ -1,5 +1,6 @@
 {
     "translations": {
+        "The linked document could not be found, or you do not have access to it.": "Het gekoppelde document is niet gevonden, of je hebt er geen toegang toe.",
         "Activity": "Activiteit",
         "No activity recorded for this document yet": "Nog geen activiteit vastgelegd voor dit document",
         "The activity of this document could not be loaded": "De activiteit van dit document kon niet worden geladen",

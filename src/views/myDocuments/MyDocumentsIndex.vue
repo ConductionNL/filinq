@@ -408,6 +408,7 @@ import FileViewerPage from '../fileViewer/FileViewerPage.vue'
 import { ocrRun } from '../../mixins/ocrRun.js'
 import { fetchSourceBadges, sourceBadgeLabel } from '../../services/bridge.js'
 import { fetchCaseSystemFiles } from '../../services/caseSystemFiles.js'
+import { openLinkedFile } from '../../services/fileDeepLink.js'
 import { fetchOcrStatus, isOcrCandidate, ocrBadgeLabel } from '../../services/ocr.js'
 import { fetchReviewMarks } from '../../services/reviewMark.js'
 import { sanitizeFile } from '../../services/sanitization.js'
@@ -632,6 +633,15 @@ export default {
 	 * @spec exclude Lifecycle bootstrap (fetch + keyboard listener wiring).
 	 */
 	watch: {
+		/**
+		 * Open the document a changed `file` route parameter names.
+		 *
+		 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md#requirement-unified-search-finds-document-content-through-openregister-req-wcs-004
+		 */
+		'$route.query.file': function() {
+			this.openFromRoute()
+		},
+
 		paginatedDocuments: {
 			/**
 			 * Read the OCR status when the files on screen change.
@@ -655,6 +665,7 @@ export default {
 	mounted() {
 		myDocumentsStore.fetchDocuments()
 		this.loadSealedIds()
+		this.openFromRoute()
 		window.addEventListener('keydown', this.onKeydown)
 	},
 
@@ -663,6 +674,20 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Open the viewer on the document the `file` route parameter names
+		 * (`/apps/filinq/my-documents?file=<id>`), the deep link of a document
+		 * hit. A file the caller has no access to is not opened.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md#requirement-unified-search-finds-document-content-through-openregister-req-wcs-004
+		 */
+		async openFromRoute() {
+			if (await openLinkedFile(this.$route?.query, fileViewerStore) === 'missing') {
+				showError(t('filinq', 'The linked document could not be found, or you do not have access to it.'))
+			}
+		},
+
 		/**
 		 * Which files carry an active waarmerk, for the badge. A failure leaves no badges.
 		 *

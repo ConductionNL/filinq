@@ -13,6 +13,7 @@
 - [ ] 2.2 Add the same search field to `CnFilinqDocumentsWidget.vue` over the content mode of `caseDocuments#files` (REQ-WCS-001). Verify: Playwright on a record detail page finds a linked document by a word in it.
 - [ ] 2.3 Show "N documents have not been read yet and cannot be found by content" with "Read them now", which calls OpenRegister's extract route for those files (D4) (REQ-WCS-002). Verify: Playwright reads the count, triggers the reading, and the document is then found.
 - [ ] 2.4 Open the viewer on My documents from a `file` route parameter, and declare the file deep link to OpenRegister once its hook exists (D5) (REQ-WCS-004). Verify: Playwright opens `/apps/filinq/my-documents?file=<id>` and the viewer shows that document.
+  - Built so far: My documents reads the `file` route parameter on mount and when it changes (`MyDocumentsIndex::openFromRoute()`), resolves the id through a WebDAV SEARCH in the caller's own files (`src/services/fileDeepLink.js`), and opens the viewer on it; a file the caller has no access to is not opened and the page says so. Pinned by `tests/vitest/fileDeepLink.spec.js` and `tests/vitest/myDocumentsFileDeepLink.spec.js`. Left: declaring the deep link to OpenRegister, which waits for its file deep-link hook (task 3.2), and the Playwright check, which needs a live instance.
 
 ## 3. Strings, docs and siblings
 
