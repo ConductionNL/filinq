@@ -1,6 +1,7 @@
 OC.L10N.register(
     "filinq",
     {
+        "The linked document could not be found, or you do not have access to it.": "Het gekoppelde document is niet gevonden, of je hebt er geen toegang toe.",
         "Activity": "Activiteit",
         "No activity recorded for this document yet": "Nog geen activiteit vastgelegd voor dit document",
         "The activity of this document could not be loaded": "De activiteit van dit document kon niet worden geladen",
@@ -4251,7 +4252,11 @@ OC.L10N.register(
         "Under a legal hold": "Onder juridische bewaring",
         "Under a legal hold: {cases}": "Onder juridische bewaring: {cases}",
         "Transferred to the e-depot. This record is read only: it can no longer be changed.": "Overgebracht naar het e-depot. Dit record is alleen-lezen: het kan niet meer worden gewijzigd.",
-        "This dossier was transferred to the e-depot and is read only.": "Dit dossier is overgebracht naar het e-depot en is alleen-lezen."
+        "This dossier was transferred to the e-depot and is read only.": "Dit dossier is overgebracht naar het e-depot en is alleen-lezen.",
+        "Find in name and content": "Zoek in naam en inhoud",
+        "Show all documents": "Toon alle documenten",
+        "The content of documents cannot be searched here; only names were matched.": "De inhoud van documenten kan hier niet doorzocht worden; alleen namen zijn vergeleken.",
+        "No document matches {words}": "Geen document komt overeen met {words}"
     },
     "nplurals=2; plural=(n != 1);"
 )

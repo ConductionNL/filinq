@@ -81,6 +81,17 @@ describe('hostObjectLeaf', () => {
 		)
 	})
 
+	it('adds extra query parameters after the host object', async () => {
+		fetch.mockResolvedValue(answer(200, {}))
+
+		await leaf().fetchForHostObject('/apps/filinq/api/case-documents/files', undefined, { mode: 'content', search: 'a b' })
+
+		expect(fetch).toHaveBeenCalledWith(
+			'/index.php/apps/filinq/api/case-documents/files?register=cases&schema=case&id=obj-1&mode=content&search=a+b',
+			{ headers: { requesttoken: 'tok-123', Accept: 'application/json' } },
+		)
+	})
+
 	it('passes an explicit method along', async () => {
 		fetch.mockResolvedValue(answer(200, {}))
 
