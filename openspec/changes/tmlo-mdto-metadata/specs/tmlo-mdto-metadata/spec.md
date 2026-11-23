@@ -1,9 +1,5 @@
 # tmlo-mdto-metadata Specification (delta)
 
----
-status: proposed
----
-
 ## Purpose
 
 MDTO (Metagegevens voor Duurzaam Toegankelijke Overheidsinformatie, the
@@ -22,14 +18,13 @@ sidecars per document/dossier feed OR's e-depot transfer stack.
 
 ### Requirement: MDTO core attributes have a single source of truth (REQ-DDTMM-001)
 
-The app MUST source every MDTO core archival attribute (waardering,
-bewaartermijn, archiefactiedatum, archiefstatus, classificatie) exclusively
-from the OpenRegister `retention` field populated by the retention engine,
-and MUST NOT store a second copy of any of these attributes in a Filinq
+The app MUST read every MDTO core archival attribute (waardering,
+bewaartermijn, archiefactiedatum, archiefstatus, classificatie) only from
+OpenRegister's `retention` field and MUST NOT copy any of them into a Filinq
 schema. The archiefvormer MUST default to OpenRegister's
-`organisation_identifier` app setting, overridable per record only through
-`mdtoSupplement.archiefvormerOverride`. Filinq MUST NOT write the
-OR-owned `retention` or `tmlo` structures directly.
+`organisation_identifier` setting, overridable per record only through
+`mdtoSupplement.archiefvormerOverride`. Filinq MUST NOT write the OR-owned
+`retention` or `tmlo` structures.
 
 #### Scenario: Core fields render from retention, read-only
 
@@ -49,17 +44,12 @@ OR-owned `retention` or `tmlo` structures directly.
 ### Requirement: mdtoSupplement schema models the attributes OR lacks (REQ-DDTMM-002)
 
 The document register MUST gain an `mdtoSupplement` schema
-(`hardValidation: true`, at most one supplement per described record):
-`objectRef` (UUID of the described record), `objectType`
-(`document` | `dossier`), `aggregatieniveau` (enum
-`archiefstuk` | `dossier`), `omschrijving`, `taal` (RFC 5646, default
-`nl`), `dekkingInTijdBegin`/`dekkingInTijdEind` (dates),
-`beperkingGebruik[]` (`type` enum `avg-persoonsgegevens` |
-`woo-uitzondering` | `auteursrecht` | `vertrouwelijk` | `overig`,
-`grondslag`, `omschrijving`, optional `einddatum`), `betrokkene[]` (`rol`,
-`naamRef` — a reference, never PII copied in clear), and
-`archiefvormerOverride`. The register version MUST be bumped so
-`ConfigurationService::importFromApp()` imports it on boot.
+(`hardValidation: true`, at most one per described record) with `objectRef`
+(UUID of the described record), `objectType` (`document` | `dossier`),
+`aggregatieniveau` (`archiefstuk` | `dossier`), `omschrijving`, `taal`
+(RFC 5646, default `nl`), `dekkingInTijdBegin`/`dekkingInTijdEind` (dates),
+`beperkingGebruik[]`, `betrokkene[]` and `archiefvormerOverride`. The
+register version MUST be bumped so boot import picks it up.
 
 #### Scenario: Register import creates the supplement schema and seed
 
@@ -68,6 +58,14 @@ The document register MUST gain an `mdtoSupplement` schema
 - THEN `mdtoSupplement` exists with the documented properties and enums
 - AND the seeded demo supplement validates against it
 - @e2e exclude register import is a boot-time backend concern with no UI surface of its own — covered by PHPUnit register-import assertions (tests/unit/Settings/)
+
+#### Scenario: A use restriction has a closed type
+
+- GIVEN the shipped `mdtoSupplement` schema
+- WHEN a `beperkingGebruik` entry is validated
+- THEN its `type` is one of `avg-persoonsgegevens`, `woo-uitzondering`, `auteursrecht`, `vertrouwelijk` or `overig`
+- AND it requires a `grondslag` and may carry an `omschrijving` and an `einddatum`
+- @e2e exclude schema shape — covered by PHPUnit (tests/unit/Settings/MdtoSupplementSchemaTest.php::testTheSchemaIsInTheRegisterWithItsFields)
 
 #### Scenario: Betrokkene never carries cleartext PII
 
@@ -79,16 +77,13 @@ The document register MUST gain an `mdtoSupplement` schema
 
 ### Requirement: Filinq context prefills the supplement as confirmable proposals (REQ-DDTMM-003)
 
-The app MUST prefill supplement values it can derive —
-`aggregatieniveau` from the record type, `dekkingInTijd` from
-document/dossier dates, and `beperkingGebruik` proposals from Filinq
-state (an unresolved or objected consent record proposes
-`avg-persoonsgegevens` with its grondslag; an active publication
-prohibition match proposes `woo-uitzondering` with its legal authority; an
-existing anonymised derivative proposes a restriction note naming the
-anonymised rendition). Every derived `beperkingGebruik` value MUST be
-flagged as proposed until an operator confirms it, and the export MUST use
-only confirmed values.
+The app MUST prefill what it can derive: `aggregatieniveau` from the record
+type, `dekkingInTijd` from document or dossier dates, and `beperkingGebruik`
+proposals from Filinq state (an unresolved or objected consent proposes
+`avg-persoonsgegevens` with its grondslag, a prohibition match
+`woo-uitzondering` with its legal authority, an anonymised derivative a note
+naming it). Each derived restriction MUST stay proposed until an operator
+confirms it; the export MUST use only confirmed values.
 
 #### Scenario: Objection state proposes an AVG use restriction
 
@@ -108,14 +103,13 @@ only confirmed values.
 
 ### Requirement: Completeness validation gates overbrenging (REQ-DDTMM-004)
 
-The app MUST validate MDTO completeness per record — verdict plus an
-explicit missing-field list — against the MDTO minimum set (identificatie,
-naam, waardering, classificatie, archiefvormer, aggregatieniveau, and
-dekkingInTijd for `bewaren` records), and the overbrenging flow MUST NOT
-proceed while the verdict is incomplete. The gate MUST be at least as
-strict as OpenRegister's `MdtoXmlGenerator::validateRequiredFields()`: any
-input OR's generator would reject MUST already be reported incomplete by
-the gate.
+The app MUST give each record a completeness verdict with an explicit
+missing-field list against the MDTO minimum set (identificatie, naam,
+waardering, classificatie, archiefvormer, aggregatieniveau, and
+dekkingInTijd for `bewaren` records); overbrenging MUST NOT proceed while it
+is incomplete. Any input OpenRegister's
+`MdtoXmlGenerator::validateRequiredFields()` would reject MUST already be
+reported incomplete.
 
 #### Scenario: Incomplete record cannot be transferred
 
@@ -134,18 +128,13 @@ the gate.
 
 ### Requirement: Deterministic MDTO sidecar per document and dossier (REQ-DDTMM-005)
 
-The app MUST export, per document/dossier record, an MDTO XML sidecar (with
-a lossless JSON projection) in the `https://www.nationaalarchief.nl/mdto`
-namespace: core elements matching OpenRegister's generator output for the
-same input (element names, waardering mapping — pinned by fixture tests),
-supplement elements (aggregatieniveau, omschrijving, taal, dekkingInTijd,
-beperkingGebruik, betrokkene), and a `bestand` section (filename, size,
-format, sha256 checksum) from the Nextcloud file facts. Output MUST be
-deterministic for unchanged input. A dossier sidecar MUST aggregate its
-member documents as archiefstukken at `aggregatieniveau: dossier`
-(references by identificatie), read through the dossier capability's
-surface without modifying dossier-register schemas (sibling ownership —
-see design.md).
+The app MUST export per document or dossier record a deterministic MDTO XML
+sidecar, with a lossless JSON projection, in the
+`https://www.nationaalarchief.nl/mdto` namespace: core elements matching
+OpenRegister's generator (names and waardering mapping pinned by fixtures),
+the supplement elements, and a `bestand` section (filename, size, format,
+sha256) from the file. A dossier sidecar MUST reference its members as
+archiefstukken, read without changing dossier-register schemas.
 
 #### Scenario: Document sidecar carries core, supplement and bestand
 
@@ -164,15 +153,13 @@ see design.md).
 
 ### Requirement: e-Depot handoff rides OpenRegister's transfer stack (REQ-DDTMM-006)
 
-The overbrenging action MUST deliver via OpenRegister's
-`EdepotTransferService` (SIP built with the transport and profile
-configured in OR's e-depot settings); Filinq MUST NOT contain any e-depot
-transport, protocol or HTTP client code. On confirmed ingestion the record
-MUST get `retention.archiefstatus = overgebracht` (read-only per the
-retention engine) and the exported sidecar MUST be attached to the record
-as an OR file attachment for the municipal audit trail. When no e-depot
-transport is configured, the action MUST degrade to an explicit
-"export for manual delivery" download — never a silent no-op.
+Overbrenging MUST deliver through OpenRegister's `EdepotTransferService`
+with the transport and profile of its e-depot settings; Filinq MUST NOT
+contain e-depot transport, protocol or HTTP client code. On confirmed
+ingestion the record MUST get `retention.archiefstatus = overgebracht` and
+the sidecar MUST be attached to it as an OpenRegister file. Without a
+transport the action MUST offer an explicit export for manual delivery,
+never a silent no-op.
 
 #### Scenario: Configured transport transfers and seals the record
 
