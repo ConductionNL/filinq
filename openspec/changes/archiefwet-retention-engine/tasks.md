@@ -55,8 +55,9 @@
 - [ ] 4.2 Playwright e2e `tests/e2e/workflows/archiefwet-retention.spec.ts` covering the `@e2e`-referenced scenarios
   - Wire settings, review/partial-approve/reject a vernietigingslijst, certificates list, overbrenging list; verify on the Postgres dev instance (port 8080); test through the UI.
 
-- [ ] 4.3 i18n: EN + NL translations for all new UI strings (ADR-005)
+- [x] 4.3 i18n: EN + NL translations for all new UI strings (ADR-005)
   - Keys in English; NL terms (vernietigingslijst, verklaring van vernietiging, overbrenging, waardering) preserved as domain vocabulary in both locales.
+  - Built (2026-11-23): every UI key of this change has an `en` and an `nl` value (`npm run test:l10n`), and the schema strings of `selectielijstEntry`, `destructionList`, `destructionCertificate` and the `archive` blocks are now catalogued in `l10n/en.json` and `l10n/nl.json`, with the other 353 uncovered strings of `filinq_register.json`; the schema ratchet `l10n/.schema-l10n-baseline.json` drops from 213 to 155 (`npm run check:schema-l10n`), the rest all in the mock register.
 
 - [ ] 4.4 Documentation `docs/features/archiefwet-retention.md` with Playwright MCP screenshots (ADR-010)
   - Covers selectielijst maintenance, the admin wiring step, the archivist workflow and the production checklist (replace `TODO-*` categories before enabling destruction).
