@@ -1,9 +1,5 @@
 # signing-rail-consolidation Specification (delta)
 
----
-status: proposed
----
-
 ## Purpose
 
 One door into filinq's signing rail for every fleet app, and a signing request
