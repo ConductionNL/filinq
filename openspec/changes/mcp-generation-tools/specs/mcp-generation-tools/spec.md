@@ -1,9 +1,5 @@
 # mcp-generation-tools Specification (delta)
 
----
-status: proposed
----
-
 ## Purpose
 
 Filinq's assistant-facing document operations over the ADR-063 MCP
@@ -48,16 +44,13 @@ NOT add any derived write verb.
 
 ### Requirement: A curated read-only document-status aggregate tool exists (REQ-DDMGT-002)
 
-The system MUST expose `filinq.getDocumentStatus` as a curated
-`#[McpTool]` on a real public method
-(`FileListingService::getFileStatus(int $fileId)`), annotated
-`scope: 'read'`, `readOnlyHint: true`, `destructiveHint: false`,
-`idempotentHint: true`. It MUST return, for one file resolved under the
-invoking principal's access only: the processing/pipeline status, entity
-COUNTS per type, OCR state and confidence, the human-review checked
-state, the validation verdict when present, and REFERENCES to related
-generation/signing records. A file the principal cannot read MUST yield
-a not-found result indistinguishable from a nonexistent file.
+The system MUST expose `filinq.getDocumentStatus` as a curated `#[McpTool]`
+on `FileListingService::getFileStatus(int $fileId)`, scope `read`, hints
+readOnly true, destructive false, idempotent true. For one file the invoking
+principal may read, it MUST return the pipeline status, entity counts per
+type, OCR state and confidence, the review checked state, the validation
+verdict when present, and references to related generation and signing
+records.
 
 #### Scenario: Agent answers "is that document anonymised yet?"
 
@@ -76,19 +69,13 @@ a not-found result indistinguishable from a nonexistent file.
 
 ### Requirement: A curated gate-safe anonymisation intake tool exists (REQ-DDMGT-003)
 
-The system MUST expose `filinq.anonymizeDocument` as a curated
-`#[McpTool]` on a narrow method (`AnonymizationService::
-anonymizeViaAgent(int $fileId)`) whose signature accepts ONLY the fileId:
-no `acknowledgedOverrides`, no entity list, no output or steering
-parameters MAY exist on the tool. It MUST run the anonymisation intake
-pipeline (extraction, detection, grondslag proposals, policy matching,
-review-queue routing) and MUST follow the identical gate rules as every
-other surface: the prohibition gate always enforced (a gate refusal MUST
-map to a refused result carrying the gate reason, never an override), and
-the human-review checked gate never created, updated, or bypassed by the
-tool. It MUST be annotated `scope: 'create'`, `readOnlyHint: false`,
-`destructiveHint: false`, `idempotentHint: false`, and the source file
-MUST never be modified or deleted by the tool.
+The system MUST expose `filinq.anonymizeDocument` as a curated `#[McpTool]`
+on `AnonymizationService::anonymizeViaAgent(int $fileId)`, taking only the
+fileId, scope `create`, hints readOnly false, destructive false, idempotent
+false. It MUST run the intake pipeline (extraction, detection, grounds,
+policies, review routing) under the gates of every surface: a prohibition
+refusal is a refused result, the review checked gate is never touched,
+the source file is never changed.
 
 #### Scenario: Agent triggers intake, humans keep the decision
 
@@ -116,14 +103,11 @@ MUST never be modified or deleted by the tool.
 
 ### Requirement: No entity values ever cross the MCP boundary (REQ-DDMGT-004)
 
-No Filinq MCP tool result MUST ever contain detected entity values,
-anonymisation placeholder maps, document text, or file bytes.
-`anonymizeDocument` results MUST be limited to status, entity counts per
-type, `reviewRequired`, and gate-refusal reasons; `getDocumentStatus`
-MUST report counts and statuses, never entity text. The unit suite MUST
-pin these response shapes so a refactor that adds entity payloads to a
-tool result breaks the build. Entity values remain renderable only in
-the authorised, audited review UI.
+No Filinq MCP tool result MUST contain detected entity values, placeholder
+maps, document text or file bytes. `anonymizeDocument` results MUST hold only
+status, entity counts per type, `reviewRequired` and gate-refusal reasons;
+`getDocumentStatus` MUST report counts and statuses only. The unit suite MUST
+pin both shapes, so a refactor that adds entity payloads breaks the build.
 
 #### Scenario: Anonymise result is counts-only
 
@@ -142,14 +126,12 @@ the authorised, audited review UI.
 
 ### Requirement: Invocations are grant-gated and attributably logged (REQ-DDMGT-005)
 
-Tool availability MUST be governed by OpenRegister's tool-grant whitelist
-(default-deny per agent, administered in OpenRegister); Filinq MUST NOT
-implement its own grant enforcement and MUST NOT weaken the model by
-registering tools outside the scannable-services path. Every invocation
-MUST leave an attributable record: generation persists its
-`correspondence` row with the generating principal (existing behaviour);
-anonymisation intake runs MUST be OR-audited and carry an `mcp`
-attribution distinguishing them from `manual` and `flow` triggers.
+Tool availability MUST be governed by OpenRegister's default-deny tool-grant
+whitelist; Filinq MUST NOT enforce grants itself or register tools outside
+the scannable-services path. Every invocation MUST be attributable:
+generation keeps its `correspondence` row with the generating principal, and
+anonymisation intake runs MUST be audited by OpenRegister with an `mcp`
+attribution distinct from `manual` and `flow`.
 
 #### Scenario: Ungranted agent sees no Filinq write tool
 
@@ -167,14 +149,12 @@ attribution distinguishing them from `manual` and `flow` triggers.
 
 ### Requirement: The adoption baseline's refusals remain binding (REQ-DDMGT-006)
 
-This change MUST NOT add any tool that initiates, advances, cancels or
-verifies a signature; MUST NOT add any batch or multi-recipient tool;
-MUST NOT expose `signerRecord`, `signingSession`, `signingAuditEntry`,
-`publicationConsent`, `publicationProhibition`, `anonymizationLink`,
-`financialExtraction`, `templateVersion` or the GL schemas through any
-new tool's parameters or results; and MUST NOT enable any derived
-`create`/`update`/`delete` verb. Every refusal declared by
-`filinq-mcp-adoption` MUST hold across the extended surface.
+This change MUST NOT add a tool that initiates, advances, cancels or verifies
+a signature, nor a batch or multi-recipient tool; MUST NOT expose
+`signerRecord`, `signingSession`, `signingAuditEntry`, `publicationConsent`,
+`publicationProhibition`, `anonymizationLink`, `financialExtraction`,
+`templateVersion` or the GL schemas through a new tool; and MUST NOT enable
+a derived `create`/`update`/`delete` verb. Every adoption refusal MUST hold.
 
 #### Scenario: The extended surface stays within the refusal lines
 
