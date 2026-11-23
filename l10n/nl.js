@@ -1263,6 +1263,7 @@ OC.L10N.register(
         "%n entity": ["%n entiteit","%n entiteiten"],
         "%n entity could not be fully removed. Check the file below before using it.": ["%n entiteit kon niet volledig worden verwijderd. Controleer het bestand hieronder voordat je het gebruikt.","%n entiteiten konden niet volledig worden verwijderd. Controleer het bestand hieronder voordat je het gebruikt."],
         "%n entity detected": ["%n entiteit gedetecteerd","%n entiteiten gedetecteerd"],
+        "%n image region burned": ["%n beeldgebied weggelakt","%n beeldgebieden weggelakt"],
         "%n entity replaced": ["%n entiteit vervangen","%n entiteiten vervangen"],
         "%n item anonymised": ["%n item geanonimiseerd","%n items geanonimiseerd"],
         "%n item removed": ["%n item verwijderd","%n items verwijderd"],

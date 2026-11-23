@@ -118,6 +118,9 @@ const documentRecordId = computed(() =>
 							)
 						}}
 					</div>
+					<div v-if="burnedRegionNote" class="muted" data-testid="burned-region-count">
+						{{ burnedRegionNote }}
+					</div>
 					<a :href="downloadUrl" download class="download-link">
 						{{ t('filinq', 'Download anonymised file') }}
 					</a>
@@ -205,9 +208,12 @@ const documentRecordId = computed(() =>
 			     `[<TYPE>: <entity_id>]` placeholders baked into the file.
 			     Original values stay hidden behind an explicit reveal so
 			     opening the result doesn't silently de-anonymise it. -->
-			<DdRemovedEntitiesList
-				v-else-if="entry && entry.viewMode === 'anonymized'"
-				:items="entry.entities" />
+			<div v-else-if="entry && entry.viewMode === 'anonymized'">
+				<p v-if="burnedRegionNote" class="muted" data-testid="burned-region-count">
+					{{ burnedRegionNote }}
+				</p>
+				<DdRemovedEntitiesList :items="entry.entities" />
+			</div>
 
 			<!-- Add new data panel. The user selects text in the document
 			     (highlighted as pending), picks a type and optionally
@@ -696,7 +702,7 @@ import ScopeRedactionDialog from '../dialogs/ScopeRedactionDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 import { colleagueHint, colleagueReason } from '../services/fourEyes.js'
-import { fetchScope, imageRedactionWarning, regionOverlays, scopeLabel } from '../services/imageRedaction.js'
+import { burnedRegionLine, fetchScope, imageRedactionWarning, regionOverlays, scopeLabel } from '../services/imageRedaction.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 import { accessibilityNote } from '../services/redactionAccessibility.js'
 import { reportRows } from '../services/sanitization.js'
@@ -778,6 +784,16 @@ export default {
 		 */
 		imageRedactionPendingNote() {
 			return imageRedactionWarning(this.entry)
+		},
+
+		/**
+		 * The burned-region count beside the replacement count.
+		 *
+		 * @return {string|null} The line, or null when nothing was burned.
+		 * @spec openspec/changes/image-redaction/tasks.md#task-4.2
+		 */
+		burnedRegionNote() {
+			return burnedRegionLine(this.entry)
 		},
 
 		/**

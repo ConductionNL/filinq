@@ -1257,6 +1257,11 @@
             "%n entity detected",
             "%n entities detected"
         ],
+        "%n image regions burned": "%n image regions burned",
+        "%n image region burned": [
+            "%n image region burned",
+            "%n image regions burned"
+        ],
         "%n entity replaced": [
             "%n entity replaced",
             "%n entities replaced"

@@ -1286,6 +1286,11 @@
             "%n entiteit gedetecteerd",
             "%n entiteiten gedetecteerd"
         ],
+        "%n image regions burned": "%n beeldgebieden weggelakt",
+        "%n image region burned": [
+            "%n beeldgebied weggelakt",
+            "%n beeldgebieden weggelakt"
+        ],
         "%n entity replaced": [
             "%n entiteit vervangen",
             "%n entiteiten vervangen"

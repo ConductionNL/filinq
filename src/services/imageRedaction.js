@@ -12,7 +12,7 @@
  */
 
 import axios from '@nextcloud/axios'
-import { translate as t } from '@nextcloud/l10n'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 
 /**
@@ -117,6 +117,24 @@ export function applyImageRedactionResult(entry, data) {
 	// Image content the seam did not burn (image-redaction REQ-DDIMR-006).
 	entry.imageRedactionPending = data.imageRedactionPending === true
 	entry.burnedRegionCount = data.burnedRegionCount ?? null
+}
+
+/**
+ * The burned-region count of a run, for the line beside its replacement count.
+ *
+ * Only regions the seam actually burned are counted (REQ-DDIMR-006), so a run
+ * that burned nothing, or a record without the field, shows no line.
+ *
+ * @param {object} entry The queue entry or anonymization link.
+ * @return {string|null} The line, or null when no region was burned.
+ * @spec openspec/changes/image-redaction/tasks.md#task-4.2
+ */
+export function burnedRegionLine(entry) {
+	const count = Number(entry?.burnedRegionCount)
+	if (!Number.isInteger(count) || count < 1) {
+		return null
+	}
+	return n('filinq', '%n image region burned', '%n image regions burned', count)
 }
 
 /**
