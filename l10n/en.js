@@ -1234,6 +1234,7 @@ OC.L10N.register(
         "%n entity": ["%n entity","%n entities"],
         "%n entity could not be fully removed. Check the file below before using it.": ["%n entity could not be fully removed. Check the file below before using it.","%n entities could not be fully removed. Check the file below before using it."],
         "%n entity detected": ["%n entity detected","%n entities detected"],
+        "%n image regions burned": "%n image regions burned",
         "%n image region burned": ["%n image region burned","%n image regions burned"],
         "%n entity replaced": ["%n entity replaced","%n entities replaced"],
         "%n item anonymised": ["%n item anonymised","%n items anonymised"],
