@@ -308,6 +308,9 @@ function anonymizedEntry(fileMeta, link) {
 		entities: [],
 		entityCount: 0,
 		replacementCount: link?.replacementCount ?? 0,
+		// The image redaction state the run recorded (image-redaction REQ-DDIMR-006).
+		burnedRegionCount: link?.burnedRegionCount ?? null,
+		imageRedactionPending: link?.imageRedactionPending === true,
 		anonymizedFileId: null,
 		anonymizedFileName: null,
 		anonymizedFilePath: null,

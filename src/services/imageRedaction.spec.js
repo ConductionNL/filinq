@@ -8,6 +8,7 @@
 import axios from '@nextcloud/axios'
 import {
 	applyImageFlags,
+	burnedRegionLine,
 	decideScope,
 	fetchScope,
 	imageExtractionWarning,
@@ -27,6 +28,7 @@ jest.mock('@nextcloud/router', () => ({
 }))
 jest.mock('@nextcloud/l10n', () => ({
 	translate: (app, text, vars) => text.replace(/{(\w+)}/g, (m, k) => (vars && k in vars ? String(vars[k]) : m)),
+	translatePlural: (app, one, many, count) => (count === 1 ? one : many).replace('%n', String(count)),
 }))
 
 // @spec openspec/changes/image-redaction/tasks.md#task-4.2
@@ -181,5 +183,26 @@ describe('regionLabel', () => {
 
 	it('falls back to an unknown type', () => {
 		expect(regionLabel({ type: '', state: 'redact' })).toBe('Image region to be redacted: Unknown')
+	})
+})
+
+// @spec openspec/changes/image-redaction/tasks.md#task-4.2
+describe('burnedRegionLine', () => {
+	it('counts the regions the seam burned', () => {
+		expect(burnedRegionLine({ burnedRegionCount: 1 })).toBe('1 image region burned')
+		expect(burnedRegionLine({ burnedRegionCount: 3 })).toBe('3 image regions burned')
+	})
+
+	it('shows nothing when no region was burned', () => {
+		expect(burnedRegionLine({ burnedRegionCount: 0 })).toBeNull()
+		expect(burnedRegionLine({ burnedRegionCount: null })).toBeNull()
+		expect(burnedRegionLine({})).toBeNull()
+		expect(burnedRegionLine(null)).toBeNull()
+	})
+
+	it('never shows a count that is not a whole number of regions', () => {
+		expect(burnedRegionLine({ burnedRegionCount: 'many' })).toBeNull()
+		expect(burnedRegionLine({ burnedRegionCount: 2.5 })).toBeNull()
+		expect(burnedRegionLine({ burnedRegionCount: -1 })).toBeNull()
 	})
 })

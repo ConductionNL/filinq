@@ -25,7 +25,8 @@
 ## 4. Frontend
 
 - [x] 4.1 Review-workbench region overlays bound to the shared entity decision model (rows carry `origin: "image"` + boxes; overlay state mirrors table decisions; table stays source of truth) (REQ-DDIMR-005)
-- [ ] 4.2 `SIGNATURE` entity-type label/badge, signature-detection-unavailable notice, image-not-scanned and pending-redaction warnings; burned-region count in listings (REQ-DDIMR-002, REQ-DDIMR-003, REQ-DDIMR-006)
+- [x] 4.2 `SIGNATURE` entity-type label/badge, signature-detection-unavailable notice, image-not-scanned and pending-redaction warnings; burned-region count in listings (REQ-DDIMR-002, REQ-DDIMR-003, REQ-DDIMR-006)
+  - Built: the `SIGNATURE` type with its label (en, nl), the signature-detection-unavailable notice, the image-not-scanned and pending-redaction warnings (`imageExtractionWarning`, `imageRedactionWarning`). The burned-region count shows beside the replacement count in the file's anonymisation result, both right after a run and when an anonymised file is opened again (`burnedRegionLine`, read from the run's `anonymizationLink`); a run that burned nothing shows no line. Pinned by `imageRedaction.spec.js` (`burnedRegionLine`) and the `anonymizedEntry` golden case `link with burned image regions`.
 
 ## 5. Quality
 
