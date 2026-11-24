@@ -32,6 +32,20 @@ NO apply in this change — implementation runs through Hydra later.
     send through the Mail app (a mailbox per organisation, so the message can
     be linked), keep `IMailer` and link nothing, or have OpenRegister accept
     a sent-message record that is not a Mail message. Not built until then.
+  - Decision (2026-11-24, delegated product decision): the third option, in the
+    shape OpenRegister already planned. filinq does not open a Mail mailbox per
+    organisation and does not keep sending through `IMailer` unlinked. Once
+    OpenRegister's messaging leaf has an e-mail channel bound to an object
+    (`openregister/send-at-on-the-messaging-leaf`) and that channel writes an
+    `EmailLink` with `direction: outbound` and the minted `Message-ID`
+    (`openregister/reply-threading-by-headers` task 1.3), filinq sends the
+    signer and initiator notifications through that channel, bound to the
+    signing-request object, instead of through `IMailer`. The link then exists
+    without a Mail account, and the record's Emails tab (D-3.1) shows it.
+    Reason: one outbound path that both sends and records is what the email
+    leaf's own roadmap builds, and it keeps filinq from holding comms state.
+    Until both OpenRegister changes are on `main`, the `IMailer` path stays
+    as it is. Signer ordering is untouched.
 
 ### D-2. Consent notification via the email leaf, drive notificationStatus (M)
 
@@ -43,6 +57,12 @@ NO apply in this change — implementation runs through Hydra later.
     email-leaf link; a delivery signal moves it to `delivered`; a failure to `failed`; no
     channel yields `skipped` with no link.
   - DEFERRED with D-1.1: needs the same OR email-leaf endpoint.
+  - Decided with D-1.1: the objection-period notification goes out through the
+    same object-bound e-mail channel, bound to the consent object, and
+    `notificationStatus` follows that channel's send result (`sent`, or
+    `failed` with the cause; `skipped` when the consent names no channel).
+    `delivered` waits for a delivery signal the channel does not give yet and
+    stays unset until it does.
 
 ### D-3. Render the comms surface on the detail page (S)
 
