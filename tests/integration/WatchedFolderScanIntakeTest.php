@@ -82,15 +82,15 @@ class WatchedFolderScanIntakeTest extends TestCase {
 
 		$this->user = trim((string)getenv('NC_INTEGRATION_USER'));
 		if ($this->user === '') {
-			$this->markTestSkipped('NC_INTEGRATION_USER is not set: no live instance to dispatch on.');
+			$this->markTestSkipped(message: 'NC_INTEGRATION_USER is not set: no live instance to dispatch on.');
 		}
 
 		if (class_exists(\OC\EventDispatcher\EventDispatcher::class) === false || \OC::$server === null) {
-			$this->markTestSkipped('No booted Nextcloud: run with --bootstrap tests/bootstrap.php inside an installed instance.');
+			$this->markTestSkipped(message: 'No booted Nextcloud: run with --bootstrap tests/bootstrap.php inside an installed instance.');
 		}
 
 		if (class_exists(WatchedFileArrivedEvent::class) === false) {
-			$this->markTestSkipped('integriq is not installed: its WatchedFileArrivedEvent cannot be loaded.');
+			$this->markTestSkipped(message: 'integriq is not installed: its WatchedFileArrivedEvent cannot be loaded.');
 		}
 
 	}//end setUp()
@@ -128,9 +128,10 @@ class WatchedFolderScanIntakeTest extends TestCase {
 	 */
 	public function testTheDispatcherReachesTheListener(): void {
 		$config = Server::get(IAppConfig::class);
-		$this->savedProfiles = $config->hasKey('filinq', ScanProfileServiceInterface::CONFIG_KEY) === true
-			? $config->getValueString('filinq', ScanProfileServiceInterface::CONFIG_KEY)
-			: null;
+		$this->savedProfiles = null;
+		if ($config->hasKey('filinq', ScanProfileServiceInterface::CONFIG_KEY) === true) {
+			$this->savedProfiles = $config->getValueString('filinq', ScanProfileServiceInterface::CONFIG_KEY);
+		}
 
 		$this->folder = 'filinq-watched-' . bin2hex(random_bytes(4));
 		Server::get(ScanProfileServiceInterface::class)->declare(
@@ -139,9 +140,9 @@ class WatchedFolderScanIntakeTest extends TestCase {
 
 		$home = Server::get(IRootFolder::class)->getUserFolder($this->user);
 		$folder = $home->newFolder($this->folder);
-		$this->assertInstanceOf(Folder::class, $folder);
+		$this->assertInstanceOf(expected: Folder::class, actual: $folder);
 		$pdf = file_get_contents(__DIR__ . '/../sample-documents/pdfa/pdfa3b-rendered.pdf');
-		$this->assertIsString($pdf);
+		$this->assertIsString(actual: $pdf);
 		$file = $folder->newFile('batch.pdf', $pdf);
 
 		$event = new WatchedFileArrivedEvent(
@@ -156,11 +157,11 @@ class WatchedFolderScanIntakeTest extends TestCase {
 		Server::get(IEventDispatcher::class)->dispatchTyped($event);
 
 		$batch = Server::get(ScanBatchServiceInterface::class)->storedFor(fileId: (int)$file->getId());
-		$this->assertIsArray($batch, 'The listener stored no batch for the handed-over file.');
-		$this->assertNotSame('', (string)($batch['uuid'] ?? ''));
+		$this->assertIsArray(actual: $batch, message: 'The listener stored no batch for the handed-over file.');
+		$this->assertNotSame(expected: '', actual: (string)($batch['uuid'] ?? ''));
 		$this->assertSame(
-			['accepted' => true, 'intakeApp' => 'filinq', 'reference' => (string)$batch['uuid']],
-			$event->getResult()
+			expected: ['accepted' => true, 'intakeApp' => 'filinq', 'reference' => (string)$batch['uuid']],
+			actual: $event->getResult()
 		);
 
 	}//end testTheDispatcherReachesTheListener()
