@@ -193,7 +193,7 @@ class TesseractCommand {
 			return 0.0;
 		}
 
-		return round(array_sum($confidences) / count($confidences), 1);
+		return round((float)array_sum($confidences) / (float)count($confidences), 1);
 
 	}//end averageConfidence()
 }//end class

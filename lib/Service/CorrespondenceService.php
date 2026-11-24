@@ -894,7 +894,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 		// Remove fixed width/height on body.
 		$html = preg_replace('/\b(width|height)\s*:\s*\d+mm\b/i', '', $html);
 
-		return $html;
+		return (string)$html;
 	}//end stripPageStyling()
 
 	/**

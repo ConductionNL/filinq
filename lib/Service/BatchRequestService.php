@@ -252,7 +252,7 @@ class BatchRequestService implements BatchRequestServiceInterface {
 		$total = count($batch['files']);
 		$prog = 0;
 		if ($total > 0) {
-			$prog = round((($ext / $total) * 100), 1);
+			$prog = round((((float)$ext / (float)$total) * 100.0), 1);
 		}
 
 		return [

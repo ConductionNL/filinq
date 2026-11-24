@@ -236,7 +236,7 @@ class FieldPlacements {
 		}
 
 		$sized  = $box['width'] > 0 && $box['height'] > 0;
-		$onPage = max($box['x'] + $box['width'], $box['y'] + $box['height']) <= 1 + self::EPSILON;
+		$onPage = max($box['x'] + $box['width'], $box['y'] + $box['height']) <= 1.0 + self::EPSILON;
 		if ($sized === false || $onPage === false) {
 			throw new InvalidArgumentException($where . ' must be a box of some size that stays on the page');
 		}

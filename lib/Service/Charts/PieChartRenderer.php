@@ -162,12 +162,12 @@ class PieChartRenderer {
 
 		$legendWidth = 0;
 		if ($showLegend === true) {
-			$legendWidth = min(220, (int)($width * 0.4));
+			$legendWidth = min(220, (int)((float)$width * 0.4));
 		}
 
 		$plotWidth = (float)($width - $legendWidth);
 		$plotHeight = (float)($chart->height - $marginTop - 14);
-		$radius = max(10.0, ((min($plotWidth, $plotHeight) / 2) - 8));
+		$radius = max(10.0, ((min($plotWidth, $plotHeight) / 2.0) - 8.0));
 
 		$innerRadius = 0.0;
 		if ((bool)($chart->options['donut'] ?? false) === true) {
@@ -177,8 +177,8 @@ class PieChartRenderer {
 		return [
 			'marginTop' => $marginTop,
 			'plotWidth' => $plotWidth,
-			'cx' => ($plotWidth / 2),
-			'cy' => ($marginTop + ($plotHeight / 2)),
+			'cx' => ($plotWidth / 2.0),
+			'cy' => ((float)$marginTop + ($plotHeight / 2.0)),
 			'radius' => $radius,
 			'innerRadius' => $innerRadius,
 		];
@@ -249,8 +249,8 @@ class PieChartRenderer {
 				color: $chart->color(index: (int)$index)
 			);
 			$parts[] = $this->svg->textEl(
-				position: new SvgPoint(x: $legendX + 14, y: $rowY + 1),
-				text: new SvgText(content: $this->labels->truncate(text: $slice['label'], max: 20) . ' (' . $percent . '%)', style: SvgTextStyle::LabelStart)
+				position: new SvgPoint(x: (float)$legendX + 14.0, y: (float)$rowY + 1.0),
+				text: new SvgText(content: $this->labels->truncate(text: $slice['label'], max: 20) . ' (' . (int)$percent . '%)', style: SvgTextStyle::LabelStart)
 			);
 			$shown++;
 		}//end foreach

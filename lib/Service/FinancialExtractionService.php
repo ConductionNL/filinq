@@ -855,7 +855,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 			return 0.0;
 		}
 
-		$average = array_sum($confidence) / count($confidence);
+		$average = (float)array_sum($confidence) / (float)count($confidence);
 
 		return round(min(1.0, max(0.0, $average)), 2);
 	}//end aggregateConfidence()

@@ -120,7 +120,7 @@ class BatchReportService implements BatchReportServiceInterface {
 		rewind($output);
 		$csv = stream_get_contents($output);
 		fclose($output);
-		return $csv;
+		return (string)$csv;
 	}//end generateReport()
 
 	/**

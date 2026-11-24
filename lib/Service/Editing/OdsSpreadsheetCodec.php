@@ -238,7 +238,7 @@ class OdsSpreadsheetCodec implements SpreadsheetFamilyCodec {
 			);
 		}
 
-		return $xml;
+		return (string)$xml;
 	}//end writeCell()
 
 	/**

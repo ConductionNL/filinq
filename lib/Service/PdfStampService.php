@@ -181,9 +181,9 @@ class PdfStampService implements PdfStampServiceInterface {
 
 		$mpdf->SetFont('', '', self::FOOTER_POINTS);
 		$mpdf->SetTextColor(80, 80, 80);
-		$top = ($mpdf->h - self::FOOTER_MARGIN - (self::FOOTER_LINE * (count($lines) - 1)));
+		$top = ($mpdf->h - self::FOOTER_MARGIN - (self::FOOTER_LINE * (float)(count($lines) - 1)));
 		foreach ($lines as $index => $line) {
-			$mpdf->WriteText(self::FOOTER_LEFT, ($top + (self::FOOTER_LINE * $index)), $line);
+			$mpdf->WriteText(self::FOOTER_LEFT, ($top + (self::FOOTER_LINE * (float)$index)), $line);
 		}
 	}//end stampPage()
 

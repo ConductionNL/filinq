@@ -241,7 +241,7 @@ class VeraPdfService {
 			);
 		}
 
-		$verdict['elapsedMs'] = (int) round((hrtime(true) - $started) / 1e6);
+		$verdict['elapsedMs'] = (int) round(((float)hrtime(true) - (float)$started) / 1e6);
 
 		return $verdict;
 

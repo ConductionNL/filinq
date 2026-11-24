@@ -7,7 +7,16 @@
     findUnusedBaselineEntry="true"
     findUnusedCode="true"
     findUnusedVariablesAndParams="true"
+    ensureOverrideAttribute="false"
 >
+    <!--
+        ensureOverrideAttribute: psalm 7 turns this check on by default and asks for
+        #[Override] on every method that implements or overrides a parent (821 here).
+        It stays off. Each attribute is a class dependency that the central phpmd
+        CouplingBetweenObjects rule counts, so adding them pushes ten classes over
+        the threshold; and the attribute is a fatal error at class load when a
+        Nextcloud version in the supported range lacks the parent method.
+    -->
     <projectFiles>
         <directory name="lib" />
         <ignoreFiles>

@@ -84,8 +84,8 @@ class SvgPrimitives {
 	 * @spec openspec/specs/template-charts/spec.md#REQ-DDTCH-002
 	 */
 	public function placeholderEl(SvgSize $canvas, string $message): string {
-		$frame = new SvgBox(origin: new SvgPoint(x: 1, y: 1), size: new SvgSize(width: $canvas->width - 2, height: $canvas->height - 2));
-		$center = new SvgPoint(x: $canvas->width / 2, y: $canvas->height / 2);
+		$frame = new SvgBox(origin: new SvgPoint(x: 1, y: 1), size: new SvgSize(width: $canvas->width - 2.0, height: $canvas->height - 2.0));
+		$center = new SvgPoint(x: $canvas->width / 2.0, y: $canvas->height / 2.0);
 
 		return $this->rectEl(box: $frame, color: '#F5F5F5')
 			. $this->rectOutlineEl(box: $frame, color: '#CCCCCC')
