@@ -14,6 +14,7 @@ import {
 	CELL_FORMATTERS,
 	formatGroupCounts,
 	formatJoinedList,
+	formatRowField,
 } from '../../src/services/cellFormatters.js'
 import { effectiveManifest } from './support/effectiveManifest.js'
 
@@ -81,12 +82,46 @@ describe('cell formatters', () => {
 			'/apps/openregister/api/archival/certificates',
 		)
 		expect(named).toEqual(['date', 'groupCounts', 'joinedList', 'joinedList'])
-		expect(Object.keys(CELL_FORMATTERS)).toEqual(['joinedList', 'groupCounts'])
+		expect(Object.keys(CELL_FORMATTERS)).toEqual(['joinedList', 'groupCounts', 'rowField'])
 		const app = readFileSync(
 			new URL('../../src/App.vue', import.meta.url),
 			'utf8',
 		)
 		expect(app).toContain(':formatters="$options.cellFormatters"')
 		expect(app).toContain('cellFormatters: CELL_FORMATTERS')
+	})
+
+	it('reads a value further down the row by its dotted path', () => {
+		const row = { retention: { archiefactiedatum: '2020-01-01', bewaartermijn: 20 } }
+
+		expect(formatRowField(undefined, row, {}, { path: 'retention.archiefactiedatum' })).toBe('2020-01-01')
+		expect(formatRowField(undefined, row, {}, { path: 'retention.bewaartermijn' })).toBe('20')
+	})
+
+	it('writes nothing when the path leads nowhere, to no scalar, or is not given', () => {
+		const row = { retention: { classification: ['1.1'] }, name: 'x' }
+
+		expect(formatRowField(undefined, row, {}, { path: 'retention.missing' })).toBe('')
+		expect(formatRowField(undefined, row, {}, { path: 'name.deeper' })).toBe('')
+		expect(formatRowField(undefined, row, {}, { path: 'retention.classification' })).toBe('')
+		expect(formatRowField(undefined, row, {}, { path: 'retention' })).toBe('')
+		expect(formatRowField(undefined, row, {}, {})).toBe('')
+		expect(formatRowField(undefined, null, {}, { path: 'name' })).toBe('')
+	})
+
+	it('lists the records due for transfer from OpenRegister, the dates read by path', () => {
+		const page = effectiveManifest().pages.find((entry) => entry.id === 'TransferDue')
+
+		expect(page.type).toBe('index')
+		expect(page.route).toBe('/transfer-due')
+		expect(page.config.entitySource).toBe('endpoint')
+		expect(page.config.sourceConfig.url).toBe('/apps/openregister/api/transfers/eligible')
+		expect(page.config.sourceConfig.rowsPath).toBe('results')
+		const byPath = page.config.columns
+			.filter((column) => column.formatter === 'rowField')
+			.map((column) => column.formatterOptions.path)
+		expect(byPath).toEqual(['retention.archiefactiedatum', 'retention.classification'])
+		const keys = page.config.columns.map((column) => column.key)
+		expect(new Set(keys).size).toBe(keys.length)
 	})
 })

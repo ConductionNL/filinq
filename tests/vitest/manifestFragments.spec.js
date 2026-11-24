@@ -56,6 +56,8 @@ const PAGES_ADDED = [
 	// archiefwet-retention-engine 3.2
 	['DestructionLists', '/destruction-lists'], ['DestructionListDetail', '/destruction-lists/:id'],
 	['DestructionCertificates', '/destruction-certificates'],
+	// archiefwet-retention-engine 3.3
+	['TransferDue', '/transfer-due'],
 ]
 
 const MENU_ADDED = [
@@ -64,6 +66,8 @@ const MENU_ADDED = [
 	// archiefwet-retention-engine 3.2
 	['DestructionLists', 58],
 	['DestructionCertificates', 58],
+	// archiefwet-retention-engine 3.3
+	['TransferDue', 58],
 ]
 
 const MENU_BEFORE = [
