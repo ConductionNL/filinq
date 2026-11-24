@@ -40,12 +40,20 @@ class ProfileExtractionServiceTest extends TestCase {
 	 * @return ProfileExtractionService
 	 */
 	private function service(string $text): ProfileExtractionService {
-		$source = $this->createMock(DocumentTextSource::class);
-		$source->method('resolveText')->willReturnCallback(static fn (?int $fileId): array => ['text' => ($fileId === 42 ? $text : ''), 'ocrConfidence' => 1.0]);
-		$time = $this->createMock(ITimeFactory::class);
+		$source = $this->createMock(originalClassName: DocumentTextSource::class);
+		$source->method('resolveText')->willReturnCallback(
+			static function (?int $fileId) use ($text): array {
+				if ($fileId !== 42) {
+					return ['text' => '', 'ocrConfidence' => 0.0];
+				}
+
+				return ['text' => $text, 'ocrConfidence' => 1.0];
+			}
+		);
+		$time = $this->createMock(originalClassName: ITimeFactory::class);
 		$time->method('now')->willReturn(new DateTimeImmutable('2026-11-15'));
 
-		return new ProfileExtractionService($source, new CvProfileParser(), $time);
+		return new ProfileExtractionService(textSource: $source, parser: new CvProfileParser(), time: $time);
 	}//end service()
 
 	/**
@@ -56,12 +64,14 @@ class ProfileExtractionServiceTest extends TestCase {
 	public function testAReadableCvAnswersItsProfile(): void {
 		$text = "Opleiding\nMaster Bedrijfskunde\n\nWerkervaring\n2018 - 2021 Acme\n2021 - heden Beta\nloonheffing\n";
 
-		$answer = $this->service($text)->extractProfile(['fileId' => '42', 'competenceCodes' => ['loonheffing', 'excel', 3]], 'hr');
+		$request = ['fileId' => '42', 'competenceCodes' => ['loonheffing', 'excel', 3]];
 
-		$this->assertSame('extracted', $answer['status']);
-		$this->assertSame(7, $answer['educationLevel']);
-		$this->assertSame(8.8, $answer['experienceYears']);
-		$this->assertSame(['loonheffing'], $answer['competenceCodes']);
+		$answer = $this->service(text: $text)->extractProfile(data: $request, requestedBy: 'hr');
+
+		$this->assertSame(expected: 'extracted', actual: $answer['status']);
+		$this->assertSame(expected: 7, actual: $answer['educationLevel']);
+		$this->assertSame(expected: 8.8, actual: $answer['experienceYears']);
+		$this->assertSame(expected: ['loonheffing'], actual: $answer['competenceCodes']);
 	}//end testAReadableCvAnswersItsProfile()
 
 	/**
@@ -70,12 +80,12 @@ class ProfileExtractionServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testADocumentUriNamesTheFile(): void {
-		$answer = $this->service('HBO Personeel en Arbeid')->extractProfile(['documentUri' => 'nc://file/42'], 'hr');
+		$answer = $this->service(text: 'HBO Personeel en Arbeid')->extractProfile(data: ['documentUri' => 'nc://file/42'], requestedBy: 'hr');
 
-		$this->assertSame('extracted', $answer['status']);
-		$this->assertSame(6, $answer['educationLevel']);
-		$this->assertNull($answer['experienceYears']);
-		$this->assertSame([], $answer['competenceCodes']);
+		$this->assertSame(expected: 'extracted', actual: $answer['status']);
+		$this->assertSame(expected: 6, actual: $answer['educationLevel']);
+		$this->assertNull(actual: $answer['experienceYears']);
+		$this->assertSame(expected: [], actual: $answer['competenceCodes']);
 	}//end testADocumentUriNamesTheFile()
 
 	/**
@@ -84,11 +94,11 @@ class ProfileExtractionServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAMissingFileReferenceIsUnreadable(): void {
-		$answer = $this->service('MSc')->extractProfile(['fileId' => 0], 'hr');
+		$answer = $this->service(text: 'MSc')->extractProfile(data: ['fileId' => 0], requestedBy: 'hr');
 
-		$this->assertSame('unreadable', $answer['status']);
-		$this->assertSame('No CV file was given.', $answer['message']);
-		$this->assertNull($answer['educationLevel']);
+		$this->assertSame(expected: 'unreadable', actual: $answer['status']);
+		$this->assertSame(expected: 'No CV file was given.', actual: $answer['message']);
+		$this->assertNull(actual: $answer['educationLevel']);
 	}//end testAMissingFileReferenceIsUnreadable()
 
 	/**
@@ -97,11 +107,11 @@ class ProfileExtractionServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFileWithoutTextIsUnreadable(): void {
-		$answer = $this->service('   ')->extractProfile(['fileId' => 42, 'competenceCodes' => ['excel']], 'hr');
+		$answer = $this->service(text: '   ')->extractProfile(data: ['fileId' => 42, 'competenceCodes' => ['excel']], requestedBy: 'hr');
 
-		$this->assertSame('unreadable', $answer['status']);
-		$this->assertStringContainsString('could not be read', $answer['message']);
-		$this->assertSame([], $answer['competenceCodes']);
-		$this->assertNull($answer['experienceYears']);
+		$this->assertSame(expected: 'unreadable', actual: $answer['status']);
+		$this->assertStringContainsString(needle: 'could not be read', haystack: $answer['message']);
+		$this->assertSame(expected: [], actual: $answer['competenceCodes']);
+		$this->assertNull(actual: $answer['experienceYears']);
 	}//end testAFileWithoutTextIsUnreadable()
 }//end class

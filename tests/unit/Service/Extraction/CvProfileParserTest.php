@@ -30,8 +30,18 @@ use PHPUnit\Framework\TestCase;
  */
 class CvProfileParserTest extends TestCase {
 
+	/**
+	 * The parser under test.
+	 *
+	 * @var CvProfileParser
+	 */
 	private CvProfileParser $parser;
 
+	/**
+	 * The day an open period runs to.
+	 *
+	 * @var DateTimeImmutable
+	 */
 	private DateTimeImmutable $today;
 
 	/**
@@ -50,14 +60,31 @@ class CvProfileParserTest extends TestCase {
 	 * @return void
 	 */
 	public function testACvWithAMastersDegreeAndTwoJobs(): void {
-		$text = "Sanne de Vries\n\nOpleiding\nMaster Bedrijfskunde, Universiteit Utrecht 2014 - 2016\nHBO Bedrijfseconomie 2010 - 2014\n\nWerkervaring\nSalarisadministrateur, Acme BV 2018 - 2021\nPayroll specialist, Beta NV 2021 - heden\nVerwerkt loonheffing en jaaropgaven.\n\nVaardigheden\nExcel, AFAS\n";
+		$text = implode(
+			"\n",
+			[
+				'Sanne de Vries',
+				'',
+				'Opleiding',
+				'Master Bedrijfskunde, Universiteit Utrecht 2014 - 2016',
+				'HBO Bedrijfseconomie 2010 - 2014',
+				'',
+				'Werkervaring',
+				'Salarisadministrateur, Acme BV 2018 - 2021',
+				'Payroll specialist, Beta NV 2021 - heden',
+				'Verwerkt loonheffing en jaaropgaven.',
+				'',
+				'Vaardigheden',
+				'Excel, AFAS',
+			]
+		);
 
-		$profile = $this->parser->parse($text, ['loonheffing', 'excel', 'sap'], $this->today);
+		$profile = $this->parser->parse(text: $text, competenceCodes: ['loonheffing', 'excel', 'sap'], today: $this->today);
 
-		$this->assertSame(7, $profile['educationLevel']);
+		$this->assertSame(expected: 7, actual: $profile['educationLevel']);
 		// January 2018 to November 2026: 106 months.
-		$this->assertSame(8.8, $profile['experienceYears']);
-		$this->assertSame(['loonheffing', 'excel'], $profile['competenceCodes']);
+		$this->assertSame(expected: 8.8, actual: $profile['experienceYears']);
+		$this->assertSame(expected: ['loonheffing', 'excel'], actual: $profile['competenceCodes']);
 	}//end testACvWithAMastersDegreeAndTwoJobs()
 
 	/**
@@ -91,7 +118,7 @@ class CvProfileParserTest extends TestCase {
 	 */
 	#[DataProvider('educations')]
 	public function testTheEducationLevelFollowsTheDegree(string $text, ?int $expected): void {
-		$this->assertSame($expected, $this->parser->educationLevel($text));
+		$this->assertSame(expected: $expected, actual: $this->parser->educationLevel(text: $text));
 	}//end testTheEducationLevelFollowsTheDegree()
 
 	/**
@@ -100,7 +127,7 @@ class CvProfileParserTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheHighestLevelWins(): void {
-		$this->assertSame(6, $this->parser->educationLevel("MBO 4 Bedrijfsadministratie\nHBO Accountancy"));
+		$this->assertSame(expected: 6, actual: $this->parser->educationLevel(text: "MBO 4 Bedrijfsadministratie\nHBO Accountancy"));
 	}//end testTheHighestLevelWins()
 
 	/**
@@ -110,7 +137,7 @@ class CvProfileParserTest extends TestCase {
 	 * @return void
 	 */
 	public function testYearsWithoutAnExperienceHeadingAreUnknown(): void {
-		$this->assertNull($this->parser->experienceYears("Opleiding\nHBO 2010 - 2014\n", $this->today));
+		$this->assertNull(actual: $this->parser->experienceYears(text: "Opleiding\nHBO 2010 - 2014\n", today: $this->today));
 	}//end testYearsWithoutAnExperienceHeadingAreUnknown()
 
 	/**
@@ -123,7 +150,7 @@ class CvProfileParserTest extends TestCase {
 		$text = "Work experience\n03/2019 - 06/2020 Analyst\njan 2020 - dec 2020 Freelance\n\nEducation\n2010 - 2014 Bachelor\n";
 
 		// March 2019 to December 2020: 21 months.
-		$this->assertSame(1.8, $this->parser->experienceYears($text, $this->today));
+		$this->assertSame(expected: 1.8, actual: $this->parser->experienceYears(text: $text, today: $this->today));
 	}//end testOverlappingPeriodsCountOnce()
 
 	/**
@@ -134,7 +161,7 @@ class CvProfileParserTest extends TestCase {
 	public function testSeparatePeriodsAddUp(): void {
 		$text = "Werkervaring\n2010 - 2012 Junior\n2015 - 2016 Medior\n2030 - 2031 Toekomst\n";
 
-		$this->assertSame(3.0, $this->parser->experienceYears($text, $this->today));
+		$this->assertSame(expected: 3.0, actual: $this->parser->experienceYears(text: $text, today: $this->today));
 	}//end testSeparatePeriodsAddUp()
 
 	/**
@@ -143,7 +170,7 @@ class CvProfileParserTest extends TestCase {
 	 * @return void
 	 */
 	public function testAHeadingWithoutPeriodsIsUnknown(): void {
-		$this->assertNull($this->parser->experienceYears("Werkervaring\nVeel ervaring in salarisadministratie.\n", $this->today));
+		$this->assertNull(actual: $this->parser->experienceYears(text: "Werkervaring\nVeel ervaring in salarisadministratie.\n", today: $this->today));
 	}//end testAHeadingWithoutPeriodsIsUnknown()
 
 	/**
@@ -155,6 +182,8 @@ class CvProfileParserTest extends TestCase {
 	public function testCompetencesMatchWholeWords(): void {
 		$text = 'Ervaring met loon heffing, Power BI en javascript.';
 
-		$this->assertSame(['loon-heffing', 'power_bi'], $this->parser->competences($text, ['loon-heffing', 'power_bi', 'java', '', 'loon-heffing']));
+		$found = $this->parser->competences(text: $text, codes: ['loon-heffing', 'power_bi', 'java', '', 'loon-heffing']);
+
+		$this->assertSame(expected: ['loon-heffing', 'power_bi'], actual: $found);
 	}//end testCompetencesMatchWholeWords()
 }//end class

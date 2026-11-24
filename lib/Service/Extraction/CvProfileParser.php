@@ -61,12 +61,15 @@ class CvProfileParser {
 	/**
 	 * A heading that opens the work-experience section.
 	 */
-	private const EXPERIENCE_HEADING = '/^\s*(werkervaring|relevante werkervaring|work experience|professional experience|employment history|experience|ervaring|loopbaan)\s*:?\s*$/iu';
+	private const EXPERIENCE_HEADING = '/^\s*(werkervaring|relevante werkervaring|work experience|professional experience|'
+		.'employment history|experience|ervaring|loopbaan)\s*:?\s*$/iu';
 
 	/**
 	 * A heading that closes it.
 	 */
-	private const OTHER_HEADING = '/^\s*(opleidingen?|education|vaardigheden|skills|competenties|competences|talen|languages|cursussen|courses|certificaten|certifications|hobby\'?s|interests|referenties|references|persoonlijke gegevens|personal details|profiel|profile|nevenactiviteiten)\s*:?\s*$/iu';
+	private const OTHER_HEADING = '/^\s*(opleidingen?|education|vaardigheden|skills|competenties|competences|talen|languages|'
+		.'cursussen|courses|certificaten|certifications|hobby\'?s|interests|referenties|references|'
+		.'persoonlijke gegevens|personal details|profiel|profile|nevenactiviteiten)\s*:?\s*$/iu';
 
 	/**
 	 * Dutch and English month names and abbreviations, to month numbers.
@@ -164,7 +167,11 @@ class CvProfileParser {
 			}
 		}
 
-		return $periods === [] ? null : round(($this->monthsCovered(periods: $periods) / 12), 1);
+		if ($periods === []) {
+			return null;
+		}
+
+		return round(($this->monthsCovered(periods: $periods) / 12), 1);
 	}//end experienceYears()
 
 	/**
@@ -188,7 +195,8 @@ class CvProfileParser {
 			}
 
 			$words = preg_split('/[-_\s]+/u', $code);
-			$pattern = '/(?<![\p{L}\p{N}])'.implode('[-_\s]+', array_map(static fn (string $word): string => preg_quote($word, '/'), $words)).'(?![\p{L}\p{N}])/iu';
+			$quoted = array_map(static fn (string $word): string => preg_quote(str: $word, delimiter: '/'), $words);
+			$pattern = '/(?<![\p{L}\p{N}])'.implode('[-_\s]+', $quoted).'(?![\p{L}\p{N}])/iu';
 			if (preg_match($pattern, $text) === 1) {
 				$found[] = $code;
 			}
@@ -223,7 +231,11 @@ class CvProfileParser {
 			}
 		}
 
-		return $section === [] ? null : implode("\n", $section);
+		if ($section === []) {
+			return null;
+		}
+
+		return implode("\n", $section);
 	}//end experienceSection()
 
 	/**

@@ -89,7 +89,13 @@ class ProfileExtractionService {
 			return $this->unreadable(message: 'The text of the CV could not be read. It may be a scan without text, or not a file you can open.');
 		}
 
-		$codes = array_values(array_filter(array_map('strval', (array)($data['competenceCodes'] ?? [])), static fn (string $code): bool => trim($code) !== ''));
+		$codes = [];
+		foreach ((array)($data['competenceCodes'] ?? []) as $code) {
+			if (is_scalar($code) === true && trim((string)$code) !== '') {
+				$codes[] = (string)$code;
+			}
+		}
+
 		$profile = $this->parser->parse(text: $text, competenceCodes: $codes, today: $this->time->now());
 
 		return [
