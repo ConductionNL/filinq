@@ -204,9 +204,7 @@ class VendorRenderOutcome {
 	private function keepEarly(string $jobId, array $outcome): void {
 		unset($this->early[$jobId]);
 		$this->early[$jobId] = $outcome;
-		while (count($this->early) > self::EARLY_LIMIT) {
-			unset($this->early[array_key_first($this->early)]);
-		}
+		$this->early         = array_slice($this->early, -self::EARLY_LIMIT, null, true);
 
 	}//end keepEarly()
 

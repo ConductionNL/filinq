@@ -78,7 +78,7 @@ class VendorRenderedListener implements IEventListener {
 			$error = (string) $event->getError();
 		}
 
-		// integriq hands the rendered document over on the event since
+		// The rendered document travels on the event since
 		// ConductionNL/integriq#3857; an older integriq has no reader.
 		$document = '';
 		if (method_exists($event, 'getDocument') === true) {
