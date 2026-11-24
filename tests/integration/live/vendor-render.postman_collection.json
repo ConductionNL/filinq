@@ -1,0 +1,373 @@
+{
+	"info": {
+		"name": "Filinq vendor render reaches generated",
+		"description": "template-engine-renders-through-a-vendor task 3.1 (REQ-TEV-002, REQ-TEV-003). A render on engine vendor:smartdocuments, against integriq's SmartDocuments source in mock mode (its shipped default), answers 202 pending with integriq's job id; once integriq's DocumentGenerationStatusJob has polled the job, the generatedDocument entry is generated and the vendor file is filed. The job runs every 300 s, so the folders are run apart by tests/integration/live/vendor-render.sh, which force-executes that job in between. It needs a live instance with integriq, so it sits in tests/integration/live/, outside the flat glob the CI Newman job runs.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. request",
+			"item": [
+				{
+					"name": "engines list vendor:smartdocuments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/templates/engines"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('200', () => pm.response.to.have.status(200));",
+									"const ids = (pm.response.json().results || []).map(e => e.id);",
+									"pm.test('filinq is an engine', () => pm.expect(ids).to.include('filinq'));",
+									"pm.test('integriq\\'s mock SmartDocuments source is an engine', () => pm.expect(ids).to.include('vendor:smartdocuments'));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "seed a template with a vendorTemplateId",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/templates"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"name\": \"Newman vendor render\", \"description\": \"Created by the vendor-render live collection; removed in teardown.\", \"content\": \"<h1>{{ onderwerp }}</h1>\", \"namespace\": \"filinqnewman\", \"format\": \"A4\", \"orientation\": \"P\", \"vendorTemplateId\": \"sd-besluit\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('2xx', () => pm.expect(pm.response.code).to.be.within(200, 299));",
+									"const b = pm.response.json();",
+									"const id = (b['@self'] && b['@self'].id) || b.id;",
+									"pm.test('returned a template id', () => pm.expect(id).to.be.a('string').and.not.empty);",
+									"pm.test('kept the vendorTemplateId', () => pm.expect(b.vendorTemplateId).to.eql('sd-besluit'));",
+									"pm.environment.set('vendorTemplateUuid', id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "publish the template",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/templates/{{vendorTemplateUuid}}/publish"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('2xx', () => pm.expect(pm.response.code).to.be.within(200, 299));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "generate on vendor:smartdocuments answers 202 pending",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/documents/generate"
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"templateId\": \"{{vendorTemplateUuid}}\", \"dataRefs\": [], \"filename\": \"newman-vendor-render\", \"options\": {\"engine\": \"vendor:smartdocuments\", \"format\": \"pdf\"}}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('202 Accepted, not a document', () => pm.response.to.have.status(202));",
+									"const b = pm.response.json();",
+									"pm.test('pending', () => pm.expect(b.status).to.eql('pending'));",
+									"pm.test('the engine is the vendor', () => pm.expect(b.engine).to.eql('vendor:smartdocuments'));",
+									"pm.test('integriq named a job', () => pm.expect(b.vendorJobId).to.be.a('string').and.not.empty);",
+									"pm.environment.set('vendorJobId', b.vendorJobId);"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "2. settled",
+			"item": [
+				{
+					"name": "the generatedDocument reached generated",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/openregister/api/objects/filinq/generatedDocument?vendorJobId={{vendorJobId}}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('200', () => pm.response.to.have.status(200));",
+									"const rows = pm.response.json().results || [];",
+									"pm.test('one entry for the job', () => pm.expect(rows.length).to.eql(1));",
+									"const e = rows[0] || {};",
+									"pm.test('generated, not pending or failed', () => pm.expect(e.status).to.eql('generated'));",
+									"pm.test('the vendor file was filed', () => pm.expect(e.fileId).to.not.be.oneOf([null, undefined, '']));",
+									"pm.test('the entry names the vendor engine', () => pm.expect(e.engine).to.eql('vendor:smartdocuments'));"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "teardown: delete the template",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/templates/{{vendorTemplateUuid}}"
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('2xx or already gone', () => pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]));"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "adminUser",
+			"value": "admin"
+		},
+		{
+			"key": "adminPass",
+			"value": "admin"
+		}
+	]
+}
