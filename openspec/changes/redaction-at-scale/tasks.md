@@ -41,7 +41,9 @@
 - [ ] 5.1 PHPUnit for coordinator budgets, cancellation, resume idempotency, sampler determinism, report aggregation, cap routing — 75% coverage on new code (ADR-009)
   - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Live-verify a 150+ file folder batch end-to-end on Postgres (8080) with OpenRegister: enqueue → ticks → cancel → resume → report.
-- [ ] 5.2 Playwright spec `tests/e2e/spec-coverage/redaction-at-scale.spec.ts` for the `@e2e`-referenced scenarios; Newman contracts for cancel/resume/report
+- [x] 5.2 Playwright spec `tests/e2e/spec-coverage/redaction-at-scale.spec.ts` for the `@e2e`-referenced scenarios; Newman contracts for cancel/resume/report
+  - Written: the Playwright spec (#2218) and the Newman contracts `tests/integration/batch-lifecycle.postman_collection.json` (a folder batch over WebDAV, then cancel, cancel again, report, resume, unknown batches 404, no auth 401, teardown), which CI's `tests/integration/*.postman_collection.json` glob picks up.
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): not run here, no live instance.
 - [ ] 5.3 i18n EN + NL for all new UI strings (keys in English); nldesign theme check (ADR-005, ADR-003)
 - [ ] 5.4 Docs: `docs/features/redaction-at-scale.md` with Playwright screenshots (ops view, cancel/resume, QA badges) + sizing guidance (files_per_tick vs cron cadence vs docs/hour) (ADR-010)
 - [ ] 5.5 Validate: `openspec validate redaction-at-scale --strict` passes; hydra gates green
