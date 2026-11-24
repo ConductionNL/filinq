@@ -178,9 +178,14 @@ class DossierManagementService implements DossierManagementServiceInterface {
 		$payload = $this->reader->payloadOf(object: $object);
 		$members = $this->context->members(object: $object, payload: $payload);
 		$status = $this->reader->statusOf(payload: $payload);
+		$folder = $this->files->homeFolder(object: $object, payload: $payload);
 
 		return [
 			'id' => $dossierId,
+			// The dossier's home folder, so the AI companion can scope a question
+			// to it (hermiq chat-about-a-document-cites-its-sources, task 5);
+			// null when the dossier has none.
+			'folderId' => $folder?->getId(),
 			'name' => (string)($payload['name'] ?? ''),
 			'description' => (string)($payload['description'] ?? ''),
 			'status' => $status,
