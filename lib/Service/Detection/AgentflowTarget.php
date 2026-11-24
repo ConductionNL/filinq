@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 
 declare(strict_types=1);
@@ -26,7 +26,7 @@ namespace OCA\Filinq\Service\Detection;
 /**
  * The agentflow-run endpoint, the agentflow on it, and the seconds a call may take.
  *
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
  */
 final class AgentflowTarget {
 
@@ -39,7 +39,7 @@ final class AgentflowTarget {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
 	 */
 	public function __construct(
 		public readonly string $endpoint,

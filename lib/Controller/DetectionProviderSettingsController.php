@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 
 declare(strict_types=1);
@@ -51,7 +51,7 @@ use OCP\IUserSession;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 class DetectionProviderSettingsController extends Controller {
 
@@ -64,7 +64,7 @@ class DetectionProviderSettingsController extends Controller {
 	 * @param IUserSession            $userSession  The session.
 	 * @param IGroupManager           $groupManager The admin check.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	public function __construct(
 		IRequest $request,
@@ -81,7 +81,7 @@ class DetectionProviderSettingsController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the settings, 401 or 403.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function index(): JSONResponse {
@@ -98,7 +98,7 @@ class DetectionProviderSettingsController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the settings, 400 on invalid input, 401 or 403.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function update(): JSONResponse {
@@ -121,7 +121,7 @@ class DetectionProviderSettingsController extends Controller {
 	 *
 	 * @return JSONResponse 200 with `available` and `reason`, 401 or 403.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function test(): JSONResponse {

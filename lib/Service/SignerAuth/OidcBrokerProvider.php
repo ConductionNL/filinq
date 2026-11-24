@@ -46,7 +46,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class OidcBrokerProvider implements SignerAuthenticationProviderInterface {
 
@@ -104,7 +104,7 @@ class OidcBrokerProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @return string `oidc-broker`.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function getIdentifier(): string {
 		return self::IDENTIFIER;
@@ -116,7 +116,7 @@ class OidcBrokerProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @return list<string>
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function getSupportedMeans(): array {
 		$means = array_column($this->mapping(), 'means');
@@ -131,7 +131,7 @@ class OidcBrokerProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @return list<string>
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function getSupportedAssurance(): array {
 		return AssuranceLevel::LEVELS;
@@ -147,7 +147,7 @@ class OidcBrokerProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @throws RuntimeException When the broker is not configured.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function initiateAuthentication(SignerAuthContext $context): AuthChallenge {
 		if ($this->settings->isBrokerConfigured() === false) {
@@ -195,7 +195,7 @@ class OidcBrokerProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @return array{requestId: string, signerId: string, userId: string}|null The bound act, or null.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function boundAct(string $state): ?array {
 		$entry = $this->pending->peek(state: $state);
@@ -218,7 +218,7 @@ class OidcBrokerProvider implements SignerAuthenticationProviderInterface {
 	 * @throws RuntimeException When the state is unknown, used, expired or bound to another act,
 	 *                          or the exchange or the token fails.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function completeAuthentication(array $callbackData): IdentityEvidence {
 		$code = (string)($callbackData['code'] ?? '');

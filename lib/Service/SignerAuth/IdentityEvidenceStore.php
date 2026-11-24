@@ -37,7 +37,7 @@ use OCP\ISession;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class IdentityEvidenceStore {
 
@@ -70,7 +70,7 @@ class IdentityEvidenceStore {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function put(string $requestId, string $signerId, IdentityEvidence $evidence): void {
 		$all = $this->all();
@@ -90,7 +90,7 @@ class IdentityEvidenceStore {
 	 * @SuppressWarnings(PHPMD.StaticAccess) IdentityEvidence::fromArray() is the value
 	 * object's named constructor; there is no state to inject.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function get(string $requestId, string $signerId): ?IdentityEvidence {
 		$stored = $this->all()[$this->key(requestId: $requestId, signerId: $signerId)] ?? null;
@@ -114,7 +114,7 @@ class IdentityEvidenceStore {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function clear(string $requestId, string $signerId): void {
 		$all = $this->all();

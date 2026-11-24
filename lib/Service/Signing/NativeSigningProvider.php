@@ -326,7 +326,7 @@ class NativeSigningProvider implements SigningProviderInterface {
 	 *
 	 * @spec openspec/specs/document-signing/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.2
 	 */
 	public function produceSignedArtifact(string $documentContent, array $context): string {

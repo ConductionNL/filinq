@@ -38,7 +38,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SignerAuthProviderFactory {
 
@@ -87,7 +87,7 @@ class SignerAuthProviderFactory {
 	 *
 	 * @throws RuntimeException When the configured provider is not registered.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function configured(): SignerAuthenticationProviderInterface {
 		return $this->get(identifier: $this->settings->providerId());
@@ -103,7 +103,7 @@ class SignerAuthProviderFactory {
 	 *
 	 * @throws RuntimeException When no provider is registered under it.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function get(string $identifier): SignerAuthenticationProviderInterface {
 		$provider = $this->providers[$identifier] ?? null;
@@ -122,7 +122,7 @@ class SignerAuthProviderFactory {
 	 *
 	 * @return bool True when registered.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function has(string $identifier): bool {
 		return isset($this->providers[$identifier]) === true;
@@ -134,7 +134,7 @@ class SignerAuthProviderFactory {
 	 *
 	 * @return list<string>
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function identifiers(): array {
 		return array_keys($this->providers);

@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 class LlmDetectionProvider implements DetectionProviderInterface, LlmDetectionProviderInterface {
 
@@ -59,7 +59,7 @@ class LlmDetectionProvider implements DetectionProviderInterface, LlmDetectionPr
 	 * @param HermiqAgentflowClient   $client   The agentflow HTTP call.
 	 * @param LlmEntityMapper         $mapper   The output mapper.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
 	 */
 	public function __construct(
 		private readonly DetectionProviderConfig $config,
@@ -79,7 +79,7 @@ class LlmDetectionProvider implements DetectionProviderInterface, LlmDetectionPr
 	 *
 	 * @throws RuntimeException When the provider is unavailable, the call fails, or the answer is malformed.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
 	 */
 	public function detect(DetectionRequest $request, string $text): DetectionResult {
 		$reason = $this->unavailableReason();
@@ -108,7 +108,7 @@ class LlmDetectionProvider implements DetectionProviderInterface, LlmDetectionPr
 	 *
 	 * @return string `llm`.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.1
 	 */
 	public function id(): string {
 		return self::ID;
@@ -119,7 +119,7 @@ class LlmDetectionProvider implements DetectionProviderInterface, LlmDetectionPr
 	 *
 	 * @return bool True when it may be called.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
 	 */
 	public function isAvailable(): bool {
 		return $this->unavailableReason() === null;
@@ -130,7 +130,7 @@ class LlmDetectionProvider implements DetectionProviderInterface, LlmDetectionPr
 	 *
 	 * @return string|null `unconfigured`, `not-local`, or null.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
 	 */
 	public function unavailableReason(): ?string {
 		$endpoint = $this->config->endpoint();
@@ -165,7 +165,7 @@ class LlmDetectionProvider implements DetectionProviderInterface, LlmDetectionPr
 	 *
 	 * @return array{available: bool, reason: string|null}
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	public function testConnection(): array {
 		$reason = $this->unavailableReason();

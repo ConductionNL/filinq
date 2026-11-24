@@ -7,7 +7,7 @@ organisation, the local Hermiq agentflow the language model runs in, and a
 test that says whether it can be used now. An organisation not opted in keeps
 OpenRegister's own detection.
 
-@spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.2
+@spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.2
 -->
 
 <template>
@@ -185,7 +185,7 @@ export default {
 	/**
 	 * Load the settings and the organisations.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.2
 	 */
 	async mounted() {
 		const [settings, organisations] = await Promise.all([
@@ -228,7 +228,7 @@ export default {
 		/**
 		 * Save the chosen organisation's provider and the Hermiq settings.
 		 *
-		 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.2
 		 */
 		async save() {
 			const fields = {
@@ -260,7 +260,7 @@ export default {
 		/**
 		 * Test whether the language model provider can be used now.
 		 *
-		 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.2
 		 */
 		async test() {
 			this.testing = true

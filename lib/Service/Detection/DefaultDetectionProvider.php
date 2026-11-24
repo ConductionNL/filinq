@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ namespace OCA\Filinq\Service\Detection;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 class DefaultDetectionProvider implements DetectionProviderInterface {
 
@@ -59,7 +59,7 @@ class DefaultDetectionProvider implements DetectionProviderInterface {
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The interface passes them; OpenRegister has already run.
 	 *
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.1
 	 */
 	public function detect(DetectionRequest $request, string $text): DetectionResult {
 		return new DetectionResult(entities: [], providerUsed: self::ID);
@@ -70,7 +70,7 @@ class DefaultDetectionProvider implements DetectionProviderInterface {
 	 *
 	 * @return string `default`.
 	 *
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.1
 	 */
 	public function id(): string {
 		return self::ID;
@@ -81,7 +81,7 @@ class DefaultDetectionProvider implements DetectionProviderInterface {
 	 *
 	 * @return bool True.
 	 *
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.1
 	 */
 	public function isAvailable(): bool {
 		return true;

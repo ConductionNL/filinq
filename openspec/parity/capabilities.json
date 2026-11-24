@@ -4003,7 +4003,7 @@
 				"evidence": "AnonymiserBackendStateClient::getState() (lib/Service/AnonymiserBackendStateClient.php) only READS the current method; filinq's own Settings.vue (lines ~846, 1048) only displays the current backend and shows a warning when it is 'regex'. No picker/action anywhere in filinq lets a user or admin choose the engine. OpenRegister owns the actual choice: OR's FileSettingsController / AnonymisationBackendController (git grep on origin/development) implement the setting.",
 				"change": "openregister/anonymiser-backend-selection",
 				"requirement": "openregister:openspec/changes/anonymiser-backend-selection/specs/anonymiser-backend-selection :: An admin settings panel MUST exist where admins pick the active method and configure per-backend endpoints",
-				"plan": "openspec/changes/llm-entity-detection-provider"
+				"plan": "openspec/changes/archive/2026-11-24-llm-entity-detection-provider"
 			},
 			"reachedOn": "nothing in filinq; the engine is chosen in OpenRegister's own admin settings",
 			"provider": "openregister",
@@ -5884,11 +5884,11 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "grep -rliF digid over lib/ and src/ returns nothing: no DigiD, eHerkenning or iDIN signer authentication in the code. Specified, unbuilt, in openspec/changes/signer-identity-rails.",
-				"change": "openspec/changes/signer-identity-rails",
+				"evidence": "grep -rliF digid over lib/ and src/ returns nothing: no DigiD, eHerkenning or iDIN signer authentication in the code. Specified, unbuilt, in openspec/changes/archive/2026-11-24-signer-identity-rails.",
+				"change": "openspec/changes/archive/2026-11-24-signer-identity-rails",
 				"requirement": [
-					"openspec/changes/signer-identity-rails/specs/signer-identity-rails :: Pluggable signer-authentication provider seam (REQ-DDSIR-001)",
-					"openspec/changes/signer-identity-rails/specs/signer-identity-rails :: Assurance levels map means to signature levels (REQ-DDSIR-002)"
+					"openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails :: Pluggable signer-authentication provider seam (REQ-DDSIR-001)",
+					"openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails :: Assurance levels map means to signature levels (REQ-DDSIR-002)"
 				]
 			},
 			"reachedOn": "nothing reaches it",
@@ -5921,8 +5921,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "openspec/changes/signer-identity-rails/tasks.md has unchecked items including step-up identity verification (task 3.2, 4.2 reference a mock-OIDC IdP, not SMS specifically). Grepped for 'sms'/'text message'/phone-code verification in signing code; no hits.",
-				"change": "openspec/changes/signer-identity-rails",
+				"evidence": "openspec/changes/archive/2026-11-24-signer-identity-rails/tasks.md has unchecked items including step-up identity verification (task 3.2, 4.2 reference a mock-OIDC IdP, not SMS specifically). Grepped for 'sms'/'text message'/phone-code verification in signing code; no hits.",
+				"change": "openspec/changes/archive/2026-11-24-signer-identity-rails",
 				"requirement": "openspec/changes/specify-capability-rows/specs/document-signing :: A signer can be verified with a code sent to their phone (REQ-SCR-004)"
 			},
 			"reachedOn": "nothing reaches it",

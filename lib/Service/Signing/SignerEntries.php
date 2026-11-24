@@ -24,7 +24,7 @@ namespace OCA\Filinq\Service\Signing;
 /**
  * The signer entries as the consumer sent them, the guardian fields per entry and the guardian-to-signer links.
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SignerEntries {
 

@@ -75,4 +75,4 @@ configured, every organisation simply keeps the default detection.
 
 ## Specification
 
-`openspec/changes/llm-entity-detection-provider/`
+`openspec/changes/archive/2026-11-24-llm-entity-detection-provider/`

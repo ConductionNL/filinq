@@ -41,7 +41,7 @@ use OCP\IAppConfig;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SignerAuthSettings implements SignerAuthSettingsInterface {
 
@@ -102,7 +102,7 @@ class SignerAuthSettings implements SignerAuthSettingsInterface {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function toArray(): array {
 		$settings = [];
@@ -130,7 +130,7 @@ class SignerAuthSettings implements SignerAuthSettingsInterface {
 	 *
 	 * @throws InvalidArgumentException When a field is invalid; the message names it.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function update(array $data): void {
 		$writes = [];
@@ -161,7 +161,7 @@ class SignerAuthSettings implements SignerAuthSettingsInterface {
 	 *
 	 * @return string The identifier, as stored; resolution is strict in the factory.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function providerId(): string {
 		return $this->read(field: 'provider');
@@ -176,7 +176,7 @@ class SignerAuthSettings implements SignerAuthSettingsInterface {
 	 *
 	 * @return string The value, '' when unset.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function broker(string $field): string {
 		return $this->read(field: $field);
@@ -188,7 +188,7 @@ class SignerAuthSettings implements SignerAuthSettingsInterface {
 	 *
 	 * @return array<string, array{means: string, assurance: string}>
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function acrMapping(): array {
 		$decoded = json_decode($this->read(field: 'acrMapping'), true);
@@ -215,7 +215,7 @@ class SignerAuthSettings implements SignerAuthSettingsInterface {
 	 *
 	 * @return bool True when the broker can be used.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function isBrokerConfigured(): bool {
 		foreach (['issuer', 'authorizationEndpoint', 'tokenEndpoint'] as $field) {
@@ -235,7 +235,7 @@ class SignerAuthSettings implements SignerAuthSettingsInterface {
 	 *
 	 * @return int Seconds; 15 minutes when unset or out of range.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function evidenceMaxAgeSeconds(): int {
 		$minutes = (int)$this->read(field: 'evidenceMaxAgeMinutes');
@@ -252,7 +252,7 @@ class SignerAuthSettings implements SignerAuthSettingsInterface {
 	 *
 	 * @return string `low` (no raise) unless an admin set more.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function guardianMinimumAssurance(): string {
 		return $this->levels->normalise(value: $this->read(field: 'guardianMinimumAssurance'));

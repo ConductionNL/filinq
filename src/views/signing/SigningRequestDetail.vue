@@ -241,7 +241,7 @@ export default {
 		 *
 		 * @return {object} `{ status, signerId }`.
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		returned() {
 			return stepUpReturn(this.$route?.query)
@@ -252,7 +252,7 @@ export default {
 		 *
 		 * @return {boolean} True when the signature can be tried again.
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		stepUpDone() {
 			return this.returned.status === 'done' && this.returned.signerId !== ''
@@ -277,7 +277,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		async signNow() {
 			const result = await this.signingStore.signDocument(

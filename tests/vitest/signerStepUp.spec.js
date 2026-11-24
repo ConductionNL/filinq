@@ -6,7 +6,7 @@
  * (src/services/signerStepUp.js): reading the hint off a refusal, starting
  * the provider, and reading the broker's return.
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 
 import { beforeEach, describe, expect, it, vi } from 'vitest'

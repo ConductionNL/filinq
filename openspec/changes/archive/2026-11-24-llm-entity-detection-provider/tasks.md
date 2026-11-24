@@ -42,8 +42,9 @@
 - [x] 5.1 PHPUnit unit tests: resolver selection + fallback (unavailable/throw/malformed → default + warning), LLM→OR mapping (types/positions/score clamp), `require_local` refusal — minimum 75% coverage on new code
   - Provider seam is fully unit-testable with a faked hermiq client; run in the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
 
-- [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/llm-entity-detection-provider.spec.ts` covering the `@e2e` scenarios
+- [x] 5.2 Playwright e2e `tests/e2e/spec-coverage/llm-entity-detection-provider.spec.ts` covering the `@e2e` scenarios
   - Switch an org to the LLM provider, run detection with the endpoint unreachable, assert the report shows the explicit fallback warning and default entities; nldesign accessibility pass; test through the UI.
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
 
 - [x] 5.3 i18n EN + NL for settings + the fallback warning banner, and documentation `docs/features/llm-entity-detection-provider.md` (ADR-010); run `openspec validate llm-entity-detection-provider --strict`
   - Keys in English; docs cover on-prem/no-cloud positioning, the honest-fallback rule, and the hermiq endpoint dependency.

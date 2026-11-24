@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 class DetectionProviderResolver {
 
@@ -59,7 +59,7 @@ class DetectionProviderResolver {
 	 * @param IL10N                    $l10n            Translations for the warning.
 	 * @param LoggerInterface          $logger          Logger.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.2
 	 */
 	public function __construct(
 		private readonly DetectionProviderConfig $config,
@@ -78,7 +78,7 @@ class DetectionProviderResolver {
 	 *
 	 * @return DetectionProviderInterface The provider.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.2
 	 */
 	public function forOrganisation(?string $organisationUuid): DetectionProviderInterface {
 		if ($this->config->providerFor(organisationUuid: $organisationUuid) === LlmDetectionProvider::ID) {
@@ -99,7 +99,7 @@ class DetectionProviderResolver {
 	 *
 	 * @return DetectionResult What ran, and the entities the LLM provider wrote (empty for default or kept).
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-3.1
 	 */
 	public function run(?string $organisationUuid, DetectionRequest $request): DetectionResult {
 		$provider = $this->forOrganisation(organisationUuid: $organisationUuid);
@@ -143,7 +143,7 @@ class DetectionProviderResolver {
 	 *
 	 * @return DetectionResult The LLM's entities, or the fallback result.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-3.1
 	 */
 	private function runLlm(DetectionProviderInterface $provider, DetectionRequest $request): DetectionResult {
 		try {
@@ -167,7 +167,7 @@ class DetectionProviderResolver {
 	 *
 	 * @return DetectionResult What ran.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-3.2
 	 */
 	public function runForActiveOrganisation(DetectionRequest $request): DetectionResult {
 		return $this->run(organisationUuid: $this->catalogue->activeOrganisationUuid(), request: $request);

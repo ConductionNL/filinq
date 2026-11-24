@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 class DetectionCatalogue {
 
@@ -56,7 +56,7 @@ class DetectionCatalogue {
 	 * @param ContainerInterface $container  Container for lazy OpenRegister resolution.
 	 * @param IAppManager        $appManager App manager (OpenRegister availability).
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.2
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
@@ -73,7 +73,7 @@ class DetectionCatalogue {
 	 *
 	 * @throws RuntimeException When OpenRegister is not available.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
 	 */
 	public function chunks(int $fileId): array {
 		$chunks = [];
@@ -97,7 +97,7 @@ class DetectionCatalogue {
 	 *
 	 * @return string|null The organisation UUID.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-3.2
 	 */
 	public function activeOrganisationUuid(): ?string {
 		try {
@@ -138,7 +138,7 @@ class DetectionCatalogue {
 	 *
 	 * @throws RuntimeException When OpenRegister is not available.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-3.1
 	 */
 	public function hasLlmRelations(int $fileId): bool {
 		foreach ($this->service(className: 'OCA\OpenRegister\Db\EntityRelationMapper')->findByFileId($fileId) as $relation) {
@@ -160,7 +160,7 @@ class DetectionCatalogue {
 	 *
 	 * @throws RuntimeException When OpenRegister is not available.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.2
 	 */
 	public function replace(int $fileId, array $entities): int {
 		$relationMapper = $this->service(className: 'OCA\OpenRegister\Db\EntityRelationMapper');

@@ -50,7 +50,7 @@ use OCA\Filinq\Exception\StepUpRequiredException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SigningAssuranceGate {
 
@@ -102,7 +102,7 @@ class SigningAssuranceGate {
 	 *
 	 * @throws InvalidArgumentException With code 400 when an assurance value is not on the scale.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function applyToRequest(array $request, array $data): array {
 		foreach (['requiredAssurance', 'guardianRequiredAssurance'] as $field) {
@@ -131,7 +131,7 @@ class SigningAssuranceGate {
 	 *
 	 * @return string The floor.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function floorFor(array $request): string {
 		return $this->levels->floorFor(signatureLevel: (string)($request['signatureLevel'] ?? 'SES'));
@@ -146,7 +146,7 @@ class SigningAssuranceGate {
 	 *
 	 * @return string `low`, `substantial` or `high`.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function requiredFor(array $request, array $signer): string {
 		$required = $this->levels->requiredFor(request: $request);
@@ -177,7 +177,7 @@ class SigningAssuranceGate {
 	 *
 	 * @throws StepUpRequiredException With code 403 when the evidence does not carry the act.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function evidenceForAct(
 		array $request,
@@ -227,7 +227,7 @@ class SigningAssuranceGate {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function consume(string $requestId, string $signerId): void {
 		$this->store->clear(requestId: $requestId, signerId: $signerId);
@@ -249,7 +249,7 @@ class SigningAssuranceGate {
 	 * @SuppressWarnings(PHPMD.StaticAccess) IdentityEvidence::fromArray() is the value
 	 * object's named constructor; there is no state to inject.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function withResolvedAssurance(array $request, array $signers): array {
 		$levels = [];

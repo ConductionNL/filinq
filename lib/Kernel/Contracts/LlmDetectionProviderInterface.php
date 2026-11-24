@@ -42,7 +42,7 @@ interface LlmDetectionProviderInterface {
 	 *
 	 * @return array{available: bool, reason: string|null}
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	public function testConnection(): array;
 }//end interface

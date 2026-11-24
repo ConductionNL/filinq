@@ -39,7 +39,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class OidcTokenExchange {
 
@@ -69,7 +69,7 @@ class OidcTokenExchange {
 	 *
 	 * @throws RuntimeException When the secret cannot be resolved, the call fails, or no ID token comes back.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function idTokenFor(string $code): string {
 		$secret = $this->credentials->resolve(credentialRef: $this->settings->broker(field: 'credentialRef'));

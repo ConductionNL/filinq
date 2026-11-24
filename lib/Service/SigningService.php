@@ -70,7 +70,7 @@ use RuntimeException;
  * SigningServiceInterface; accept() is the accept-only recipient's counterpart of sign().
  *
  * @spec openspec/specs/document-signing/spec.md
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SigningService implements SigningServiceInterface {
 
@@ -221,7 +221,7 @@ class SigningService implements SigningServiceInterface {
 	 * (sign or accept); an instance would add nothing.
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function createRequest(array $data, string $via=''): array {
 		// Throws RuntimeException('No authenticated user') when there is no session user.
@@ -409,7 +409,7 @@ class SigningService implements SigningServiceInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
 	 * (sign or accept); an instance would add nothing.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	private function persistSigners(string $requestId, SignerEntries $entries): array {
 		$objectService = $this->settingsService->getObjectService();
@@ -615,7 +615,7 @@ class SigningService implements SigningServiceInterface {
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
 	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
 	 */
 	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null, ?array $fields = null): array {

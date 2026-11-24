@@ -8,7 +8,7 @@
  * 403 with a `stepUp` hint; the signer starts the configured provider, is
  * sent to the broker, comes back on the request page and signs again.
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 
 import axios from '@nextcloud/axios'
@@ -21,7 +21,7 @@ import { generateUrl } from '@nextcloud/router'
  * @param {object|null} source An axios error, or a folder result.
  * @return {object|null} The hint (`requiredAssurance`, `reason`, `provider`), or null.
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 export function stepUpHint(source) {
 	const hint = source?.response?.data?.stepUp ?? source?.stepUp ?? null
@@ -38,7 +38,7 @@ export function stepUpHint(source) {
  * @param {string} signerId The signer record.
  * @return {Promise<object>} The challenge: `type` (`redirect` or `none`), `url`, `requiredAssurance`.
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 export async function startStepUp(requestId, signerId) {
 	const { data } = await axios.post(
@@ -56,7 +56,7 @@ export async function startStepUp(requestId, signerId) {
  * @param {object} query The route query.
  * @return {object} `{ status: 'done'|'failed'|null, signerId }`.
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 export function stepUpReturn(query) {
 	const status = ['done', 'failed'].includes(query?.stepUp) ? query.stepUp : null
@@ -75,7 +75,7 @@ const FLOORS = { SES: 'low', AdES: 'substantial', QES: 'high' }
  * @param {string} signatureLevel `SES`, `AdES` or `QES`.
  * @return {string} The floor; `low` for anything else.
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 export function assuranceFloor(signatureLevel) {
 	return FLOORS[signatureLevel] ?? 'low'
@@ -87,7 +87,7 @@ export function assuranceFloor(signatureLevel) {
  * @param {string} signatureLevel `SES`, `AdES` or `QES`.
  * @return {Array<string>} The floor and everything above it.
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 export function assuranceLevelsFrom(signatureLevel) {
 	return LEVELS.slice(LEVELS.indexOf(assuranceFloor(signatureLevel)))

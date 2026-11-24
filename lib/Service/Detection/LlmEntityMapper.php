@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use UnexpectedValueException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 class LlmEntityMapper {
 
@@ -119,7 +119,7 @@ class LlmEntityMapper {
 	 *
 	 * @throws UnexpectedValueException When the list or one of its items is malformed.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.2
 	 */
 	public function map(mixed $items, float $defaultConfidence): array {
 		if (is_array($items) === false || array_is_list($items) === false) {
@@ -141,7 +141,7 @@ class LlmEntityMapper {
 	 *
 	 * @return string The mapped type.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.2
 	 */
 	public function mapType(string $type): string {
 		$key = strtoupper(trim($type));

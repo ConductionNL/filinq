@@ -45,7 +45,7 @@ interface DetectionProviderConfigInterface {
 	 * @return array<string, mixed> providers, endpoint, agentflow, requireLocal, defaultConfidence,
 	 *                              timeout and the available provider ids.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	public function toArray(): array;
 
@@ -62,7 +62,7 @@ interface DetectionProviderConfigInterface {
 	 *
 	 * @throws InvalidArgumentException When a field is invalid; nothing is written then.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	public function update(array $data): void;
 }//end interface

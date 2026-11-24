@@ -51,7 +51,7 @@ interface SigningServiceInterface {
 	 *                                   or a signer under the age of consent has no guardian.
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function createRequest(array $data): array;
 
@@ -141,7 +141,7 @@ interface SigningServiceInterface {
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-3
 	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null, ?array $fields = null): array;
 

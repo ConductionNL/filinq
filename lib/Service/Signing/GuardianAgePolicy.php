@@ -41,7 +41,7 @@ use OCA\Filinq\Service\SettingsService;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class GuardianAgePolicy {
 
@@ -79,7 +79,7 @@ class GuardianAgePolicy {
 	 *
 	 * @return int The configured age, raised to the request's own age when that is higher.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function appliedAge(array $data): int {
 		$requested = $this->positiveInt(value: ($data['guardianConsentAge'] ?? null));
@@ -100,7 +100,7 @@ class GuardianAgePolicy {
 	 *
 	 * @return bool True when under the age.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function isUnderAge(string $birthDate, int $age, DateTimeImmutable $moment): bool {
 		$born = $this->parseBirthDate(value: $birthDate);
@@ -119,7 +119,7 @@ class GuardianAgePolicy {
 	 *
 	 * @return DateTimeImmutable|null Midnight UTC on that date, or null when it is not a real YYYY-MM-DD date.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function parseBirthDate(string $value): ?DateTimeImmutable {
 		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $parts) !== 1) {
@@ -141,7 +141,7 @@ class GuardianAgePolicy {
 	 *
 	 * @return DateTimeImmutable That moment, or now when none was recorded or it cannot be read.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function moment(string $value): DateTimeImmutable {
 		if ($value === '') {

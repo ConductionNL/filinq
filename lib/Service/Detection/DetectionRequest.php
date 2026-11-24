@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 
 declare(strict_types=1);
@@ -27,7 +27,7 @@ namespace OCA\Filinq\Service\Detection;
  * The file a detection runs over, the entity types it looks for, and whether
  * it is a re-analysis that may replace earlier LLM relations.
  *
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-3.1
  */
 final class DetectionRequest {
 
@@ -42,7 +42,7 @@ final class DetectionRequest {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-3.1
 	 */
 	public function __construct(
 		public readonly int $fileId,

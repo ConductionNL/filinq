@@ -41,7 +41,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SubjectPseudonymiser {
 
@@ -68,7 +68,7 @@ class SubjectPseudonymiser {
 	 *
 	 * @throws RuntimeException When the subject is empty or the instance has no secret.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function pseudonym(string $issuer, string $subject): string {
 		if ($subject === '') {

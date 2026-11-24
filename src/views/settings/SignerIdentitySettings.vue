@@ -171,7 +171,7 @@ export default {
 		 *
 		 * @return {Array<object>} Id and label per provider.
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		providerOptions() {
 			return [
@@ -188,7 +188,7 @@ export default {
 		 *
 		 * @return {Array<object>} Id and label per level.
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		assuranceOptions() {
 			return [
@@ -203,7 +203,7 @@ export default {
 		 *
 		 * @return {string} The example JSON.
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		acrPlaceholder() {
 			return '{"urn:your-broker:idin": {"means": "idin", "assurance": "substantial"}}'
@@ -222,7 +222,7 @@ export default {
 		 *
 		 * @return {string} The URL.
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		url() {
 			return generateUrl('/apps/filinq/api/settings/signer-identity')
@@ -234,7 +234,7 @@ export default {
 		 * @param {object} data The settings.
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		apply(data) {
 			this.provider = data.provider || 'nextcloud-session'
@@ -251,7 +251,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		async load() {
 			try {
@@ -269,7 +269,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		async save() {
 			this.saving = true

@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.2
  */
 
 import axios from '@nextcloud/axios'
@@ -20,7 +20,7 @@ const BASE = '/apps/filinq/api/detection-provider'
  * Load the detection settings as the admin section reads them.
  *
  * @return {Promise<{ok: boolean, data?: object}>} The settings, or the refusal.
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.2
  */
 export function loadDetectionSettings() {
 	return answer(axios.get(generateUrl(`${BASE}/settings`)))
@@ -31,7 +31,7 @@ export function loadDetectionSettings() {
  *
  * @param {object} fields Any of organisation + provider, endpoint, agentflow, requireLocal.
  * @return {Promise<{ok: boolean, data?: object}>} The settings as stored, or the refusal.
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.2
  */
 export function saveDetectionSettings(fields) {
 	return answer(axios.put(generateUrl(`${BASE}/settings`), fields))
@@ -41,7 +41,7 @@ export function saveDetectionSettings(fields) {
  * Ask whether the LLM provider could be called now.
  *
  * @return {Promise<{ok: boolean, data?: {available: boolean, reason: string|null}}>} The test result.
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.2
  */
 export function testDetectionProvider() {
 	return answer(axios.post(generateUrl(`${BASE}/test`)))
@@ -52,7 +52,7 @@ export function testDetectionProvider() {
  *
  * @return {Promise<{ok: boolean, data?: {organisations: Array<{uuid: string, name: string}>, active: string|null}}>}
  *         The organisations and the admin's active one, or the refusal.
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.2
  */
 export async function loadOrganisations() {
 	const result = await answer(axios.get(generateUrl('/apps/openregister/api/organisations')))
@@ -75,7 +75,7 @@ export async function loadOrganisations() {
  * @param {object} providers The stored organisation → provider map.
  * @param {string|null} organisation The organisation uuid.
  * @return {string} The provider id.
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.2
  */
 export function providerFor(providers, organisation) {
 	if (!organisation || !providers || typeof providers !== 'object') {
@@ -89,7 +89,7 @@ export function providerFor(providers, organisation) {
  *
  * @param {string} id The provider id.
  * @return {string} The label; an unknown id is shown as it is.
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.2
  */
 export function providerLabel(id) {
 	return {
@@ -103,7 +103,7 @@ export function providerLabel(id) {
  *
  * @param {{available: boolean, reason: string|null}} result The test result.
  * @return {string} The sentence.
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.2
  */
 export function testResultText(result) {
 	if (result && result.available === true) {
@@ -125,7 +125,7 @@ export function testResultText(result) {
  *
  * @param {object} data The extract endpoint's answer.
  * @return {{provider: string|null, fellBack: boolean, warning: string|null}} The notice.
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-3.2
  */
 export function detectionNotice(data) {
 	if (!data || typeof data.detectionProvider !== 'string' || data.detectionProvider === '') {
@@ -147,7 +147,7 @@ export function detectionNotice(data) {
  * @param {object} entry The queue entry.
  * @param {object} data The extract endpoint's answer.
  * @return {void}
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-3.2
  */
 export function applyDetectionNotice(entry, data) {
 	const notice = detectionNotice(data)
