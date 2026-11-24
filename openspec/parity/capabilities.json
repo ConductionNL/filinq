@@ -7451,23 +7451,23 @@
 			"name": "Reach every document function through a documented REST API.",
 			"source": "category-derived",
 			"sourceRef": "canonical api-platform (11 competitors)",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/connect-openapi-documentation on 2026-09-27 for the missing half: an OpenAPI document that covers every route, published with the app, where today openapi.json documents 2 of about 150 routes. Before: appinfo/routes.php declares ~150 REST routes covering every controller/service function. openapi.json exists at the repo root but python parse shows only 2 documented paths ('/api/anonymization/batch/folder' and an unrelated ocs path) out of the ~150 routes.",
-				"change": "openspec/changes/connect-openapi-documentation",
+				"evidence": "openapi.json documents all versioned routes (286 paths, OpenAPI 3.0, server /apps/filinq/api/v1), served at GET /api/v1/openapi.json and rendered on the docs site at /api from docs/static/oas/filinq-api.json. tests/unit/Middleware/Support/OpenApiDocumentTest.php pins the document to appinfo/routes.php both ways; tests/unit/OpenApiCoverageTest.php adds the 150-route floor, no foreign path and the docs copy equal to openapi.json; the PHPUnit job of code-quality.yml runs both on every pull request. Maintained rather than generated (design D7, 24 Nov 2026).",
+				"change": "openspec/changes/archive/2026-11-24-connect-openapi-documentation",
 				"requirement": [
-					"openspec/changes/connect-openapi-documentation/specs/openapi-documentation :: The OpenAPI document is generated from the code (REQ-COD-001)",
-					"openspec/changes/connect-openapi-documentation/specs/openapi-documentation :: Every route is documented or excluded with a reason (REQ-COD-002)"
+					"openspec/specs/openapi-documentation :: One OpenAPI document matches the routes both ways (REQ-COD-001)",
+					"openspec/specs/openapi-documentation :: The route table and the document are read in full (REQ-COD-002)"
 				]
 			},
-			"reachedOn": "external frontend, not in this repo (any HTTP client can call the routes); the OpenAPI documentation itself is far from complete",
+			"reachedOn": "GET /index.php/apps/filinq/api/v1/openapi.json, and /api on the docs site",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "api-and-integrations",
 			"featureConfidence": "high",
-			"note": "The API surface exists and is reachable; 'documented' is the gap - openapi.json covers roughly 1% of the routes.",
+			"note": "Every route is reachable and documented; the document is maintained and pinned to the routes by tests.",
 			"zylab": "unknown",
 			"datamask": "unknown",
 			"smartdocuments": "unknown",
