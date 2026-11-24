@@ -1,7 +1,7 @@
 /**
  * Where filinq's Woo refusal grounds come from, for the read-only admin section.
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-the-snapshot-is-read-only-and-the-admin-says-where-the-list-lives-req-grd-004
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-the-snapshot-is-read-only-and-the-admin-says-where-the-list-lives-req-grd-004
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ function isCitable(ground) {
  *
  * @param {object|null} answer The `/api/grounds` answer.
  * @return {{source: string, version: string, grounds: Array<{code: string, label: string}>}|null} The summary, or null when nothing could be read.
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-the-snapshot-is-read-only-and-the-admin-says-where-the-list-lives-req-grd-004
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-the-snapshot-is-read-only-and-the-admin-says-where-the-list-lives-req-grd-004
  */
 export function sourceSummary(answer) {
 	if (!hasGrounds(answer)) {
@@ -55,7 +55,7 @@ export function sourceSummary(answer) {
  * The address of dossiq's grounds page.
  *
  * @return {string} The URL of the grounds page in dossiq.
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-the-snapshot-is-read-only-and-the-admin-says-where-the-list-lives-req-grd-004
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-the-snapshot-is-read-only-and-the-admin-says-where-the-list-lives-req-grd-004
  */
 export function dossiqGroundsUrl() {
 	return generateUrl('/apps/dossiq/settings/woo-refusal-grounds')
@@ -65,7 +65,7 @@ export function dossiqGroundsUrl() {
  * Read the grounds summary; null when the list cannot be read.
  *
  * @return {Promise<object|null>}
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-the-snapshot-is-read-only-and-the-admin-says-where-the-list-lives-req-grd-004
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-the-snapshot-is-read-only-and-the-admin-says-where-the-list-lives-req-grd-004
  */
 export async function fetchGroundsSource() {
 	try {

@@ -43,7 +43,7 @@ interface RefusalGroundsResolverInterface {
 	 *
 	 * @throws RuntimeException When the snapshot is needed and cannot be read; an empty list is never answered.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-one-resolver-reads-the-grounds-from-dossiq-or-from-a-read-only-snapshot-req-grd-001
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-one-resolver-reads-the-grounds-from-dossiq-or-from-a-read-only-snapshot-req-grd-001
 	 */
 	public function list(): array;
 }//end interface

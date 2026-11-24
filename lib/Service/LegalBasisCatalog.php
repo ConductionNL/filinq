@@ -153,7 +153,7 @@ class LegalBasisCatalog {
 	 *
 	 * @return array<int, array{slug: string, name: string, description: string}> Available bases.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private function offeredBases(mixed $result): array {
 		$bases = ($this->wooGrounds?->options() ?? []);
@@ -175,7 +175,7 @@ class LegalBasisCatalog {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private function isOfferedFromBase(string $slug): bool {
 		return $this->wooGrounds === null || $this->wooGrounds->isWooReference(ref: $slug) === false;

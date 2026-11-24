@@ -32,7 +32,7 @@ use RecursiveIteratorIterator;
  * until it is either routed through the resolver or shown not to serve Woo
  * grounds.
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
  */
 #[CoversNothing]
 class GroundsReadersTest extends TestCase {

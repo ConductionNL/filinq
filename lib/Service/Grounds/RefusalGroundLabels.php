@@ -15,7 +15,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ use Throwable;
  * or map that cannot be read gives nothing rather than an error, so a page
  * still renders.
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
  */
 class RefusalGroundLabels {
 
@@ -66,7 +66,7 @@ class RefusalGroundLabels {
 	 *
 	 * @return array<string, array{name: string, description: string}>
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	public function byCode(): array {
 		if ($this->byCode !== null) {
@@ -101,7 +101,7 @@ class RefusalGroundLabels {
 	 *
 	 * @return array{name: string, description: string}|null
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	public function labelFor(string $ref): ?array {
 		$byCode = $this->byCode();
@@ -122,7 +122,7 @@ class RefusalGroundLabels {
 	 *
 	 * @return list<array{slug: string, name: string, description: string}>
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	public function options(): array {
 		$options = [];
@@ -140,7 +140,7 @@ class RefusalGroundLabels {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	public function codeFor(string $ref): ?string {
 		try {
@@ -158,7 +158,7 @@ class RefusalGroundLabels {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	public function isWooReference(string $ref): bool {
 		if (preg_match('/^5\.\d/', $ref) === 1) {
@@ -179,7 +179,7 @@ class RefusalGroundLabels {
 	 *
 	 * @return array{code: string, name: string, description: string}|null
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private static function labelOf(mixed $ground): ?array {
 		if (is_array($ground) === false) {

@@ -16,7 +16,7 @@
 // @e2e openspec/specs/woo-publicatie-pipeline/spec.md#successful-handoff-creates-the-endpoint-publication
 // @e2e openspec/specs/woo-publicatie-pipeline/spec.md#withdraw-a-publication
 // @e2e openspec/specs/woo-publicatie-pipeline/spec.md#wizard-reflects-gate-state
-// @e2e openspec/changes/woo-hand-off-files-its-category/specs/woo-publicatie-pipeline/spec.md#a-handed-off-decision-appears-in-its-category-sitemap
+// @e2e openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category/specs/woo-publicatie-pipeline/spec.md#a-handed-off-decision-appears-in-its-category-sitemap
 
 import type { Page } from '@playwright/test'
 
@@ -185,7 +185,7 @@ test.describe('woo hand-off files its category', () => {
 	const catalog = process.env.E2E_OPENCATALOGI_CATALOG ?? ''
 
 	test('a handed-off decision appears in its category sitemap', async ({ page }) => {
-		// @e2e openspec/changes/woo-hand-off-files-its-category/specs/woo-publicatie-pipeline/spec.md#a-handed-off-decision-appears-in-its-category-sitemap
+		// @e2e openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category/specs/woo-publicatie-pipeline/spec.md#a-handed-off-decision-appears-in-its-category-sitemap
 		test.skip(
 			recordId === '' || catalog === '',
 			'needs E2E_WOO_READY_RECORD and E2E_OPENCATALOGI_CATALOG on a live instance',

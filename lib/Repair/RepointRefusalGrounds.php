@@ -24,7 +24,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
  */
 
 declare(strict_types=1);
@@ -46,7 +46,7 @@ use Throwable;
 /**
  * Rewrites one-to-one Woo slugs to codes and reports what it left.
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
  */
 class RepointRefusalGrounds implements IRepairStep {
 
@@ -71,7 +71,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 * @param LoggerInterface         $logger     Names an object that could not be written.
 	 * @param ContainerInterface|null $container  Reaches OpenRegister's object service and entity relations.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	public function __construct(
 		private readonly DossierObjectReaderInterface $reader,
@@ -87,7 +87,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return object|null
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function objectService(): ?object {
 		try {
@@ -102,7 +102,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	public function getName(): string {
 		return 'Re-point stored Woo grounds to the dossiq refusal ground codes';
@@ -115,7 +115,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	public function run(IOutput $output): void {
 		try {
@@ -143,7 +143,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return array{rewritten: int, left: list<string>} The report.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function repointObjects(array $report, IOutput $output): array {
 		$objectService = $this->objectService();
@@ -166,7 +166,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return array{bases: list<mixed>, left: list<string>} The grounds, and the old slugs left as they were.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	public function repoint(array $bases): array {
 		$out = ['bases' => [], 'left' => []];
@@ -195,7 +195,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return array{rewritten: int, left: list<string>} The report.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function repointSchema(object $objectService, string $schema, array $report): array {
 		try {
@@ -222,7 +222,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return array{rewritten: int, left: list<string>} The report.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function repointObject(object $objectService, string $schema, mixed $object, array $report): array {
 		$payload = $this->payloadWithBases(object: $object);
@@ -252,7 +252,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function payloadWithBases(mixed $object): ?array {
 		$payload = $object;
@@ -276,7 +276,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return bool True when the object was written.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function save(object $objectService, string $schema, array $payload): bool {
 		$uuid = (string)($payload['@self']['uuid'] ?? $payload['@self']['id'] ?? $payload['id'] ?? '');
@@ -324,7 +324,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return array{rewritten: int, left: list<string>} The report.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function repointRelations(array $report, IOutput $output): array {
 		$mapper = $this->relationMapper();
@@ -355,7 +355,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return object|null
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function relationMapper(): ?object {
 		try {
@@ -380,7 +380,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return array{rewritten: int, left: list<string>} The report.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function repointRelation(object $mapper, object $relation, array $report): array {
 		$bases = $relation->getBases();
@@ -417,7 +417,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return array{rewritten: int, left: list<string>} The report.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function repointMapping(array $report): array {
 		$raw = $this->appConfig->getValueString('filinq', LegalBasisProposalServiceInterface::CONFIG_KEY, '');
@@ -447,7 +447,7 @@ class RepointRefusalGrounds implements IRepairStep {
 	 *
 	 * @return array{0: mixed, 1: array{rewritten: int, left: list<string>}} The grounds and the report.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function repointMappingType(string $type, mixed $bases, array $report): array {
 		if (is_array($bases) === false) {

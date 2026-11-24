@@ -330,7 +330,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category/tasks.md#task-1.3
 	 */
 	private function moveHandedOffCategory(array $record, array $metadata): void {
 		$publicationRef = (string) ($record['endpointPublicationRef'] ?? '');

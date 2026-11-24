@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use Throwable;
 /**
  * Stops the creation of a `base` object that names a Woo ground.
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
  */
 class BaseRefusalGroundGuard implements IEventListener {
 
@@ -72,7 +72,7 @@ class BaseRefusalGroundGuard implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	public function handle(Event $event): void {
 		$object = $this->createdObject(event: $event);
@@ -108,7 +108,7 @@ class BaseRefusalGroundGuard implements IEventListener {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function isBaseSchema(string $schema): bool {
 		if (strtolower($schema) === self::SCHEMA) {
@@ -137,7 +137,7 @@ class BaseRefusalGroundGuard implements IEventListener {
 	 *
 	 * @return object|null
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function createdObject(Event $event): ?object {
 		if (self::isCreatingEvent(event: $event) === false || method_exists($event, 'getObject') === false) {
@@ -154,7 +154,7 @@ class BaseRefusalGroundGuard implements IEventListener {
 	 *
 	 * @return object|null
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private static function withSchema(mixed $object): ?object {
 		if (is_object($object) === false || method_exists($object, 'getSchema') === false) {
@@ -171,7 +171,7 @@ class BaseRefusalGroundGuard implements IEventListener {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private static function isCreatingEvent(Event $event): bool {
 		return is_a($event, 'OCA\\OpenRegister\\Event\\ObjectCreatingEvent') === true;
@@ -184,7 +184,7 @@ class BaseRefusalGroundGuard implements IEventListener {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private static function slugOf(object $object): string {
 		$payload = [];
@@ -209,7 +209,7 @@ class BaseRefusalGroundGuard implements IEventListener {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
 	 */
 	private function isWooGround(string $slug): bool {
 		if (preg_match('/^5\.\d/', $slug) === 1) {

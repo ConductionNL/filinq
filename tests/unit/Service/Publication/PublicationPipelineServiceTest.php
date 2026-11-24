@@ -686,7 +686,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category/tasks.md#task-1.2
 	 */
 	public function testTheHandOffFilesTheCategoryCode(): void {
 		$pipeline = $this->pipeline();
@@ -702,7 +702,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category/tasks.md#task-1.2
 	 */
 	public function testARecordFromBeforeTheCodesIsTranslated(): void {
 		$pipeline = $this->pipeline();
@@ -796,7 +796,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category/tasks.md#task-1.2
 	 */
 	public function testAnUnknownCategoryBlocksTheHandOff(): void {
 		$pipeline = $this->pipeline();
@@ -820,7 +820,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.3
+	 * @spec openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category/tasks.md#task-1.3
 	 */
 	public function testChangingTheCategoryMovesThePublication(): void {
 		$pipeline = $this->pipeline();

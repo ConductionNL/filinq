@@ -20,8 +20,8 @@
  * Not run in the change that wrote it (decision 139): the live pass runs it.
  */
 
-// @e2e openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#dossiq-installed
-// @e2e openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#no-editing-without-dossiq
+// @e2e openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#dossiq-installed
+// @e2e openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#no-editing-without-dossiq
 
 import type { APIRequestContext, Page } from '@playwright/test'
 

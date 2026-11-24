@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Throwable;
 /**
  * Answers the Woo refusal grounds for the pickers.
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
  */
 class GroundsController extends Controller {
 
@@ -67,7 +67,7 @@ class GroundsController extends Controller {
 	 *
 	 * @return JSONResponse 200 with source, version and grounds; 401; 503 when no list can be read.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/tasks.md
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/tasks.md
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {

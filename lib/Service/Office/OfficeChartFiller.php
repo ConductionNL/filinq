@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-charts-and-images/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-24-office-charts-and-images/tasks.md#task-1.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -42,7 +42,7 @@ use Throwable;
  * language) and reported as a generation warning, the same honest failure as
  * the Twig `chart()` function.
  *
- * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
+ * @spec openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
  */
 class OfficeChartFiller {
 
@@ -94,7 +94,7 @@ class OfficeChartFiller {
 	 *
 	 * @return string[] The generation warnings, one per placeholder that became a marker.
 	 *
-	 * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
+	 * @spec openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
 	 */
 	public function fill(TemplateProcessor $processor, array $charts): array {
 		$warnings = [];
@@ -131,7 +131,7 @@ class OfficeChartFiller {
 	 *
 	 * @return Chart|ChartRenderError The element, or the reason it cannot be built.
 	 *
-	 * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
+	 * @spec openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
 	 */
 	public function build(string $type, array $data, array $options=[]): Chart|ChartRenderError {
 		if (isset(self::TYPES[$type]) === false) {

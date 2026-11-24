@@ -12,7 +12,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/tasks.md
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/tasks.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
