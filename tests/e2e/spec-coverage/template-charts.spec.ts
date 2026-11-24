@@ -15,8 +15,8 @@
 // @e2e openspec/specs/template-charts/spec.md#collection-renders-with-selected-formatted-columns
 // @e2e openspec/specs/template-charts/spec.md#readable-raster-image-is-embedded
 // @e2e openspec/specs/template-charts/spec.md#unreadable-file-degrades-to-a-marker-not-a-bypass
-// @e2e openspec/changes/office-charts-and-images/specs/template-charts/spec.md#office-chart-is-native-and-survives-the-cascade
-// @e2e openspec/changes/office-charts-and-images/specs/template-charts/spec.md#readable-image-lands-in-the-docx
+// @e2e openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#office-chart-is-native-and-survives-the-cascade
+// @e2e openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#readable-image-lands-in-the-docx
 
 import type { APIRequestContext } from '@playwright/test'
 
@@ -166,8 +166,8 @@ test.describe('office-charts-and-images: native charts and images in a generated
 	test('an office generation carries a native chart part and the image at its placeholder', async ({
 		request,
 	}) => {
-		// @e2e openspec/changes/office-charts-and-images/specs/template-charts/spec.md#office-chart-is-native-and-survives-the-cascade
-		// @e2e openspec/changes/office-charts-and-images/specs/template-charts/spec.md#readable-image-lands-in-the-docx
+		// @e2e openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#office-chart-is-native-and-survives-the-cascade
+		// @e2e openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#readable-image-lands-in-the-docx
 		const stamp = `e2echart-${Date.now()}`
 		const logo = `/remote.php/dav/files/admin/${stamp}.png`
 		const put = await request.put(logo, { data: Buffer.from(PNG_BASE64, 'base64') })

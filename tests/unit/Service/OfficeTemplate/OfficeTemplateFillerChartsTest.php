@@ -11,7 +11,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
+ * @spec openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

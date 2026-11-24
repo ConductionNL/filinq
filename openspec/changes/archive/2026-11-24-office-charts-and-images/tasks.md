@@ -13,5 +13,6 @@
 ## 2. Docs and e2e
 
 - [x] 2.1 Office section in `docs/features/template-charts.md`: the two placeholders and the row-cloning collection-table recipe
-- [ ] 2.2 Extend `tests/e2e/spec-coverage/template-charts.spec.ts` with an office generation that downloads the DOCX and checks the chart part
+- [x] 2.2 Extend `tests/e2e/spec-coverage/template-charts.spec.ts` with an office generation that downloads the DOCX and checks the chart part
   - Written (2026-11-21), not run: the office generation in `tests/e2e/spec-coverage/template-charts.spec.ts` uploads `chart-template.docx`, generates a DOCX with a chart and a readable image, and checks `word/charts/chart1.xml`, `word/media/` and the filled tags. Stays open until it has run against a live instance.
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.

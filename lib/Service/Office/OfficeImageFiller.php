@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-charts-and-images/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-24-office-charts-and-images/tasks.md#task-1.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -40,7 +40,7 @@ use Throwable;
  * read becomes the `[image unavailable: …]` marker plus a warning, never a
  * blank and never another user's file.
  *
- * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-008
+ * @spec openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-008
  */
 class OfficeImageFiller {
 
@@ -83,7 +83,7 @@ class OfficeImageFiller {
 	 *
 	 * @return string[] The generation warnings, one per placeholder that became a marker.
 	 *
-	 * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-008
+	 * @spec openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-008
 	 */
 	public function fill(TemplateProcessor $processor, array $images): array {
 		$warnings = [];

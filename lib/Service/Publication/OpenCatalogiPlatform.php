@@ -101,7 +101,7 @@ class OpenCatalogiPlatform implements OpenCatalogiPlatformInterface {
 	 * @return list<array{code: string, label: string}> The categories, empty when OpenCatalogi is not there.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-3.1
-	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category/tasks.md#task-1.1
 	 */
 	public function categories(): array {
 		$categories = [];
@@ -121,7 +121,7 @@ class OpenCatalogiPlatform implements OpenCatalogiPlatformInterface {
 	 *
 	 * @return string|null The code, or null when the value is neither or OpenCatalogi is not there.
 	 *
-	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category/tasks.md#task-1.1
 	 */
 	public function toPlatformCode(string $value): ?string {
 		$value = trim($value);
@@ -190,7 +190,7 @@ class OpenCatalogiPlatform implements OpenCatalogiPlatformInterface {
 	 *
 	 * @return array<string, array<string, mixed>> Per code, its TOOI URI and label; empty without OpenCatalogi.
 	 *
-	 * @spec openspec/changes/woo-hand-off-files-its-category/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category/tasks.md#task-1.1
 	 */
 	private function categoryList(): array {
 		if ($this->available() === false) {

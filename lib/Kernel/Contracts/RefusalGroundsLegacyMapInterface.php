@@ -43,7 +43,7 @@ interface RefusalGroundsLegacyMapInterface {
 	 *
 	 * @throws RuntimeException When the mapping file cannot be read.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/tasks.md
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/tasks.md
 	 */
 	public function all(): array;
 
@@ -54,7 +54,7 @@ interface RefusalGroundsLegacyMapInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/tasks.md
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/tasks.md
 	 */
 	public function isLegacySlug(string $slug): bool;
 
@@ -66,7 +66,7 @@ interface RefusalGroundsLegacyMapInterface {
 	 *
 	 * @return string|null The code.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/tasks.md
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/tasks.md
 	 */
 	public function codeFor(string $slug): ?string;
 }//end interface

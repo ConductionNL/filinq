@@ -34,11 +34,12 @@ pickers read `base` objects.
   - GIVEN an existing install WHEN upgraded THEN existing `base` objects stay readable.
   - Test: PHPUnit `RegisterSeedTest::testNoWooBaseIsSeeded`, `BaseSchemaGuardTest::testANewWooGroundIsRefused`.
   - Built (c3): the 19 Woo `base` seeds are gone from `filinq_register.json` (register 8.56.0, `base` 1.3.0 says the Woo grounds come from dossiq); `BaseRefusalGroundGuard` stops the creation of a `base` object whose slug is a Woo code or old slug (`ObjectCreatingEvent`). Existing `base` objects are untouched. The seed check is `DossierRegisterConfigTest::testNoWooBaseIsSeeded`.
-- [ ] 5 The admin page (REQ-GRD-004). Files: the grondslagen settings section, `l10n/en.json`, `l10n/nl.json`.
+- [x] 5 The admin page (REQ-GRD-004). Files: the grondslagen settings section, `l10n/en.json`, `l10n/nl.json`.
   - GIVEN the snapshot WHEN the page opens THEN read-only, version shown, no add or edit action, and the line naming dossiq.
   - GIVEN dossiq WHEN the page opens THEN a link to dossiq's grounds page and no editor.
   - Test: Playwright `tests/e2e/spec-coverage/grondslagen-read-from-dossiq.spec.ts` (both states; the dossiq-absent state on an instance with dossiq disabled).
   - Built (c3): the read-only **Woo refusal grounds** section (`src/views/settings/RefusalGroundsSource.vue` over `src/services/groundsSource.js`, reading `/api/grounds`): with dossiq a link to dossiq's grounds page, without it the snapshot's version and grounds; no editor. Strings in en and nl; Vitest `groundsSource.spec.js`; the settings golden re-recorded. Left: the Playwright spec (live, both states).
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
 - [x] 6 Docs. Files: `docs/features/grondslagen.md` (one list in dossiq, the snapshot for redaction only, the repair report).
   - Test: the docs build.
   - Built (c3): `docs/features/grondslagen.md`, linked from `docs/features/README.md`.

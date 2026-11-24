@@ -2302,10 +2302,10 @@
 			"built": {
 				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/TemplateRenderer.php registers the sandboxed chart(), data_table() and nc_image() Twig functions (lib/Service/Charts/ChartSvgRenderer, TableHtmlRenderer, TemplateImageResolver). Charts reach HTML and PDF as SVG, and ODT documents (DocumentRenderPipeline) and DOCX letters (CorrespondenceService) as PNG through lib/Service/Charts/SvgRasterizer. Rating stays partial: office templates (${chart:key}, ${image:key}) wait on openspec/changes/office-charts-and-images, and there is no editor button, an author types the function in Edit HTML.",
+				"evidence": "lib/Service/TemplateRenderer.php registers the sandboxed chart(), data_table() and nc_image() Twig functions (lib/Service/Charts/ChartSvgRenderer, TableHtmlRenderer, TemplateImageResolver). Charts reach HTML and PDF as SVG, and ODT documents (DocumentRenderPipeline) and DOCX letters (CorrespondenceService) as PNG through lib/Service/Charts/SvgRasterizer. Rating stays partial: office templates (${chart:key}, ${image:key}) wait on openspec/changes/archive/2026-11-24-office-charts-and-images, and there is no editor button, an author types the function in Edit HTML.",
 				"change": "openspec/changes/archive/2026-09-28-template-charts",
 				"requirement": "openspec/specs/template-charts :: Charts render in Twig templates from context data (REQ-DDTCH-002)",
-				"plan": "openspec/changes/office-charts-and-images"
+				"plan": "openspec/changes/archive/2026-11-24-office-charts-and-images"
 			},
 			"reachedOn": "/templates/:id Edit HTML, then Preview with Sample data (JSON)",
 			"provider": "filinq",
@@ -5070,7 +5070,7 @@
 					"openspec/specs/anonymization :: Grondslag pickers MUST source the list from the register",
 					"openspec/specs/anonymisation-grondslagen-summary :: The per-document summary MUST list anonymised entities and their bases"
 				],
-				"plan": "openspec/changes/grondslagen-read-from-dossiq"
+				"plan": "openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq"
 			},
 			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue -> EntityReviewTable.vue)",
 			"provider": "filinq",
@@ -5587,9 +5587,9 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Read at development b9e834e6 and opencatalogi development 7a5a8a492. The hand-off reaches OpenCatalogi (see woo-publish), but lib/Service/Publication/OpenCatalogiPublicationMap.php:58 FIELDS and toPublication() (:76) write no wooCategory, while OpenCatalogi's category sitemaps, which the national Woo index harvests, list only publications whose wooCategory matches (opencatalogi lib/Service/SitemapService.php:374). OpenCatalogi added that field on 30 Sep (schema 0.0.5), a day after filinq's pipeline was archived. The picker also stores the TOOI URI basename (c_…, OpenCatalogiPlatform.php:91) where OpenCatalogi's enum takes infocat001-017. So nothing filinq hands off reaches the index yet.",
-				"change": "openspec/changes/woo-hand-off-files-its-category",
+				"change": "openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/changes/woo-hand-off-files-its-category/specs/woo-publicatie-pipeline :: The hand-off files the publication under its Woo category (REQ-DDWPP-010)"
+				"requirement": "openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category/specs/woo-publicatie-pipeline :: The hand-off files the publication under its Woo category (REQ-DDWPP-010)"
 			},
 			"reachedOn": "nothing reaches it: handed-off publications carry no wooCategory, so no category sitemap lists them",
 			"provider": "filinq",

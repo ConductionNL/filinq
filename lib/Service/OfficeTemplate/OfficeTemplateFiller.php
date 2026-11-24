@@ -73,7 +73,7 @@ class OfficeTemplateFiller {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
+	 * @spec openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
 	 */
 	public function __construct(
 		private readonly ?OfficeChartFiller $charts = null,
@@ -95,7 +95,7 @@ class OfficeTemplateFiller {
 	 * @throws Exception When the DOCX cannot be read (422).
 	 *
 	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
-	 * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
+	 * @spec openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
 	 */
 	public function fill(string $docx, array $data, array $fragments=[], array $fieldMap=[]): array {
 		$run = new OfficeFillRun(processor: $this->open(docx: $docx), data: $data, fragments: $fragments, fieldMap: $fieldMap);
@@ -130,7 +130,7 @@ class OfficeTemplateFiller {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
+	 * @spec openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
 	 */
 	private function fillChartsAndImages(OfficeFillRun $run): void {
 		if ($this->charts !== null) {

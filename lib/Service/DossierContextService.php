@@ -247,7 +247,7 @@ class DossierContextService {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private function wooLabel(string $ref): ?string {
 		if ($this->wooGrounds === null || $this->wooGrounds->isWooReference(ref: $ref) === false) {

@@ -10,7 +10,7 @@
  * On an error no options are returned rather than a hard-coded list, so a
  * value that is not a ground is never offered for storage.
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
@@ -24,7 +24,7 @@ import { generateUrl } from '@nextcloud/router'
  *
  * @param {object} ground A ground of the list (`code`, `label`, `citable`).
  * @return {{label: string, value: string}|null} The option, or null.
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
  */
 export function groundOption(ground) {
 	const code = typeof ground?.code === 'string' ? ground.code : ''
@@ -51,7 +51,7 @@ function optionLabel(code, label) {
  *
  * @return {Promise<Array<{label: string, value: string}>>} Options for NcSelect
  *   ({label, value: code}); empty when the list cannot be read.
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
  */
 export async function fetchBaseOptions() {
 	try {

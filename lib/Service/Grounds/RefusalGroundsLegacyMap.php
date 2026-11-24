@@ -18,7 +18,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ use RuntimeException;
 /**
  * The mapping from filinq's old Woo `base` slugs to dossiq codes.
  *
- * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
+ * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-existing-references-are-re-pointed-to-dossiqs-codes-without-guessing-req-grd-003
  */
 class RefusalGroundsLegacyMap implements RefusalGroundsLegacyMapInterface {
 
@@ -69,7 +69,7 @@ class RefusalGroundsLegacyMap implements RefusalGroundsLegacyMapInterface {
 	 *
 	 * @throws RuntimeException When the mapping file cannot be read.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/tasks.md
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/tasks.md
 	 */
 	public function all(): array {
 		if ($this->map !== null) {
@@ -96,7 +96,7 @@ class RefusalGroundsLegacyMap implements RefusalGroundsLegacyMapInterface {
 	 *
 	 * @throws RuntimeException When the mapping file cannot be read.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/tasks.md
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/tasks.md
 	 */
 	private function decoded(): array {
 		$decoded = null;
@@ -121,7 +121,7 @@ class RefusalGroundsLegacyMap implements RefusalGroundsLegacyMapInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/tasks.md
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/tasks.md
 	 */
 	private static function isEntry(mixed $slug, mixed $code): bool {
 		return is_string($slug) === true && is_string($code) === true && $code !== '';
@@ -134,7 +134,7 @@ class RefusalGroundsLegacyMap implements RefusalGroundsLegacyMapInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/tasks.md
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/tasks.md
 	 */
 	public function isLegacySlug(string $slug): bool {
 		return array_key_exists($slug, $this->all());
@@ -148,7 +148,7 @@ class RefusalGroundsLegacyMap implements RefusalGroundsLegacyMapInterface {
 	 *
 	 * @return string|null The code.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/tasks.md
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/tasks.md
 	 */
 	public function codeFor(string $slug): ?string {
 		$code = ($this->all()[$slug] ?? null);

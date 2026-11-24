@@ -96,7 +96,7 @@ class BaseLabelResolver {
 	 *                                                                 display name and
 	 *                                                                 Woo Art. 5 toelichting.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	public function resolve(array $baseRefs): array {
 		if (count($baseRefs) === 0) {
@@ -137,7 +137,7 @@ class BaseLabelResolver {
 	 *
 	 * @return array<string, array{name: string, description: string}> Map from each reference to its label.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private function resolveThroughGrounds(array $baseRefs): array {
 		$woo = new RefusalGroundLabels(grounds: $this->grounds, legacy: $this->legacy, logger: $this->logger);
@@ -165,7 +165,7 @@ class BaseLabelResolver {
 	 *
 	 * @return array<string, array<string,string>> The lookups.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private function tenantBaseLookups(): array {
 		$objectService = $this->repository->objectService();
@@ -322,7 +322,7 @@ class BaseLabelResolver {
 	 *
 	 * @return array{name: string, description: string} The label.
 	 *
-	 * @spec openspec/changes/grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
 	 */
 	private function labelFor(string $refString, array $lookups): array {
 		if (isset($lookups['slugToName'][$refString]) === true) {
