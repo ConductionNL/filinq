@@ -140,3 +140,5 @@ For `pur-ai-agent`:
 - shillinq: listen to `nl.conduction.filinq.extraction.verdict` and decide,
   per supplier and with its own history, whether a `pass` invoice is booked
   without a person.
+
+Filed: https://github.com/ConductionNL/shillinq/issues/3243 (camera entry on the receipts screen) and https://github.com/ConductionNL/shillinq/issues/3244 (acting on the verdict event).

@@ -25,8 +25,9 @@
 - [x] 2.4 Implement the overbrenging handoff via OR's `EdepotTransferService` (REQ-DDTMM-006)
   - Gate → sidecar → SIP transfer with configured transport/profile; on confirm: `archiefstatus = overgebracht` + sidecar attached as OR file attachment; degradation to explicit manual-export download when no transport is configured; zero transport/HTTP code in Filinq (architecture test).
 
-- [ ] 2.5 File the OpenRegister issues surfaced by this change (design.md)
+- [x] 2.5 File the OpenRegister issues surfaced by this change (design.md)
   - (a) `tmlo` vs `retention` duplication — the two MDTO generators read different fields; (b) extension-element support in `MdtoXmlGenerator` so app supplements need no app-side XML assembly. Link both on tracking issue #237.
+  - Filed as ConductionNL/openregister#11038 and ConductionNL/openregister#11039 (2026-11-24); the attribute gap is ConductionNL/openregister#2031.
 
 ## 3. Frontend
 

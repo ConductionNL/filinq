@@ -26,8 +26,9 @@
 
 ## 5. Cross-app, strings, tests and docs
 
-- [ ] 5.1 File the hermiq issue for the free-prompt half of `plt-ai-fill`. Verify: the issue link is in the PR body.
+- [x] 5.1 File the hermiq issue for the free-prompt half of `plt-ai-fill`. Verify: the issue link is in the PR body.
   - Not done by this build: filing an issue in another repository is outside what the build may do; the issue still needs filing.
+  - Filed as ConductionNL/hermiq#1947 (2026-11-24); linked in `proposal.md` and the PR body.
 - [x] 5.2 Dutch and English strings (ADR-005) and `@spec` tags on every new method. Verify: `npm run lint`, `npm run check:l10n` and `composer check:strict` pass.
   - The new UI strings in `l10n/en.json` and `l10n/nl.json` (`.js` rebuilt); `@spec` tags on the new methods. `npm run lint` (0 errors), `npm run test:l10n` and `check:l10n-js` pass; phpcs, phpstan and phpmd are clean on the change's PHP after `SchemaFieldFillService` was split: the decision half is `FieldSuggestionDecisions`, and the text model and document text are injected.
 - [ ] 5.3 PHPUnit at 75% or more on the new classes (ADR-009) and a section in `docs/features/` with a screenshot of the suggestion dialog, saying which provider reads the text (ADR-010). Verify: the coverage report and the docs page.

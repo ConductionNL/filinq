@@ -36,6 +36,11 @@ e-depot generator but returns 422 from `/api/tmlo/*` ("no TMLO metadata").
 informatieobject attributes an e-depot ingest profile typically requires.
 Both gaps are OR-side; this change files them as OR issues and designs
 around them without duplicating OR logic (see D3/D5).
+Filed: https://github.com/ConductionNL/openregister/issues/11038 (the
+422 on retention-only objects) and
+https://github.com/ConductionNL/openregister/issues/11039 (supplement
+elements on `MdtoXmlGenerator`); the missing attributes are
+https://github.com/ConductionNL/openregister/issues/2031.
 
 ### Filinq side
 

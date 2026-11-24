@@ -24,7 +24,8 @@ Built in this pass: the register moves to 8.52.0 with `financialExtraction` 1.1.
 
 ## 4. Cross-app, strings, tests and docs
 
-- [ ] 4.1 File the shillinq issues for the camera entry on its receipts screen and for acting on the verdict event (proposal, cross-app dependencies). Verify: both issue links are in the PR body.
+- [x] 4.1 File the shillinq issues for the camera entry on its receipts screen and for acting on the verdict event (proposal, cross-app dependencies). Verify: both issue links are in the PR body.
+  - Filed as ConductionNL/shillinq#3243 and ConductionNL/shillinq#3244 (2026-11-24); linked in `proposal.md` and the PR body.
 - [x] 4.2 Dutch and English strings (ADR-005) and `@spec` tags on every new method. Verify: `npm run lint`, `npm run check:l10n` and `composer check:strict` pass.
   English and Dutch in `l10n/en.json` and `l10n/nl.json` (rebuilt `.js`); `@spec` on every new method.
 - [x] 4.3 PHPUnit at 75% or more on the new classes (ADR-009). Verify: the coverage report for the new files.
