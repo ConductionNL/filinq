@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Integration;
 
+use OCA\Filinq\AppInfo\Application;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
 use OCA\Integriq\Event\WatchedFileArrivedEvent;
@@ -28,8 +29,8 @@ use OCP\EventDispatcher\IEventDispatcher;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IAppConfig;
-use OCP\Server;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 
 /**
  * Dispatches integriq's real WatchedFileArrivedEvent through the IEventDispatcher
@@ -50,6 +51,13 @@ use PHPUnit\Framework\TestCase;
  * @coversNothing
  */
 class WatchedFolderScanIntakeTest extends TestCase {
+
+	/**
+	 * filinq's app container, the one the booted instance registered for it.
+	 *
+	 * @var ContainerInterface
+	 */
+	private ContainerInterface $container;
 
 	/**
 	 * The watched folder the test declares, under the user's home.
@@ -93,6 +101,10 @@ class WatchedFolderScanIntakeTest extends TestCase {
 			$this->markTestSkipped(message: 'integriq is not installed: its WatchedFileArrivedEvent cannot be loaded.');
 		}
 
+		// The app's own container: on a booted instance App() reuses the one
+		// Nextcloud registered for filinq, so the services are the live ones.
+		$this->container = (new Application())->getContainer();
+
 	}//end setUp()
 
 	/**
@@ -102,12 +114,12 @@ class WatchedFolderScanIntakeTest extends TestCase {
 	 */
 	protected function tearDown(): void {
 		if ($this->folder !== '') {
-			$home = Server::get(IRootFolder::class)->getUserFolder($this->user);
+			$home = $this->container->get(IRootFolder::class)->getUserFolder($this->user);
 			if ($home->nodeExists($this->folder) === true) {
 				$home->get($this->folder)->delete();
 			}
 
-			$config = Server::get(IAppConfig::class);
+			$config = $this->container->get(IAppConfig::class);
 			if ($this->savedProfiles === null) {
 				$config->deleteKey('filinq', ScanProfileServiceInterface::CONFIG_KEY);
 			} else {
@@ -127,18 +139,18 @@ class WatchedFolderScanIntakeTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheDispatcherReachesTheListener(): void {
-		$config = Server::get(IAppConfig::class);
+		$config = $this->container->get(IAppConfig::class);
 		$this->savedProfiles = null;
 		if ($config->hasKey('filinq', ScanProfileServiceInterface::CONFIG_KEY) === true) {
 			$this->savedProfiles = $config->getValueString('filinq', ScanProfileServiceInterface::CONFIG_KEY);
 		}
 
 		$this->folder = 'filinq-watched-' . bin2hex(random_bytes(4));
-		Server::get(ScanProfileServiceInterface::class)->declare(
+		$this->container->get(ScanProfileServiceInterface::class)->declare(
 			[['id' => $this->folder, 'watchedFolder' => $this->folder, 'separatorMode' => 'none']]
 		);
 
-		$home = Server::get(IRootFolder::class)->getUserFolder($this->user);
+		$home = $this->container->get(IRootFolder::class)->getUserFolder($this->user);
 		$folder = $home->newFolder($this->folder);
 		$this->assertInstanceOf(expected: Folder::class, actual: $folder);
 		$pdf = file_get_contents(__DIR__ . '/../sample-documents/pdfa/pdfa3b-rendered.pdf');
@@ -154,9 +166,9 @@ class WatchedFolderScanIntakeTest extends TestCase {
 			ownerUid: $this->user,
 		);
 
-		Server::get(IEventDispatcher::class)->dispatchTyped($event);
+		$this->container->get(IEventDispatcher::class)->dispatchTyped($event);
 
-		$batch = Server::get(ScanBatchServiceInterface::class)->storedFor(fileId: (int)$file->getId());
+		$batch = $this->container->get(ScanBatchServiceInterface::class)->storedFor(fileId: (int)$file->getId());
 		$this->assertIsArray(actual: $batch, message: 'The listener stored no batch for the handed-over file.');
 		$this->assertNotSame(expected: '', actual: (string)($batch['uuid'] ?? ''));
 		$this->assertSame(
