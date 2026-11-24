@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/extraction-cv-profile/specs/cv-profile-extraction/spec.md
+ * @spec openspec/changes/archive/2026-11-24-extraction-cv-profile/specs/cv-profile-extraction/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/extraction-cv-profile/specs/cv-profile-extraction/spec.md
+ * @spec openspec/changes/archive/2026-11-24-extraction-cv-profile/specs/cv-profile-extraction/spec.md
  */
 class ProfileExtractionService {
 
@@ -73,8 +73,8 @@ class ProfileExtractionService {
 	 *
 	 * @return array{status: string, educationLevel: int|null, experienceYears: float|null, competenceCodes: list<string>, message: string}
 	 *
-	 * @spec openspec/changes/extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
-	 * @spec openspec/changes/extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-002
+	 * @spec openspec/changes/archive/2026-11-24-extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
+	 * @spec openspec/changes/archive/2026-11-24-extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-002
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $requestedBy keeps the extractFinancial() call shape; the read is the session user's.
 	 */
