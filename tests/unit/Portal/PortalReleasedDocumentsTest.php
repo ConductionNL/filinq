@@ -161,7 +161,7 @@ class PortalReleasedDocumentsTest extends TestCase {
 				'gated' => true,
 				'reason' => 'not_accepted',
 				'message' => 'Read the conditions and accept them before this file is downloaded.',
-				'agreement' => ['version' => 'v2', 'terms' => 'Do not republish.'],
+				'agreement' => ['version' => 'v2', 'text' => 'Do not republish.'],
 				'internal' => 'never shown',
 			]
 		);
@@ -171,7 +171,7 @@ class PortalReleasedDocumentsTest extends TestCase {
 		$terms = $provider->releasedDocumentTerms(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject);
 
 		$this->assertFalse(condition: $terms['mayDownload']);
-		$this->assertSame(expected: ['version' => 'v2', 'terms' => 'Do not republish.'], actual: $terms['agreement']);
+		$this->assertSame(expected: ['version' => 'v2', 'text' => 'Do not republish.'], actual: $terms['agreement']);
 		$this->assertArrayNotHasKey(key: 'internal', array: $terms);
 
 	}//end testTheTermsHookShowsTheConditionsInForce()
