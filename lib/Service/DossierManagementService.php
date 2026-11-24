@@ -172,15 +172,21 @@ class DossierManagementService implements DossierManagementServiceInterface {
 	 * @throws RuntimeException When the caller cannot read the dossier.
 	 *
 	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/companion-knows-the-open-document/specs/companion-page-context/spec.md#requirement-the-dossier-detail-names-its-home-folder-req-ckod-002
 	 */
 	public function detail(string $dossierId): array {
 		$object = $this->requireReadable(dossierId: $dossierId);
 		$payload = $this->reader->payloadOf(object: $object);
 		$members = $this->context->members(object: $object, payload: $payload);
 		$status = $this->reader->statusOf(payload: $payload);
+		$folder = $this->files->homeFolder(object: $object, payload: $payload);
 
 		return [
 			'id' => $dossierId,
+			// The dossier's home folder, so the AI companion can scope a question
+			// to it (hermiq chat-about-a-document-cites-its-sources, task 5);
+			// null when the dossier has none.
+			'folderId' => $folder?->getId(),
 			'name' => (string)($payload['name'] ?? ''),
 			'description' => (string)($payload['description'] ?? ''),
 			'status' => $status,

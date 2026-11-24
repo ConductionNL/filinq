@@ -182,6 +182,7 @@ import {
 	viewerPropsFor,
 } from '../../services/viewerRouting.js'
 import { fileViewerStore } from '../../store/store.js'
+import { pointCompanionAt, releaseCompanion } from '../../utils/companionContext.js'
 
 /**
  * Header icon per viewer kind; any other kind shows the generic document icon.
@@ -219,6 +220,10 @@ export default {
 	},
 
 	mixins: [ocrRun],
+
+	inject: {
+		cnAiContext: { from: 'cnAiContext', default: null },
+	},
 
 	data() {
 		return {
@@ -384,8 +389,13 @@ export default {
 				this.loadOcrStatus()
 				this.loadSourceBadge()
 				recordDocumentOpened(this.notesFileId)
+				pointCompanionAt(this.cnAiContext, 'document', this.notesFileId)
 			},
 		},
+	},
+
+	beforeUnmount() {
+		releaseCompanion(this.cnAiContext)
 	},
 
 	methods: {
