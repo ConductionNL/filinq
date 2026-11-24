@@ -76,6 +76,7 @@
     before the write. Named rather than guessed.
 
 - [ ] 1.5 Number a registration per unit as well as per year, once OpenRegister names a generated sequence per unit; until then the register keeps one instance-wide series (row in-number, REQ-DIO-01). Verify: PHPUnit that two units each start at 1 in a new year.
+  - Dependency built (2026-11-24): ConductionNL/openregister#11042 adds `partitionBy` to `x-openregister-generated` (one counter per value of a property per period; an empty value keeps the shared counter). Left: once an OpenRegister release carries it, declare `"partitionBy": "unit"` on `documentRegistration.registrationNumber`, drop the instance-wide NOTE from its description, and add the PHPUnit. Not before: an OpenRegister without it refuses the unknown key when it saves the schema, so the register would not import.
 
 ## 2. Discharge and the open post list
 
