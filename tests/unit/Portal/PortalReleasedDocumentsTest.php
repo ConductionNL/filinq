@@ -86,6 +86,8 @@ class PortalReleasedDocumentsTest extends TestCase {
 		$this->assertSame(expected: ['documentName', 'kind', 'releasedAt', 'withdrawnAt'], actual: $documents['fields']);
 		$this->assertSame(expected: 'releasedDocuments', actual: $documents['documents']['provider']);
 		$this->assertSame(expected: 'releasedDocumentOpened', actual: $documents['documents']['opened']);
+		$this->assertSame(expected: 'releasedDocumentTerms', actual: $documents['documents']['terms']);
+		$this->assertSame(expected: 'releasedDocumentAccept', actual: $documents['documents']['accept']);
 		$this->assertArrayNotHasKey(key: 'contactRef', array: array_flip($documents['fields']), message: 'The scope key is never projected.');
 
 	}//end testTheRequesterDocumentsCollectionIsScopedToTheirContact()
@@ -146,4 +148,86 @@ class PortalReleasedDocumentsTest extends TestCase {
 		$this->assertTrue(condition: (new PortalContributionProvider(releases: $this->releases(), agreements: $open))->releasedDocumentOpened(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject));
 
 	}//end testAnUndecidableDownloadIsRefused()
+	/**
+	 * The terms hook shows the conditions in force to a subject who has not accepted them.
+	 *
+	 * @return void
+	 */
+	public function testTheTermsHookShowsTheConditionsInForce(): void {
+		$agreements = $this->createMock(DownloadAgreementGateInterface::class);
+		$agreements->expects($this->once())->method('check')->with('4711', 'portal:subject-1')->willReturn(
+			[
+				'mayDownload' => false,
+				'gated' => true,
+				'reason' => 'not_accepted',
+				'message' => 'Read the conditions and accept them before this file is downloaded.',
+				'agreement' => ['version' => 'v2', 'terms' => 'Do not republish.'],
+				'internal' => 'never shown',
+			]
+		);
+		$provider = new PortalContributionProvider(releases: $this->releases(), agreements: $agreements);
+
+		$terms = $provider->releasedDocumentTerms(releaseId: 'rel-1', documentId: 'rel-1', subject: ['subjectRef' => 'subject-1']);
+
+		$this->assertFalse(condition: $terms['mayDownload']);
+		$this->assertSame(expected: ['version' => 'v2', 'terms' => 'Do not republish.'], actual: $terms['agreement']);
+		$this->assertArrayNotHasKey(key: 'internal', array: $terms);
+
+	}//end testTheTermsHookShowsTheConditionsInForce()
+
+	/**
+	 * The terms hook answers null when nothing can decide.
+	 *
+	 * @return void
+	 */
+	public function testTheTermsHookAnswersNullWhenUndecidable(): void {
+		$failing = $this->createMock(DownloadAgreementGateInterface::class);
+		$failing->method('check')->willThrowException(new RuntimeException('store down'));
+		$open = $this->createMock(DownloadAgreementGateInterface::class);
+		$open->method('check')->willReturn(['mayDownload' => true]);
+		$subject = ['subjectRef' => 'subject-1'];
+
+		$this->assertNull((new PortalContributionProvider(releases: $this->releases()))->releasedDocumentTerms(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject));
+		$this->assertNull((new PortalContributionProvider(releases: $this->releases(), agreements: $open))->releasedDocumentTerms(releaseId: 'rel-1', documentId: 'rel-1', subject: []));
+		$this->assertNull((new PortalContributionProvider(releases: $this->releases(), agreements: $open))->releasedDocumentTerms(releaseId: 'rel-1', documentId: 'other', subject: $subject));
+		$this->assertNull((new PortalContributionProvider(releases: $this->releases(), agreements: $failing))->releasedDocumentTerms(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject));
+
+	}//end testTheTermsHookAnswersNullWhenUndecidable()
+
+	/**
+	 * Accepting records the version shown for this portal subject, after which the download may go ahead.
+	 *
+	 * @return void
+	 */
+	public function testAcceptingRecordsTheShownVersionForTheSubject(): void {
+		$agreements = $this->createMock(DownloadAgreementGateInterface::class);
+		$agreements->expects($this->once())->method('accept')->with('4711', 'portal:subject-1', 'v2')->willReturn(['mayDownload' => true]);
+		$provider = new PortalContributionProvider(releases: $this->releases(), agreements: $agreements);
+
+		$this->assertTrue(condition: $provider->releasedDocumentAccept(releaseId: 'rel-1', documentId: 'rel-1', subject: ['subjectRef' => 'subject-1'], version: ' v2 '));
+
+	}//end testAcceptingRecordsTheShownVersionForTheSubject()
+
+	/**
+	 * An acceptance that cannot be recorded answers false: no subject, no version, an unlisted id, a refused or failing gate.
+	 *
+	 * @return void
+	 */
+	public function testAnAcceptanceThatCannotBeRecordedRefuses(): void {
+		$never = $this->createMock(DownloadAgreementGateInterface::class);
+		$never->expects($this->never())->method('accept');
+		$refused = $this->createMock(DownloadAgreementGateInterface::class);
+		$refused->method('accept')->willReturn(['mayDownload' => false, 'reason' => 'version_moved_on']);
+		$failing = $this->createMock(DownloadAgreementGateInterface::class);
+		$failing->method('accept')->willThrowException(new RuntimeException('store down'));
+		$subject = ['subjectRef' => 'subject-1'];
+
+		$quiet = new PortalContributionProvider(releases: $this->releases(), agreements: $never);
+		$this->assertFalse(condition: $quiet->releasedDocumentAccept(releaseId: 'rel-1', documentId: 'rel-1', subject: [], version: 'v2'));
+		$this->assertFalse(condition: $quiet->releasedDocumentAccept(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject, version: ' '));
+		$this->assertFalse(condition: $quiet->releasedDocumentAccept(releaseId: 'rel-1', documentId: 'other', subject: $subject, version: 'v2'));
+		$this->assertFalse(condition: (new PortalContributionProvider(releases: $this->releases(), agreements: $refused))->releasedDocumentAccept(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject, version: 'v1'));
+		$this->assertFalse(condition: (new PortalContributionProvider(releases: $this->releases(), agreements: $failing))->releasedDocumentAccept(releaseId: 'rel-1', documentId: 'rel-1', subject: $subject, version: 'v2'));
+
+	}//end testAnAcceptanceThatCannotBeRecordedRefuses()
 }//end class
