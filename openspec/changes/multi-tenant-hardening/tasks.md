@@ -62,9 +62,10 @@
   - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Measured with pcov over the new classes' tests: `SystemContextSeam` 100%, `EffectiveSettings` 97.9%, `OrganisationSettingsService` 96.5%, `OrganisationSettingsInput` 98.2%, `OrganisationSettingsController` 100% of statements; backfill in `OrganisationBackfillTest`, guardrails in `MultiTenantGuardrailsTest`.
 
-- [ ] 6.2 Playwright e2e `tests/e2e/workflows/multi-tenant-isolation.spec.ts` + `tests/e2e/spec-coverage/multi-tenant.spec.ts` + `tests/e2e/spec-coverage/organisation-settings.spec.ts` covering the `@e2e`-referenced scenarios with two seeded organisations on the Postgres dev instance
+- [x] 6.2 Playwright e2e `tests/e2e/workflows/multi-tenant-isolation.spec.ts` + `tests/e2e/spec-coverage/multi-tenant.spec.ts` + `tests/e2e/spec-coverage/organisation-settings.spec.ts` covering the `@e2e`-referenced scenarios with two seeded organisations on the Postgres dev instance
   - Includes the GH #283 forgery scenario failing and the nldesign-theme accessibility pass on the new settings section.
   - Round 2: the three spec files are written, with a shared two-organisation fixture (`tests/e2e/workflows/multi-tenant-fixtures.ts`: three run-stamped users signed in by basic auth with an empty storage state, organisations made by the users so OpenRegister stamps them). Not run: needs the live instance. Not covered by them: the branding colours of a generated letter, the batch-report label and the anonymiser's entity pre-selection (each needs a full document run; PHPUnit pins them).
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
 
 - [x] 6.3 i18n: EN + NL for all new UI strings (organisation settings section, report labels, empty states)
   - Keys in English.

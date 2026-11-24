@@ -34,8 +34,9 @@ modify; if not, say so in the PR body.
   - Test: PHPUnit `MovePoliciesToTheEngineTest::testAnOrganisationTermIsMoved`, `::testAnInexpressibleRuleStays`, `::testTheRepairIsIdempotent`, `::testTheWooProfileBecomesAnEngineProfile`.
 - [ ] 5 Settings, strings and docs. Files: the admin settings (where the guarantees now live, with links to OpenRegister's settings), `l10n/en.json`, `l10n/nl.json`, `docs/features/redaction-and-what-leaves-the-building.md` (the engine is the guarantee; filinq is the workbench).
   - Test: the docs build.
-- [ ] 6 End to end. Files: `tests/e2e/spec-coverage/redaction-guarantees-from-the-engine.spec.ts` (with `anonymisation.requireReview` on: a batch with one undecided document shows the engine's refusal for it; decide, mark reviewed, run again, read `clean` on the link).
+- [x] 6 End to end. Files: `tests/e2e/spec-coverage/redaction-guarantees-from-the-engine.spec.ts` (with `anonymisation.requireReview` on: a batch with one undecided document shows the engine's refusal for it; decide, mark reviewed, run again, read `clean` on the link).
   - Test: the Playwright spec.
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
 
 Verification (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 

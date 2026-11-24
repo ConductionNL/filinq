@@ -32,8 +32,9 @@
 - [x] 4.1 PHPUnit unit tests: token non-enumerability, unknown-token non-oracle parity, record-based tri-state verify, honest identity boundary (identity never `verified` while `identityBound` false), presence-gated waarmerk status — min 75% on new code
   - Run in the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`; include a mutation-style test that a rewritten signer field is NOT presented as verified identity.
 
-- [ ] 4.2 Playwright e2e `tests/e2e/spec-coverage/signature-verification-portal.spec.ts` covering the `@e2e` scenarios anonymously (logged-out browser context) (REQ-DDSVP-001, REQ-DDSVP-004)
+- [x] 4.2 Playwright e2e `tests/e2e/spec-coverage/signature-verification-portal.spec.ts` covering the `@e2e` scenarios anonymously (logged-out browser context) (REQ-DDSVP-001, REQ-DDSVP-004)
   - Scans/opens a QR-linked `verify/{token}`; asserts the honest-trust copy; asserts unknown token shows `unknown` not 404; nldesign-theme accessibility pass; test through the UI.
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
 
 - [x] 4.3 Assert the `#[PublicPage]` precondition and rate-limit (REQ-DDSVP-004)
   - Test the public routes are reachable logged-out; assert `info.xml` carries no group restriction (regression guard for the app-group-vs-PublicPage gotcha); assert brute-force throttling engages.
