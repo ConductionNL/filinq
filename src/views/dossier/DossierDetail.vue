@@ -414,6 +414,7 @@ export default {
 		 * The dossier's home folder, which the AI companion scopes a question to.
 		 *
 		 * @return {number|null} The folder id, or null while none is known.
+		 * @spec openspec/changes/companion-knows-the-open-document/specs/companion-page-context/spec.md#requirement-the-companion-knows-the-document-or-folder-a-page-shows-req-ckod-001
 		 */
 		companionFolderId() {
 			const dossier = this.dossierStore.dossier
@@ -483,6 +484,7 @@ export default {
 			 *
 			 * @param {number|null} folderId The folder id.
 			 * @return {void}
+			 * @spec openspec/changes/companion-knows-the-open-document/specs/companion-page-context/spec.md#requirement-the-companion-knows-the-document-or-folder-a-page-shows-req-ckod-001
 			 */
 			handler(folderId) {
 				pointCompanionAt(this.cnAiContext, 'folder', folderId)

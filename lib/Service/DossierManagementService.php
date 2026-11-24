@@ -172,6 +172,7 @@ class DossierManagementService implements DossierManagementServiceInterface {
 	 * @throws RuntimeException When the caller cannot read the dossier.
 	 *
 	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/companion-knows-the-open-document/specs/companion-page-context/spec.md#requirement-the-dossier-detail-names-its-home-folder-req-ckod-002
 	 */
 	public function detail(string $dossierId): array {
 		$object = $this->requireReadable(dossierId: $dossierId);

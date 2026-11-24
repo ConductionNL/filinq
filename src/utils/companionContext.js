@@ -32,6 +32,7 @@ function idOf(value) {
  * @param {string} pageKind `document` or `folder`.
  * @param {number|string|null} fileId The file or folder id.
  * @return {void}
+ * @spec openspec/changes/companion-knows-the-open-document/specs/companion-page-context/spec.md#requirement-the-companion-knows-the-document-or-folder-a-page-shows-req-ckod-001
  */
 export function pointCompanionAt(context, pageKind, fileId) {
 	if (!context) {
@@ -54,6 +55,7 @@ export function pointCompanionAt(context, pageKind, fileId) {
  *
  * @param {object|null} context The injected `cnAiContext`.
  * @return {void}
+ * @spec openspec/changes/companion-knows-the-open-document/specs/companion-page-context/spec.md#requirement-the-companion-knows-the-document-or-folder-a-page-shows-req-ckod-001
  */
 export function releaseCompanion(context) {
 	if (!context) {
