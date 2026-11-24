@@ -117,6 +117,7 @@ Features proposed based on tender analysis and customer requests. Not yet specif
 | [Woo metadata worklist](./woo-metadata-worklist.md) | woo-metadata-worklist.md | Publicatiecomponent | TEC-DMS-6 | Done |
 | [Woo refusal grounds](./grondslagen.md) | grondslagen.md | Publicatiecomponent | TEC-DMS-6 | Done |
 | [Finding documents by their content](./document-content-search.md) | document-content-search.md | Documentbeheercomponent | — | Implemented |
+| [Retention under the Archiefwet](./archiefwet-retention.md) | archiefwet-retention.md | Archiefcomponent | — | Implemented |
 | [Document Signing](./document-signing.md) | document-signing.md | — | TEC-DMS-4 | Roadmap |
 | [Digital Signing Integration](./digital-signing.md) | digital-signing.md | — | TEC-DMS-4 | Roadmap |
 | [PDF Page Stamping](./pdf-page-stamping.md) | pdf-page-stamping.md | — | — | Implemented |

@@ -63,6 +63,7 @@
 
 - [ ] 4.4 Documentation `docs/features/archiefwet-retention.md` with Playwright MCP screenshots (ADR-010)
   - Covers selectielijst maintenance, the admin wiring step, the archivist workflow and the production checklist (replace `TODO-*` categories before enabling destruction).
+  - Built so far (2026-11-24): `docs/features/archiefwet-retention.md` (linked from `docs/features/README.md`) covers the selectielijst and its maintenance, the Archiefbeheer wiring step, the destruction-list review, the certificates, the records due for transfer, transferred records, the production checklist and the routes used. Left: the screenshots, which need a browser on a live instance.
 
 - [ ] 4.5 Gates + validation
   - `composer check:strict` zero new violations; `openspec validate archiefwet-retention-engine --strict` exits 0; the REQ-DDARE-009 seed-lint passes (no `TODO-*` categorie remains); fix pre-existing quality issues encountered on touched files.
