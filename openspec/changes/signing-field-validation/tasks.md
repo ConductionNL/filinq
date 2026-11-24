@@ -21,7 +21,8 @@
 ## 4. Strings, docs and siblings
 
 - [ ] 4.1 Dutch and English strings (ADR-005), `@spec` tags on new methods, and a section in `docs/features/` with a screenshot of the dialog (ADR-010). Verify: `npm run check:l10n`, `npm run lint` and `composer check:strict` pass; PHPUnit coverage on the new PHP is at least 75% (ADR-009).
-- [ ] 4.2 File openregister's IBAN format and portaliq's row-action inputs as issues on their repos and link them in this change's proposal. Verify: both issue URLs are in `proposal.md` under Cross-app dependencies.
+- [x] 4.2 File openregister's IBAN format and portaliq's row-action inputs as issues on their repos and link them in this change's proposal. Verify: both issue URLs are in `proposal.md` under Cross-app dependencies.
+  - IBAN built as ConductionNL/openregister#10571; portaliq filed as ConductionNL/portaliq#2664 (2026-11-24); both URLs in `proposal.md`.
 
 ## Build notes
 

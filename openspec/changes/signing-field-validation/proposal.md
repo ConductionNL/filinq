@@ -108,3 +108,5 @@ open change `bulk-signing-field-builder` (REQ-DDBSF-003) and depends on it.
 - **portaliq**: the portal sign row action must collect the field values
   filinq declares for the signer and send them with the sign act. Today a
   row action carries no inputs.
+
+Filed: https://github.com/ConductionNL/openregister/pull/10571 (the IBAN format, built) and https://github.com/ConductionNL/portaliq/issues/2664 (row actions that collect field values).

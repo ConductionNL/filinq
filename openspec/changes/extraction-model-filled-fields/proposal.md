@@ -141,3 +141,5 @@ place.
 - Consuming apps (shillinq, dossiq and others) MAY declare a
   `fieldFillProfile` for their schemas and show the suggestions in their
   own record forms through `POST api/extraction/fields`.
+
+Filed: https://github.com/ConductionNL/hermiq/issues/1947 (hermiq, the free-prompt half of `plt-ai-fill`).

@@ -105,3 +105,5 @@ theirs.
   it must pass the verified signer e-mail in the assertion. Until both
   land, an external accept-only recipient cannot act on the portal, and
   neither can an external signer.
+
+Filed: https://github.com/ConductionNL/portaliq/issues/804 (both gaps: row actions dropped by `CollectionConfigNormaliser`, and no `signerEmail` claim; closed in portaliq).

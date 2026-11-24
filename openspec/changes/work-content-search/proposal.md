@@ -106,3 +106,5 @@ search provider of its own.
   `ContentSearchHandler` only maps chunks to their owning objects. (3) A
   way for an app to give a file hit its deep link, as `deepLinks` does for
   objects.
+
+Filed: https://github.com/ConductionNL/openregister/issues/11037 (scoped chunk query, file hits in unified search, file deep-link hook) and https://github.com/ConductionNL/openregister/issues/4097 (the unscoped `/api/search/files/*` read exposure, closed).

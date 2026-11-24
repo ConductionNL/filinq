@@ -123,3 +123,5 @@ it.
   the document and the namespace destination applies, keep the returned
   bytes for its own record, and show the delivery status on its generated
   document page.
+
+Filed: https://github.com/ConductionNL/integriq/issues/3842 (push synchronisation on `caseSystemDelivery`) and https://github.com/ConductionNL/humaniq/issues/1244 (render with mode `both`).
