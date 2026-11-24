@@ -133,7 +133,7 @@ class TemplatePreviewControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#3-generation-and-finality
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#3-generation-and-finality
 	 */
 	public function testAPreviewFillsATableFromRelatedRecords(): void {
 		$listRefs = [['register' => 'zaken', 'schema' => 'besluit', 'as' => 'besluiten']];

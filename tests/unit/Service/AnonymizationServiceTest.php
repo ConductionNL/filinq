@@ -216,6 +216,44 @@ class AnonymizationServiceTest extends TestCase {
 	}//end testExtractResumesByDefault()
 
 	/**
+	 * Extraction prepares the review rendition, runs detection on it after the
+	 * source's own extraction, and answers it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.1
+	 */
+	public function testExtractionPreparesTheReviewRenditionAndDetectsOnIt(): void {
+		$extractor = $this->recordingExtractor();
+		$rendition = ['sourceFileId' => 1, 'fileId' => 2, 'sha256' => 'a1', 'kind' => 'converted', 'backend' => 'libreoffice', 'textLayer' => 'native'];
+		$renditions = $this->createMock(\OCA\Filinq\Service\Review\ReviewRenditionService::class);
+		$renditions->expects($this->once())->method('recordFor')->with(1)->willReturnCallback(
+			function () use ($extractor, $rendition): array {
+				$this->assertCount(1, $extractor->calls, 'the source is extracted before its rendition is prepared');
+				return $rendition;
+			}
+		);
+		$renditions->expects($this->once())->method('detectOnRendition')->with(1, $rendition, $extractor, ['PERSON'])->willReturn(true);
+
+		$result = $this->serviceWithExtractor($extractor, ['PERSON'], ['renditions' => $renditions])->extractAndDetectEntities(fileId: 1);
+
+		$this->assertSame($rendition, $result['reviewRendition']);
+	}//end testExtractionPreparesTheReviewRenditionAndDetectsOnIt()
+
+	/**
+	 * Without a rendition service the answer carries no rendition field.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.1
+	 */
+	public function testExtractionWithoutARenditionServiceIsUnchanged(): void {
+		$result = $this->serviceWithExtractor($this->recordingExtractor(), null)->extractAndDetectEntities(fileId: 1);
+
+		$this->assertArrayNotHasKey('reviewRendition', $result);
+	}//end testExtractionWithoutARenditionServiceIsUnchanged()
+
+	/**
 	 * The response carries the risk level resolved through FileEntityStatsService.
 	 *
 	 * @return void

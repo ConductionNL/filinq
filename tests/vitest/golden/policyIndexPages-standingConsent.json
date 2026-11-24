@@ -437,7 +437,8 @@
 			],
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": null,
@@ -515,7 +516,8 @@
 			],
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": null,
@@ -593,7 +595,8 @@
 			"matchRules": [],
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": null,
@@ -662,7 +665,8 @@
 			"matchRules": [],
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "server says no",
 		"deleteTarget": null,
@@ -741,7 +745,8 @@
 			"matchRules": [],
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "[Save failed]",
 		"deleteTarget": null,
@@ -874,7 +879,8 @@
 			"matchRules": [],
 			"consentStatus": "objection_received",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": null,
@@ -943,7 +949,8 @@
 			"matchRules": [],
 			"consentStatus": "objection_received",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": null,
@@ -1012,7 +1019,8 @@
 			"matchRules": [],
 			"consentStatus": "objection_received",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": {
@@ -1103,7 +1111,8 @@
 			"matchRules": [],
 			"consentStatus": "objection_received",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": null,
@@ -1172,7 +1181,8 @@
 			"matchRules": [],
 			"consentStatus": "objection_received",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": {
@@ -1245,7 +1255,8 @@
 			"matchRules": [],
 			"consentStatus": "objection_received",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": null,
@@ -1320,7 +1331,8 @@
 			"matchRules": [],
 			"consentStatus": "objection_received",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": {
@@ -1411,7 +1423,8 @@
 			"matchRules": [],
 			"consentStatus": "objection_received",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": null,
@@ -1486,7 +1499,8 @@
 			"matchRules": [],
 			"consentStatus": "objection_received",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": {
@@ -1558,7 +1572,8 @@
 			"matchRules": [],
 			"consentStatus": "objection_received",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		},
 		"formError": "",
 		"deleteTarget": {

@@ -28,6 +28,8 @@
 			"</x-nctextfield>",
 			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid until (ISO 8601, optional)\">",
 			"</x-nctextfield>",
+			"<x-ncselect data-modelvalue=\"[]\" data-options=\"[]\" label=\"label\" data-on-reduce=\"\" multiple=\"true\" inputlabel=\"Legal bases (grondslagen)\" placeholder=\"Pick grondslagen…\" data-testid=\"policy-rule-bases\" data-on-onupdate:modelvalue=\"\">",
+			"</x-ncselect>",
 			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
 			"<x-slot name=\"default\">Active</x-slot>",
 			"</x-nccheckboxradioswitch>",
@@ -44,7 +46,15 @@
 		"buttons": [
 			{
 				"variant": null,
-				"emitted": [["onUpdate:open", false], ["onCancel"]]
+				"emitted": [
+					[
+						"onUpdate:open",
+						false
+					],
+					[
+						"onCancel"
+					]
+				]
 			},
 			{
 				"variant": "primary",
@@ -61,7 +71,8 @@
 							"jurisdiction": "",
 							"validUntil": "",
 							"active": true,
-							"matchRules": []
+							"matchRules": [],
+							"bases": []
 						}
 					]
 				]
@@ -97,6 +108,8 @@
 			"</x-nctextfield>",
 			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid until (ISO 8601, optional)\">",
 			"</x-nctextfield>",
+			"<x-ncselect data-modelvalue=\"[]\" data-options=\"[]\" label=\"label\" data-on-reduce=\"\" multiple=\"true\" inputlabel=\"Legal bases (grondslagen)\" placeholder=\"Pick grondslagen…\" data-testid=\"policy-rule-bases\" data-on-onupdate:modelvalue=\"\">",
+			"</x-ncselect>",
 			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
 			"<x-slot name=\"default\">Active</x-slot>",
 			"</x-nccheckboxradioswitch>",
@@ -131,7 +144,15 @@
 		"buttons": [
 			{
 				"variant": null,
-				"emitted": [["onUpdate:open", false], ["onCancel"]]
+				"emitted": [
+					[
+						"onUpdate:open",
+						false
+					],
+					[
+						"onCancel"
+					]
+				]
 			},
 			{
 				"variant": "primary",
@@ -154,6 +175,7 @@
 									"value": "123456782"
 								}
 							],
+							"bases": [],
 							"entityText": "Jan Jansen",
 							"label": "Woordenlijst",
 							"consentMethod": "paper"
@@ -200,6 +222,8 @@
 			"</x-nctextfield>",
 			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid until (ISO 8601, optional)\">",
 			"</x-nctextfield>",
+			"<x-ncselect data-modelvalue=\"[]\" data-options=\"[]\" label=\"label\" data-on-reduce=\"\" multiple=\"true\" inputlabel=\"Legal bases (grondslagen)\" placeholder=\"Pick grondslagen…\" data-testid=\"policy-rule-bases\" data-on-onupdate:modelvalue=\"\">",
+			"</x-ncselect>",
 			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
 			"<x-slot name=\"default\">Active</x-slot>",
 			"</x-nccheckboxradioswitch>",
@@ -235,7 +259,15 @@
 		"buttons": [
 			{
 				"variant": null,
-				"emitted": [["onUpdate:open", false], ["onCancel"]]
+				"emitted": [
+					[
+						"onUpdate:open",
+						false
+					],
+					[
+						"onCancel"
+					]
+				]
 			},
 			{
 				"variant": "primary",
@@ -258,6 +290,7 @@
 									"value": "123456782"
 								}
 							],
+							"bases": [],
 							"entityText": "Jan Jansen",
 							"label": "Woordenlijst",
 							"consentMethod": "paper"
@@ -272,7 +305,9 @@
 		]
 	},
 	"prohibition.closed": {
-		"html": ["<!--v-if-->"],
+		"html": [
+			"<!--v-if-->"
+		],
 		"buttons": []
 	},
 	"standingConsent.create": {
@@ -304,6 +339,8 @@
 			"</x-nctextfield>",
 			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid until (ISO 8601, optional)\">",
 			"</x-nctextfield>",
+			"<x-ncselect data-modelvalue=\"[]\" data-options=\"[]\" label=\"label\" data-on-reduce=\"\" multiple=\"true\" inputlabel=\"Legal bases (grondslagen)\" placeholder=\"Pick grondslagen…\" data-testid=\"policy-rule-bases\" data-on-onupdate:modelvalue=\"\">",
+			"</x-ncselect>",
 			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
 			"<x-slot name=\"default\">Active</x-slot>",
 			"</x-nccheckboxradioswitch>",
@@ -320,7 +357,15 @@
 		"buttons": [
 			{
 				"variant": null,
-				"emitted": [["onUpdate:open", false], ["onCancel"]]
+				"emitted": [
+					[
+						"onUpdate:open",
+						false
+					],
+					[
+						"onCancel"
+					]
+				]
 			},
 			{
 				"variant": "primary",
@@ -340,7 +385,8 @@
 							"matchRules": [],
 							"consentStatus": "consent_given",
 							"publicationDecision": "publish_with_consent",
-							"notificationStatus": "skipped"
+							"notificationStatus": "skipped",
+							"bases": []
 						}
 					]
 				]
@@ -376,6 +422,8 @@
 			"</x-nctextfield>",
 			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid until (ISO 8601, optional)\">",
 			"</x-nctextfield>",
+			"<x-ncselect data-modelvalue=\"[]\" data-options=\"[]\" label=\"label\" data-on-reduce=\"\" multiple=\"true\" inputlabel=\"Legal bases (grondslagen)\" placeholder=\"Pick grondslagen…\" data-testid=\"policy-rule-bases\" data-on-onupdate:modelvalue=\"\">",
+			"</x-ncselect>",
 			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
 			"<x-slot name=\"default\">Active</x-slot>",
 			"</x-nccheckboxradioswitch>",
@@ -410,7 +458,15 @@
 		"buttons": [
 			{
 				"variant": null,
-				"emitted": [["onUpdate:open", false], ["onCancel"]]
+				"emitted": [
+					[
+						"onUpdate:open",
+						false
+					],
+					[
+						"onCancel"
+					]
+				]
 			},
 			{
 				"variant": "primary",
@@ -436,6 +492,7 @@
 							"consentStatus": "consent_given",
 							"publicationDecision": "publish_with_consent",
 							"notificationStatus": "skipped",
+							"bases": [],
 							"primaryName": "Jan Jansen",
 							"label": "Woordenlijst",
 							"reason": "Court order"
@@ -482,6 +539,8 @@
 			"</x-nctextfield>",
 			"<x-nctextfield modelvalue=\"\" data-on-onupdate:modelvalue=\"\" label=\"Valid until (ISO 8601, optional)\">",
 			"</x-nctextfield>",
+			"<x-ncselect data-modelvalue=\"[]\" data-options=\"[]\" label=\"label\" data-on-reduce=\"\" multiple=\"true\" inputlabel=\"Legal bases (grondslagen)\" placeholder=\"Pick grondslagen…\" data-testid=\"policy-rule-bases\" data-on-onupdate:modelvalue=\"\">",
+			"</x-ncselect>",
 			"<x-nccheckboxradioswitch modelvalue=\"true\" data-on-onupdate:modelvalue=\"\" type=\"switch\">",
 			"<x-slot name=\"default\">Active</x-slot>",
 			"</x-nccheckboxradioswitch>",
@@ -517,7 +576,15 @@
 		"buttons": [
 			{
 				"variant": null,
-				"emitted": [["onUpdate:open", false], ["onCancel"]]
+				"emitted": [
+					[
+						"onUpdate:open",
+						false
+					],
+					[
+						"onCancel"
+					]
+				]
 			},
 			{
 				"variant": "primary",
@@ -543,6 +610,7 @@
 							"consentStatus": "consent_given",
 							"publicationDecision": "publish_with_consent",
 							"notificationStatus": "skipped",
+							"bases": [],
 							"primaryName": "Jan Jansen",
 							"label": "Woordenlijst",
 							"reason": "Court order"
@@ -557,7 +625,9 @@
 		]
 	},
 	"standingConsent.closed": {
-		"html": ["<!--v-if-->"],
+		"html": [
+			"<!--v-if-->"
+		],
 		"buttons": []
 	},
 	"customDictionary.create": {
@@ -616,7 +686,11 @@
 		"buttons": [
 			{
 				"variant": null,
-				"emitted": [["onCancel"]]
+				"emitted": [
+					[
+						"onCancel"
+					]
+				]
 			},
 			{
 				"variant": "primary",
@@ -680,7 +754,11 @@
 		"buttons": [
 			{
 				"variant": null,
-				"emitted": [["onCancel"]]
+				"emitted": [
+					[
+						"onCancel"
+					]
+				]
 			},
 			{
 				"variant": "primary",
@@ -769,7 +847,11 @@
 		"buttons": [
 			{
 				"variant": null,
-				"emitted": [["onCancel"]]
+				"emitted": [
+					[
+						"onCancel"
+					]
+				]
 			},
 			{
 				"variant": "primary",
@@ -854,7 +936,11 @@
 		"buttons": [
 			{
 				"variant": null,
-				"emitted": [["onCancel"]]
+				"emitted": [
+					[
+						"onCancel"
+					]
+				]
 			},
 			{
 				"variant": "primary",

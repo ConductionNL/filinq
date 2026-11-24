@@ -155,6 +155,26 @@ class PublicationStore implements PublicationStoreInterface {
 	}//end findRedactedCopy()
 
 	/**
+	 * The anonymisation link of a document withheld in full, if it is.
+	 *
+	 * @param string $fileId The source document
+	 *
+	 * @return array<string, mixed>|null The link with `withheld: true`, or null when the document is not withheld.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-6.2
+	 */
+	public function findWithheldLink(string $fileId): ?array {
+		foreach ($this->search(schema: 'anonymizationLink', filters: ['sourceFileId' => $fileId]) as $link) {
+			if (($link['withheld'] ?? false) === true) {
+				return $link;
+			}
+		}
+
+		return null;
+
+	}//end findWithheldLink()
+
+	/**
 	 * The anonymisation link of a document's redacted copy, with what the
 	 * redaction recorded about it.
 	 *

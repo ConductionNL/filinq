@@ -173,7 +173,9 @@ trait BuildsAnonymizationService {
 			ocrFallback: ($deps['ocrFallback'] ?? $this->ocrFallbackThatStandsAside()),
 			backendState: ($deps['backendState'] ?? DetectionStates::clientOver(
 				DetectionStates::orState(enabled: true, active: 'regex', effective: 'regex')
-			))
+			)),
+			images: ($deps['images'] ?? null),
+			renditions: ($deps['renditions'] ?? null)
 		);
 
 	}//end makeAnonymizationServiceFrom()

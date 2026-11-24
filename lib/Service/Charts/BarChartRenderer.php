@@ -135,7 +135,7 @@ class BarChartRenderer extends CartesianChartRenderer {
 
 			if ($group['labelled'] === true && $barHeight > 12) {
 				$parts[] = $this->svg->textEl(
-					position: new SvgPoint(x: $x + (($group['barWidth'] * 0.86) / 2), y: $y - 4),
+					position: new SvgPoint(x: $x + (((float)$group['barWidth'] * 0.86) / 2.0), y: (float)$y - 4.0),
 					text: new SvgText(content: $this->labels->formatValue(value: $value, format: $chart->valueFormat()), style: SvgTextStyle::LabelMiddle)
 				);
 			}
@@ -185,7 +185,7 @@ class BarChartRenderer extends CartesianChartRenderer {
 				'marginTop' => $marginTop,
 				'marginLeft' => $marginLeft,
 				'plotWidth' => $plotWidth,
-				'rowHeight' => ($plotHeight / max(1, count($chart->normalized['labels']))),
+				'rowHeight' => ((float)$plotHeight / (float)max(1, count($chart->normalized['labels']))),
 				'niceMax' => $niceMax,
 			]
 		);
@@ -222,7 +222,7 @@ class BarChartRenderer extends CartesianChartRenderer {
 			$rowY = $geometry['marginTop'] + ($i * $rowHeight);
 
 			$parts[] = $this->svg->textEl(
-				position: new SvgPoint(x: $marginLeft - 8, y: $rowY + ($rowHeight / 2) + 3),
+				position: new SvgPoint(x: (float)$marginLeft - 8.0, y: (float)$rowY + ((float)$rowHeight / 2.0) + 3.0),
 				text: new SvgText(content: $this->labels->truncate(text: $labels[$i], max: 22), style: SvgTextStyle::LabelEnd)
 			);
 
@@ -236,7 +236,7 @@ class BarChartRenderer extends CartesianChartRenderer {
 			$bar = new SvgBox(origin: new SvgPoint(x: $marginLeft, y: $barY), size: new SvgSize(width: $barWidth, height: $barHeight));
 			$parts[] = $this->svg->rectEl(box: $bar, color: $color);
 			$parts[] = $this->svg->textEl(
-				position: new SvgPoint(x: $marginLeft + $barWidth + 6, y: $barY + ($barHeight / 2) + 3),
+				position: new SvgPoint(x: (float)$marginLeft + (float)$barWidth + 6.0, y: (float)$barY + ((float)$barHeight / 2.0) + 3.0),
 				text: new SvgText(content: $this->labels->formatValue(value: $value, format: $valueFmt), style: SvgTextStyle::LabelStart)
 			);
 		}//end for

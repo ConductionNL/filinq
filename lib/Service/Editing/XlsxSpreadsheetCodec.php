@@ -174,7 +174,7 @@ class XlsxSpreadsheetCodec implements SpreadsheetFamilyCodec {
 			);
 		}
 
-		return preg_replace($pattern, $replacement, $xml, 1);
+		return (string)preg_replace($pattern, $replacement, $xml, 1);
 	}//end writeCell()
 
 	/**

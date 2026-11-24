@@ -24,10 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Controller\Support\ScanBatchCut;
 use OCA\Filinq\Controller\Support\ScanSetupServices;
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
@@ -37,7 +35,6 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\Files\File;
-use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -82,7 +79,6 @@ class ScanIntakeController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param ScanSetupServices $setup Separator sheets and scan profiles.
 	 * @param ScanBatchServiceInterface $batches The splitter.
-	 * @param ScanBatchRepositoryInterface $store The batch store.
 	 * @param IRootFolder $rootFolder The file tree.
 	 * @param IUserSession $userSession The current session.
 	 *
@@ -92,7 +88,6 @@ class ScanIntakeController extends Controller {
 		IRequest $request,
 		ScanSetupServices $setup,
 		private readonly ScanBatchServiceInterface $batches,
-		private readonly ScanBatchRepositoryInterface $store,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 	) {
@@ -203,6 +198,7 @@ class ScanIntakeController extends Controller {
 	 * @return JSONResponse The batch, split or failed.
 	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md
 	 *
 	 * @no-admin-idor-exempt the batch file is resolved by batchFile() from the session user's own user
 	 * folder, and the segments are written with the Node API into its parent folder, which enforces create
@@ -224,7 +220,10 @@ class ScanIntakeController extends Controller {
 				return $file;
 			}
 
-			$profile = $this->resolveProfile(profileId: $profileId, path: $file->getPath());
+			$profile = $this->resolveProfile(
+				profileId: $profileId,
+				path: $this->userRelativePath(userId: $user->getUID(), path: $file->getPath())
+			);
 			if ($profile === null) {
 				return new JSONResponse(
 					data: ['error' => 'No scan profile watches this folder, so there is nothing that says how to cut this batch.'],
@@ -232,7 +231,10 @@ class ScanIntakeController extends Controller {
 				);
 			}
 
-			return $this->cut(cut: new ScanBatchCut(file: $file, profile: $profile));
+			return new JSONResponse(
+				data: $this->batches->take(file: $file, profile: $profile),
+				statusCode: Http::STATUS_OK
+			);
 		} catch (Throwable $e) {
 			return new JSONResponse(
 				data: ['error' => $e->getMessage()],
@@ -275,37 +277,6 @@ class ScanIntakeController extends Controller {
 	}//end batchFile()
 
 	/**
-	 * Receive the batch when it is new, then cut it into its parent folder.
-	 *
-	 * The batch is looked up by the id of the file batchFile() resolved, so
-	 * nothing reaches the store without that check.
-	 *
-	 * @param ScanBatchCut $cut The batch file and its profile.
-	 *
-	 * @return JSONResponse The split batch, or a 400 when it has no folder to write to.
-	 */
-	private function cut(ScanBatchCut $cut): JSONResponse {
-		$batch = $this->store->findByFile(fileId: (int)$cut->file->getId());
-		if ($batch === null) {
-			$batch = $this->batches->receive(file: $cut->file, profile: $cut->profile);
-		}
-
-		$target = $cut->file->getParent();
-		if (($target instanceof Folder) === false) {
-			return new JSONResponse(
-				data: ['error' => 'The batch has no folder to write its segments to.'],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
-		}
-
-		return new JSONResponse(
-			data: $this->batches->split(batch: $batch, profile: $cut->profile, file: $cut->file, target: $target),
-			statusCode: Http::STATUS_OK
-		);
-
-	}//end cut()
-
-	/**
 	 * The profile to cut a batch with.
 	 *
 	 * @param string $profileId The profile the caller named, if any.
@@ -327,4 +298,32 @@ class ScanIntakeController extends Controller {
 		return $this->profiles->forPath(path: $path);
 
 	}//end resolveProfile()
+
+	/**
+	 * A node path as the user sees it in Files, the way a profile stores its watched folder.
+	 *
+	 * The Node API answers `/<uid>/files/Scans/batch.pdf`; a profile watches
+	 * `Scans`. Without this the folder never matched and a split without a
+	 * named profile was always refused.
+	 *
+	 * @param string $userId The owner of the user folder the batch was found in.
+	 * @param string $path   The absolute node path.
+	 *
+	 * @return string The path below the user's Files root, starting with `/`.
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	private function userRelativePath(string $userId, string $path): string {
+		$root = '/' . $userId . '/files';
+		if ($path === $root) {
+			return '/';
+		}
+
+		if (str_starts_with($path, $root . '/') === true) {
+			return substr($path, strlen($root));
+		}
+
+		return $path;
+
+	}//end userRelativePath()
 }//end class

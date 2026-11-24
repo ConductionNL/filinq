@@ -27,7 +27,7 @@ Rows: `con-webhook` (filinq matrix)
 - GIVEN an admin has set up a receiver for "Document signed"
 - WHEN the last external signer signs a contract and the request completes
 - THEN the receiver gets one `document.signed` delivery naming the signed file and the signing request
-- @e2e tests/e2e/document-webhooks.spec.ts
+- @e2e tests/e2e/workflows/document-webhooks.spec.ts
 
 #### Scenario: A write through the API raises the same event
 
@@ -76,14 +76,14 @@ Rows: `con-webhook` (filinq matrix)
 - GIVEN an admin on filinq's admin settings page
 - WHEN the admin adds "Records system" with a URL, ticks "Document signed" and "Document registered", types a secret and sends a test
 - THEN the section lists the receiver with both events and shows that the test arrived
-- @e2e tests/e2e/document-webhooks.spec.ts
+- @e2e tests/e2e/workflows/document-webhooks.spec.ts
 
 #### Scenario: No secret, no receiver
 
 - GIVEN the same form
 - WHEN the admin leaves the secret empty and saves
 - THEN the form says "Type a secret so the receiver can check each delivery" and nothing is saved
-- @e2e tests/e2e/document-webhooks.spec.ts
+- @e2e tests/e2e/workflows/document-webhooks.spec.ts
 
 ### Requirement: Delivery is OpenRegister's (REQ-CDW-004)
 
@@ -100,4 +100,4 @@ Rows: `con-webhook` (filinq matrix)
 - GIVEN an OpenRegister without app-declared webhook events
 - WHEN an admin opens the "Document webhooks" section
 - THEN the section says "Delivery is not available on this server"
-- @e2e tests/e2e/document-webhooks.spec.ts
+- @e2e tests/e2e/workflows/document-webhooks.spec.ts

@@ -137,6 +137,17 @@ class GuardianEntryPreparer {
 	 */
 	private function roleOf(array $entry): string {
 		$role = trim((string)($entry['role'] ?? ''));
+		// An accept-only recipient signs nothing, so it takes no part in the
+		// guardian rule; `sign` is the request form's word for a signer
+		// (signing-accept-only-recipient D1).
+		if ($role === RecipientRole::ACCEPT) {
+			return '';
+		}
+
+		if ($role === 'sign') {
+			$role = 'signer';
+		}
+
 		$named = trim((string)($entry['guardianFor'] ?? '')) !== '';
 		$hasBirthDate = trim((string)($entry['birthDate'] ?? '')) !== '';
 

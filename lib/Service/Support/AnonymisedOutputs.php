@@ -26,6 +26,7 @@ namespace OCA\Filinq\Service\Support;
 use OCA\Filinq\Service\AnonymisedPdfOutputService;
 use OCA\Filinq\Service\EmlAnonymizationService;
 use OCA\Filinq\Service\GrondslagenSummaryAttacher;
+use OCA\Filinq\Service\Sanitization\FinalArtifactSanitizer;
 
 /**
  * What an anonymised document is turned into: the anonymised email, the anonymised PDF and the attached summary of legal bases.
@@ -46,6 +47,7 @@ final class AnonymisedOutputs {
 	 * @param EmlAnonymizationService    $eml     Anonymises email documents
 	 * @param AnonymisedPdfOutputService $pdf     Writes the anonymised PDF
 	 * @param GrondslagenSummaryAttacher $summary Attaches the summary of legal bases
+	 * @param FinalArtifactSanitizer|null $sanitizer Opt-in sanitization of the delivered artifact
 	 *
 	 * @return void
 	 *
@@ -55,6 +57,7 @@ final class AnonymisedOutputs {
 		public readonly EmlAnonymizationService $eml,
 		public readonly AnonymisedPdfOutputService $pdf,
 		public readonly GrondslagenSummaryAttacher $summary,
+		public readonly ?FinalArtifactSanitizer $sanitizer=null,
 	) {
 
 	}//end __construct()

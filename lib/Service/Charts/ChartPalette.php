@@ -121,7 +121,7 @@ class ChartPalette {
 
 		// Relative luminance (WCAG); reject seed colors too close to white
 		// (poor contrast/near-invisible bars/lines/slices).
-		$luminance = ((0.2126 * $r) + (0.7152 * $g) + (0.0722 * $b)) / 255;
+		$luminance = ((0.2126 * (float)$r) + (0.7152 * (float)$g) + (0.0722 * (float)$b)) / 255.0;
 		if ($luminance > 0.85) {
 			return null;
 		}
@@ -134,7 +134,7 @@ class ChartPalette {
 
 		$ramp = [];
 		for ($i = 0; $i < 8; $i++) {
-			$hue = fmod(($h + ($i * 45)), 360);
+			$hue = fmod(($h + ((float)$i * 45.0)), 360.0);
 			$ramp[] = $this->hslToHex(h: $hue, s: $s, l: $l);
 		}
 
@@ -180,13 +180,13 @@ class ChartPalette {
 	 * @return array{0: float, 1: float, 2: float}
 	 */
 	private function rgbToHsl(int $r, int $g, int $b): array {
-		$rf = $r / 255;
-		$gf = $g / 255;
-		$bf = $b / 255;
+		$rf = (float)$r / 255.0;
+		$gf = (float)$g / 255.0;
+		$bf = (float)$b / 255.0;
 
 		$max = max($rf, $gf, $bf);
 		$min = min($rf, $gf, $bf);
-		$l = ($max + $min) / 2;
+		$l = ($max + $min) / 2.0;
 
 		if ($max === $min) {
 			return [0.0, 0.0, $l];
@@ -195,7 +195,7 @@ class ChartPalette {
 		$d = $max - $min;
 		$s = $d / ($max + $min);
 		if ($l > 0.5) {
-			$s = $d / (2 - $max - $min);
+			$s = $d / (2.0 - $max - $min);
 		}
 
 		return [$this->hueOf(channels: [$rf, $gf, $bf]), $s, $l];
@@ -217,16 +217,16 @@ class ChartPalette {
 				$h = fmod((($gf - $bf) / $d), 6);
 				break;
 			case $gf:
-				$h = (($bf - $rf) / $d) + 2;
+				$h = (($bf - $rf) / $d) + 2.0;
 				break;
 			default:
-				$h = (($rf - $gf) / $d) + 4;
+				$h = (($rf - $gf) / $d) + 4.0;
 				break;
 		}
 
-		$h *= 60;
+		$h *= 60.0;
 		if ($h < 0) {
-			$h += 360;
+			$h += 360.0;
 		}
 
 		return $h;
@@ -242,9 +242,9 @@ class ChartPalette {
 	 * @return string Hex color.
 	 */
 	private function hslToHex(float $h, float $s, float $l): string {
-		$c = (1 - abs((2 * $l) - 1)) * $s;
-		$x = $c * (1 - abs(fmod(($h / 60), 2) - 1));
-		$m = $l - ($c / 2);
+		$c = (1.0 - abs((2.0 * $l) - 1.0)) * $s;
+		$x = $c * (1.0 - abs(fmod(($h / 60.0), 2.0) - 1.0));
+		$m = $l - ($c / 2.0);
 
 		[$r, $g, $b] = $this->hueSextant(h: $h, c: $c, x: $x);
 
@@ -267,12 +267,12 @@ class ChartPalette {
 	 * @return int The channel value.
 	 */
 	private function toByte(float $unit): int {
-		$value = ($unit * 255);
+		$value = ($unit * 255.0);
 		if (abs($value) < 1.0E-9) {
 			return 0;
 		}
 
-		$scale = (10 ** (14 - (int)floor(log10(abs($value)))));
+		$scale = (float)(10 ** (14 - (int)floor(log10(abs($value)))));
 		return (int)round(round($value * $scale) / $scale);
 	}//end toByte()
 

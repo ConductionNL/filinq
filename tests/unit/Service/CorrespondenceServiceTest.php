@@ -265,7 +265,7 @@ class CorrespondenceServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#3-generation-and-finality
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#3-generation-and-finality
 	 */
 	public function testATemplateTableIsFilledFromTwoRelatedRecords(): void {
 		$this->templateSvc->method('getTemplate')->willReturn(['id' => 'tmpl-1', 'name' => 'Besluit', 'content' => '{% for b in besluiten %}<tr>{{ b.title }}</tr>{% endfor %}']);

@@ -32,6 +32,7 @@ use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Service\Conversion\OutputLayoutMover;
+use OCP\IAppConfig;
 
 /**
  * Applies a user-reviewed entity list across every file in a batch.
@@ -45,12 +46,43 @@ use OCA\Filinq\Service\Conversion\OutputLayoutMover;
  * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
  */
 class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
+
+	/**
+	 * QA sample rate in percent when `batch.qa_sample_rate` is not set.
+	 *
+	 * @var integer
+	 */
+	private const DEFAULT_QA_SAMPLE_RATE = 5;
+
+	/**
+	 * The status of a batch stopped on request.
+	 */
+	private const CANCELLED = 'cancelled';
+	/**
+	 * Result fields a batch entry carries over when the anonymise result has them, in entry order.
+	 *
+	 * @var list<string>
+	 */
+	private const OPTIONAL_RESULT_KEYS = [
+		'warning',
+		'summaryFileId',
+		'createdConsents',
+		'sanitization',
+		'sanitizationWarning',
+		'detection',
+	];
+
 	/**
 	 * Constructor for BatchAnonymizeService
 	 *
 	 * @param AnonymizationService $anonService Service that performs single-document anonymization.
 	 * @param BatchStateService $stateService Service that persists per-batch state between calls.
 	 * @param OutputLayoutMover $layoutMover Moves each redacted output into the output subfolder.
+	 * @param BatchQaSampler|null $qaSampler Picks the batch's QA sample on completion; null samples nothing.
+	 * @param IAppConfig|null $appConfig Reads `batch.qa_sample_rate`; null uses the default rate.
+	 * @param BatchBackgroundPath|null $background Sends a batch above the synchronous cap to the background
+	 *                                             path and finds a resumed file's existing copy; null keeps
+	 *                                             every batch in-request.
 	 *
 	 * @return void
 	 */
@@ -58,6 +90,9 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		private readonly AnonymizationService $anonService,
 		private readonly BatchStateService $stateService,
 		private readonly OutputLayoutMover $layoutMover,
+		private readonly ?BatchQaSampler $qaSampler=null,
+		private readonly ?IAppConfig $appConfig=null,
+		private readonly ?BatchBackgroundPath $background=null,
 	) {
 
 	}//end __construct()
@@ -91,10 +126,15 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 *                      the batch. Defaults to `"dossier"` because a batch IS a folder/dossier:
 	 *                      a person gets the SAME scope-local number across all the batch's files
 	 *                      (OpenRegister derives the dossier from each file's parent folder).
+	 * @param bool   $sanitize Sanitize each delivered artifact (document-sanitization 3.4).
 	 *
 	 * @return array<string, mixed> Summary of the run — see runBatch().
 	 *
 	 * @throws Exception When the batch cannot be found.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$sanitize` is the caller's per-run choice to also
+	 * sanitize the delivered output, an option of the same run (like the output format), not a second
+	 * responsibility.
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
@@ -106,8 +146,15 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		array $unredactedEntities = [],
 		string $outputFormat = 'pdf-only',
 		string $scope = 'dossier',
+		bool $sanitize = false,
 	): array {
-		$callOptions = ['appendBasisSummary' => false, 'unredactedEntities' => $unredactedEntities, 'outputFormat' => $outputFormat, 'scope' => $scope];
+		$callOptions = [
+			'appendBasisSummary' => false,
+			'unredactedEntities' => $unredactedEntities,
+			'outputFormat' => $outputFormat,
+			'scope' => $scope,
+			'sanitize' => $sanitize,
+		];
 
 		return $this->runBatch(batchId: $batchId, request: new BatchAnonymizeRequest(entities: $entities, callOptions: $callOptions));
 	}//end anonymizeBatch()
@@ -126,10 +173,15 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 * @param string $outputFormat Per-batch output format gate
 	 *                             ('pdf-only'|'pdf'|'preserve', default 'pdf-only').
 	 * @param string $scope Placeholder-numbering scope forwarded to OpenRegister.
+	 * @param bool   $sanitize Sanitize each delivered artifact (document-sanitization 3.4).
 	 *
 	 * @return array<string, mixed> Summary of the run — see runBatch().
 	 *
 	 * @throws Exception When the batch cannot be found.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$sanitize` is the caller's per-run choice to also
+	 * sanitize the delivered output, an option of the same run (like the output format), not a second
+	 * responsibility.
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
@@ -141,8 +193,15 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		array $unredactedEntities = [],
 		string $outputFormat = 'pdf-only',
 		string $scope = 'dossier',
+		bool $sanitize = false,
 	): array {
-		$callOptions = ['appendBasisSummary' => true, 'unredactedEntities' => $unredactedEntities, 'outputFormat' => $outputFormat, 'scope' => $scope];
+		$callOptions = [
+			'appendBasisSummary' => true,
+			'unredactedEntities' => $unredactedEntities,
+			'outputFormat' => $outputFormat,
+			'scope' => $scope,
+			'sanitize' => $sanitize,
+		];
 
 		return $this->runBatch(batchId: $batchId, request: new BatchAnonymizeRequest(entities: $entities, callOptions: $callOptions));
 	}//end anonymizeBatchWithBasisSummary()
@@ -174,6 +233,10 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 			throw new Exception('Batch not found or expired', 404);
 		}
 
+		if ($this->background !== null && $this->background->takes(batch: $batch) === true) {
+			return $this->background->enqueue(batchId: $batchId, batch: $batch, request: $request);
+		}
+
 		$batch['status'] = 'anonymizing';
 		$this->stateService->updateBatch($batchId, $batch);
 
@@ -183,13 +246,107 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		// consistently across the batch.
 		$run = new BatchAnonymizeRun(batch: $batch, request: $request);
 		foreach (array_keys($batch['files']) as $index) {
+			// Cooperative cancellation: checked between files, never inside
+			// one, so the file in progress always finishes (REQ-DDRAS-004).
+			if ($this->cancelRequested(batchId: $batchId) === true) {
+				$run->batch['status'] = self::CANCELLED;
+				$this->stateService->updateBatch($batchId, $run->batch);
+				return $run->summary(batchId: $batchId);
+			}
+
 			$this->processFile(run: $run, index: $index);
 		}
 
-		$run->batch['status'] = 'completed';
+		$run->batch = $this->complete(batch: $run->batch);
 		$this->stateService->updateBatch($batchId, $run->batch);
 		return $run->summary(batchId: $batchId);
 	}//end runBatch()
+
+	/**
+	 * Anonymize one file of a background batch.
+	 *
+	 * The same per-file step as the in-request path; the work unit applies
+	 * the background path's retry rule to the outcome.
+	 *
+	 * @param array<string, mixed>  $batch   The batch.
+	 * @param int|string            $index   The file's index in `files`.
+	 * @param BatchAnonymizeRequest $request The stored request.
+	 *
+	 * @return array<string, mixed> The batch with that file's entry updated.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-chunked-background-processing-under-cron-req-ddras-002
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-resource-guards-on-extractconvert-backends-req-ddras-008
+	 */
+	public function anonymizeAt(array $batch, int|string $index, BatchAnonymizeRequest $request): array {
+		$run = new BatchAnonymizeRun(batch: $batch, request: $request);
+		$this->processFile(run: $run, index: $index);
+		return $run->batch;
+	}//end anonymizeAt()
+
+	/**
+	 * Close the anonymize phase: draw the QA sample and mark the batch completed.
+	 *
+	 * @param array<string, mixed> $batch The batch.
+	 *
+	 * @return array<string, mixed> The completed batch.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-sampling-qa-routed-to-human-review-req-ddras-007
+	 */
+	public function complete(array $batch): array {
+		$batch = $this->markQaSample(batch: $batch);
+		$batch['status'] = 'completed';
+		$batch['completedAt'] = time();
+		return $batch;
+	}//end complete()
+
+	/**
+	 * Whether the batch was asked to stop since this run read it.
+	 *
+	 * @param string $batchId The batch id.
+	 *
+	 * @return bool True when the stored batch is `cancelling` or `cancelled`.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-cooperative-cancellation-req-ddras-004
+	 */
+	private function cancelRequested(string $batchId): bool {
+		$stored = $this->stateService->getBatch($batchId);
+		$status = (string)($stored['status'] ?? '');
+
+		return in_array($status, ['cancelling', self::CANCELLED], true);
+
+	}//end cancelRequested()
+
+	/**
+	 * Mark the batch's QA sample, reusing a stored seed so a re-run picks the same files.
+	 *
+	 * @param array<string, mixed> $batch The batch after its anonymize phase.
+	 *
+	 * @return array<string, mixed> The batch with `qaSampled` files, `qaSampleRate` and `qaSampleSeed`.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-sampling-qa-routed-to-human-review-req-ddras-007
+	 */
+	private function markQaSample(array $batch): array {
+		if ($this->qaSampler === null) {
+			return $batch;
+		}
+
+		$rate = self::DEFAULT_QA_SAMPLE_RATE;
+		if ($this->appConfig !== null) {
+			$rate = (int)$this->appConfig->getValueString(
+				'filinq',
+				'batch.qa_sample_rate',
+				(string)self::DEFAULT_QA_SAMPLE_RATE
+			);
+		}
+
+		$seed = (string)($batch['qaSampleSeed'] ?? '');
+		if ($seed === '') {
+			$seed = bin2hex(random_bytes(16));
+		}
+
+		return $this->qaSampler->mark(batch: $batch, draw: new BatchQaDraw(rate: $rate, seed: $seed));
+
+	}//end markQaSample()
 
 	/**
 	 * Skip, refuse or anonymise one file of the batch, by its status and the prohibition gate.
@@ -209,6 +366,18 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		}
 
 		if ($file['status'] !== 'extracted') {
+			return;
+		}
+
+		$link = $this->background?->existingOutput(batch: $run->batch, entry: $file);
+		if ($link !== null) {
+			$file['status'] = 'anonymized';
+			$file['anonymizedFileId'] = $link['anonymizedFileId'];
+			$file['anonymizedFilePath'] = ($link['anonymizedFilePath'] ?? null);
+			$file['replacementCount'] = (int)($link['replacementCount'] ?? ($file['replacementCount'] ?? 0));
+			$file['resumedFromLink'] = true;
+			$run->batch['files'][$index] = $file;
+			$run->processed++;
 			return;
 		}
 
@@ -305,7 +474,7 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 *                                                                the file was anonymized.
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-3
 	 */
 	private function anonymizeBatchFile(array $entry, BatchAnonymizeRequest $request, string $userId): array {
 		try {
@@ -363,6 +532,10 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 			->withOutputFormat(outputFormat: $callOptions['outputFormat'])
 			->withScope(scope: $callOptions['scope'], dossierKey: null)
 			->withUserId(userId: $userId);
+		if (($callOptions['sanitize'] ?? false) === true) {
+			$options = $options->sanitized();
+		}
+
 		if ($callOptions['appendBasisSummary'] === true) {
 			return $this->anonService->anonymizeDocumentWithBasisSummary(fileId: $fileId, entities: $request->entities, options: $options);
 		}
@@ -404,8 +577,39 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 			$entry['warning'] = $moved['warning'];
 		}
 
-		return $entry;
+		return $this->relocateSanitized(entry: $entry, userId: $userId);
 	}//end applyOutputLayout()
+
+	/**
+	 * Move the sanitized derivative of the final-artifact pass beside the moved anonymised file.
+	 *
+	 * Without a derivative the entry is returned as it is.
+	 *
+	 * @param array<string, mixed> $entry  The batch file entry after the layout move.
+	 * @param string               $userId Owner of the batch.
+	 *
+	 * @return array<string, mixed> The entry with the derivative's new path.
+	 *
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
+	 */
+	private function relocateSanitized(array $entry, string $userId): array {
+		$sanitizedId = ($entry['sanitization']['sanitizedFileId'] ?? null);
+		if ($sanitizedId === null) {
+			return $entry;
+		}
+
+		$moved = $this->layoutMover->relocate(
+			userId: $userId,
+			anonymizedFileId: (int)$sanitizedId,
+			legacyPath: ''
+		);
+		$entry['sanitization']['sanitizedFilePath'] = $moved['path'];
+		if ($moved['warning'] !== null) {
+			$entry['sanitization']['moveWarning'] = $moved['warning'];
+		}
+
+		return $entry;
+	}//end relocateSanitized()
 
 	/**
 	 * Fold a successful anonymise result into the file's batch entry.
@@ -424,23 +628,20 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		$entry['anonymizedFileId'] = $result['anonymizedFileId'] ?? null;
 		$entry['anonymizedFilePath'] = $result['anonymizedFilePath'] ?? null;
 
-		if (isset($result['warning']) === true) {
-			$entry['warning'] = $result['warning'];
-		}
+		// Optional result fields, copied in this order when present: the warning,
+		// the basis summary, created consents, the opt-in final-artifact pass (the
+		// derivative, or why the kept file is unsanitized), and which backend looked
+		// and what it found, so a batch reader can tell "nothing to redact" from
+		// "nothing looked".
+		foreach (self::OPTIONAL_RESULT_KEYS as $key) {
+			if (isset($result[$key]) === false) {
+				continue;
+			}
 
-		if (isset($result['summaryFileId']) === true) {
-			$entry['summaryFileId'] = $result['summaryFileId'];
-			$entry['summaryFilePath'] = $result['summaryFilePath'] ?? null;
-		}
-
-		if (isset($result['createdConsents']) === true) {
-			$entry['createdConsents'] = $result['createdConsents'];
-		}
-
-		// Which backend looked and what it found, so a batch reader can tell
-		// "nothing to redact" from "nothing looked".
-		if (isset($result['detection']) === true) {
-			$entry['detection'] = $result['detection'];
+			$entry[$key] = $result[$key];
+			if ($key === 'summaryFileId') {
+				$entry['summaryFilePath'] = $result['summaryFilePath'] ?? null;
+			}
 		}
 
 		return $entry;

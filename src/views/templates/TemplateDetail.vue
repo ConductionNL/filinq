@@ -84,6 +84,14 @@
 				@click="activeTab = 'wizard'">
 				{{ t('filinq', 'Wizard') }}
 			</button>
+			<button
+				v-if="isOffice"
+				class="template-detail__tab"
+				:class="[{ active: activeTab === 'office' }]"
+				data-testid="template-tab-office"
+				@click="activeTab = 'office'">
+				{{ t('filinq', 'Word file') }}
+			</button>
 		</div>
 
 		<!-- EDITOR TAB -->
@@ -235,6 +243,13 @@
 			:readOnly="Boolean(lockOwner && !isLockMine)"
 			@saved="onWizardSaved" />
 
+		<!-- OFFICE TAB: the Word file, its merge tags and field mapping (office-template-authoring) -->
+		<OfficeTemplatePanel
+			v-else-if="activeTab === 'office'"
+			:template="templateStore.templateItem"
+			:readOnly="Boolean(lockOwner && !isLockMine)"
+			@updated="onOfficeUpdated" />
+
 		<!-- Dialogs (extracted per ADR-004) -->
 		<MergeFieldDialog
 			v-if="showMergeDialog"
@@ -262,6 +277,7 @@ import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
 import HtmlDocumentEditor from '../../components/HtmlDocumentEditor.vue'
 import TemplateLintChecklist from '../../components/TemplateLintChecklist.vue'
+import OfficeTemplatePanel from '../../components/templates/OfficeTemplatePanel.vue'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
 import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
 import WizardAuthoringPanel from './WizardAuthoringPanel.vue'
@@ -310,6 +326,7 @@ export default {
 		CnConfirmDialog,
 		TemplateLintChecklist,
 		WizardAuthoringPanel,
+		OfficeTemplatePanel,
 	},
 
 	data() {
@@ -396,6 +413,16 @@ export default {
 
 		isNew() {
 			return this.templateStore.templateItem === null
+		},
+
+		/**
+		 * Whether this is an office (Word) template rather than a Twig one.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 */
+		isOffice() {
+			return this.templateStore.templateItem?.templateType === 'office'
 		},
 
 		isLockMine() {
@@ -499,6 +526,16 @@ export default {
 		 */
 		onWizardSaved(wizard) {
 			this.hasWizard = Boolean(wizard) && wizard.active !== false
+		},
+
+		/**
+		 * Reload the template after its Word file or field mapping changed.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/office-template-authoring/specs/template-management/spec.md
+		 */
+		async onOfficeUpdated() {
+			await this.templateStore.fetchTemplate(this.templateStore.templateItem.id)
 		},
 
 		/**

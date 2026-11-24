@@ -65,10 +65,15 @@ interface BatchAnonymizeServiceInterface {
 	 *                      the batch. Defaults to `"dossier"` because a batch IS a folder/dossier:
 	 *                      a person gets the SAME scope-local number across all the batch's files
 	 *                      (OpenRegister derives the dossier from each file's parent folder).
+	 * @param bool   $sanitize Sanitize each delivered artifact (document-sanitization 3.4).
 	 *
 	 * @return array<string, mixed> Summary of the run — see runBatch().
 	 *
 	 * @throws Exception When the batch cannot be found.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$sanitize` is the caller's per-run choice to also
+	 * sanitize the delivered output, an option of the same run (like the output format), not a second
+	 * responsibility.
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
@@ -80,6 +85,7 @@ interface BatchAnonymizeServiceInterface {
 		array $unredactedEntities = [],
 		string $outputFormat = 'pdf-only',
 		string $scope = 'dossier',
+		bool $sanitize = false,
 	): array;
 
 	/**
@@ -96,10 +102,15 @@ interface BatchAnonymizeServiceInterface {
 	 * @param string $outputFormat Per-batch output format gate
 	 *                             ('pdf-only'|'pdf'|'preserve', default 'pdf-only').
 	 * @param string $scope Placeholder-numbering scope forwarded to OpenRegister.
+	 * @param bool   $sanitize Sanitize each delivered artifact (document-sanitization 3.4).
 	 *
 	 * @return array<string, mixed> Summary of the run — see runBatch().
 	 *
 	 * @throws Exception When the batch cannot be found.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$sanitize` is the caller's per-run choice to also
+	 * sanitize the delivered output, an option of the same run (like the output format), not a second
+	 * responsibility.
 	 *
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-3
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
@@ -111,5 +122,6 @@ interface BatchAnonymizeServiceInterface {
 		array $unredactedEntities = [],
 		string $outputFormat = 'pdf-only',
 		string $scope = 'dossier',
+		bool $sanitize = false,
 	): array;
 }//end interface

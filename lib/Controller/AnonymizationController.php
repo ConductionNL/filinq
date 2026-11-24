@@ -31,12 +31,15 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Controller\Support\AnonymizationServices;
+use OCA\Filinq\Controller\Support\CheckedGateReport;
 use OCA\Filinq\Controller\Support\OutputFormatChoice;
+use OCA\Filinq\Controller\Support\SanitizeChoice;
 use OCA\Filinq\Exception\ConversionFailedException;
 use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Kernel\AnonymizeCall;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\AnonymizeRequestServiceInterface;
+use OCA\Filinq\Service\Review\DocumentReviewService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
@@ -75,6 +78,9 @@ class AnonymizationController extends Controller {
 	 * @param AnonymizeRequestServiceInterface $anonymizeRequest Workflow behind the anonymize endpoints:
 	 *                                                          authentication, file access, body validation,
 	 *                                                          the prohibition guards and the anonymisation call.
+	 * @param DocumentReviewService|null $reviews The per-document checked gate. The container always
+	 *                                            supplies it; null only where a test builds the
+	 *                                            controller without the review workbench.
 	 *
 	 * @return void
 	 */
@@ -85,6 +91,7 @@ class AnonymizationController extends Controller {
 		private readonly IL10N $l10n,
 		private readonly IAppConfig $appConfig,
 		private readonly AnonymizeRequestServiceInterface $anonymizeRequest,
+		private readonly ?DocumentReviewService $reviews = null,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -343,6 +350,13 @@ class AnonymizationController extends Controller {
 				return $this->payloadResponse(payload: $refusal);
 			}
 
+			// The checked gate runs after file access and the prohibition gate,
+			// in addition to them (anonymization-review-workbench D3).
+			$checkedGate = $this->reviews?->commitGate(files: [['fileId' => $fileId]], reason: DocumentReviewService::REASON_DOCUMENT);
+			if (isset($checkedGate['refusal']) === true) {
+				return $this->payloadResponse(payload: $checkedGate['refusal']);
+			}
+
 			// Optional `outputFormat`: the per-call value overrides the tenant
 			// default, which itself defaults to 'pdf-only'.
 			$outputFormat = $this->resolveOutputFormat(params: $params);
@@ -350,8 +364,18 @@ class AnonymizationController extends Controller {
 				return $this->invalidOutputFormatResponse();
 			}
 
-			return $this->runAnonymize(
-				call: new AnonymizeCall(fileId: $fileId, params: $params, request: $validated['request'], outputFormat: $outputFormat)
+			// Optional `sanitize`: sanitize the delivered artifact; the per-call
+			// value overrides the tenant default, which itself defaults to false.
+			$sanitize = (new SanitizeChoice(appConfig: $this->appConfig))->resolve(params: $params);
+			if ($sanitize === null) {
+				return new JSONResponse(['error' => $this->l10n->t('Invalid sanitize: must be a boolean')], 400);
+			}
+
+			return (new CheckedGateReport())->onto(
+				response: $this->runAnonymize(
+					call: new AnonymizeCall(fileId: $fileId, params: $params, request: $validated['request'], outputFormat: $outputFormat, sanitize: $sanitize)
+				),
+				gate: $checkedGate
 			);
 		} catch (\Throwable $e) {
 			return $this->anonymizeFailedResponse(exception: $e);

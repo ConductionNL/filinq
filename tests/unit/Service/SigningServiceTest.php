@@ -506,6 +506,90 @@ class SigningServiceTest extends TestCase {
 	}//end testCreateRequestInternalHasNoProvenance()
 
 	/**
+	 * Save the signing requests through a callback that keeps the first one.
+	 *
+	 * @param array<string, mixed> $captured Receives the first saved signing request.
+	 *
+	 * @return void
+	 */
+	private function captureTheCreatedRequest(array &$captured): void {
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$captured): array {
+				if (isset($object['initiatorUserId']) === true && $captured === []) {
+					$captured = $object;
+				}
+
+				$object['id'] = 'req-via-1';
+				return $object;
+			}
+		);
+
+	}//end captureTheCreatedRequest()
+
+	/**
+	 * A request an agent starts says so: the persisted request carries
+	 * `initiatedVia: mcp` and its CREATED audit entry `via: mcp`, beside the
+	 * signed-in user as initiator and actor.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-agent-initiated-writes-are-attributable-req-ddhat-003
+	 */
+	public function testAnAgentStartedRequestIsAttributedToMcp(): void {
+		$captured = [];
+		$this->captureTheCreatedRequest(captured: $captured);
+		$this->persistAuditsThroughTheRealService();
+
+		$result = $this->service->startSigningRequest(
+			data: [
+				'documentFileId' => '7',
+				'documentName' => 'internal.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+			]
+		);
+
+		$this->assertSame('mcp', $captured['initiatedVia'] ?? null);
+		$this->assertSame('alice', $captured['initiatorUserId']);
+		$this->assertSame('mcp', $result['initiatedVia'] ?? null);
+		$this->assertSame(
+			[['docudesk.signing.CREATED', ['signRequestId' => 'req-via-1', 'actorUserId' => 'alice', 'actorDisplayName' => 'Alice', 'ipAddress' => '127.0.0.1', 'signatureLevel' => 'SES', 'provider' => 'native', 'extra' => ['via' => 'mcp']]]],
+			$this->persistedAudits
+		);
+
+	}//end testAnAgentStartedRequestIsAttributedToMcp()
+
+	/**
+	 * Filinq's own path never claims mcp, even when the request data asks it to.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-agent-initiated-writes-are-attributable-req-ddhat-003
+	 */
+	public function testTheRequestDataCannotClaimMcpAttribution(): void {
+		$captured = [];
+		$this->captureTheCreatedRequest(captured: $captured);
+		$this->persistAuditsThroughTheRealService();
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => '7',
+				'documentName' => 'internal.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [['displayName' => 'Bea', 'email' => 'bea@example.org']],
+				'initiatedVia' => 'mcp',
+			]
+		);
+
+		$this->assertArrayNotHasKey('initiatedVia', $captured);
+		$this->assertSame([], $this->persistedAudits[0][1]['extra']);
+
+	}//end testTheRequestDataCannotClaimMcpAttribution()
+
+	/**
 	 * Issue #1209: a request that names nobody to sign is refused with a 400
 	 * before anything is stored, instead of being saved as a PENDING request
 	 * nobody can ever sign.
@@ -2709,6 +2793,188 @@ class SigningServiceTest extends TestCase {
 		$this->assertSame(['Bob Smit', 'Alice Jansen'], $context['signerLabels'] ?? null);
 
 	}//end testCompletionHandsThePlacementsAndSignerNamesToTheProvider()
+
+	/**
+	 * A request whose second signer has a required "Reference" text field.
+	 *
+	 * @param string $firstStatus The first signer's status.
+	 * @param array<int, array<string, mixed>> $firstValues What the first signer typed.
+	 *
+	 * @return array{request: array<string, mixed>, records: array<string, array<string, mixed>>}
+	 */
+	private function requestWithFields(string $firstStatus = 'PENDING', array $firstValues = []): array {
+		$placements = [
+			['signerIndex' => 0, 'page' => 1, 'x' => 0.1, 'y' => 0.1, 'width' => 0.2, 'height' => 0.1, 'type' => 'text', 'label' => 'Note'],
+			['signerIndex' => 1, 'page' => 1, 'x' => 0.1, 'y' => 0.3, 'width' => 0.2, 'height' => 0.1, 'type' => 'text', 'label' => 'Reference', 'required' => true],
+			['signerIndex' => 1, 'page' => 1, 'x' => 0.1, 'y' => 0.5, 'width' => 0.2, 'height' => 0.1, 'type' => 'signature'],
+		];
+		$first = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'bob', 'displayName' => 'Bob Smit', 'status' => $firstStatus];
+		if ($firstValues !== []) {
+			$first['fieldValues'] = $firstValues;
+		}
+
+		return [
+			'request' => ['id' => 'req-001', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'provider' => 'native', 'initiatorUserId' => 'alice', 'documentFileId' => '42', 'signerIds' => ['signer-001', 'signer-002'], 'signingMode' => 'parallel', 'fieldPlacements' => $placements],
+			'records' => [
+				'signer-001' => $first,
+				'signer-002' => ['id' => 'signer-002', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'displayName' => 'Alice Jansen', 'status' => 'PENDING'],
+			],
+		];
+
+	}//end requestWithFields()
+
+	/**
+	 * Answer the object store from the given request and records, keeping every save.
+	 *
+	 * @param array<string, mixed>                $request The request.
+	 * @param array<string, array<string, mixed>> $records The signer records.
+	 *
+	 * @return \ArrayObject<int, array<string, mixed>> The saved objects, in order.
+	 */
+	private function storeWith(array $request, array $records): \ArrayObject {
+		$saved = new \ArrayObject();
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use ($saved): array {
+				$saved->append($object);
+				return $object;
+			}
+		);
+		$this->objectService->method('find')->willReturnCallback(
+			function (string $id) use ($request, $records, $saved): array {
+				if ($id === 'req-001') {
+					return $request;
+				}
+
+				foreach (array_reverse($saved->getArrayCopy()) as $object) {
+					if (($object['id'] ?? '') === $id) {
+						return $object;
+					}
+				}
+
+				return $records[$id];
+			}
+		);
+		$this->objectService->method('findAll')->willReturnCallback(
+			function () use ($records, $saved): array {
+				foreach ($saved as $object) {
+					if (isset($records[$object['id'] ?? '']) === true) {
+						$records[$object['id']] = $object;
+					}
+				}
+
+				return array_values($records);
+			}
+		);
+
+		return $saved;
+
+	}//end storeWith()
+
+	/**
+	 * The values a signer typed are stored, normalised, in the same save as SIGNED.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 */
+	public function testSignStoresTheTypedValuesWithTheSignature(): void {
+		['request' => $request, 'records' => $records] = $this->requestWithFields();
+		$saved = $this->storeWith(request: $request, records: $records);
+
+		$signer = $this->service->sign(requestId: 'req-001', signerId: 'signer-002', fields: ['1' => '  ref-7 ', '0' => 'not mine']);
+
+		$this->assertSame('SIGNED', $signer['status']);
+		$this->assertSame([['placement' => 1, 'label' => 'Reference', 'value' => 'ref-7']], $signer['fieldValues']);
+		$this->assertSame('SIGNED', $saved[0]['status']);
+		$this->assertSame($signer['fieldValues'], $saved[0]['fieldValues']);
+
+	}//end testSignStoresTheTypedValuesWithTheSignature()
+
+	/**
+	 * A refused value writes nothing: no signer record, no request, no audit entry.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 */
+	public function testARefusedValueWritesNothing(): void {
+		['request' => $request, 'records' => $records] = $this->requestWithFields();
+		$saved = $this->storeWith(request: $request, records: $records);
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		try {
+			$this->service->sign(requestId: 'req-001', signerId: 'signer-002', fields: ['1' => '   ']);
+			$this->fail('A required field left empty must refuse the signature');
+		} catch (\OCA\Filinq\Exception\SigningFieldsRefusedException $e) {
+			$this->assertSame(422, $e->getCode());
+			$this->assertSame([1 => 'Fill in this field'], $e->fieldErrors());
+		}
+
+		$this->assertCount(0, $saved);
+
+	}//end testARefusedValueWritesNothing()
+
+	/**
+	 * A sign act without fields, such as a folder selection, leaves a document with fields out.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+	 */
+	public function testSigningWithoutFieldsIsRefusedWhenTheSignerHasSome(): void {
+		['request' => $request, 'records' => $records] = $this->requestWithFields();
+		$saved = $this->storeWith(request: $request, records: $records);
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		try {
+			$this->service->sign(requestId: 'req-001', signerId: 'signer-002');
+			$this->fail('A document with fields must not be signed without them');
+		} catch (RuntimeException $e) {
+			$this->assertSame('This document has fields to fill in. Open it to sign.', $e->getMessage());
+			$this->assertSame(422, $e->getCode());
+		}
+
+		$this->assertCount(0, $saved);
+
+	}//end testSigningWithoutFieldsIsRefusedWhenTheSignerHasSome()
+
+	/**
+	 * At completion each typed value travels to the provider in its own field block.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 */
+	public function testCompletionHandsTheTypedValuesToTheProvider(): void {
+		['request' => $request, 'records' => $records] = $this->requestWithFields(
+			firstStatus: 'SIGNED',
+			firstValues: [['placement' => 0, 'label' => 'Note', 'value' => 'from bob'], ['placement' => 1, 'label' => 'Reference', 'value' => 'not bob\'s field']]
+		);
+		$this->storeWith(request: $request, records: $records);
+
+		$context = null;
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturnCallback(
+			function (string $bytes, array $ctx) use (&$context): string {
+				$context = $ctx;
+				return 'SIGNED-BYTES';
+			}
+		);
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->userFolder = $folder;
+
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-002', fields: [1 => 'ref-7']);
+
+		$this->assertNotNull($context, 'The artifact was produced');
+		$this->assertSame('from bob', $context['fieldPlacements'][0]['value'] ?? null);
+		$this->assertSame('ref-7', $context['fieldPlacements'][1]['value'] ?? null);
+		$this->assertArrayNotHasKey('value', $context['fieldPlacements'][2]);
+
+	}//end testCompletionHandsTheTypedValuesToTheProvider()
 	/**
 	 * sign() refuses a request that does not exist, before any write.
 	 *
@@ -2851,4 +3117,308 @@ class SigningServiceTest extends TestCase {
 
 	}//end testSignRecordsSignatureDataAndAuditDefaults()
 
+
+	/**
+	 * signing-accept-only-recipient: a mixed request stores the accept-only role,
+	 * a signer entry stores none (it reads as signing).
+	 *
+	 * @return void
+	 */
+	public function testAMixedRequestStoresTheAcceptOnlyRole(): void {
+		$saved = [];
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved): array {
+				$saved[] = $object;
+				$object['id'] = (isset($object['initiatorUserId']) === true) ? 'req-sao' : 'signer-'.count($saved);
+				return $object;
+			}
+		);
+
+		$this->service->createRequest(
+			data: [
+				'documentFileId' => '1001',
+				'documentName' => 'huurovereenkomst.pdf',
+				'signatureLevel' => 'SES',
+				'signingMode' => 'sequential',
+				'signers' => [
+					['displayName' => 'Huurder', 'userId' => 'tenant', 'role' => 'sign'],
+					['displayName' => 'Ambtenaar', 'userId' => 'officer', 'role' => 'accept'],
+				],
+			]
+		);
+
+		$records = array_values(array_filter($saved, static fn (array $o) => isset($o['signingRequestId']) === true));
+		$this->assertSame('signer', ($records[0]['role'] ?? 'signer'));
+		$this->assertSame('accept', $records[1]['role']);
+		$this->assertSame('officer', $records[1]['userId']);
+
+	}//end testAMixedRequestStoresTheAcceptOnlyRole()
+
+	/**
+	 * A request of accept-only recipients is refused before anything is stored.
+	 *
+	 * @return void
+	 */
+	public function testARequestWhereNobodySignsIsRefused(): void {
+		$this->providerFactory->method('getProvider')->willReturn($this->makeSupportingProvider());
+		$this->objectService->expects($this->never())->method('saveObject');
+
+		try {
+			$this->service->createRequest(
+				data: [
+					'documentFileId' => '1001',
+					'documentName' => 'huurovereenkomst.pdf',
+					'signatureLevel' => 'SES',
+					'signingMode' => 'parallel',
+					'signers' => [['displayName' => 'Ambtenaar', 'userId' => 'officer', 'role' => 'accept']],
+				]
+			);
+			$this->fail('a request without a signer must be refused');
+		} catch (\InvalidArgumentException $e) {
+			$this->assertSame(400, $e->getCode());
+			$this->assertSame('A signing request needs at least one recipient who signs', $e->getMessage());
+		}
+
+	}//end testARequestWhereNobodySignsIsRefused()
+
+	/**
+	 * Rows of a request with a signer and an accept-only recipient, in this state.
+	 *
+	 * @param string $signerStatus    The signer's status.
+	 * @param string $accepterStatus  The accepter's status.
+	 * @param string $mode            The signing mode.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private static function acceptRows(string $signerStatus, string $accepterStatus = 'PENDING', string $mode = 'sequential'): array {
+		return [
+			'req-sao' => [
+				'id' => 'req-sao', 'status' => 'IN_PROGRESS', 'signatureLevel' => 'SES', 'provider' => 'native',
+				'initiatorUserId' => 'carol', 'documentFileId' => '42', 'signingMode' => $mode,
+				'signerIds' => ['signer-tenant', 'signer-officer'],
+			],
+			'signer-tenant' => ['id' => 'signer-tenant', 'signingRequestId' => 'req-sao', 'userId' => 'tenant', 'order' => 0, 'status' => $signerStatus],
+			'signer-officer' => ['id' => 'signer-officer', 'signingRequestId' => 'req-sao', 'userId' => 'alice', 'order' => 1, 'role' => 'accept', 'status' => $accepterStatus],
+		];
+
+	}//end acceptRows()
+
+	/**
+	 * Serve these rows from find(), and record every save.
+	 *
+	 * @param array<string, array<string, mixed>> $rows  The rows by id.
+	 * @param array<int, array<string, mixed>>    $saved Receives every saved object.
+	 *
+	 * @return void
+	 */
+	private function serveRows(array &$rows, array &$saved): void {
+		$this->objectService->method('find')->willReturnCallback(
+			static function (string $id) use (&$rows): ?array {
+				return ($rows[$id] ?? null);
+			}
+		);
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (array $object) use (&$saved, &$rows): array {
+				$saved[] = $object;
+				if (isset($object['id']) === true) {
+					$rows[$object['id']] = $object;
+				}
+
+				return $object;
+			}
+		);
+
+	}//end serveRows()
+
+	/**
+	 * The detail page's recipient list: every recipient in order, with role,
+	 * state and the time they signed or accepted, and no address, IP or
+	 * signature data of a co-recipient (task 4.2).
+	 *
+	 * @return void
+	 */
+	public function testRecipientsOfListsEachRecipientWithRoleAndState(): void {
+		$rows = self::acceptRows(signerStatus: 'SIGNED', accepterStatus: 'ACCEPTED');
+		$rows['signer-tenant'] += ['displayName' => 'Tenant', 'email' => 'tenant@example.org', 'signedAt' => '2026-11-01T10:00:00+00:00', 'ipAddress' => '10.0.0.1', 'signatureData' => ['consent' => true]];
+		$rows['signer-officer'] += ['acceptedAt' => '2026-11-02T10:00:00+00:00'];
+		$saved = [];
+		$this->serveRows($rows, $saved);
+
+		$recipients = $this->service->recipientsOf(request: $rows['req-sao']);
+
+		$this->assertSame(
+			[
+				['id' => 'signer-tenant', 'name' => 'Tenant', 'role' => 'sign', 'status' => 'SIGNED', 'order' => 0, 'at' => '2026-11-01T10:00:00+00:00'],
+				['id' => 'signer-officer', 'name' => 'alice', 'role' => 'accept', 'status' => 'ACCEPTED', 'order' => 1, 'at' => '2026-11-02T10:00:00+00:00'],
+			],
+			$recipients
+		);
+		$this->assertSame([], $saved, 'listing writes nothing');
+
+	}//end testRecipientsOfListsEachRecipientWithRoleAndState()
+
+	/**
+	 * A recipient record that cannot be read keeps its place as UNREADABLE,
+	 * and a request without recipients lists none.
+	 *
+	 * @return void
+	 */
+	public function testRecipientsOfKeepsAnUnreadableRecordsPlace(): void {
+		$this->objectService->method('find')->willThrowException(new RuntimeException('gone'));
+
+		$this->assertSame(
+			[['id' => 'signer-x', 'name' => '', 'role' => 'sign', 'status' => 'UNREADABLE', 'order' => 0, 'at' => '']],
+			$this->service->recipientsOf(request: ['signerIds' => ['signer-x']])
+		);
+		$this->assertSame([], $this->service->recipientsOf(request: ['signerIds' => []]));
+
+	}//end testRecipientsOfKeepsAnUnreadableRecordsPlace()
+
+	/**
+	 * The actor resolver reads a recipient's role from its record: `accept`
+	 * for an accept-only recipient, `sign` otherwise and when unreadable.
+	 *
+	 * @return void
+	 */
+	public function testTheActorResolverReadsTheRecipientRole(): void {
+		$rows = self::acceptRows(signerStatus: 'PENDING');
+		$saved = [];
+		$this->serveRows($rows, $saved);
+		$resolver = new SigningActorResolver(
+			settingsService: $this->settingsService,
+			config: $this->config,
+			userSession: $this->userSession,
+			request: $this->request
+		);
+
+		$this->assertSame('accept', $resolver->recipientRole(signerId: 'signer-officer'));
+		$this->assertSame('sign', $resolver->recipientRole(signerId: 'signer-tenant'));
+
+	}//end testTheActorResolverReadsTheRecipientRole()
+
+	/**
+	 * An unreadable recipient record reads as `sign`.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableRecipientReadsAsSign(): void {
+		$this->objectService->method('find')->willThrowException(new RuntimeException('gone'));
+		$resolver = new SigningActorResolver(
+			settingsService: $this->settingsService,
+			config: $this->config,
+			userSession: $this->userSession,
+			request: $this->request
+		);
+
+		$this->assertSame('sign', $resolver->recipientRole(signerId: 'signer-x'));
+
+	}//end testAnUnreadableRecipientReadsAsSign()
+
+	/**
+	 * The accept-only recipient accepts after the signer signed: ACCEPTED,
+	 * acceptedAt, no signature data, the audit entry ACCEPTED, and the request completes.
+	 *
+	 * @return void
+	 */
+	public function testAnAcceptanceIsRecordedAndCompletesTheRequest(): void {
+		$rows = self::acceptRows(signerStatus: 'SIGNED');
+		$saved = [];
+		$this->serveRows($rows, $saved);
+		$provider = $this->createMock(\OCA\Filinq\Service\Signing\SigningProviderInterface::class);
+		$provider->method('produceSignedArtifact')->willReturn('SIGNED-BYTES');
+		$this->providerFactory->method('getProvider')->willReturn($provider);
+		$file = $this->createMock(\OCP\Files\File::class);
+		$file->method('getContent')->willReturn('original-bytes');
+		$folder = $this->createMock(\OCP\Files\Folder::class);
+		$folder->method('getById')->willReturn([$file]);
+		$this->userFolder = $folder;
+		$this->auditService->expects($this->once())->method('logEvent')->with(
+			$this->callback(static fn (SigningAuditEvent $event): bool => $event->action === 'ACCEPTED')
+		);
+
+		$accepted = $this->service->accept(requestId: 'req-sao', signerId: 'signer-officer');
+
+		$this->assertSame('ACCEPTED', $accepted['status']);
+		$this->assertNotEmpty($accepted['acceptedAt']);
+		$this->assertArrayNotHasKey('signatureData', $accepted);
+		$this->assertArrayNotHasKey('signedAt', $accepted);
+		$this->assertSame('COMPLETED', $rows['req-sao']['status']);
+
+	}//end testAnAcceptanceIsRecordedAndCompletesTheRequest()
+
+	/**
+	 * In sequential mode an accepter placed after a signer who has not signed waits.
+	 *
+	 * @return void
+	 */
+	public function testASequentialRequestRefusesAnEarlyAcceptance(): void {
+		$rows = self::acceptRows(signerStatus: 'PENDING');
+		$saved = [];
+		$this->serveRows($rows, $saved);
+
+		try {
+			$this->service->accept(requestId: 'req-sao', signerId: 'signer-officer');
+			$this->fail('an early acceptance must be refused');
+		} catch (RuntimeException $e) {
+			$this->assertSame(409, $e->getCode());
+		}
+
+		$this->assertSame([], $saved);
+
+		// In parallel mode the order does not hold.
+		$rows = self::acceptRows(signerStatus: 'PENDING', mode: 'parallel');
+		$this->auditService->expects($this->once())->method('logEvent');
+		$this->assertSame('ACCEPTED', $this->service->accept(requestId: 'req-sao', signerId: 'signer-officer')['status']);
+		$this->assertSame('IN_PROGRESS', $rows['req-sao']['status'], 'the signer has not signed yet');
+
+	}//end testASequentialRequestRefusesAnEarlyAcceptance()
+
+	/**
+	 * An accept-only recipient cannot sign, and a signer cannot accept; nothing is written.
+	 *
+	 * @return void
+	 */
+	public function testEachRoleIsRefusedTheOtherAct(): void {
+		$rows = self::acceptRows(signerStatus: 'SIGNED');
+		$rows['signer-tenant']['userId'] = 'alice';
+		$saved = [];
+		$this->serveRows($rows, $saved);
+
+		foreach ([['sign', 'signer-officer', SigningService::ACCEPT_NOT_SIGN], ['accept', 'signer-tenant', SigningService::SIGN_NOT_ACCEPT]] as [$act, $signerId, $message]) {
+			if ($act === 'sign') {
+				$rows['signer-tenant']['status'] = 'SIGNED';
+			} else {
+				$rows['signer-tenant']['status'] = 'PENDING';
+			}
+
+			try {
+				$this->service->{$act}(requestId: 'req-sao', signerId: $signerId);
+				$this->fail($act . ' must be refused for ' . $signerId);
+			} catch (RuntimeException $e) {
+				$this->assertSame(422, $e->getCode());
+				$this->assertSame($message, $e->getMessage());
+			}
+		}
+
+		$this->assertSame([], $saved);
+
+	}//end testEachRoleIsRefusedTheOtherAct()
+
+	/**
+	 * Another user cannot accept for the invited recipient.
+	 *
+	 * @return void
+	 */
+	public function testAnotherUserCannotAccept(): void {
+		$rows = self::acceptRows(signerStatus: 'SIGNED');
+		$rows['signer-officer']['userId'] = 'officer';
+		$saved = [];
+		$this->serveRows($rows, $saved);
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('Not authorized to accept as this signer');
+		$this->service->accept(requestId: 'req-sao', signerId: 'signer-officer');
+
+	}//end testAnotherUserCannotAccept()
 }//end class

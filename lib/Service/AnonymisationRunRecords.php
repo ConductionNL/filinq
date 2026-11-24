@@ -22,6 +22,7 @@ namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Service\Pseudonymisation\PseudonymMapRecorder;
 use OCA\Filinq\Service\Redaction\RedactionVerdictRecorder;
+use OCA\Filinq\Service\Review\ReviewRenditionRepository;
 use OCA\Filinq\Service\Sanitization\AnonymisationSanitizationRecorder;
 
 /**
@@ -44,6 +45,7 @@ class AnonymisationRunRecords {
 	 *                                                     the tag structure, and what it kept.
 	 * @param AnonymisationSanitizationRecorder|null $sanitization Keeps what OpenRegister's office
 	 *                                                     sanitiser removed during the run.
+	 * @param ReviewRenditionRepository|null $renditions The source's review rendition, copied onto the link.
 	 *
 	 * @return void
 	 */
@@ -53,6 +55,7 @@ class AnonymisationRunRecords {
 		private readonly PseudonymMapRecorder $keys,
 		private readonly ?RedactionAccessibilityService $accessibility = null,
 		private readonly ?AnonymisationSanitizationRecorder $sanitization = null,
+		private readonly ?ReviewRenditionRepository $renditions = null,
 	) {
 
 	}//end __construct()
@@ -71,12 +74,7 @@ class AnonymisationRunRecords {
 	 */
 	public function record(array $resultInfo, array $context): array {
 		// On the bytes actually written, like the verdict: the summary page is already on.
-		if ($this->accessibility !== null && array_key_exists('structureReport', $context) === true) {
-			$resultInfo['structurePreservation'] = $this->accessibility->assessOutput(
-				report: $context['structureReport'],
-				output: $context['anonymisedNode']
-			);
-		}
+		$resultInfo = $this->withStructurePreservation(resultInfo: $resultInfo, context: $context);
 
 		// 🔴 ON THE BYTES THAT WERE ACTUALLY WRITTEN. The grondslagen summary
 		// appends a page after the redaction, so the caller runs this after it:
@@ -91,6 +89,14 @@ class AnonymisationRunRecords {
 
 		if (empty($resultInfo['anonymizedFileId']) === true) {
 			return $resultInfo;
+		}
+
+		// Per entity TYPE, never a value: what a processing certificate may state.
+		$resultInfo['entityTypeCounts'] = $this->entityTypeCounts(redactedValues: (array) ($context['redactedValues'] ?? []));
+		// The rendition the review ran on, so the link says what was reviewed (REQ-DDARW-012).
+		$rendition = $this->renditionOf(fileId: (int) $context['fileId']);
+		if ($rendition !== null) {
+			$resultInfo['reviewRendition'] = $rendition;
 		}
 
 		$resultInfo = $this->persistence->recordAnonymizationLink(
@@ -121,6 +127,26 @@ class AnonymisationRunRecords {
 	}//end record()
 
 	/**
+	 * The result with the structure-preservation assessment of the written output, when there is a report to assess.
+	 *
+	 * @param array<string, mixed> $resultInfo The result so far.
+	 * @param array<string, mixed> $context    The run's context.
+	 *
+	 * @return array<string, mixed> The result.
+	 */
+	private function withStructurePreservation(array $resultInfo, array $context): array {
+		if ($this->accessibility !== null && array_key_exists('structureReport', $context) === true) {
+			$resultInfo['structurePreservation'] = $this->accessibility->assessOutput(
+				report: $context['structureReport'],
+				output: $context['anonymisedNode']
+			);
+		}
+
+		return $resultInfo;
+
+	}//end withStructurePreservation()
+
+	/**
 	 * Whether the run asks OpenRegister to keep the tag structure.
 	 *
 	 * Null (OpenRegister decides) when no accessibility service is wired.
@@ -133,4 +159,51 @@ class AnonymisationRunRecords {
 		return $this->accessibility?->preserveRequested();
 
 	}//end preserveStructure()
+
+	/**
+	 * How many redacted values of each entity type the run had.
+	 *
+	 * @param array<int, mixed> $redactedValues The mapped entities (text, entityType, key).
+	 *
+	 * @return array<string, int> Entity type => count; no value is kept.
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-anonymization-runs-can-be-certified-with-a-sealed-processing-certificate-req-ddwmk-003
+	 */
+	private function entityTypeCounts(array $redactedValues): array {
+		$counts = [];
+		foreach ($redactedValues as $entity) {
+			if (is_array($entity) === false) {
+				continue;
+			}
+
+			$type = strtoupper((string) ($entity['entityType'] ?? 'UNKNOWN'));
+			$counts[$type] = (($counts[$type] ?? 0) + 1);
+		}
+
+		ksort($counts);
+		return $counts;
+
+	}//end entityTypeCounts()
+
+	/**
+	 * The six rendition fields of a source, or null when none was prepared.
+	 *
+	 * @param int $fileId The source file id.
+	 *
+	 * @return array<string, mixed>|null The rendition.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-5.1
+	 */
+	private function renditionOf(int $fileId): ?array {
+		$stored = $this->renditions?->findFor(sourceFileId: $fileId);
+		if ($stored === null) {
+			return null;
+		}
+
+		return array_intersect_key(
+			$stored,
+			array_flip(['fileId', 'sha256', 'kind', 'backend', 'textLayer', 'preparedAt'])
+		);
+
+	}//end renditionOf()
 }//end class

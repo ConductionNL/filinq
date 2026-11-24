@@ -52,6 +52,11 @@ use OCP\IUserSession;
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) One branch over the limit (51 of 50): a render a vendor
+ *   engine took answers 202 with its job id instead of a document (template-engine-renders-through-a-vendor).
+ *   That answer belongs on the same generate endpoint as every other generation result, so it lives in
+ *   buildDocumentResponse() beside the files and inline answers rather than in a second controller.
  */
 class DocumentController extends Controller {
 	use AnswersNotAuthenticated;
@@ -491,11 +496,16 @@ class DocumentController extends Controller {
 	 * @return DataDownloadResponse|JSONResponse The formatted response
 	 *
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-001
+	 * @spec openspec/changes/template-engine-renders-through-a-vendor/specs/document-creatie-sjablonen/spec.md#requirement-a-vendor-render-goes-to-integriq-and-never-falls-back-req-tev-002
 	 */
 	private function buildDocumentResponse(
 		array $result,
 		string $filename,
 	): DataDownloadResponse|JSONResponse {
+		if (($result['status'] ?? null) === 'pending') {
+			return $this->pendingResponse(result: $result);
+		}
+
 		$output = $result['output'] ?? ['mode' => 'return'];
 		if (($output['mode'] ?? 'return') === 'files') {
 			return new JSONResponse(
@@ -515,6 +525,25 @@ class DocumentController extends Controller {
 
 		return $response;
 	}//end buildDocumentResponse()
+
+	/**
+	 * A render a vendor engine took: 202 with the pending entry and the job id, no document yet.
+	 *
+	 * @param array<string, mixed> $result The pending generation result.
+	 *
+	 * @return JSONResponse 202 with status, engine, vendorJobId, metadata and warnings.
+	 *
+	 * @spec openspec/changes/template-engine-renders-through-a-vendor/specs/document-creatie-sjablonen/spec.md#requirement-a-vendor-render-goes-to-integriq-and-never-falls-back-req-tev-002
+	 */
+	private function pendingResponse(array $result): JSONResponse {
+		$fields = ['status' => 'pending', 'engine' => null, 'vendorJobId' => null, 'format' => null, 'metadata' => [], 'warnings' => []];
+
+		return new JSONResponse(
+			data: array_merge($fields, array_intersect_key($result, $fields), ['status' => 'pending']),
+			statusCode: Http::STATUS_ACCEPTED
+		);
+
+	}//end pendingResponse()
 
 	/**
 	 * The document itself: JSON with the content for html, a download otherwise.

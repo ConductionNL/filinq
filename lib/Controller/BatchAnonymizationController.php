@@ -34,7 +34,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\CheckedGateReport;
 use OCA\Filinq\Controller\Support\OutputFormatChoice;
+use OCA\Filinq\Controller\Support\SanitizeChoice;
 use OCA\Filinq\Kernel\Contracts\AnonymizationProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchAnonymizeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchExtractionServiceInterface;
@@ -44,6 +46,7 @@ use OCA\Filinq\Kernel\Contracts\BatchStateServiceInterface;
 use OCA\Filinq\Kernel\Contracts\BatchUploadServiceInterface;
 use OCA\Filinq\Kernel\Contracts\EntityConsolidationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
+use OCA\Filinq\Service\Review\DocumentReviewService;
 use OCA\Filinq\Settings\FilinqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -72,6 +75,22 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.ExcessiveParameterList)
  */
 class BatchAnonymizationController extends Controller {
+
+	/**
+	 * The progress figures a background batch carries, added to the status
+	 * answer when present (REQ-DDRAS-003); written with every batch write.
+	 */
+	private const PROGRESS_FIELDS = [
+		'background',
+		'throttled',
+		'startedAt',
+		'completedAt',
+		'filesSucceeded',
+		'filesFailed',
+		'filesPending',
+		'progressPercent',
+		'documentsPerHour',
+	];
 	use AnswersNotAuthenticated;
 
 	/**
@@ -95,6 +114,9 @@ class BatchAnonymizationController extends Controller {
 	 * @param BatchRequestServiceInterface $batchRequest Request/response shaping for the batch endpoints: body
 	 *                                                   validation, folder-parameter coercion, progress
 	 *                                                   aggregation and the multi-status mapping.
+	 * @param DocumentReviewService|null $reviews The per-document checked gate. The container always
+	 *                                            supplies it; null only where a test builds the
+	 *                                            controller without the review workbench.
 	 *
 	 * @return void
 	 */
@@ -114,6 +136,7 @@ class BatchAnonymizationController extends Controller {
 		private readonly IAppConfig $appConfig,
 		private readonly IUserSession $userSession,
 		private readonly BatchRequestServiceInterface $batchRequest,
+		private readonly ?DocumentReviewService $reviews = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -194,9 +217,9 @@ class BatchAnonymizationController extends Controller {
 				return new JSONResponse($folder['error']['body'], $folder['error']['status']);
 			}
 
-			$batch = $this->folderBatchService->createFolderBatch(
-				folderId: $folder['folderId'],
-				folderPath: $folder['folderPath']
+			$batch = $this->createFolderBatchFor(
+				folder: $folder,
+				recursive: filter_var($this->request->getParam('recursive', false), FILTER_VALIDATE_BOOLEAN)
 			);
 
 			return new JSONResponse(
@@ -206,6 +229,8 @@ class BatchAnonymizationController extends Controller {
 					'folderPath' => $batch['folderPath'],
 					'fileCount' => count($batch['files']),
 					'files' => $batch['files'],
+					'background' => ($batch['background'] ?? false),
+					'batchStatus' => ($batch['status'] ?? null),
 				]
 			);
 		} catch (\Throwable $e) {
@@ -213,6 +238,31 @@ class BatchAnonymizationController extends Controller {
 		}//end try
 
 	}//end folderBatch()
+
+	/**
+	 * Create the folder batch, flat or with every subfolder.
+	 *
+	 * @param array{folderId: int|null, folderPath: string|null} $folder    The resolved folder parameters.
+	 * @param bool                                             $recursive Whether subfolders are included.
+	 *
+	 * @return array<string, mixed> The created batch.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/folder-batch-analysis/spec.md#requirement-optional-recursive-folder-enumeration-req-ddras-011
+	 */
+	private function createFolderBatchFor(array $folder, bool $recursive): array {
+		if ($recursive === true) {
+			return $this->folderBatchService->createRecursiveFolderBatch(
+				folderId: $folder['folderId'],
+				folderPath: $folder['folderPath']
+			);
+		}
+
+		return $this->folderBatchService->createFolderBatch(
+			folderId: $folder['folderId'],
+			folderPath: $folder['folderPath']
+		);
+
+	}//end createFolderBatchFor()
 
 	/**
 	 * Extract entities from the next pending file in a batch.
@@ -281,7 +331,7 @@ class BatchAnonymizationController extends Controller {
 				'totalEntities' => $summary['totalEntities'],
 				'progress' => $summary['progress'],
 				'totalFiles' => $summary['totalFiles'],
-			]
+			] + array_intersect_key($batch, array_flip(self::PROGRESS_FIELDS))
 		);
 
 	}//end batchStatus()
@@ -385,11 +435,27 @@ class BatchAnonymizationController extends Controller {
 				return $this->invalidOutputFormatResponse();
 			}
 
+			// Optional `sanitize`: per-batch value overrides the tenant default (false).
+			$sanitize = (new SanitizeChoice(appConfig: $this->appConfig))->resolve(params: $params);
+			if ($sanitize === null) {
+				return new JSONResponse(['error' => $this->l10n->t('Invalid sanitize: must be a boolean')], 400);
+			}
+
 			$unredactedError = $this->batchRequest->validateUnredactedEntries(
 				entries: $validated['request']['unredactedEntities']
 			);
 			if ($unredactedError !== null) {
 				return new JSONResponse($unredactedError['body'], $unredactedError['status']);
+			}
+
+			// Every non-error file must hold a checked mark before anything is
+			// anonymised; in addition to the prohibition gate (REQ-DDARW-011).
+			$checkedGate = $this->reviews?->commitGate(
+				files: $this->reviews->batchFiles(batch: $this->stateService->getBatch($batchId)),
+				reason: DocumentReviewService::REASON_BATCH
+			);
+			if (isset($checkedGate['refusal']) === true) {
+				return new JSONResponse($checkedGate['refusal']['body'], $checkedGate['refusal']['status']);
 			}
 
 			$batchResult = $this->runBatchAnonymize(
@@ -398,12 +464,15 @@ class BatchAnonymizationController extends Controller {
 					'request' => $validated['request'],
 					'outputFormat' => $outputFormat,
 					'scope' => $this->batchRequest->resolveScope(params: $params),
+					'sanitize' => $sanitize,
 				]
 			);
 
 			if ($validated['request']['hasStrayBases'] === true) {
 				$batchResult['ignoredFields'] = ['bases'];
 			}
+
+			$batchResult = (new CheckedGateReport())->ontoArray(result: $batchResult, gate: $checkedGate);
 
 			return new JSONResponse($batchResult, $this->batchRequest->resolveHttpStatus(result: $batchResult));
 		} catch (\Throwable $e) {
@@ -419,7 +488,7 @@ class BatchAnonymizationController extends Controller {
 	 * BatchAnonymizeService entry point; every other value is forwarded verbatim.
 	 *
 	 * @param string $batchId Identifier of the batch to anonymize.
-	 * @param array{request: array<string, mixed>, outputFormat: string, scope: string} $run Request, format and scope.
+	 * @param array{request: array<string, mixed>, outputFormat: string, scope: string, sanitize?: bool} $run Request, format, scope and sanitize flag.
 	 *
 	 * @return array<string, mixed> The batch run summary.
 	 *
@@ -434,7 +503,8 @@ class BatchAnonymizationController extends Controller {
 				entities: $request['entities'],
 				unredactedEntities: $request['unredactedEntities'],
 				outputFormat: $run['outputFormat'],
-				scope: $run['scope']
+				scope: $run['scope'],
+				sanitize: ($run['sanitize'] ?? false)
 			);
 		}
 
@@ -443,7 +513,8 @@ class BatchAnonymizationController extends Controller {
 			entities: $request['entities'],
 			unredactedEntities: $request['unredactedEntities'],
 			outputFormat: $run['outputFormat'],
-			scope: $run['scope']
+			scope: $run['scope'],
+			sanitize: ($run['sanitize'] ?? false)
 		);
 
 	}//end runBatchAnonymize()

@@ -18,7 +18,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md
+ * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use OCA\Filinq\Service\SettingsService;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md
+ * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md
  */
 class FourEyesPolicy {
 	/**
@@ -58,7 +58,7 @@ class FourEyesPolicy {
 	 *
 	 * @return bool True when four eyes are required.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-2
 	 */
 	public function appliesTo(bool $wooRun): bool {
 		return match ($this->settings->getFourEyesMode()) {

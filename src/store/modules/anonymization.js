@@ -39,6 +39,7 @@ import { defineStore } from 'pinia'
 import { applyDetectionNotice } from '../../services/detectionProvider.js'
 import { extractDocumentText } from '../../services/fileViewerService.js'
 import { FOUR_EYES_REASONS } from '../../services/fourEyes.js'
+import { applyImageFlags, applyImageRedactionResult } from '../../services/imageRedaction.js'
 import { applyOcrFlags } from '../../services/ocr.js'
 import {
 	markChecked,
@@ -307,6 +308,9 @@ function anonymizedEntry(fileMeta, link) {
 		entities: [],
 		entityCount: 0,
 		replacementCount: link?.replacementCount ?? 0,
+		// The image redaction state the run recorded (image-redaction REQ-DDIMR-006).
+		burnedRegionCount: link?.burnedRegionCount ?? null,
+		imageRedactionPending: link?.imageRedactionPending === true,
 		anonymizedFileId: null,
 		anonymizedFileName: null,
 		anonymizedFilePath: null,
@@ -623,7 +627,9 @@ function applyExtractResponse(entry, data) {
 	applyDetectionNotice(entry, data)
 	// A scan detection could not read is not "nothing to anonymise".
 	const unseen = applyOcrFlags(entry, data)
-	return { found: entities.length, unseen }
+	// Nor are images nobody looked at (image-redaction REQ-DDIMR-002).
+	const imagesUnseen = applyImageFlags(entry, data)
+	return { found: entities.length, unseen: unseen || imagesUnseen }
 }
 
 /**
@@ -1024,6 +1030,8 @@ function applyAnonymizeResult(entry, data) {
 	entry.anonymizedFileId = data.anonymizedFileId
 	entry.anonymizedFileName = data.anonymizedFileName
 	entry.anonymizedFilePath = data.anonymizedFilePath
+	// The run's record, for its processing certificate (document-waarmerk-certification).
+	entry.anonymizationLinkId = data.anonymizationLinkId || entry.anonymizationLinkId || null
 	entry.replacementCount = data.replacementCount || 0
 	entry.complete = data.complete !== false
 	entry.residualCount = data.residualCount || 0
@@ -1031,6 +1039,7 @@ function applyAnonymizeResult(entry, data) {
 	entry.pseudonymisation = data.pseudonymisation || null
 	entry.structurePreservation = data.structurePreservation || null
 	entry.sanitizationReport = data.sanitizationReport || null
+	applyImageRedactionResult(entry, data)
 	entry.reanonymize = false
 	entry.status = 'completed'
 }
@@ -1076,6 +1085,7 @@ async function resolveFaithfulMarkers(store, entry) {
  * @param {Error} err The failure.
  * @return {void}
  * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-entity-toggle-in-review
+ * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
  */
 function applyAnonymizeFailure(entry, err) {
 	console.error(`Failed to anonymise ${entry.name}:`, err)

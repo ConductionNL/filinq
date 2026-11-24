@@ -36,12 +36,17 @@ use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use Stringable;
+use OCA\Filinq\Service\Intake\ContentHasher;
+use OCA\Filinq\Service\Intake\IntakeDeadlines;
+use OCA\Filinq\Service\Support\IntakeSignals;
+
 
 /**
  * Every path through receive(), compared with JSON recorded from the
  * implementation before it was split.
  *
  * @covers \OCA\Filinq\Service\IntakeService
+ * @uses   \OCA\Filinq\Service\Support\IntakeSignals
  * @uses   \OCA\Filinq\Event\IntakeDocumentReceivedEvent
  * @uses   \OCA\Filinq\Exception\IntakeRefusedException
  * @uses \OCA\Filinq\Event\Support\IntakeArrival
@@ -187,7 +192,22 @@ class IntakeReceiveTraceTest extends TestCase {
 			new IntakeFiling(placement: $this->createMock(IntakeFilePlacement::class), ocrQueue: $ocr),
 			new IntakeRouting(defaults: $defaults, routing: $this->createMock(IntakeRoutingService::class), parties: $parties),
 			$this->createMock(IUserSession::class),
-			$logger
+			$logger,
+			$this->noSignals()
 		);
 	}//end service()
+
+	/**
+	 * Signals that set a fixed deadline and hash nothing.
+	 *
+	 * @return IntakeSignals
+	 */
+	private function noSignals(): IntakeSignals {
+		$deadlines = $this->createMock(IntakeDeadlines::class);
+		$deadlines->method('deadlineFor')->willReturn('2026-11-13');
+		$hasher = $this->createMock(ContentHasher::class);
+		$hasher->method('hashOf')->willReturn(null);
+
+		return new IntakeSignals(deadlines: $deadlines, hasher: $hasher);
+	}//end noSignals()
 }//end class

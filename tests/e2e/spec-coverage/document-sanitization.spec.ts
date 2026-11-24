@@ -12,9 +12,9 @@
  * tests/unit/Controller/SanitizationControllerTest.php.
  */
 
-// @e2e openspec/changes/document-sanitization/specs/document-sanitization/spec.md#office-document-is-sanitized-into-a-derivative
-// @e2e openspec/changes/document-sanitization/specs/document-sanitization/spec.md#report-shows-category-counts-not-content
-// @e2e openspec/changes/document-sanitization/specs/document-sanitization/spec.md#unsanitized-hand-off-warns
+// @e2e openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#office-document-is-sanitized-into-a-derivative
+// @e2e openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#report-shows-category-counts-not-content
+// @e2e openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#unsanitized-hand-off-warns
 
 import type { Page } from '@playwright/test'
 
@@ -73,8 +73,8 @@ test.describe('document sanitization', () => {
 	test('sanitize writes a copy and shows counts, never content', async ({
 		page,
 	}) => {
-		// @e2e openspec/changes/document-sanitization/specs/document-sanitization/spec.md#office-document-is-sanitized-into-a-derivative
-		// @e2e openspec/changes/document-sanitization/specs/document-sanitization/spec.md#report-shows-category-counts-not-content
+		// @e2e openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#office-document-is-sanitized-into-a-derivative
+		// @e2e openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#report-shows-category-counts-not-content
 		const posted: string[] = []
 		await page.route(`**/apps/filinq/api/sanitization/${fileId}`, (route) => {
 			posted.push(route.request().method())
@@ -114,7 +114,7 @@ test.describe('document sanitization', () => {
 	})
 
 	test('an unsanitized hand-off warns and can still proceed', async ({ page }) => {
-		// @e2e openspec/changes/document-sanitization/specs/document-sanitization/spec.md#unsanitized-hand-off-warns
+		// @e2e openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#unsanitized-hand-off-warns
 		const record = {
 			id: 'pub-1',
 			status: 'ready',

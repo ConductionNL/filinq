@@ -266,13 +266,16 @@ class IntakeDocumentSchemaTest extends TestCase {
 	}//end testTheSchemaValidatesHard()
 
 	/**
-	 * Two waiting examples are seeded, one scanned and one mailed.
+	 * The waiting examples are seeded: one scanned and one mailed, then one
+	 * mailed letter with a KvK registry suggestion and one whose KvK lookup is
+	 * not configured (intake-base-registry-enrichment).
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md
 	 */
-	public function testTwoWaitingExamplesAreSeeded(): void {
+	public function testTheWaitingExamplesAreSeeded(): void {
 		$seeds = [];
 		foreach ($this->descriptor()['components']['objects'] as $object) {
 			if (($object['@self']['schema'] ?? '') === 'intakeDocument') {
@@ -280,11 +283,15 @@ class IntakeDocumentSchemaTest extends TestCase {
 			}
 		}
 
-		$this->assertCount(2, $seeds);
-		$this->assertSame(['scan', 'mail'], array_column($seeds, 'channel'));
+		$this->assertCount(4, $seeds);
+		$this->assertSame(['scan', 'mail', 'mail', 'mail'], array_column($seeds, 'channel'));
 		foreach ($seeds as $seed) {
 			$this->assertSame('received', $seed['status']);
 		}
 
-	}//end testTwoWaitingExamplesAreSeeded()
+		$this->assertSame('Voorbeeld B.V.', $seeds[2]['registrySuggestion'][0]['fields']['name']);
+		$this->assertFalse($seeds[2]['registrySuggestion'][0]['written']);
+		$this->assertSame('KvK lookup is not configured', $seeds[3]['registryLookupNote']);
+
+	}//end testTheWaitingExamplesAreSeeded()
 }//end class

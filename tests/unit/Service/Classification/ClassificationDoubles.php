@@ -30,6 +30,7 @@ use OCA\Filinq\Tests\Unit\Service\Wizard\WizardObjectStore;
 use OCA\OpenRegister\Service\ObjectService;
 use RuntimeException;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Contract\ObjectSaveOptions as PublishedObjectSaveOptions;
 
 /**
  * In-memory classificationResult and dossier rows.
@@ -64,7 +65,7 @@ class ClassificationObjectStore extends ObjectService {
 	 */
 	public function saveObject(
 		array $object = [],
-		ObjectSaveOptions $options = new ObjectSaveOptions(),
+		ObjectSaveOptions|PublishedObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true
 	) {

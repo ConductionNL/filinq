@@ -36,9 +36,12 @@ use OCA\Filinq\Service\Publication\OpenCatalogiPublicationMap;
 use OCA\Filinq\Exception\PublicationNotReadyException;
 use OCA\Filinq\Service\Publication\DiwooMissingFields;
 use OCA\Filinq\Service\Publication\PublicationPipelineService;
+use OCA\Filinq\Service\Publication\PublicationPipelineSources;
+use OCA\Filinq\Service\RetentionSurfaceService;
 use OCA\Filinq\Service\Publication\PublicationReadiness;
 use OCA\Filinq\Service\Publication\PublicationStore;
 use OCA\Filinq\Service\Redaction\RedactionReviewMarkRepository;
+use OCA\OpenRegister\Exception\HookStoppedException;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -110,6 +113,20 @@ class PublicationPipelineServiceTest extends TestCase {
 	private bool $platform = true;
 
 	/**
+	 * The properties OpenCatalogi's publication schema declares; null reads as a schema that cannot be found.
+	 *
+	 * @var array<string, mixed>|null
+	 */
+	private ?array $publicationProperties = null;
+
+	/**
+	 * Whether OpenCatalogi's pre-save listener refuses the publication's document type.
+	 *
+	 * @var bool
+	 */
+	private bool $refuseDocumentType = false;
+
+	/**
 	 * The accessibility gate mode (filinq.redaction.accessibility_gate).
 	 *
 	 * @var string
@@ -124,6 +141,13 @@ class PublicationPipelineServiceTest extends TestCase {
 	private string $defaultPublisher = '';
 
 	/**
+	 * What the retention surface answers for the document; false gives the pipeline no retention surface.
+	 *
+	 * @var array{date: string, source: string}|null|false
+	 */
+	private array|null|false $destruction = false;
+
+	/**
 	 * The pipeline over the in-memory world.
 	 *
 	 * @return PublicationPipelineService
@@ -134,6 +158,13 @@ class PublicationPipelineServiceTest extends TestCase {
 			function (array $object = [], ObjectSaveOptions $options = new ObjectSaveOptions()): array {
 				$register = $options->target->register ?? '';
 				$schema = $options->target->schema ?? '';
+				if ($schema === OpenCatalogiPublicationMap::SCHEMA && $this->refuseDocumentType === true) {
+					throw new HookStoppedException(
+						'documentsoort: "' . ($object['documentsoort'] ?? '') . '" is not on the national list of document types',
+						['documentsoort' => 'not on the national list']
+					);
+				}
+
 				$uuid = $options->uuid;
 				$this->saves[] = [$schema, $object];
 				$uuid = $uuid ?? ($schema . '-' . (count($this->rows[$schema] ?? []) + 1));
@@ -188,11 +219,80 @@ class PublicationPipelineServiceTest extends TestCase {
 				];
 			}
 		};
+		$this->publicationProperties ??= json_decode((string) file_get_contents(__DIR__ . '/../../../fixtures/opencatalogi-publication-schema.json'), true)['properties'];
+		$registers = new class {
+			/**
+			 * OpenCatalogi's register, holding schema 7, as RegisterMapper::find() answers it.
+			 *
+			 * @param string|int $id            The register id or slug
+			 * @param bool       $_rbac         Ignored
+			 * @param bool       $_multitenancy Ignored
+			 *
+			 * @return object The register.
+			 */
+			public function find(string|int $id, bool $_rbac = true, bool $_multitenancy = true): object {
+				if ($id !== 'publication') {
+					throw new RuntimeException('Register not found');
+				}
+
+				return new class {
+					/**
+					 * @return array<int, int>
+					 */
+					public function getSchemas(): array {
+						return [7];
+					}
+				};
+			}
+		};
+		$schemas = new class ($this) {
+			/**
+			 * Constructor.
+			 *
+			 * @param PublicationPipelineServiceTest $test The test that holds the schema's properties
+			 */
+			public function __construct(private PublicationPipelineServiceTest $test) {
+			}
+
+			/**
+			 * The schema with this slug among the ids, as SchemaMapper::findBySlugInIds() answers it.
+			 *
+			 * @param string          $slug      The schema slug
+			 * @param array<int, int> $schemaIds The register's schema ids
+			 *
+			 * @return object|null The schema.
+			 */
+			public function findBySlugInIds(string $slug, array $schemaIds): ?object {
+				$properties = $this->test->publicationProperties();
+				if ($slug !== 'publication' || in_array(7, $schemaIds, true) === false || $properties === null) {
+					return null;
+				}
+
+				return new class ($properties) {
+					/**
+					 * Constructor.
+					 *
+					 * @param array<string, mixed> $properties The declared properties
+					 */
+					public function __construct(private array $properties) {
+					}
+
+					/**
+					 * @return array<string, mixed>
+					 */
+					public function getProperties(): array {
+						return $this->properties;
+					}
+				};
+			}
+		};
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static fn (string $id): object => match ($id) {
 				'OCA\OpenRegister\Service\FileService' => $fileService,
 				'OCA\OpenCatalogi\Service\TooiVocabularyService' => $tooi,
+				'OCA\OpenRegister\Db\RegisterMapper' => $registers,
+				'OCA\OpenRegister\Db\SchemaMapper' => $schemas,
 				default => $objects,
 			}
 		);
@@ -241,10 +341,37 @@ class PublicationPipelineServiceTest extends TestCase {
 			map: new OpenCatalogiPublicationMap(),
 			platform: new OpenCatalogiPlatform(appManager: $apps, container: $container, rootFolder: $root),
 			clock: $clock,
-			config: $appConfig
+			sources: new PublicationPipelineSources(config: $appConfig, retention: $this->retentionSurface())
 		);
 
 	}//end pipeline()
+
+	/**
+	 * The retention surface double, or none.
+	 *
+	 * @return RetentionSurfaceService|null
+	 */
+	private function retentionSurface(): ?RetentionSurfaceService {
+		if ($this->destruction === false) {
+			return null;
+		}
+
+		$surface = $this->createMock(originalClassName: RetentionSurfaceService::class);
+		$surface->method('destructionDateFor')->willReturnCallback(fn (array $record): ?array => $this->destruction);
+
+		return $surface;
+
+	}//end retentionSurface()
+
+	/**
+	 * Called by the fake schema mapper.
+	 *
+	 * @return array<string, mixed>|null The publication schema's properties, null when there is no schema.
+	 */
+	public function publicationProperties(): ?array {
+		return $this->publicationProperties;
+
+	}//end publicationProperties()
 
 	/**
 	 * Called by the fake file service.
@@ -590,6 +717,81 @@ class PublicationPipelineServiceTest extends TestCase {
 	}//end testARecordFromBeforeTheCodesIsTranslated()
 
 	/**
+	 * The document type travels in its own field and the summary stays empty.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-1
+	 */
+	public function testTheHandOffWritesTheDocumentTypeToItsOwnField(): void {
+		$pipeline = $this->pipeline();
+
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+
+		$publication = $this->rows['publication'][$record['endpointPublicationRef']];
+		$this->assertSame('besluit', $publication['documentsoort']);
+		$this->assertArrayNotHasKey('summary', $publication);
+		$this->assertContains('handed_off', array_column($this->rows['publicationLogEntry'], 'action'));
+
+	}//end testTheHandOffWritesTheDocumentTypeToItsOwnField()
+
+	/**
+	 * An OpenCatalogi whose publication has no documentsoort refuses the hand-off, names the update and writes nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
+	 */
+	public function testAnOpenCatalogiWithoutTheFieldRefusesTheHandoff(): void {
+		$properties = json_decode((string) file_get_contents(__DIR__ . '/../../../fixtures/opencatalogi-publication-schema.json'), true)['properties'];
+		unset($properties['documentsoort']);
+		$this->publicationProperties = $properties;
+		$pipeline = $this->pipeline();
+		$ready = $this->readyRecord(pipeline: $pipeline);
+
+		try {
+			$pipeline->handoff(record: $ready, actor: 'anna');
+			$this->fail('An OpenCatalogi without documentsoort must not take the hand-off');
+		} catch (RuntimeException $e) {
+			$this->assertSame(PublicationPipelineService::NEEDS_DOCUMENT_TYPE_FIELD, $e->getMessage());
+			$this->assertStringContainsString('update OpenCatalogi', $e->getMessage());
+			$this->assertSame(409, $e->getCode());
+		}
+
+		$this->assertArrayNotHasKey('publication', $this->rows);
+		$this->assertSame([], $this->attached);
+		$this->assertSame('ready', $this->rows['publicationRecord'][$ready['uuid']]['status']);
+
+	}//end testAnOpenCatalogiWithoutTheFieldRefusesTheHandoff()
+
+	/**
+	 * OpenCatalogi refusing the document type reaches the operator and leaves the record ready.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
+	 */
+	public function testARefusedDocumentTypeLeavesTheRecordReady(): void {
+		$this->refuseDocumentType = true;
+		$pipeline = $this->pipeline();
+		$ready = $this->readyRecord(pipeline: $pipeline);
+
+		try {
+			$pipeline->handoff(record: $ready, actor: 'anna');
+			$this->fail('A refused document type must not hand off');
+		} catch (RuntimeException $e) {
+			$this->assertStringContainsString('documentsoort', $e->getMessage());
+			$this->assertInstanceOf(HookStoppedException::class, $e->getPrevious());
+		}
+
+		$this->assertArrayNotHasKey('publication', $this->rows);
+		$this->assertSame([], $this->attached);
+		$this->assertSame('ready', $this->rows['publicationRecord'][$ready['uuid']]['status']);
+		$this->assertNotContains('handed_off', array_column($this->rows['publicationLogEntry'] ?? [], 'action'));
+
+	}//end testARefusedDocumentTypeLeavesTheRecordReady()
+
+	/**
 	 * A category that is neither a code nor a known basename blocks the hand-off and writes nothing.
 	 *
 	 * @return void
@@ -804,4 +1006,74 @@ class PublicationPipelineServiceTest extends TestCase {
 		$this->assertSame('draft', $this->rows['publicationRecord'][$draft['uuid']]['status']);
 
 	}//end testADestroyedSourceWithdrawsItsPublication()
+	/**
+	 * A hand-off carries the destruction date the retention surface finds to the platform, and logs it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-destruction-dates-propagate-to-the-publication-pipeline-with-source-precedence-req-ddare-007
+	 */
+	public function testAHandoffCarriesTheDestructionDateTheRetentionSurfaceFinds(): void {
+		$this->destruction = ['date' => '2033-10-01', 'source' => 'Archiefwet 1995, selectielijst categorie 11.1.2'];
+		$pipeline = $this->pipeline();
+
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+
+		$this->assertSame(expected: '2033-10-01', actual: $record['destructionDate']);
+		$this->assertSame(expected: 'Archiefwet 1995, selectielijst categorie 11.1.2', actual: $record['destructionDateSource']);
+		$platform = $this->rows['publication'][$record['endpointPublicationRef']];
+		$this->assertSame(expected: '2033-10-01T00:00:00+00:00', actual: $platform['retentionExpiresAt']);
+		$this->assertSame(
+			expected: [
+				'created',
+				'readiness_evaluated',
+				'metadata_assembled',
+				'readiness_evaluated',
+				'handed_off',
+				'destruction_date_propagated',
+				'published',
+			],
+			actual: array_column($this->rows['publicationLogEntry'], 'action')
+		);
+
+	}//end testAHandoffCarriesTheDestructionDateTheRetentionSurfaceFinds()
+
+	/**
+	 * Without a date the hand-off goes on and nothing about destruction is written.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-destruction-dates-propagate-to-the-publication-pipeline-with-source-precedence-req-ddare-007
+	 */
+	public function testAHandoffWithoutADestructionDateIsNotBlocked(): void {
+		$this->destruction = null;
+		$pipeline = $this->pipeline();
+
+		$record = $pipeline->handoff(record: $this->readyRecord(pipeline: $pipeline), actor: 'anna');
+
+		$this->assertSame(expected: 'published', actual: $record['status']);
+		$this->assertSame(expected: '', actual: (string) ($record['destructionDate'] ?? ''));
+		$this->assertNotContains(needle: 'destruction_date_propagated', haystack: array_column($this->rows['publicationLogEntry'], 'action'));
+
+	}//end testAHandoffWithoutADestructionDateIsNotBlocked()
+
+	/**
+	 * The same date from the same source is not written or logged a second time.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-destruction-dates-propagate-to-the-publication-pipeline-with-source-precedence-req-ddare-007
+	 */
+	public function testAnUnchangedDestructionDateIsNotPropagatedAgain(): void {
+		$this->destruction = ['date' => '2033-10-01', 'source' => 'Zaaksysteem'];
+		$pipeline = $this->pipeline();
+		$record = $this->readyRecord(pipeline: $pipeline);
+		$record['destructionDate'] = '2033-10-01';
+		$record['destructionDateSource'] = 'Zaaksysteem';
+
+		$pipeline->handoff(record: $record, actor: 'anna');
+
+		$this->assertNotContains(needle: 'destruction_date_propagated', haystack: array_column($this->rows['publicationLogEntry'], 'action'));
+
+	}//end testAnUnchangedDestructionDateIsNotPropagatedAgain()
 }//end class

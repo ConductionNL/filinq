@@ -19,7 +19,6 @@ namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\ScanIntakeController;
 use OCA\Filinq\Controller\Support\ScanSetupServices;
-use OCA\Filinq\Kernel\Contracts\ScanBatchRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\ScanBatchServiceInterface;
 use OCA\Filinq\Kernel\Contracts\ScanProfileServiceInterface;
 use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
@@ -38,7 +37,6 @@ use RuntimeException;
  *
  * @covers \OCA\Filinq\Controller\ScanIntakeController
  * @covers \OCA\Filinq\Controller\Support\ScanSetupServices
- * @uses   \OCA\Filinq\Controller\Support\ScanBatchCut
  *
  * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  */
@@ -153,7 +151,6 @@ class ScanIntakeSplitTraceTest extends TestCase {
 			$this->createMock(IRequest::class),
 			new ScanSetupServices(sheets: $this->createMock(SeparatorSheetServiceInterface::class), profiles: $this->profiles($world)),
 			$this->batches($world),
-			$this->store($world),
 			$root,
 			$session
 		);
@@ -189,24 +186,6 @@ class ScanIntakeSplitTraceTest extends TestCase {
 	}//end profiles()
 
 	/**
-	 * A batch store that records what it was asked.
-	 *
-	 * @param array<string, mixed> $world How it answers.
-	 *
-	 * @return ScanBatchRepositoryInterface
-	 */
-	private function store(array $world): ScanBatchRepositoryInterface {
-		$store = $this->createMock(ScanBatchRepositoryInterface::class);
-		$store->method('findByFile')->willReturnCallback(
-			function (int $fileId) use ($world): ?array {
-				$this->calls[] = ['findByFile', $fileId];
-				return $world['batch'] ?? null;
-			}
-		);
-		return $store;
-	}//end store()
-
-	/**
 	 * A splitter that records what it was asked.
 	 *
 	 * @param array<string, mixed> $world How it answers.
@@ -215,20 +194,16 @@ class ScanIntakeSplitTraceTest extends TestCase {
 	 */
 	private function batches(array $world): ScanBatchServiceInterface {
 		$batches = $this->createMock(ScanBatchServiceInterface::class);
-		$batches->method('receive')->willReturnCallback(
-			function (File $file, array $profile): array {
-				$this->calls[] = ['receive', $file->getPath(), $profile];
-				return ['id' => 'batch-new', 'status' => 'received'];
-			}
-		);
-		$batches->method('split')->willReturnCallback(
-			function (array $batch, array $profile, File $file, Folder $target) use ($world): array {
-				$this->calls[] = ['split', $batch, $profile, $file->getPath(), $target->getPath()];
+		$batches->method('take')->willReturnCallback(
+			function (File $file, array $profile) use ($world): array {
+				$this->calls[] = ['take', $file->getPath(), $profile];
+				// The real take() asks for the parent first; a file that cannot name one fails here.
+				$file->getParent();
 				if (($world['cut'] ?? '') === 'throw') {
 					throw new RuntimeException('unreadable page 3');
 				}
 
-				return ['batch' => $batch['id'], 'segments' => 2];
+				return ['batch' => ($world['batch']['id'] ?? 'batch-new'), 'segments' => 2];
 			}
 		);
 		return $batches;

@@ -85,6 +85,7 @@ class ConsentService implements ConsentServiceInterface {
 	 * @param PolicyMatchService $policyMatcher Policy rule matcher
 	 * @param ConsentScopeValidator $scopeValidator Consent scope validator
 	 * @param ConsentRecordWriter $recordWriter Consent persistence layer
+	 * @param ConsentRequestSender|null $sender Sends a new request to the third party (REQ-FHB-02)
 	 *
 	 * @return void
 	 */
@@ -95,6 +96,7 @@ class ConsentService implements ConsentServiceInterface {
 		private readonly PolicyMatchService $policyMatcher,
 		private readonly ConsentScopeValidator $scopeValidator,
 		private readonly ConsentRecordWriter $recordWriter,
+		private readonly ?ConsentRequestSender $sender = null,
 	) {
 
 	}//end __construct()
@@ -212,9 +214,39 @@ class ConsentService implements ConsentServiceInterface {
 			return $this->recordWriter->updateExistingConsent(existing: $existing, context: $context);
 		}
 
-		return $this->recordWriter->createNewConsent(context: $context);
+		return $this->notify(record: $this->recordWriter->createNewConsent(context: $context), context: $context);
 
 	}//end recordConsent()
+
+	/**
+	 * Send a new record's consent request to the third party and store how it went.
+	 *
+	 * Only a record waiting on the third party is sent: a standing consent
+	 * settles the record at once and asks nobody.
+	 *
+	 * @param array<string, mixed> $record  The created record.
+	 * @param array<string, mixed> $context The request context.
+	 *
+	 * @return array<string, mixed> The record, with the outcome.
+	 *
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/specs/consent-management/spec.md
+	 */
+	private function notify(array $record, array $context): array {
+		if ($this->sender === null || ($record['notificationStatus'] ?? null) !== 'pending') {
+			return $record;
+		}
+
+		$outcome = $this->sender->send(record: $record, context: $context);
+		$stored  = $this->recordWriter->recordNotification(
+			record: $record,
+			fields: $outcome,
+			register: (string)$context['register'],
+			schema: (string)$context['schema']
+		);
+		$stored['wasUpdated'] = false;
+
+		return $stored;
+	}//end notify()
 
 	/**
 	 * Match the request's entity against the policy rules, refusing it when a prohibition matches.
@@ -379,7 +411,8 @@ class ConsentService implements ConsentServiceInterface {
 			register: $update->register,
 			schema: $update->schema,
 			data: $update->data,
-			actor: (string) $user?->getUID()
+			actor: (string) $user?->getUID(),
+			via: $update->via
 		);
 
 	}//end validateAndUpdateConsent()
@@ -392,6 +425,7 @@ class ConsentService implements ConsentServiceInterface {
 	 * @param string $schema The schema ID
 	 * @param array<string, mixed> $data The data to update
 	 * @param string $actor The user making the change, recorded on each status event
+	 * @param string $via   How: `mcp` for an agent through Hermiq's gate, '' in Filinq itself
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
@@ -405,10 +439,11 @@ class ConsentService implements ConsentServiceInterface {
 		string $schema,
 		array $data,
 		string $actor = '',
+		string $via = '',
 	): array {
 		return $this->updateHandler->updateConsentStatus(
 			consent: new RegisterObjectRef(id: $consentId, register: $register, schema: $schema),
-			change: new ConsentStatusChange(data: $data, actor: $actor)
+			change: new ConsentStatusChange(data: $data, actor: $actor, via: $via)
 		);
 
 	}//end updateConsentStatus()

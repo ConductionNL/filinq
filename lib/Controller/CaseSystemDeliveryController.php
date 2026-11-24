@@ -186,6 +186,8 @@ class CaseSystemDeliveryController extends Controller {
 	 * The refusal for a caller who is not a signed-in admin, or null.
 	 *
 	 * @return JSONResponse|null 401, 403, or null when allowed.
+	 *
+	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 	 */
 	private function refusal(): ?JSONResponse {
 		$user = $this->userSession->getUser();

@@ -202,6 +202,11 @@ class BatchRequestService implements BatchRequestServiceInterface {
 	 * @spec openspec/changes/publication-clearance-anonymise-payload/tasks.md#task-5
 	 */
 	public function resolveHttpStatus(array $result): int {
+		// Handed to the background path: accepted, processed later (REQ-DDRAS-009).
+		if (($result['background'] ?? false) === true) {
+			return Http::STATUS_ACCEPTED;
+		}
+
 		$prohibitionFiles = (int)($result['prohibitionSkippedFiles'] ?? 0);
 		$conversionFails = (int)($result['conversionFailures'] ?? 0);
 		$processed = (int)($result['processedFiles'] ?? 0);
@@ -247,7 +252,7 @@ class BatchRequestService implements BatchRequestServiceInterface {
 		$total = count($batch['files']);
 		$prog = 0;
 		if ($total > 0) {
-			$prog = round((($ext / $total) * 100), 1);
+			$prog = round((((float)$ext / (float)$total) * 100.0), 1);
 		}
 
 		return [

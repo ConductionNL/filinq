@@ -39,7 +39,7 @@ use OCA\Filinq\Kernel\Contracts\RedactionOutputGuardInterface;
  * Refuses a redacted write until somebody has checked this detection run.
  *
  * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
- * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md
+ * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md
  */
 class RedactionOutputGuard implements RedactionOutputGuardInterface {
 
@@ -77,7 +77,7 @@ class RedactionOutputGuard implements RedactionOutputGuardInterface {
 	 *                                       checker is the one anonymising or the anonymiser is unknown.
 	 *
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-2
 	 */
 	public function assertMayWrite(
 		int $fileId,

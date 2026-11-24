@@ -284,6 +284,7 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	 * @spec openspec/specs/anonymization/spec.md
 	 * @spec openspec/changes/anonymisation-append-basis-summary-flag/tasks.md#task-1
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
 	 */
 	private function callAnonymizeDocument(AnonymizeCall $call, string $userId): array {
 		$request = $call->request;
@@ -296,6 +297,10 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 			->withWooCase(wooCase: $this->isWooCase(params: $call->params));
 		if (($request['reversible'] ?? false) === true) {
 			$options = $options->reversible();
+		}
+
+		if ($call->sanitize === true) {
+			$options = $options->sanitized();
 		}
 
 		if ($request['appendBasisSummary'] === true) {
@@ -473,7 +478,7 @@ class AnonymizeRequestService implements AnonymizeRequestServiceInterface {
 	 *
 	 * @return bool True when `wooCase` is set.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-2
 	 */
 	private function isWooCase(array $params): bool {
 		$flag = ($params['wooCase'] ?? false);

@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/document-sanitization/tasks.md#3-5
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-5
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,6 +27,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Sanitization;
 use InvalidArgumentException;
 use OCA\Filinq\Service\Sanitization\SanitizationRecordRepository;
 use OCA\Filinq\Service\Sanitization\SanitizationStatus;
+use OCA\Filinq\Service\Sanitization\SealLookup;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -42,10 +43,11 @@ class SanitizationStatusTest extends TestCase {
 	 * The status over the given records, for a user who can read files 10 and 11.
 	 *
 	 * @param list<array<string, mixed>> $records The records.
+	 * @param SealLookup|null            $seals   The seal lookup, null for none.
 	 *
 	 * @return SanitizationStatus
 	 */
-	private function statusOver(array $records): SanitizationStatus {
+	private function statusOver(array $records, ?SealLookup $seals = null): SanitizationStatus {
 		$folder = $this->createMock(Folder::class);
 		$folder->method('getById')->willReturnCallback(fn (int $id): array => in_array($id, [10, 11], true) ? [$this->createMock(File::class)] : []);
 		$root = $this->createMock(IRootFolder::class);
@@ -54,7 +56,7 @@ class SanitizationStatusTest extends TestCase {
 		$repo->method('forSourceFile')->willReturnCallback(fn (int $id): array => array_values(array_filter($records, fn (array $r): bool => $r['fileId'] === $id)));
 		$repo->method('forSanitizedFile')->willReturnCallback(fn (int $id): array => array_values(array_filter($records, fn (array $r): bool => $r['sanitizedFileId'] === $id)));
 
-		return new SanitizationStatus(rootFolder: $root, records: $repo);
+		return new SanitizationStatus(rootFolder: $root, records: $repo, seals: $seals);
 
 	}//end statusOver()
 
@@ -88,4 +90,19 @@ class SanitizationStatusTest extends TestCase {
 		$this->statusOver([])->forFile(fileId: 99, userId: 'alice');
 
 	}//end testAnUnreadableFileIsNotFound()
+
+	/**
+	 * The status says whether the file carries an active waarmerk; without a lookup it does not.
+	 *
+	 * @return void
+	 */
+	public function testTheStatusSaysWhetherTheFileIsSealed(): void {
+		$seals = $this->createMock(SealLookup::class);
+		$seals->method('hasActiveSeal')->willReturnCallback(static fn (int $id): bool => $id === 10);
+
+		$this->assertTrue($this->statusOver([], $seals)->forFile(fileId: 10, userId: 'alice')['sealed']);
+		$this->assertFalse($this->statusOver([], $seals)->forFile(fileId: 11, userId: 'alice')['sealed']);
+		$this->assertFalse($this->statusOver([])->forFile(fileId: 10, userId: 'alice')['sealed']);
+
+	}//end testTheStatusSaysWhetherTheFileIsSealed()
 }//end class

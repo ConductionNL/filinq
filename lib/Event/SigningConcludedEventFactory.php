@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Event;
 
+use OCA\Filinq\Service\Signing\RecipientRole;
+
 /**
  * Builds a SigningConcludedEvent from a persisted signing-request array.
  *
@@ -64,7 +66,7 @@ class SigningConcludedEventFactory {
 			signingRequestId: (string)($request['id'] ?? $request['uuid'] ?? ''),
 			status: $status,
 			signedDocumentRef: $signedDocumentRef,
-			signers: (array)($request['signerIds'] ?? []),
+			signers: RecipientRole::split(request: $request)['signers'],
 			signedAt: ($request['signedAt'] ?? null),
 			provenance: new SigningProvenance(
 				sourceApp: (string)($request['sourceApp'] ?? ''),
@@ -75,6 +77,7 @@ class SigningConcludedEventFactory {
 				correlationId: (string)($request['correlationId'] ?? ''),
 			),
 			assuranceLevel: $this->resolveAssuranceLevel(request: $request),
+			accepted: RecipientRole::split(request: $request)['accepted'],
 		);
 
 	}//end create()

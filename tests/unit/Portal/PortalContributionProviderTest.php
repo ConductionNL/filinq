@@ -305,9 +305,10 @@ final class PortalContributionProviderTest extends TestCase {
 	}//end testSignerSigningRequestsUsesViaJoin()
 
 	/**
-	 * `signerSigningRequests` carries exactly the `sign` and `decline`
-	 * contract-v2.2 rowActions, each gated `minTrust: substantial`, each
-	 * resolving to an instance-local relative endpoint (REQ-DDPSS-001).
+	 * `signerSigningRequests` carries exactly the `sign`, `decline` and
+	 * `accept` contract-v2.2 rowActions, each gated `minTrust: substantial`,
+	 * each resolving to an instance-local relative endpoint (REQ-DDPSS-001,
+	 * signing-accept-only-recipient REQ-SAO-004).
 	 *
 	 * @return void
 	 */
@@ -319,9 +320,10 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertArrayHasKey('rowActions', $request, 'The awaiting-signature collection must carry the sign/decline rowActions');
 
 		$rowActions = $this->indexById($request['rowActions']);
-		$this->assertSame(['decline', 'sign', 'viewDocument'], $this->sortedKeys($rowActions), 'Exactly sign + decline + viewDocument, no other rowAction');
+		$this->assertSame(['accept', 'decline', 'sign', 'viewDocument'], $this->sortedKeys($rowActions), 'Exactly sign + decline + accept + viewDocument, no other rowAction');
+		$this->assertSame('/apps/filinq/api/portal/signing/accept', $rowActions['accept']['endpoint']);
 
-		$expectedMethods = ['sign' => 'POST', 'decline' => 'POST', 'viewDocument' => 'GET'];
+		$expectedMethods = ['sign' => 'POST', 'decline' => 'POST', 'accept' => 'POST', 'viewDocument' => 'GET'];
 		foreach ($expectedMethods as $id => $method) {
 			$action = $rowActions[$id];
 			$this->assertSame($id, $action['id']);
@@ -340,6 +342,7 @@ final class PortalContributionProviderTest extends TestCase {
 			$rowActions['decline']['endpoint'],
 			'sign and decline must resolve to distinct endpoints'
 		);
+		$this->assertCount(4, array_unique(array_column($rowActions, 'endpoint')), 'each row act resolves to its own endpoint');
 
 	}//end testSignerSigningRequestsCarriesSignAndDeclineRowActions()
 
@@ -392,9 +395,9 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertIsArray($manifest);
 
 		$actions = $this->indexById($manifest['actions']);
-		$this->assertSame(['decline', 'sign', 'viewDocument'], $this->sortedKeys($actions), 'Exactly sign + decline + viewDocument, no other action');
+		$this->assertSame(['accept', 'decline', 'sign', 'viewDocument'], $this->sortedKeys($actions), 'Exactly sign + decline + accept + viewDocument, no other action');
 
-		$expectedMethods = ['sign' => 'POST', 'decline' => 'POST', 'viewDocument' => 'GET'];
+		$expectedMethods = ['sign' => 'POST', 'decline' => 'POST', 'accept' => 'POST', 'viewDocument' => 'GET'];
 		foreach ($expectedMethods as $id => $method) {
 			$action = $actions[$id];
 			$this->assertSame($id, $action['id']);
@@ -433,7 +436,7 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertIsArray($manifest);
 
 		$actions = $this->indexById($manifest['actions']);
-		foreach (['sign', 'decline'] as $id) {
+		foreach (['sign', 'decline', 'accept'] as $id) {
 			$this->assertSame('signingRequestId', ($actions[$id]['rowField'] ?? null), "action '{$id}' must declare rowField signingRequestId");
 			$this->assertSame('signerEmail', ($actions[$id]['scopeClaim'] ?? null), "action '{$id}' must declare scopeClaim signerEmail");
 			$this->assertArrayNotHasKey('type', $actions[$id], "action '{$id}' must stay an endpoint action, not a create/update");
@@ -609,8 +612,8 @@ final class PortalContributionProviderTest extends TestCase {
 		$this->assertSame('nl:My publication consents', $subject['collections'][0]['label']);
 		$this->assertSame('nl:My signatures', $signer['collections'][0]['label']);
 		$this->assertSame('nl:Documents awaiting my signature', $signer['collections'][1]['label']);
-		$this->assertSame(['nl:Sign', 'nl:Decline to sign', 'nl:View document'], array_column($signer['collections'][1]['rowActions'], 'label'));
-		$this->assertSame(['nl:Sign', 'nl:Decline to sign', 'nl:View document'], array_column($signer['actions'], 'label'));
+		$this->assertSame(['nl:Sign', 'nl:Decline to sign', 'nl:Accept', 'nl:View document'], array_column($signer['collections'][1]['rowActions'], 'label'));
+		$this->assertSame(['nl:Sign', 'nl:Decline to sign', 'nl:Accept', 'nl:View document'], array_column($signer['actions'], 'label'));
 
 	}//end testLabelsAreTranslated()
 }//end class

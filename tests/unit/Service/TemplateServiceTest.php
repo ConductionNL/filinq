@@ -597,4 +597,56 @@ class TemplateServiceTest extends TestCase {
 
 	}//end testGetTemplatesByNamespaceReturnsEmptyWhenNoResults()
 
+	/**
+	 * A duplicate of an office template carries its type, source, binding,
+	 * tags, mapping and report (office-template-authoring REQ-DDOTA-007).
+	 *
+	 * @return void
+	 */
+	public function testADuplicateOfAnOfficeTemplateCarriesItsSource(): void {
+		$original = [
+			'id' => 't-1', 'name' => 'Brief', 'namespace' => 'filinq', 'content' => 'tekst',
+			'templateType' => 'office', 'sourceFileId' => 9, 'contentHash' => 'abc', 'boundRegister' => 'dossier', 'boundSchema' => 'dossier',
+			'mergeFields' => [['path' => 'naam']], 'fieldMap' => ['naam' => 'aanvrager.naam'], 'tagReport' => ['unknown' => []], 'lockedBy' => 'x',
+		];
+		$mockObjectService = $this->createMock(ObjectService::class);
+		$mockObjectService->method('find')->willReturn($original);
+		$mockObjectService->expects($this->once())->method('saveObject')
+			->with($this->callback(
+				static fn (array $object): bool => $object['name'] === 'Brief (kopie)'
+					&& $object['templateType'] === 'office'
+					&& $object['sourceFileId'] === 9
+					&& $object['contentHash'] === 'abc'
+					&& $object['boundSchema'] === 'dossier'
+					&& $object['fieldMap'] === ['naam' => 'aanvrager.naam']
+					&& $object['mergeFields'] === [['path' => 'naam']]
+					&& isset($object['lockedBy']) === false
+			))
+			->willReturn(['id' => 't-2']);
+		$this->setUpWithOpenRegister($mockObjectService);
+		$this->mockRegisterResolver->method('getRegisterAndSchema')->willReturn(['register' => 'templates', 'schema' => 'template']);
+
+		$this->assertSame(['id' => 't-2'], $this->templateService->duplicateTemplate(id: 't-1'));
+	}//end testADuplicateOfAnOfficeTemplateCarriesItsSource()
+
+	/**
+	 * Rendering an older version of an office template uses that version's
+	 * source file.
+	 *
+	 * @return void
+	 */
+	public function testAnOlderOfficeVersionRendersItsOwnSource(): void {
+		$mockObjectService = $this->createMock(ObjectService::class);
+		$mockObjectService->method('find')->willReturn(['id' => 't-1', 'content' => 'nieuw', 'templateType' => 'office', 'sourceFileId' => 22, 'contentHash' => 'bbb']);
+		$versions = $this->createMock(TemplateVersionService::class);
+		$versions->method('getNextVersionNumber')->willReturn(3);
+		$versions->method('findVersionByNumber')->with('t-1', 1)->willReturn(['content' => 'oud', 'sourceFileId' => 11, 'contentHash' => 'aaa', 'editor' => 'x']);
+		$this->setUpWithOpenRegisterAndVersionService($mockObjectService, $versions);
+		$this->mockRegisterResolver->method('getRegisterAndSchema')->willReturn(['register' => 'templates', 'schema' => 'template']);
+
+		$template = $this->templateService->getTemplateAtVersion(id: 't-1', version: 1);
+
+		$this->assertSame(['oud', 11, 'aaa', 1, 'office'], [$template['content'], $template['sourceFileId'], $template['contentHash'], $template['version'], $template['templateType']]);
+		$this->assertArrayNotHasKey('editor', $template);
+	}//end testAnOlderOfficeVersionRendersItsOwnSource()
 }//end class

@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/document-sanitization/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -28,6 +28,7 @@ use InvalidArgumentException;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\Filinq\Service\Sanitization\DocumentSanitizationService;
 use OCA\Filinq\Service\Sanitization\SanitizationRecordRepository;
+use OCA\Filinq\Service\Sanitization\SealLookup;
 use OCA\OpenRegister\Exception\SanitizationException;
 use OCA\OpenRegister\Files\Service\File\OfficeDocumentSanitizer;
 use OCA\OpenRegister\Files\Service\File\SanitizationReport;
@@ -90,11 +91,14 @@ class DocumentSanitizationServiceTest extends TestCase {
 	}//end file()
 
 	/**
-	 * The service, with OpenRegister's office sanitizer and no PDF seam.
+	 * The service, with OpenRegister's office sanitizer and, when given, its PDF sanitizer.
+	 *
+	 * @param object|null     $pdf   OpenRegister's PDF sanitizer, null for an OpenRegister without it.
+	 * @param SealLookup|null $seals The seal lookup, null for none.
 	 *
 	 * @return DocumentSanitizationService
 	 */
-	private function service(): DocumentSanitizationService {
+	private function service(?object $pdf = null, ?SealLookup $seals = null): DocumentSanitizationService {
 		$userFolder = $this->createMock(Folder::class);
 		$userFolder->method('getById')->willReturnCallback(fn (int $id): array => isset($this->files[$id]) === true ? [$this->files[$id]] : []);
 		$root = $this->createMock(IRootFolder::class);
@@ -104,7 +108,11 @@ class DocumentSanitizationServiceTest extends TestCase {
 		$this->office->method('isSanitizable')->willReturnCallback(fn (string $mime): bool => str_contains($mime, 'wordprocessingml') || str_contains($mime, 'opendocument.text'));
 		$locator = $this->createMock(OpenRegisterServiceLocator::class);
 		$locator->method('get')->willReturnCallback(
-			fn (string $class): mixed => $class === OfficeDocumentSanitizer::class ? $this->office : throw new \RuntimeException($class . ' is not available.')
+			fn (string $class): mixed => match (true) {
+				$class === OfficeDocumentSanitizer::class => $this->office,
+				$class === DocumentSanitizationService::PDF_ENGINE && $pdf !== null => $pdf,
+				default => throw new \RuntimeException($class . ' is not available.'),
+			}
 		);
 		$records = $this->createMock(SanitizationRecordRepository::class);
 		$records->method('save')->willReturnCallback(
@@ -118,7 +126,8 @@ class DocumentSanitizationServiceTest extends TestCase {
 			rootFolder: $root,
 			locator: $locator,
 			records: $records,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			seals: $seals
 		);
 
 	}//end service()
@@ -266,4 +275,145 @@ class DocumentSanitizationServiceTest extends TestCase {
 		}
 
 	}//end testUnreachableAndUnsupportedFiles()
+
+	/**
+	 * OpenRegister's PDF sanitizer in the shape it answers: a temporary file and a report.
+	 *
+	 * @param \Throwable|null $failure What sanitize() throws instead.
+	 *
+	 * @return object The engine.
+	 */
+	private function pdfEngine(?\Throwable $failure = null): object {
+		return new class($failure) {
+			/** @var array<int, int> The file ids asked for. */
+			public array $asked = [];
+
+			public function __construct(private readonly ?\Throwable $failure) {
+			}
+
+			public function sanitize(int $fileId): object {
+				$this->asked[] = $fileId;
+				if ($this->failure !== null) {
+					throw $this->failure;
+				}
+
+				$path = (string) tempnam(sys_get_temp_dir(), 'filinq-pdf-sanitized-');
+				file_put_contents($path, "%PDF-1.7 sanitized");
+
+				return (object) [
+					'path' => $path,
+					'report' => new class implements \JsonSerializable {
+						public function jsonSerialize(): array {
+							return [
+								'metadataFieldsScrubbed' => 2,
+								'xmpScrubbed' => true,
+								'annotationsRemoved' => 3,
+								'embeddedFilesRemoved' => 1,
+								'javascriptRemoved' => 1,
+								'openActionsRemoved' => 1,
+								'additionalActionsRemoved' => 2,
+								'preservedAttachments' => [['name' => 'mdto.xml', 'relationship' => 'Source']],
+							];
+						}
+					},
+				];
+			}
+		};
+
+	}//end pdfEngine()
+
+	/**
+	 * With OpenRegister's PDF sanitizer a PDF becomes a derivative beside it, and the record holds its counts.
+	 *
+	 * @return void
+	 */
+	public function testAPdfBecomesASanitizedDerivativeWithThePdfSeam(): void {
+		$this->file(id: 45, name: 'besluit.pdf', mime: 'application/pdf');
+		$pdf = $this->pdfEngine();
+		$service = $this->service(pdf: $pdf);
+		$this->office->expects($this->never())->method('sanitize');
+
+		$result = $service->sanitize(fileId: 45, userId: 'alice');
+
+		$this->assertTrue($result['sanitized']);
+		$this->assertSame([45], $pdf->asked);
+		$this->assertSame([['besluit_sanitized.pdf', '%PDF-1.7 sanitized']], $this->created);
+		$this->assertSame(
+			[
+				'metadataFieldsScrubbed' => 2,
+				'xmpNamespacesStripped' => 1,
+				'annotationsRemoved' => 3,
+				'embeddedFilesRemoved' => 1,
+				'scriptsRemoved' => 4,
+				'resaved' => true,
+				'preservedAttachments' => [['name' => 'mdto.xml', 'relationship' => 'Source']],
+			],
+			$result['report']
+		);
+		$this->assertSame('PdfDocumentSanitizer', $this->records[0]['engine']);
+		$this->assertValidRecord(record: $this->records[0]);
+
+	}//end testAPdfBecomesASanitizedDerivativeWithThePdfSeam()
+
+	/**
+	 * An encrypted PDF fails closed with 422 through the PDF seam too.
+	 *
+	 * @return void
+	 */
+	public function testAnEncryptedPdfFailsClosed(): void {
+		$this->file(id: 46, name: 'geheim.pdf', mime: 'application/pdf');
+		$service = $this->service(pdf: $this->pdfEngine(failure: new SanitizationException(reason: SanitizationException::REASON_ENCRYPTED)));
+
+		try {
+			$service->sanitize(fileId: 46, userId: 'alice');
+			$this->fail('an encrypted PDF was not refused');
+		} catch (InvalidArgumentException $e) {
+			$this->assertSame(422, $e->getCode());
+		}
+
+		$this->assertSame([], $this->created);
+		$this->assertSame([], $this->records);
+
+	}//end testAnEncryptedPdfFailsClosed()
+
+	/**
+	 * Sanitizing a sealed file still writes the copy, and says the copy needs a new seal.
+	 *
+	 * @return void
+	 */
+	public function testASealedSourceIsSanitizedWithAWarning(): void {
+		$this->file(id: 41, name: 'a.docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+		$seals = $this->createMock(SealLookup::class);
+		$seals->expects($this->once())->method('hasActiveSeal')->with(41)->willReturn(true);
+		$service = $this->service(seals: $seals);
+		$temp = tempnam(sys_get_temp_dir(), 'san');
+		$this->office->method('sanitize')->willReturn(new SanitizationResult(path: $temp, report: new SanitizationReport()));
+
+		$result = $service->sanitize(fileId: 41, userId: 'alice');
+
+		$this->assertTrue($result['sanitized']);
+		$this->assertTrue($result['sourceSealed']);
+		$this->assertSame(901, $result['sanitizedFileId']);
+		$this->assertCount(1, $this->records);
+
+	}//end testASealedSourceIsSanitizedWithAWarning()
+
+	/**
+	 * An unsealed source, or no seal lookup at all, carries no warning.
+	 *
+	 * @return void
+	 */
+	public function testAnUnsealedSourceCarriesNoWarning(): void {
+		$this->file(id: 41, name: 'a.docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+		$seals = $this->createMock(SealLookup::class);
+		$seals->method('hasActiveSeal')->willReturn(false);
+		foreach ([$seals, null] as $lookup) {
+			$service = $this->service(seals: $lookup);
+			$temp = tempnam(sys_get_temp_dir(), 'san');
+			$this->office->method('sanitize')->willReturn(new SanitizationResult(path: $temp, report: new SanitizationReport()));
+
+			$this->assertFalse($service->sanitize(fileId: 41, userId: 'alice')['sourceSealed']);
+		}
+
+	}//end testAnUnsealedSourceCarriesNoWarning()
 }//end class

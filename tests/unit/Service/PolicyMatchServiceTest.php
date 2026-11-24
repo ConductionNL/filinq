@@ -236,6 +236,7 @@ class PolicyMatchServiceTest extends TestCase {
 		// `searchObjectsBySlug(): array`; the contract says `array|int`, and
 		// nothing was verifying that the two agreed.
 		$fakeObjectService = $this->createMock(ObjectServiceInterface::class);
+		$fakeObjectService->method('runAsSystem')->willReturnCallback(static fn (callable $operation): mixed => $operation());
 		$fakeObjectService->method('searchObjectsBySlug')->willReturnCallback(
 			static function (
 				string $registerSlug,

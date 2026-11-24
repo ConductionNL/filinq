@@ -43,6 +43,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Service\Signing\LibreSignProvider;
+use OCA\Filinq\Service\Signing\RecipientRole;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -61,6 +62,9 @@ use RuntimeException;
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the sum of small independent
+ * checks of the signing fields and their placement on one document.
  *
  * @spec openspec/specs/document-signing/spec.md
  */
@@ -338,15 +342,55 @@ class SignedArtifactProducer {
 		}
 
 		$labels = [];
-		foreach ((array) ($request['signerIds'] ?? []) as $signerId) {
+		$values = [];
+		foreach (array_values((array) ($request['signerIds'] ?? [])) as $index => $signerId) {
 			$record = ($signers[(string) $signerId] ?? []);
 			$names = array_filter([(string) ($record['displayName'] ?? ''), (string) ($record['email'] ?? ''), (string) ($record['userId'] ?? '')]);
 			$labels[] = (string) (reset($names) ?? '');
+			$values += $this->typedValues(record: $record, signerIndex: $index, placements: $placements);
+		}
+
+		// What a signer typed is drawn in its own field block, so it sits
+		// inside the sealed content (signing-field-validation REQ-SFV-004).
+		foreach ($values as $position => $value) {
+			$placements[$position]['value'] = $value;
 		}
 
 		return ['fieldPlacements' => $placements, 'signerLabels' => $labels];
 
 	}//end placementContext()
+
+	/**
+	 * The values one signer typed, keyed by placement position.
+	 *
+	 * Only a value for a text field placed for this signer counts.
+	 *
+	 * @param array<string, mixed>             $record      The signer record.
+	 * @param int                              $signerIndex The signer's position in `signerIds`.
+	 * @param array<int, array<string, mixed>> $placements  The request's placements.
+	 *
+	 * @return array<int, string> The values.
+	 *
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 */
+	private function typedValues(array $record, int $signerIndex, array $placements): array {
+		$values = [];
+		foreach ((array) ($record['fieldValues'] ?? []) as $entry) {
+			if (is_array($entry) === false || is_int($entry['placement'] ?? null) === false || is_string($entry['value'] ?? null) === false) {
+				continue;
+			}
+
+			$placement = ($placements[$entry['placement']] ?? null);
+			if (is_array($placement) === true && ($placement['type'] ?? null) === 'text'
+				&& (int) ($placement['signerIndex'] ?? -1) === $signerIndex
+			) {
+				$values[$entry['placement']] = $entry['value'];
+			}
+		}
+
+		return $values;
+
+	}//end typedValues()
 
 	/**
 	 * Build the provider's evidence context.
@@ -359,7 +403,9 @@ class SignedArtifactProducer {
 	private function buildContext(array $request, ?array $verifiedActor): array {
 		$context = [
 			'signer' => $this->resolveSignerLabel(verifiedActor: $verifiedActor),
-			'signers' => ($request['signerIds'] ?? []),
+			// Signers and accept-only recipients apart (signing-accept-only-recipient D3).
+			'signers' => RecipientRole::split(request: $request)['signers'],
+			'accepted' => RecipientRole::split(request: $request)['accepted'],
 			'timestamp' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
 			'ip' => $this->request->getRemoteAddress(),
 			'level' => (string)($request['signatureLevel'] ?? 'SES'),

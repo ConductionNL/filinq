@@ -212,7 +212,7 @@ class OdfBlockStyleCodec implements BlockStyleFamilyCodec {
 			$markup = preg_replace('/<\/text:p>$/', '</text:h>', $markup, 1);
 			$markup = preg_replace('/\s+text:outline-level="\d+"/', '', $markup, 1);
 
-			return preg_replace(
+			return (string)preg_replace(
 				'/^<text:h\b/',
 				sprintf('<text:h text:outline-level="%d"', $level),
 				$markup,
@@ -226,7 +226,7 @@ class OdfBlockStyleCodec implements BlockStyleFamilyCodec {
 		$markup = preg_replace('/\s+text:outline-level="\d+"/', '', $markup, 1);
 		$markup = preg_replace('/^<text:h\b/', '<text:p', $markup, 1);
 
-		return preg_replace('/<\/text:h>$/', '</text:p>', $markup, 1);
+		return (string)preg_replace('/<\/text:h>$/', '</text:p>', $markup, 1);
 	}//end applyOdfHeading()
 
 	/**
@@ -240,7 +240,7 @@ class OdfBlockStyleCodec implements BlockStyleFamilyCodec {
 	private function pointAtStyle(string $markup, string $styleName): string {
 		$stripped = preg_replace('/\s+text:style-name="[^"]*"/', '', $markup, 1);
 
-		return preg_replace(
+		return (string)preg_replace(
 			'/^<(text:[ph])\b/',
 			sprintf('<$1 text:style-name="%s"', $styleName),
 			$stripped,

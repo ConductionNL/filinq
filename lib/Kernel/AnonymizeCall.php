@@ -44,14 +44,20 @@ final class AnonymizeCall {
 	 * @param array<string, mixed> $params       Raw request parameters (scope, dossierKey, filters)
 	 * @param array<string, mixed> $request      The normalised body from validateBody()
 	 * @param string               $outputFormat The resolved output format
+	 * @param bool                 $sanitize     Whether the delivered artifact is sanitized
 	 *
 	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `$sanitize` is the caller's per-run choice to also
+	 * sanitize the delivered output, an option of the same run (like the output format), not a second
+	 * responsibility.
 	 */
 	public function __construct(
 		public readonly int $fileId,
 		public readonly array $params,
 		public readonly array $request,
 		public readonly string $outputFormat,
+		public readonly bool $sanitize=false,
 	) {
 
 	}//end __construct()

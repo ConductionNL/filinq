@@ -172,20 +172,20 @@ class VerificationQrStamp {
 	 */
 	private function drawStamp(Mpdf $mpdf, array $matrix, string $url, string $caption): void {
 		$modules = count($matrix);
-		$side = (($modules + (2 * self::QUIET_MODULES)) * self::MODULE_MM);
+		$side = ((float)($modules + (2 * self::QUIET_MODULES)) * self::MODULE_MM);
 		$left = ($mpdf->w - self::MARGIN_MM - $side);
 		$top = ($mpdf->h - self::MARGIN_MM - $side);
 
 		$mpdf->SetFillColor(255, 255, 255);
 		$mpdf->Rect($left, $top, $side, $side, 'F');
 		$mpdf->SetFillColor(0, 0, 0);
-		$origin = (self::QUIET_MODULES * self::MODULE_MM);
+		$origin = ((float)self::QUIET_MODULES * self::MODULE_MM);
 		foreach ($matrix as $row => $columns) {
 			foreach ($columns as $column => $dark) {
 				if ($dark === true) {
 					$mpdf->Rect(
-						($left + $origin + ($column * self::MODULE_MM)),
-						($top + $origin + ($row * self::MODULE_MM)),
+						($left + $origin + ((float)$column * self::MODULE_MM)),
+						($top + $origin + ((float)$row * self::MODULE_MM)),
 						self::MODULE_MM,
 						self::MODULE_MM,
 						'F'

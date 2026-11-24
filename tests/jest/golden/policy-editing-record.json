@@ -1,6 +1,6 @@
 {
 	"prohibition: full": {
-		"json": "{\"primaryName\":\"Jan Jansen\",\"entityType\":\"ORGANIZATION\",\"reason\":\"Court order\",\"legalAuthority\":\"Rechtbank\",\"caseReference\":\"Z-1\",\"severity\":\"high\",\"jurisdiction\":\"NL\",\"validUntil\":\"2027-01-01\",\"active\":true,\"matchRules\":[{\"type\":\"bsn\",\"value\":\"123456782\"}]}",
+		"json": "{\"primaryName\":\"Jan Jansen\",\"entityType\":\"ORGANIZATION\",\"reason\":\"Court order\",\"legalAuthority\":\"Rechtbank\",\"caseReference\":\"Z-1\",\"severity\":\"high\",\"jurisdiction\":\"NL\",\"validUntil\":\"2027-01-01\",\"active\":true,\"matchRules\":[{\"type\":\"bsn\",\"value\":\"123456782\"}],\"bases\":[]}",
 		"record": {
 			"primaryName": "Jan Jansen",
 			"entityType": "ORGANIZATION",
@@ -16,11 +16,12 @@
 					"type": "bsn",
 					"value": "123456782"
 				}
-			]
+			],
+			"bases": []
 		}
 	},
 	"prohibition: empty": {
-		"json": "{\"primaryName\":\"\",\"entityType\":\"PERSON\",\"reason\":\"\",\"legalAuthority\":\"\",\"caseReference\":\"\",\"severity\":\"medium\",\"jurisdiction\":\"\",\"validUntil\":\"\",\"active\":true,\"matchRules\":[]}",
+		"json": "{\"primaryName\":\"\",\"entityType\":\"PERSON\",\"reason\":\"\",\"legalAuthority\":\"\",\"caseReference\":\"\",\"severity\":\"medium\",\"jurisdiction\":\"\",\"validUntil\":\"\",\"active\":true,\"matchRules\":[],\"bases\":[]}",
 		"record": {
 			"primaryName": "",
 			"entityType": "PERSON",
@@ -31,11 +32,12 @@
 			"jurisdiction": "",
 			"validUntil": "",
 			"active": true,
-			"matchRules": []
+			"matchRules": [],
+			"bases": []
 		}
 	},
 	"prohibition: falsy": {
-		"json": "{\"primaryName\":\"\",\"entityType\":\"PERSON\",\"reason\":\"\",\"legalAuthority\":\"\",\"caseReference\":\"\",\"severity\":\"medium\",\"jurisdiction\":\"\",\"validUntil\":\"\",\"active\":true,\"matchRules\":[]}",
+		"json": "{\"primaryName\":\"\",\"entityType\":\"PERSON\",\"reason\":\"\",\"legalAuthority\":\"\",\"caseReference\":\"\",\"severity\":\"medium\",\"jurisdiction\":\"\",\"validUntil\":\"\",\"active\":true,\"matchRules\":[],\"bases\":[]}",
 		"record": {
 			"primaryName": "",
 			"entityType": "PERSON",
@@ -46,11 +48,12 @@
 			"jurisdiction": "",
 			"validUntil": "",
 			"active": true,
-			"matchRules": []
+			"matchRules": [],
+			"bases": []
 		}
 	},
 	"prohibition: inactive": {
-		"json": "{\"primaryName\":\"\",\"entityType\":\"PERSON\",\"reason\":\"\",\"legalAuthority\":\"\",\"caseReference\":\"\",\"severity\":\"medium\",\"jurisdiction\":\"\",\"validUntil\":\"\",\"active\":false,\"matchRules\":[]}",
+		"json": "{\"primaryName\":\"\",\"entityType\":\"PERSON\",\"reason\":\"\",\"legalAuthority\":\"\",\"caseReference\":\"\",\"severity\":\"medium\",\"jurisdiction\":\"\",\"validUntil\":\"\",\"active\":false,\"matchRules\":[],\"bases\":[]}",
 		"record": {
 			"primaryName": "",
 			"entityType": "PERSON",
@@ -61,11 +64,12 @@
 			"jurisdiction": "",
 			"validUntil": "",
 			"active": false,
-			"matchRules": []
+			"matchRules": [],
+			"bases": []
 		}
 	},
 	"prohibition: extraRuleKeys": {
-		"json": "{\"primaryName\":\"\",\"entityType\":\"PERSON\",\"reason\":\"\",\"legalAuthority\":\"\",\"caseReference\":\"\",\"severity\":\"medium\",\"jurisdiction\":\"\",\"validUntil\":\"\",\"active\":true,\"matchRules\":[{\"type\":\"name\",\"value\":\"Jan\"},{\"value\":\"x\"}]}",
+		"json": "{\"primaryName\":\"\",\"entityType\":\"PERSON\",\"reason\":\"\",\"legalAuthority\":\"\",\"caseReference\":\"\",\"severity\":\"medium\",\"jurisdiction\":\"\",\"validUntil\":\"\",\"active\":true,\"matchRules\":[{\"type\":\"name\",\"value\":\"Jan\"},{\"value\":\"x\"}],\"bases\":[]}",
 		"record": {
 			"primaryName": "",
 			"entityType": "PERSON",
@@ -84,11 +88,12 @@
 				{
 					"value": "x"
 				}
-			]
+			],
+			"bases": []
 		}
 	},
 	"standingConsent: full": {
-		"json": "{\"entityText\":\"Jan Jansen\",\"entityType\":\"ORGANIZATION\",\"consentMethod\":\"paper\",\"consentDocument\":\"doc-1\",\"consentScope\":\"all\",\"legalBasis\":\"art 6\",\"validFrom\":\"2026-01-01\",\"validUntil\":\"2027-01-01\",\"active\":true,\"matchRules\":[{\"type\":\"bsn\",\"value\":\"123456782\"}],\"consentStatus\":\"consent_withdrawn\",\"publicationDecision\":\"never\",\"notificationStatus\":\"sent\"}",
+		"json": "{\"entityText\":\"Jan Jansen\",\"entityType\":\"ORGANIZATION\",\"consentMethod\":\"paper\",\"consentDocument\":\"doc-1\",\"consentScope\":\"all\",\"legalBasis\":\"art 6\",\"validFrom\":\"2026-01-01\",\"validUntil\":\"2027-01-01\",\"active\":true,\"matchRules\":[{\"type\":\"bsn\",\"value\":\"123456782\"}],\"consentStatus\":\"consent_withdrawn\",\"publicationDecision\":\"never\",\"notificationStatus\":\"sent\",\"bases\":[]}",
 		"record": {
 			"entityText": "Jan Jansen",
 			"entityType": "ORGANIZATION",
@@ -107,11 +112,12 @@
 			],
 			"consentStatus": "consent_withdrawn",
 			"publicationDecision": "never",
-			"notificationStatus": "sent"
+			"notificationStatus": "sent",
+			"bases": []
 		}
 	},
 	"standingConsent: empty": {
-		"json": "{\"entityText\":\"\",\"entityType\":\"PERSON\",\"consentMethod\":\"\",\"consentDocument\":\"\",\"consentScope\":\"\",\"legalBasis\":\"\",\"validFrom\":\"\",\"validUntil\":\"\",\"active\":true,\"matchRules\":[],\"consentStatus\":\"consent_given\",\"publicationDecision\":\"publish_with_consent\",\"notificationStatus\":\"skipped\"}",
+		"json": "{\"entityText\":\"\",\"entityType\":\"PERSON\",\"consentMethod\":\"\",\"consentDocument\":\"\",\"consentScope\":\"\",\"legalBasis\":\"\",\"validFrom\":\"\",\"validUntil\":\"\",\"active\":true,\"matchRules\":[],\"consentStatus\":\"consent_given\",\"publicationDecision\":\"publish_with_consent\",\"notificationStatus\":\"skipped\",\"bases\":[]}",
 		"record": {
 			"entityText": "",
 			"entityType": "PERSON",
@@ -125,11 +131,12 @@
 			"matchRules": [],
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		}
 	},
 	"standingConsent: falsy": {
-		"json": "{\"entityText\":\"\",\"entityType\":\"PERSON\",\"consentMethod\":\"\",\"consentDocument\":\"\",\"consentScope\":\"\",\"legalBasis\":\"\",\"validFrom\":\"\",\"validUntil\":\"\",\"active\":true,\"matchRules\":[],\"consentStatus\":\"consent_given\",\"publicationDecision\":\"publish_with_consent\",\"notificationStatus\":\"skipped\"}",
+		"json": "{\"entityText\":\"\",\"entityType\":\"PERSON\",\"consentMethod\":\"\",\"consentDocument\":\"\",\"consentScope\":\"\",\"legalBasis\":\"\",\"validFrom\":\"\",\"validUntil\":\"\",\"active\":true,\"matchRules\":[],\"consentStatus\":\"consent_given\",\"publicationDecision\":\"publish_with_consent\",\"notificationStatus\":\"skipped\",\"bases\":[]}",
 		"record": {
 			"entityText": "",
 			"entityType": "PERSON",
@@ -143,11 +150,12 @@
 			"matchRules": [],
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		}
 	},
 	"standingConsent: inactive": {
-		"json": "{\"entityText\":\"\",\"entityType\":\"PERSON\",\"consentMethod\":\"\",\"consentDocument\":\"\",\"consentScope\":\"\",\"legalBasis\":\"\",\"validFrom\":\"\",\"validUntil\":\"\",\"active\":false,\"matchRules\":[],\"consentStatus\":\"consent_given\",\"publicationDecision\":\"publish_with_consent\",\"notificationStatus\":\"skipped\"}",
+		"json": "{\"entityText\":\"\",\"entityType\":\"PERSON\",\"consentMethod\":\"\",\"consentDocument\":\"\",\"consentScope\":\"\",\"legalBasis\":\"\",\"validFrom\":\"\",\"validUntil\":\"\",\"active\":false,\"matchRules\":[],\"consentStatus\":\"consent_given\",\"publicationDecision\":\"publish_with_consent\",\"notificationStatus\":\"skipped\",\"bases\":[]}",
 		"record": {
 			"entityText": "",
 			"entityType": "PERSON",
@@ -161,11 +169,12 @@
 			"matchRules": [],
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		}
 	},
 	"standingConsent: extraRuleKeys": {
-		"json": "{\"entityText\":\"\",\"entityType\":\"PERSON\",\"consentMethod\":\"\",\"consentDocument\":\"\",\"consentScope\":\"\",\"legalBasis\":\"\",\"validFrom\":\"\",\"validUntil\":\"\",\"active\":true,\"matchRules\":[{\"type\":\"name\",\"value\":\"Jan\"},{\"value\":\"x\"}],\"consentStatus\":\"consent_given\",\"publicationDecision\":\"publish_with_consent\",\"notificationStatus\":\"skipped\"}",
+		"json": "{\"entityText\":\"\",\"entityType\":\"PERSON\",\"consentMethod\":\"\",\"consentDocument\":\"\",\"consentScope\":\"\",\"legalBasis\":\"\",\"validFrom\":\"\",\"validUntil\":\"\",\"active\":true,\"matchRules\":[{\"type\":\"name\",\"value\":\"Jan\"},{\"value\":\"x\"}],\"consentStatus\":\"consent_given\",\"publicationDecision\":\"publish_with_consent\",\"notificationStatus\":\"skipped\",\"bases\":[]}",
 		"record": {
 			"entityText": "",
 			"entityType": "PERSON",
@@ -187,7 +196,8 @@
 			],
 			"consentStatus": "consent_given",
 			"publicationDecision": "publish_with_consent",
-			"notificationStatus": "skipped"
+			"notificationStatus": "skipped",
+			"bases": []
 		}
 	}
 }

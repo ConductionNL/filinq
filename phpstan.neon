@@ -46,6 +46,10 @@ parameters:
         # OpenRegister's integration provider contract (template-library-leaf):
         # TemplatesLeafProvider implements it, so the same non-ignorable rule applies.
         - tests/stubs/openregister-integration.stub.php
+        # integriq's watched-folder hand-over event (scan-intake-from-a-watched-folder):
+        # WatchedFileArrivedListener reads it, and integriq is a sibling app that is
+        # absent from the analysis path. The stub is a verbatim copy of its class.
+        - tests/stubs/integriq-watched-file.stub.php
 
     ignoreErrors:
         # @template-implements IEventListener<OCA\OpenRegister\Event\*> in listeners:

@@ -334,7 +334,7 @@ class UploadPolicyService implements UploadPolicyServiceInterface {
 	 * @spec exclude Formatting helper.
 	 */
 	private function megabytes(int $bytes): string {
-		return round(($bytes / 1048576), 1) . ' MB';
+		return (string)round(((float)$bytes / 1048576.0), 1) . ' MB';
 
 	}//end megabytes()
 }//end class

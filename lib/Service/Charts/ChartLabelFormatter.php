@@ -75,7 +75,7 @@ class ChartLabelFormatter {
 	 */
 	public function formatValue(float $value, string $format): string {
 		if ($format === 'percent') {
-			return sprintf('%.0f%%', $value * 100);
+			return sprintf('%.0f%%', $value * 100.0);
 		}
 
 		if (str_starts_with($format, 'decimal:') === true) {

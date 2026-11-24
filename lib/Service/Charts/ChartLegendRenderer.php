@@ -91,10 +91,11 @@ class ChartLegendRenderer {
 			$color = $chart->color(index: (int)$index);
 			$name = $this->labels->truncate(text: $oneSeries['name'], max: 18);
 
-			$swatch = new SvgBox(origin: new SvgPoint(x: $cursorX, y: $y - 9), size: new SvgSize(width: 9, height: 9));
+			$swatch = new SvgBox(origin: new SvgPoint(x: $cursorX, y: $y - 9.0), size: new SvgSize(width: 9, height: 9));
 			$parts[] = $this->svg->rectEl(box: $swatch, color: $color);
-			$parts[] = $this->svg->textEl(position: new SvgPoint(x: $cursorX + 13, y: $y), text: new SvgText(content: $name, style: SvgTextStyle::LabelStart));
-			$cursorX += 13 + (strlen($name) * 5.5) + 14;
+			$label = new SvgText(content: $name, style: SvgTextStyle::LabelStart);
+			$parts[] = $this->svg->textEl(position: new SvgPoint(x: $cursorX + 13.0, y: $y), text: $label);
+			$cursorX = $cursorX + 13.0 + ((float)strlen($name) * 5.5) + 14.0;
 		}
 
 		return implode('', $parts);
