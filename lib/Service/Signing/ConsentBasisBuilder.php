@@ -39,7 +39,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class ConsentBasisBuilder {
 
@@ -66,7 +66,7 @@ class ConsentBasisBuilder {
 	 *
 	 * @throws RuntimeException With code 409 when a signer signed under the age and no guardian acted for them.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function build(array $request, array $signers): array {
 		$age = $this->agePolicy->appliedAge(data: $request);

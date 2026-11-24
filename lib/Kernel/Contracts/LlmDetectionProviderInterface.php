@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/filinq
  *
- * @spec openspec/specs/method-decomposition/spec.md
+ * @spec openspec/specs/llm-entity-detection-provider/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -42,7 +42,7 @@ interface LlmDetectionProviderInterface {
 	 *
 	 * @return array{available: bool, reason: string|null}
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	public function testConnection(): array;
 }//end interface

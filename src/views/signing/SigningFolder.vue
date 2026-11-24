@@ -259,7 +259,7 @@ export default {
 		 *
 		 * @return {boolean} True after a failed step-up.
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		stepUpFailed() {
 			return stepUpReturn(this.$route?.query).status === 'failed'
@@ -406,7 +406,7 @@ export default {
 		 * @param {object} result A result of the last pass.
 		 * @return {object|null} The hint.
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		hintOf(result) {
 			return stepUpHint(result)

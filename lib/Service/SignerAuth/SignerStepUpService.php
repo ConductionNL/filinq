@@ -43,7 +43,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SignerStepUpService implements SignerStepUpServiceInterface {
 
@@ -80,7 +80,7 @@ class SignerStepUpService implements SignerStepUpServiceInterface {
 	 *
 	 * @throws RuntimeException When there is no session user, the signer is not theirs, or the provider cannot start.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function start(string $requestId, string $signerId): array {
 		[$userId] = $this->actors->resolveActingIdentity();
@@ -115,7 +115,7 @@ class SignerStepUpService implements SignerStepUpServiceInterface {
 	 *
 	 * @throws RuntimeException When the state is unknown or used, belongs to another user, or the broker fails.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function authorizeCallback(string $code, string $state): array {
 		[$userId] = $this->actors->resolveActingIdentity();

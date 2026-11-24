@@ -44,7 +44,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 interface SignerAuthenticationProviderInterface {
 
@@ -53,7 +53,7 @@ interface SignerAuthenticationProviderInterface {
 	 *
 	 * @return string The identifier.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function getIdentifier(): string;
 
@@ -62,7 +62,7 @@ interface SignerAuthenticationProviderInterface {
 	 *
 	 * @return list<string> For example `['digid', 'eherkenning', 'idin']`.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function getSupportedMeans(): array;
 
@@ -71,7 +71,7 @@ interface SignerAuthenticationProviderInterface {
 	 *
 	 * @return list<string> A non-empty subset of `low`, `substantial`, `high`.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function getSupportedAssurance(): array;
 
@@ -84,7 +84,7 @@ interface SignerAuthenticationProviderInterface {
 	 *
 	 * @throws RuntimeException When the provider cannot start (for example, not configured).
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function initiateAuthentication(SignerAuthContext $context): AuthChallenge;
 
@@ -101,7 +101,7 @@ interface SignerAuthenticationProviderInterface {
 	 *
 	 * @throws RuntimeException When the input is invalid, expired, unbound or unverifiable.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function completeAuthentication(array $callbackData): IdentityEvidence;
 }//end interface

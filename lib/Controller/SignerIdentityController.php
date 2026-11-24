@@ -49,7 +49,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SignerIdentityController extends Controller {
 
@@ -83,7 +83,7 @@ class SignerIdentityController extends Controller {
 	 *
 	 * @return JSONResponse The challenge and the assurance needed, or a generic 404.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 *
 	 * @no-admin-idor-exempt SignerStepUpService::start() calls
 	 * SigningActorResolver::loadAuthorisedSigner(), which refuses unless the signer record belongs to the
@@ -110,7 +110,7 @@ class SignerIdentityController extends Controller {
 	 *
 	 * @return RedirectResponse Back to the request page, with the outcome in the query.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]

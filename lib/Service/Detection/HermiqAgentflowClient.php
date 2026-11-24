@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use UnexpectedValueException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 class HermiqAgentflowClient {
 
@@ -50,7 +50,7 @@ class HermiqAgentflowClient {
 	 *
 	 * @param IClientService $clientService Nextcloud's HTTP client factory.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
 	 */
 	public function __construct(
 		private readonly IClientService $clientService,
@@ -69,7 +69,7 @@ class HermiqAgentflowClient {
 	 * @throws RuntimeException When the call fails or times out.
 	 * @throws UnexpectedValueException When the answer carries no `state.entities`.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
 	 */
 	public function entities(AgentflowTarget $target, string $text, ?array $entityTypes): mixed {
 		try {
@@ -120,7 +120,7 @@ class HermiqAgentflowClient {
 	 *
 	 * @return bool True when something answered.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	public function answers(string $endpoint, int $timeout): bool {
 		try {

@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ namespace OCA\Filinq\Service\Detection;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 interface DetectionProviderInterface {
 
@@ -50,7 +50,7 @@ interface DetectionProviderInterface {
 	 *
 	 * @throws \RuntimeException When the engine cannot run or answers with something unusable.
 	 *
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.1
 	 */
 	public function detect(DetectionRequest $request, string $text): DetectionResult;
 
@@ -59,7 +59,7 @@ interface DetectionProviderInterface {
 	 *
 	 * @return string The id.
 	 *
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.1
 	 */
 	public function id(): string;
 
@@ -68,7 +68,7 @@ interface DetectionProviderInterface {
 	 *
 	 * @return bool True when a call may be attempted.
 	 *
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.1
 	 */
 	public function isAvailable(): bool;
 }//end interface

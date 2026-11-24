@@ -39,7 +39,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class IdTokenValidator {
 
@@ -63,7 +63,7 @@ class IdTokenValidator {
 	 *
 	 * @throws RuntimeException When the token is malformed or any check fails; the message names the check.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function validate(string $idToken, string $issuer, string $clientId, string $nonce, int $now): array {
 		$parts = explode('.', $idToken);

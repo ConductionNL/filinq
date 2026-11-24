@@ -40,7 +40,7 @@ use InvalidArgumentException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 final class IdentityEvidence {
 
@@ -85,7 +85,7 @@ final class IdentityEvidence {
 	 *
 	 * @return array{provider: string, means: string, assurance: string, subjectPseudonym: string, authenticatedAt: string, evidenceHash: string}
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function toArray(): array {
 		return [
@@ -108,7 +108,7 @@ final class IdentityEvidence {
 	 *
 	 * @throws InvalidArgumentException When the provider is missing or the timestamp does not parse.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public static function fromArray(array $data): self {
 		$provider = (string)($data['provider'] ?? '');
@@ -144,7 +144,7 @@ final class IdentityEvidence {
 	 *
 	 * @return bool True when the evidence may still be used.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function isFreshAt(DateTimeImmutable $now, int $maxAgeSeconds): bool {
 		$age = $now->getTimestamp() - $this->authenticatedAt->getTimestamp();

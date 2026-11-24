@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+@spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 -->
 
 <template>
@@ -82,7 +82,7 @@ export default {
 		 *
 		 * @return {string} The label.
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		levelLabel() {
 			const labels = {
@@ -102,7 +102,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		async start() {
 			this.busy = true

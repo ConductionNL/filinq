@@ -35,7 +35,7 @@ namespace OCA\Filinq\Service\SignerAuth;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 final class AssuranceLevel {
 
@@ -64,7 +64,7 @@ final class AssuranceLevel {
 	 *
 	 * @return string `low`, `substantial` or `high`.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function normalise(mixed $value): string {
 		if (is_string($value) === true && in_array($value, self::LEVELS, true) === true) {
@@ -82,7 +82,7 @@ final class AssuranceLevel {
 	 *
 	 * @return bool True for `low`, `substantial` or `high`.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function isLevel(mixed $value): bool {
 		return is_string($value) === true && in_array($value, self::LEVELS, true) === true;
@@ -97,7 +97,7 @@ final class AssuranceLevel {
 	 *
 	 * @return bool True when `$held` is at least `$required`.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function meets(string $held, string $required): bool {
 		return $this->rank(level: $held) >= $this->rank(level: $required);
@@ -111,7 +111,7 @@ final class AssuranceLevel {
 	 *
 	 * @return string The strongest, or `low` when none is given.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function strongest(array $levels): string {
 		$best = 'low';
@@ -132,7 +132,7 @@ final class AssuranceLevel {
 	 *
 	 * @return string The weakest, or `low` when none is given.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function weakest(array $levels): string {
 		if ($levels === []) {
@@ -157,7 +157,7 @@ final class AssuranceLevel {
 	 *
 	 * @return string The assurance floor.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function floorFor(string $signatureLevel): string {
 		return self::SIGNATURE_LEVEL_FLOORS[$signatureLevel] ?? 'low';
@@ -175,7 +175,7 @@ final class AssuranceLevel {
 	 *
 	 * @return string The assurance that applies.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function requiredFor(array $request): string {
 		$floor = $this->floorFor(signatureLevel: (string)($request['signatureLevel'] ?? 'SES'));

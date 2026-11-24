@@ -145,7 +145,7 @@ class PortalSigningReceiverController extends Controller {
 	 *
 	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
 	 */
 	#[PublicPage]

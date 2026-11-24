@@ -31,10 +31,10 @@
  * request this spec creates are restored or removed in afterAll.
  */
 
-// @e2e openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md#request-cannot-undercut-its-level-floor
-// @e2e openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md#substantial-request-refuses-a-session-only-signer
-// @e2e openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md#step-up-unlocks-the-signature
-// @e2e openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md#evidence-lands-on-record-audit-and-artifact-together
+// @e2e openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md#request-cannot-undercut-its-level-floor
+// @e2e openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md#substantial-request-refuses-a-session-only-signer
+// @e2e openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md#step-up-unlocks-the-signature
+// @e2e openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md#evidence-lands-on-record-audit-and-artifact-together
 
 import type { APIRequestContext, Page } from '@playwright/test'
 import type { Server } from 'https'
@@ -413,7 +413,7 @@ test.describe('signer identity rails: assurance gate and broker step-up', () => 
 	})
 
 	test('a QES request cannot undercut its level floor', async () => {
-		// @e2e openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md#request-cannot-undercut-its-level-floor
+		// @e2e openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md#request-cannot-undercut-its-level-floor
 		const created = await createRequest({
 			signatureLevel: 'QES',
 			provider: 'validsign',
@@ -434,7 +434,7 @@ test.describe('signer identity rails: assurance gate and broker step-up', () => 
 	})
 
 	test('a substantial request refuses a signer who only has a Nextcloud session', async () => {
-		// @e2e openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md#substantial-request-refuses-a-session-only-signer
+		// @e2e openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md#substantial-request-refuses-a-session-only-signer
 		const created = await createRequest({
 			signatureLevel: 'SES',
 			provider: 'native',
@@ -468,7 +468,7 @@ test.describe('signer identity rails: assurance gate and broker step-up', () => 
 	test('the step-up sends the signer to the broker for the assurance the request needs', async ({
 		page,
 	}) => {
-		// @e2e openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md#step-up-unlocks-the-signature
+		// @e2e openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md#step-up-unlocks-the-signature
 		const created = await createRequest({
 			signatureLevel: 'SES',
 			provider: 'native',
@@ -517,7 +517,7 @@ test.describe('signer identity rails: assurance gate and broker step-up', () => 
 	test('the step-up at DigiD substantial unlocks the signature', async ({
 		page,
 	}) => {
-		// @e2e openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md#step-up-unlocks-the-signature
+		// @e2e openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md#step-up-unlocks-the-signature
 		test.skip(!BACKCHANNEL, BACKCHANNEL_REASON)
 		const created = await createRequest({
 			signatureLevel: 'SES',
@@ -548,7 +548,7 @@ test.describe('signer identity rails: assurance gate and broker step-up', () => 
 	})
 
 	test('the evidence lands on the record, the audit entry and the artifact together', async () => {
-		// @e2e openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md#evidence-lands-on-record-audit-and-artifact-together
+		// @e2e openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md#evidence-lands-on-record-audit-and-artifact-together
 		test.skip(!BACKCHANNEL, BACKCHANNEL_REASON)
 		expect(signed.id, 'the previous test signed a request').toBeTruthy()
 		const expected = {

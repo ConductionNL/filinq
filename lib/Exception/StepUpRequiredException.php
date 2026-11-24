@@ -40,7 +40,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class StepUpRequiredException extends RuntimeException {
 
@@ -72,7 +72,7 @@ class StepUpRequiredException extends RuntimeException {
 	 *
 	 * @return array{required: bool, reason: string, requiredAssurance: string, heldAssurance: string, provider: string}
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function stepUp(): array {
 		return [

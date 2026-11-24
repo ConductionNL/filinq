@@ -523,7 +523,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * @return array<string, mixed> `detectionProvider`, `detectionFellBack`, `detectionWarning`;
 	 *                              empty when no resolver is wired.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-3.2
 	 */
 	private function runDetectionProvider(DetectionRequest $request): array {
 		if ($this->detectionResolver === null) {

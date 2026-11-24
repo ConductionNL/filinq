@@ -48,7 +48,7 @@ interface SignerAuthSettingsInterface {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function toArray(): array;
 
@@ -63,7 +63,7 @@ interface SignerAuthSettingsInterface {
 	 *
 	 * @throws InvalidArgumentException When a field is invalid; the message names it.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function update(array $data): void;
 
@@ -72,7 +72,7 @@ interface SignerAuthSettingsInterface {
 	 *
 	 * @return string The identifier, as stored; resolution is strict in the factory.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function providerId(): string;
 
@@ -84,7 +84,7 @@ interface SignerAuthSettingsInterface {
 	 *
 	 * @return string The value, '' when unset.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function broker(string $field): string;
 
@@ -93,7 +93,7 @@ interface SignerAuthSettingsInterface {
 	 *
 	 * @return array<string, array{means: string, assurance: string}>
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function acrMapping(): array;
 
@@ -102,7 +102,7 @@ interface SignerAuthSettingsInterface {
 	 *
 	 * @return bool True when the broker can be used.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function isBrokerConfigured(): bool;
 
@@ -111,7 +111,7 @@ interface SignerAuthSettingsInterface {
 	 *
 	 * @return int Seconds; 15 minutes when unset or out of range.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function evidenceMaxAgeSeconds(): int;
 
@@ -120,7 +120,7 @@ interface SignerAuthSettingsInterface {
 	 *
 	 * @return string `low` (no raise) unless an admin set more.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function guardianMinimumAssurance(): string;
 }//end interface

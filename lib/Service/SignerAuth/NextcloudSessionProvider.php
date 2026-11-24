@@ -41,7 +41,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class NextcloudSessionProvider implements SignerAuthenticationProviderInterface {
 
@@ -72,7 +72,7 @@ class NextcloudSessionProvider implements SignerAuthenticationProviderInterface 
 	 *
 	 * @return string `nextcloud-session`.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function getIdentifier(): string {
 		return self::IDENTIFIER;
@@ -84,7 +84,7 @@ class NextcloudSessionProvider implements SignerAuthenticationProviderInterface 
 	 *
 	 * @return list<string> `['nc-session']`.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function getSupportedMeans(): array {
 		return ['nc-session'];
@@ -96,7 +96,7 @@ class NextcloudSessionProvider implements SignerAuthenticationProviderInterface 
 	 *
 	 * @return list<string> `['low']`.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function getSupportedAssurance(): array {
 		return ['low'];
@@ -112,7 +112,7 @@ class NextcloudSessionProvider implements SignerAuthenticationProviderInterface 
 	 *
 	 * @throws RuntimeException When there is no session user.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function initiateAuthentication(SignerAuthContext $context): AuthChallenge {
 		$this->sessionUid();
@@ -130,7 +130,7 @@ class NextcloudSessionProvider implements SignerAuthenticationProviderInterface 
 	 *
 	 * @throws RuntimeException When an id is missing or the claimed user is not the session user.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function completeAuthentication(array $callbackData): IdentityEvidence {
 		$requestId = (string)($callbackData['requestId'] ?? '');

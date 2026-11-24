@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ namespace OCA\Filinq\Service\Detection;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 final class DetectionResult {
 
@@ -49,7 +49,7 @@ final class DetectionResult {
 	 * @param bool                             $fellBack     Whether the chosen provider failed and the default ran instead.
 	 * @param string|null                      $warning      The operator-facing warning for a fallback, or null.
 	 *
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.1
 	 */
 	public function __construct(
 		public readonly array $entities,
@@ -64,7 +64,7 @@ final class DetectionResult {
 	 *
 	 * @return array{detectionProvider: string, detectionFellBack: bool, detectionWarning: string|null}
 	 *
- * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-3.2
 	 */
 	public function toPayload(): array {
 		return [

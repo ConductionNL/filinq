@@ -46,7 +46,7 @@ interface SignerStepUpServiceInterface {
 	 *
 	 * @throws RuntimeException When there is no session user, the signer is not theirs, or the provider cannot start.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function start(string $requestId, string $signerId): array;
 
@@ -63,7 +63,7 @@ interface SignerStepUpServiceInterface {
 	 *
 	 * @throws RuntimeException When the state is unknown or used, belongs to another user, or the broker fails.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function authorizeCallback(string $code, string $state): array;
 }//end interface

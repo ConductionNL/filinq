@@ -38,7 +38,7 @@ use OCP\Security\ISecureRandom;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class OidcPendingAuthentications {
 
@@ -78,7 +78,7 @@ class OidcPendingAuthentications {
 	 *
 	 * @return array{state: string, nonce: string}
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function open(SignerAuthContext $context): array {
 		$state = $this->secureRandom->generate(32, ISecureRandom::CHAR_ALPHANUMERIC);
@@ -105,7 +105,7 @@ class OidcPendingAuthentications {
 	 *
 	 * @return array{requestId: string, signerId: string, userId: string, nonce: string}|null
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function peek(string $state): ?array {
 		$entry = $this->all()[$state] ?? null;
@@ -129,7 +129,7 @@ class OidcPendingAuthentications {
 	 *
 	 * @return array{requestId: string, signerId: string, userId: string, nonce: string}|null
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function take(string $state): ?array {
 		$entry = $this->peek(state: $state);

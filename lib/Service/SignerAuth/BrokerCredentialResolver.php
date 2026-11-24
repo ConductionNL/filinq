@@ -48,7 +48,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class BrokerCredentialResolver {
 
@@ -90,7 +90,7 @@ class BrokerCredentialResolver {
 	 *
 	 * @throws RuntimeException When there is no reference, no broker, or the broker gives no secret.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function resolve(string $credentialRef): string {
 		if ($credentialRef === '') {

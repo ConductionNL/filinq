@@ -45,7 +45,7 @@ use OCP\IRequest;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SignerIdentitySettingsController extends Controller {
 
@@ -70,7 +70,7 @@ class SignerIdentitySettingsController extends Controller {
 	 *
 	 * @return JSONResponse The settings, with the default acr mapping for reference.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function index(): JSONResponse {
@@ -83,7 +83,7 @@ class SignerIdentitySettingsController extends Controller {
 	 *
 	 * @return JSONResponse The stored settings, or 400 naming the invalid field.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function update(): JSONResponse {

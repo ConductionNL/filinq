@@ -986,7 +986,7 @@ describe('reanalyseEntry — a scan detection could not read', () => {
 })
 
 describe('reanalyseEntry: which detection engine ran', () => {
-	// @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-3.2
+	// @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-3.2
 	beforeEach(() => {
 		setActivePinia(createPinia())
 		jest.clearAllMocks()

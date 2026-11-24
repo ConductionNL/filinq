@@ -49,7 +49,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+ * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class GuardianConsentGuard {
 
@@ -104,7 +104,7 @@ class GuardianConsentGuard {
 	 *
 	 * @return int The configured age (default 16), raised to the request's own when that is higher.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function appliedAge(array $data): int {
 		return $this->agePolicy->appliedAge(data: $data);
@@ -122,7 +122,7 @@ class GuardianConsentGuard {
 	 *
 	 * @throws InvalidArgumentException With code 400 when an entry is invalid.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function prepareSigners(array $signers, int $age, DateTimeImmutable $now): array {
 		return $this->preparer->prepare(signers: $signers, age: $age, now: $now);
@@ -144,7 +144,7 @@ class GuardianConsentGuard {
 	 *
 	 * @throws RuntimeException With code 403 when the act must be refused.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function guardSigningAct(
 		string $requestId,
@@ -194,7 +194,7 @@ class GuardianConsentGuard {
 	 *
 	 * @throws RuntimeException With code 409 when a signer signed under the age and no guardian acted for them.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function consentBasis(array $request, array $signers): array {
 		return $this->basisBuilder->build(request: $request, signers: $signers);
@@ -214,7 +214,7 @@ class GuardianConsentGuard {
 	 *
 	 * @throws RuntimeException With code 409 when a signer signed under the age and no guardian acted for them.
 	 *
-	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	public function withConsentBasis(array $request, array $signers): array {
 		$basis = $this->consentBasis(request: $request, signers: $signers);

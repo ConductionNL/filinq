@@ -309,7 +309,7 @@ export default {
 		 *
 		 * @return {Array<object>} Id and label per level.
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		assuranceOptions() {
 			const labels = {
@@ -332,7 +332,7 @@ export default {
 		 *
 		 * @return {string} The hint.
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		assuranceHint() {
 			return t(
@@ -366,7 +366,7 @@ export default {
 		 *
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+		 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
 		 */
 		'form.signatureLevel': function () {
 			const allowed = assuranceLevelsFrom(this.form.signatureLevel)

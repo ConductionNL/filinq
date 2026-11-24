@@ -43,9 +43,9 @@
  * Not run in the change that wrote it (decision 139): the live pass runs it.
  */
 
-// @e2e openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md#one-organisation-opts-into-the-llm-provider
-// @e2e openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md#llm-unavailable-falls-back-with-a-visible-warning
-// @e2e openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md#admin-configures-and-tests-the-llm-provider
+// @e2e openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md#one-organisation-opts-into-the-llm-provider
+// @e2e openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md#llm-unavailable-falls-back-with-a-visible-warning
+// @e2e openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md#admin-configures-and-tests-the-llm-provider
 
 import type { APIRequestContext, Page } from '@playwright/test'
 

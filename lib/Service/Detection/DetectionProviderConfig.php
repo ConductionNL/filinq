@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use OCP\IAppConfig;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
+ * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/specs/llm-entity-detection-provider/spec.md
  */
 class DetectionProviderConfig implements DetectionProviderConfigInterface {
 
@@ -115,7 +115,7 @@ class DetectionProviderConfig implements DetectionProviderConfigInterface {
 	 *
 	 * @param IAppConfig $appConfig App configuration.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.2
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
@@ -129,7 +129,7 @@ class DetectionProviderConfig implements DetectionProviderConfigInterface {
 	 *
 	 * @return string `default` unless the organisation chose a known provider.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.2
 	 */
 	public function providerFor(?string $organisationUuid): string {
 		if ($organisationUuid === null || $organisationUuid === '') {
@@ -149,7 +149,7 @@ class DetectionProviderConfig implements DetectionProviderConfigInterface {
 	 *
 	 * @return array<string, string> Organisation UUID to provider id.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-1.2
 	 */
 	public function providerMap(): array {
 		$decoded = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, self::KEY_PROVIDER, '{}'), true);
@@ -172,7 +172,7 @@ class DetectionProviderConfig implements DetectionProviderConfigInterface {
 	 *
 	 * @return string The URL, or empty when unset.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
 	 */
 	public function endpoint(): string {
 		return trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::KEY_ENDPOINT, ''));
@@ -183,7 +183,7 @@ class DetectionProviderConfig implements DetectionProviderConfigInterface {
 	 *
 	 * @return string The reference, or empty when unset.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
 	 */
 	public function agentflow(): string {
 		return trim($this->appConfig->getValueString(AppIdentity::APP_ID, self::KEY_AGENTFLOW, ''));
@@ -194,7 +194,7 @@ class DetectionProviderConfig implements DetectionProviderConfigInterface {
 	 *
 	 * @return bool The toggle.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
 	 */
 	public function requireLocal(): bool {
 		return $this->appConfig->getValueString(AppIdentity::APP_ID, self::KEY_REQUIRE_LOCAL, '1') !== '0';
@@ -205,7 +205,7 @@ class DetectionProviderConfig implements DetectionProviderConfigInterface {
 	 *
 	 * @return float The confidence.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.2
 	 */
 	public function defaultConfidence(): float {
 		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::KEY_DEFAULT_CONFIDENCE, '');
@@ -221,7 +221,7 @@ class DetectionProviderConfig implements DetectionProviderConfigInterface {
 	 *
 	 * @return int Seconds.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-2.1
 	 */
 	public function timeout(): int {
 		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::KEY_TIMEOUT, '');
@@ -238,7 +238,7 @@ class DetectionProviderConfig implements DetectionProviderConfigInterface {
 	 * @return array<string, mixed> providers, endpoint, agentflow, requireLocal, defaultConfidence,
 	 *                              timeout and the available provider ids.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	public function toArray(): array {
 		return [
@@ -265,7 +265,7 @@ class DetectionProviderConfig implements DetectionProviderConfigInterface {
 	 *
 	 * @throws InvalidArgumentException When a field is invalid; nothing is written then.
 	 *
-	 * @spec openspec/changes/llm-entity-detection-provider/tasks.md#task-4.1
+	 * @spec openspec/changes/archive/2026-11-24-llm-entity-detection-provider/tasks.md#task-4.1
 	 */
 	public function update(array $data): void {
 		foreach ($this->writesFor(data: $data) as $key => $value) {
