@@ -238,27 +238,124 @@ class PortalContributionProvider {
 	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
 	 */
 	public function releasedDocumentOpened(string $releaseId, string $documentId, array $subject): bool {
-		$person = trim((string)($subject['subjectRef'] ?? ''));
-		if ($this->releases === null || $this->agreements === null || $person === '') {
+		$fileId = $this->releasedFileId(releaseId: $releaseId, documentId: $documentId);
+		$person = $this->portalPerson(subject: $subject);
+		if ($fileId === null || $person === null) {
 			return false;
 		}
 
-		foreach ($this->releases->portalEntries(releaseId: $releaseId) as $entry) {
-			if ($entry['id'] !== $documentId) {
-				continue;
-			}
-
-			try {
-				$decision = $this->agreements->check(document: (string)$entry['file']['fileId'], person: 'portal:' . $person);
-			} catch (Throwable) {
-				return false;
-			}
-
-			return ($decision['mayDownload'] ?? false) === true;
+		try {
+			$decision = $this->agreements->check(document: $fileId, person: $person);
+		} catch (Throwable) {
+			return false;
 		}
 
-		return false;
+		return ($decision['mayDownload'] ?? false) === true;
 	}//end releasedDocumentOpened()
+
+	/**
+	 * Portaliq's `terms` hook: the download conditions to show before a released document is opened.
+	 *
+	 * Answers whether this portal subject may download the document now and,
+	 * when not, the conditions in force with their version, so the portal can
+	 * show them with an Accept button. Null when it cannot be decided (no
+	 * gate, no subject, an unknown document, a failure): the portal then
+	 * offers nothing to accept, and the `opened` hook still refuses.
+	 *
+	 * @param string               $releaseId  The release.
+	 * @param string               $documentId The listed entry's id.
+	 * @param array<string, mixed> $subject    The session's subject, as portaliq passes it.
+	 *
+	 * @return array<string, mixed>|null `mayDownload`, and `agreement` with the terms and version when not.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	public function releasedDocumentTerms(string $releaseId, string $documentId, array $subject): ?array {
+		$fileId = $this->releasedFileId(releaseId: $releaseId, documentId: $documentId);
+		$person = $this->portalPerson(subject: $subject);
+		if ($fileId === null || $person === null) {
+			return null;
+		}
+
+		try {
+			$decision = $this->agreements->check(document: $fileId, person: $person);
+		} catch (Throwable) {
+			return null;
+		}
+
+		return array_intersect_key($decision, array_flip(['mayDownload', 'gated', 'reason', 'message', 'agreement']));
+	}//end releasedDocumentTerms()
+
+	/**
+	 * Portaliq's `accept` hook: record that this portal subject accepted the conditions shown.
+	 *
+	 * The acceptance is written for `portal:<subjectRef>` and the version the
+	 * subject was shown; the gate refuses a version that is no longer in
+	 * force. True only when the document may be downloaded afterwards;
+	 * anything that cannot be decided records nothing and answers false.
+	 *
+	 * @param string               $releaseId  The release.
+	 * @param string               $documentId The listed entry's id.
+	 * @param array<string, mixed> $subject    The session's subject, as portaliq passes it.
+	 * @param string               $version    The version of the conditions the subject was shown.
+	 *
+	 * @return bool True when the download may now go ahead.
+	 *
+	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 */
+	public function releasedDocumentAccept(string $releaseId, string $documentId, array $subject, string $version): bool {
+		$fileId = $this->releasedFileId(releaseId: $releaseId, documentId: $documentId);
+		$person = $this->portalPerson(subject: $subject);
+		if ($fileId === null || $person === null || trim($version) === '') {
+			return false;
+		}
+
+		try {
+			$decision = $this->agreements->accept(document: $fileId, person: $person, version: trim($version));
+		} catch (Throwable) {
+			return false;
+		}
+
+		return ($decision['mayDownload'] ?? false) === true;
+	}//end releasedDocumentAccept()
+
+	/**
+	 * The file id of a listed released document, or null when it is not listed or nothing can decide.
+	 *
+	 * @param string $releaseId  The release.
+	 * @param string $documentId The listed entry's id.
+	 *
+	 * @return string|null The file id.
+	 */
+	private function releasedFileId(string $releaseId, string $documentId): ?string {
+		if ($this->releases === null || $this->agreements === null) {
+			return null;
+		}
+
+		foreach ($this->releases->portalEntries(releaseId: $releaseId) as $entry) {
+			if ($entry['id'] === $documentId) {
+				return (string)$entry['file']['fileId'];
+			}
+		}
+
+		return null;
+	}//end releasedFileId()
+
+	/**
+	 * Who accepts, as the agreement gate names a portal subject, or null without one.
+	 *
+	 * @param array<string, mixed> $subject The session's subject.
+	 *
+	 * @return string|null `portal:<subjectRef>`.
+	 */
+	private function portalPerson(array $subject): ?string {
+		$person = trim((string)($subject['subjectRef'] ?? ''));
+		if ($person === '') {
+			return null;
+		}
+
+		return 'portal:' . $person;
+	}//end portalPerson()
 
 	/**
 	 * The audiences this provider contributes to (contract v2, preferred).
@@ -380,7 +477,9 @@ class PortalContributionProvider {
 	 * document. Each row's document is served through portaliq's documents
 	 * call (`releasedDocuments`) and its `opened` hook
 	 * (`releasedDocumentOpened`), which refuses a download whose conditions
-	 * the person has not accepted.
+	 * the person has not accepted. The `terms` hook (`releasedDocumentTerms`)
+	 * answers the conditions to show and the `accept` hook
+	 * (`releasedDocumentAccept`) records the person's acceptance.
 	 *
 	 * @return array<string, mixed> The collection.
 	 *
@@ -406,6 +505,8 @@ class PortalContributionProvider {
 				'label' => $this->translate(text: 'Documents'),
 				'provider' => 'releasedDocuments',
 				'opened' => 'releasedDocumentOpened',
+				'terms' => 'releasedDocumentTerms',
+				'accept' => 'releasedDocumentAccept',
 			],
 		];
 
