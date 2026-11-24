@@ -754,6 +754,41 @@ final class DossierManagementServiceTest extends TestCase {
 	}//end testLegacyDossierIsSettledBeforeItsFirstTransition()
 
 	/**
+	 * The detail names the dossier's home folder, so the AI companion can
+	 * scope a question to it; a dossier without one names none.
+	 *
+	 * @return void
+	 */
+	public function testDetailNamesTheHomeFolder(): void {
+		$this->seedDossier([
+			'@self' => ['id' => 'd1', 'folder' => 4242],
+			'name' => 'Dossier A',
+		]);
+		$folder = $this->createMock(Folder::class);
+		$folder->method('getId')->willReturn(4242);
+		$folder->method('getDirectoryListing')->willReturn([]);
+		$this->repository->method('resolveDossierFolder')->willReturn($folder);
+
+		self::assertSame(4242, $this->service->detail('d1')['folderId']);
+
+	}//end testDetailNamesTheHomeFolder()
+
+	/**
+	 * A dossier without a home folder names none.
+	 *
+	 * @return void
+	 */
+	public function testDetailWithoutAHomeFolderNamesNone(): void {
+		$this->seedDossier([
+			'@self' => ['id' => 'd1', 'folder' => null],
+			'name' => 'Woo 2026-001',
+		]);
+
+		self::assertNull($this->service->detail('d1')['folderId']);
+
+	}//end testDetailWithoutAHomeFolderNamesNone()
+
+	/**
 	 * The publication section reports the pipeline as absent, and is gated on it.
 	 *
 	 * Presence-gated capabilities must be HIDDEN when absent, never

@@ -308,6 +308,7 @@ import MdtoPanel from '../../components/MdtoPanel.vue'
 import WizardEntryActions from '../../components/WizardEntryActions.vue'
 import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { dossierStore } from '../../store/store.js'
+import { pointCompanionAt, releaseCompanion } from '../../utils/companionContext.js'
 import { dossierStatusColors, dossierStatusLabel } from './dossierStatus.js'
 
 /**
@@ -343,6 +344,10 @@ export default {
 
 	// leaf-integrations: the registry's leaves (Files, Deck) for this dossier.
 	mixins: [recordLeafSidebarMixin({ schema: 'dossier', record: (vm) => vm.dossierStore.dossier, title: (dossier) => dossier.name })],
+
+	inject: {
+		cnAiContext: { from: 'cnAiContext', default: null },
+	},
 
 	data() {
 		return {
@@ -405,6 +410,17 @@ export default {
 		 * @return {string|null} The file id, or null when nothing is open.
 		 * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
 		 */
+		/**
+		 * The dossier's home folder, which the AI companion scopes a question to.
+		 *
+		 * @return {number|null} The folder id, or null while none is known.
+		 * @spec openspec/changes/companion-knows-the-open-document/specs/companion-page-context/spec.md#requirement-the-companion-knows-the-document-or-folder-a-page-shows-req-ckod-001
+		 */
+		companionFolderId() {
+			const dossier = this.dossierStore.dossier
+			return dossier && dossier.folderId ? dossier.folderId : null
+		},
+
 		notesFileId() {
 			const doc = this.dossierStore.selectedDocument
 			if (!doc || doc.missing || !doc.id) {
@@ -460,8 +476,28 @@ export default {
 		},
 	},
 
+	watch: {
+		companionFolderId: {
+			immediate: true,
+			/**
+			 * Point the AI companion at this dossier's folder.
+			 *
+			 * @param {number|null} folderId The folder id.
+			 * @return {void}
+			 * @spec openspec/changes/companion-knows-the-open-document/specs/companion-page-context/spec.md#requirement-the-companion-knows-the-document-or-folder-a-page-shows-req-ckod-001
+			 */
+			handler(folderId) {
+				pointCompanionAt(this.cnAiContext, 'folder', folderId)
+			},
+		},
+	},
+
 	mounted() {
 		this.dossierStore.fetchDossier(this.dossierId)
+	},
+
+	beforeUnmount() {
+		releaseCompanion(this.cnAiContext)
 	},
 
 	methods: {

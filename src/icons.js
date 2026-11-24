@@ -16,6 +16,7 @@ import AccountCheck from 'vue-material-design-icons/AccountCheck.vue'
 import AccountEdit from 'vue-material-design-icons/AccountEdit.vue'
 import AccountRemove from 'vue-material-design-icons/AccountRemove.vue'
 import AlertCircleOutline from 'vue-material-design-icons/AlertCircleOutline.vue'
+import ArchiveArrowUpOutline from 'vue-material-design-icons/ArchiveArrowUpOutline.vue'
 import BookAlphabet from 'vue-material-design-icons/BookAlphabet.vue'
 import BookOpenVariant from 'vue-material-design-icons/BookOpenVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
@@ -86,6 +87,7 @@ export default {
 	// Used by the `product` schema's rate card in the register. Unregistered,
 	// it rendered as NOTHING — not a fallback glyph, just an empty cell where
 	// the icon should be (ADR-077 rule 3).
+	ArchiveArrowUpOutline,
 	Cash,
 	BookOpenVariant,
 	BookOpenVariantOutline,

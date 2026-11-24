@@ -22,4 +22,5 @@ named change is archived.
   Ticked (decision 399): archived as `openspec/changes/archive/2026-10-09-signing-folder-across-cases`.
 - [ ] 10 `documents-in-and-out-of-the-building` (register rows 4.26, 4.28, 13.39)
 - [ ] 11 Add any later parity change to the index in the same PR that opens it.
-- [ ] 12 Tell the openregister umbrella that cluster 43, the archiving process, is theirs under D7, and point it at `archiefwet-retention-engine` for what filinq already consumes.
+- [x] 12 Tell the openregister umbrella that cluster 43, the archiving process, is theirs under D7, and point it at `archiefwet-retention-engine` for what filinq already consumes.
+  Told in ConductionNL/openregister#11052 (both notes of the proposal's "What moved out" section, linked to openregister#4228).

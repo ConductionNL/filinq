@@ -82,8 +82,36 @@ export function formatGroupCounts(value, _row, _property, options = {}) {
 		.join('; ')
 }
 
+/**
+ * A value further down the row, named by a dotted path, as text. For a
+ * column whose value sits inside an object of the row, such as
+ * `retention.archiefactiedatum`, so the column keeps a key of its own.
+ *
+ * @param {unknown} _value The column's own value (unused).
+ * @param {object} row The full row.
+ * @param {object} [_property] The schema property (unused).
+ * @param {{path?: string}} [options] The column's `formatterOptions`: the dotted path to read.
+ * @return {string} The text, or empty when the path leads nowhere or to no scalar.
+ * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-transfer-to-archive-state-for-permanent-records-req-ddare-006
+ */
+export function formatRowField(_value, row, _property, options = {}) {
+	const path = typeof options?.path === 'string' ? options.path : ''
+	if (path === '') {
+		return ''
+	}
+	let current = row
+	for (const segment of path.split('.')) {
+		if (current === null || typeof current !== 'object' || Array.isArray(current)) {
+			return ''
+		}
+		current = current[segment]
+	}
+	return textOf(current)
+}
+
 /** The app's cell formatters, by the id a manifest column names. */
 export const CELL_FORMATTERS = Object.freeze({
 	joinedList: formatJoinedList,
 	groupCounts: formatGroupCounts,
+	rowField: formatRowField,
 })

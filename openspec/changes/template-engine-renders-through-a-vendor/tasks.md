@@ -20,5 +20,6 @@
 
 ## 3. Verification
 
-- [ ] 3.1 Newman: a vendor render against integriq's mock-mode SmartDocuments source reaches `generated`.
+- [x] 3.1 Newman: a vendor render against integriq's mock-mode SmartDocuments source reaches `generated`.
+  - Written, not verified (the cloud sandbox has no instance; run it on the dev stack with integriq). `tests/integration/live/vendor-render.postman_collection.json`: folder `1. request` lists the engines (`vendor:smartdocuments` present), seeds a template with `vendorTemplateId: sd-besluit` (one of integriq's SmartDocuments fixtures), publishes it, and generates on `vendor:smartdocuments` expecting 202 `pending` with integriq's job id; folder `2. settled` reads the `generatedDocument` entry for that `vendorJobId` from OpenRegister and expects `generated`, a filed `fileId` and the vendor engine, then deletes the template. integriq's `DocumentGenerationStatusJob` polls every 300 s, so `tests/integration/live/vendor-render.sh` runs the two folders apart and force-executes that job through `occ` in between (`OCC` names the occ command line). It sits in `tests/integration/live/`, outside the flat glob of the CI Newman job, because it needs integriq installed.
 - [ ] 3.2 Live: a dossiq decision on `vendor:smartdocuments` lands as a file in the case (with dossiq task 2.6).
