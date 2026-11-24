@@ -286,7 +286,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	 * @throws Exception If composing fails
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-correspondence-generation-api
-	 * @spec openspec/changes/letter-email-sending/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-1
 	 */
 	public function compose(string $templateId, array $dataRefs, array $options = []): array {
 		$format = $options['format'] ?? $this->getDefaultFormat();
@@ -368,7 +368,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	 *
 	 * @return array The created correspondence register entry, or [] when logging failed.
 	 *
-	 * @spec openspec/changes/letter-email-sending/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-1
 	 */
 	public function logSent(
 		string $templateId,

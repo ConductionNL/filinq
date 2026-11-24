@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/letter-email-sending/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -42,7 +42,7 @@ use ReflectionMethod;
  * The send route answers what the send did: 201 sent, 502 not sent, and the
  * refusals with their own status and a message without server internals.
  *
- * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
  */
 class CorrespondenceControllerSendTest extends TestCase {
 

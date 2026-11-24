@@ -25,9 +25,9 @@
  * Not run in the change that wrote it (decision 139): the live pass runs it.
  */
 
-// @e2e openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md#an-officer-sends-a-letter-to-a-citizen
-// @e2e openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md#the-pdf-goes-along
-// @e2e openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md#the-recipient-has-no-email-address
+// @e2e openspec/specs/letter-correspondence-generation/spec.md#an-officer-sends-a-letter-to-a-citizen
+// @e2e openspec/specs/letter-correspondence-generation/spec.md#the-pdf-goes-along
+// @e2e openspec/specs/letter-correspondence-generation/spec.md#the-recipient-has-no-email-address
 
 import type { Page, Route } from '@playwright/test'
 

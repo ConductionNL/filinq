@@ -6,7 +6,7 @@
  * under which subject, a refusal is shown with Send off, and Send hands the
  * PDF choice to the page.
  *
- * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
  */
 
 const { nextTick } = require('vue')

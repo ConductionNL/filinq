@@ -7133,20 +7133,20 @@
 			"name": "Compose an outgoing letter from an approved template and send it.",
 			"source": "category-derived",
 			"sourceRef": "journey \"Send Official Correspondence by Email\"",
-			"filinq": "partial",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Not built (closing audit 2026-11-12, decision 389): composing works; sending the letter does not exist yet (DECISIONS row 268). Built so far: src/views/correspondence/CorrespondenceIndex.vue -> src/store/modules/correspondence.js:83 -> POST api/correspondence/generate (routes.php:220, FE) -> lib/Controller/CorrespondenceController.php:91 generate() -> lib/Service/CorrespondenceService.php (VALID_FORMATS = ['pdf','docx','html','email'], line 78) composes from an approved template. Composition returns a DataDownloadResponse|JSONResponse (download or content) - grep of lib/ for IMailer/OCP\\Mail found no match, so the 'email' format only produces email-safe HTML (line 670 case 'email', line 690 strips page CSS for email clients); nothing dispatches it.",
-				"change": "openspec/changes/letter-email-sending",
+				"evidence": "Built (letter-email-sending, REQ-LCS-01/REQ-LCS-02): src/views/correspondence/CorrespondenceIndex.vue 'Send by email' -> src/dialogs/CorrespondenceSendDialog.vue -> src/store/modules/correspondence.js sendByEmail() -> POST api/correspondence/send (appinfo/routes.php correspondence#send) -> lib/Controller/CorrespondenceController.php send() -> lib/Service/CorrespondenceSendService.php send(): composes with format email, optional PDF attachment, sends through Nextcloud's IMailer and logs the correspondence entry sent (sentAt, sentTo, sentBy) or failed. PHPUnit tests/unit/Service/CorrespondenceServiceSendTest.php and tests/unit/Controller/CorrespondenceControllerSendTest.php; e2e tests/e2e/spec-coverage/letter-email-sending.spec.ts written, runs in nightly.",
+				"change": "openspec/changes/archive/2026-11-24-letter-email-sending",
 				"spec": "openspec/specs/letter-correspondence-generation",
 				"requirement": [
 					"openspec/specs/letter-correspondence-generation :: Correspondence generation API",
 					"openspec/specs/letter-correspondence-generation :: Email body generation",
-					"openspec/changes/letter-email-sending/specs/letter-correspondence-generation :: A composed letter can be sent by email (REQ-LCS-01)",
-					"openspec/changes/letter-email-sending/specs/letter-correspondence-generation :: A send that cannot happen says why and records nothing as sent (REQ-LCS-02)"
+					"openspec/specs/letter-correspondence-generation :: A composed letter can be sent by email (REQ-LCS-01)",
+					"openspec/specs/letter-correspondence-generation :: A send that cannot happen says why and records nothing as sent (REQ-LCS-02)"
 				],
-				"plan": "openspec/changes/letter-email-sending"
+				"plan": "openspec/changes/archive/2026-11-24-letter-email-sending"
 			},
 			"reachedOn": "/correspondence (CorrespondenceIndex.vue)",
 			"provider": "filinq",

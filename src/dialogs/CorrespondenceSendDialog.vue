@@ -11,7 +11,7 @@ The dialog does not send. It emits `confirm` with the PDF choice; the page
 sends through the correspondence store and passes back `saving` and the
 server's `error`, so a refused send keeps the dialog open with the reason.
 
-@spec openspec/changes/letter-email-sending/tasks.md#task-3
+@spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
 -->
 
 <template>
@@ -106,7 +106,7 @@ export default {
 		 * Ask the server for the address and the subject.
 		 *
 		 * @return {Promise<void>} Resolves once the preview or its refusal is shown.
-		 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
 		 */
 		async loadPreview() {
 			this.loading = true
@@ -128,7 +128,7 @@ export default {
 		 * Hand the PDF choice to the page, which sends.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
 		 */
 		confirm() {
 			this.$emit('confirm', { attachPdf: this.attachPdf })

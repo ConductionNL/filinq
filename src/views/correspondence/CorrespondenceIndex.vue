@@ -528,7 +528,7 @@ export default {
 		 * Open the send-by-email dialog for the current letter.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
 		 */
 		openSendDialog() {
 			this.sendError = ''
@@ -540,7 +540,7 @@ export default {
 		 *
 		 * @param {{attachPdf: boolean}} choice What the dialog confirmed.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
 		 */
 		async sendByEmail(choice) {
 			this.sendError = ''
