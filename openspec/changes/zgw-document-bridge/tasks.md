@@ -46,8 +46,9 @@
   - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Includes: health clock cases, PUT-semantics survival of a non-changed field, invalid-transition rejection, staged-original hash unchanged after processing.
 
-- [ ] 4.2 Playwright e2e specs `tests/e2e/spec-coverage/zgw-bridge.spec.ts` + `tests/e2e/workflows/zgw-bridge-workflow.spec.ts` covering the `@e2e`-referenced scenarios
+- [x] 4.2 Playwright e2e specs `tests/e2e/spec-coverage/zgw-bridge.spec.ts` + `tests/e2e/workflows/zgw-bridge-workflow.spec.ts` covering the `@e2e`-referenced scenarios
   - Verify end-to-end with OpenRegister on the Postgres dev instance (port 8080); test through the UI.
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
 
 - [x] 4.3 i18n: EN + NL translations for all new UI strings (badge, panel, statuses, empty state)
   - Keys in English; `l10n/` updated for both languages.

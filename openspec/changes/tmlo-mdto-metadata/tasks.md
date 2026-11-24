@@ -42,8 +42,9 @@
   - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Includes: prefill matrix (consent/prohibition/anonymisation states), gate-implies-generator pin, sidecar determinism (byte-identical rerun), dossier aggregation fixture, fake-TransportInterface transfer, register-lint (no retention duplication, no archival annotation), architecture tests (no retention/tmlo writes, no transport code).
 
-- [ ] 4.2 Playwright e2e `tests/e2e/workflows/tmlo-mdto-metadata.spec.ts` covering the `@e2e`-referenced scenarios
+- [x] 4.2 Playwright e2e `tests/e2e/workflows/tmlo-mdto-metadata.spec.ts` covering the `@e2e`-referenced scenarios
   - MDTO panel, proposal confirmation, blocked transfer with missing-field banner, sidecar export, manual-delivery degradation; verify on the Postgres dev instance (port 8080); test through the UI.
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
 
 - [x] 4.3 i18n: EN + NL translations for all new UI strings (ADR-005)
   - Keys in English; MDTO domain vocabulary (waardering, beperkingGebruik, overbrenging, archiefvormer) preserved in both locales.

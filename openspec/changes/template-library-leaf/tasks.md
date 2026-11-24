@@ -17,7 +17,8 @@
 ## 3. Quality
 
 - [x] 3.1 PHPUnit for `listForObject()` scope matching and for the provider, inside the container (ADR-009)
-- [ ] 3.2 Playwright e2e `tests/e2e/template-leaf.spec.ts`: the widget lists scoped templates and generates one on a host object
+- [x] 3.2 Playwright e2e `tests/e2e/template-leaf.spec.ts`: the widget lists scoped templates and generates one on a host object
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
 - [ ] 3.3 Dutch and English strings; docs `docs/features/templates-on-an-object.md` with screenshots (ADR-010)
   - Strings done: the generate-document widget's seven strings are in `l10n/en.json` and `l10n/nl.json` (`.js` rebuilt), `npm run test:l10n` passes. Left: the docs page with screenshots, which needs a running instance.
 - [ ] 3.4 Hand the leaf ids to dossiq for `documents-on-the-case` and the retirement of `DossiqMergeTemplateNode`

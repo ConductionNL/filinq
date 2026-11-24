@@ -38,7 +38,8 @@
 - [ ] 4.1 PHPUnit unit tests for gate logic, `standingConsentMatch` attachment, policy `bases` CRUD and check-invalidation — minimum 75% coverage on new code (ADR-009)
   - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - End-to-end verify with OpenRegister on Postgres (8080): detection → pre-application → gate → commit.
-- [ ] 4.2 Playwright spec `tests/e2e/spec-coverage/review-workbench.spec.ts` covering the `@e2e`-referenced scenarios
+- [x] 4.2 Playwright spec `tests/e2e/spec-coverage/review-workbench.spec.ts` covering the `@e2e`-referenced scenarios
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
 - [x] 4.3 Vitest coverage for the workbench store wiring (shared entity model, selection pre-fill)
 - [x] 4.4 i18n: EN + NL translations for all new UI strings (keys in English) (ADR-005)
   - Test with the nldesign theme enabled for accessibility compliance.
