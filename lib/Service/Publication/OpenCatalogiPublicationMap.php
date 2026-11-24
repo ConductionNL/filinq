@@ -77,7 +77,7 @@ class OpenCatalogiPublicationMap {
 	 * @return array<string, mixed> The fields to write, only those in FIELDS; never a `summary`.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.3
-	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-diwoo-documentsoort-to-opencatalogi/tasks.md#task-1
 	 */
 	public function toPublication(array $record): array {
 		$publication = ['title' => (string) ($record['officieleTitel'] ?? '')];

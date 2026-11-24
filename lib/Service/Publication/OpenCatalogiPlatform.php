@@ -156,7 +156,7 @@ class OpenCatalogiPlatform implements OpenCatalogiPlatformInterface {
 	 *
 	 * @return bool True when the publication schema has that property.
 	 *
-	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
 	 */
 	public function publicationDeclares(string $field): bool {
 		if ($field === '' || $this->available() === false) {

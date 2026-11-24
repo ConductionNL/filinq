@@ -32,7 +32,7 @@ use PHPUnit\Framework\TestCase;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-24-diwoo-documentsoort-to-opencatalogi/tasks.md#task-1
  */
 #[CoversClass(OpenCatalogiPublicationMap::class)]
 class OpenCatalogiPublicationMapTest extends TestCase {
