@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/forms-as-documents/specs/document-creatie-sjablonen/spec.md#requirement-a-file-is-a-value-a-field-can-hold-and-a-form-becomes-a-document-req-dft-05
+ * @spec openspec/changes/archive/2026-11-24-forms-as-documents/specs/document-creatie-sjablonen/spec.md#requirement-a-file-is-a-value-a-field-can-hold-and-a-form-becomes-a-document-req-dft-05
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/forms-as-documents/specs/document-creatie-sjablonen/spec.md#requirement-a-file-is-a-value-a-field-can-hold-and-a-form-becomes-a-document-req-dft-05
+ * @spec openspec/changes/archive/2026-11-24-forms-as-documents/specs/document-creatie-sjablonen/spec.md#requirement-a-file-is-a-value-a-field-can-hold-and-a-form-becomes-a-document-req-dft-05
  */
 class FormDocumentController extends Controller {
 	/**
@@ -75,7 +75,7 @@ class FormDocumentController extends Controller {
 	 *
 	 * @return JSONResponse The reference and the record's title, or the refusal.
 	 *
-	 * @spec openspec/changes/forms-as-documents/tasks.md#1-build
+	 * @spec openspec/changes/archive/2026-11-24-forms-as-documents/tasks.md#1-build
 	 */
 	#[NoAdminRequired]
 	public function checkReference(): JSONResponse {
@@ -94,7 +94,7 @@ class FormDocumentController extends Controller {
 	 *
 	 * @return JSONResponse 201 with the filed document, or the refusal.
 	 *
-	 * @spec openspec/changes/forms-as-documents/tasks.md#1-build
+	 * @spec openspec/changes/archive/2026-11-24-forms-as-documents/tasks.md#1-build
 	 */
 	#[NoAdminRequired]
 	public function submit(): JSONResponse {

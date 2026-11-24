@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/forms-as-documents/specs/document-creatie-sjablonen/spec.md#requirement-a-file-is-a-value-a-field-can-hold-and-a-form-becomes-a-document-req-dft-05
+ * @spec openspec/changes/archive/2026-11-24-forms-as-documents/specs/document-creatie-sjablonen/spec.md#requirement-a-file-is-a-value-a-field-can-hold-and-a-form-becomes-a-document-req-dft-05
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/forms-as-documents/specs/document-creatie-sjablonen/spec.md#requirement-a-file-is-a-value-a-field-can-hold-and-a-form-becomes-a-document-req-dft-05
+ * @spec openspec/changes/archive/2026-11-24-forms-as-documents/specs/document-creatie-sjablonen/spec.md#requirement-a-file-is-a-value-a-field-can-hold-and-a-form-becomes-a-document-req-dft-05
  */
 class FormDocumentFiling {
 
@@ -114,7 +114,7 @@ class FormDocumentFiling {
 	 *
 	 * @throws FormDocumentRefused 400 malformed, 404 when it does not resolve or the caller may not read it.
 	 *
-	 * @spec openspec/changes/forms-as-documents/tasks.md#1-build
+	 * @spec openspec/changes/archive/2026-11-24-forms-as-documents/tasks.md#1-build
 	 */
 	public function checkReference(array $reference): array {
 		$ref = $this->normaliseReference(reference: $reference, defaults: true);
@@ -148,7 +148,7 @@ class FormDocumentFiling {
 	 *
 	 * @throws FormDocumentRefused 400 malformed, 404 for the record or a reference, 502 when filing fails.
 	 *
-	 * @spec openspec/changes/forms-as-documents/tasks.md#1-build
+	 * @spec openspec/changes/archive/2026-11-24-forms-as-documents/tasks.md#1-build
 	 */
 	public function renderSubmission(array $submission): array {
 		$templateId = trim((string) ($submission['templateId'] ?? ''));
