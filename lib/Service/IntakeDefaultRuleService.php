@@ -198,13 +198,19 @@ class IntakeDefaultRuleService {
 	/**
 	 * One rule by its uuid, as match() reads the rule set.
 	 *
+	 * The registry lookup reads the rule an intake document was stamped with,
+	 * so the purpose it declares for a BRP lookup is the one the organisation
+	 * wrote down for that channel and sender.
+	 *
 	 * @param string $uuid The rule's uuid, as `defaultRule` names it on a document.
 	 *
 	 * @return array<string, mixed>|null The rule, or null when none has that uuid.
 	 *
 	 * @spec openspec/changes/intake-acknowledge-and-stamp
+	 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-the-brp-is-asked-only-under-a-declared-purpose-req-ibr-002
 	 */
 	public function findRule(string $uuid): ?array {
+		$uuid = trim($uuid);
 		if ($uuid === '') {
 			return null;
 		}

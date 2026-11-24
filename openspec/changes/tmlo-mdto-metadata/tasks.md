@@ -51,5 +51,6 @@
 - [ ] 4.4 Documentation `docs/features/tmlo-mdto-metadata.md` with Playwright MCP screenshots (ADR-010)
   - Covers the metadata model split (retention core vs supplement), proposal workflow, completeness gate and both delivery paths.
 
-- [ ] 4.5 Gates + validation
+- [x] 4.5 Gates + validation
   - `composer check:strict` zero new violations; `openspec validate tmlo-mdto-metadata --strict` exits 0; fix pre-existing quality issues encountered on touched files.
+  - Built (c6): the spec deltas reworded without changing an obligation: the `status` front matter and the document-register purpose paragraph moved to `proposal.md`; REQ-DDTMM-001 to -006 and -020 tightened under 500 characters, with the `beperkingGebruik` item shape of -002 moved into its own scenario ("A use restriction has a closed type", covered by `MdtoSupplementSchemaTest::testTheSchemaIsInTheRegisterWithItsFields`). `openspec validate tmlo-mdto-metadata --strict` reports the change valid. No code changed, so `composer check:strict` has nothing new; hydra diff check shows no new findings (gate-119 procedure-code is red on `development` too).

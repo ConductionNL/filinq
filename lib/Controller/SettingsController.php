@@ -226,7 +226,7 @@ class SettingsController extends Controller {
 	 * @return JSONResponse JSON response containing the updated settings
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function create(): JSONResponse {
@@ -304,7 +304,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse `{run}`, the run or null when none was stored yet.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function integrityScanLast(): JSONResponse {
@@ -329,7 +329,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse `{run}`, the run just stored.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function integrityScanStart(): JSONResponse {

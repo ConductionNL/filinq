@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md
+ * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md
  */
 
 declare(strict_types=1);

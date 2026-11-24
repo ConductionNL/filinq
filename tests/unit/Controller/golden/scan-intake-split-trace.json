@@ -54,7 +54,7 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ]
         ]
     },
@@ -75,32 +75,15 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ],
             [
-                "findByFile",
-                42
-            ],
-            [
-                "receive",
+                "take",
                 "/beheerder/files/Scans/batch.pdf",
                 {
                     "id": "scan-a",
                     "folder": "/Scans"
                 }
-            ],
-            [
-                "split",
-                {
-                    "id": "batch-new",
-                    "status": "received"
-                },
-                {
-                    "id": "scan-a",
-                    "folder": "/Scans"
-                },
-                "/beheerder/files/Scans/batch.pdf",
-                "/beheerder/files/Scans"
             ]
         ]
     },
@@ -124,29 +107,12 @@
                 "scan-a"
             ],
             [
-                "findByFile",
-                42
-            ],
-            [
-                "receive",
+                "take",
                 "/beheerder/files/Scans/batch.pdf",
                 {
                     "id": "scan-a",
                     "folder": "/Scans"
                 }
-            ],
-            [
-                "split",
-                {
-                    "id": "batch-new",
-                    "status": "received"
-                },
-                {
-                    "id": "scan-a",
-                    "folder": "/Scans"
-                },
-                "/beheerder/files/Scans/batch.pdf",
-                "/beheerder/files/Scans"
             ]
         ]
     },
@@ -167,32 +133,15 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ],
             [
-                "findByFile",
-                42
-            ],
-            [
-                "receive",
+                "take",
                 "/beheerder/files/Scans/batch.pdf",
                 {
                     "id": "scan-a",
                     "folder": "/Scans"
                 }
-            ],
-            [
-                "split",
-                {
-                    "id": "batch-new",
-                    "status": "received"
-                },
-                {
-                    "id": "scan-a",
-                    "folder": "/Scans"
-                },
-                "/beheerder/files/Scans/batch.pdf",
-                "/beheerder/files/Scans"
             ]
         ]
     },
@@ -233,24 +182,15 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ],
             [
-                "findByFile",
-                42
-            ],
-            [
-                "split",
-                {
-                    "id": "batch-1",
-                    "status": "received"
-                },
+                "take",
+                "/beheerder/files/Scans/batch.pdf",
                 {
                     "id": "scan-a",
                     "folder": "/Scans"
-                },
-                "/beheerder/files/Scans/batch.pdf",
-                "/beheerder/files/Scans"
+                }
             ]
         ]
     },
@@ -282,7 +222,7 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ]
         ]
     },
@@ -302,14 +242,10 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ],
             [
-                "findByFile",
-                42
-            ],
-            [
-                "receive",
+                "take",
                 "/beheerder/files/Scans/batch.pdf",
                 {
                     "id": "scan-a",
@@ -334,32 +270,43 @@
             ],
             [
                 "forPath",
-                "/beheerder/files/Scans/batch.pdf"
+                "/Scans/batch.pdf"
             ],
             [
-                "findByFile",
-                42
-            ],
-            [
-                "receive",
+                "take",
                 "/beheerder/files/Scans/batch.pdf",
                 {
                     "id": "scan-a",
                     "folder": "/Scans"
                 }
+            ]
+        ]
+    },
+    "the batch has no folder": {
+        "status": 400,
+        "data": {
+            "error": "The batch has no folder to write its segments to."
+        },
+        "calls": [
+            [
+                "getUserFolder",
+                "beheerder"
             ],
             [
-                "split",
-                {
-                    "id": "batch-new",
-                    "status": "received"
-                },
+                "getById",
+                42
+            ],
+            [
+                "forPath",
+                "/Scans/batch.pdf"
+            ],
+            [
+                "take",
+                "/beheerder/files/Scans/batch.pdf",
                 {
                     "id": "scan-a",
                     "folder": "/Scans"
-                },
-                "/beheerder/files/Scans/batch.pdf",
-                "/beheerder/files/Scans"
+                }
             ]
         ]
     }

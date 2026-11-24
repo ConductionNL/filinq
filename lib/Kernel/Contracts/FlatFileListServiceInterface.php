@@ -34,6 +34,14 @@ namespace OCA\Filinq\Kernel\Contracts;
  * @spec exclude Structural contract, no functional requirement.
  */
 interface FlatFileListServiceInterface {
+
+	/**
+	 * The most files one search of a list may ask about.
+	 *
+	 * @var int
+	 */
+	public const MAX_SEARCH_FILES = 500;
+
 	/**
 	 * Every file on one object, one page of it.
 	 *
@@ -47,6 +55,32 @@ interface FlatFileListServiceInterface {
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
 	 */
 	public function listFor(array $domain, int $page = 1, int $limit = 50, string $search = ''): array;
+
+	/**
+	 * Every file on one object whose name or content holds the words, one page of it.
+	 *
+	 * @param array<string, mixed> $domain The object, as register, schema and id.
+	 * @param string $search The words.
+	 * @param int $page The page to read, from 1.
+	 * @param int $limit How many rows a page holds.
+	 *
+	 * @return array<string, mixed> The page: results, total, page, pages, and content as {available, unread}.
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 */
+	public function searchContent(array $domain, string $search, int $page = 1, int $limit = 50): array;
+
+	/**
+	 * Which of the given files hold the words, among those the caller may read.
+	 *
+	 * @param string           $words   The words.
+	 * @param array<int, mixed> $fileIds The files of the caller's list, at most MAX_SEARCH_FILES.
+	 *
+	 * @return array{available: bool, hits: array<int, array{fileId: int, rank: float, snippet: string}>, unread: array<int, int>} The answer.
+	 *
+	 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+	 */
+	public function searchFiles(string $words, array $fileIds): array;
 
 	/**
 	 * Every document record of one object, readable file or not.

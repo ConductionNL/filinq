@@ -38,6 +38,7 @@
 			"validUntil": "",
 			"active": true,
 			"matchRules": [],
+			"bases": [],
 			"entityText": " "
 		},
 		"editing": false,
@@ -77,6 +78,7 @@
 			"validUntil": "",
 			"active": true,
 			"matchRules": [],
+			"bases": [],
 			"entityText": " "
 		},
 		"editing": false,
@@ -102,6 +104,7 @@
 					"value": "Jan"
 				}
 			],
+			"bases": [],
 			"entityText": "X",
 			"consentMethod": ""
 		},
@@ -128,6 +131,7 @@
 					"value": "Jan"
 				}
 			],
+			"bases": [],
 			"entityText": "X",
 			"consentMethod": ""
 		},
@@ -154,6 +158,7 @@
 					"value": "Jan"
 				}
 			],
+			"bases": [],
 			"entityText": "X",
 			"consentMethod": ""
 		},
@@ -180,6 +185,7 @@
 					"value": "Jan"
 				}
 			],
+			"bases": [],
 			"entityText": "X",
 			"consentMethod": ""
 		},
@@ -206,6 +212,7 @@
 					"value": "Jan"
 				}
 			],
+			"bases": [],
 			"entityText": "X",
 			"consentMethod": ""
 		},
@@ -232,6 +239,7 @@
 					"value": "Jan"
 				}
 			],
+			"bases": [],
 			"entityText": "X",
 			"consentMethod": ""
 		},
@@ -258,6 +266,7 @@
 					"value": "Jan"
 				}
 			],
+			"bases": [],
 			"entityText": "X",
 			"consentMethod": ""
 		},
@@ -284,6 +293,7 @@
 					"value": "Jan"
 				}
 			],
+			"bases": [],
 			"entityText": "X",
 			"consentMethod": ""
 		},
@@ -310,6 +320,7 @@
 					"value": "Jan"
 				}
 			],
+			"bases": [],
 			"entityText": "X",
 			"consentMethod": ""
 		},
@@ -336,6 +347,7 @@
 							"value": "changed after submit"
 						}
 					],
+					"bases": [],
 					"entityText": "X",
 					"consentMethod": ""
 				}
@@ -359,6 +371,7 @@
 					"value": "Jan"
 				}
 			],
+			"bases": [],
 			"entityText": "X",
 			"consentMethod": ""
 		},
@@ -397,6 +410,7 @@
 					"value": "Jan"
 				}
 			],
+			"bases": [],
 			"entityText": "Jan",
 			"consentMethod": "paper"
 		},
@@ -445,6 +459,7 @@
 					"value": "Jan"
 				}
 			],
+			"bases": [],
 			"entityText": "Jan",
 			"consentMethod": "paper"
 		},
@@ -475,6 +490,7 @@
 							"value": "Jan"
 						}
 					],
+					"bases": [],
 					"entityText": "Jan",
 					"consentMethod": "paper"
 				}
@@ -492,7 +508,8 @@
 			"jurisdiction": "",
 			"validUntil": "",
 			"active": true,
-			"matchRules": []
+			"matchRules": [],
+			"bases": []
 		},
 		"editing": true,
 		"dialogTitle": "[Edit publish-never rule]",

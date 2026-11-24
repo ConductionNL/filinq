@@ -54,4 +54,22 @@ interface FolderBatchServiceInterface {
 	 * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
 	 */
 	public function createFolderBatch(?int $folderId = null, ?string $folderPath = null): array;
+
+	/**
+	 * Create a batch from a folder and every subfolder below it
+	 *
+	 * As createFolderBatch(), but the files of every subfolder are included
+	 * (the anonymised-output subfolder excepted), each recording its path
+	 * below the folder. The batch size cap applies to the whole tree.
+	 *
+	 * @param int|null $folderId Node ID of the folder, or null
+	 * @param string|null $folderPath Path relative to the user's root folder, or null
+	 *
+	 * @return array<string, mixed> Batch data with batchId, folderId, folderPath, fileCount, files
+	 *
+	 * @throws Exception If input is invalid, folder is not found, not a folder, empty, or too large
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/folder-batch-analysis/spec.md#requirement-optional-recursive-folder-enumeration-req-ddras-011
+	 */
+	public function createRecursiveFolderBatch(?int $folderId = null, ?string $folderPath = null): array;
 }//end interface

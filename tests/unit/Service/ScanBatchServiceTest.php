@@ -79,6 +79,20 @@ class ScanBatchServiceTest extends TestCase {
 	private array $dispatched = [];
 
 	/**
+	 * The batch the fake register already holds for the file, if any.
+	 *
+	 * @var array<string, mixed>|null
+	 */
+	private ?array $existing = null;
+
+	/**
+	 * The file ids the fake register was asked to look a batch up by.
+	 *
+	 * @var array<int, int>
+	 */
+	private array $lookedUp = [];
+
+	/**
 	 * A one-page PDF carrying the given text.
 	 *
 	 * @param string $text What the page says.
@@ -141,6 +155,14 @@ class ScanBatchServiceTest extends TestCase {
 				$this->stored[] = $batch;
 
 				return $batch;
+			}
+		);
+
+		$repository->method('findByFile')->willReturnCallback(
+			function (int $fileId): ?array {
+				$this->lookedUp[] = $fileId;
+
+				return $this->existing;
 			}
 		);
 
@@ -804,4 +826,110 @@ class ScanBatchServiceTest extends TestCase {
 		$this->assertCount(2, $this->written);
 		$this->assertCount(2, $this->dispatched);
 	}//end testAnOriginalThatCannotBePlacedGoesToTheInbox()
+	/**
+	 * The batch file double sitting in the given folder.
+	 *
+	 * @param Folder $parent The folder it sits in.
+	 *
+	 * @return File The double.
+	 */
+	private function batchFileIn(Folder $parent): File {
+		$file = $this->createMock(originalClassName: File::class);
+		$file->method('getId')->willReturn(4711);
+		$file->method('getName')->willReturn('batch.pdf');
+		$file->method('getContent')->willReturn('%PDF-1.4 fixture');
+		$file->method('getParent')->willReturn($parent);
+
+		return $file;
+
+	}//end batchFileIn()
+
+	/**
+	 * A new batch is received once and then cut into its own folder.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md
+	 */
+	public function testTakeReceivesOnceAndSplits(): void {
+		$service = $this->service(texts: ['aanvraag 1', 'aanvraag 2']);
+
+		$batch = $service->take(
+			file: $this->batchFileIn(parent: $this->targetFolder()),
+			profile: ['id' => 'postkamer', 'separatorMode' => 'none']
+		);
+
+		$this->assertSame(expected: [4711], actual: $this->lookedUp);
+		$this->assertCount(expectedCount: 2, haystack: $this->stored, message: 'received once, then stored split');
+		$this->assertSame(expected: 'received', actual: $this->stored[0]['status']);
+		$this->assertSame(expected: 4711, actual: $this->stored[0]['file']);
+		$this->assertSame(expected: 'postkamer', actual: $this->stored[0]['scannerId']);
+		$this->assertSame(expected: 'split', actual: $batch['status']);
+		$this->assertSame(expected: 'batch-1', actual: $batch['uuid']);
+		$this->assertCount(expectedCount: 1, haystack: $this->written);
+		$this->assertCount(expectedCount: 1, haystack: $this->dispatched);
+	}//end testTakeReceivesOnceAndSplits()
+
+	/**
+	 * A batch already stored for the file is cut from that record, not received again.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md
+	 */
+	public function testTakeReusesAStoredBatch(): void {
+		$this->existing = ['uuid' => 'batch-7', 'file' => 4711, 'scannerId' => 'postkamer', 'status' => 'received'];
+		$service = $this->service(texts: ['aanvraag 1']);
+
+		$batch = $service->take(
+			file: $this->batchFileIn(parent: $this->targetFolder()),
+			profile: ['id' => 'postkamer', 'separatorMode' => 'none']
+		);
+
+		$this->assertCount(expectedCount: 1, haystack: $this->stored, message: 'only the split is stored; nothing is received');
+		$this->assertSame(expected: 'batch-7', actual: $this->stored[0]['uuid']);
+		$this->assertSame(expected: 'split', actual: $batch['status']);
+		$this->assertSame(expected: 'batch-7', actual: $batch['uuid']);
+	}//end testTakeReusesAStoredBatch()
+
+	/**
+	 * The batch stored for a file is read from the store, and a file without one answers null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-accepts-only-what-it-stored-and-each-file-once-req-scw-002
+	 */
+	public function testStoredForAnswersTheStoredBatch(): void {
+		$service = $this->service(texts: ['aanvraag 1']);
+		$this->assertNull(actual: $service->storedFor(fileId: 4711));
+
+		$this->existing = ['uuid' => 'batch-7', 'file' => 4711, 'status' => 'failed'];
+		$this->assertSame(expected: 'batch-7', actual: $service->storedFor(fileId: 4711)['uuid'] ?? null);
+		$this->assertCount(expectedCount: 0, haystack: $this->stored, message: 'reading the batch stores nothing');
+	}//end testStoredForAnswersTheStoredBatch()
+
+	/**
+	 * A batch whose folder cannot be read is refused before anything is received or cut.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md
+	 */
+	public function testTakeReceivesNothingWhenTheFolderCannotBeRead(): void {
+		$service = $this->service(texts: ['aanvraag 1']);
+		$file = $this->createMock(originalClassName: File::class);
+		$file->method('getId')->willReturn(4711);
+		$file->method('getParent')->willThrowException(new \RuntimeException('no parent'));
+
+		try {
+			$service->take(file: $file, profile: ['id' => 'postkamer', 'separatorMode' => 'none']);
+			$this->fail(message: 'a batch without a readable folder was taken');
+		} catch (\RuntimeException $e) {
+			$this->assertSame(expected: 'no parent', actual: $e->getMessage());
+		}
+
+		$this->assertSame(expected: [], actual: $this->lookedUp);
+		$this->assertSame(expected: [], actual: $this->stored);
+		$this->assertSame(expected: [], actual: $this->dispatched);
+	}//end testTakeReceivesNothingWhenTheFolderCannotBeRead()
 }//end class

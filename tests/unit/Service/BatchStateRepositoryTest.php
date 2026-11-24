@@ -353,6 +353,58 @@ class BatchStateRepositoryTest extends TestCase {
 	}//end testFindReadsAResultThatIsAlreadyAPlainArray()
 
 	/**
+	 * The organisation OpenRegister stamped the batch with is read from the envelope, so a report can name its scope.
+	 *
+	 * @return void
+	 */
+	public function testTheOrganisationStampIsReadFromTheEnvelope(): void {
+		$store = new FixedResultObjectServiceFake(
+			result: [
+				'batchId' => 'batch-1',
+				'status' => 'completed',
+				'documents' => [],
+				'@self' => ['id' => 'batch-1', 'organisation' => 'org-a-uuid'],
+			]
+		);
+
+		$loaded = $this->buildRepositoryOn(store: $store)->find(batchId: 'batch-1');
+
+		$this->assertIsArray($loaded);
+		$this->assertSame('org-a-uuid', $loaded['organisation']);
+	}//end testTheOrganisationStampIsReadFromTheEnvelope()
+
+	/**
+	 * An unstamped batch reads with a null organisation, never an empty or invented one.
+	 *
+	 * @return void
+	 */
+	public function testAnUnstampedBatchHasNoOrganisation(): void {
+		$store = new FixedResultObjectServiceFake(
+			result: ['batchId' => 'batch-1', 'documents' => [], '@self' => ['id' => 'batch-1', 'organisation' => '']]
+		);
+
+		$loaded = $this->buildRepositoryOn(store: $store)->find(batchId: 'batch-1');
+
+		$this->assertIsArray($loaded);
+		$this->assertArrayHasKey('organisation', $loaded);
+		$this->assertNull($loaded['organisation']);
+	}//end testAnUnstampedBatchHasNoOrganisation()
+
+	/**
+	 * Filinq never writes the organisation stamp: a batch read with one is saved without it.
+	 *
+	 * @return void
+	 */
+	public function testTheOrganisationIsNotWrittenBack(): void {
+		$this->repository->save(
+			batchId: 'batch-1',
+			batch: ['batchId' => 'batch-1', 'organisation' => 'org-b-uuid', 'files' => []]
+		);
+
+		$this->assertArrayNotHasKey('organisation', $this->store->saveCalls[0]['object']);
+	}//end testTheOrganisationIsNotWrittenBack()
+
+	/**
 	 * A result that is an object WITHOUT `jsonSerialize()` is still read.
 	 *
 	 * @return void

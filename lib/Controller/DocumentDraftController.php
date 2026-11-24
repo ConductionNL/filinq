@@ -12,7 +12,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use OCP\IUserSession;
  * Two routes: create a draft, finish a draft. Saving an edit and discarding a
  * draft are plain object writes through OpenRegister's API (design D5).
  *
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.1
  */
 class DocumentDraftController extends Controller {
 	use AnswersNotAuthenticated;
@@ -80,7 +80,7 @@ class DocumentDraftController extends Controller {
 	 * @return JSONResponse 201 with the draft id, stage, html, warnings and expiry;
 	 *                      409 for a template with a plain-language version.
 	 *
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.1
 	 *
 	 * @no-admin-idor-exempt the draft is created for the session user, and the
 	 * data it renders is read under OpenRegister's RBAC like the preview route.
@@ -123,7 +123,7 @@ class DocumentDraftController extends Controller {
 	 *
 	 * @return DataDownloadResponse|JSONResponse The document, or 404 for a draft that is not the user's.
 	 *
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.3
 	 */
 	#[NoAdminRequired]
 	public function finish(string $id): DataDownloadResponse|JSONResponse {

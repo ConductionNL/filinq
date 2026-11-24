@@ -26,7 +26,7 @@ const PAGES_BEFORE = [
 	['WizardRunner', '/templates/:id/wizard'], ['Correspondence', '/correspondence'], ['SigningRequests', '/signing'],
 	['BulkSigningBatches', '/signing-batches'], ['SigningEnvelopes', '/signing-envelopes'], ['SigningFolder', '/signing-folder'],
 	['SigningRequestForm', '/signing/new'], ['SigningRequestDetail', '/signing/:id'], ['SignatureVerification', '/signing/verify/:fileId'],
-	['MyDocuments', '/my-documents'], ['Publications', '/publications/:id?'], ['PrintJobs', '/print-jobs'],
+	['MyDocuments', '/my-documents'], ['SharedLinks', '/my-documents/shared-links'], ['Publications', '/publications/:id?'], ['PrintJobs', '/print-jobs'],
 	['LegalHolds', '/legal-holds'], ['SubjectErasures', '/subject-erasures'], ['EmailIngestion', '/email-ingestion'], ['IntakeChannels', '/intake-channels'],
 	['MailArchiveImport', '/mail-archive-import'],
 	['EntitySearch', '/entity-search'], ['PrintPreview', '/print-preview/:templateId?'], ['Comparison', '/comparison'],
@@ -37,7 +37,13 @@ const PAGES_BEFORE = [
 	['Intake', '/intake'], ['IntakeRules', '/intake/rules'], ['ClassificationPending', '/classification'],
 	['DigitisationProjects', '/digitisation'], ['DigitisationProjectDetail', '/digitisation/:id'], ['ScanChecks', '/scan-checks'],
 	['PaperOriginalDetail', '/paper-originals/:id'], ['FeaturesRoadmap', '/features-roadmap'],
-	['Flows', '/flows'], ['FlowDetail', '/flows/:id'],
+	['Flows', '/flows'], ['FlowDetail', '/flows/:id'], ['FlowRuns', '/flow-runs'], ['OrganisationSettings', '/organisation-settings'],
+	// Added after the split by redaction-at-scale (REQ-DDRAS-003).
+	['BatchOperations', '/batch-operations'], ['BatchOperationDetail', '/batch-operations/:id'],
+	// office-template-authoring added these two after the split.
+	['TextFragments', '/text-fragments'], ['TemplateImport', '/templates-import'],
+	// Added after the split: the anonymisation review workbench.
+	['ReviewWorkbench', '/review/:fileId'],
 ]
 
 /**
@@ -47,11 +53,17 @@ const PAGES_BEFORE = [
 const PAGES_ADDED = [
 	// generate-draft-and-attended-edit
 	['Drafts', '/drafts'], ['DraftEditor', '/drafts/:id'],
+	// archiefwet-retention-engine 3.2
+	['DestructionLists', '/destruction-lists'], ['DestructionListDetail', '/destruction-lists/:id'],
+	['DestructionCertificates', '/destruction-certificates'],
 ]
 
 const MENU_ADDED = [
 	// generate-draft-and-attended-edit
 	['Drafts', 54],
+	// archiefwet-retention-engine 3.2
+	['DestructionLists', 58],
+	['DestructionCertificates', 58],
 ]
 
 const MENU_BEFORE = [
@@ -62,7 +74,11 @@ const MENU_BEFORE = [
 	['MailArchiveImport', 28],
 	['EntitySearch', 59], ['SigningRequests', 60], ['SigningFolder', 65], ['BulkSigningBatches', 66],
 	['SigningEnvelopes', 67], ['CustomDictionary', 70], ['Documentation', 90], ['StoreMenu', 92],
-	['ReportsMenu', 95], ['FeaturesRoadmapMenu', 100], ['FlowsMenu', 96],
+	['ReportsMenu', 95], ['FeaturesRoadmapMenu', 100], ['FlowsMenu', 96], ['FlowRunsMenu', 97], ['OrganisationSettings', 97],
+	// Added after the split by redaction-at-scale (REQ-DDRAS-003).
+	['BatchOperations', 42],
+	// office-template-authoring added these two after the split.
+	['TextFragments', 51], ['TemplateImport', 52],
 ]
 
 /**

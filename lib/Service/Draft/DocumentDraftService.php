@@ -12,7 +12,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  * rendered by Twig again. Saving an edit and discarding go through
  * OpenRegister's object API directly.
  *
- * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.1
  */
 class DocumentDraftService {
 
@@ -108,7 +108,7 @@ class DocumentDraftService {
 	 * @throws Exception 400 for an unknown origin, 409 for a template with a plain-language version,
 	 *                   503 without OpenRegister.
 	 *
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.1
 	 */
 	public function create(string $templateId, array $dataRefs, array $options, string $origin): array {
 		if (in_array($origin, self::ORIGINS, true) === false) {
@@ -159,8 +159,8 @@ class DocumentDraftService {
 	 * @throws Exception 404 when the draft is not the user's, 409 when it is not being edited,
 	 *                   422 when a wizard draft's answers do not pass, 503 without OpenRegister.
 	 *
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.3
-	 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.4
 	 */
 	public function finish(string $draftId, string $userId): array {
 		$draft = $this->ownDraft(draftId: $draftId, userId: $userId);

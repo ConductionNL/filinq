@@ -138,6 +138,25 @@ if (is_dir($ocpDbExceptionDir) === true) {
 	}
 }
 
+// The Flow engine's public contracts and the file / tag events it dispatches
+// (flow-operations), read from vendor/nextcloud/ocp on first use. Lazy and
+// scoped to these prefixes so nothing NextcloudStubs.php declares is shadowed.
+spl_autoload_register(
+	static function (string $class): void {
+		$prefixes = ['OCP\\WorkflowEngine\\', 'OCP\\Files\\Events\\Node\\', 'OCP\\SystemTag\\MapperEvent', 'OCP\\EventDispatcher\\IWebhookCompatibleEvent'];
+		foreach ($prefixes as $prefix) {
+			if (str_starts_with($class, $prefix) === true) {
+				$path = __DIR__ . '/../vendor/nextcloud/ocp/' . str_replace('\\', '/', $class) . '.php';
+				if (is_file($path) === true) {
+					require_once $path;
+				}
+
+				return;
+			}
+		}
+	}
+);
+
 // Load OCP's public system-tag API (files_confidential label consumption,
 // files-confidential-labels) — same "real file, not classmapped" situation
 // as the EventDispatcher/AppFramework\Db contracts above.
@@ -270,6 +289,19 @@ if (interface_exists('\\OCA\\OpenRegister\\Service\\Flow\\IFlowNode') === false)
 	require_once __DIR__ . '/stubs/openregister-flow.stub.php';
 }
 
+// The watched-folder hand-over event of integriq (scan-intake-from-a-watched-folder):
+// integriq's own class when the sibling app sits next to this one, so the
+// listener and the contract test run against the real surface; the verbatim
+// copy in tests/stubs otherwise.
+if (class_exists('\\OCA\\Integriq\\Event\\WatchedFileArrivedEvent') === false) {
+	$integriqWatchedFileEvent = __DIR__ . '/../../integriq/lib/Event/WatchedFileArrivedEvent.php';
+	if (is_file($integriqWatchedFileEvent) === false) {
+		$integriqWatchedFileEvent = __DIR__ . '/stubs/integriq-watched-file.stub.php';
+	}
+
+	require_once $integriqWatchedFileEvent;
+}
+
 // Shared test-only trait. The composer PSR-4 dev prefix maps
 // OCA\Filinq\Tests\ to tests/, which cannot resolve the lower-cased
 // tests/unit/ directory segment, so non-test helper classes under tests/unit
@@ -278,6 +310,7 @@ require_once __DIR__ . '/unit/Service/BuildsAnonymizationService.php';
 require_once __DIR__ . '/unit/Service/ReadsAnonymizeOptions.php';
 require_once __DIR__ . '/unit/Service/DetectionStates.php';
 require_once __DIR__ . '/unit/Service/Ocr/OcrDoubles.php';
+require_once __DIR__ . '/unit/Flow/FlowOperationDoubles.php';
 require_once __DIR__ . '/unit/Service/Pseudonymisation/PseudonymDoubles.php';
 // The real OCP contracts the legal hold notifier implements and uses
 // (e-discovery-legal-hold), so its double cannot drift from Nextcloud's.
@@ -309,9 +342,17 @@ require_once __DIR__ . '/unit/Support/NextcloudDispatch.php';
 // "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
 require_once __DIR__ . '/unit/Support/RecordsCalls.php';
 
+// A real review gate over in-memory doubles (anonymization-review-workbench 5.2).
+// Same "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
+require_once __DIR__ . '/unit/Support/BuildsInMemoryReviewGate.php';
+
 // Subject erasure doubles (erase-a-person-while-the-records-stay); same
 // "helper class under tests/unit that PSR-4 cannot resolve" situation as above.
 require_once __DIR__ . '/unit/Service/SubjectErasure/SubjectErasureDoubles.php';
+
+// The runtime-generated organisation certificate of the waarmerk tests (no
+// PEM or key fixture is committed); same PSR-4 situation as above.
+require_once __DIR__ . '/unit/Service/Waarmerk/WaarmerkKeyPair.php';
 
 // The veraPDF service over the recorded veraPDF (tests/fixtures/verapdf).
 require_once __DIR__ . '/unit/Service/VeraPdf/VeraPdfDoubles.php';
@@ -349,6 +390,19 @@ foreach (
 		require_once $ocpFile;
 	}
 }
+
+// Any other OCP interface (OCP\Mail\IMailer, ...) from the OCP package, which
+// does not classmap-autoload. Only reached for a class no stub above declared.
+spl_autoload_register(static function (string $class): void {
+	if (str_starts_with($class, 'OCP\\') === false) {
+		return;
+	}
+
+	$file = __DIR__ . '/../vendor/nextcloud/ocp/' . str_replace('\\', '/', $class) . '.php';
+	if (is_file($file) === true) {
+		require_once $file;
+	}
+});
 
 // OpenRegister's object-service option objects, from main, when OpenRegister itself is absent.
 spl_autoload_register(

@@ -2,6 +2,7 @@
 kind: code
 tracking_issue: https://github.com/ConductionNL/filinq/issues/237
 depends_on: [archiefwet-retention-engine]
+status: proposed
 ---
 
 # Proposal: tmlo-mdto-metadata
@@ -123,3 +124,10 @@ overbrenging, and the export sidecar assembly.
   output for unchanged input.
 - A dossier export aggregates its member documents as archiefstukken.
 - `composer check:strict` and the unit suite pass with zero new violations.
+
+## Document register
+
+The document register hosts the `mdtoSupplement` schema carrying the MDTO
+informatieobject attributes OpenRegister's platform metadata does not
+model, one supplement per described document or dossier record (spec
+delta `specs/document-register`, REQ-DDTMM-020).

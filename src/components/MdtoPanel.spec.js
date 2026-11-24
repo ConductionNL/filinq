@@ -186,4 +186,36 @@ describe('MdtoPanel', () => {
 
 		expect(rendered.html()).toContain('The record cannot be read.')
 	})
+
+	// @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-transfer-to-archive-state-for-permanent-records-req-ddare-006
+	it('shows a transferred record read only and tells the parent', async () => {
+		const onTransferred = jest.fn()
+		const answer = status({
+			retention: { archiefnominatie: 'bewaren', archiefstatus: 'overgebracht' },
+			proposals: { beperkingGebruik: { value: [objection], proposed: true } },
+		})
+		fetchMdtoStatus.mockResolvedValue({ ok: true, data: answer })
+		rendered = await renderStubbed(MdtoPanel, { props: { objectId: 'rec-1', onTransferred } })
+		await settle()
+
+		expect(rendered.html()).toContain('data-testid="mdto-transferred"')
+		expect(rendered.html()).toContain('Transferred to the e-depot. This record is read only: it can no longer be changed.')
+		expect(button(rendered, 'mdto-transfer').disabled).toBe(true)
+		expect(button(rendered, 'mdto-restriction-accept').disabled).toBe(true)
+		expect(button(rendered, 'mdto-restriction-reject').disabled).toBe(true)
+		expect(onTransferred).toHaveBeenLastCalledWith(true)
+	})
+
+	// @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-transfer-to-archive-state-for-permanent-records-req-ddare-006
+	it('leaves a record that is not transferred editable', async () => {
+		const onTransferred = jest.fn()
+		fetchMdtoStatus.mockResolvedValue({ ok: true, data: status() })
+		rendered = await renderStubbed(MdtoPanel, { props: { objectId: 'rec-1', onTransferred } })
+		await settle()
+
+		expect(rendered.html()).not.toContain('mdto-transferred')
+		expect(button(rendered, 'mdto-transfer').disabled).toBe(false)
+		expect(onTransferred).toHaveBeenLastCalledWith(false)
+	})
 })
+

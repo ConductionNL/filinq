@@ -113,8 +113,7 @@ class ConsentUpdateHandler {
 			// other users.
 			$object = $objectService->find(
 				id: $consent->id,
-				options: new ObjectFindOptions(register: $consent->register, schema: $consent->schema),
-				_rbac: false
+				options: new ObjectFindOptions(register: $consent->register, schema: $consent->schema)
 			);
 
 			if ($object === null) {
@@ -126,8 +125,7 @@ class ConsentUpdateHandler {
 
 			$savedObject = $objectService->saveObject(
 				object: array_merge($existing, $allowedData),
-				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $consent->register, schema: $consent->schema)),
-				_rbac: false
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $consent->register, schema: $consent->schema))
 			);
 
 			$this->logger->info(
@@ -194,7 +192,8 @@ class ConsentUpdateHandler {
 			changes: $allowedData,
 			actor: $change->actor,
 			evidence: (string) ($data['evidence'] ?? ''),
-			now: new DateTimeImmutable()
+			now: new DateTimeImmutable(),
+			via: $change->via
 		);
 	}//end consentChanges()
 

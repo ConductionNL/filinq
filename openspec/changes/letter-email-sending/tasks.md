@@ -43,5 +43,5 @@
 ### Task 5: Verification and the row
 - **files**: `tests/e2e/spec-coverage/letter-email-sending.spec.ts` (send against the dev mail catcher), `openspec/parity/capabilities.json`
 - [ ] `@spec` tags on changed methods (gate 16) and the e2e scenarios (gate 19)
-  - `@spec` tags are on every new and changed method; the e2e spec against the dev mail catcher is not written or run here (needs a live instance with a mail catcher).
+  - `@spec` tags are on every new and changed method. The e2e spec `tests/e2e/spec-coverage/letter-email-sending.spec.ts` is written: the send, the PDF choice and the 422 refusal against route-stubbed server answers, and the real send read from a Mailpit-compatible catcher when `E2E_MAIL_CATCHER_URL`, `E2E_LETTER_TEMPLATE_ID` and `E2E_LETTER_RECIPIENT` are set. Not run: it needs a live instance with a mail catcher, so this box stays open.
 - [ ] When tasks 1 to 4 are done: set row sh-letter `filinq` to `yes`, cite REQ-LCS-01, archive this change

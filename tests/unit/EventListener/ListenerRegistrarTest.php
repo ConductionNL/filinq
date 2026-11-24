@@ -29,9 +29,14 @@ use OCA\Filinq\EventListener\ListenerRegistrar;
 use OCA\Filinq\EventListener\PdfUaAttachListener;
 use OCA\Filinq\EventListener\SigningTaskListener;
 use OCA\Filinq\Flow\FilinqFlowNodeListener;
+use OCA\Filinq\EventListener\VendorRenderedListener;
+use OCA\Filinq\EventListener\WatchedFileArrivedListener;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\EventDispatcher\IEventDispatcher;
+use OCA\Filinq\Flow\RegisterFlowOperationsListener;
+use OCP\WorkflowEngine\Events\LoadSettingsScriptsEvent;
+use OCP\WorkflowEngine\Events\RegisterOperationsEvent;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -90,7 +95,7 @@ class ListenerRegistrarTest extends TestCase {
 
 		(new ListenerRegistrar())->register($context);
 
-		self::assertCount(32, $registered);
+		self::assertCount(expectedCount: 38, haystack: $registered);
 		self::assertSame(['OCA\Filinq\Event\IntakeDocumentReceivedEvent', 'OCA\Filinq\EventListener\IntakeDocumentReceivedListener'], $registered[0]);
 		self::assertSame(
 			[
@@ -110,23 +115,29 @@ class ListenerRegistrarTest extends TestCase {
 				['OCA\OpenRegister\Service\Flow\RegisterFlowNodesEvent', FilinqFlowNodeListener::class],
 				[DocumentGenerationRequestedEvent::class, DocumentGenerationRequestedListener::class],
 				[DocumentStampRequestedEvent::class, DocumentStampRequestedListener::class],
+				[RegisterOperationsEvent::class, RegisterFlowOperationsListener::class],
+				[LoadSettingsScriptsEvent::class, RegisterFlowOperationsListener::class],
+				['OCA\Integriq\Event\DocumentRenderedEvent', VendorRenderedListener::class],
+				['OCA\Integriq\Event\WatchedFileArrivedEvent', WatchedFileArrivedListener::class],
 			],
-			array_slice($registered, 24, 3)
+			array_slice($registered, 24, 7)
 		);
 		self::assertSame(
 			[
 				['OCP\Files\Events\Node\NodeCreatedEvent', PdfUaAttachListener::class],
 				['OCP\Files\Events\Node\NodeWrittenEvent', PdfUaAttachListener::class],
 			],
-			array_slice($registered, 27, 2)
+			array_slice($registered, 31, 2)
 		);
 		self::assertSame(
 			[
 				['OCP\Files\Events\Node\NodeWrittenEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
 				['OCP\Files\Events\Node\BeforeNodeDeletedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
 				['OCP\Share\Events\ShareCreatedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
+				['OCA\Filinq\Event\Webhook\DocumentSignedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
+				['OCP\Files\Events\BeforeDirectFileDownloadEvent', 'OCA\Filinq\EventListener\DocumentDownloadedListener'],
 			],
-			array_slice($registered, 29)
+			array_slice($registered, 33)
 		);
 	}//end testRegisterDelegatesToEveryAreaInOrder()
 

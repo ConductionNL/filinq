@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-sanitization/tasks.md#3-3
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -58,7 +58,7 @@ class AnonymisationSanitizationRecorder {
 	 *
 	 * @return array<string, mixed> The result, with sanitizationReport and, when the record failed, sanitizationWarning.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-3
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-3
 	 */
 	public function record(array $resultInfo, array $context): array {
 		$report = $context['sanitizationReport'] ?? null;

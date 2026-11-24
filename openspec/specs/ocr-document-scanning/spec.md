@@ -141,3 +141,30 @@ The system SHALL report OCR confidence scores and track an ocrProcessed flag per
 - **Integration**: Called by `AnonymizationService::extractAndDetectEntities()` as a pre-processing step before OpenRegister's TextExtractionService
 - **Config**: OCR settings stored in IAppConfig (`ocr_enabled`, `ocr_languages`, `ocr_dpi`)
 - **Dependencies**: Tesseract binary on system, PHP Imagick extension for PDF conversion
+
+<!-- Added by finish-half-built-capabilities (archived 2026-11-20-finish-half-built-capabilities). -->
+
+### Requirement: An OCR run makes the file itself searchable (REQ-FHB-01)
+
+When OCR recognises text in a scanned PDF, Filinq SHALL write that text into the file as an invisible text layer behind the page images, so a search in Nextcloud or OpenRegister finds the file by its words. The page images SHALL stay unchanged and the file before the run SHALL stay available as a file version. An image file (PNG, JPEG, TIFF) SHALL get a searchable PDF beside it.
+
+#### Scenario: A scanned letter is found by a word on its page
+
+- **GIVEN** a scanned PDF without a text layer that reads "Bezwaar tegen besluit"
+- **WHEN** OCR runs on the file
+- **THEN** the file has a text layer with "Bezwaar tegen besluit"
+- **AND** a search for "bezwaar" finds the file
+- **AND** the previous version of the file is still in its version history
+
+#### Scenario: A photographed page gets a searchable copy
+
+- **GIVEN** a JPEG of a printed page
+- **WHEN** OCR runs on the file
+- **THEN** a PDF with the image and its text layer is stored beside the JPEG
+
+#### Scenario: A final or signed PDF keeps its bytes
+
+- **GIVEN** a scanned PDF that is final, under signature, or the source of an anonymised copy
+- **WHEN** OCR runs on the file, by hand or as the automatic extraction fallback
+- **THEN** the PDF is not rewritten, so its frozen checksum and its signature still match
+- **AND** the run reports the text layer as `protected`

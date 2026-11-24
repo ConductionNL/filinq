@@ -6,7 +6,7 @@
  * per kind and a link per finding, and "Nu controleren" starts a run through
  * the admin endpoint and shows that run.
  *
- * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+ * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
  */
 
 import axios from '@nextcloud/axios'

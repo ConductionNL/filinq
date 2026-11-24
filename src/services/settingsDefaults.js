@@ -24,6 +24,8 @@ export function defaultSettings() {
 		enable_inbound_classification: true,
 		ocr_enabled: true,
 		ocr_on_arrival: true,
+		// intake-base-registry-enrichment D3: no BRP lookup until an admin turns it on.
+		'intake.brp_lookup_enabled': false,
 		ocr_dpi: 300,
 		signing_enabled: false,
 		signing_provider: 'native',
@@ -34,6 +36,8 @@ export function defaultSettings() {
 		extraction_unattended_threshold: '0.9',
 		'filinq.anonymisation.default_output_format': 'pdf-only',
 		'anonymisation.output_subfolder_name': 'anonymised',
+		// Review workbench: a detected finding below it is uncertain.
+		'filinq.review.certain_from': 0.85,
 		// Four eyes when anonymising (REQ-SET-12): Woo cases only by default.
 		redaction_four_eyes: 'woo',
 		// files-confidential-labels — off by default (design.md D3).

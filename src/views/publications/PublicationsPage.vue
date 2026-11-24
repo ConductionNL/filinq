@@ -240,7 +240,14 @@ SPDX-License-Identifier: EUPL-1.2
 			</section>
 
 			<section>
-				<h3>{{ t('filinq', 'Hand off') }}</h3>
+				<h3>
+					{{ t('filinq', 'Hand off') }}
+					<CnStatusBadge
+						v-if="sanitized === true"
+						:label="t('filinq', 'Sanitized')"
+						:colorMap="sanitizedColors"
+						data-testid="publication-sanitized" />
+				</h3>
 				<NcNoteCard
 					v-if="sanitized === false"
 					type="warning"
@@ -343,6 +350,7 @@ SPDX-License-Identifier: EUPL-1.2
 </template>
 
 <script>
+import { CnStatusBadge } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
@@ -386,7 +394,7 @@ const FIELDS = [
 
 export default {
 	name: 'PublicationsPage',
-	components: { NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcTextField, PublicationBulkMetadataDialog },
+	components: { CnStatusBadge, NcButton, NcEmptyContent, NcLoadingIcon, NcNoteCard, NcTextField, PublicationBulkMetadataDialog },
 
 	data() {
 		return {
@@ -411,6 +419,16 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The colour of the sanitized badge.
+		 *
+		 * @return {object} The badge colour by label.
+		 * @spec openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#requirement-publication-hand-off-consults-the-sanitized-signal-req-ddsan-004
+		 */
+		sanitizedColors() {
+			return { [t('filinq', 'Sanitized')]: 'success' }
+		},
+
 		/**
 		 * Whether every listed record is selected.
 		 *
@@ -651,7 +669,7 @@ export default {
 		 *
 		 * @param {object} record The record
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/document-sanitization/tasks.md#4-2
+		 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#4-2
 		 */
 		async readSanitized(record) {
 			this.sanitized = null

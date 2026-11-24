@@ -22,6 +22,20 @@
 			"order": 58
 		},
 		{
+			"id": "DestructionLists",
+			"label": "Destruction lists",
+			"icon": "ClipboardCheckOutline",
+			"route": "DestructionLists",
+			"order": 58
+		},
+		{
+			"id": "DestructionCertificates",
+			"label": "Destruction certificates",
+			"icon": "FileCheckOutline",
+			"route": "DestructionCertificates",
+			"order": 58
+		},
+		{
 			"id": "SubjectErasures",
 			"label": "Erasure requests",
 			"icon": "AccountRemove",
@@ -63,6 +77,92 @@
 			"title": "Legal holds",
 			"component": "LegalHolds",
 			"_note": "The hold register (e-discovery-legal-hold): legal matters and the records they freeze, with placement per record, retry and release. type:custom because it reads GET api/legal-holds, which serves hold authority only (admins plus legal_hold_authority_groups); the legalHoldCase schema itself is admin-only in OpenRegister."
+		},
+		{
+			"id": "DestructionLists",
+			"route": "/destruction-lists",
+			"type": "index",
+			"title": "Destruction lists",
+			"config": {
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/openregister/api/archival/destruction-lists",
+					"rowsPath": "results",
+					"searchFields": {"status": {"param": "status", "single": true}},
+					"refusedText": "Only an archivist can review destruction lists."
+				},
+				"rowRoute": "DestructionListDetail",
+				"columns": [
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "valueMap",
+						"formatterOptions": {
+							"map": {
+								"in_review": "In review",
+								"awaiting_second_approval": "Awaiting second approval",
+								"approved": "Approved",
+								"rejected": "Rejected",
+								"completed": "Completed",
+								"executing": "Executing",
+								"executed": "Executed"
+							}
+						}
+					},
+					{"key": "entryCount", "label": "Records"},
+					{"key": "createdAt", "label": "Created", "formatter": "date"}
+				]
+			},
+			"_note": "The destruction lists OpenRegister draws up (archiefwet-retention-engine, REQ-DDARE-004), as an ordinary index over the endpoint source: OpenRegister's own GET api/archival/destruction-lists, which checks the archivist role and answers 403 to anybody else. filinq adds no route. rowRoute opens DestructionListDetail."
+		},
+		{
+			"id": "DestructionListDetail",
+			"route": "/destruction-lists/:id",
+			"type": "detail",
+			"title": "Destruction list",
+			"config": {
+				"entitySource": "endpoint",
+				"sourceConfig": {"url": "/apps/openregister/api/archival/destruction-lists/{id}"},
+				"bodyWidgets": [
+					{
+						"id": "destruction-list-review",
+						"component": "DestructionListReview",
+						"placement": "before-body",
+						"props": {
+							"objectId": "@objectId"
+						}
+					}
+				]
+			},
+			"_note": "One destruction list as a type:detail page over OpenRegister's GET api/archival/destruction-lists/{id}. The review is a bodyWidgets section (DestructionListReview): the proposed records with title, schema, register, archiefactiedatum and selectielijst category, keeping a record off the list with a reason, approval in full or of the rest (one POST .../approve carrying every kept record and its reason, which no per-row action can send) and rejection with a reason (POST .../reject). Every call is OpenRegister's."
+		},
+		{
+			"id": "DestructionCertificates",
+			"route": "/destruction-certificates",
+			"type": "index",
+			"title": "Destruction certificates",
+			"config": {
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/openregister/api/archival/certificates",
+					"rowsPath": "results",
+					"refusedText": "Only an archivist can read destruction certificates."
+				},
+				"columns": [
+					{"key": "destructionDate", "label": "Destroyed on", "formatter": "date"},
+					{"key": "totalDestroyed", "label": "Records destroyed"},
+					{
+						"key": "groupedBySchema",
+						"label": "Per schema and selection list category",
+						"formatter": "groupCounts",
+						"formatterOptions": {"keys": ["schema", "classification"]}
+					},
+					{"key": "approvedBy", "label": "Approved by", "formatter": "joinedList"},
+					{"key": "selectielijstBron", "label": "Selection list", "formatter": "joinedList"},
+					{"key": "complianceStatement", "label": "Statement"}
+				]
+			},
+			"_note": "The verklaringen van vernietiging (archiefwet-retention-engine, REQ-DDARE-005) as an ordinary index over the endpoint source: OpenRegister's own GET api/archival/certificates, newest first, which checks the archivist role. Read only: a certificate is a permanent record and filinq adds no route. The per-schema totals and the approvers are written by the app's groupCounts and joinedList cell formatters."
 		},
 		{
 			"id": "SubjectErasures",

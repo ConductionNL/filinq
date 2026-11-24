@@ -30,8 +30,11 @@ use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCA\Filinq\Kernel\SigningAuditActor;
 use OCA\Filinq\Kernel\SigningAuditEvent;
 use OCA\Filinq\Kernel\SigningAuditSubject;
+use OCA\Filinq\Service\Signing\FieldValueChecker;
 use OCA\Filinq\Service\Signing\PortalSignatureAssurance;
+use OCA\Filinq\Service\Signing\RecipientRole;
 use OCA\Filinq\Service\Signing\SignerEntries;
+use OCA\Filinq\Service\Signing\SigningAttribution;
 use OCA\Filinq\Service\Signing\SigningAct;
 use OCA\Filinq\Service\Signing\SigningTurn;
 use OCA\Filinq\Service\Support\SigningGuards;
@@ -60,10 +63,33 @@ use RuntimeException;
  * signing act and the portal assurance this class builds count as well as its
  * four collaborators; inlining them elsewhere would split one lifecycle.
  *
+ * @SuppressWarnings(PHPMD.TooManyMethods) Each method is one step of the signing request lifecycle
+ * (create, sign, accept, decline, progress); splitting the class would spread that lifecycle over
+ * two.
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods) Each public method is one lifecycle operation of
+ * SigningServiceInterface; accept() is the accept-only recipient's counterpart of sign().
+ *
  * @spec openspec/specs/document-signing/spec.md
  * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
  */
 class SigningService implements SigningServiceInterface {
+
+	/**
+	 * The refusal when an accept-only recipient tries to sign.
+	 */
+	public const ACCEPT_NOT_SIGN = 'This document asks you to accept it, not to sign it';
+
+	/**
+	 * The refusal when a recipient who signs tries to accept.
+	 */
+	public const SIGN_NOT_ACCEPT = 'This document asks you to sign it, not to accept it';
+
+	/**
+	 * How an agent's request is attributed: started via mcp, through Hermiq's approval gate.
+	 *
+	 * @var string
+	 */
+	private const VIA_MCP = 'mcp';
 
 	/**
 	 * The app a lifecycle move made on filinq's behalf is recorded against.
@@ -97,6 +123,7 @@ class SigningService implements SigningServiceInterface {
 	 * @param SigningActorResolver $actorResolver Resolves the acting identity + authorises it
 	 * @param SigningGuards $guards The request validator, guardian consent rule, identity gate and mandate
 	 * @param SigningOutputs $outputs The audit trail, signed artifact producer and conclusion emitter
+	 * @param FieldValueChecker $fieldValueChecker Checks what a signer typed into the fields placed for them
 	 *
 	 * @return void
 	 */
@@ -105,6 +132,7 @@ class SigningService implements SigningServiceInterface {
 		private readonly SigningActorResolver $actorResolver,
 		private readonly SigningGuards $guards,
 		private readonly SigningOutputs $outputs,
+		private readonly FieldValueChecker $fieldValueChecker = new FieldValueChecker(),
 	) {
 
 	}//end __construct()
@@ -131,8 +159,11 @@ class SigningService implements SigningServiceInterface {
 	// gives: the spec-coverage gate cannot walk past a multi-line attribute's `)]`.
 	//
 	// This is the only signing method an agent may reach, and only to START a
-	// request: sign(), decline(), bulkSign(), cancelRequest() and every class
-	// under Service/Signing/ stay attribute-free. The write hints route the tool
+	// request: createRequest() (the form, bulk and envelope paths), sign(),
+	// decline(), bulkSign(), cancelRequest() and every class under
+	// Service/Signing/ stay attribute-free. It is a separate entry point so the
+	// request it creates says it came via mcp; createRequest() cannot tell an
+	// agent's call from the form's. The write hints route the tool
 	// through Hermiq's human-approval gate; Filinq adds no gate of its own.
 
 	#[McpTool(
@@ -149,9 +180,36 @@ class SigningService implements SigningServiceInterface {
 		scope: 'create'
 	)]
 	/**
+	 * Start a signing request on an agent's behalf, attributed `mcp`.
+	 *
+	 * The same creation createRequest() runs, as the signed-in user (the
+	 * invoking principal), with every validation unchanged. The persisted
+	 * request carries `initiatedVia: mcp` and its CREATED audit entry records
+	 * `via: mcp` beside the actor, so an agent-started request is told apart
+	 * from one started in Filinq. Neither can be set through the request data.
+	 *
+	 * @param array<string, mixed> $data The signing request data, as createRequest() takes it.
+	 *
+	 * @return array<string, mixed> The created signing request.
+	 *
+	 * @throws RuntimeException If creation fails.
+	 * @throws \InvalidArgumentException With code 400 when the request or a guardian entry is invalid.
+	 *
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-an-approval-gated-signing-request-initiation-tool-exists-req-ddhat-001
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-agent-initiated-writes-are-attributable-req-ddhat-003
+	 */
+	public function startSigningRequest(array $data): array {
+		return $this->createRequest(data: $data, via: self::VIA_MCP);
+
+	}//end startSigningRequest()
+
+	/**
 	 * Create a new signing request
 	 *
 	 * @param array<string, mixed> $data The signing request data
+	 * @param string               $via  How it was started: `mcp` from startSigningRequest(), ''
+	 *                                   (the default) for Filinq's own paths. The request data
+	 *                                   cannot set it.
 	 *
 	 * @return array<string, mixed> The created signing request
 	 *
@@ -159,23 +217,20 @@ class SigningService implements SigningServiceInterface {
 	 * @throws \InvalidArgumentException With code 400 when a guardian entry is invalid,
 	 *                                   or a signer under the age of consent has no guardian.
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
+	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#3-2
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
-	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-an-approval-gated-signing-request-initiation-tool-exists-req-ddhat-001
 	 */
-	public function createRequest(array $data): array {
-		// Throws RuntimeException('No authenticated user') when there is no
-		// session user — exactly as the inline check here did before.
+	public function createRequest(array $data, string $via=''): array {
+		// Throws RuntimeException('No authenticated user') when there is no session user.
 		[$initiatorUserId, $initiatorDisplayName] = $this->actorResolver->resolveActingIdentity();
 
 		$objectService = $this->settingsService->getObjectService();
 
-		// These three were read straight off IAppConfig here, duplicating both
-		// the keys AND the defaults ('30', 'SES', 'native') that
-		// SettingsService::loadFeatureToggles() already owns — two sources of
-		// truth for the same three settings, free to drift. getFeatureToggles()
-		// is the cheap accessor (plain IAppConfig reads, no register or schema
-		// discovery), which is why it is safe on a write path.
+		// SettingsService owns these keys and defaults ('30', 'SES', 'native'); getFeatureToggles()
+		// is the cheap accessor (plain IAppConfig reads, no register discovery), safe on a write path.
 		$toggles = $this->settingsService->getFeatureToggles();
 		$expiryDays = (int)$toggles['signing_request_expiry_days'];
 		$deadline = (new DateTimeImmutable())->modify('+' . $expiryDays . ' days');
@@ -216,6 +271,8 @@ class SigningService implements SigningServiceInterface {
 		// A request that names nobody who can sign is refused before anything
 		// is stored, instead of being saved as PENDING for ever (#1209).
 		$this->guards->validator->validateSigners(signers: $signers);
+		// A request of accept-only recipients signs nothing (signing-accept-only-recipient D1).
+		RecipientRole::assertSomeoneSigns(entries: $signers);
 		$prepared = $this->guards->consentGuard->prepareSigners(
 			signers: $signers,
 			age: $request['guardianConsentAge'],
@@ -232,6 +289,7 @@ class SigningService implements SigningServiceInterface {
 		$request = $this->withProvenance(request: $request, data: $data);
 		$request = $this->guards->validator->withPlacements(request: $request, data: $data, producer: $this->outputs->artifactProducer);
 		$request = $this->outputs->artifactProducer->delegate(request: $request, signers: $signers);
+		$request = (new SigningAttribution(via: $via))->onto(request: $request);
 
 		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
 		$savedRequest = $objectService->saveObject(
@@ -253,20 +311,41 @@ class SigningService implements SigningServiceInterface {
 		);
 		$createdRequest['assuranceFloor'] = $this->guards->assuranceGate->floorFor(request: $request);
 
+		$this->logCreated(
+			request: $request,
+			requestId: (string)$requestId,
+			initiator: [$initiatorUserId, $initiatorDisplayName],
+			attribution: new SigningAttribution(via: $via)
+		);
+
+		return $createdRequest;
+	}//end createRequest()
+
+	/**
+	 * Write the CREATED audit entry of a new request, with how it was started.
+	 *
+	 * @param array<string, mixed>     $request     The created request.
+	 * @param string                   $requestId   Its id.
+	 * @param array{0: string, 1: string} $initiator   The initiator's user id and display name.
+	 * @param SigningAttribution       $attribution How the request was started.
+	 *
+	 * @return void
+	 */
+	private function logCreated(array $request, string $requestId, array $initiator, SigningAttribution $attribution): void {
 		$this->outputs->auditService->logEvent(
 			event: new SigningAuditEvent(
 				request: new SigningAuditSubject(id: $requestId, signatureLevel: $request['signatureLevel'], provider: $request['provider']),
 				action: 'CREATED',
 				actor: new SigningAuditActor(
-					userId: $initiatorUserId,
-					displayName: $initiatorDisplayName,
+					userId: $initiator[0],
+					displayName: $initiator[1],
 					ipAddress: $this->actorResolver->getClientIp()
-				)
+				),
+				metadata: $attribution->auditMetadata()
 			)
 		);
 
-		return $createdRequest;
-	}//end createRequest()
+	}//end logCreated()
 
 	/**
 	 * Copy the provenance a consuming app sent onto the request.
@@ -327,6 +406,9 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @return list<string> The signer record ids, in entry order.
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
+	 *
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
 	 */
 	private function persistSigners(string $requestId, SignerEntries $entries): array {
@@ -361,6 +443,11 @@ class SigningService implements SigningServiceInterface {
 
 			if (isset($links[$index]) === true) {
 				$signerRecord['guardianForSignerId'] = $ids[$links[$index]];
+			}
+
+			// An accept-only recipient (signing-accept-only-recipient D1).
+			if (RecipientRole::accepts(recipient: $signerData) === true) {
+				$signerRecord['role'] = RecipientRole::ACCEPT;
 			}
 
 			$created = $this->toArray(
@@ -510,6 +597,10 @@ class SigningService implements SigningServiceInterface {
 	 *                                                 (portal-signing-surface REQ-DDPSS-002:
 	 *                                                 consent confirmation + optional drawn
 	 *                                                 signature). Never trusted for identity.
+	 * @param array<array-key, mixed>|null $fields     What the signer typed into the text fields
+	 *                                                 placed for them, keyed by placement position
+	 *                                                 (signing-field-validation REQ-SFV-003); null
+	 *                                                 when the act carries no fields.
 	 *
 	 * @return array<string, mixed> The updated signer record
 	 *
@@ -525,8 +616,9 @@ class SigningService implements SigningServiceInterface {
 	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
 	 */
-	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null): array {
+	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null, ?array $fields = null): array {
 		return $this->signAct(
 			act: [
 				'requestId'     => $requestId,
@@ -534,6 +626,7 @@ class SigningService implements SigningServiceInterface {
 				'verifiedActor' => $verifiedActor,
 				'signatureData' => $signatureData,
 				'onBehalfOf'    => null,
+				'fields'        => $fields,
 			]
 		);
 	}//end sign()
@@ -568,6 +661,7 @@ class SigningService implements SigningServiceInterface {
 				'verifiedActor' => null,
 				'signatureData' => null,
 				'onBehalfOf'    => $delegator,
+				'fields'        => null,
 			]
 		);
 	}//end signOnBehalfOf()
@@ -578,13 +672,17 @@ class SigningService implements SigningServiceInterface {
 	 * The act holds the signing request id (`requestId`), the signer record id
 	 * (`signerId`), the verified external actor or null (`verifiedActor`), the
 	 * evidence for `signatureData` or null, and the signer a delegate signs for
-	 * or null (`onBehalfOf`).
+	 * or null (`onBehalfOf`), and what the signer typed into the fields placed
+	 * for them or null (`fields`).
 	 *
 	 * @param array<string, mixed> $act The act.
 	 *
 	 * @return array<string, mixed> The updated signer record
 	 *
 	 * @throws RuntimeException If signing fails
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
 	 */
 	private function signAct(array $act): array {
 		$requestId     = $act['requestId'];
@@ -592,6 +690,7 @@ class SigningService implements SigningServiceInterface {
 		$verifiedActor = $act['verifiedActor'];
 		$signatureData = $act['signatureData'];
 		$onBehalfOf    = $act['onBehalfOf'];
+		$fields        = $act['fields'] ?? null;
 		[$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
 
 		// A delegated signature is refused before anything is read unless a
@@ -611,6 +710,11 @@ class SigningService implements SigningServiceInterface {
 			actorUserId: $signerUserId,
 			action: 'sign'
 		);
+
+		// Accepting is not signing: an accept-only recipient accepts (D2).
+		if (RecipientRole::accepts(recipient: $signer) === true) {
+			throw new RuntimeException(self::ACCEPT_NOT_SIGN, 422);
+		}
 
 		$request = $this->loadSignableRequest(requestId: $requestId);
 
@@ -643,6 +747,8 @@ class SigningService implements SigningServiceInterface {
 				signers: $this->signerRecords(request: $request, known: [$signerId => $signer])
 			);
 		}
+		// Typed field values are checked before anything is written (REQ-SFV-003).
+		$typed = $this->fieldValueChecker->valuesForAct(request: $request, signerId: $signerId, fields: $fields);
 
 		$signer['identityEvidence'] = $this->guards->assuranceGate->evidenceForAct(
 			request: $request + ['id' => $requestId],
@@ -661,6 +767,7 @@ class SigningService implements SigningServiceInterface {
 
 		$signer = $act->stampSigned(signer: array_merge($signer, $consent['record']), ipAddress: $this->actorResolver->getClientIp());
 		$signer = (new PortalSignatureAssurance())->recordOn(signer: $signer, request: $request, verifiedActor: $verifiedActor);
+		$signer = array_merge($signer, $typed);
 		$signer    = $this->stampDelegation(signer: $signer, onBehalfOf: $onBehalfOf, actorUserId: $actorUserId);
 		$delegated = array_filter(['signedOnBehalfOf' => $onBehalfOf], static fn ($value): bool => $value !== null);
 
@@ -748,6 +855,124 @@ class SigningService implements SigningServiceInterface {
 
 		return $signer;
 	}//end stampDelegation()
+
+	/**
+	 * Accept a request as an accept-only recipient (signing-accept-only-recipient D2, D4).
+	 *
+	 * The same checks as sign(): the authorised recipient, a request that can
+	 * still be acted on, and a recipient still PENDING; in sequential mode
+	 * every recipient before this one has signed or accepted. It writes
+	 * ACCEPTED and acceptedAt, never signatureData, and the audit entry
+	 * ACCEPTED. The signing mandate is not asked: accepting is not signing.
+	 *
+	 * @param string                    $requestId     The signing request ID.
+	 * @param string                    $signerId      The recipient's signer record ID.
+	 * @param array<string, mixed>|null $verifiedActor The verified portal actor, or null for the session user.
+	 *
+	 * @return array<string, mixed> The updated recipient record.
+	 *
+	 * @throws RuntimeException With code 422 for a recipient who signs, or when the request or recipient cannot accept.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 */
+	public function accept(string $requestId, string $signerId, ?array $verifiedActor = null): array {
+		[$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+
+		$signer = $this->actorResolver->loadAuthorisedSigner(
+			requestId: $requestId,
+			signerId: $signerId,
+			verifiedActor: $verifiedActor,
+			actorUserId: $actorUserId,
+			action: 'accept'
+		);
+		if (RecipientRole::accepts(recipient: $signer) === false) {
+			throw new RuntimeException(self::SIGN_NOT_ACCEPT, 422);
+		}
+
+		$request = $this->loadSignableRequest(requestId: $requestId);
+		if (($signer['status'] ?? '') !== 'PENDING') {
+			throw new RuntimeException('Signer has already responded to this request');
+		}
+
+		$this->assertEarlierRecipientsDone(request: $request, signerId: $signerId, signer: $signer);
+
+		$act = new SigningAct(
+			request: $request,
+			target: ['requestId' => $requestId, 'signerId' => $signerId],
+			actor: ['userId' => $actorUserId, 'displayName' => $actorDisplayName, 'verified' => $verifiedActor],
+			signatureData: null
+		);
+		$signer['status'] = RecipientRole::ACCEPTED;
+		$signer['acceptedAt'] = $act->now->format(DateTimeInterface::ATOM);
+		$signer['ipAddress'] = $this->actorResolver->getClientIp();
+		$this->settingsService->getObjectService()->saveObject(
+			object: $signer,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $signerRegister, schema: $signerSchema)),
+			_rbac: false
+		);
+
+		$this->outputs->auditService->logEvent(
+			event: new SigningAuditEvent(
+				request: new SigningAuditSubject(
+					id: $requestId,
+					signatureLevel: $request['signatureLevel'] ?? 'SES',
+					provider: $request['provider'] ?? 'native'
+				),
+				action: 'ACCEPTED',
+				actor: new SigningAuditActor(userId: $actorUserId, displayName: $actorDisplayName, ipAddress: $signer['ipAddress']),
+				metadata: $this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor)
+			)
+		);
+		$this->updateRequestStatus(act: $act);
+
+		return $signer;
+	}//end accept()
+
+	/**
+	 * In sequential mode, refuse to act before every earlier recipient signed or accepted.
+	 *
+	 * @param array<string, mixed> $request  The signing request.
+	 * @param string               $signerId The acting recipient's record ID.
+	 * @param array<string, mixed> $signer   The acting recipient's record.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException With code 409 when an earlier recipient has not responded.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 */
+	private function assertEarlierRecipientsDone(array $request, string $signerId, array $signer): void {
+		if (($request['signingMode'] ?? 'sequential') !== 'sequential') {
+			return;
+		}
+
+		$objectService = $this->settingsService->getObjectService();
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+		$order = (int)($signer['order'] ?? 0);
+		foreach (($request['signerIds'] ?? []) as $otherId) {
+			if ((string)$otherId === $signerId) {
+				continue;
+			}
+
+			$other = $this->toArray(
+				object: $objectService->find(
+					id: (string)$otherId,
+					options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema),
+					_rbac: false
+				)
+			);
+			if ((int)($other['order'] ?? 0) < $order && RecipientRole::isDone(recipient: $other) === false) {
+				throw new RuntimeException('It is not your turn yet: an earlier recipient has not responded', 409);
+			}
+		}
+	}//end assertEarlierRecipientsDone()
 
 	/**
 	 * Load a signing request that can still be signed.
@@ -1080,6 +1305,9 @@ class SigningService implements SigningServiceInterface {
 	 * @param SigningAct $act The signing act: request ID, request data and verified actor.
 	 *
 	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
 	 */
 	private function updateRequestStatus(SigningAct $act): void {
 		$requestId = $act->requestId;
@@ -1134,11 +1362,16 @@ class SigningService implements SigningServiceInterface {
 		// MAC-covered assertion and into the completion payload.
 		$freshRequest = $this->guards->assuranceGate->withResolvedAssurance(request: $freshRequest, signers: $signers);
 
+		// Accept-only recipients are listed as accepted, never as signers, in
+		// the artifact's evidence and the concluded event (D3). Carried on a
+		// copy, so the stored request does not gain the key.
+		$accepterIds = RecipientRole::accepterIds(signers: $signers);
+
 		// The verification token comes first, so the QR code linking to its
 		// public record is part of the bytes that get signed (REQ-DDSVP-005).
 		$verificationToken = $this->outputs->artifactProducer->newVerificationToken();
 		$signedDocumentRef = $this->outputs->artifactProducer->produce(
-			request: $freshRequest,
+			request: ($freshRequest + ['accepterIds' => $accepterIds]),
 			verifiedActor: $act->verifiedActor,
 			signers: $signers,
 			verificationToken: $verificationToken
@@ -1166,7 +1399,7 @@ class SigningService implements SigningServiceInterface {
 		// signed reference is the stored artifact (file id + version), never
 		// the unsigned original documentFileId.
 		$this->outputs->emitter->emitIfDelegated(
-			request: $freshRequest,
+			request: ($freshRequest + ['accepterIds' => $accepterIds]),
 			status: 'signed',
 			signedDocumentRef: $signedDocumentRef
 		);
@@ -1187,7 +1420,7 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @return array<string, array<string, mixed>> The records, by id.
 	 *
-	 * @spec openspec/changes/finish-half-built-capabilities/tasks.md#4-signing
+	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/tasks.md#4-signing
 	 */
 	private function signerRecords(array $request, array $known): array {
 		$earlier = [];
@@ -1232,6 +1465,9 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @return array{allSigned: bool, signers: array<string, array<string, mixed>>} Whether every
 	 *     signer signed, and the records read, keyed by signer ID.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
 	 */
 	private function signerProgress(array $request): array {
 		$objectService = $this->settingsService->getObjectService();
@@ -1248,7 +1484,8 @@ class SigningService implements SigningServiceInterface {
 			$signer = $this->toArray(object: $signerObj);
 			$signers[(string)$signerId] = $signer;
 
-			if (($signer['status'] ?? '') !== 'SIGNED') {
+			// A signer is done when SIGNED, an accept-only recipient when ACCEPTED (D3).
+			if (RecipientRole::isDone(recipient: $signer) === false) {
 				$allSigned = false;
 				break;
 			}
@@ -1276,6 +1513,72 @@ class SigningService implements SigningServiceInterface {
 		$this->outputs->emitter->emitIfDelegated(request: $request, status: 'expired');
 
 	}//end emitExpiredConclusion()
+
+	/**
+	 * The recipients of a request, in order, with their role and state.
+	 *
+	 * The caller has already been allowed to read the request. The projection
+	 * is an allow-list: no e-mail address, IP address or signature data of a
+	 * co-recipient leaves this method. A record that cannot be read is listed
+	 * as UNREADABLE, so the list keeps every place in the order.
+	 *
+	 * @param array<string, mixed> $request The signing request, as getRequest() returned it.
+	 *
+	 * @return list<array<string, mixed>> The recipients.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+	 */
+	public function recipientsOf(array $request): array {
+		$signerIds = (array)($request['signerIds'] ?? []);
+		if ($signerIds === []) {
+			return [];
+		}
+
+		$objectService = $this->settingsService->getObjectService();
+		['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+
+		$recipients = [];
+		foreach (array_values($signerIds) as $index => $signerId) {
+			$signerId = (string)$signerId;
+			try {
+				$record = $this->toArray(
+					object: $objectService->find(id: $signerId, options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema), _rbac: false)
+				);
+			} catch (\Throwable $e) {
+				$record = [];
+			}
+
+			$accepts = RecipientRole::accepts(recipient: $record);
+			$name    = (string)($record['displayName'] ?? '');
+			if ($name === '') {
+				$name = (string)($record['userId'] ?? '');
+			}
+
+			$at = ($record['signedAt'] ?? '');
+			if ($accepts === true) {
+				$at = ($record['acceptedAt'] ?? '');
+			}
+
+			$role = 'sign';
+			if ($accepts === true) {
+				$role = RecipientRole::ACCEPT;
+			}
+
+			$recipients[] = [
+				'id' => $signerId,
+				'name' => $name,
+				'role' => $role,
+				'status' => (string)($record['status'] ?? 'UNREADABLE'),
+				'order' => (int)($record['order'] ?? $index),
+				'at' => (string)$at,
+			];
+		}//end foreach
+
+		return $recipients;
+	}//end recipientsOf()
 
 	/**
 	 * Normalise an ObjectService result to an array

@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
+ * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -41,7 +41,7 @@ use Throwable;
 /**
  * Scan the collection for missing, changed and orphaned files.
  *
- * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
+ * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
  */
 class IntegrityScanService {
 	use ReadsStoredObjectRows;
@@ -69,7 +69,7 @@ class IntegrityScanService {
 	 * @param FinalDocumentService          $finalDocuments Tells a final record and reads a file's checksum.
 	 * @param LoggerInterface               $logger         Records what could not be read.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objects,
@@ -86,7 +86,7 @@ class IntegrityScanService {
 	 *
 	 * @return array<string, mixed> The stored run: times, `checked`, a count per kind and `findings`.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	public function run(string $trigger): array {
 		$startedAt = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);
@@ -124,7 +124,7 @@ class IntegrityScanService {
 	 *
 	 * @return array<string, mixed>|null The run, or null when no run was stored yet.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-3-the-admin-section-reads-and-starts-a-scan
 	 */
 	public function last(): ?array {
 		$last = null;
@@ -144,7 +144,7 @@ class IntegrityScanService {
 	 *
 	 * @return array<int, array<string, mixed>> The findings.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function dossierFindings(int &$checked): array {
 		$findings = [];
@@ -168,7 +168,7 @@ class IntegrityScanService {
 	 *
 	 * @return array<int, array<string, mixed>> The findings.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function finalDocumentFindings(int &$checked): array {
 		$findings = [];
@@ -199,7 +199,7 @@ class IntegrityScanService {
 	 *
 	 * @return array<int, array<string, mixed>> The findings.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function anonymizationFindings(int &$checked): array {
 		$findings = [];
@@ -236,7 +236,7 @@ class IntegrityScanService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function matchesChecksum(array $version, int $fileId): bool {
 		if ((string)($version['versionLabel'] ?? '') !== '') {
@@ -264,7 +264,7 @@ class IntegrityScanService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function resolves(int $fileId): bool {
 		if ($fileId <= 0) {
@@ -285,7 +285,7 @@ class IntegrityScanService {
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function rows(string $schema): array {
 		try {
@@ -326,7 +326,7 @@ class IntegrityScanService {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-1-the-scan-service-finds-the-three-kinds
 	 */
 	private function finding(string $kind, string $schema, array $record, int $fileId): array {
 		return [

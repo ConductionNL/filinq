@@ -226,7 +226,7 @@ class SettingsControllerIndexTraceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	public function testARefusedValueAnswers400(): void {
 		$this->settings->method('updateSettings')->willThrowException(

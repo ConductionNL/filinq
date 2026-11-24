@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\BridgeRecordReader;
 use OCA\Filinq\Service\BridgeSourceBadges;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\SessionUserFile;
@@ -40,6 +41,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @covers \OCA\Filinq\Service\BridgeSourceBadges
  * @uses   \OCA\Filinq\Service\SessionUserFile
+ * @uses   \OCA\Filinq\Service\BridgeRecordReader
  * @uses   \OCA\Filinq\Service\StoredRecordFields
  */
 class BridgeSourceBadgesTest extends TestCase {
@@ -71,7 +73,10 @@ class BridgeSourceBadgesTest extends TestCase {
 		$root = $this->createMock(IRootFolder::class);
 		$root->method('getUserFolder')->with('clerk')->willReturn($folder);
 
-		return new BridgeSourceBadges(objectResolver: $resolver, files: new SessionUserFile($root, $session));
+		return new BridgeSourceBadges(
+			bridge: new BridgeRecordReader(objectResolver: $resolver),
+			files: new SessionUserFile(rootFolder: $root, userSession: $session)
+		);
 	}//end badges()
 
 	/**

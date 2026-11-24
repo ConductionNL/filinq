@@ -319,6 +319,31 @@ Next: set the guardian consent age for your school in the signing settings.
 
 ---
 
+## Recipients who accept without signing
+
+A recipient can be asked to accept a document instead of signing it, for example an officer who confirms a tenancy agreement the tenant signs. Give the entry `"role": "accept"` in the request's `signers` (or in the signer list of `DocumentSigningRequestedEvent`); every other entry signs.
+
+```
+POST /apps/filinq/api/signing/requests/{id}/accept
+{ "signerId": "<the recipient's signer record id>" }
+```
+
+- An acceptance is recorded as `ACCEPTED` with `acceptedAt`, and the audit entry `ACCEPTED`. It never carries signature data: it is not a signature.
+- An accept-only recipient cannot sign (422 "This document asks you to accept it, not to sign it"), and a signer cannot accept. Both may decline.
+- A request completes when every signer has signed and every accept-only recipient has accepted. In sequential mode the order holds across both: a recipient placed after a signer acts after that signer.
+- Accepting asks no signing mandate; the recipient check still applies.
+- A request whose recipients all only accept is refused: nothing would be signed.
+
+On `signerRecord`, `role` was already `signer` or `guardian`; `accept` is its third value, and no role signs as a party. A consumer that treats `status == SIGNED` as "done" should also count `ACCEPTED` for an accept-only recipient.
+
+In the app:
+
+- **New signing request**: every recipient row has a *Role*, *Sign* or *Accept only*. The form will not create a request without a recipient who signs.
+- **Signing folder**: a document you only accept shows an *Accept* button instead of the selection box, and is never part of *Sign selected*.
+- **Request detail**: the *Recipients* table lists each recipient in order with their role, state and when they signed or accepted. `GET /apps/filinq/api/signing/requests/{id}` returns that list as `recipients` (id, name, role, status, order, at); it holds no e-mail address, IP address or signature data.
+
+On the portal, the signer manifest declares a third act, `accept`, beside `sign` and `decline` (`POST /apps/filinq/api/portal/signing/accept`, `minTrust: substantial`). The receiver checks the portal assertion and the invited recipient exactly as for signing. The wrong act for a recipient's role answers 422 `wrong_act` with the message above, on both the sign and the accept act.
+
 ## Signer identity: DigiD, eHerkenning and iDIN
 
 A Nextcloud login tells Filinq which account is signing. It does not say how strongly that

@@ -103,11 +103,21 @@
 			"<!--v-if-->",
 			"</div>"
 		],
-		"mountCalls": [["prohibition", "fetchProhibitions"]],
+		"mountCalls": [
+			[
+				"prohibition",
+				"fetchProhibitions"
+			]
+		],
 		"events": {
 			"onRefresh": {
 				"present": true,
-				"calls": [["prohibition", "fetchProhibitions"]],
+				"calls": [
+					[
+						"prohibition",
+						"fetchProhibitions"
+					]
+				],
 				"data": {
 					"isRefreshing": false,
 					"currentPage": 1,
@@ -249,7 +259,8 @@
 							"type": "bsn",
 							"value": "123456782"
 						}
-					]
+					],
+					"bases": []
 				},
 				"formError": "",
 				"deleteTarget": null,
@@ -290,7 +301,8 @@
 							"type": "bsn",
 							"value": "123456782"
 						}
-					]
+					],
+					"bases": []
 				},
 				"formError": "",
 				"deleteTarget": {
@@ -340,7 +352,8 @@
 					"jurisdiction": "",
 					"validUntil": "",
 					"active": true,
-					"matchRules": []
+					"matchRules": [],
+					"bases": []
 				},
 				"formError": "",
 				"deleteTarget": null,
@@ -376,7 +389,8 @@
 					"jurisdiction": "",
 					"validUntil": "",
 					"active": true,
-					"matchRules": []
+					"matchRules": [],
+					"bases": []
 				},
 				"formError": "",
 				"deleteTarget": {
@@ -504,11 +518,21 @@
 			"<!--v-if-->",
 			"</div>"
 		],
-		"mountCalls": [["standingConsent", "fetchStandingConsents"]],
+		"mountCalls": [
+			[
+				"standingConsent",
+				"fetchStandingConsents"
+			]
+		],
 		"events": {
 			"onRefresh": {
 				"present": true,
-				"calls": [["standingConsent", "fetchStandingConsents"]],
+				"calls": [
+					[
+						"standingConsent",
+						"fetchStandingConsents"
+					]
+				],
 				"data": {
 					"isRefreshing": false,
 					"currentPage": 1,
@@ -657,7 +681,8 @@
 					],
 					"consentStatus": "consent_given",
 					"publicationDecision": "publish_with_consent",
-					"notificationStatus": "skipped"
+					"notificationStatus": "skipped",
+					"bases": []
 				},
 				"formError": "",
 				"deleteTarget": null,
@@ -702,7 +727,8 @@
 					],
 					"consentStatus": "consent_given",
 					"publicationDecision": "publish_with_consent",
-					"notificationStatus": "skipped"
+					"notificationStatus": "skipped",
+					"bases": []
 				},
 				"formError": "",
 				"deleteTarget": {
@@ -756,7 +782,8 @@
 					"matchRules": [],
 					"consentStatus": "consent_given",
 					"publicationDecision": "publish_with_consent",
-					"notificationStatus": "skipped"
+					"notificationStatus": "skipped",
+					"bases": []
 				},
 				"formError": "",
 				"deleteTarget": null,
@@ -796,7 +823,8 @@
 					"matchRules": [],
 					"consentStatus": "consent_given",
 					"publicationDecision": "publish_with_consent",
-					"notificationStatus": "skipped"
+					"notificationStatus": "skipped",
+					"bases": []
 				},
 				"formError": "",
 				"deleteTarget": {

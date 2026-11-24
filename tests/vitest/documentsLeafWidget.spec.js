@@ -182,4 +182,87 @@ describe('documents leaf', () => {
 		await vm.copyToOtherRecord(row)
 		expect(vm.linkMessage).toBe('[t] You may not copy this document to that record.')
 	})
+
+	it('searches the record\'s documents by name and content and marks the words in a snippet', async () => {
+		answerWith(200, {
+			results: [{ fileId: 7, name: 'Besluit.pdf', match: 'content', snippet: 'over de Parkeervergunning' }],
+			content: { available: true, unread: 0 },
+		})
+		const vm = await leaf()
+		vm.searchWords = '  parkeervergunning '
+		await vm.searchContent()
+		expect(calls[0].url).toBe('/index.php/apps/filinq/api/case-documents/files?register=zaken&schema=zaak&id=z-1&mode=content&search=parkeervergunning')
+		expect(vm.searchedWords).toBe('parkeervergunning')
+		expect(vm.rows).toHaveLength(1)
+		expect(vm.contentNotSearched).toBe(false)
+		expect(vm.loading).toBe(false)
+		expect(vm.snippetParts(vm.rows[0])).toEqual([
+			{ text: 'over de ', marked: false },
+			{ text: 'Parkeervergunning', marked: true },
+		])
+	})
+
+	it('says so when the server could not search the content', async () => {
+		answerWith(200, { results: [], content: { available: false, unread: 0 } })
+		const vm = await leaf()
+		vm.searchWords = 'vergunning'
+		await vm.searchContent()
+		expect(vm.contentNotSearched).toBe(true)
+	})
+
+	it('shows every document again when the search is cleared or empty', async () => {
+		answerWith(200, { results: [{ fileId: 1, name: 'a.pdf' }] })
+		const vm = await leaf()
+		vm.searchWords = 'x'
+		vm.searchedWords = 'x'
+		vm.contentNotSearched = true
+		await vm.clearSearch()
+		expect(vm.searchWords).toBe('')
+		expect(vm.searchedWords).toBe('')
+		expect(vm.contentNotSearched).toBe(false)
+		expect(calls[0].url).toBe('/index.php/apps/filinq/api/case-documents/files?register=zaken&schema=zaak&id=z-1')
+
+		calls.length = 0
+		vm.searchWords = '   '
+		await vm.searchContent()
+		expect(calls[0].url).toBe('/index.php/apps/filinq/api/case-documents/files?register=zaken&schema=zaak&id=z-1')
+		expect(vm.rows).toEqual([{ fileId: 1, name: 'a.pdf' }])
+	})
+
+	it('lists the documents not read yet and reads them, then searches again', async () => {
+		answerWith(200, { results: [], content: { available: true, unread: 2, unreadFileIds: [8, 9] } })
+		const vm = await leaf()
+		vm.searchWords = 'vergunning'
+		await vm.searchContent()
+		expect(vm.unread).toEqual([8, 9])
+
+		calls.length = 0
+		await vm.readUnread()
+		expect(calls.map((call) => call.url)).toEqual([
+			'/index.php/apps/openregister/api/files/8/extract',
+			'/index.php/apps/openregister/api/files/9/extract',
+			'/index.php/apps/filinq/api/case-documents/files?register=zaken&schema=zaak&id=z-1&mode=content&search=vergunning',
+		])
+		expect(vm.reading).toBe(false)
+		expect(vm.readMessage).toBe('')
+	})
+
+	it('says how many documents could not be read', async () => {
+		answerWith(404, {})
+		const vm = await leaf()
+		vm.searchedWords = 'vergunning'
+		vm.unread = [8]
+		await vm.readUnread()
+		expect(vm.readMessage).toBe('%n document could not be read'.replace('%n', '1'))
+	})
+
+	it('forgets the unread documents when the search is cleared', async () => {
+		answerWith(200, { results: [] })
+		const vm = await leaf()
+		vm.unread = [8]
+		vm.readMessage = 'x'
+		await vm.clearSearch()
+		expect(vm.unread).toEqual([])
+		expect(vm.readMessage).toBe('')
+	})
 })

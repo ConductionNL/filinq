@@ -7,7 +7,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/redaction-four-eyes-setting/specs/admin-settings/spec.md#requirement-the-admin-chooses-when-four-eyes-are-required-req-set-12
+ * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/admin-settings/spec.md#requirement-the-admin-chooses-when-four-eyes-are-required-req-set-12
  */
 
 import { readFileSync } from 'node:fs'

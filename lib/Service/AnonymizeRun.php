@@ -64,7 +64,7 @@ class AnonymizeRun {
 	 *
 	 * @return bool True for a Woo run.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-2
 	 */
 	public function isWooRun(): bool {
 		return ($this->options['wooCase'] ?? false) === true || ($this->options['scope'] ?? '') === 'dossier';

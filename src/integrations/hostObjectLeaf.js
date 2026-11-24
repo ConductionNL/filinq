@@ -40,17 +40,21 @@ export const hostObjectLeaf = {
 		 *
 		 * @param {string} path The route, e.g. `/apps/filinq/api/case-documents/files`.
 		 * @param {string} [method] The HTTP method; GET when left out.
+		 * @param {object} [extra] More query parameters, after the host object.
 		 * @return {Promise<Response>} The response.
 		 *
 		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.2
 		 */
-		fetchForHostObject(path, method) {
+		fetchForHostObject(path, method, extra = {}) {
 			const headers = {
 				requesttoken: this.requestToken(),
 				Accept: 'application/json',
 			}
+			const query = this.hostObjectQuery()
+			Object.entries(extra || {}).forEach(([key, value]) => query.set(key, String(value)))
 			return fetch(
-				generateUrl(path) + '?' + this.hostObjectQuery().toString(),
+				generateUrl(path) + '?' + query.toString(),
 				method ? { method, headers } : { headers },
 			)
 		},
@@ -63,17 +67,19 @@ export const hostObjectLeaf = {
 		 *
 		 * @param {string} path The route, e.g. `/apps/filinq/api/case-documents/files`.
 		 * @param {function(object): void} apply Receives the parsed JSON body.
+		 * @param {object} [extra] More query parameters, after the host object.
 		 * @return {Promise<void>} Resolves once the answer is applied.
 		 *
 		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.2
 		 */
-		async loadForHostObject(path, apply) {
+		async loadForHostObject(path, apply, extra = {}) {
 			if (this.objectId === '') {
 				this.loading = false
 				return
 			}
 			try {
-				const response = await this.fetchForHostObject(path)
+				const response = await this.fetchForHostObject(path, undefined, extra)
 				if (response.ok === false) {
 					this.error = true
 					return

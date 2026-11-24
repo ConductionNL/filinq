@@ -9,7 +9,7 @@
  * The Filinq-side receiver for portaliq's ADR-046 contract-v2/v2.2 A6
  * endpoint-forward actions (`portal-signing-actions`, `portal-signing-surface`).
  * Gives an external, accountless **signer** a real signing surface: portaliq
- * forwards `sign`/`decline`/`viewDocument` server-to-server, attaching a
+ * forwards `sign`/`decline`/`accept`/`viewDocument` server-to-server, attaching a
  * short-lived `X-Portal-Subject` HS256 assertion and NEVER the client's own
  * `Authorization` header. This controller verifies that assertion, derives
  * the acting signer's identity SERVER-SIDE from it (never from the request
@@ -39,6 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
+use OCA\Filinq\Controller\Support\PortalSignAct;
 use OCA\Filinq\Kernel\Contracts\OpenRegisterResolverInterface;
 use OCA\Filinq\Kernel\Contracts\PortalSigningDocumentResolverInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
@@ -60,6 +61,14 @@ use Throwable;
  * Receives portaliq's forwarded signing actions on the `signer` audience.
  *
  * @spec openspec/specs/portal-signing-actions/spec.md
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth type is
+ * PortalSignAct, which reads the sign act's consent, drawn signature and typed
+ * field values and answers a refused value with 422, so the controller itself
+ * stays one call and one branch.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the sum of small independent
+ * checks of the portal's signing callbacks.
  */
 class PortalSigningReceiverController extends Controller {
 	/**
@@ -137,6 +146,7 @@ class PortalSigningReceiverController extends Controller {
 	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/signer-identity-rails/specs/signer-identity-rails/spec.md
+	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -150,22 +160,25 @@ class PortalSigningReceiverController extends Controller {
 
 		[$verifiedActor, $signerRecord] = $context;
 
-		$consent = (bool)$this->request->getParam('consent', false);
-		$signature = $this->request->getParam('signature');
-
-		$signatureData = ['consent' => $consent];
-		if (is_string($signature) === true && $signature !== '') {
-			$signatureData['signature'] = $signature;
-		}
+		// Consent, the optional drawn signature and the typed field values
+		// (signing-field-validation D7).
+		$act = new PortalSignAct(request: $this->request);
 
 		try {
 			$signer = $this->signingService->sign(
 				requestId: (string)$signerRecord['signingRequestId'],
 				signerId: (string)($signerRecord['id'] ?? $signerRecord['uuid'] ?? ''),
 				verifiedActor: $verifiedActor,
-				signatureData: $signatureData
+				signatureData: $act->signatureData,
+				fields: $act->fields
 			);
 		} catch (Throwable $e) {
+			// A value that fails its check: nothing was signed (REQ-SFV-003).
+			$refused = $act->refusal(exception: $e);
+			if ($refused !== null) {
+				return new JSONResponse($refused, Http::STATUS_UNPROCESSABLE_ENTITY);
+			}
+
 			// A refusal by the guardian consent rule (signer-identity-rails
 			// REQ-DDSIR-008/009) carries code 403: the act was refused, nothing
 			// failed downstream. It is not a rejected assertion either, so it
@@ -173,6 +186,11 @@ class PortalSigningReceiverController extends Controller {
 			if ($e->getCode() === Http::STATUS_FORBIDDEN) {
 				$this->logger->info('Filinq: portal signing refused: ' . $e->getMessage());
 				return new JSONResponse(['error' => 'signing_refused'], Http::STATUS_FORBIDDEN);
+			}
+
+			// An accept-only recipient sent the sign act (signing-accept-only-recipient D5).
+			if ($e->getCode() === Http::STATUS_UNPROCESSABLE_ENTITY) {
+				return $this->wrongAct(exception: $e);
 			}
 
 			return $this->downstreamFailure(context: 'signDocument', exception: $e);
@@ -243,6 +261,59 @@ class PortalSigningReceiverController extends Controller {
 
 	}//end declineDocument()
 
+
+	/**
+	 * POST /apps/filinq/api/portal/signing/accept
+	 *
+	 * The acceptDocument act (signing-accept-only-recipient REQ-SAO-004): an
+	 * accept-only recipient accepts the document without signing it. Guarded
+	 * by the same assertion and invited-recipient scope as signDocument, then
+	 * drives `SigningService::accept()` acting as the verified recipient. A
+	 * recipient who must sign gets 422 with the service's message, and
+	 * nothing is written.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#3-portal
+	 */
+	#[PublicPage]
+	#[NoCSRFRequired]
+	#[AnonRateLimit(limit: 20, period: 60)]
+	#[BruteForceProtection(action: self::THROTTLE_ACTION)]
+	public function acceptDocument(): JSONResponse {
+		$context = $this->authoriseAct();
+		if ($context instanceof JSONResponse) {
+			return $context;
+		}
+
+		[$verifiedActor, $signerRecord] = $context;
+
+		try {
+			$recipient = $this->signingService->accept(
+				requestId: (string)$signerRecord['signingRequestId'],
+				signerId: (string)($signerRecord['id'] ?? $signerRecord['uuid'] ?? ''),
+				verifiedActor: $verifiedActor
+			);
+		} catch (Throwable $e) {
+			if ($e->getCode() === Http::STATUS_UNPROCESSABLE_ENTITY) {
+				return $this->wrongAct(exception: $e);
+			}
+
+			if ($e->getCode() === Http::STATUS_FORBIDDEN) {
+				$this->logger->info('Filinq: portal acceptance refused: ' . $e->getMessage());
+				return new JSONResponse(['error' => 'signing_refused'], Http::STATUS_FORBIDDEN);
+			}
+
+			return $this->downstreamFailure(context: 'acceptDocument', exception: $e);
+		}
+
+		return new JSONResponse(
+			[
+				'status' => ($recipient['status'] ?? 'ACCEPTED'),
+			]
+		);
+
+	}//end acceptDocument()
 
 	/**
 	 * GET /apps/filinq/api/portal/signing/viewDocument
@@ -559,6 +630,25 @@ class PortalSigningReceiverController extends Controller {
 			);
 		}
 	}//end registerRejectedAssertion()
+
+	/**
+	 * The answer to the wrong act for the recipient's role: 422 with the
+	 * service's message ("This document asks you to accept it, not to sign
+	 * it", or the reverse). Not a rejected assertion, so it does not count
+	 * against the brute-force throttle.
+	 *
+	 * @param Throwable $exception The service's 422 refusal.
+	 *
+	 * @return JSONResponse
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#3-portal
+	 */
+	private function wrongAct(Throwable $exception): JSONResponse {
+		return new JSONResponse(
+			['error' => 'wrong_act', 'message' => $exception->getMessage()],
+			Http::STATUS_UNPROCESSABLE_ENTITY
+		);
+	}//end wrongAct()
 
 	/**
 	 * Relay a downstream/OpenRegister failure as 502 — never leaking

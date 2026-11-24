@@ -118,10 +118,17 @@ const documentRecordId = computed(() =>
 							)
 						}}
 					</div>
+					<div v-if="burnedRegionNote" class="muted" data-testid="burned-region-count">
+						{{ burnedRegionNote }}
+					</div>
 					<a :href="downloadUrl" download class="download-link">
 						{{ t('filinq', 'Download anonymised file') }}
 					</a>
 				</NcNoteCard>
+				<WaarmerkRunActions
+					:anonymizedFileId="entry.anonymizedFileId"
+					:fileName="entry.anonymizedFileName || ''"
+					:anonymizationLinkId="entry.anonymizationLinkId || null" />
 
 				<NcNoteCard
 					v-if="accessibility"
@@ -201,9 +208,12 @@ const documentRecordId = computed(() =>
 			     `[<TYPE>: <entity_id>]` placeholders baked into the file.
 			     Original values stay hidden behind an explicit reveal so
 			     opening the result doesn't silently de-anonymise it. -->
-			<DdRemovedEntitiesList
-				v-else-if="entry && entry.viewMode === 'anonymized'"
-				:items="entry.entities" />
+			<div v-else-if="entry && entry.viewMode === 'anonymized'">
+				<p v-if="burnedRegionNote" class="muted" data-testid="burned-region-count">
+					{{ burnedRegionNote }}
+				</p>
+				<DdRemovedEntitiesList :items="entry.entities" />
+			</div>
 
 			<!-- Add new data panel. The user selects text in the document
 			     (highlighted as pending), picks a type and optionally
@@ -559,6 +569,16 @@ const documentRecordId = computed(() =>
 				:error="reviewMessage"
 				:colleagueHint="colleagueHintText"
 				@confirm="onMarkChecked" />
+			<router-link
+				class="review-workbench-link"
+				data-testid="open-review-workbench"
+				:to="{
+					name: 'ReviewWorkbench',
+					params: { fileId: entry.fileId },
+					query: { name: entry.name, path: entry.filePath },
+				}">
+				{{ t('filinq', 'Open in review workbench') }}
+			</router-link>
 			<NcButton
 				variant="primary"
 				:disabled="includedCount === 0 || isAnonymising || !entryChecked || colleagueRequired"
@@ -675,13 +695,14 @@ import DdRemovedEntitiesList from '../components/DdRemovedEntitiesList.vue'
 import DdSearchBar from '../components/DdSearchBar.vue'
 import DdToggle from '../components/DdToggle.vue'
 import ReviewMarkCard from '../components/ReviewMarkCard.vue'
+import WaarmerkRunActions from '../components/WaarmerkRunActions.vue'
 import ProhibitionBlockedDialog from '../dialogs/ProhibitionBlockedDialog.vue'
 import RestoreOriginalDialog from '../dialogs/RestoreOriginalDialog.vue'
 import ScopeRedactionDialog from '../dialogs/ScopeRedactionDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 import { colleagueHint, colleagueReason } from '../services/fourEyes.js'
-import { fetchScope, imageRedactionWarning, regionOverlays, scopeLabel } from '../services/imageRedaction.js'
+import { burnedRegionLine, fetchScope, imageRedactionWarning, regionOverlays, scopeLabel } from '../services/imageRedaction.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 import { accessibilityNote } from '../services/redactionAccessibility.js'
 import { reportRows } from '../services/sanitization.js'
@@ -707,6 +728,7 @@ export default {
 		ScopeRedactionDialog,
 		FileHidden,
 		ReviewMarkCard,
+		WaarmerkRunActions,
 		KeyVariant,
 		Plus,
 		ShieldLockOutline,
@@ -765,6 +787,16 @@ export default {
 		},
 
 		/**
+		 * The burned-region count beside the replacement count.
+		 *
+		 * @return {string|null} The line, or null when nothing was burned.
+		 * @spec openspec/changes/image-redaction/tasks.md#task-4.2
+		 */
+		burnedRegionNote() {
+			return burnedRegionLine(this.entry)
+		},
+
+		/**
 		 * Id of the file currently open in the viewer, or null. Watched to
 		 * trigger entity loading — a plain instance computed fires reliably
 		 * where a string-path watch on the imported store does not.
@@ -796,7 +828,7 @@ export default {
 		 * What OpenRegister's office sanitiser removed from the anonymised copy.
 		 *
 		 * @return {Array<object>} Label and count per category.
-		 * @spec openspec/changes/document-sanitization/tasks.md#3-3
+		 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-3
 		 */
 		sanitizationRows() {
 			return reportRows(this.entry?.sanitizationReport)
@@ -1018,7 +1050,7 @@ export default {
 		 * asks for four eyes up front; a refusal the server sent is kept.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-5
+		 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-5
 		 */
 		fourEyesReason() {
 			return colleagueReason(this.entry, {
@@ -1030,7 +1062,7 @@ export default {
 
 		/**
 		 * @return {boolean} True when the signed-in person may not anonymise the open file.
-		 * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
+		 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
 		 */
 		colleagueRequired() {
 			return this.fourEyesReason !== ''
@@ -1038,7 +1070,7 @@ export default {
 
 		/**
 		 * @return {string} The sentence the review card shows, or ''.
-		 * @spec openspec/changes/redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
+		 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
 		 */
 		colleagueHintText() {
 			return colleagueHint(this.fourEyesReason, t)
@@ -2076,6 +2108,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.review-workbench-link {
+	display: block;
+	margin: 4px 0 8px;
+	color: var(--color-primary-element);
+	text-decoration: underline;
+}
+
 /* Match MainMenu / NcAppContent chrome: rounded card, soft shadow,
  * translucent background. Lib does not expose a variable for radius/shadow,
  * so override directly. */
@@ -2358,6 +2397,7 @@ export default {
 	font-size: 0.85rem;
 	list-style: disc;
 }
+
 .scope-redaction {
 	display: flex;
 	flex-direction: column;

@@ -17,7 +17,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/whole-collection-integrity-scan/tasks.md#task-2-nightly-job-occ-command-and-notification
+ * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/tasks.md#task-2-nightly-job-occ-command-and-notification
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\Notification\UnknownNotificationException;
 /**
  * Renders an integrity scan's findings notification.
  *
- * @spec openspec/changes/whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02
+ * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02
  */
 class IntegrityScanNotifier implements INotifier {
 
@@ -63,7 +63,7 @@ class IntegrityScanNotifier implements INotifier {
 	 *
 	 * @return string The id.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02
 	 */
 	public function getID(): string {
 		return AppIdentity::APP_ID . '-integrity-scan';
@@ -75,7 +75,7 @@ class IntegrityScanNotifier implements INotifier {
 	 *
 	 * @return string The name.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02
 	 */
 	public function getName(): string {
 		return $this->l10nFactory->get(AppIdentity::APP_ID)->t('Integrity check');
@@ -93,7 +93,7 @@ class IntegrityScanNotifier implements INotifier {
 	 *
 	 * @throws UnknownNotificationException When it is not ours.
 	 *
-	 * @spec openspec/changes/whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02
+	 * @spec openspec/changes/archive/2026-11-20-whole-collection-integrity-scan/specs/document-versions/spec.md#requirement-the-scan-runs-nightly-and-on-demand-and-administrators-see-the-result-req-dis-02
 	 */
 	public function prepare(INotification $notification, string $languageCode): INotification {
 		if ($notification->getApp() !== AppIdentity::APP_ID || $notification->getSubject() !== self::SUBJECT) {

@@ -59,10 +59,14 @@ class CaseDocumentsControllerFilesTraceTest extends TestCase {
 	 * The controller, with or without a session user.
 	 *
 	 * @param bool $signedIn Whether somebody is logged in.
+	 * @param string $mode The `mode` query parameter.
 	 *
 	 * @return CaseDocumentsController The controller.
 	 */
-	private function controller(bool $signedIn = true): CaseDocumentsController {
+	private function controller(bool $signedIn = true, string $mode = 'name'): CaseDocumentsController {
+		$request = $this->createMock(originalClassName: IRequest::class);
+		$request->method('getParam')->willReturnMap(valueMap: [['mode', 'name', $mode]]);
+
 		$session = $this->createMock(IUserSession::class);
 		if ($signedIn === true) {
 			$session->method('getUser')->willReturn($this->createMock(IUser::class));
@@ -72,7 +76,7 @@ class CaseDocumentsControllerFilesTraceTest extends TestCase {
 
 		return new CaseDocumentsController(
 			'filinq',
-			$this->createMock(IRequest::class),
+			$request,
 			$this->flatList,
 			$this->createMock(DocumentDomainServiceInterface::class),
 			$this->createMock(UploadPolicyServiceInterface::class),
@@ -108,6 +112,42 @@ class CaseDocumentsControllerFilesTraceTest extends TestCase {
 	}//end testFilesHandsTheDomainAndPagingToTheFlatList()
 
 	/**
+	 * The content mode with words asks the content search, not the name list.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 */
+	public function testFilesInContentModeSearchesTheContent(): void {
+		$page = ['results' => [], 'total' => 0, 'page' => 1, 'pages' => 0, 'content' => ['available' => false, 'unread' => 0]];
+		$this->flatList->expects($this->never())->method(constraint: 'listFor');
+		$this->flatList->expects($this->once())
+			->method(constraint: 'searchContent')
+			->with(['register' => 'zaken', 'schema' => 'zaak', 'id' => 'z-1'], 'Lindenlaan', 1, 50)
+			->willReturn(value: $page);
+
+		$response = $this->controller(mode: 'content')->files(register: 'zaken', schema: 'zaak', id: 'z-1', search: 'Lindenlaan');
+
+		$this->assertSame(expected: $page, actual: $response->getData());
+
+	}//end testFilesInContentModeSearchesTheContent()
+
+	/**
+	 * The content mode without words is the plain list.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/specs/document-content-search/spec.md
+	 */
+	public function testFilesInContentModeWithoutWordsListsByName(): void {
+		$this->flatList->expects($this->never())->method(constraint: 'searchContent');
+		$this->flatList->expects($this->once())->method(constraint: 'listFor')->willReturn(value: ['results' => []]);
+
+		$this->controller(mode: 'content')->files(register: 'zaken', schema: 'zaak', id: 'z-1');
+
+	}//end testFilesInContentModeWithoutWordsListsByName()
+
+	/**
 	 * No session: 401 before the list is read.
 	 *
 	 * @return void
@@ -136,4 +176,41 @@ class CaseDocumentsControllerFilesTraceTest extends TestCase {
 		$this->assertSame(['error' => 'register unreachable'], $response->getData());
 
 	}//end testAFailingListIsA500()
+	/**
+	 * A search of the caller's list hands the words and the file ids to the service.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+	 */
+	public function testSearchFilesAsksTheServiceAboutTheListedFiles(): void {
+		$answer = ['available' => true, 'hits' => [['fileId' => 11, 'rank' => 0.5, 'snippet' => 'x']], 'unread' => []];
+		$this->flatList->expects($this->once())
+			->method(constraint: 'searchFiles')
+			->with('vergunning', [11, 12])
+			->willReturn(value: $answer);
+
+		$response = $this->controller()->searchFiles(words: 'vergunning', fileIds: [11, 12]);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: $answer, actual: $response->getData());
+
+	}//end testSearchFilesAsksTheServiceAboutTheListedFiles()
+
+	/**
+	 * Without a session, without words or with too many files nothing is asked.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/work-content-search/tasks.md#task-2.1
+	 */
+	public function testSearchFilesRefusesWhatItCannotAnswer(): void {
+		$this->flatList->expects($this->never())->method(constraint: 'searchFiles');
+		$tooMany = range(start: 1, end: FlatFileListServiceInterface::MAX_SEARCH_FILES + 1);
+
+		$this->assertSame(expected: 401, actual: $this->controller(signedIn: false)->searchFiles(words: 'a', fileIds: [1])->getStatus());
+		$this->assertSame(expected: 400, actual: $this->controller()->searchFiles(words: '  ', fileIds: [1])->getStatus());
+		$this->assertSame(expected: 400, actual: $this->controller()->searchFiles(words: 'a', fileIds: $tooMany)->getStatus());
+
+	}//end testSearchFilesRefusesWhatItCannotAnswer()
 }//end class

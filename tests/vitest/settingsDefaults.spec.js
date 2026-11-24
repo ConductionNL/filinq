@@ -28,6 +28,7 @@ describe('defaultSettings', () => {
 			['enable_inbound_classification', true],
 			['ocr_enabled', true],
 			['ocr_on_arrival', true],
+			['intake.brp_lookup_enabled', false],
 			['ocr_dpi', 300],
 			['signing_enabled', false],
 			['signing_provider', 'native'],
@@ -38,6 +39,7 @@ describe('defaultSettings', () => {
 			['extraction_unattended_threshold', '0.9'],
 			['filinq.anonymisation.default_output_format', 'pdf-only'],
 			['anonymisation.output_subfolder_name', 'anonymised'],
+			['filinq.review.certain_from', 0.85],
 			['redaction_four_eyes', 'woo'],
 			['filinq.confidentiality.prioritise_analysis', false],
 			[

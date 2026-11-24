@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-sanitization/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -48,6 +48,7 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 	 * @param OpenRegisterServiceLocator   $locator    OpenRegister's services.
 	 * @param SanitizationRecordRepository $records    The run records.
 	 * @param LoggerInterface              $logger     The logger.
+	 * @param SealLookup|null              $seals      Whether the source carries an active waarmerk.
 	 *
 	 * @return void
 	 */
@@ -56,6 +57,7 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 		private readonly OpenRegisterServiceLocator $locator,
 		private readonly SanitizationRecordRepository $records,
 		private readonly LoggerInterface $logger,
+		private readonly ?SealLookup $seals=null,
 	) {
 
 	}//end __construct()
@@ -67,40 +69,35 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 	 * @param string $userId  Who asks.
 	 * @param string $trigger manual, anonymisation or publication.
 	 *
-	 * @return array<string, mixed> sanitized, sanitizedFileId, sanitizedFileName, report, recordId; or sanitizationSkipped with a reason.
+	 * @return array<string, mixed> sanitized, sanitizedFileId, sanitizedFileName, report, recordId, sourceSealed; or sanitizationSkipped with a reason.
 	 *
 	 * @throws InvalidArgumentException 404 unreachable, 415 unsupported, 422 encrypted, 500 engine failure.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-5
 	 */
 	public function sanitize(int $fileId, string $userId, string $trigger='manual'): array {
 		$file = $this->resolve(fileId: $fileId, userId: $userId);
 		$mime = $file->getMimeType();
-		if ($mime === 'application/pdf') {
+		[$engine, $engineName] = $this->selectEngine(mime: $mime);
+		if ($engine === null) {
 			return $this->skipped(fileId: $fileId, reason: 'pdf_sanitizer_unavailable');
 		}
 
-		$engine = $this->officeEngine();
-		if ($engine === null || $engine->isSanitizable($mime) === false) {
-			throw new InvalidArgumentException(message: 'unsupported_format', code: 415);
-		}
-
 		$result = $this->runEngine(engine: $engine, fileId: $fileId);
-		try {
-			$derivative = $this->writeDerivative(source: $file, tempPath: $result->path);
-		} finally {
-			if (is_file($result->path) === true) {
-				unlink($result->path);
-			}
-		}
+		$derivative = $this->writeAndDiscard(source: $file, tempPath: $result->path);
 
 		$report = $result->report->jsonSerialize();
+		if ($engineName === 'PdfDocumentSanitizer') {
+			$report = self::pdfReport(report: $report);
+		}
+
 		$record = $this->records->save(
 			record: [
 				'fileId'          => $fileId,
 				'sanitizedFileId' => $derivative->getId(),
 				'trigger'         => $trigger,
-				'engine'          => 'OfficeDocumentSanitizer',
+				'engine'          => $engineName,
 				'report'          => $report,
 				'sanitizedAt'     => gmdate(format: 'Y-m-d\TH:i:s\Z'),
 				'sanitizedBy'     => $userId,
@@ -115,9 +112,57 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 			'sanitizedFileName' => $derivative->getName(),
 			'report'            => $report,
 			'recordId'          => (string) ($record['uuid'] ?? ''),
+			// The clean copy never carries the source's seal: the caller warns
+			// that it must be sealed again (REQ-DDSAN-005). A warning, not a refusal.
+			'sourceSealed'      => $this->seals?->hasActiveSeal(fileId: $fileId) === true,
 		];
 
 	}//end sanitize()
+
+	/**
+	 * The engine for a mime type and its name.
+	 *
+	 * A PDF engine that is not installed comes back null, so the caller skips;
+	 * any other format the office engine cannot sanitize is refused.
+	 *
+	 * @param string $mime The file's mime type.
+	 *
+	 * @return array{0: mixed, 1: string} The engine (null: PDF engine unavailable) and its name.
+	 *
+	 * @throws InvalidArgumentException 415 when the format is not supported.
+	 */
+	private function selectEngine(string $mime): array {
+		if ($mime === 'application/pdf') {
+			return [$this->engine(className: self::PDF_ENGINE), 'PdfDocumentSanitizer'];
+		}
+
+		$engine = $this->engine(className: self::OFFICE_ENGINE);
+		if ($engine === null || $engine->isSanitizable($mime) === false) {
+			throw new InvalidArgumentException(message: 'unsupported_format', code: 415);
+		}
+
+		return [$engine, 'OfficeDocumentSanitizer'];
+
+	}//end selectEngine()
+
+	/**
+	 * Write the derivative beside the source, then remove the engine's temp file.
+	 *
+	 * @param File   $source   The source file.
+	 * @param string $tempPath The engine's output.
+	 *
+	 * @return File The derivative.
+	 */
+	private function writeAndDiscard(File $source, string $tempPath): File {
+		try {
+			return $this->writeDerivative(source: $source, tempPath: $tempPath);
+		} finally {
+			if (is_file($tempPath) === true) {
+				unlink($tempPath);
+			}
+		}
+
+	}//end writeAndDiscard()
 
 	/**
 	 * The file, through the user's folder: not found and not allowed read the same.
@@ -147,18 +192,53 @@ class DocumentSanitizationService implements DocumentSanitizationServiceInterfac
 	}//end resolve()
 
 	/**
-	 * OpenRegister's office sanitizer, or null when it is not there.
+	 * An OpenRegister sanitizer, or null when this OpenRegister does not have it.
+	 *
+	 * @param string $className OFFICE_ENGINE or PDF_ENGINE.
 	 *
 	 * @return mixed The engine.
 	 */
-	private function officeEngine(): mixed {
+	private function engine(string $className): mixed {
 		try {
-			return $this->locator->get(className: self::OFFICE_ENGINE);
+			return $this->locator->get(className: $className);
 		} catch (Throwable) {
 			return null;
 		}
 
-	}//end officeEngine()
+	}//end engine()
+
+	/**
+	 * OpenRegister's PDF report in the record's report shape: counts per
+	 * category, the full re-save, and the PDF/A-3 archival attachments kept.
+	 *
+	 * @param array<string, mixed> $report The PdfSanitizationReport as data.
+	 *
+	 * @return array<string, mixed> The record report.
+	 *
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/specs/document-sanitization/spec.md#requirement-pdf-sanitization-removes-hidden-payload-through-a-full-re-save-req-ddsan-002
+	 */
+	private static function pdfReport(array $report): array {
+		$preserved = [];
+		foreach ((array) ($report['preservedAttachments'] ?? []) as $attachment) {
+			$preserved[] = [
+				'name' => mb_substr((string) ($attachment['name'] ?? ''), 0, 255),
+				'relationship' => (string) ($attachment['relationship'] ?? ''),
+			];
+		}
+
+		return [
+			'metadataFieldsScrubbed' => (int) ($report['metadataFieldsScrubbed'] ?? 0),
+			'xmpNamespacesStripped' => (int) (($report['xmpScrubbed'] ?? false) === true),
+			'annotationsRemoved' => (int) ($report['annotationsRemoved'] ?? 0),
+			'embeddedFilesRemoved' => (int) ($report['embeddedFilesRemoved'] ?? 0),
+			'scriptsRemoved' => (int) ($report['javascriptRemoved'] ?? 0)
+				+ (int) ($report['openActionsRemoved'] ?? 0)
+				+ (int) ($report['additionalActionsRemoved'] ?? 0),
+			'resaved' => true,
+			'preservedAttachments' => $preserved,
+		];
+
+	}//end pdfReport()
 
 	/**
 	 * Run the engine; map its refusals to statuses.

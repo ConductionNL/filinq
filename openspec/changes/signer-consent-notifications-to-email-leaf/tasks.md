@@ -21,6 +21,17 @@ NO apply in this change — implementation runs through Hydra later.
     Tracked under OR's "email leaf" change; unblocks once the endpoint
     ships and Filinq can swap NativeSigningProvider / ValidSignProvider
     notifications to call it.
+  - Checked again (2026-11-22): OpenRegister `development` now has the email
+    leaf, as `emails#index|create|destroy` on
+    `/api/objects/{register}/{schema}/{id}/emails/{list,send,direct/{emailId}}`
+    (`lib/Notifications/Controller/EmailsController.php`). `create` LINKS an
+    existing Nextcloud Mail message to the object and answers 501 without the
+    Mail app; it does not send. Filinq sends these notifications through
+    Nextcloud's system mailer (`IMailer`, e.g. `ConsentRequestSender`), which
+    leaves no Mail message to link. So this task needs a decision first:
+    send through the Mail app (a mailbox per organisation, so the message can
+    be linked), keep `IMailer` and link nothing, or have OpenRegister accept
+    a sent-message record that is not a Mail message. Not built until then.
 
 ### D-2. Consent notification via the email leaf, drive notificationStatus (M)
 
@@ -43,6 +54,15 @@ NO apply in this change — implementation runs through Hydra later.
   - DEFERRED: cross-repo handoff to `@conduction/nextcloud-vue` shipping
     `CnEmailTab`. Tracked alongside the universal-shared-integration-registry
     change; unblocks once the component ships.
+  - Checked again (2026-11-22): `@conduction/nextcloud-vue` 2.180.0 (the locked
+    version) ships `CnEmailTab` as the built-in `email` integration
+    (`integrations/builtin/email.js`, `requiredApp: mail`, group `comms`).
+    Both detail pages already publish their record into the registry-driven
+    object sidebar (`recordLeafSidebarMixin` on `SigningRequestDetail.vue` and
+    `ConsentDetail.vue`, hosted by `RecordLeafSidebar.vue` with
+    `useRegistry`), so the Emails tab shows there wherever Mail is installed,
+    with no comms tab of filinq's own. What is left is the live check, which
+    needs an instance with Mail, and linked messages to show (D-1.1, D-2.1).
 
 ### D-4. i18n + tests (M)
 

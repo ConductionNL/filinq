@@ -47,6 +47,11 @@ class DocumentDownloadLog {
 	public const ROUTE_UI = 'ui';
 
 	/**
+	 * Taken through Nextcloud's own direct download (the Files app, a direct link).
+	 */
+	public const ROUTE_FILES = 'files';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param DocumentDownloadRecorder $recorder Builds the record.

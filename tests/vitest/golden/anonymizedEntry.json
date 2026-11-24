@@ -84,7 +84,8 @@
 			"entities": [],
 			"entityCount": 0,
 			"replacementCount": 12,
-			"detailUnavailable": true,
+			"burnedRegionCount": null,
+			"imageRedactionPending": false,
 			"anonymizedFileId": null,
 			"anonymizedFileName": null,
 			"anonymizedFilePath": null,
@@ -93,7 +94,8 @@
 			"sourceFilePath": "/DocuDesk/Dos/bron.pdf",
 			"anonymizationLinkId": "L1",
 			"runCount": 2,
-			"dossier": "Dos"
+			"dossier": "Dos",
+			"detailUnavailable": true
 		},
 		"queued": 1,
 		"calls": [
@@ -129,7 +131,8 @@
 			"entities": [],
 			"entityCount": 0,
 			"replacementCount": 12,
-			"detailUnavailable": true,
+			"burnedRegionCount": null,
+			"imageRedactionPending": false,
 			"anonymizedFileId": null,
 			"anonymizedFileName": null,
 			"anonymizedFilePath": null,
@@ -138,7 +141,8 @@
 			"sourceFilePath": "/DocuDesk/Dos/bron.pdf",
 			"anonymizationLinkId": "L1",
 			"runCount": 2,
-			"dossier": "Dos"
+			"dossier": "Dos",
+			"detailUnavailable": true
 		},
 		"queued": 1,
 		"calls": [
@@ -174,7 +178,8 @@
 			"entities": [],
 			"entityCount": 0,
 			"replacementCount": 12,
-			"detailUnavailable": true,
+			"burnedRegionCount": null,
+			"imageRedactionPending": false,
 			"anonymizedFileId": null,
 			"anonymizedFileName": null,
 			"anonymizedFilePath": null,
@@ -183,7 +188,8 @@
 			"sourceFilePath": "/DocuDesk/Dos/bron.pdf",
 			"anonymizationLinkId": "L1",
 			"runCount": 2,
-			"dossier": "Dos"
+			"dossier": "Dos",
+			"detailUnavailable": true
 		},
 		"queued": 0,
 		"calls": [
@@ -219,7 +225,8 @@
 			"entities": [],
 			"entityCount": 0,
 			"replacementCount": 0,
-			"detailUnavailable": true,
+			"burnedRegionCount": null,
+			"imageRedactionPending": false,
 			"anonymizedFileId": null,
 			"anonymizedFileName": null,
 			"anonymizedFilePath": null,
@@ -228,7 +235,8 @@
 			"sourceFilePath": null,
 			"anonymizationLinkId": null,
 			"runCount": null,
-			"dossier": "Dos"
+			"dossier": "Dos",
+			"detailUnavailable": true
 		},
 		"queued": 1,
 		"calls": [
@@ -338,6 +346,8 @@
 			],
 			"entityCount": 7,
 			"replacementCount": 8,
+			"burnedRegionCount": null,
+			"imageRedactionPending": false,
 			"anonymizedFileId": null,
 			"anonymizedFileName": null,
 			"anonymizedFilePath": null,
@@ -491,6 +501,8 @@
 			],
 			"entityCount": 7,
 			"replacementCount": 12,
+			"burnedRegionCount": null,
+			"imageRedactionPending": false,
 			"anonymizedFileId": null,
 			"anonymizedFileName": null,
 			"anonymizedFilePath": null,
@@ -644,6 +656,8 @@
 			],
 			"entityCount": 7,
 			"replacementCount": 8,
+			"burnedRegionCount": null,
+			"imageRedactionPending": false,
 			"anonymizedFileId": null,
 			"anonymizedFileName": null,
 			"anonymizedFilePath": null,
@@ -737,6 +751,8 @@
 			],
 			"entityCount": 1,
 			"replacementCount": 2,
+			"burnedRegionCount": null,
+			"imageRedactionPending": false,
 			"anonymizedFileId": null,
 			"anonymizedFileName": null,
 			"anonymizedFilePath": null,
@@ -797,6 +813,8 @@
 			],
 			"entityCount": 1,
 			"replacementCount": 0,
+			"burnedRegionCount": null,
+			"imageRedactionPending": false,
 			"anonymizedFileId": null,
 			"anonymizedFileName": null,
 			"anonymizedFilePath": null,
@@ -834,9 +852,56 @@
 		]
 	},
 	{
-		"name": "link with empty fields",
+		"name": "link with burned image regions",
 		"entry": {
 			"id": "file-10",
+			"name": "f.pdf",
+			"status": "completed",
+			"viewMode": "anonymized",
+			"error": null,
+			"fileId": 9,
+			"filePath": "/DocuDesk/Dos/f.pdf",
+			"entities": [],
+			"entityCount": 0,
+			"replacementCount": 2,
+			"burnedRegionCount": 3,
+			"imageRedactionPending": true,
+			"anonymizedFileId": null,
+			"anonymizedFileName": null,
+			"anonymizedFilePath": null,
+			"sourceFileId": null,
+			"sourceFileName": null,
+			"sourceFilePath": null,
+			"anonymizationLinkId": "L5",
+			"runCount": null,
+			"dossier": "Dos",
+			"detailUnavailable": true
+		},
+		"queued": 1,
+		"calls": [
+			[
+				"GET",
+				"/index.php/apps/openregister/api/objects/filinq/anonymizationLink",
+				{
+					"params": {
+						"anonymizedFileId": 9
+					}
+				}
+			],
+			[
+				"TEXT",
+				{
+					"path": "/DocuDesk/Dos/f.pdf",
+					"mimeType": "application/pdf",
+					"fileName": "f.pdf"
+				}
+			]
+		]
+	},
+	{
+		"name": "link with empty fields",
+		"entry": {
+			"id": "file-11",
 			"name": "f.pdf",
 			"status": "completed",
 			"viewMode": "anonymized",
@@ -860,6 +925,8 @@
 			],
 			"entityCount": 1,
 			"replacementCount": 1,
+			"burnedRegionCount": null,
+			"imageRedactionPending": false,
 			"anonymizedFileId": null,
 			"anonymizedFileName": null,
 			"anonymizedFilePath": null,
@@ -905,7 +972,7 @@
 	{
 		"name": "linked entry from a bare link",
 		"entry": {
-			"id": "file-11",
+			"id": "file-12",
 			"name": "a.pdf",
 			"status": "completed",
 			"viewMode": "anonymized",
@@ -915,7 +982,8 @@
 			"entities": [],
 			"entityCount": 0,
 			"replacementCount": 0,
-			"detailUnavailable": true,
+			"burnedRegionCount": null,
+			"imageRedactionPending": false,
 			"anonymizedFileId": null,
 			"anonymizedFileName": null,
 			"anonymizedFilePath": null,
@@ -924,7 +992,8 @@
 			"sourceFilePath": null,
 			"anonymizationLinkId": null,
 			"runCount": null,
-			"dossier": null
+			"dossier": null,
+			"detailUnavailable": true
 		},
 		"queued": 1
 	}

@@ -99,6 +99,29 @@ interface ScanBatchServiceInterface {
 	public function receive(File $file, array $profile): array;
 
 	/**
+	 * Take one batch in and cut it: receive it when it is new, then split it into its own folder.
+	 *
+	 * @param File $file The PDF the scanner wrote.
+	 * @param array<string, mixed> $profile The scan profile to cut it with.
+	 *
+	 * @return array<string, mixed> The batch, `split` or `failed`.
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md
+	 */
+	public function take(File $file, array $profile): array;
+
+	/**
+	 * The batch already stored for a file, whatever state it is in.
+	 *
+	 * @param int $fileId The Nextcloud file id of the batch PDF.
+	 *
+	 * @return array<string, mixed>|null The batch, or null when the file is none.
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-accepts-only-what-it-stored-and-each-file-once-req-scw-002
+	 */
+	public function storedFor(int $fileId): ?array;
+
+	/**
 	 * Cut one batch into documents and announce every one of them.
 	 *
 	 * @param array<string, mixed> $batch The batch, as received.

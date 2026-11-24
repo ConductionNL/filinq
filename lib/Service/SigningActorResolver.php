@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Signing\RecipientRole;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\IAppConfig;
 use OCP\IRequest;
@@ -216,6 +217,44 @@ class SigningActorResolver {
 
 		return null;
 	}//end findSignerForUser()
+
+	/**
+	 * What a recipient is asked to do: `accept` for an accept-only recipient, else `sign`.
+	 *
+	 * A record that cannot be read reads as `sign`, the role every record
+	 * without one has (signing-accept-only-recipient D1).
+	 *
+	 * @param string $signerId The signer record ID.
+	 *
+	 * @return string `sign` or `accept`.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
+	 * (sign or accept); an instance would add nothing.
+	 *
+	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+	 */
+	public function recipientRole(string $signerId): string {
+		$signerRegister = $this->config->getValueString('filinq', 'signerRecord_register', '');
+		$signerSchema   = $this->config->getValueString('filinq', 'signerRecord_schema', '');
+
+		try {
+			$signer = $this->toArray(
+				object: $this->settingsService->getObjectService()->find(
+					id: $signerId,
+					options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema),
+					_rbac: false
+				)
+			);
+		} catch (\Throwable $e) {
+			return 'sign';
+		}
+
+		if (RecipientRole::accepts(recipient: $signer) === true) {
+			return RecipientRole::ACCEPT;
+		}
+
+		return 'sign';
+	}//end recipientRole()
 
 	/**
 	 * Is the user a signer of this request, by its signer records?

@@ -464,7 +464,7 @@ export default {
 		 *
 		 * @param {string} id The draft.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.4
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.4
 		 */
 		async resumeDraft(id) {
 			const result = await loadDraft(id)
@@ -485,7 +485,7 @@ export default {
 		 * Save the answers so far and this step, to finish later from Drafts.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.4
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.4
 		 */
 		async saveForLater() {
 			this.savingLater = true
@@ -514,7 +514,7 @@ export default {
 		 * own checks. The run's saved answers make way for the draft.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.4
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.4
 		 */
 		async openForEditing() {
 			this.openingDraft = true
@@ -546,7 +546,7 @@ export default {
 		 * Remove the run's saved answers once the run went on without them.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.4
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.4
 		 */
 		async dropSavedRun() {
 			const id = draftId(this.draft)

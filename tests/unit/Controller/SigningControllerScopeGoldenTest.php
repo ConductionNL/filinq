@@ -98,6 +98,38 @@ class SigningControllerScopeGoldenTest extends TestCase {
 	}//end testAdministratorReadsUnscoped()
 
 	/**
+	 * The request the caller may read carries its recipients, as the
+	 * signing service lists them for that same request (task 4.2).
+	 *
+	 * @return void
+	 */
+	public function testTheRequestCarriesItsRecipients(): void {
+		$request = ['id' => 'r1', 'signerIds' => ['s1']];
+		$recipients = [['id' => 's1', 'name' => 'Bea', 'role' => 'accept', 'status' => 'PENDING', 'order' => 0, 'at' => '']];
+		$this->signing->method('getRequest')->willReturn($request);
+		$this->signing->expects($this->once())->method('recipientsOf')->with(request: $request)->willReturn($recipients);
+
+		$data = $this->controller(['alice', false])->showRequest('r1')->getData();
+
+		$this->assertSame($recipients, $data['recipients']);
+		$this->assertSame('r1', $data['id']);
+
+	}//end testTheRequestCarriesItsRecipients()
+
+	/**
+	 * A request out of scope lists no recipients: the list is never asked for.
+	 *
+	 * @return void
+	 */
+	public function testNoRecipientsAreListedForARequestOutOfScope(): void {
+		$this->signing->method('getRequest')->willReturn(null);
+		$this->signing->expects($this->never())->method('recipientsOf');
+
+		$this->assertSame(404, $this->controller(['alice', false])->showRequest('r2')->getStatus());
+
+	}//end testNoRecipientsAreListedForARequestOutOfScope()
+
+	/**
 	 * Refused: a request out of the caller's scope is a 404, never a 403.
 	 *
 	 * @return void

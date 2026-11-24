@@ -45,6 +45,12 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 					data-testid="intake-reach-warning">
 					{{ reachWarningText }}
 				</NcNoteCard>
+				<NcNoteCard
+					v-if="fillError"
+					type="error"
+					data-testid="intake-fill-error">
+					{{ fillError }}
+				</NcNoteCard>
 				<div class="intake-modes">
 					<NcButton
 						:variant="mode === 'waiting' ? 'primary' : 'secondary'"
@@ -132,6 +138,16 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 						{{ t('filinq', 'Assign') }}
 					</NcActionButton>
 					<NcActionButton
+						v-if="canFill(row)"
+						closeAfterClick
+						data-testid="intake-fill-fields"
+						@click="fill(row, row.assignedTo)">
+						<template #icon>
+							<FormTextbox :size="20" />
+						</template>
+						{{ t('filinq', 'Fill fields from document') }}
+					</NcActionButton>
+					<NcActionButton
 						v-if="row.file"
 						closeAfterClick
 						data-testid="intake-open-notes"
@@ -207,6 +223,14 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 			@confirm="reject"
 			@cancel="closeDialogs" />
 
+		<FieldSuggestionDialog
+			v-if="suggestion"
+			:suggestion="suggestion"
+			:saving="saving"
+			:error="actionError"
+			@confirm="decide"
+			@cancel="closeDialogs" />
+
 		<IntakeNotesDialog
 			v-if="notesTarget"
 			:document="notesTarget"
@@ -245,14 +269,22 @@ import Delete from 'vue-material-design-icons/Delete.vue'
 import DotsHorizontal from 'vue-material-design-icons/DotsHorizontal.vue'
 import FileDocumentOutline from 'vue-material-design-icons/FileDocumentOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
+import FormTextbox from 'vue-material-design-icons/FormTextbox.vue'
 import LockOpenVariant from 'vue-material-design-icons/LockOpenVariant.vue'
 import IntakeRoutingDeclaration from '../../components/intake/IntakeRoutingDeclaration.vue'
+import FieldSuggestionDialog from '../../dialogs/FieldSuggestionDialog.vue'
 import FinalDocumentReasonDialog from '../../dialogs/FinalDocumentReasonDialog.vue'
 import IntakeAssignDialog from '../../dialogs/IntakeAssignDialog.vue'
 import IntakeDeadlineDialog from '../../dialogs/IntakeDeadlineDialog.vue'
 import IntakeNotesDialog from '../../dialogs/IntakeNotesDialog.vue'
 import SeparatorSheetsDialog from '../../dialogs/SeparatorSheetsDialog.vue'
 import PdfPasswordModal from '../../modals/PdfPasswordModal.vue'
+import {
+	decideFields,
+	fetchFieldFillStatus,
+	idOf,
+	suggestFields,
+} from '../../services/fieldFill.js'
 import {
 	acknowledgementColorMap,
 	acknowledgementDetail,
@@ -291,9 +323,11 @@ export default {
 		ContentDuplicate,
 		Delete,
 		DotsHorizontal,
+		FieldSuggestionDialog,
 		FileDocumentOutline,
 		FinalDocumentReasonDialog,
 		FolderOutline,
+		FormTextbox,
 		IntakeAssignDialog,
 		IntakeNotesDialog,
 		IntakeDeadlineDialog,
@@ -322,6 +356,9 @@ export default {
 			loadError: '',
 			notificationReach: null,
 			separatorsOpen: false,
+			fieldFillAvailable: false,
+			suggestion: null,
+			fillError: '',
 			readingColorMap: readingColorMap(),
 			acknowledgementColorMap: acknowledgementColorMap(),
 			channelColorMap: {
@@ -435,8 +472,15 @@ export default {
 		},
 	},
 
+	/**
+	 * Load the intake list and the field fill status.
+	 *
+	 * @return {void}
+	 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+	 */
 	mounted() {
 		this.load()
+		this.loadFieldFill()
 	},
 
 	methods: {
@@ -620,11 +664,114 @@ export default {
 			this.deadlineTarget = row
 		},
 
+		/**
+		 * Close every open dialog, the field suggestion dialog included.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
 		closeDialogs() {
 			this.assignTarget = null
 			this.rejectTarget = null
 			this.deadlineTarget = null
+			this.suggestion = null
 			this.actionError = ''
+		},
+
+		/**
+		 * Whether model filling is on and a text model is there; the action
+		 * is not shown otherwise (REQ-EMF-004).
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
+		async loadFieldFill() {
+			try {
+				this.fieldFillAvailable = (await fetchFieldFillStatus())?.available === true
+			} catch {
+				this.fieldFillAvailable = false
+			}
+		},
+
+		/**
+		 * Whether a row's document can fill the record it is on.
+		 *
+		 * @param {object} row The intake document.
+		 * @return {boolean}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
+		canFill(row) {
+			return this.fieldFillAvailable && this.mode === 'waiting' && Boolean(row?.file) && onRecord(row?.assignedTo)
+		},
+
+		/**
+		 * Offer the fields of a document that was just assigned to a record
+		 * (REQ-EMF-003); quiet when the schema has no profile.
+		 *
+		 * @param {object} document The intake document.
+		 * @param {{register: string, schema: string, id: string}} target The record.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
+		async offerFields(document, target) {
+			if (this.fieldFillAvailable && document?.file) {
+				await this.fill(document, target, true)
+			}
+		},
+
+		/**
+		 * Ask the model for the record's declared fields from a document.
+		 *
+		 * @param {object} row The intake document.
+		 * @param {{register: string, schema: string, id: string}} target The record it is on.
+		 * @param {boolean} [offered] Offered after an assign: a schema without a
+		 *     profile, or no model, then says nothing.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
+		async fill(row, target, offered = false) {
+			this.fillError = ''
+			this.actionError = ''
+			try {
+				this.suggestion = await suggestFields({
+					fileId: row.file,
+					register: target.register,
+					schema: target.schema,
+					objectId: target.id,
+				})
+			} catch (error) {
+				this.suggestion = null
+				if (offered && [409, 503].includes(error?.response?.status)) {
+					return
+				}
+				this.fillError = error?.response?.data?.error
+					|| t('filinq', 'The fields could not be filled from the document.')
+			}
+		},
+
+		/**
+		 * Write the clerk's decisions to the record.
+		 *
+		 * @param {object} decisions Per field `{decision, value?}`.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/extraction-model-filled-fields/specs/schema-field-suggestions/spec.md
+		 */
+		async decide(decisions) {
+			const id = idOf(this.suggestion)
+			if (!id) {
+				return
+			}
+			this.saving = true
+			this.actionError = ''
+			try {
+				await decideFields(id, decisions)
+				this.closeDialogs()
+			} catch (error) {
+				this.actionError = error?.response?.data?.error
+					|| t('filinq', 'The decisions could not be saved.')
+			} finally {
+				this.saving = false
+			}
 		},
 
 		/**
@@ -681,9 +828,11 @@ export default {
 			this.saving = true
 			this.actionError = ''
 			try {
+				const document = this.assignTarget
 				await assignIntakeDocument(uuid, target)
 				this.closeDialogs()
 				await this.load()
+				await this.offerFields(document, target)
 			} catch (error) {
 				this.actionError =
 					error?.response?.data?.error
@@ -720,6 +869,15 @@ export default {
 			}
 		},
 	},
+}
+/**
+ * Whether a target names a whole record.
+ *
+ * @param {object} target `{register, schema, id}`.
+ * @return {boolean}
+ */
+function onRecord(target) {
+	return Boolean(target?.register && target?.schema && target?.id)
 }
 </script>
 

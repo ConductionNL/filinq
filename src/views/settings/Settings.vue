@@ -172,12 +172,39 @@
 
 			<div class="setting-item">
 				<NcTextField
+					:modelValue="String(settings['filinq.review.certain_from'])"
+					type="number"
+					min="0"
+					max="1"
+					step="0.05"
+					:label="t('filinq', 'Certain from (review workbench)')"
+					:helperText="
+						t(
+							'filinq',
+							'A detected finding below this confidence is shown as uncertain and needs an explicit decision before the document can be marked as reviewed. It cannot be lower than the detection floor set in OpenRegister.',
+						)
+					"
+					data-testid="certain-from"
+					@update:modelValue="
+						settings['filinq.review.certain_from'] = $event
+					" />
+			</div>
+
+			<div class="setting-item">
+				<NcTextField
 					:modelValue="settings['woo.default_publisher']"
 					:label="t('filinq', 'Publisher (TOOI identifier)')"
 					:helperText="t('filinq', 'A new publication starts with this publisher.')"
 					data-testid="settings-woo-default-publisher"
 					@update:modelValue="settings['woo.default_publisher'] = $event" />
 			</div>
+		</NcSettingsSection>
+
+		<NcSettingsSection
+			v-if="isAdmin"
+			:name="t('filinq', 'Archiefbeheer')"
+			:description="t('filinq', 'Where OpenRegister looks up selectielijst categories and keeps its destruction lists.')">
+			<ArchivalWiringSettings :registers="availableRegisters" />
 		</NcSettingsSection>
 
 		<NcSettingsSection
@@ -287,6 +314,17 @@
 				"
 				data-testid="settings-inbound-classification" />
 
+			<!-- BRP lookup of a BSN on an arriving document (intake-base-registry-enrichment D3): off by default. -->
+			<SettingSwitchRow
+				v-model="settings['intake.brp_lookup_enabled']"
+				:label="t('filinq', 'Look up BSNs in the BRP')"
+				:description="
+					t(
+						'filinq',
+						'Ask the BRP for the name and address behind a BSN on an arriving document. Only for intake rules that state a purpose, and only as a suggestion somebody accepts.',
+					)
+				"
+				data-testid="settings-brp-lookup" />
 			<div class="setting-item">
 				<NcTextField
 					:modelValue="String(settings.extraction_unattended_threshold)"
@@ -780,13 +818,18 @@
 		<SignerIdentitySettings v-if="isAdmin" />
 		<SigningSourcesSettings v-if="isAdmin" />
 		<CaseSystemDeliverySettings v-if="isAdmin" />
+		<!-- Finality rules (finish-half-built-capabilities 3.2): the caller of POST /api/document-finality-rules -->
+		<DocumentFinalityRuleSettings v-if="isAdmin" />
 		<BridgeSourcesSettings v-if="isAdmin" />
 
+		<!-- Waarmerk organisation certificate (document-waarmerk-certification): its own admin endpoint -->
+		<WaarmerkSettings v-if="isAdmin" />
 		<DocumentWebhooksSection v-if="isAdmin" />
 
 		<IntegrityScanSection v-if="isAdmin" />
 
 		<EmailIngestionSettings v-if="isAdmin" />
+		<ModelFillingSettings v-if="isAdmin" />
 
 		<MailArchiveImportSettings v-if="isAdmin" />
 
@@ -960,19 +1003,23 @@ import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import Restart from 'vue-material-design-icons/Restart.vue'
 import AnonymiserBackendWarning from '../../components/AnonymiserBackendWarning.vue'
+import ArchivalWiringSettings from './ArchivalWiringSettings.vue'
 import BridgeSourcesSettings from './BridgeSourcesSettings.vue'
 import CaseSystemDeliverySettings from './CaseSystemDeliverySettings.vue'
 import DetectionProviderSettings from './DetectionProviderSettings.vue'
+import DocumentFinalityRuleSettings from './DocumentFinalityRuleSettings.vue'
 import DocumentWebhooksSection from './DocumentWebhooksSection.vue'
 import EmailIngestionSettings from './EmailIngestionSettings.vue'
 import EntityTypeSelector from './EntityTypeSelector.vue'
 import IntegrityScanSection from './IntegrityScanSection.vue'
 import MailArchiveImportSettings from './MailArchiveImportSettings.vue'
+import ModelFillingSettings from './ModelFillingSettings.vue'
 import PageLayoutSettings from './PageLayoutSettings.vue'
 import RefusalGroundsSource from './RefusalGroundsSource.vue'
 import SettingSwitchRow from './SettingSwitchRow.vue'
 import SignerIdentitySettings from './SignerIdentitySettings.vue'
 import SigningSourcesSettings from './SigningSourcesSettings.vue'
+import WaarmerkSettings from './WaarmerkSettings.vue'
 import {
 	backendStateFromSettings,
 	emptyBackendState,
@@ -1087,6 +1134,7 @@ export default {
 		DocumentWebhooksSection,
 		IntegrityScanSection,
 		RefusalGroundsSource,
+		ArchivalWiringSettings,
 		NcSettingsSection,
 		NcNoteCard,
 		NcSelect,
@@ -1104,6 +1152,7 @@ export default {
 		EntityTypeSelector,
 		DetectionProviderSettings,
 		EmailIngestionSettings,
+		ModelFillingSettings,
 		MailArchiveImportSettings,
 		PageLayoutSettings,
 		SettingSwitchRow,
@@ -1111,6 +1160,8 @@ export default {
 		SigningSourcesSettings,
 		BridgeSourcesSettings,
 		CaseSystemDeliverySettings,
+		DocumentFinalityRuleSettings,
+		WaarmerkSettings,
 	},
 
 	data() {
@@ -1192,7 +1243,7 @@ export default {
 		 * The four-eyes choices (REQ-SET-12), the default first.
 		 *
 		 * @return {Array<{value: string, label: string}>} The radio options.
-		 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-4
+		 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-4
 		 */
 		fourEyesOptions() {
 			return [
@@ -1355,6 +1406,7 @@ export default {
 						data.enable_inbound_classification ?? true
 					this.settings.ocr_enabled = data.ocr_enabled ?? true
 					this.settings.ocr_on_arrival = data.ocr_on_arrival ?? true
+					this.settings['intake.brp_lookup_enabled'] = data['intake.brp_lookup_enabled'] === true
 					this.settings.ocr_dpi = data.ocr_dpi ?? 300
 					// Signing settings
 					this.settings.signing_enabled =
@@ -1377,6 +1429,8 @@ export default {
 						?? 'pdf-only'
 					this.settings['anonymisation.output_subfolder_name'] =
 						data['anonymisation.output_subfolder_name'] || 'anonymised'
+					this.settings['filinq.review.certain_from'] =
+						data['filinq.review.certain_from'] ?? 0.85
 					this.settings.redaction_four_eyes = ['woo', 'always', 'off'].includes(
 						data.redaction_four_eyes,
 					)
@@ -1584,6 +1638,7 @@ export default {
 
 				ocr_enabled: this.settings.ocr_enabled ? '1' : '0',
 				ocr_on_arrival: this.settings.ocr_on_arrival ? '1' : '0',
+				'intake.brp_lookup_enabled': this.settings['intake.brp_lookup_enabled'] ? '1' : '0',
 				ocr_languages: ocrLangs,
 				ocr_dpi: String(this.settings.ocr_dpi),
 				signing_enabled: this.settings.signing_enabled ? '1' : '0',
@@ -1615,6 +1670,8 @@ export default {
 				'anonymisation.output_subfolder_name':
 					this.settings['anonymisation.output_subfolder_name'],
 
+				// Refused by the backend below OpenRegister's detection floor.
+				'filinq.review.certain_from': Number(this.settings['filinq.review.certain_from']),
 				redaction_four_eyes: this.settings.redaction_four_eyes || 'woo',
 
 				'woo.default_publisher': (this.settings['woo.default_publisher'] || '').trim(),

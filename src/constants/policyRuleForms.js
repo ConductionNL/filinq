@@ -18,6 +18,7 @@ export const POLICY_RULE_BLANK_FORMS = {
 		validUntil: '',
 		active: true,
 		matchRules: [],
+		bases: [],
 	}),
 	standingConsent: () => ({
 		entityText: '',
@@ -33,5 +34,6 @@ export const POLICY_RULE_BLANK_FORMS = {
 		consentStatus: 'consent_given',
 		publicationDecision: 'publish_with_consent',
 		notificationStatus: 'skipped',
+		bases: [],
 	}),
 }
