@@ -650,7 +650,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 			return '';
 		}
 
-		return $realPath;
+		return (string)$realPath;
 	}//end resolveInsideDir()
 
 	/**

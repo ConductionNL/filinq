@@ -188,7 +188,7 @@ class ReceivedStampService {
 		$boxWidth  = 150.0;
 		$lineHigh  = 14.0;
 		$margin    = 24.0;
-		$boxHeight = (count($lines) * $lineHigh) + 8.0;
+		$boxHeight = ((float)count($lines) * $lineHigh) + 8.0;
 		$left      = ($width - $margin - $boxWidth);
 
 		$document->SetDrawColor(180, 0, 0);
@@ -202,7 +202,7 @@ class ReceivedStampService {
 			}
 
 			$document->SetFont('Helvetica', $style, 10);
-			$document->SetXY($left, ($margin + 4.0 + ($index * $lineHigh)));
+			$document->SetXY($left, ($margin + 4.0 + ((float)$index * $lineHigh)));
 			$document->Cell($boxWidth, $lineHigh, $this->latin1(text: $line), 0, 0, 'C');
 		}
 	}//end drawStamp()

@@ -66,7 +66,7 @@ final class BatchProgress {
 
 		$percent = 0.0;
 		if ($total > 0) {
-			$percent = round((($done / $total) * 100), 1);
+			$percent = round((((float)$done / (float)$total) * 100.0), 1);
 		}
 
 		return [

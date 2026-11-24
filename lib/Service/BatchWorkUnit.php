@@ -161,7 +161,7 @@ class BatchWorkUnit {
 
 		$timedOut = $this->outOfTime(started: $started, seconds: $budget['seconds'])
 			&& $this->queuedIndexes(batch: $batch, phase: $phase) !== [];
-		$batch['throttled'] = ($timedOut === true && $processed < ($budget['files'] * self::THROTTLE_SHARE));
+		$batch['throttled'] = ($timedOut === true && (float)$processed < ((float)$budget['files'] * self::THROTTLE_SHARE));
 		$batch = $this->closePhaseWhenDone(batch: $batch, phase: $phase);
 		$this->stateService->updateBatch($batchId, $batch);
 		return [
@@ -366,7 +366,7 @@ class BatchWorkUnit {
 	 * @return int
 	 */
 	private function elapsedMs(int|float $start): int {
-		return (int)round((hrtime(true) - $start) / 1000000);
+		return (int)round(((float)hrtime(true) - (float)$start) / 1000000.0);
 
 	}//end elapsedMs()
 }//end class

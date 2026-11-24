@@ -171,7 +171,7 @@ class DocumentTextSource {
 
 		return [
 			'text' => $result['text'],
-			'ocrConfidence' => ($result['confidence'] / 100),
+			'ocrConfidence' => ((float)$result['confidence'] / 100.0),
 		];
 	}//end ocrStagedFile()
 

@@ -444,7 +444,7 @@ class SettingsService implements SettingsServiceInterface {
 	 */
 	private function convertValueToString(mixed $value): string {
 		if (is_array($value) === true || is_object($value) === true) {
-			return json_encode($value);
+			return (string)json_encode($value);
 		}
 
 		return (string)$value;

@@ -26,6 +26,7 @@ namespace OCA\Filinq\Service\OfficeTemplate;
 
 use OCA\Filinq\Exception\OfficeSourceRefusedException;
 use PhpOffice\PhpWord\TemplateProcessor;
+use RuntimeException;
 use Throwable;
 use ZipArchive;
 
@@ -122,6 +123,10 @@ class MergeTagReader {
 	 */
 	private function tempFile(string $bytes): string {
 		$path = tempnam(sys_get_temp_dir(), 'filinq-docx-');
+		if ($path === false) {
+			throw new RuntimeException('Could not create a temporary file for the template.');
+		}
+
 		file_put_contents($path, $bytes);
 
 		return $path;

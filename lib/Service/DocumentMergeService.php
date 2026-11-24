@@ -368,7 +368,7 @@ class DocumentMergeService implements DocumentMergeServiceInterface {
 			}
 
 			$run->pages += $added;
-			$run->job['progress'] = (int)round(((($index + 1) / count($resolved)) * 100));
+			$run->job['progress'] = (int)round((((float)($index + 1) / (float)count($resolved)) * 100.0));
 			$this->jobs->save(job: $run->job, uuid: $run->uuid());
 		}
 

@@ -98,7 +98,7 @@ class VeraPdfProcess {
 			$read = [$pipes[1], $pipes[2]];
 			$write = null;
 			$except = null;
-			if ((int) stream_select($read, $write, $except, 0, (int) min(200000, ($remaining * 1000000))) > 0) {
+			if ((int) stream_select($read, $write, $except, 0, (int) min(200000, ((float)$remaining * 1000000.0))) > 0) {
 				$out['stdout'] .= $this->chunk(stream: $pipes[1], ready: $read, kept: strlen($out['stdout']));
 				$out['stderr'] .= $this->chunk(stream: $pipes[2], ready: $read, kept: strlen($out['stderr']));
 			}
