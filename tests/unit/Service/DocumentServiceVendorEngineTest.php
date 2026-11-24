@@ -185,6 +185,8 @@ class DocumentServiceVendorEngineTest extends TestCase {
 				$this->assertSame(expected: 'tpl-1', actual: $run['templateId']);
 				$this->assertSame(expected: 'pdf', actual: $run['format']);
 				$this->assertSame(expected: ['besluit' => 'toegewezen'], actual: $data);
+				$this->assertSame(expected: 'DocuDesk/default', actual: $run['recordFields']['outputFolder']);
+				$this->assertSame(expected: 'document.pdf', actual: $run['recordFields']['outputName']);
 				return ['status' => 'pending', 'vendorJobId' => 'job-1', 'warnings' => ['vendor note']];
 			}
 		);
@@ -219,4 +221,35 @@ class DocumentServiceVendorEngineTest extends TestCase {
 		$service->generateDocument(templateId: 'tpl-1', dataRefs: [], options: ['format' => 'pdf', 'engine' => 'vendor:smartdocuments']);
 
 	}//end testWithoutTheVendorRenderAVendorEngineIsRefused()
+
+	/**
+	 * A vendor render records the folder and name the request asked for, as a filinq render would use them.
+	 *
+	 * @return void
+	 */
+	public function testAVendorRenderRecordsWhereItsDocumentGoes(): void {
+		$vendor = $this->vendorMock();
+		$vendor->expects($this->once())->method('render')->willReturnCallback(
+			function (string $slug, array $run, array $data): array {
+				$this->assertSame(expected: 'Zaken/Besluiten', actual: $run['recordFields']['outputFolder']);
+				$this->assertSame(expected: 'besluit-42.docx', actual: $run['recordFields']['outputName']);
+				$this->assertSame(expected: 'dossier/d-1', actual: $run['recordFields']['sourceObject']);
+				return ['status' => 'pending', 'vendorJobId' => 'job-1', 'warnings' => []];
+			}
+		);
+
+		$this->service(vendor: $vendor)->generateDocument(
+			templateId: 'tpl-1',
+			dataRefs: [],
+			options: [
+				'format' => 'docx',
+				'userId' => 'alice',
+				'engine' => 'vendor:smartdocuments',
+				'filename' => 'besluit-42',
+				'output' => ['targetPath' => 'Zaken/Besluiten/'],
+			],
+			recordFields: ['sourceObject' => 'dossier/d-1']
+		);
+
+	}//end testAVendorRenderRecordsWhereItsDocumentGoes()
 }//end class

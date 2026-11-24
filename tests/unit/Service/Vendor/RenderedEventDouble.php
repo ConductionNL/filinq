@@ -41,6 +41,7 @@ class RenderedEventDouble extends Event {
 	 * @param string $requestedBy   The user the render was made for.
 	 * @param string $fileReference The vendor's reference to the document.
 	 * @param string $error         Why there is no document.
+	 * @param string $document      The rendered document, as integriq hands it over.
 	 */
 	public function __construct(
 		private readonly string $jobId,
@@ -48,6 +49,7 @@ class RenderedEventDouble extends Event {
 		private readonly string $requestedBy = '',
 		private readonly string $fileReference = '',
 		private readonly string $error = '',
+		private readonly string $document = '',
 	) {
 		parent::__construct();
 	}//end __construct()
@@ -96,4 +98,13 @@ class RenderedEventDouble extends Event {
 	public function getError(): string {
 		return $this->error;
 	}//end getError()
+
+	/**
+	 * The rendered document.
+	 *
+	 * @return string
+	 */
+	public function getDocument(): string {
+		return $this->document;
+	}//end getDocument()
 }//end class

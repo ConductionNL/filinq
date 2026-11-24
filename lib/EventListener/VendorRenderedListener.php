@@ -66,6 +66,7 @@ class VendorRenderedListener implements IEventListener {
 	 * @return void
 	 *
 	 * @spec openspec/changes/template-engine-renders-through-a-vendor/tasks.md#2-backend
+	 * @spec openspec/changes/template-engine-renders-through-a-vendor/specs/document-creatie-sjablonen/spec.md#requirement-the-vendors-file-is-stored-like-a-filinq-render-req-tev-003
 	 */
 	public function handle(Event $event): void {
 		if (method_exists($event, 'getJobId') === false || method_exists($event, 'getStatus') === false) {
@@ -77,10 +78,18 @@ class VendorRenderedListener implements IEventListener {
 			$error = (string) $event->getError();
 		}
 
+		// integriq hands the rendered document over on the event since
+		// ConductionNL/integriq#3857; an older integriq has no reader.
+		$document = '';
+		if (method_exists($event, 'getDocument') === true) {
+			$document = (string) $event->getDocument();
+		}
+
 		$this->outcome->settle(
 			jobId: (string) $event->getJobId(),
 			status: (string) $event->getStatus(),
-			error: $error
+			error: $error,
+			document: $document
 		);
 
 	}//end handle()

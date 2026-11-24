@@ -70,6 +70,7 @@ class VendorRenderService {
 	 * @param GeneratedDocumentLogger $log          Records the pending generatedDocument.
 	 * @param RenderEngine            $engine       Reads and names the engine.
 	 * @param string                  $requestEvent The render command's class; a test names a double.
+	 * @param VendorRenderOutcome|null $outcome     Settles an outcome integriq announced before the entry was written.
 	 */
 	public function __construct(
 		private readonly VendorRenderSources $sources,
@@ -77,6 +78,7 @@ class VendorRenderService {
 		private readonly GeneratedDocumentLogger $log,
 		private readonly RenderEngine $engine = new RenderEngine(),
 		private readonly string $requestEvent = self::REQUEST_EVENT,
+		private readonly ?VendorRenderOutcome $outcome = null,
 	) {
 
 	}//end __construct()
@@ -111,6 +113,7 @@ class VendorRenderService {
 	 * @throws Exception When the render cannot be taken; nothing is rendered by filinq's engine.
 	 *
 	 * @spec openspec/changes/template-engine-renders-through-a-vendor/specs/document-creatie-sjablonen/spec.md#requirement-a-vendor-render-goes-to-integriq-and-never-falls-back-req-tev-002
+	 * @spec openspec/changes/template-engine-renders-through-a-vendor/specs/document-creatie-sjablonen/spec.md#requirement-the-vendors-file-is-stored-like-a-filinq-render-req-tev-003
 	 */
 	public function render(string $slug, array $run, array $data): array {
 		$source           = $this->source(slug: $slug);
@@ -154,8 +157,22 @@ class VendorRenderService {
 			]
 		);
 
+		// A vendor that settled inside the request announced its outcome
+		// before the entry above existed; settle it now.
+		$settled = $this->outcome?->settleEarly(jobId: $jobId);
+		if ($settled !== null) {
+			$entry = $settled;
+		}
+
+		if (($entry['status'] ?? null) === VendorRenderOutcome::STATUS_FAILED) {
+			throw new Exception(
+				message: 'Source "' . $slug . '" could not render the document: ' . (string) ($entry['errorMessage'] ?? ''),
+				code: 502
+			);
+		}
+
 		return [
-			'status' => self::STATUS_PENDING,
+			'status' => (string) ($entry['status'] ?? self::STATUS_PENDING),
 			'engine' => $this->engine->forVendor(slug: $slug),
 			'vendorJobId' => $jobId,
 			'content' => '',
@@ -164,7 +181,13 @@ class VendorRenderService {
 			'metadata' => $entry,
 			'templateVersion' => ($run['template']['version'] ?? null),
 			'warnings' => [],
-			'output' => ['mode' => 'files', 'fileId' => null, 'path' => null, 'name' => null, 'size' => null],
+			'output' => [
+				'mode' => 'files',
+				'fileId' => ($entry['fileId'] ?? null),
+				'path' => ($entry['filePath'] ?? null),
+				'name' => null,
+				'size' => null,
+			],
 		];
 
 	}//end render()
