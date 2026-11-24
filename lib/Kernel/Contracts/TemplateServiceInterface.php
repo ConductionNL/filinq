@@ -227,7 +227,7 @@ interface TemplateServiceInterface {
 	 *
 	 * @return array The published template
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
 	 */
 	public function publishTemplate(string $id): array;
 
@@ -238,7 +238,7 @@ interface TemplateServiceInterface {
 	 *
 	 * @return array The template users generate from
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
 	 */
 	public function getPublishedTemplate(string $id): array;
 }//end interface

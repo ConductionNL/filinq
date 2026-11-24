@@ -14,7 +14,7 @@ import { generateUrl } from '@nextcloud/router'
  *
  * @param {{register?: string, schema?: string, id?: string}} form The form fields.
  * @return {{register: string, schema: string, id: string}|null} The record, trimmed.
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
  */
 export function linkTarget(form) {
 	const target = {
@@ -34,7 +34,7 @@ export function linkTarget(form) {
  * @param {string} uuid The document record.
  * @param {{register: string, schema: string, id: string}} target The record.
  * @return {string} The URL with the record as query parameters.
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
  */
 export function domainLinkUrl(uuid, target) {
 	const query = new URLSearchParams({ register: target.register, schema: target.schema, id: target.id })
@@ -49,7 +49,7 @@ export function domainLinkUrl(uuid, target) {
  * @param {{register: string, schema: string, id: string}} target The record.
  * @param {string} requestToken The page's request token.
  * @return {Promise<{ok: boolean, status: number, error: string}>} What the server answered.
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
  */
 export async function changeDomainLink(method, uuid, target, requestToken) {
 	return send(domainLinkUrl(uuid, target), method, requestToken)
@@ -65,7 +65,7 @@ export async function changeDomainLink(method, uuid, target, requestToken) {
  * @param {{register: string, schema: string, id: string}} target The record to copy it to.
  * @param {string} requestToken The page's request token.
  * @return {Promise<{ok: boolean, status: number, error: string}>} What the server answered.
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
  */
 export async function copyToRecord(fileId, source, target, requestToken) {
 	const query = new URLSearchParams({

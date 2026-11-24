@@ -117,7 +117,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return JSONResponse {results: [{record, published, blockers}], categories: string[]}
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
 	 */
 	#[NoAdminRequired]
 	public function active(): JSONResponse {
@@ -154,7 +154,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return Response The file, 404 when not visible or not published, 409 with the agreement to accept
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-3.3
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
@@ -196,7 +196,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return string The published copy's file reference, or ''
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-3.3
 	 */
 	private function publishedCopy(?array $record): string {
 		if ($record === null || in_array($record['status'] ?? '', ['handed_off', 'published'], true) === false) {
@@ -216,7 +216,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return JSONResponse|null 409 with the agreement to accept, or null when every agreement is accepted
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-3.3
 	 */
 	private function unacceptedAgreement(DownloadAgreementGateInterface $agreements, array $documents, string $uid): ?JSONResponse {
 		foreach (array_unique($documents) as $document) {

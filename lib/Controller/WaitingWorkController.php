@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use OCP\IUserSession;
 /**
  * Serves `GET api/documents/waiting` (REQ-SCR-006).
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
  */
 class WaitingWorkController extends Controller {
 	use ReadsCurrentUserId;
@@ -71,7 +71,7 @@ class WaitingWorkController extends Controller {
 	 *
 	 * @return JSONResponse `{results, total}`, or 401 without a session.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {

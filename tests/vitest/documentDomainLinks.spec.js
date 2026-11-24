@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { changeDomainLink, copyToRecord, domainLinkUrl, linkTarget } from '../../src/integrations/documentDomainLinks.js'
