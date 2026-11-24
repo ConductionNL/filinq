@@ -21,19 +21,17 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\FormDocumentController;
-use OCA\Filinq\Exception\FormDocumentRefused;
-use OCA\Filinq\Kernel\Contracts\FormDocumentServiceInterface;
+use OCA\Filinq\Controller\FormDocumentRefused;
+use OCA\Filinq\Controller\FormDocumentFiling;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUser;
-use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
- * The form routes answer the service's result, its refusal, a 401 or a 500.
+ * The form routes answer the service's result, its refusal or a 500.
  *
  * @covers \OCA\Filinq\Controller\FormDocumentController
  */
@@ -42,35 +40,31 @@ class FormDocumentControllerTest extends TestCase {
 	/**
 	 * The service double.
 	 *
-	 * @var FormDocumentServiceInterface&MockObject
+	 * @var FormDocumentFiling&MockObject
 	 */
-	private FormDocumentServiceInterface&MockObject $forms;
+	private FormDocumentFiling&MockObject $forms;
 
 	/**
 	 * Build a controller over a request with these parameters.
 	 *
-	 * @param array<string, mixed> $params   The request parameters.
-	 * @param bool                 $loggedIn Whether there is a session user.
+	 * @param array<string, mixed> $params The request parameters.
 	 *
 	 * @return FormDocumentController The controller.
 	 */
-	private function controller(array $params, bool $loggedIn=true): FormDocumentController {
-		$request = $this->createMock(IRequest::class);
+	private function controller(array $params): FormDocumentController {
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParam')->willReturnCallback(
 			static fn (string $key, mixed $default=null): mixed => ($params[$key] ?? $default)
 		);
-		$session = $this->createMock(IUserSession::class);
-		$session->method('getUser')->willReturn($loggedIn === true ? $this->createMock(IUser::class) : null);
-		$l10n = $this->createMock(IL10N::class);
-		$l10n->method('t')->willReturnArgument(0);
-		$this->forms = $this->createMock(FormDocumentServiceInterface::class);
+		$l10n = $this->createMock(originalClassName: IL10N::class);
+		$l10n->method('t')->willReturnArgument(argumentIndex: 0);
+		$this->forms = $this->createMock(originalClassName: FormDocumentFiling::class);
 
 		return new FormDocumentController(
 			request: $request,
 			forms: $this->forms,
-			userSession: $session,
 			l10n: $l10n,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
 		);
 
 	}//end controller()
@@ -142,18 +136,4 @@ class FormDocumentControllerTest extends TestCase {
 
 	}//end testAnUnexpectedFailureIsA500()
 
-	/**
-	 * Without a session both routes answer 401 and the service is not called.
-	 *
-	 * @return void
-	 */
-	public function testWithoutASessionBothRoutesAre401(): void {
-		$controller = $this->controller(params: [], loggedIn: false);
-		$this->forms->expects($this->never())->method('checkReference');
-		$this->forms->expects($this->never())->method('renderSubmission');
-
-		$this->assertSame(expected: 401, actual: $controller->checkReference()->getStatus());
-		$this->assertSame(expected: 401, actual: $controller->submit()->getStatus());
-
-	}//end testWithoutASessionBothRoutesAre401()
 }//end class

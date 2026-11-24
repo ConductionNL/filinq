@@ -86,7 +86,6 @@ use OCA\Filinq\Kernel\Contracts\FinalDocumentCorrectionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentFailureMapperInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentRepositoryInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentServiceInterface;
-use OCA\Filinq\Kernel\Contracts\FormDocumentServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentUnfreezeServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FinancialExtractionServiceInterface;
 use OCA\Filinq\Kernel\Contracts\FlatFileListServiceInterface;
@@ -206,7 +205,6 @@ use OCA\Filinq\Service\EmailIngestion\EmailIngestionSettings;
 use OCA\Filinq\Service\EntitySearch\EntitySearchService;
 use OCA\Filinq\Service\FieldFill\FieldFillProfileService;
 use OCA\Filinq\Service\FieldFill\SchemaFieldFillService;
-use OCA\Filinq\Service\Forms\FormDocumentService;
 use OCA\Filinq\Service\Grounds\RefusalGroundsLegacyMap;
 use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
 use OCA\Filinq\Service\Intake\IntakeNotificationReach;
@@ -330,7 +328,6 @@ final class ContractBindings {
 		FinalDocumentFailureMapperInterface::class     => FinalDocumentFailureMapper::class,
 		FinalDocumentRepositoryInterface::class        => FinalDocumentRepository::class,
 		FinalDocumentServiceInterface::class           => FinalDocumentService::class,
-		FormDocumentServiceInterface::class            => FormDocumentService::class,
 		FinalDocumentUnfreezeServiceInterface::class   => FinalDocumentUnfreezeService::class,
 		FinancialExtractionServiceInterface::class     => FinancialExtractionService::class,
 		FlatFileListServiceInterface::class            => FlatFileListService::class,

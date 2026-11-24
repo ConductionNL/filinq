@@ -5,8 +5,8 @@
  *
  * A document reference or a submitted form that filinq refuses, with the HTTP status to answer.
  *
- * @category  Exception
- * @package   OCA\Filinq\Exception
+ * @category  Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -21,15 +21,15 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Exception;
+namespace OCA\Filinq\Controller;
 
 use RuntimeException;
 
 /**
  * A refused document reference or form render; the code is the HTTP status.
  *
- * @category Exception
- * @package  OCA\Filinq\Exception
+ * @category Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app

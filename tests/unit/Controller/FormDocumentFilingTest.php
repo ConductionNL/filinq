@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Unit tests for FormDocumentService
+ * Unit tests for FormDocumentFiling
  *
  * @category  Tests
- * @package   OCA\Filinq\Tests\Unit\Service\Forms
+ * @package   OCA\Filinq\Tests\Unit\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -18,25 +18,25 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Tests\Unit\Service\Forms;
+namespace OCA\Filinq\Tests\Unit\Controller;
 
-use OCA\Filinq\Exception\FormDocumentRefused;
+use OCA\Filinq\Controller\FormDocumentFiling;
+use OCA\Filinq\Controller\FormDocumentRefused;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\Filinq\Service\Forms\FormDocumentService;
-use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
  * A document reference is checked as the caller reads it, and a submitted form is filed from its values.
  *
- * @covers \OCA\Filinq\Service\Forms\FormDocumentService
+ * @covers \OCA\Filinq\Controller\FormDocumentFiling
  */
-class FormDocumentServiceTest extends TestCase {
+class FormDocumentFilingTest extends TestCase {
 
 	/**
 	 * Records the caller may read, by id.
@@ -69,9 +69,9 @@ class FormDocumentServiceTest extends TestCase {
 	/**
 	 * The service under test.
 	 *
-	 * @var FormDocumentService
+	 * @var FormDocumentFiling
 	 */
-	private FormDocumentService $service;
+	private FormDocumentFiling $service;
 
 	/**
 	 * Wire the service over doubles of OpenRegister and the render.
@@ -81,11 +81,11 @@ class FormDocumentServiceTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$objects = $this->getMockBuilder(ObjectService::class)->onlyMethods(['find'])->getMock();
+		$objects = $this->getMockBuilder(className: ObjectService::class)->onlyMethods(['find'])->getMock();
 		$objects->method('find')->willReturnCallback(
 			fn (string $id = '') => ($this->readable[$id] ?? null)
 		);
-		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
+		$resolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objects);
 
 		$test = $this;
@@ -93,9 +93,9 @@ class FormDocumentServiceTest extends TestCase {
 			/**
 			 * Constructor.
 			 *
-			 * @param FormDocumentServiceTest $test The test that records the files.
+			 * @param FormDocumentFilingTest $test The test that records the files.
 			 */
-			public function __construct(private readonly FormDocumentServiceTest $test) {
+			public function __construct(private readonly FormDocumentFilingTest $test) {
 			}
 
 			/**
@@ -111,15 +111,15 @@ class FormDocumentServiceTest extends TestCase {
 				return $this->test->recordFile(objectEntity: $objectEntity, fileName: $fileName, content: $content);
 			}
 		};
-		$locator = $this->createMock(OpenRegisterServiceLocator::class);
-		$locator->method('get')->willReturn($files);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->method('get')->willReturn($files);
 
-		$this->documents = $this->createMock(DocumentServiceInterface::class);
-		$this->service   = new FormDocumentService(
+		$this->documents = $this->createMock(originalClassName: DocumentServiceInterface::class);
+		$this->service   = new FormDocumentFiling(
 			objects: $resolver,
-			locator: $locator,
+			container: $container,
 			documents: $this->documents,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(originalClassName: LoggerInterface::class)
 		);
 
 	}//end setUp()
@@ -179,10 +179,10 @@ class FormDocumentServiceTest extends TestCase {
 	public function testAnUnreadableReferenceIsRefusedAs404(): void {
 		try {
 			$this->service->checkReference(reference: ['register' => 'filinq', 'schema' => 'document', 'id' => 'secret']);
-			$this->fail('an unreadable reference must be refused');
+			$this->fail(message: 'an unreadable reference must be refused');
 		} catch (FormDocumentRefused $refused) {
 			$this->assertSame(expected: 404, actual: $refused->getCode());
-			$this->assertSame(expected: FormDocumentService::REFERENCE_NOT_READABLE, actual: $refused->getMessage());
+			$this->assertSame(expected: FormDocumentFiling::REFERENCE_NOT_READABLE, actual: $refused->getMessage());
 		}
 
 	}//end testAnUnreadableReferenceIsRefusedAs404()
@@ -193,8 +193,8 @@ class FormDocumentServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testAReferenceWithoutAnIdIsMalformed(): void {
-		$this->expectException(FormDocumentRefused::class);
-		$this->expectExceptionCode(400);
+		$this->expectException(exception: FormDocumentRefused::class);
+		$this->expectExceptionCode(code: 400);
 
 		$this->service->checkReference(reference: ['register' => 'filinq', 'id' => '  ']);
 
@@ -233,7 +233,10 @@ class FormDocumentServiceTest extends TestCase {
 			]
 		);
 
-		$this->assertSame(expected: [['objectEntity' => 'case-1', 'fileName' => 'aanvraagformulier.pdf', 'content' => '%PDF-1.7 form']], actual: $this->filed);
+		$this->assertSame(
+			expected: [['objectEntity' => 'case-1', 'fileName' => 'aanvraagformulier.pdf', 'content' => '%PDF-1.7 form']],
+			actual: $this->filed
+		);
 		$this->assertSame(expected: 4711, actual: $filed['fileId']);
 		$this->assertSame(expected: 'abc', actual: $filed['sha256']);
 		$this->assertSame(expected: 3, actual: $filed['templateVersion']);
@@ -250,8 +253,8 @@ class FormDocumentServiceTest extends TestCase {
 		$this->readable['case-1'] = ['title' => 'Case'];
 		$this->documents->expects($this->never())->method('generateDocument');
 
-		$this->expectException(FormDocumentRefused::class);
-		$this->expectExceptionCode(404);
+		$this->expectException(exception: FormDocumentRefused::class);
+		$this->expectExceptionCode(code: 404);
 
 		$this->service->renderSubmission(
 			submission: [
@@ -272,8 +275,8 @@ class FormDocumentServiceTest extends TestCase {
 	public function testARecordTheCallerMayNotReadIsRefused(): void {
 		$this->documents->expects($this->never())->method('generateDocument');
 
-		$this->expectException(FormDocumentRefused::class);
-		$this->expectExceptionCode(404);
+		$this->expectException(exception: FormDocumentRefused::class);
+		$this->expectExceptionCode(code: 404);
 
 		$this->service->renderSubmission(
 			submission: ['templateId' => 'tpl', 'record' => ['register' => 'dossiq', 'schema' => 'case', 'id' => 'other'], 'values' => []]
@@ -296,7 +299,7 @@ class FormDocumentServiceTest extends TestCase {
 		foreach ($cases as $index => $submission) {
 			try {
 				$this->service->renderSubmission(submission: $submission);
-				$this->fail('case ' . $index . ' must be refused');
+				$this->fail(message: 'case ' . $index . ' must be refused');
 			} catch (FormDocumentRefused $refused) {
 				$this->assertSame(expected: 400, actual: $refused->getCode(), message: 'case ' . $index);
 			}
@@ -314,7 +317,13 @@ class FormDocumentServiceTest extends TestCase {
 		$this->documents->method('generateDocument')->willReturn(['content' => 'odt bytes']);
 
 		$filed = $this->service->renderSubmission(
-			submission: ['templateId' => 't', 'record' => ['register' => 'r', 'schema' => 's', 'id' => 'case-1'], 'values' => [], 'format' => 'odf', 'filename' => 'a/b:c.odt']
+			submission: [
+				'templateId' => 't',
+				'record' => ['register' => 'r', 'schema' => 's', 'id' => 'case-1'],
+				'values' => [],
+				'format' => 'odf',
+				'filename' => 'a/b:c.odt',
+			]
 		);
 		$this->assertSame(expected: 'a-b-c.odt', actual: $filed['fileName']);
 		$this->assertSame(expected: hash('sha256', 'odt bytes'), actual: $filed['sha256']);
@@ -336,8 +345,8 @@ class FormDocumentServiceTest extends TestCase {
 		$this->documents->method('generateDocument')->willReturn(['content' => 'x']);
 		$this->fileFails = true;
 
-		$this->expectException(FormDocumentRefused::class);
-		$this->expectExceptionCode(502);
+		$this->expectException(exception: FormDocumentRefused::class);
+		$this->expectExceptionCode(code: 502);
 
 		$this->service->renderSubmission(
 			submission: ['templateId' => 't', 'record' => ['register' => 'r', 'schema' => 's', 'id' => 'case-1'], 'values' => []]

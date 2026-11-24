@@ -24,16 +24,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Exception\FormDocumentRefused;
 use OCA\Filinq\Kernel\AppIdentity;
-use OCA\Filinq\Kernel\Contracts\FormDocumentServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
-use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -49,25 +46,25 @@ use Throwable;
  * @spec openspec/changes/forms-as-documents/specs/document-creatie-sjablonen/spec.md#requirement-a-file-is-a-value-a-field-can-hold-and-a-form-becomes-a-document-req-dft-05
  */
 class FormDocumentController extends Controller {
-	use AnswersNotAuthenticated;
-
 	/**
 	 * Constructor.
 	 *
-	 * @param IRequest                     $request     The request.
-	 * @param FormDocumentServiceInterface $forms       Checks references and files submitted forms.
-	 * @param IUserSession                 $userSession The session user.
-	 * @param IL10N                        $l10n        Translations.
-	 * @param LoggerInterface              $logger      Logger for diagnostics.
+	 * Both routes are `NoAdminRequired` and not public, so Nextcloud answers
+	 * 401 before a request without a session reaches them. Every record is
+	 * read through OpenRegister's ObjectService with the caller's rights.
+	 *
+	 * @param IRequest                     $request The request.
+	 * @param FormDocumentFiling          $forms   Checks references and files submitted forms.
+	 * @param LoggerInterface              $logger  Logger for diagnostics.
+	 * @param IL10N                        $l10n    Translations.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly FormDocumentServiceInterface $forms,
-		private readonly IUserSession $userSession,
-		private readonly IL10N $l10n,
+		private readonly FormDocumentFiling $forms,
 		private readonly LoggerInterface $logger,
+		private readonly IL10N $l10n,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
@@ -82,10 +79,6 @@ class FormDocumentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function checkReference(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
-		}
-
 		$reference = [
 			'register' => $this->request->getParam('register', ''),
 			'schema' => $this->request->getParam('schema', ''),
@@ -105,10 +98,6 @@ class FormDocumentController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function submit(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
-		}
-
 		$submission = [];
 		foreach (['templateId', 'record', 'values', 'documentFields', 'filename', 'format'] as $key) {
 			$value = $this->request->getParam($key);

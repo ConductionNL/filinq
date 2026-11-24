@@ -1,15 +1,15 @@
 <?php
 
 /**
- * Form Document Service
+ * Form Document Filing
  *
- * filinq's half of forms as documents. The surface that defines a form owns
+ * The filinq half of forms as documents. The surface that defines a form owns
  * its fields, the document-reference field type included; filinq checks the
  * reference such a field holds, and renders a submitted form to a document
  * filed on the record.
  *
- * @category  Service
- * @package   OCA\Filinq\Service\Forms
+ * @category  Controller
+ * @package   OCA\Filinq\Controller
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -24,29 +24,28 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Service\Forms;
+namespace OCA\Filinq\Controller;
 
-use OCA\Filinq\Exception\FormDocumentRefused;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
-use OCA\Filinq\Kernel\Contracts\FormDocumentServiceInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\Filinq\Service\OpenRegisterServiceLocator;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Service\ObjectService;
+use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
  * Checks document references in form fields and files a submitted form as a document.
  *
- * @category Service
- * @package  OCA\Filinq\Service\Forms
+ * @category Controller
+ * @package  OCA\Filinq\Controller
  * @author   Conduction B.V. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
  * @spec openspec/changes/forms-as-documents/specs/document-creatie-sjablonen/spec.md#requirement-a-file-is-a-value-a-field-can-hold-and-a-form-becomes-a-document-req-dft-05
  */
-class FormDocumentService implements FormDocumentServiceInterface {
+class FormDocumentFiling {
 
 	/**
 	 * The register a reference names when it names none.
@@ -87,7 +86,7 @@ class FormDocumentService implements FormDocumentServiceInterface {
 	 * Constructor.
 	 *
 	 * @param DocumentObjectServiceResolver $objects   Resolver for OpenRegister's ObjectService.
-	 * @param OpenRegisterServiceLocator    $locator   Resolver for OpenRegister's FileService.
+	 * @param ContainerInterface            $container Resolves OpenRegister's FileService.
 	 * @param DocumentServiceInterface      $documents filinq's template render.
 	 * @param LoggerInterface               $logger    Logger for diagnostics.
 	 *
@@ -95,7 +94,7 @@ class FormDocumentService implements FormDocumentServiceInterface {
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objects,
-		private readonly OpenRegisterServiceLocator $locator,
+		private readonly ContainerInterface $container,
 		private readonly DocumentServiceInterface $documents,
 		private readonly LoggerInterface $logger,
 	) {
@@ -236,8 +235,8 @@ class FormDocumentService implements FormDocumentServiceInterface {
 			'id' => trim((string) ($reference['id'] ?? '')),
 		];
 		if ($defaults === true) {
-			$ref['register'] = ($ref['register'] !== '' ? $ref['register'] : self::DEFAULT_REGISTER);
-			$ref['schema']   = ($ref['schema'] !== '' ? $ref['schema'] : self::DEFAULT_SCHEMA);
+			$ref['register'] = self::orDefault(value: $ref['register'], default: self::DEFAULT_REGISTER);
+			$ref['schema']   = self::orDefault(value: $ref['schema'], default: self::DEFAULT_SCHEMA);
 		}
 
 		if (in_array('', $ref, true) === true) {
@@ -283,10 +282,14 @@ class FormDocumentService implements FormDocumentServiceInterface {
 	 */
 	private function findQuietly(string $id, ObjectFindOptions $options): mixed {
 		try {
-			return $this->objects->resolve()->find(id: $id, options: $options);
+			// The caller's rights apply: OpenRegister answers null or throws for a record they may not read.
+			// The caller's rights apply through OpenRegister's ObjectService.
+			$objectService = $this->objects->resolve();
+
+			return $objectService->find(id: $id, options: $options);
 		} catch (Throwable $e) {
 			$this->logger->debug(
-				message: '[FormDocumentService] a record did not resolve',
+				message: '[FormDocumentFiling] a record did not resolve',
 				context: ['file' => __FILE__, 'line' => __LINE__, 'id' => $id, 'error' => $e->getMessage()]
 			);
 
@@ -308,14 +311,14 @@ class FormDocumentService implements FormDocumentServiceInterface {
 	 */
 	private function file(array $record, string $fileName, string $content): ?int {
 		try {
-			$file = $this->locator->get(className: self::FILE_SERVICE)->addFile(
+			$file = $this->container->get(self::FILE_SERVICE)->addFile(
 				objectEntity: $record['id'],
 				fileName: $fileName,
 				content: $content
 			);
 		} catch (Throwable $e) {
 			$this->logger->error(
-				message: '[FormDocumentService] the submitted form could not be filed on the record',
+				message: '[FormDocumentFiling] the submitted form could not be filed on the record',
 				context: ['file' => __FILE__, 'line' => __LINE__, 'record' => $record['id'], 'error' => $e->getMessage()]
 			);
 
@@ -346,11 +349,31 @@ class FormDocumentService implements FormDocumentServiceInterface {
 			$base = 'form-' . gmdate('Ymd-His');
 		}
 
-		$extension = ($format === 'odf' ? 'odt' : $format);
+		$extension = $format;
+		if ($format === 'odf') {
+			$extension = 'odt';
+		}
 
 		return $base . '.' . $extension;
 
 	}//end fileNameOf()
+
+	/**
+	 * The value, or the default when the value is empty.
+	 *
+	 * @param string $value   The value.
+	 * @param string $default The default.
+	 *
+	 * @return string The value or the default.
+	 */
+	private static function orDefault(string $value, string $default): string {
+		if ($value === '') {
+			return $default;
+		}
+
+		return $value;
+
+	}//end orDefault()
 
 	/**
 	 * A found object as an array, or null.

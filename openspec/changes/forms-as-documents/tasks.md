@@ -13,13 +13,13 @@
 
 ## Build notes
 
-- 1.1: `FormDocumentService::checkReference()` (`lib/Service/Forms/`) reads the
+- 1.1: `FormDocumentFiling::checkReference()` (`lib/Controller/FormDocumentFiling.php`, beside its controller like `TemplateRequestHandler`) reads the
   record with the caller's rights and answers `{register, schema, id, title}`;
   it never reads or copies the file. A record the caller may not read answers
   the same 404 as one that does not exist, so the check does not reveal that a
   record exists. Route `POST api/forms/document-reference`. PHPUnit:
-  `tests/unit/Service/Forms/FormDocumentServiceTest.php`.
-- 1.2: `FormDocumentService::renderSubmission()` renders through
+  `tests/unit/Controller/FormDocumentFilingTest.php`.
+- 1.2: `FormDocumentFiling::renderSubmission()` renders through
   `DocumentService::generateDocument()` with no data references and the
   submission as `adHocData` (`form`, `documents`, `record`), so the filed
   document is the values as submitted (D2), and stores it in the record's
