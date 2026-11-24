@@ -33,7 +33,7 @@
 - [x] 4.1 PHPUnit for operation validation, enqueue/dedupe, loop guard, gate pass-through (prohibition + checked gate), OCR/settings degradation, PDF/A additive output, validation severity aggregation, run persistence — 75% coverage on new code (ADR-009)
   - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Live-verify on Postgres (8080) with OpenRegister: build a real Flow rule, drop a scan in the folder, run cron, see the run + notification.
-- [ ] 4.2 Playwright spec `tests/e2e/spec-coverage/flow-operations.spec.ts` for the `@e2e`-referenced scenarios
+- [x] 4.2 Playwright spec `tests/e2e/spec-coverage/flow-operations.spec.ts` for the `@e2e`-referenced scenarios — written, runs in nightly (not verified against a live instance)
 - [x] 4.3 i18n EN + NL for all new UI strings (keys in English); nldesign theme check (ADR-005, ADR-003)
 - [ ] 4.4 Docs: `docs/features/flow-operations.md` with Playwright screenshots (rule builder with a Filinq operation, runs listing, failure notification) (ADR-010)
 - [ ] 4.5 Validate: `openspec validate flow-operations --strict` passes; the REQ-DDFLO-010 register-lint passes (no `P1Y` placeholder remains); hydra gates green

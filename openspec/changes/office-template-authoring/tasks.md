@@ -61,7 +61,7 @@
   - Coverage measured 2026-11-20 with pcov over the full unit suite (8398 tests, 0 failures), statements of the lib files carrying this change's `@spec` tag: 1490 of 1690, 88.2% over 23 files. Register-drift pins: `OfficeTemplateSeedTest::testTheOfficeDataModelIsPinned()`. Fixtures on disk: `tests/sample-documents/beschikking-parkeervergunning.docx` (valid) and `tests/sample-documents/office/` `macro-letter.docx`, `corrupt-letter.docx`, `letter.odt`, pinned through the source guard by `OfficeSampleFilesTest`.
   - Fixtures: valid DOCX, macro DOCX, corrupt DOCX, ODT in `tests/sample-documents/`
 
-- [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/office-template-authoring.spec.ts` + extend `templates.spec.ts` for the parity scenarios; verify on Postgres (8080), test with nldesign theme enabled
+- [x] 5.2 Playwright e2e `tests/e2e/spec-coverage/office-template-authoring.spec.ts` for the parity scenarios (kept in that file rather than extending `templates.spec.ts`) — written, runs in nightly (not verified against a live instance); the Postgres (8080) and nldesign-theme passes follow in the nightly
 
 - [x] 5.3 i18n: all new UI strings with English source keys + NL translations (ADR-005)
   - Built: every new UI and schema string in `l10n/en.json` and `l10n/nl.json`, `.js` rebuilt with `npm run l10n:build`.

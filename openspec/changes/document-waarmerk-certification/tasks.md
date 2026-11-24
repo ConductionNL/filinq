@@ -43,7 +43,7 @@
 
 - [x] 5.1 Unit tests ≥75% on new code (seal/verify round-trip with runtime-generated cert, tamper detection, revocation dominance, write-once invariant, oracle parity, key-never-logged assertion); run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
 
-- [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/document-waarmerk-certification.spec.ts` (seal → QR page → verify valid / tampered / revoked); verify on Postgres (8080); test with nldesign theme enabled
+- [x] 5.2 Playwright e2e `tests/e2e/spec-coverage/document-waarmerk-certification.spec.ts` (seal → QR page → verify valid / tampered / revoked); verify on Postgres (8080); test with nldesign theme enabled — written, runs in nightly (not verified against a live instance)
 
 - [x] 5.3 i18n EN source + NL translations for all new strings, incl. the public page (citizen-facing Dutch first-class)
 

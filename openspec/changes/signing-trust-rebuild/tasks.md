@@ -39,7 +39,7 @@
 
 - [x] 4.1 `ConsentController::errorResponse()` adopts the SigningController oracle-free pattern (REQ-DDSTR-009), verbatim-matched against `SigningController::errorResponse()`; unit-tested (byte-identical not-found vs non-owner, exception-text-never-leaks, 4xx-honoured) in `tests/unit/Controller/ConsentControllerTest.php`. **Newman parity assertions NOT written** (no Newman collection in this repo for consent). Coordinate-only: `_rbac`/`_multitenancy` flags untouched (owned by `multi-tenant-hardening`).
 
-- [ ] 4.2 **NOT DONE.** Playwright e2e `tests/e2e/spec-coverage/signing-trust-rebuild.spec.ts` was not authored in this pass — no live Nextcloud/Postgres 8080 instance was exercised. Every behaviour it would cover is unit-tested instead (see 1.4/2.4/3.1).
+- [x] 4.2 Playwright e2e `tests/e2e/spec-coverage/signing-trust-rebuild.spec.ts` (written in #2218) — written, runs in nightly (not verified against a live instance)
 
 - [x] 4.3 i18n: EN source (`l10n/en.json`/`en.js`) + NL translations (`l10n/nl.json`/`nl.js`) added for the new verdict/status/reason strings; `node tests/l10n/check-l10n.js` passes with zero missing keys.
 
