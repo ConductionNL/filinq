@@ -28,6 +28,7 @@
 // @e2e openspec/specs/letter-correspondence-generation/spec.md#an-officer-sends-a-letter-to-a-citizen
 // @e2e openspec/specs/letter-correspondence-generation/spec.md#the-pdf-goes-along
 // @e2e openspec/specs/letter-correspondence-generation/spec.md#the-recipient-has-no-email-address
+// @e2e openspec/specs/letter-correspondence-generation/spec.md#the-mail-server-fails
 
 import type { Page, Route } from '@playwright/test'
 
@@ -49,6 +50,8 @@ const SEND_BY_EMAIL = /^(Send by email|Versturen per e-mail)$/
 const SEND = /^(Send|Versturen)$/
 const ATTACH_PDF = /Attach the letter as PDF|De brief als pdf bijvoegen/
 const NO_ADDRESS = 'Deze ontvanger heeft geen e-mailadres'
+const NOT_SENT =
+	/The letter was not sent: the mail server did not accept it\.|De brief is niet verstuurd/
 const SENT_TO = new RegExp(
 	`(Sent to|Verstuurd naar) ${ADDRESS.replace(/\./g, '\\.')}`,
 )
@@ -58,11 +61,13 @@ const SENT_TO = new RegExp(
  *
  * @param page The page.
  * @param preview What the preview answers: the address and subject, or a refusal.
+ * @param answer What the send answers; a sent letter when not given.
  * @return The bodies of the send requests the page made.
  */
 async function stubSend(
 	page: Page,
 	preview: { status: number; body: Record<string, unknown> },
+	answer?: { status: number; body: Record<string, unknown> },
 ): Promise<Array<Record<string, any>>> {
 	const sent: Array<Record<string, any>> = []
 	await page.route(
@@ -79,15 +84,17 @@ async function stubSend(
 		async (route: Route) => {
 			sent.push(route.request().postDataJSON() ?? {})
 			await route.fulfill({
-				status: 200,
+				status: answer?.status ?? 200,
 				contentType: 'application/json',
-				body: JSON.stringify({
-					status: 'sent',
-					to: ADDRESS,
-					subject: SUBJECT,
-					sentAt: '2026-11-20T10:00:00+00:00',
-					warnings: [],
-				}),
+				body: JSON.stringify(
+					answer?.body ?? {
+						status: 'sent',
+						to: ADDRESS,
+						subject: SUBJECT,
+						sentAt: '2026-11-20T10:00:00+00:00',
+						warnings: [],
+					},
+				),
 			})
 		},
 	)
@@ -199,6 +206,37 @@ test.describe('letter-email-sending: a letter goes out by email', () => {
 		await expect(dialog, 'the dialog stays open').toBeVisible()
 		await expect(dialog.getByRole('button', { name: SEND })).toBeDisabled()
 		expect(sent, 'no send request').toHaveLength(0)
+		await expect(page.getByTestId('correspondence-sent')).toHaveCount(0)
+	})
+
+	test('a mail server that refuses the message: the page says the letter was not sent', async ({
+		page,
+	}) => {
+		const sent = await stubSend(
+			page,
+			{ status: 200, body: { to: ADDRESS, subject: SUBJECT } },
+			{
+				status: 502,
+				body: {
+					status: 'failed',
+					to: ADDRESS,
+					subject: SUBJECT,
+					sentAt: null,
+					error: 'The letter was not sent: the mail server did not accept it.',
+				},
+			},
+		)
+		await fillLetter(page, TEMPLATE_ID, RECIPIENT)
+
+		await page.getByTestId('correspondence-send-email').click()
+		const dialog = page.getByTestId('correspondence-send-dialog')
+		await dialog.getByRole('button', { name: SEND }).click()
+
+		expect(sent, 'the page tried exactly once').toHaveLength(1)
+		await expect(dialog.getByTestId('correspondence-send-error')).toContainText(
+			NOT_SENT,
+		)
+		await expect(dialog, 'the dialog stays open').toBeVisible()
 		await expect(page.getByTestId('correspondence-sent')).toHaveCount(0)
 	})
 

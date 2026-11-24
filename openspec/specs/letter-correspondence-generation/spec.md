@@ -171,7 +171,6 @@ Filinq SHALL refuse the send with 422 and a message naming the cause when the re
 - **GIVEN** a mail server that refuses the message
 - **WHEN** the officer sends a letter by email
 - **THEN** the correspondence object has status `failed` with the reason and the page says the letter was not sent
-- @e2e exclude needs a failing mail server; covered by PHPUnit on CorrespondenceService with a mocked IMailer
 
 ## Dependencies
 

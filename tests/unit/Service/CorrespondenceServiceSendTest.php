@@ -434,21 +434,29 @@ class CorrespondenceServiceSendTest extends TestCase {
 	 */
 	public function testTheSendNeedsNoEmailLeafAndAttemptsNoLink(): void {
 		$constructor = (new \ReflectionClass(CorrespondenceSendService::class))->getConstructor();
-		$this->assertNotNull($constructor);
+		$this->assertNotNull(actual: $constructor);
 		foreach ($constructor->getParameters() as $parameter) {
 			$type = (string) $parameter->getType();
-			$this->assertStringNotContainsStringIgnoringCase('Email', $type, 'the send takes no email-leaf service: '.$parameter->getName());
-			$this->assertStringNotContainsStringIgnoringCase('Link', $type, 'the send takes no link service: '.$parameter->getName());
+			$this->assertStringNotContainsStringIgnoringCase(
+				needle: 'Email',
+				haystack: $type,
+				message: 'the send takes no email-leaf service: '.$parameter->getName()
+			);
+			$this->assertStringNotContainsStringIgnoringCase(
+				needle: 'Link',
+				haystack: $type,
+				message: 'the send takes no link service: '.$parameter->getName()
+			);
 		}
 
-		$this->recipient(['email' => 'j.jansen@example.nl']);
+		$this->recipient(fields: ['email' => 'j.jansen@example.nl']);
 		$this->mailer->expects($this->once())->method('send')->willReturn([]);
 
 		$result = $this->sender->send(templateId: 'tmpl-1', dataRefs: self::RECIPIENT, options: ['userId' => 'officer']);
 
-		$this->assertSame('sent', $result['status']);
-		$this->assertCount(1, $this->logged);
-		$this->assertArrayNotHasKey('emailLink', $this->logged[0]);
+		$this->assertSame(expected: 'sent', actual: $result['status']);
+		$this->assertCount(expectedCount: 1, haystack: $this->logged);
+		$this->assertArrayNotHasKey(key: 'emailLink', array: $this->logged[0]);
 
 	}//end testTheSendNeedsNoEmailLeafAndAttemptsNoLink()
 
