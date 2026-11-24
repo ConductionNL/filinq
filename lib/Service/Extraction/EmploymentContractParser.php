@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Extraction;
 
+use OCA\Filinq\Service\Contract\ContractTermExtractor;
+
 /**
  * Reads the terms of an employment contract.
  *
@@ -61,16 +63,17 @@ class EmploymentContractParser {
 	private const AMOUNT = '(?:€|eur|euro)\s*(\d{1,3}(?:[.\s]\d{3})*(?:,\d{1,2})?|\d+(?:[.,]\d{1,2})?)';
 
 	/**
-	 * Month names to numbers.
+	 * Constructor.
 	 *
-	 * @var array<string, int>
+	 * @param ContractTermExtractor $terms Reads a date as a contract writes it.
+	 *
+	 * @return void
 	 */
-	private const MONTHS = [
-		'januari' => 1, 'january' => 1, 'februari' => 2, 'february' => 2, 'maart' => 3, 'march' => 3,
-		'april' => 4, 'mei' => 5, 'may' => 5, 'juni' => 6, 'june' => 6, 'juli' => 7, 'july' => 7,
-		'augustus' => 8, 'august' => 8, 'september' => 9, 'oktober' => 10, 'october' => 10,
-		'november' => 11, 'december' => 12,
-	];
+	public function __construct(
+		private readonly ContractTermExtractor $terms,
+	) {
+
+	}//end __construct()
 
 	/**
 	 * Read the terms.
@@ -138,8 +141,8 @@ class EmploymentContractParser {
 		foreach ($labels as $field => $label) {
 			preg_match_all('/'.$label.'\s*:?\s*'.self::DATE.'/iu', $text, $matches);
 			foreach ($matches[1] as $raw) {
-				$date = $this->isoDate(raw: $raw);
-				if ($date !== '') {
+				$date = $this->terms->normaliseDate(raw: $raw);
+				if ($date !== null) {
 					$fields[$field] = ['value' => $date, 'confidence' => self::LABELLED];
 					break;
 				}
@@ -206,35 +209,6 @@ class EmploymentContractParser {
 
 		return [];
 	}//end term()
-
-	/**
-	 * A date as Y-m-d, or '' when it is not a date.
-	 *
-	 * @param string $raw The date as written.
-	 *
-	 * @return string
-	 */
-	private function isoDate(string $raw): string {
-		$raw = strtolower(trim($raw));
-		$parts = null;
-		if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $raw, $match) === 1) {
-			$parts = [(int)$match[1], (int)$match[2], (int)$match[3]];
-		}
-
-		if (preg_match('/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{4})$/', $raw, $match) === 1) {
-			$parts = [(int)$match[3], (int)$match[2], (int)$match[1]];
-		}
-
-		if (preg_match('/^(\d{1,2})\s+([a-z]+)\s+(\d{4})$/', $raw, $match) === 1 && isset(self::MONTHS[$match[2]]) === true) {
-			$parts = [(int)$match[3], self::MONTHS[$match[2]], (int)$match[1]];
-		}
-
-		if ($parts === null || checkdate($parts[1], $parts[2], $parts[0]) === false) {
-			return '';
-		}
-
-		return sprintf('%04d-%02d-%02d', $parts[0], $parts[1], $parts[2]);
-	}//end isoDate()
 
 	/**
 	 * A written euro amount as a number: 3.250,00 and 3250.00 are 3250.0.

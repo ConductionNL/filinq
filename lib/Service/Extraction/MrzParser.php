@@ -136,7 +136,8 @@ class MrzParser {
 	 * @return list<string>|null
 	 */
 	private function runOf(array $lines, int $length, int $count): ?array {
-		for ($start = 0; $start + $count <= count($lines); $start++) {
+		$last = (count($lines) - $count);
+		for ($start = 0; $start <= $last; $start++) {
 			$run = array_slice($lines, $start, $count);
 			if (count(array_filter($run, static fn (string $line): bool => strlen($line) === $length)) === $count) {
 				return $run;

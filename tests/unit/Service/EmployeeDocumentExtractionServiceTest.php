@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use DateTimeImmutable;
+use OCA\Filinq\Service\Contract\ContractTermExtractor;
 use OCA\Filinq\Service\DocumentTextSource;
 use OCA\Filinq\Service\EmployeeDocumentExtractionService;
 use OCA\Filinq\Service\Extraction\EmploymentContractParser;
@@ -54,7 +55,7 @@ class EmployeeDocumentExtractionServiceTest extends TestCase {
 		$time = $this->createMock(originalClassName: ITimeFactory::class);
 		$time->method('now')->willReturn(new DateTimeImmutable('2026-11-15'));
 
-		return new EmployeeDocumentExtractionService(textSource: $source, mrz: new MrzParser(), contract: new EmploymentContractParser(), time: $time);
+		return new EmployeeDocumentExtractionService(textSource: $source, mrz: new MrzParser(), contract: new EmploymentContractParser(terms: new ContractTermExtractor()), time: $time);
 	}//end service()
 
 	/**
@@ -74,12 +75,12 @@ class EmployeeDocumentExtractionServiceTest extends TestCase {
 	}//end testAnIdentityDocumentIsRead()
 
 	/**
-	 * A contract is read into its terms, through a documentUri.
+	 * A contract is read into its terms.
 	 *
 	 * @return void
 	 */
 	public function testAContractIsRead(): void {
-		$request = ['documentUri' => 'nc://file/42', 'docType' => 'employment-contract'];
+		$request = ['fileId' => '42', 'docType' => 'employment-contract'];
 
 		$answer = $this->service(text: "Startdatum: 01-05-2026\n24 uur per week")->extractEmployeeDocument(data: $request, requestedBy: 'hr');
 

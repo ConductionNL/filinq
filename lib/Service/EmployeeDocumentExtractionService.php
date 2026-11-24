@@ -70,7 +70,7 @@ class EmployeeDocumentExtractionService {
 	/**
 	 * Read an employee document.
 	 *
-	 * `$data` carries `fileId` (or a `documentUri` ending in it) and `docType`,
+	 * `$data` carries `fileId`, the Nextcloud file id, and `docType`,
 	 * `employment-contract` or `identity-document`. The answer is
 	 * `{status, docType, fields, message}`: `fields` maps each value read to
 	 * `{value, confidence}`; status `extracted`, `unreadable` when the file
@@ -92,10 +92,10 @@ class EmployeeDocumentExtractionService {
 			return $this->answer(status: 'refused', docType: $docType, message: 'The document type must be employment-contract or identity-document.');
 		}
 
-		$fileId = $this->fileIdOf(data: $data);
+		$fileId = ($data['fileId'] ?? null);
 		$text = '';
-		if ($fileId !== null) {
-			$text = trim((string)($this->textSource->resolveText(fileId: $fileId)['text'] ?? ''));
+		if (is_numeric($fileId) === true && (int)$fileId > 0) {
+			$text = trim((string)($this->textSource->resolveText(fileId: (int)$fileId)['text'] ?? ''));
 		}
 
 		if ($text === '') {
@@ -115,27 +115,6 @@ class EmployeeDocumentExtractionService {
 		$message = 'The document was read. Check every value before you use it.';
 		return $this->answer(status: 'extracted', docType: $docType, message: $message, fields: $fields);
 	}//end extractEmployeeDocument()
-
-	/**
-	 * The file id of the request: `fileId`, else the trailing number of
-	 * `documentUri`; null when neither names a positive id.
-	 *
-	 * @param array<string, mixed> $data The request.
-	 *
-	 * @return int|null
-	 */
-	private function fileIdOf(array $data): ?int {
-		$fileId = ($data['fileId'] ?? null);
-		if (is_numeric($fileId) === true && (int)$fileId > 0) {
-			return (int)$fileId;
-		}
-
-		if (preg_match('/(\d+)\s*$/', (string)($data['documentUri'] ?? ''), $match) === 1 && (int)$match[1] > 0) {
-			return (int)$match[1];
-		}
-
-		return null;
-	}//end fileIdOf()
 
 	/**
 	 * An answer.

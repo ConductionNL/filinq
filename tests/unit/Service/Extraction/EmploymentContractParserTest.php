@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service\Extraction;
 
+use OCA\Filinq\Service\Contract\ContractTermExtractor;
 use OCA\Filinq\Service\Extraction\EmploymentContractParser;
 use PHPUnit\Framework\TestCase;
 
@@ -37,7 +38,7 @@ class EmploymentContractParserTest extends TestCase {
 	 * @return array<string, string|float>
 	 */
 	private function values(string $text): array {
-		return array_map(static fn (array $field): string|float => $field['value'], (new EmploymentContractParser())->parse(text: $text));
+		return array_map(static fn (array $field): string|float => $field['value'], (new EmploymentContractParser(terms: new ContractTermExtractor()))->parse(text: $text));
 	}//end values()
 
 	/**
@@ -99,7 +100,7 @@ class EmploymentContractParserTest extends TestCase {
 	 * @return void
 	 */
 	public function testConfidenceAndAbsence(): void {
-		$fields = (new EmploymentContractParser())->parse(text: "Ingangsdatum: 31-02-2026\nStartdatum: 01-02-2026\n36 uur per week");
+		$fields = (new EmploymentContractParser(terms: new ContractTermExtractor()))->parse(text: "Ingangsdatum: 31-02-2026\nStartdatum: 01-02-2026\n36 uur per week");
 
 		$this->assertSame(expected: EmploymentContractParser::LABELLED, actual: $fields['startDate']['confidence']);
 		$this->assertSame(expected: EmploymentContractParser::PHRASED, actual: $fields['hoursPerWeek']['confidence']);
