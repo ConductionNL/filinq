@@ -721,7 +721,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-diwoo-documentsoort-to-opencatalogi/tasks.md#task-1
 	 */
 	public function testTheHandOffWritesTheDocumentTypeToItsOwnField(): void {
 		$pipeline = $this->pipeline();
@@ -740,7 +740,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
 	 */
 	public function testAnOpenCatalogiWithoutTheFieldRefusesTheHandoff(): void {
 		$properties = json_decode((string) file_get_contents(__DIR__ . '/../../../fixtures/opencatalogi-publication-schema.json'), true)['properties'];
@@ -769,7 +769,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
 	 */
 	public function testARefusedDocumentTypeLeavesTheRecordReady(): void {
 		$this->refuseDocumentType = true;

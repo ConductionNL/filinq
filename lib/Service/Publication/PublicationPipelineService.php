@@ -359,7 +359,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 * @throws RuntimeException             When the platform is not there or refuses.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-woo-publicatie-pipeline/tasks.md#task-2.3
-	 * @spec openspec/changes/diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-diwoo-documentsoort-to-opencatalogi/tasks.md#task-2
 	 */
 	public function handoff(array $record, string $actor): array {
 		if ($this->platform->available() === false) {

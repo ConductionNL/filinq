@@ -17,6 +17,7 @@
 // @e2e openspec/specs/woo-publicatie-pipeline/spec.md#withdraw-a-publication
 // @e2e openspec/specs/woo-publicatie-pipeline/spec.md#wizard-reflects-gate-state
 // @e2e openspec/changes/archive/2026-11-24-woo-hand-off-files-its-category/specs/woo-publicatie-pipeline/spec.md#a-handed-off-decision-appears-in-its-category-sitemap
+// @e2e openspec/changes/archive/2026-11-24-diwoo-documentsoort-to-opencatalogi/specs/woo-publicatie-pipeline/spec.md#successful-handoff-creates-the-endpoint-publication
 
 import type { Page } from '@playwright/test'
 
@@ -215,5 +216,52 @@ test.describe('woo hand-off files its category', () => {
 			`/index.php/apps/opencatalogi/api/${encodeURIComponent(catalog)}/sitemaps/sitemapindex-diwoo-infocat001.xml`,
 		)
 		await expect(page.locator('body')).toContainText(publication)
+	})
+})
+
+/*
+ * THE DOCUMENT TYPE ON THE PUBLICATION. With `E2E_WOO_READY_RECORD_DOCTYPE`
+ * (the uuid of another ready publication record with complete metadata and a
+ * `documentsoort`), the operator hands it off on the page and OpenCatalogi's
+ * publication then carries that document type in its own `documentsoort`
+ * field, with the summary empty. A separate record, because a hand-off
+ * consumes the one above. Without it the test is skipped: it needs a live
+ * instance with an OpenCatalogi that has the field.
+ */
+test.describe('woo hand-off writes the document type to its own field', () => {
+	const recordId = process.env.E2E_WOO_READY_RECORD_DOCTYPE ?? ''
+
+	test('the publication carries the document type and an empty summary', async ({ page }) => {
+		// @e2e openspec/changes/archive/2026-11-24-diwoo-documentsoort-to-opencatalogi/specs/woo-publicatie-pipeline/spec.md#successful-handoff-creates-the-endpoint-publication
+		test.skip(recordId === '', 'needs E2E_WOO_READY_RECORD_DOCTYPE on a live instance with OpenCatalogi')
+
+		const before = await page.request.get(`/index.php/apps/filinq/api/publications/${recordId}`, {
+			headers: { 'OCS-APIRequest': 'true' },
+		})
+		expect(before.ok(), await before.text()).toBeTruthy()
+		const documentType = String((await before.json()).documentsoort ?? '')
+		expect(documentType, 'the prepared record needs a documentsoort').not.toBe('')
+
+		await go(page, `publications/${recordId}`)
+		await expect(page.getByText('Ready to hand off')).toBeVisible()
+		const handedOff = page.waitForResponse(
+			(response) =>
+				response.url().includes(`/apps/filinq/api/publications/${recordId}/handoff`)
+				&& response.request().method() === 'POST',
+		)
+		await page.getByRole('button', { name: 'Hand off for publication' }).click()
+		const answer = await handedOff
+		expect(answer.status(), await answer.text()).toBeLessThan(300)
+		const publication = String((await answer.json()).endpointPublicationRef ?? '')
+		expect(publication).not.toBe('')
+
+		const platform = await page.request.get(
+			`/index.php/apps/openregister/api/objects/publication/publication/${publication}`,
+			{ headers: { 'OCS-APIRequest': 'true' } },
+		)
+		expect(platform.ok(), await platform.text()).toBeTruthy()
+		const object = await platform.json()
+		expect(object.documentsoort).toBe(documentType)
+		expect(String(object.summary ?? '')).toBe('')
 	})
 })

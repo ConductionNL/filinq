@@ -21,9 +21,11 @@ never checks opencatalogi's schema.
   - GIVEN the refreshed fixture WHEN the pin test runs THEN every key in `FIELDS`, `documentsoort` included, is a property of opencatalogi's schema.
   - Test: the existing pin test, now covering `documentsoort`. If opencatalogi's change is not merged yet, the PR stays in draft and says so; do not hand-edit the fixture to make the pin pass.
   - Cross-app: opencatalogi's side is `DiwooCompletenessListenerTest::testTheFilinqHandoffPayloadIsAccepted`. Paste the payload this change produces into the PR body so both sides test the same bytes.
-- [ ] 4 Docs and e2e. Files: `docs/features/woo-publicatie-pipeline.md` (the field, the refusal, and that existing summaries are cleaned by opencatalogi's repair step), `tests/e2e/workflows/woo-publicatie-pipeline.spec.ts` (hand off a record and read `documentsoort` on the opencatalogi publication, with the summary empty).
+- [x] 4 Docs and e2e. Files: `docs/features/woo-publicatie-pipeline.md` (the field, the refusal, and that existing summaries are cleaned by opencatalogi's repair step), `tests/e2e/workflows/woo-publicatie-pipeline.spec.ts` (hand off a record and read `documentsoort` on the opencatalogi publication, with the summary empty).
   - Test: the Playwright spec.
   - Built: the docs (`docs/features/woo-publicatie-pipeline.md`: the field, both refusals, and that opencatalogi's repair step cleans existing summaries). Left: the Playwright step that reads `documentsoort` on the opencatalogi publication. `woo-publicatie-pipeline.spec.ts` answers the API with route handlers and has no OpenCatalogi behind it, so that check needs a live instance with OpenCatalogi.
+  - Built (e2e): `woo hand-off writes the document type to its own field` in that spec hands off the record named by `E2E_WOO_READY_RECORD_DOCTYPE` on the page and reads the OpenCatalogi publication: `documentsoort` equals the record's, `summary` empty. Skipped without the variable.
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
 
 Verification (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 

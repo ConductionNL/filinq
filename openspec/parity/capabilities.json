@@ -5552,7 +5552,7 @@
 				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
 				"readOn": "2026-10-07",
 				"requirement": "openspec/specs/woo-publicatie-pipeline :: Handoff to OpenCatalogi as the publication endpoint (REQ-DDWPP-005)",
-				"plan": "openspec/changes/diwoo-documentsoort-to-opencatalogi"
+				"plan": "openspec/changes/archive/2026-11-24-diwoo-documentsoort-to-opencatalogi"
 			},
 			"reachedOn": "/publications (Hand off for publication) and the Publish button in the file viewer",
 			"provider": "filinq",
