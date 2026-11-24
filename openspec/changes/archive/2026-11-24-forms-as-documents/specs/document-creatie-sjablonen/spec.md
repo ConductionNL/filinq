@@ -20,18 +20,18 @@ and filed on the record.
 - GIVEN a permit form with a field "Overzicht DigiD-aansluitingen" holding a document reference
 - WHEN the applicant selects a document they may read
 - THEN the field holds the reference and the file is stored once
-- @e2e exclude not built: blocked on the decision which surface owns forms (tasks 0.1)
+- @e2e exclude API only: filinq has no form screen; the form surface's own e2e drives it, PHPUnit covers filinq's routes
 
 #### Scenario: The form in the dossier
 
 - GIVEN a submitted aanvraagformulier
 - WHEN it is submitted
 - THEN a document is generated from the values as submitted and filed on the case
-- @e2e exclude not built: blocked on the decision which surface owns forms (tasks 0.1)
+- @e2e exclude API only: filinq has no form screen; the form surface's own e2e drives it, PHPUnit covers filinq's routes
 
 #### Scenario: A later value change does not rewrite the form
 
 - GIVEN a filed aanvraagformulier document
 - WHEN a field on the case is changed afterwards
 - THEN the filed document still shows what was submitted
-- @e2e exclude not built: blocked on the decision which surface owns forms (tasks 0.1)
+- @e2e exclude API only: filinq has no form screen; the form surface's own e2e drives it, PHPUnit covers filinq's routes
