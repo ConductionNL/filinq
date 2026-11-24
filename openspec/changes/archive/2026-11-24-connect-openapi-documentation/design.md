@@ -99,6 +99,17 @@ deleted. `docs/api/openapi.md` is rewritten: authentication with a
 Nextcloud app password, the link to `/api`, and the link to OpenRegister's
 register document for stored records.
 
+### D7. Maintained, not generated (24 Nov 2026, supersedes D1, D2, D3 and D5)
+
+Since this design was written, `openapi.json` became a maintained document of
+every route under the `api-contract` spec, pinned to `appinfo/routes.php` both
+ways by `OpenApiDocumentTest`. nextcloud/openapi-extractor 1.9.1 stops on the
+`EUPL-1.2` licence and documents a non-OCS route only once every method
+carries `#[OpenAPI]` and a typed `@return`, so adopting it would replace the
+richer document with a thinner one. Decision: keep the maintained document;
+the tests of D4 and the PHPUnit job of the code quality workflow are the
+staleness check D5 asked for. D6 holds unchanged.
+
 ## Declarative-vs-imperative decision (ADR-031)
 
 Not applicable: no lifecycle, aggregation, derived field, notification,
