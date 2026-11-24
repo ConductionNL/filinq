@@ -27,6 +27,13 @@
 			"icon": "Domain",
 			"route": "CustomDictionary",
 			"order": 70
+		},
+		{
+			"id": "BatchOperations",
+			"label": "Batch operations",
+			"icon": "ProgressClock",
+			"route": "BatchOperations",
+			"order": 42
 		}
 	],
 	"pages": [
@@ -69,6 +76,79 @@
 			"title": "My Documents",
 			"component": "MyDocumentsIndex",
 			"_note": "Hosts the in-app file viewer (FileViewerPage renders when fileViewerStore.currentFile is set). The anonymisation widget routes here after upload so the user reviews detected entities next to the document contents."
+		},
+		{
+			"id": "SharedLinks",
+			"route": "/my-documents/shared-links",
+			"type": "custom",
+			"title": "Shared links",
+			"component": "SharedLinksIndex",
+			"_note": "share-document-links 3.3: the documentShare records, reached from the options menu on My documents rather than the main menu. type:custom because Take back goes through filinq's DELETE api/shares/{id}, which also deletes the Nextcloud share and a bundle's archive; the index page type's delete would only remove the record."
+		},
+		{
+			"id": "BatchOperations",
+			"route": "/batch-operations",
+			"type": "index",
+			"title": "Batch operations",
+			"config": {
+				"register": "filinq",
+				"schema": "anonymizationBatch",
+				"columns": [
+					"folderPath",
+					"status",
+					"progressPercent",
+					"documentsPerHour",
+					"throttled",
+					"totalFiles",
+					"startedAt"
+				],
+				"rowRoute": "BatchOperationDetail",
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"emptyText": "No anonymisation batches yet",
+				"actionToggles": {
+					"showAdd": false
+				}
+			},
+			"_note": "redaction-at-scale REQ-DDRAS-003: OpenRegister lists the anonymizationBatch objects directly, and its cascade decides who sees which: the owner bypass gives a user their own batches, policy-admins and admins see all. Progress and documents per hour are written with every batch write from the batch's own files (BatchProgress). A row opens BatchOperationDetail, which polls the status endpoint and carries cancel, resume and the QA sample."
+		},
+		{
+			"id": "BatchOperationDetail",
+			"route": "/batch-operations/:id",
+			"type": "detail",
+			"title": "Batch",
+			"config": {
+				"register": "filinq",
+				"schema": "anonymizationBatch",
+				"documentationUrl": "https://filinq.conduction.nl",
+				"bodyWidgets": [
+					{
+						"id": "batch-operation",
+						"component": "BatchOperationDetail",
+						"placement": "before-body",
+						"props": {
+							"objectId": "@objectId"
+						}
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				}
+			},
+			"_note": "One batch (REQ-DDRAS-003/004/005/007) as a declarative type:detail page: the anonymizationBatch record's own fields render in the details widget. The live part is a bodyWidgets section (BatchOperationDetail) because it polls GET api/anonymization/batch/{id}/status while the batch runs, carries cancel and resume behind their own confirmation dialogs (POST .../cancel, .../resume) and lists the QA-sampled files with their review outcome; its props carry @objectId."
+		},
+		{
+			"id": "ReviewWorkbench",
+			"route": "/review/:fileId",
+			"type": "custom",
+			"title": "Review workbench",
+			"component": "ReviewWorkbench",
+			"_note": "Per-document anonymisation review: the original beside the anonymised result (DocumentCompare), the findings table as the decision panel, selection to a manual entity, and the reviewed mark the commit gate reads (/api/review/{fileId}). Opened from the file viewer's sidebar, which passes name, path and mime in the query; type:custom because the data comes from the anonymisation store and filinq's review endpoints, not a plain OR index."
 		}
 	]
 }

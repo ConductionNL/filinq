@@ -32,6 +32,8 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Filinq\Service\Review\ReviewSettingsRules;
+use OCA\Filinq\Service\Extraction\UnattendedThresholdSetting;
 use OCA\Filinq\Service\Support\RegisterSetup;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -80,6 +82,9 @@ class SettingsService implements SettingsServiceInterface {
 		'signing_request_expiry_days'                => ['30', 'int'],
 		'signing_guardian_consent_age'               => ['16', 'text'],
 		'filinq.anonymisation.default_output_format' => ['pdf-only', 'text'],
+		'filinq.review.checked_gate'                 => ['enforced', 'text'],
+		'filinq.review.certain_from'                 => ['0.85', 'float'],
+		'extraction_unattended_threshold'            => ['0.9', 'text'],
 		self::FOUR_EYES_KEY                          => [self::FOUR_EYES_DEFAULT, 'text'],
 	];
 
@@ -99,8 +104,9 @@ class SettingsService implements SettingsServiceInterface {
 	 * @param OcrService $ocrService OCR service for Tesseract status
 	 * @param LegalBasisProposalService $legalBasisProposal Grondslag-per-entity-type proposal service
 	 * @param OpenRegisterAvailabilityService $openRegister OpenRegister availability resolver
-	 * @param QpdfDecryptor|null $qpdf The qpdf probe for the admin status line; last and
-	 *                                 nullable so no construction site shifts.
+	 * @param ReviewSettingsRules|null $reviewRules The review workbench's save rules (gate mode, certain-from).
+	 * @param QpdfDecryptor|null $qpdf The qpdf probe for the admin status line; nullable
+	 *                                 so no construction site shifts.
 	 *
 	 * @return void
 	 *
@@ -113,6 +119,7 @@ class SettingsService implements SettingsServiceInterface {
 		private readonly OcrService $ocrService,
 		private readonly LegalBasisProposalService $legalBasisProposal,
 		private readonly OpenRegisterAvailabilityService $openRegister,
+		private readonly ?ReviewSettingsRules $reviewRules = null,
 		private readonly ?QpdfDecryptor $qpdf = null,
 	) {
 		$this->appName = 'filinq';
@@ -194,9 +201,10 @@ class SettingsService implements SettingsServiceInterface {
 	 * The OCR settings: tenant-wide toggles read by OcrService, and whether
 	 * an arriving intake scan is read in the background.
 	 *
-	 * @return array{ocr_enabled: bool, ocr_languages: string, ocr_dpi: int, ocr_on_arrival: bool} The settings.
+	 * @return array{ocr_enabled: bool, ocr_languages: string, ocr_dpi: int, ocr_on_arrival: bool, 'intake.brp_lookup_enabled': bool} The settings.
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.4
+	 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-the-brp-is-asked-only-under-a-declared-purpose-req-ibr-002
 	 */
 	private function loadOcrSettings(): array {
 		return [
@@ -204,6 +212,8 @@ class SettingsService implements SettingsServiceInterface {
 			'ocr_languages' => $this->config->getValueString($this->appName, 'ocr_languages', 'nld+eng'),
 			'ocr_dpi' => (int)$this->config->getValueString($this->appName, 'ocr_dpi', '300'),
 			'ocr_on_arrival' => $this->config->getValueString($this->appName, 'ocr_on_arrival', '1') === '1',
+			// Base registry lookups of an arriving document's BSN (intake-base-registry-enrichment D3): off unless an admin turns it on.
+			'intake.brp_lookup_enabled' => $this->config->getValueString($this->appName, 'intake.brp_lookup_enabled', '0') === '1',
 		];
 
 	}//end loadOcrSettings()
@@ -273,13 +283,14 @@ class SettingsService implements SettingsServiceInterface {
 	 * @param string                       $key  The app config key.
 	 * @param array{0: string, 1: string} $spec The default and the kind.
 	 *
-	 * @return int|bool|string The typed value.
+	 * @return int|float|bool|string The typed value.
 	 */
-	private function toggleValue(string $key, array $spec): int|bool|string {
+	private function toggleValue(string $key, array $spec): int|float|bool|string {
 		$raw = $this->config->getValueString($this->appName, $key, $spec[0]);
 
 		return match ($spec[1]) {
 			'int' => (int)$raw,
+			'float' => (float)$raw,
 			'on' => $raw === '1',
 			'notOff' => $raw !== '0',
 			default => $raw,
@@ -433,7 +444,7 @@ class SettingsService implements SettingsServiceInterface {
 	 */
 	private function convertValueToString(mixed $value): string {
 		if (is_array($value) === true || is_object($value) === true) {
-			return json_encode($value);
+			return (string)json_encode($value);
 		}
 
 		return (string)$value;
@@ -504,15 +515,21 @@ class SettingsService implements SettingsServiceInterface {
 		'libresign_qualified',
 		'signing_request_expiry_days',
 		'signing_guardian_consent_age',
+		'extraction_unattended_threshold',
 		'ocr_enabled',
 		'ocr_languages',
 		'ocr_dpi',
 		'ocr_on_arrival',
+		'intake.brp_lookup_enabled',
 		'pseudonymisation_restore_allowed_groups',
 		'legal_hold_authority_groups',
 		'filinq.confidentiality.label_vocabulary',
 		'filinq.confidentiality.prioritise_analysis',
 		self::SUBFOLDER_KEY,
+		// Review workbench checked gate: `enforced` (default) or `advisory`.
+		'filinq.review.checked_gate',
+		// Review workbench certain-from: a detected finding below it is uncertain.
+		'filinq.review.certain_from',
 		self::FOUR_EYES_KEY,
 		self::DEFAULT_PUBLISHER_KEY,
 	];
@@ -533,10 +550,12 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
 	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	public function updateSettings(array $data): array {
 		$this->assertValidSubfolderName(data: $data);
+		($this->reviewRules ?? new ReviewSettingsRules())->assertValid(data: $data);
+		(new UnattendedThresholdSetting())->assertValid(data: $data);
 		$this->assertValidFourEyesMode(data: $data);
 
 		try {
@@ -631,7 +650,7 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @throws RuntimeException With code 400 when the value is not woo, always or off.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	private function assertValidFourEyesMode(array $data): void {
 		if (array_key_exists(self::FOUR_EYES_KEY, $data) === false) {
@@ -659,7 +678,7 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @return string One of woo, always or off.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	public function getFourEyesMode(): string {
 		$mode = trim($this->config->getValueString($this->appName, self::FOUR_EYES_KEY, self::FOUR_EYES_DEFAULT));

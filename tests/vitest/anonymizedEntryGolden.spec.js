@@ -109,6 +109,17 @@ const CASES = [
 		{},
 	],
 	[
+		// @spec openspec/changes/image-redaction/tasks.md#task-4.2
+		'link with burned image regions',
+		'plain',
+		{
+			results: [
+				{ id: 'L5', replacementCount: 2, burnedRegionCount: 3, imageRedactionPending: true },
+			],
+		},
+		{},
+	],
+	[
 		'link with empty fields',
 		'[PERSON: 1]',
 		{

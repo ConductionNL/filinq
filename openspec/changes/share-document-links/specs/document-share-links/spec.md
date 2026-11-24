@@ -25,14 +25,14 @@ Rows: `sh-link` (filinq matrix)
 - GIVEN a clerk on `/my-documents` with `besluit-2026-114.pdf`
 - WHEN the clerk chooses "Share by link", keeps the expiry at 14 days and confirms
 - THEN the dialog shows a link, and a logged-out browser opening it gets the PDF
-- @e2e tests/e2e/document-share-links.spec.ts
+- @e2e tests/e2e/workflows/share-document-links.spec.ts
 
 #### Scenario: A file the clerk may not share
 
 - GIVEN a document shared with the clerk without reshare permission
 - WHEN the clerk tries to share it by link
 - THEN the dialog shows Nextcloud's reason and no link or share record exists
-- @e2e tests/e2e/document-share-links.spec.ts
+- @e2e tests/e2e/workflows/share-document-links.spec.ts
 
 ### Requirement: Several documents leave as one archive with a manifest (REQ-SDL-002)
 
@@ -51,14 +51,14 @@ Rows: `sh-bundle` (filinq matrix)
 - GIVEN a clerk in bulk selection on `/my-documents` with four documents selected
 - WHEN the clerk chooses "Share by link", names the bundle "Bezwaar 2026-031" and confirms
 - THEN one link opens `Bezwaar 2026-031.zip` holding the four documents and `manifest.json`
-- @e2e tests/e2e/document-share-links.spec.ts
+- @e2e tests/e2e/workflows/share-document-links.spec.ts
 
 #### Scenario: Over the ceiling, told before
 
 - GIVEN a selection larger than the ceiling
 - WHEN the clerk opens the dialog
 - THEN the dialog says the bundle goes over the ceiling and names what would be left out, before anything is built
-- @e2e tests/e2e/document-share-links.spec.ts
+- @e2e tests/e2e/workflows/share-document-links.spec.ts
 
 ### Requirement: Every link runs out (REQ-SDL-003)
 
@@ -73,7 +73,7 @@ Rows: `sh-link`, `sh-bundle` (filinq matrix)
 - GIVEN Nextcloud enforces link expiry at 7 days
 - WHEN a clerk picks an expiry 30 days ahead
 - THEN the dialog sets it to 7 days ahead and says why
-- @e2e tests/e2e/document-share-links.spec.ts
+- @e2e tests/e2e/workflows/share-document-links.spec.ts
 
 ### Requirement: A link can be taken back, and closes when it runs out (REQ-SDL-004)
 
@@ -91,7 +91,7 @@ Rows: `sh-revoke` (filinq matrix)
 - GIVEN a clerk with an active link on the Shared links page
 - WHEN the clerk chooses "Take back"
 - THEN the row reads "Taken back" with the clerk's name, and the link no longer opens
-- @e2e tests/e2e/document-share-links.spec.ts
+- @e2e tests/e2e/workflows/share-document-links.spec.ts
 
 #### Scenario: Somebody else's link
 
@@ -124,7 +124,7 @@ Rows: `sh-bundle`, `sh-link`, `sh-revoke` (filinq matrix)
 - GIVEN a document shared by link last month and taken back a week later
 - WHEN an archivist opens the Shared links page as admin
 - THEN the row names the file and its version, the sharer, the expiry and who took it back, and shows no link
-- @e2e tests/e2e/document-share-links.spec.ts
+- @e2e tests/e2e/workflows/share-document-links.spec.ts
 
 ### Requirement: A labelled document is shared only after a confirmation (REQ-SDL-006)
 
@@ -139,4 +139,4 @@ Rows: `sh-link`, `sh-bundle` (filinq matrix)
 - GIVEN a document labelled "Confidential"
 - WHEN a clerk opens "Share by link" on it
 - THEN the dialog says the document is labelled "Confidential" and the share button stays disabled until the clerk ticks the confirmation
-- @e2e tests/e2e/document-share-links.spec.ts
+- @e2e tests/e2e/workflows/share-document-links.spec.ts

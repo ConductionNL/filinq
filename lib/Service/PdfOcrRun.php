@@ -93,7 +93,7 @@ final class PdfOcrRun {
 	public function averageConfidence(): float {
 		$avgConfidence = 0.0;
 		if ($this->pageCount > 0) {
-			$avgConfidence = ($this->totalConfidence / $this->pageCount);
+			$avgConfidence = ($this->totalConfidence / (float)$this->pageCount);
 		}
 
 		return $avgConfidence;

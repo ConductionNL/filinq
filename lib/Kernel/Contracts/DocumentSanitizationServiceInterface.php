@@ -42,6 +42,11 @@ interface DocumentSanitizationServiceInterface {
 	public const OFFICE_ENGINE = 'OCA\OpenRegister\Files\Service\File\OfficeDocumentSanitizer';
 
 	/**
+	 * OpenRegister's PDF sanitizer; absent on an OpenRegister that predates it.
+	 */
+	public const PDF_ENGINE = 'OCA\OpenRegister\Files\Service\File\PdfDocumentSanitizer';
+
+	/**
 	 * Sanitize a file the user can read into a derivative beside it.
 	 *
 	 * @param int    $fileId  The file.
@@ -52,7 +57,7 @@ interface DocumentSanitizationServiceInterface {
 	 *
 	 * @throws InvalidArgumentException 404 unreachable, 415 unsupported, 422 encrypted, 500 engine failure.
 	 *
-	 * @spec openspec/changes/document-sanitization/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-1
 	 */
 	public function sanitize(int $fileId, string $userId, string $trigger = 'manual'): array;
 }//end interface

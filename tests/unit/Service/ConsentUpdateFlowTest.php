@@ -52,6 +52,13 @@ class ConsentUpdateFlowTest extends TestCase {
 	private array $calls = [];
 
 	/**
+	 * The status events of the last save.
+	 *
+	 * @var array<int, array<string, string>>
+	 */
+	private array $savedEvents = [];
+
+	/**
 	 * A handler over a stored consent record.
 	 *
 	 * @param array<string, mixed>|null $stored The stored record, or null when it is not found.
@@ -80,6 +87,7 @@ class ConsentUpdateFlowTest extends TestCase {
 				$register = $options->target->register;
 				$schema = $options->target->schema;
 				$uuid = $options->uuid;
+				$this->savedEvents = (array)($object['statusEvents'] ?? []);
 				unset($object['statusEvents']);
 				$this->calls[] = ['save' => [$object, $register, $schema, $uuid, $_rbac]];
 				if ($saveFails === true) {
@@ -125,14 +133,14 @@ class ConsentUpdateFlowTest extends TestCase {
 
 		$this->assertSame(
 			expected: [
-				['find' => ['c-1', 'filinq', 'publicationConsent', false]],
+				['find' => ['c-1', 'filinq', 'publicationConsent', true]],
 				[
 					'save' => [
 						['consentStatus' => 'pending', 'notificationStatus' => 'sent', 'documentId' => 'd-1', 'policyMatch' => null, 'objectionReason' => 'privacy'],
 						'filinq',
 						'publicationConsent',
 						null,
-						false,
+						true,
 					],
 				],
 				[
@@ -147,6 +155,28 @@ class ConsentUpdateFlowTest extends TestCase {
 	}//end testWhitelistedFieldsAreSaved()
 
 	/**
+	 * An agent's change carries `via: mcp` on its status event beside the
+	 * user it ran as; a change made in Filinq itself carries no `via`
+	 * (hermiq-ai-tooling REQ-DDHAT-003).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/hermiq-ai-tooling/specs/filinq-mcp-surface/spec.md#requirement-agent-initiated-writes-are-attributable-req-ddhat-003
+	 */
+	public function testAnAgentsStatusEventSaysItCameViaMcp(): void {
+		$stored = ['consentStatus' => 'pending', 'notificationStatus' => 'sent', 'documentId' => 'd-1', 'policyMatch' => null];
+		$ref    = new RegisterObjectRef(id: 'c-1', register: 'filinq', schema: 'publicationConsent');
+
+		$this->handler(stored: $stored)->updateConsentStatus(consent: $ref, change: new ConsentStatusChange(data: ['consentStatus' => 'consent_given', 'evidence' => 'brief'], actor: 'ingrid', via: 'mcp'));
+		$this->assertCount(expectedCount: 1, haystack: $this->savedEvents);
+		$this->assertSame(expected: ['field' => 'consentStatus', 'from' => 'pending', 'to' => 'consent_given', 'evidence' => 'brief', 'by' => 'ingrid'], actual: array_diff_key($this->savedEvents[0], ['at' => true, 'via' => true]));
+		$this->assertSame(expected: 'mcp', actual: $this->savedEvents[0]['via']);
+
+		$this->handler(stored: $stored)->updateConsentStatus(consent: $ref, change: new ConsentStatusChange(data: ['consentStatus' => 'consent_given', 'evidence' => 'brief'], actor: 'ingrid'));
+		$this->assertArrayNotHasKey(key: 'via', array: $this->savedEvents[0]);
+	}//end testAnAgentsStatusEventSaysItCameViaMcp()
+
+	/**
 	 * A record that is not found is wrapped, logged and nothing is saved.
 	 *
 	 * @return void
@@ -159,7 +189,7 @@ class ConsentUpdateFlowTest extends TestCase {
 		$this->assertSame(expected: 'Consent record not found: c-1', actual: $caught->getPrevious()?->getMessage());
 		$this->assertSame(
 			expected: [
-				['find' => ['c-1', 'filinq', 'publicationConsent', false]],
+				['find' => ['c-1', 'filinq', 'publicationConsent', true]],
 				[
 					'log error' => 'Failed to update consent status: Consent record not found: c-1',
 					'context'   => ['consentId' => 'c-1', 'exception' => 'Consent record not found: c-1'],
@@ -194,7 +224,7 @@ class ConsentUpdateFlowTest extends TestCase {
 		$caught = $this->failure(handler: $this->handler(stored: ['policyMatch' => null]), data: ['policyMatch' => 'p-1']);
 
 		$this->assertSame(expected: InvalidArgumentException::class, actual: get_class($caught));
-		$this->assertSame(expected: [['find' => ['c-1', 'filinq', 'publicationConsent', false]]], actual: $this->calls);
+		$this->assertSame(expected: [['find' => ['c-1', 'filinq', 'publicationConsent', true]]], actual: $this->calls);
 	}//end testGuardRefusalPassesThrough()
 
 	/**

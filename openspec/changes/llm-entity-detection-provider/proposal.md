@@ -1,5 +1,6 @@
 ---
 kind: code
+status: proposed
 ---
 
 # Proposal: llm-entity-detection-provider

@@ -144,7 +144,8 @@ class Wave12SecurityRegressionTest extends TestCase {
 			$corrSvc,
 			$userSession,
 			$this->createMock(LoggerInterface::class),
-			$this->makeL10n()
+			$this->makeL10n(),
+			$this->createMock(\OCA\Filinq\Service\CorrespondenceSendService::class)
 		);
 
 	}//end makeCorrespondenceController()

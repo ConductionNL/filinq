@@ -56,6 +56,10 @@
 				<LegalHoldBadge
 					:objectId="dossierId"
 					@held="underLegalHold = $event" />
+				<MdtoPanel
+					:objectId="dossierId"
+					objectType="dossier"
+					@transferred="transferred = $event" />
 				<NcNoteCard v-if="folderWarning" type="warning">
 					{{ folderWarning }}
 				</NcNoteCard>
@@ -75,7 +79,7 @@
 						v-for="target in offeredTransitions"
 						:key="target"
 						variant="secondary"
-						:disabled="dossierStore.saving"
+						:disabled="dossierStore.saving || transferred"
 						@click="transition(target)">
 						{{ transitionLabel(target) }}
 					</NcButton>
@@ -136,7 +140,10 @@
 			<section class="dossier-section dossier-documents">
 				<div class="dossier-section-head">
 					<h3>{{ t('filinq', 'Documents') }}</h3>
-					<NcButton variant="secondary" @click="addDocument">
+					<NcButton
+						variant="secondary"
+						:disabled="transferred"
+						@click="addDocument">
 						<template #icon>
 							<Plus :size="20" />
 						</template>
@@ -196,15 +203,8 @@
 								</template>
 								<NcActionButton
 									closeAfterClick
-									:disabled="underLegalHold"
-									:title="
-										underLegalHold
-											? t(
-													'filinq',
-													'This dossier is under a legal hold.',
-												)
-											: ''
-									"
+									:disabled="underLegalHold || transferred"
+									:title="removeTitle()"
 									@click="confirmRemove(doc)">
 									<template #icon>
 										<Delete :size="20" />
@@ -224,6 +224,13 @@
 						<p v-else class="dossier-muted">
 							{{ t('filinq', 'Select a document to preview it.') }}
 						</p>
+						<!-- The selected document's own notes: its Nextcloud file comments (work-document-notes D3). -->
+						<CnNotesCard
+							v-if="notesFileId"
+							:key="notesFileId"
+							class="dossier-viewer-notes"
+							:fileId="notesFileId"
+							data-testid="dossier-document-notes" />
 					</div>
 				</div>
 			</section>
@@ -279,7 +286,7 @@
 </template>
 
 <script>
-import { CnConfirmDialog, CnStatusBadge } from '@conduction/nextcloud-vue'
+import { CnConfirmDialog, CnNotesCard, CnStatusBadge } from '@conduction/nextcloud-vue'
 import axios from '@nextcloud/axios'
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
@@ -297,6 +304,7 @@ import FilePdfBox from 'vue-material-design-icons/FilePdfBox.vue'
 import FolderAccount from 'vue-material-design-icons/FolderAccount.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import LegalHoldBadge from '../../components/LegalHoldBadge.vue'
+import MdtoPanel from '../../components/MdtoPanel.vue'
 import WizardEntryActions from '../../components/WizardEntryActions.vue'
 import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { dossierStore } from '../../store/store.js'
@@ -314,6 +322,7 @@ import { dossierStatusColors, dossierStatusLabel } from './dossierStatus.js'
 export default {
 	name: 'DossierDetail',
 	components: {
+		CnNotesCard,
 		CnStatusBadge,
 		CnConfirmDialog,
 		Delete,
@@ -322,6 +331,7 @@ export default {
 		FilePdfBox,
 		FolderAccount,
 		LegalHoldBadge,
+		MdtoPanel,
 		NcActionButton,
 		NcActions,
 		NcButton,
@@ -346,6 +356,10 @@ export default {
 			// e-discovery-legal-hold: set by LegalHoldBadge; removing (which can
 			// trash a file) is switched off while the dossier is held.
 			underLegalHold: false,
+			// archiefwet-retention-engine: set by MdtoPanel; a dossier
+			// transferred to the e-depot is read only, and OpenRegister
+			// refuses every write to it with 409 OBJECT_TRANSFERRED.
+			transferred: false,
 			statusColorMap: dossierStatusColors(),
 		}
 	},
@@ -383,6 +397,20 @@ export default {
 				return targets
 			}
 			return targets.filter((target) => target !== 'published')
+		},
+
+		/**
+		 * The file whose notes show under the viewer: the selected document.
+		 *
+		 * @return {string|null} The file id, or null when nothing is open.
+		 * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
+		 */
+		notesFileId() {
+			const doc = this.dossierStore.selectedDocument
+			if (!doc || doc.missing || !doc.id) {
+				return null
+			}
+			return String(doc.id)
 		},
 
 		/**
@@ -455,10 +483,35 @@ export default {
 			return labels[target] || target
 		},
 
+		/**
+		 * Start renaming, unless the dossier was transferred to the e-depot.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-transfer-to-archive-state-for-permanent-records-req-ddare-006
+		 */
 		startRename() {
+			if (this.transferred) {
+				return
+			}
 			this.draftName = this.dossierStore.dossier.name
 			this.renaming = true
 			this.$nextTick(() => this.$refs.titleInput?.focus())
+		},
+
+		/**
+		 * Why removing a document is switched off, or empty when it is not.
+		 *
+		 * @return {string} The reason, shown as the action's title.
+		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-transfer-to-archive-state-for-permanent-records-req-ddare-006
+		 */
+		removeTitle() {
+			if (this.transferred) {
+				return t('filinq', 'This dossier was transferred to the e-depot and is read only.')
+			}
+			if (this.underLegalHold) {
+				return t('filinq', 'This dossier is under a legal hold.')
+			}
+			return ''
 		},
 
 		cancelRename() {
@@ -654,8 +707,14 @@ export default {
 	border: 1px solid var(--color-border);
 	border-radius: var(--border-radius);
 	display: flex;
+	flex-direction: column;
 	align-items: center;
 	justify-content: center;
+}
+
+.dossier-viewer-notes {
+	align-self: stretch;
+	border-top: 1px solid var(--color-border);
 }
 
 .dossier-viewer-frame {

@@ -33,6 +33,28 @@
 					>: {{ signingStore.signingRequest.provider }}
 				</div>
 			</div>
+			<h3>{{ t('filinq', 'Recipients') }}</h3>
+			<table v-if="recipients.length > 0" class="audit-table">
+				<thead>
+					<tr>
+						<th scope="col">{{ t('filinq', 'Name') }}</th>
+						<th scope="col">{{ t('filinq', 'Role') }}</th>
+						<th scope="col">{{ t('filinq', 'State') }}</th>
+						<th scope="col">{{ t('filinq', 'Signed or accepted at') }}</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr v-for="recipient in recipients" :key="recipient.id">
+						<td>{{ recipient.name }}</td>
+						<td>{{ recipient.role }}</td>
+						<td>{{ recipient.status }}</td>
+						<td>{{ recipient.at }}</td>
+					</tr>
+				</tbody>
+			</table>
+			<p v-else>
+				{{ t('filinq', 'No recipients yet.') }}
+			</p>
 			<SigningEnvelopePanel
 				v-if="signingStore.signingRequest.envelopeRef"
 				:envelopeId="signingStore.signingRequest.envelopeRef"
@@ -68,6 +90,9 @@
 				@click="openVerify">
 				{{ t('filinq', 'Verify') }}
 			</NcButton>
+			<SigningEvidenceCard
+				:requestId="id"
+				:status="signingStore.signingRequest.status || ''" />
 			<NcButton
 				v-if="canWithdraw"
 				variant="error"
@@ -129,9 +154,11 @@ import { NcButton, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import CancelSigningRequestDialog from '../../dialogs/CancelSigningRequestDialog.vue'
 import SignerStepUpModal from '../../modals/SignerStepUpModal.vue'
 import SigningEnvelopePanel from './SigningEnvelopePanel.vue'
+import SigningEvidenceCard from './SigningEvidenceCard.vue'
 import { stepUpReturn } from '../../services/signerStepUp.js'
 import { recordLeafSidebarMixin } from '../../sidebars/recordSidebar.js'
 import { useSigningStore } from '../../store/modules/signing.js'
+import { recipientRows } from './recipientList.js'
 
 /**
  * The states a signing request can still be withdrawn from.
@@ -147,6 +174,7 @@ export default {
 		NcNoteCard,
 		SignerStepUpModal,
 		SigningEnvelopePanel,
+		SigningEvidenceCard,
 	},
 
 	// leaf-integrations: the registry's leaves (Mail, Calendar) for this request.
@@ -228,6 +256,17 @@ export default {
 		 */
 		stepUpDone() {
 			return this.returned.status === 'done' && this.returned.signerId !== ''
+		},
+
+		/**
+		 * Who signs and who only accepts, with their state and time (REQ-SAO-001..003).
+		 *
+		 * @return {Array<object>} The recipient rows.
+		 *
+		 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+		 */
+		recipients() {
+			return recipientRows(this.signingStore.signingRequest?.recipients)
 		},
 	},
 

@@ -26,9 +26,11 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use Exception;
+use OCA\Filinq\BackgroundJob\IntegrityScanJob;
 use OCA\Filinq\Controller\SettingsController;
 use OCA\Filinq\Controller\Support\AppConfiguration;
 use OCA\Filinq\Controller\Support\SettingsBackends;
+use OCA\Filinq\Service\IntegrityScanService;
 use OCA\Filinq\Kernel\Contracts\AnonymiserBackendStateClientInterface;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\App\IAppManager;
@@ -224,7 +226,7 @@ class SettingsControllerIndexTraceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
 	 */
 	public function testARefusedValueAnswers400(): void {
 		$this->settings->method('updateSettings')->willThrowException(
@@ -313,7 +315,7 @@ class SettingsControllerIndexTraceTest extends TestCase {
 
 		return new SettingsController(
 			system: new AppConfiguration(apps: $apps, config: $config),
-			backends: new SettingsBackends(settings: $this->settings, anonymiser: $client),
+			backends: new SettingsBackends(settings: $this->settings, anonymiser: $client, integrityScan: $this->createMock(IntegrityScanService::class), integrityNotices: $this->createMock(IntegrityScanJob::class)),
 			request: $request,
 			groupManager: $groups,
 			userSession: $session,

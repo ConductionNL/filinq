@@ -1,7 +1,12 @@
 {
 	"prohibition": {
 		"mounted": {
-			"calls": [["prohibitionStore", "fetchProhibitions"]],
+			"calls": [
+				[
+					"prohibitionStore",
+					"fetchProhibitions"
+				]
+			],
 			"dialog": null
 		},
 		"createOpened": {
@@ -16,6 +21,7 @@
 				"Severity",
 				"Jurisdiction (optional)",
 				"Valid until (ISO 8601, optional)",
+				"label",
 				"Active"
 			],
 			"notes": [
@@ -45,11 +51,14 @@
 				"Severity",
 				"Jurisdiction (optional)",
 				"Valid until (ISO 8601, optional)",
+				"label",
 				"Active",
 				"Match type",
 				"Match value"
 			],
-			"notes": [": Match rules"],
+			"notes": [
+				": Match rules"
+			],
 			"buttons": [
 				{
 					"label": "Cancel",
@@ -81,7 +90,8 @@
 								"type": "bsn",
 								"value": "123456782"
 							}
-						]
+						],
+						"bases": []
 					}
 				]
 			],
@@ -104,6 +114,7 @@
 					"Severity",
 					"Jurisdiction (optional)",
 					"Valid until (ISO 8601, optional)",
+					"label",
 					"Active",
 					"Match type",
 					"Match value"
@@ -138,7 +149,8 @@
 						"type": "exact",
 						"value": "Piet"
 					}
-				]
+				],
+				"bases": []
 			}
 		},
 		"editChanged": {
@@ -153,6 +165,7 @@
 				"Severity",
 				"Jurisdiction (optional)",
 				"Valid until (ISO 8601, optional)",
+				"label",
 				"Active",
 				"Match type",
 				"Match value"
@@ -193,7 +206,8 @@
 								"type": "exact",
 								"value": "Piet"
 							}
-						]
+						],
+						"bases": []
 					}
 				]
 			],
@@ -223,7 +237,8 @@
 								"type": "bsn",
 								"value": "123456782"
 							}
-						]
+						],
+						"bases": []
 					}
 				]
 			],
@@ -244,6 +259,7 @@
 					"Severity",
 					"Jurisdiction (optional)",
 					"Valid until (ISO 8601, optional)",
+					"label",
 					"Active",
 					"Match type",
 					"Match value"
@@ -267,7 +283,12 @@
 	},
 	"standingConsent": {
 		"mounted": {
-			"calls": [["standingConsentStore", "fetchStandingConsents"]],
+			"calls": [
+				[
+					"standingConsentStore",
+					"fetchStandingConsents"
+				]
+			],
 			"dialog": null
 		},
 		"createOpened": {
@@ -282,6 +303,7 @@
 				"Legal basis",
 				"Valid from (ISO 8601, optional)",
 				"Valid until (ISO 8601, optional)",
+				"label",
 				"Active"
 			],
 			"notes": [
@@ -312,6 +334,7 @@
 				"Legal basis",
 				"Valid from (ISO 8601, optional)",
 				"Valid until (ISO 8601, optional)",
+				"label",
 				"Active",
 				"Match type",
 				"Match value"
@@ -354,7 +377,8 @@
 						],
 						"consentStatus": "consent_given",
 						"publicationDecision": "publish_with_consent",
-						"notificationStatus": "skipped"
+						"notificationStatus": "skipped",
+						"bases": []
 					}
 				]
 			],
@@ -377,6 +401,7 @@
 					"Legal basis",
 					"Valid from (ISO 8601, optional)",
 					"Valid until (ISO 8601, optional)",
+					"label",
 					"Active",
 					"Match type",
 					"Match value"
@@ -414,7 +439,8 @@
 				],
 				"consentStatus": "consent_given",
 				"publicationDecision": "publish_with_consent",
-				"notificationStatus": "sent"
+				"notificationStatus": "sent",
+				"bases": []
 			}
 		},
 		"editChanged": {
@@ -429,11 +455,14 @@
 				"Legal basis",
 				"Valid from (ISO 8601, optional)",
 				"Valid until (ISO 8601, optional)",
+				"label",
 				"Active",
 				"Match type",
 				"Match value"
 			],
-			"notes": [": Match rules"],
+			"notes": [
+				": Match rules"
+			],
 			"buttons": [
 				{
 					"label": "Cancel",
@@ -469,7 +498,8 @@
 						],
 						"consentStatus": "consent_given",
 						"publicationDecision": "publish_with_consent",
-						"notificationStatus": "sent"
+						"notificationStatus": "sent",
+						"bases": []
 					}
 				]
 			],
@@ -502,7 +532,8 @@
 						],
 						"consentStatus": "consent_given",
 						"publicationDecision": "publish_with_consent",
-						"notificationStatus": "skipped"
+						"notificationStatus": "skipped",
+						"bases": []
 					}
 				]
 			],
@@ -523,6 +554,7 @@
 					"Legal basis",
 					"Valid from (ISO 8601, optional)",
 					"Valid until (ISO 8601, optional)",
+					"label",
 					"Active",
 					"Match type",
 					"Match value"

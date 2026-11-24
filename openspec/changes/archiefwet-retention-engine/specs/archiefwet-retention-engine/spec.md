@@ -20,38 +20,42 @@ UI surfaces and one propagation rule.
 
 ## ADDED Requirements
 
-### Requirement: Archief register hosts selectielijst and disposal-workflow homes (REQ-DDARE-001)
+### Requirement: The register hosts selectielijst and disposal-workflow homes (REQ-DDARE-001)
 
-The app MUST declare an `archief` register in
-`lib/Settings/filinq_register.json` with three schemas, all
+The app MUST declare, in its one consolidated `filinq` register in
+`lib/Settings/filinq_register.json` (the app declares exactly one register,
+so there is no separate `archief` register), three schemas, all
 `hardValidation: true`, stored as OpenRegister objects (ADR-001):
 `selectielijstEntry` (`categorie` string unique, `omschrijving`,
 `bewaartermijn` ISO-8601 duration string, `archiefnominatie` enum
-`bewaren` | `vernietigen`, `bron`, `toelichting`) matching exactly the field
-contract OpenRegister's `RetentionService::lookupSelectielijstEntry()`
-reads; `destructionList` and `destructionCertificate` matching the shapes
+`bewaren` | `vernietigen`, `bron`, `toelichting`, `selectielijstVersie`)
+holding every field OpenRegister's `lookupSelectielijstEntry()` reads and its
+selectielijst import writes, and accepting the further columns an imported
+file carries; `destructionList` and `destructionCertificate` matching the shapes
 OR's `DestructionService` writes (list: `status`, `createdAt`,
 `objectCount`, `objects[]`, `approvals[]`, `rejections[]`; certificate:
-`type`, `destructionDate`, `approvers[]`, per-schema and per-category
-counts, `complianceStatement`, `immutable`). The register version MUST be
+`type`, `destructionDate`, `approvedBy[]`, per-schema and per-category
+counts, `complianceStatement`, `immutable`). Because OpenRegister stores the
+certificate of an executed list in its destruction-list schema,
+`destructionList` MUST accept the certificate's shape as well. The register version MUST be
 bumped so `ConfigurationService::importFromApp()` imports it on boot.
 Seeded `selectielijstEntry` objects MUST, before this change is applied to
 production, carry real VNG selectielijst-manager-approved category codes
 (the apply-blocker in REQ-DDARE-009): placeholder `TODO-*` codes MAY be used
 only during authoring and MUST NOT remain in the seed at apply time.
 
-#### Scenario: Register import creates the archief schemas and seeds
+#### Scenario: Register import creates the archival schemas and seeds
 
 - GIVEN a fresh Nextcloud instance with Filinq and OpenRegister installed
 - WHEN the app boots and `ConfigurationService::importFromApp()` runs
-- THEN the `archief` register exists with schemas `selectielijstEntry`, `destructionList` and `destructionCertificate`
-- AND the seeded selectielijst entries are queryable via `ObjectService::searchObjects()` with `@self.register = archief`
+- THEN the `filinq` register holds schemas `selectielijstEntry`, `destructionList` and `destructionCertificate`
+- AND the seeded selectielijst entries are queryable via `ObjectService::searchObjects()` with `@self.register = filinq`
 - AND at apply time no seeded `categorie` value is a `TODO-*` placeholder (see the apply-blocker in REQ-DDARE-009)
 - @e2e exclude register import is a boot-time backend concern with no UI surface of its own — covered by PHPUnit register-import assertions (tests/unit/Settings/)
 
 #### Scenario: Selectielijst entry field contract matches the OR reader
 
-- GIVEN the shipped `selectielijstEntry` schema and OpenRegister's `lookupSelectielijstEntry()` field list (`categorie`, `omschrijving`, `bewaartermijn`, `archiefnominatie`, `bron`, `toelichting`)
+- GIVEN the shipped `selectielijstEntry` schema and OpenRegister's `lookupSelectielijstEntry()` field list (`categorie`, `archiefnominatie`, `bewaartermijn`, `bron`, `selectielijstVersie`)
 - WHEN the schema's properties are compared against that list in the unit suite
 - THEN every field the OR reader consumes exists on the schema with the documented type
 - AND a drift (renamed or dropped field) breaks the unit suite instead of silently emptying lookups
@@ -64,17 +68,17 @@ OpenRegister's current archival settings (via OR's
 `GET /api/settings/archival`) and offers an explicit "Koppel
 archiefregister" action that sets `selectielijstRegister`,
 `selectielijstSchema`, `destructionListRegister`, `destructionListSchema`
-and `archivalRegister` to the `archief` register's identifiers (via OR's
+and `archivalRegister` to the `filinq` register's and these schemas' identifiers (via OR's
 `PUT /api/settings/archival`). The app MUST NOT rewrite these settings
 silently (no repair step, no boot hook): when the settings already point at
 a different register the panel MUST show the current owner and require the
 admin action to rewire.
 
-#### Scenario: Admin wires the archief register
+#### Scenario: Admin wires the archival register
 
 - GIVEN an admin on the Filinq Archiefbeheer settings section with OR archival settings unset
 - WHEN they click "Koppel archiefregister" and confirm
-- THEN OR's archival settings point at the `archief` register for selectielijst, destruction lists and certificates
+- THEN OR's archival settings point at the `filinq` register and its `selectielijstEntry` and `destructionList` schemas
 - AND the panel reflects the wired state
 - @e2e tests/e2e/workflows/archiefwet-retention.spec.ts
 

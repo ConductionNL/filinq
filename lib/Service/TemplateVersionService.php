@@ -108,6 +108,13 @@ class TemplateVersionService implements TemplateVersionServiceInterface {
 			'editor' => $editor,
 			'changelog' => $changelog ?? '',
 		];
+		// An office template's version points at its own immutable source file
+		// (office-template-authoring REQ-DDOTA-006); a Twig snapshot is unchanged.
+		foreach (['sourceFileId', 'contentHash'] as $sourceField) {
+			if (empty($templateState[$sourceField]) === false) {
+				$versionData[$sourceField] = $templateState[$sourceField];
+			}
+		}
 
 		$result = $objectService->saveObject(
 			object: $versionData,
@@ -223,7 +230,7 @@ class TemplateVersionService implements TemplateVersionServiceInterface {
 	 *
 	 * @throws Exception If the chain cannot be read
 	 *
-	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-caller-can-pin-the-template-version-to-render-req-ddtvp-003
+	 * @spec openspec/changes/archive/2026-11-20-generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-caller-can-pin-the-template-version-to-render-req-ddtvp-003
 	 */
 	public function findVersionByNumber(string $templateId, int $number): ?array {
 		// The chain is read whole and matched here: a `version` search parameter
@@ -256,7 +263,7 @@ class TemplateVersionService implements TemplateVersionServiceInterface {
 	 *
 	 * @throws Exception If the chain cannot be read
 	 *
-	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-filinq-answers-which-version-was-in-force-on-a-date-req-ddtvp-004
+	 * @spec openspec/changes/archive/2026-11-20-generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-filinq-answers-which-version-was-in-force-on-a-date-req-ddtvp-004
 	 */
 	public function versionInForceAt(string $templateId, DateTimeInterface $moment): ?int {
 		$began = $this->templateCreatedAt(templateId: $templateId);
@@ -382,6 +389,13 @@ class TemplateVersionService implements TemplateVersionServiceInterface {
 			'format' => $targetVersion['format'] ?? 'A4',
 			'orientation' => $targetVersion['orientation'] ?? 'P',
 		];
+		// Restoring an office version re-points the template at that version's
+		// source, so text, file and checksum move back together.
+		foreach (['sourceFileId', 'contentHash'] as $sourceField) {
+			if (empty($targetVersion[$sourceField]) === false) {
+				$restoreData[$sourceField] = $targetVersion[$sourceField];
+			}
+		}
 
 		return $service->updateTemplateWithoutVersion(
 			id: $templateId,

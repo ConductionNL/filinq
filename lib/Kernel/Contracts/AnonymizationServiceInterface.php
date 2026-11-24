@@ -216,7 +216,7 @@ interface AnonymizationServiceInterface {
 	 * @throws Exception If anonymization fails.
 	 * @throws RedactionNotReviewedException When the review gate refuses the run.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-3
 	 */
 	public function anonymizeDocumentAs(int $fileId, array $entities, string $userId): array;
 }//end interface

@@ -71,6 +71,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 * @param PdfDocumentFactory $documents Assembles each segment.
 	 * @param IEventDispatcher $events Where every segment is announced.
 	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param PaperOriginalFiling|null $originals Files the scan of a paper original on its project's record.
 	 *
 	 * @return void
 	 */
@@ -81,6 +82,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 		private readonly PdfDocumentFactory $documents,
 		private readonly IEventDispatcher $events,
 		private readonly LoggerInterface $logger,
+		private readonly ?PaperOriginalFiling $originals = null,
 	) {
 
 	}//end __construct()
@@ -109,6 +111,46 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	}//end receive()
 
 	/**
+	 * Take one batch in and cut it: receive it when it is new, then split it into its own folder.
+	 *
+	 * The one intake path every caller goes through, the split route and a
+	 * watched folder alike. A batch already stored for the file is cut again
+	 * from that record, so the same scan is never received twice.
+	 *
+	 * @param File $file The PDF the scanner wrote.
+	 * @param array<string, mixed> $profile The scan profile to cut it with.
+	 *
+	 * @return array<string, mixed> The batch, `split` or `failed`.
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md
+	 */
+	public function take(File $file, array $profile): array {
+		// Asked first: a node that cannot name its folder throws here, before
+		// anything is received, so a batch is never stored without a place to cut it to.
+		$target = $file->getParent();
+
+		$batch = $this->storedFor(fileId: (int)$file->getId());
+		if ($batch === null) {
+			$batch = $this->receive(file: $file, profile: $profile);
+		}
+
+		return $this->split(batch: $batch, profile: $profile, file: $file, target: $target);
+	}//end take()
+
+	/**
+	 * The batch already stored for a file, whatever state it is in.
+	 *
+	 * @param int $fileId The Nextcloud file id of the batch PDF.
+	 *
+	 * @return array<string, mixed>|null The batch, or null when the file is none.
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-accepts-only-what-it-stored-and-each-file-once-req-scw-002
+	 */
+	public function storedFor(int $fileId): ?array {
+		return $this->batches->findByFile(fileId: $fileId);
+	}//end storedFor()
+
+	/**
 	 * Cut one batch into documents and announce every one of them.
 	 *
 	 * @param array<string, mixed> $batch The batch, as received.
@@ -128,7 +170,11 @@ class ScanBatchService implements ScanBatchServiceInterface {
 			$batch['pageCount'] = count($pages);
 			$segments = $this->segmentsOf(pages: $pages, mode: $mode, profile: $profile);
 			$this->requireSegments(pages: $pages, segments: $segments);
-			$delivery = new ScanDelivery(scannerId: (string)($batch['scannerId'] ?? ($profile['id'] ?? '')), target: $target);
+			$delivery = new ScanDelivery(
+				scannerId: (string)($batch['scannerId'] ?? ($profile['id'] ?? '')),
+				target: $target,
+				batchId: (string)($batch['uuid'] ?? '')
+			);
 			$batch['segments'] = $this->deliverAll(segments: $segments, delivery: $delivery);
 		} catch (ScanSplitFailedException $e) {
 			return $this->fail(batch: $batch, reason: $e->getMessage());
@@ -231,6 +277,12 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function segmentsOf(array $pages, string $mode, array $profile): array {
+		if ($mode === self::MODE_NONE) {
+			// One document per batch: no page is read as a separator, so a
+			// blank or unreadable page stays inside the document.
+			return $this->wholeBatch(pages: $pages);
+		}
+
 		$rule = new SeparatorRule(mode: $mode, inkThreshold: (int)($profile['inkThreshold'] ?? 4096));
 		$segments = [];
 		$current = ['pages' => [], 'firstPage' => 1, 'caseNumber' => ''];
@@ -262,6 +314,24 @@ class ScanBatchService implements ScanBatchServiceInterface {
 
 		return $segments;
 	}//end segmentsOf()
+
+	/**
+	 * The whole batch as one segment, for a profile that does not cut.
+	 *
+	 * @param array<int, string> $pages The batch's pages.
+	 *
+	 * @return array<int, array{pages: array<int, string>, firstPage: int, caseNumber: string}> One segment, or none for an empty batch.
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
+	 */
+	private function wholeBatch(array $pages): array {
+		if ($pages === []) {
+			return [];
+		}
+
+		return [['pages' => array_values($pages), 'firstPage' => 1, 'caseNumber' => '']];
+
+	}//end wholeBatch()
 
 	/**
 	 * What one page is: a separator naming a case, a separator naming none, or
@@ -303,16 +373,16 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	private function deliver(array $segment, ScanDelivery $delivery): array {
-		$document = $this->documents->create();
-		foreach ($segment['pages'] as $page) {
-			$this->documents->appendPages(document: $document, pdf: $page);
+		$place = $this->placeOf(segment: $segment);
+		if ($place !== null) {
+			return $this->deliverOriginal(segment: $segment, delivery: $delivery, place: $place);
 		}
 
 		$scannerId = $delivery->scannerId;
 		$name = $delivery->target->getNonExistingName(
 			sprintf('scan-%s-%02d.pdf', $scannerId, ($segment['position'] + 1))
 		);
-		$file = $delivery->target->newFile($name, $this->documents->output(document: $document));
+		$file = $delivery->target->newFile($name, $this->assemble(segment: $segment));
 
 		// The event carries the case number the SEPARATOR named, as a source
 		// reference. It is a suggestion for the clerk, never an assignment.
@@ -349,6 +419,81 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	}//end deliver()
 
 	/**
+	 * The segment's pages as one PDF.
+	 *
+	 * @param array<string, mixed> $segment The segment.
+	 *
+	 * @return string The PDF bytes.
+	 */
+	private function assemble(array $segment): string {
+		$document = $this->documents->create();
+		foreach ($segment['pages'] as $page) {
+			$this->documents->appendPages(document: $document, pdf: $page);
+		}
+
+		return $this->documents->output(document: $document);
+
+	}//end assemble()
+
+	/**
+	 * Where the scan of the paper original a segment's separator named is
+	 * filed, or null for a segment that goes to the inbox: one whose
+	 * separator named a case or nothing, or an original that cannot be found.
+	 *
+	 * @param array<string, mixed> $segment The segment.
+	 *
+	 * @return array{original: array<string, mixed>, project: array<string, mixed>, folder: \OCP\Files\Folder}|null
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 */
+	private function placeOf(array $segment): ?array {
+		$reference = (string)($segment['caseNumber'] ?? '');
+		if ($this->originals === null || str_starts_with($reference, SeparatorSheetService::ORIGINAL_MARKER) === false) {
+			return null;
+		}
+
+		return $this->originals->placeFor(originalId: substr($reference, strlen(SeparatorSheetService::ORIGINAL_MARKER)));
+
+	}//end placeOf()
+
+	/**
+	 * File the scan of a paper original on its project's record and record
+	 * it on the original; it does not pass the intake inbox (design D3).
+	 *
+	 * @param array<string, mixed> $segment  The segment, with its `position`.
+	 * @param ScanDelivery         $delivery The scanner and the batch.
+	 * @param array{original: array<string, mixed>, project: array<string, mixed>, folder: \OCP\Files\Folder} $place Where it goes.
+	 *
+	 * @return array<string, mixed> What the batch records about this segment.
+	 *
+	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 */
+	private function deliverOriginal(array $segment, ScanDelivery $delivery, array $place): array {
+		$name = $place['folder']->getNonExistingName($this->originals->fileName(original: $place['original']));
+		$file = $place['folder']->newFile($name, $this->assemble(segment: $segment));
+		$original = $this->originals->markScanned(
+			place: $place,
+			scan: ['fileId' => (int)$file->getId(), 'pages' => count($segment['pages']), 'batchId' => $delivery->batchId]
+		);
+
+		$this->logger->info(
+			message: '[ScanBatchService] the scan of a paper original was filed on its project record',
+			context: ['scannerId' => $delivery->scannerId, 'fileId' => $file->getId(), 'pages' => count($segment['pages'])]
+		);
+
+		return [
+			'fileId' => $file->getId(),
+			'name' => $name,
+			'firstPage' => (int)($segment['firstPage'] ?? 0),
+			'pages' => count($segment['pages']),
+			'sourceRef' => (string)($segment['caseNumber'] ?? ''),
+			'paperOriginal' => (string)($place['original']['id'] ?? ''),
+			'originalStatus' => (string)($original['status'] ?? ''),
+		];
+
+	}//end deliverOriginal()
+
+	/**
 	 * Stop a batch, saying why, having delivered nothing.
 	 *
 	 * @param array<string, mixed> $batch The batch as it stands.
@@ -382,8 +527,8 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 */
 	private function mode(array $profile): string {
 		$mode = (string)($profile['separatorMode'] ?? self::MODE_QR);
-		if ($mode === self::MODE_BLANK) {
-			return self::MODE_BLANK;
+		if ($mode === self::MODE_BLANK || $mode === self::MODE_NONE) {
+			return $mode;
 		}
 
 		return self::MODE_QR;

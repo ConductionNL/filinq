@@ -44,10 +44,14 @@
 
 ## 6. Verification
 
-- [ ] 6.1 Run PHPUnit in the container:
+- [x] 6.1 Run PHPUnit in the container:
       `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
       and read the exit code, not the summary line.
-- [ ] 6.2 Run `openspec validate one-signing-rail-for-the-fleet --strict`.
+      Done (2026-11-23): `php vendor/bin/phpunit -c phpunit-unit.xml --no-coverage` on `development`
+      23e71f5 (the unit suite runs on its stubs, no Nextcloud needed) exits 0: 8525 tests, 8 skipped.
+- [x] 6.2 Run `openspec validate one-signing-rail-for-the-fleet --strict`.
+      Done (2026-11-23): the `status` front matter moved from the spec delta to `proposal.md`, the
+      only warning; the command now reports the change valid.
 - [ ] 6.3 Run `composer check:strict`.
 - [ ] 6.4 Raise a delegated request from shillinq on the dev instance and
       confirm the noun is on the persisted record.

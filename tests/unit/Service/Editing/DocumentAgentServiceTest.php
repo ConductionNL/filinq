@@ -283,7 +283,7 @@ class DocumentAgentServiceTest extends TestCase {
 			}
 		}
 
-		$this->assertSame(['createRequest'], $tools, 'Only createRequest() may be a tool; sign, decline, bulkSign and cancelRequest never.');
+		$this->assertSame(['startSigningRequest'], $tools, 'Only startSigningRequest() may be a tool; createRequest, sign, decline, bulkSign and cancelRequest never.');
 
 	}//end testNoSigningServiceIsReachableByAnAgent()
 
@@ -298,7 +298,7 @@ class DocumentAgentServiceTest extends TestCase {
 	public function testStartingASigningRequestIsAnHonestlyHintedWrite(): void {
 		$this->assertContains(SigningService::class, (new FilinqScannableServices())->getScannableServiceClasses());
 
-		$attributes = (new ReflectionMethod(SigningService::class, 'createRequest'))->getAttributes(McpTool::class);
+		$attributes = (new ReflectionMethod(SigningService::class, 'startSigningRequest'))->getAttributes(McpTool::class);
 		$this->assertCount(1, $attributes);
 
 		$tool = $attributes[0]->newInstance();

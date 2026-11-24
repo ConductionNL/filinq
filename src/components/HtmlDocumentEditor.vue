@@ -163,7 +163,7 @@ export default {
 		 * The mounted HTML, sanitised before it reaches `v-html`.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.1
 		 */
 		safeHtml() {
 			return sanitizeHtml(this.mountedHtml)
@@ -175,7 +175,7 @@ export default {
 		 * Re-mount the area when the value changes from outside.
 		 *
 		 * @param {string} value The new HTML.
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.1
 		 */
 		modelValue(value) {
 			if (value !== this.emittedHtml) {
@@ -192,7 +192,7 @@ export default {
 		 * Apply an inline formatting command at the selection.
 		 *
 		 * @param {string} cmd The `execCommand` command.
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.1
 		 */
 		execFormat(cmd) {
 			if (this.readonly) {
@@ -206,7 +206,7 @@ export default {
 		 * Apply a block format, such as a heading, at the selection.
 		 *
 		 * @param {string} tag The block tag.
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.1
 		 */
 		execBlock(tag) {
 			if (this.readonly) {
@@ -220,7 +220,7 @@ export default {
 		 * Emit the area's current HTML. A host that inserts content itself
 		 * (the template page's merge field) calls this afterwards.
 		 *
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.1
 		 */
 		sync() {
 			if (!this.$refs.editor || this.readonly) {
@@ -234,7 +234,7 @@ export default {
 		 * Take the raw-HTML box's value and re-mount the area with it.
 		 *
 		 * @param {Event} event The textarea's input event.
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.1
 		 */
 		syncFromRaw(event) {
 			if (this.readonly) {

@@ -30,7 +30,10 @@ namespace OCA\Filinq\EventListener;
 use OCA\Filinq\Event\DocumentGenerationRequestedEvent;
 use OCA\Filinq\Event\DocumentStampRequestedEvent;
 use OCA\Filinq\Flow\FilinqFlowNodeListener;
+use OCA\Filinq\Flow\RegisterFlowOperationsListener;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use OCP\WorkflowEngine\Events\LoadSettingsScriptsEvent;
+use OCP\WorkflowEngine\Events\RegisterOperationsEvent;
 
 /**
  * Registers the flow-node listener and the generation command listener.
@@ -66,6 +69,8 @@ class DocumentGenerationRegistrar {
 	 * @return void
 	 *
 	 * @spec openspec/changes/flow-generate-document-node/specs/flow-document-generation/spec.md#requirement-filinq-registers-its-node-and-still-boots-without-openregister
+	 * @spec openspec/changes/template-engine-renders-through-a-vendor/tasks.md#2-backend
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md#requirement-filinq-takes-a-scanned-batch-that-integriqs-watched-folder-hands-over-req-scw-001
 	 */
 	public function register(IRegistrationContext $context): void {
 		$context->registerEventListener(
@@ -84,6 +89,33 @@ class DocumentGenerationRegistrar {
 		$context->registerEventListener(
 			event: DocumentStampRequestedEvent::class,
 			listener: DocumentStampRequestedListener::class
+		);
+
+		// Nextcloud Flow (flow-operations): the four file operations, and the
+		// script that renders their options in the Flow rule builder.
+		$context->registerEventListener(
+			event: RegisterOperationsEvent::class,
+			listener: RegisterFlowOperationsListener::class
+		);
+		$context->registerEventListener(
+			event: LoadSettingsScriptsEvent::class,
+			listener: RegisterFlowOperationsListener::class
+		);
+
+		// Vendor renders (template-engine-renders-through-a-vendor): integriq
+		// reports how a render it handed to a vendor ended; keyed by name so
+		// filinq boots without integriq.
+		$context->registerEventListener(
+			event: VendorRenderedListener::RENDERED_EVENT,
+			listener: VendorRenderedListener::class
+		);
+
+		// Watched-folder scan intake (scan-intake-from-a-watched-folder):
+		// integriq hands a scanned batch over; keyed by name so filinq boots
+		// without integriq, and the listener checks the class before reading it.
+		$context->registerEventListener(
+			event: WatchedFileArrivedListener::ARRIVED_EVENT,
+			listener: WatchedFileArrivedListener::class
 		);
 
 	}//end register()

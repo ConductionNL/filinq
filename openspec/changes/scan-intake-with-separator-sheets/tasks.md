@@ -17,15 +17,18 @@
 ## 3. Batch split
 
 - [x] 3.1 Add `lib/Service/ScanBatchService.php` with `receive` and `split` over FPDI, QR and blank-page detection, and the intake event per segment (REQ-SCI-03)
-- [ ] 3.2 Point the watched-folder job at `ScanBatchService::receive()` for profile folders; the OCR watch keeps its own folders (D2)
+- [x] 3.2 Point the watched-folder job at `ScanBatchService::receive()` for profile folders; the OCR watch keeps its own folders (D2)
   - Replaced by `scan-intake-from-a-watched-folder` (D4: integriq's watcher hands the file over); that change ticks this box. It waits on integriq's `WatchedFileArrivedEvent`, which is not on integriq `development` (checked 2026-10-09).
+  - Done in `scan-intake-from-a-watched-folder` (tasks 2.1 and 2.2): `WatchedFileArrivedListener` hands a PDF in a profile folder to `ScanBatchService::take()`, the one find-or-receive-then-split path, after integriq's `WatchedFileArrivedEvent` landed on integriq `development`.
 
 ## 4. Inbox
 
 - [x] 4.1 Pre-fill the assign picker from `sourceRef` on the intake page and the leaf (REQ-SCI-04)
   - The intake dialog pre-selects; the `filinq-document-intake` leaf (built 2026-10-09) lists documents whose `sourceRef` names the host record first and marks them (`orderForHost()` in `src/services/intakeLeaf.js`, tests/vitest/documentIntakeLeaf.spec.js).
 
-- [ ] 4.2 List and add scanner profiles on the intake channels page as the board `filinq/FqInvoerkanalen` draws it, over the existing `scanIntake#listProfiles` and `scanIntake#declareProfiles` routes; extend `ScanProfileService` with `resolution`, `colourMode` and separator mode `none` (one document per batch, no split) (REQ-SCI-05)
+- [x] 4.2 List and add scanner profiles on the intake channels page as the board `filinq/FqInvoerkanalen` draws it, over the existing `scanIntake#listProfiles` and `scanIntake#declareProfiles` routes; extend `ScanProfileService` with `resolution`, `colourMode` and separator mode `none` (one document per batch, no split) (REQ-SCI-05)
+  - 2026-11-13: backend half built: `ScanProfileService` stores and validates `resolution` (75–1200 dpi, default 300) and `colourMode` (`colour`, `greyscale`, `blackAndWhite`), and accepts separator mode `none`; `ScanBatchService` delivers a `none` batch as one document; `scanBatch` 1.1.0 admits `none` (register 8.52.0). Open: the intake channels page. No such page is in `src/manifest.json` yet, so the board's page has to be configured there first.
+  - 2026-11-14: the intake channels page is built: `IntakeChannels` (custom page in `src/manifest.d/20-intake.json`, admin settings menu) lists the profiles in a `CnIndexPage` and adds one through a form (name, watched folder, resolution, colour mode, separator mode including `none`), declaring the whole list over `scanIntake#declareProfiles`; the form logic is in `src/services/scanProfiles.js` (tests/vitest/scanProfiles.spec.js). Dutch and English strings are in. The Playwright case is in 5.2.
 
 ## 5. Quality
 

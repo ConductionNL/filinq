@@ -16,6 +16,7 @@
 // @e2e openspec/specs/woo-publicatie-pipeline/spec.md#successful-handoff-creates-the-endpoint-publication
 // @e2e openspec/specs/woo-publicatie-pipeline/spec.md#withdraw-a-publication
 // @e2e openspec/specs/woo-publicatie-pipeline/spec.md#wizard-reflects-gate-state
+// @e2e openspec/changes/woo-hand-off-files-its-category/specs/woo-publicatie-pipeline/spec.md#a-handed-off-decision-appears-in-its-category-sitemap
 
 import type { Page } from '@playwright/test'
 
@@ -168,5 +169,51 @@ test.describe('woo publication pipeline', () => {
 		await expect(check).toContainText('Detected entities checked by a person')
 		await check.getByRole('link', { name: 'Resolve this' }).click()
 		await expect(page).toHaveURL(/\/anonymization/)
+	})
+})
+
+/*
+ * THE REAL HAND-OFF. With `E2E_WOO_READY_RECORD` (the uuid of a publication
+ * record that is ready, with category "Besluiten op Woo-verzoeken" and complete
+ * metadata) and `E2E_OPENCATALOGI_CATALOG` (the catalog slug or id the
+ * sitemaps are served under), the operator hands the record off on the page
+ * and the category sitemap of OpenCatalogi then lists the publication. Without
+ * both it is skipped: it needs a live instance with OpenCatalogi.
+ */
+test.describe('woo hand-off files its category', () => {
+	const recordId = process.env.E2E_WOO_READY_RECORD ?? ''
+	const catalog = process.env.E2E_OPENCATALOGI_CATALOG ?? ''
+
+	test('a handed-off decision appears in its category sitemap', async ({ page }) => {
+		// @e2e openspec/changes/woo-hand-off-files-its-category/specs/woo-publicatie-pipeline/spec.md#a-handed-off-decision-appears-in-its-category-sitemap
+		test.skip(
+			recordId === '' || catalog === '',
+			'needs E2E_WOO_READY_RECORD and E2E_OPENCATALOGI_CATALOG on a live instance',
+		)
+
+		await go(page, `publications/${recordId}`)
+		await expect(page.getByText('Ready to hand off')).toBeVisible()
+		const handedOff = page.waitForResponse(
+			(response) =>
+				response.url().includes(`/apps/filinq/api/publications/${recordId}/handoff`)
+				&& response.request().method() === 'POST',
+		)
+		await page.getByRole('button', { name: 'Hand off for publication' }).click()
+		const answer = await handedOff
+		expect(answer.status(), await answer.text()).toBeLessThan(300)
+		const publication = String((await answer.json()).endpointPublicationRef ?? '')
+		expect(publication).not.toBe('')
+
+		const platform = await page.request.get(
+			`/index.php/apps/openregister/api/objects/publication/publication/${publication}`,
+			{ headers: { 'OCS-APIRequest': 'true' } },
+		)
+		expect(platform.ok(), await platform.text()).toBeTruthy()
+		expect((await platform.json()).wooCategory).toBe('infocat001')
+
+		await page.goto(
+			`/index.php/apps/opencatalogi/api/${encodeURIComponent(catalog)}/sitemaps/sitemapindex-diwoo-infocat001.xml`,
+		)
+		await expect(page.locator('body')).toContainText(publication)
 	})
 })

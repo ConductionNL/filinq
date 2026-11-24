@@ -97,6 +97,13 @@ final class AnonymizeOptions {
 	private bool $appendBasisSummary = false;
 
 	/**
+	 * Whether the outbound sanitization pass runs on the delivered artifact.
+	 *
+	 * @var bool
+	 */
+	private bool $sanitize = false;
+
+	/**
 	 * A copy with this output format.
 	 *
 	 * @param string $outputFormat 'pdf-only', 'pdf' or 'preserve'.
@@ -167,7 +174,7 @@ final class AnonymizeOptions {
 	 *
 	 * @return self A changed copy.
 	 *
-	 * @spec openspec/changes/redaction-four-eyes-setting/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-2
 	 */
 	public function withWooCase(bool $wooCase): self {
 		$copy = clone $this;
@@ -189,6 +196,21 @@ final class AnonymizeOptions {
 	}//end reversible()
 
 	/**
+	 * A copy that sanitizes the delivered artifact: after the PDF conversion and
+	 * after any grondslagen summary, so the metadata the conversion writes is
+	 * removed too.
+	 *
+	 * @return self
+	 *
+	 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-4
+	 */
+	public function sanitized(): self {
+		$copy = clone $this;
+		$copy->sanitize = true;
+		return $copy;
+	}//end sanitized()
+
+	/**
 	 * The run for this file and these entities, without the grondslagen summary.
 	 *
 	 * @param int                         $fileId   The Nextcloud file ID.
@@ -199,21 +221,22 @@ final class AnonymizeOptions {
 	 * @spec openspec/specs/anonymization/spec.md
 	 */
 	public function runFor(int $fileId, array $entities): AnonymizeRun {
-		return new AnonymizeRun(
-			fileId: $fileId,
-			entities: $entities,
-			overrides: $this->overrides,
-			options: [
-				'appendBasisSummary' => $this->appendBasisSummary,
-				'outputFormat' => $this->outputFormat,
-				'unredactedEntities' => $this->unredactedEntities,
-				'scope' => $this->scope,
-				'dossierKey' => $this->dossierKey,
-				'reversible' => $this->reversible,
-				'userId' => $this->userId,
-				'wooCase' => $this->wooCase,
-			]
-		);
+		$options = [
+			'appendBasisSummary' => $this->appendBasisSummary,
+			'outputFormat' => $this->outputFormat,
+			'unredactedEntities' => $this->unredactedEntities,
+			'scope' => $this->scope,
+			'dossierKey' => $this->dossierKey,
+			'reversible' => $this->reversible,
+			'userId' => $this->userId,
+			'wooCase' => $this->wooCase,
+		];
+		// Only when asked, so a run without the flag carries exactly the options it always did.
+		if ($this->sanitize === true) {
+			$options['sanitize'] = true;
+		}
+
+		return new AnonymizeRun(fileId: $fileId, entities: $entities, overrides: $this->overrides, options: $options);
 	}//end runFor()
 
 	/**

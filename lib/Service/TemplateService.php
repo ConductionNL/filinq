@@ -78,6 +78,21 @@ class TemplateService implements TemplateServiceInterface {
 	private const LOCK_TIMEOUT_MINUTES = 15;
 
 	/**
+	 * The fields of an office template a duplicate carries over
+	 * (office-template-authoring REQ-DDOTA-007).
+	 */
+	private const OFFICE_FIELDS = [
+		'templateType',
+		'sourceFileId',
+		'contentHash',
+		'boundRegister',
+		'boundSchema',
+		'mergeFields',
+		'fieldMap',
+		'tagReport',
+	];
+
+	/**
 	 * Constructor for TemplateService
 	 *
 	 * @param OpenRegisterAccess $openRegister The app manager and container that reach OpenRegister.
@@ -226,7 +241,7 @@ class TemplateService implements TemplateServiceInterface {
 	 *
 	 * @return array The template with `version`, or without it when unknown
 	 *
-	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-template-carries-the-version-it-is-on-req-ddtvp-001
+	 * @spec openspec/changes/archive/2026-11-20-generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-template-carries-the-version-it-is-on-req-ddtvp-001
 	 */
 	private function withVersion(string $id, array $template): array {
 		unset($template['version']);
@@ -258,7 +273,7 @@ class TemplateService implements TemplateServiceInterface {
 	 *
 	 * @throws Exception 404 naming the template and the version when it does not exist
 	 *
-	 * @spec openspec/changes/generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-caller-can-pin-the-template-version-to-render-req-ddtvp-003
+	 * @spec openspec/changes/archive/2026-11-20-generated-document-names-its-template-version/specs/template-version-provenance/spec.md#requirement-a-caller-can-pin-the-template-version-to-render-req-ddtvp-003
 	 */
 	public function getTemplateAtVersion(string $id, ?int $version): array {
 		$template = $this->getTemplate(id: $id);
@@ -275,7 +290,8 @@ class TemplateService implements TemplateServiceInterface {
 			throw new Exception(message: "Template {$id} has no version {$version}", code: 404);
 		}
 
-		$stored = array_intersect_key($snapshot, array_flip(['content', 'name', 'format', 'orientation']));
+		// An office snapshot also names its own source file and checksum.
+		$stored = array_intersect_key($snapshot, array_flip(['content', 'name', 'format', 'orientation', 'sourceFileId', 'contentHash']));
 		return array_merge($template, $stored, ['version' => $version]);
 	}//end getTemplateAtVersion()
 
@@ -615,6 +631,14 @@ class TemplateService implements TemplateServiceInterface {
 			'category' => $original['category'] ?? '',
 			'tags' => $original['tags'] ?? [],
 		];
+		// An office template's copy points at the same source file: sources are
+		// stored once per checksum and never change, so the copy and the original
+		// can each be edited without touching the other's file.
+		foreach (self::OFFICE_FIELDS as $officeField) {
+			if (array_key_exists($officeField, $original) === true && $original[$officeField] !== null) {
+				$duplicateData[$officeField] = $original[$officeField];
+			}
+		}
 
 		$objectService = $this->getObjectService();
 		$config = $this->registerResolver->getRegisterAndSchema();

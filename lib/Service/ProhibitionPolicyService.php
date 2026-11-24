@@ -119,8 +119,11 @@ class ProhibitionPolicyService {
 	 *    (`{ruleId, ruleName, highConfidence}`) for the review UI and is never
 	 *    auto-skipped.
 	 *
-	 * Every returned entity gains a `prohibitionMatch` key (null when none).
-	 * Best-effort: policy failures are logged and never block detection.
+	 * Every returned entity gains a `prohibitionMatch` and a `standingConsentMatch`
+	 * key (null when none). A standing-consent winner is pre-set `included: false`,
+	 * a prohibition winner `included: true`; a matched rule's `bases` fill an empty
+	 * grondslag decision. Best-effort: policy failures are logged and never block
+	 * detection.
 	 *
 	 * @param array<int, array<string, mixed>> $entities Normalized entities.
 	 * @param mixed $entityRelationMapper OpenRegister EntityRelationMapper (DI).
@@ -128,12 +131,14 @@ class ProhibitionPolicyService {
 	 * @return array<int, array<string, mixed>> Entities with `prohibitionMatch` attached.
 	 *
 	 * @spec openspec/changes/anonymisation-bases-passthrough/tasks.md#task-7
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.1
 	 */
 	public function applyPolicyDecisions(array $entities, mixed $entityRelationMapper): array {
 		$policy = $this->resolvePolicyMatcher();
 		if ($policy === null) {
 			foreach ($entities as &$plain) {
 				$plain['prohibitionMatch'] = ($plain['prohibitionMatch'] ?? null);
+				$plain['standingConsentMatch'] = ($plain['standingConsentMatch'] ?? null);
 			}
 
 			unset($plain);
@@ -432,6 +437,7 @@ class ProhibitionPolicyService {
 	 */
 	private function applyPolicyToEntity(array $entity, array $policy, mixed $entityRelationMapper): array {
 		$entity['prohibitionMatch'] = null;
+		$entity['standingConsentMatch'] = null;
 		$value = (string)($entity['value'] ?? '');
 		if ($value === '') {
 			return $entity;
@@ -457,10 +463,17 @@ class ProhibitionPolicyService {
 				'ruleName' => $match['primaryName'],
 				'highConfidence' => (((float)($entity['confidence'] ?? 0.0)) >= $policy['threshold']),
 			];
-			return $entity;
+			$entity['included'] = true;
+			return $this->withRuleBases(entity: $entity, match: $match);
 		}
 
 		if ($match['kind'] === PolicyMatchService::KIND_STANDING_CONSENT) {
+			$entity['standingConsentMatch'] = [
+				'ruleId' => $match['uuid'],
+				'ruleName' => $match['primaryName'],
+			];
+			$entity['included'] = false;
+			$entity = $this->withRuleBases(entity: $entity, match: $match);
 			return $this->autoSkipStandingConsent(
 				entity: $entity,
 				entityRelationMapper: $entityRelationMapper
@@ -469,6 +482,35 @@ class ProhibitionPolicyService {
 
 		return $entity;
 	}//end applyPolicyToEntity()
+
+	/**
+	 * Pre-fill the matched rule's grondslagen when the entity has none (fill-only-when-empty).
+	 *
+	 * A reviewer's or a proposal's bases already on the entity always win; the
+	 * rule's `bases` only fill an empty decision. `basesSource` marks the fill so
+	 * the review UI can show it as proposed.
+	 *
+	 * @param array<string, mixed> $entity The normalized entity.
+	 * @param array<string, mixed> $match The matcher result.
+	 *
+	 * @return array<string, mixed> The entity, with the rule's bases when they filled an empty decision.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.1
+	 */
+	private function withRuleBases(array $entity, array $match): array {
+		$ruleBases = ($match['bases'] ?? []);
+		$current = ($entity['bases'] ?? null);
+		if (is_array($ruleBases) === false || count($ruleBases) === 0
+			|| (is_array($current) === true && count($current) > 0)
+		) {
+			return $entity;
+		}
+
+		$entity['bases'] = array_values($ruleBases);
+		$entity['basesSource'] = 'rule';
+		return $entity;
+
+	}//end withRuleBases()
 
 	/**
 	 * Auto-skip a standing-consent occurrence unless it is already skipped.

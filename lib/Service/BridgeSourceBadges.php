@@ -42,13 +42,13 @@ class BridgeSourceBadges {
 	/**
 	 * Constructor.
 	 *
-	 * @param DocumentObjectServiceResolver $objectResolver OpenRegister's ObjectService.
-	 * @param SessionUserFile               $files          The caller's own files.
+	 * @param BridgeRecordReader $bridge The bridge records, read as the server.
+	 * @param SessionUserFile    $files  The caller's own files.
 	 *
 	 * @spec openspec/changes/zgw-document-bridge
 	 */
 	public function __construct(
-		private readonly DocumentObjectServiceResolver $objectResolver,
+		private readonly BridgeRecordReader $bridge,
 		private readonly SessionUserFile $files,
 	) {
 	}//end __construct()
@@ -81,7 +81,7 @@ class BridgeSourceBadges {
 		}
 
 		$sourceByFile = [];
-		foreach ($this->search(schema: BridgeService::SCHEMA_DOCUMENT, filters: ['stagedFileRef' => $readable]) as $document) {
+		foreach ($this->bridge->rows(schema: BridgeService::SCHEMA_DOCUMENT, filters: ['stagedFileRef' => $readable]) as $document) {
 			$fileId = (int)($document['stagedFileRef'] ?? 0);
 			if (in_array($fileId, $readable, true) === true) {
 				$sourceByFile[$fileId] = (string)($document['sourceId'] ?? '');
@@ -93,7 +93,7 @@ class BridgeSourceBadges {
 		}
 
 		$vendors = [];
-		foreach ($this->search(schema: BridgeService::SCHEMA_SOURCE, filters: []) as $source) {
+		foreach ($this->bridge->rows(schema: BridgeService::SCHEMA_SOURCE, filters: []) as $source) {
 			$vendors[(string)($source['uuid'] ?? ($source['id'] ?? ''))] = (string)($source['vendor'] ?? '');
 		}
 
@@ -107,33 +107,4 @@ class BridgeSourceBadges {
 
 		return $badges;
 	}//end forFiles()
-
-	/**
-	 * Search one bridge schema as the server.
-	 *
-	 * @param string               $schema  The schema slug.
-	 * @param array<string, mixed> $filters The filters.
-	 *
-	 * @return array<int, array<string, mixed>> The rows as flat fields.
-	 *
-	 * @spec openspec/changes/zgw-document-bridge
-	 */
-	private function search(string $schema, array $filters): array {
-		$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-			registerSlug: BridgeService::REGISTER,
-			schemaSlug: $schema,
-			filters: $filters,
-			_rbac: false
-		);
-		if (is_array($results) === false) {
-			return [];
-		}
-
-		$rows = [];
-		foreach ($results as $result) {
-			$rows[] = (new StoredRecordFields())->read(row: $result);
-		}
-
-		return $rows;
-	}//end search()
 }//end class

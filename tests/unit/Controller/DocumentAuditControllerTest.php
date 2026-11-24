@@ -71,6 +71,58 @@ class DocumentAuditControllerTest extends TestCase {
 	}//end testAnUnreadableDocumentAnswersNotFound()
 
 	/**
+	 * Filinq's viewer showing a readable document writes one `opened` entry.
+	 *
+	 * @return void
+	 */
+	public function testOpeningAReadableDocumentIsRecorded(): void {
+		$audit = $this->createMock(originalClassName: DocumentActionAudit::class);
+		$audit->expects($this->once())->method(constraint: 'record')
+			->with(fileId: 41, action: 'opened', context: ['route' => 'ui'])
+			->willReturn(value: true);
+
+		$response = $this->controller(audit: $audit, readable: true)->opened(fileId: 41);
+
+		$this->assertSame(expected: 200, actual: $response->getStatus());
+		$this->assertSame(expected: ['recorded' => true], actual: $response->getData());
+
+	}//end testOpeningAReadableDocumentIsRecorded()
+
+	/**
+	 * Opening a document the caller may not read answers 404 and writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testOpeningAnUnreadableDocumentWritesNothing(): void {
+		$audit = $this->createMock(originalClassName: DocumentActionAudit::class);
+		$audit->expects($this->never())->method(constraint: 'record');
+
+		$response = $this->controller(audit: $audit, readable: false)->opened(fileId: 41);
+
+		$this->assertSame(expected: 404, actual: $response->getStatus());
+
+	}//end testOpeningAnUnreadableDocumentWritesNothing()
+
+	/**
+	 * The opened route is declared for the controller method.
+	 *
+	 * @return void
+	 */
+	public function testTheOpenedRouteIsDeclared(): void {
+		$routes = require dirname(__DIR__, 3) . '/appinfo/routes.php';
+		$found  = array_filter(
+			$routes['routes'],
+			static fn (array $route): bool => $route['name'] === 'documentAudit#opened'
+				&& $route['url'] === 'api/documents/{fileId}/opened'
+				&& $route['verb'] === 'POST'
+		);
+
+		$this->assertCount(expectedCount: 1, haystack: $found);
+		$this->assertTrue(condition: method_exists(DocumentAuditController::class, 'opened'));
+
+	}//end testTheOpenedRouteIsDeclared()
+
+	/**
 	 * The controller over a resolver that does or does not open file 41.
 	 *
 	 * @param DocumentActionAudit $audit    The trail double.

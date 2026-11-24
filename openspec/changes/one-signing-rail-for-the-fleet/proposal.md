@@ -1,6 +1,7 @@
 ---
 kind: code
 depends_on: [libresign-signing-provider, signing-trust-rebuild]
+status: proposed
 ---
 
 # Proposal: one signing rail for the fleet

@@ -2,7 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "filinq demo data",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it."
     },
     "x-openregister": {
@@ -4391,19 +4391,19 @@
                 "@self": {
                     "register": "filinq",
                     "schema": "base",
-                    "slug": "base-voorbeeld-name-1-1"
+                    "slug": "woo-art-5-1-2-e"
                 },
-                "name": "Voorbeeld Name 1",
-                "description": "Voorbeeld Description 1"
+                "name": "Woo art. 5.1.2.e — eerbiediging persoonlijke levenssfeer",
+                "description": "Uitzonderingsgrond voor persoonsgegevens in Woo-publicaties (AVG art. 4/6)."
             },
             {
                 "@self": {
                     "register": "filinq",
                     "schema": "base",
-                    "slug": "base-voorbeeld-name-2-2"
+                    "slug": "woo-art-5-1-2-i"
                 },
-                "name": "Voorbeeld Name 2",
-                "description": "Voorbeeld Description 2"
+                "name": "Woo art. 5.1.2.i — goed functioneren van de overheid",
+                "description": "Uitzonderingsgrond voor informatie waarvan openbaarmaking het goed functioneren van het bestuursorgaan onevenredig schaadt (Woo art. 5.1 lid 2 sub i)."
             },
             {
                 "@self": {
@@ -4952,9 +4952,9 @@
                     "slug": "publicationconsent-publicationconsent-2-2"
                 },
                 "entityType": "ORGANIZATION",
-                "entityText": "Voorbeeld Entitytext 2",
+                "entityText": "Gemeente Voorbeeldstad",
                 "scope": "entity",
-                "documentId": "Voorbeeld Documentid 2",
+                "documentId": "00000000-0000-0000-0000-000000000000",
                 "entityKey": "Voorbeeld Entitykey 2",
                 "contactEmail": "voorbeeld1@example.invalid",
                 "contactAddress": "Voorbeeld Contactaddress 2",
@@ -4966,20 +4966,23 @@
                 "objectionReceivedAt": "2026-03-02T09:00:00+00:00",
                 "objectionReason": "Voorbeeld markdown 1",
                 "publicationDecision": "anonymize",
-                "legalBasis": "Voorbeeld Legalbasis 2",
-                "notes": "Voorbeeld markdown 1",
+                "legalBasis": "Bestuursorgaan zelf — geen derde-belanghebbende",
+                "notes": "Demo voor de reviewwerkbank: nooit anonimiseren (staande toestemming), met grondslag.",
                 "matchRules": [
                     {
                         "type": "normalized",
-                        "value": "Voorbeeld Value 2"
+                        "value": "Gemeente Voorbeeldstad"
                     }
                 ],
-                "validFrom": "2026-03-02T09:00:00+00:00",
-                "validUntil": "2026-03-02T09:00:00+00:00",
+                "validFrom": "2026-01-01T00:00:00+00:00",
+                "validUntil": "2099-12-31T23:59:59+00:00",
                 "active": true,
                 "consentMethod": "digital_signature",
                 "consentDocument": "https://example.invalid/resource/1",
-                "consentScope": "Voorbeeld Consentscope 2"
+                "consentScope": "Voorbeeld Consentscope 2",
+                "bases": [
+                    "woo-art-5-1-2-e"
+                ]
             },
             {
                 "@self": {
@@ -5023,24 +5026,27 @@
                     "schema": "publicationProhibition",
                     "slug": "publicationprohibition-publicationprohibition-1-1"
                 },
-                "primaryName": "Voorbeeld Primaryname 1",
+                "primaryName": "Beschermde getuige zaak KG ZA 24/123",
                 "entityType": "PERSON",
                 "matchRules": [
                     {
-                        "type": "exact",
-                        "value": "Voorbeeld Value 1"
+                        "type": "normalized",
+                        "value": "Beschermde Getuige A"
                     }
                 ],
-                "reason": "Voorbeeld Reason 1",
+                "reason": "gerechtelijk bevel",
                 "active": true,
-                "legalAuthority": "Voorbeeld Legalauthority 1",
-                "caseReference": "Voorbeeld Casereference 1",
+                "legalAuthority": "Rechtbank Den Haag KG ZA 24/123",
+                "caseReference": "KG ZA 24/123",
                 "severity": "critical",
                 "jurisdiction": "Voorbeeld Jurisdiction 1",
                 "addedBy": "Voorbeeld Addedby 1",
-                "validFrom": "2026-03-01T09:00:00+00:00",
-                "validUntil": "2026-03-01T09:00:00+00:00",
-                "notes": "Voorbeeld Notes 1"
+                "validFrom": "2026-01-01T00:00:00+00:00",
+                "validUntil": "2099-12-31T23:59:59+00:00",
+                "notes": "Demo voor de reviewwerkbank: altijd anonimiseren, met grondslag.",
+                "bases": [
+                    "woo-art-5-1-2-e"
+                ]
             },
             {
                 "@self": {
@@ -5715,6 +5721,48 @@
                 "ocrProcessedAt": "2026-07-17T08:30:00+00:00",
                 "triggeredBy": "manual",
                 "engineVersion": "tesseract 5.3.0"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "reviewRendition",
+                    "slug": "reviewrendition-1"
+                },
+                "sourceFileId": 812004,
+                "fileId": 812004,
+                "sha256": "a3f1c2d4e5b60718293a4b5c6d7e8f90112233445566778899aabbccddeeff00",
+                "kind": "native-pdf",
+                "backend": "",
+                "textLayer": "native",
+                "preparedAt": "2026-07-16T10:04:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "reviewRendition",
+                    "slug": "reviewrendition-2"
+                },
+                "sourceFileId": 812005,
+                "fileId": 812011,
+                "sha256": "5be2a9d0c4f3e2d1b0a9f8e7d6c5b4a39281706f5e4d3c2b1a09f8e7d6c5b4a3",
+                "kind": "converted",
+                "backend": "libreoffice",
+                "textLayer": "native",
+                "preparedAt": "2026-07-16T10:06:00+00:00"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "reviewRendition",
+                    "slug": "reviewrendition-3"
+                },
+                "sourceFileId": 812006,
+                "fileId": 812006,
+                "sha256": "0f9e8d7c6b5a49382716f5e4d3c2b1a00f9e8d7c6b5a49382716f5e4d3c2b1a0",
+                "kind": "ocr-text-layer",
+                "backend": "tesseract",
+                "textLayer": "ocr",
+                "preparedAt": "2026-07-17T08:30:30+00:00"
             },
             {
                 "@self": {
@@ -8186,6 +8234,32 @@
             {
                 "@self": {
                     "register": "filinq",
+                    "schema": "organisationSettings",
+                    "slug": "organisationsettings-demostad-1"
+                },
+                "name": "Demostad",
+                "consentPeriodDays": 42,
+                "anonymizationProfile": {
+                    "anonymize": [
+                        "PERSON",
+                        "BSN",
+                        "PHONE",
+                        "EMAIL",
+                        "IBAN",
+                        "ADDRESS"
+                    ],
+                    "keepVisible": [
+                        "ORGANIZATION",
+                        "LOCATION",
+                        "DATE"
+                    ]
+                },
+                "defaultHuisstijl": "00000000-0000-0000-0000-000000000001",
+                "notes": "Voorbeeld: zes weken bezwaartermijn voor Demostad."
+            },
+            {
+                "@self": {
+                    "register": "filinq",
                     "schema": "documentType",
                     "slug": "voorbeeld-rapport"
                 },
@@ -8201,6 +8275,16 @@
             {
                 "@self": {
                     "register": "filinq",
+                    "schema": "organisationSettings",
+                    "slug": "organisationsettings-voorbeeld-2"
+                },
+                "name": "Voorbeeldgemeente",
+                "consentPeriodDays": 28,
+                "notes": "Voorbeeld: alleen de bezwaartermijn wijkt af."
+            },
+            {
+                "@self": {
+                    "register": "filinq",
                     "schema": "document",
                     "slug": "document-voorbeeld-1"
                 },
@@ -8210,6 +8294,23 @@
                 "confidentiality": "intern",
                 "documentType": "voorbeeld-brief",
                 "creationDate": "2026-03-01"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "organisationSettings",
+                    "slug": "organisationsettings-voorbeeld-3"
+                },
+                "name": "Voorbeeldwaterschap",
+                "anonymizationProfile": {
+                    "anonymize": [
+                        "PERSON",
+                        "BSN"
+                    ],
+                    "keepVisible": [
+                        "ORGANIZATION"
+                    ]
+                }
             },
             {
                 "@self": {
@@ -8236,6 +8337,993 @@
                 "confidentiality": "vertrouwelijk",
                 "documentType": "voorbeeld-rapport",
                 "creationDate": "2026-03-03"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "fieldFillProfile",
+                    "slug": "demostad-velden-subsidie"
+                },
+                "declaringApp": "dossiq",
+                "register": "dossiq",
+                "schema": "subsidieaanvraag",
+                "fields": [
+                    "aanvrager",
+                    "bedrag",
+                    "gewensteStartdatum"
+                ],
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "fieldFillProfile",
+                    "slug": "demostad-velden-factuur"
+                },
+                "declaringApp": "shillinq",
+                "register": "shillinq",
+                "schema": "inkoopfactuur",
+                "fields": [
+                    "leverancier",
+                    "factuurnummer",
+                    "factuurdatum"
+                ],
+                "active": true
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "fieldFillProfile",
+                    "slug": "demostad-velden-dossier"
+                },
+                "declaringApp": "filinq",
+                "register": "filinq",
+                "schema": "dossier",
+                "fields": [
+                    "name",
+                    "description"
+                ],
+                "active": false
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "fieldSuggestion",
+                    "slug": "demostad-suggestie-subsidie-1"
+                },
+                "fileId": 1001,
+                "register": "dossiq",
+                "schema": "subsidieaanvraag",
+                "objectId": "demostad-subsidie-2026-014",
+                "requestedBy": "demo-registrar",
+                "suggestions": {
+                    "aanvrager": {
+                        "value": "Stichting Groen Dorp",
+                        "confidence": 0.75,
+                        "foundInText": true,
+                        "passage": "Aanvrager: Stichting Groen Dorp, Dorpsstraat 4"
+                    },
+                    "bedrag": {
+                        "value": 12500,
+                        "confidence": 0.55,
+                        "foundInText": false,
+                        "passage": null
+                    }
+                },
+                "droppedFields": 1,
+                "truncated": false,
+                "provider": "Local large language model",
+                "decisions": [],
+                "status": "suggested"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "fieldSuggestion",
+                    "slug": "demostad-suggestie-subsidie-2"
+                },
+                "fileId": 1002,
+                "register": "dossiq",
+                "schema": "subsidieaanvraag",
+                "objectId": "demostad-subsidie-2026-015",
+                "requestedBy": "demo-registrar",
+                "suggestions": {
+                    "aanvrager": {
+                        "value": "Buurtvereniging De Linde",
+                        "confidence": 0.75,
+                        "foundInText": true,
+                        "passage": "namens Buurtvereniging De Linde vragen wij"
+                    }
+                },
+                "droppedFields": 0,
+                "truncated": false,
+                "provider": "Local large language model",
+                "decisions": [
+                    {
+                        "field": "aanvrager",
+                        "decision": "accept",
+                        "suggested": "Buurtvereniging De Linde",
+                        "written": "Buurtvereniging De Linde",
+                        "decidedBy": "demo-registrar",
+                        "decidedAt": "2026-11-02T10:14:00+01:00"
+                    }
+                ],
+                "decidedBy": "demo-registrar",
+                "decidedAt": "2026-11-02T10:14:00+01:00",
+                "status": "decided"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "fieldSuggestion",
+                    "slug": "demostad-suggestie-factuur-1"
+                },
+                "fileId": 1003,
+                "register": "shillinq",
+                "schema": "inkoopfactuur",
+                "objectId": "demostad-factuur-88231",
+                "requestedBy": "demo-crediteuren",
+                "suggestions": {
+                    "leverancier": {
+                        "value": "Drukkerij Van Dam B.V.",
+                        "confidence": 0.75,
+                        "foundInText": true,
+                        "passage": "Drukkerij Van Dam B.V. Industrieweg 12"
+                    },
+                    "factuurdatum": {
+                        "value": "2026-10-28",
+                        "confidence": 0.75,
+                        "foundInText": true,
+                        "passage": "Factuurdatum 2026-10-28"
+                    }
+                },
+                "droppedFields": 0,
+                "truncated": false,
+                "provider": "Local large language model",
+                "decisions": [
+                    {
+                        "field": "leverancier",
+                        "decision": "accept",
+                        "suggested": "Drukkerij Van Dam B.V.",
+                        "written": "Drukkerij Van Dam B.V.",
+                        "decidedBy": "demo-crediteuren",
+                        "decidedAt": "2026-10-29T09:02:00+01:00"
+                    },
+                    {
+                        "field": "factuurdatum",
+                        "decision": "reject",
+                        "suggested": "2026-10-28",
+                        "written": null,
+                        "decidedBy": "demo-crediteuren",
+                        "decidedAt": "2026-10-29T09:02:00+01:00"
+                    }
+                ],
+                "decidedBy": "demo-crediteuren",
+                "decidedAt": "2026-10-29T09:02:00+01:00",
+                "status": "decided"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "template",
+                    "slug": "template-beschikking-parkeervergunning"
+                },
+                "name": "Beschikking parkeervergunning",
+                "description": "Demo office template: a Word file with merge tags. Its source is tests/sample-documents/beschikking-parkeervergunning.docx; upload that file as a new source to make it render on an instance.",
+                "content": "Gemeente Demostad\nBeschikking parkeervergunning\nAan: ${aanvrager.naam}\nAdres: ${aanvrager.adres}\nDatum besluit: ${besluit.datum}\nUw aanvraag voor een parkeervergunning is toegekend.\n${fragment:ondertekening-burgemeester}",
+                "namespace": "filinq",
+                "templateType": "office",
+                "sourceFileId": 0,
+                "contentHash": "6b7dd8ac207041a008d92edb7befc35f65815c35c6bc0ce217e03dc347f6049e",
+                "boundRegister": "dossier",
+                "boundSchema": "dossier",
+                "mergeFields": [
+                    {
+                        "path": "aanvrager.naam"
+                    },
+                    {
+                        "path": "aanvrager.adres"
+                    },
+                    {
+                        "path": "besluit.datum"
+                    },
+                    {
+                        "path": "fragment:ondertekening-burgemeester"
+                    }
+                ],
+                "fieldMap": {},
+                "tagReport": {
+                    "validated": false,
+                    "severity": "warning",
+                    "tags": [
+                        {
+                            "tag": "aanvrager.naam",
+                            "status": "unvalidated"
+                        },
+                        {
+                            "tag": "aanvrager.adres",
+                            "status": "unvalidated"
+                        },
+                        {
+                            "tag": "besluit.datum",
+                            "status": "unvalidated"
+                        },
+                        {
+                            "tag": "fragment:ondertekening-burgemeester",
+                            "status": "fragment"
+                        }
+                    ],
+                    "unknown": [],
+                    "notice": "Not validated: demo data is imported without checking the dossier schema; a new upload checks it."
+                },
+                "category": "beschikkingen",
+                "tags": [
+                    "parkeren",
+                    "huisstijl-2026"
+                ],
+                "format": "A4",
+                "orientation": "P"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "textFragment",
+                    "slug": "textfragment-ondertekening-burgemeester"
+                },
+                "name": "Ondertekening burgemeester",
+                "slug": "ondertekening-burgemeester",
+                "namespace": "filinq",
+                "content": "Hoogachtend,\nde burgemeester van Demostad,\nnamens deze,",
+                "category": "ondertekening",
+                "tags": [
+                    "ondertekening"
+                ],
+                "language": "nl"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "textFragment",
+                    "slug": "textfragment-bezwaarclausule"
+                },
+                "name": "Bezwaarclausule",
+                "slug": "bezwaarclausule",
+                "namespace": "filinq",
+                "content": "Bent u het niet eens met dit besluit? Dan kunt u binnen zes weken na de dag van verzending bezwaar maken bij het college van burgemeester en wethouders van Demostad.",
+                "category": "rechtsmiddelen",
+                "tags": [
+                    "bezwaar",
+                    "beschikking"
+                ],
+                "language": "nl"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "textFragment",
+                    "slug": "textfragment-contactgegevens"
+                },
+                "name": "Contactgegevens",
+                "slug": "contactgegevens",
+                "namespace": "filinq",
+                "content": "Heeft u vragen? Bel 14 0123 en noem zaaknummer ${zaaknummer}.",
+                "category": "contact",
+                "tags": [
+                    "contact"
+                ],
+                "language": "nl"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "templateImportJob",
+                    "slug": "templateimportjob-huisstijl-2026"
+                },
+                "status": "completed",
+                "totalFiles": 3,
+                "imported": 3,
+                "failed": 0,
+                "startedBy": "demo-communicatie",
+                "report": [
+                    {
+                        "file": "beschikking-parkeervergunning.docx",
+                        "tags": 4,
+                        "unknownTags": 0
+                    }
+                ]
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "templateImportJob",
+                    "slug": "templateimportjob-brieven-archief"
+                },
+                "status": "completed",
+                "totalFiles": 2,
+                "imported": 1,
+                "failed": 1,
+                "startedBy": "demo-communicatie",
+                "report": [
+                    {
+                        "file": "ontvangstbevestiging.docx",
+                        "tags": 2,
+                        "unknownTags": 1
+                    },
+                    {
+                        "file": "oud-sjabloon.doc",
+                        "failed": true,
+                        "reason": "Only DOCX and ODT files can be office templates."
+                    }
+                ]
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "templateImportJob",
+                    "slug": "templateimportjob-bouwstenen"
+                },
+                "status": "queued",
+                "totalFiles": 12,
+                "imported": 0,
+                "failed": 0,
+                "startedBy": "demo-communicatie",
+                "report": []
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "documentShare",
+                    "slug": "demostad-share-expired"
+                },
+                "kind": "document",
+                "files": [
+                    {
+                        "fileId": 0,
+                        "name": "besluit-2026-114.pdf",
+                        "version": "seed",
+                        "label": ""
+                    }
+                ],
+                "shareId": "seed",
+                "sharedBy": "seed-user-dia",
+                "sharedAt": "2026-10-01T09:00:00+00:00",
+                "expiresAt": "2026-10-15",
+                "note": "Advies bezwaarcommissie",
+                "labelConfirmed": false,
+                "status": "expired"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "documentShare",
+                    "slug": "demostad-share-active"
+                },
+                "kind": "document",
+                "files": [
+                    {
+                        "fileId": 0,
+                        "name": "advies-wob-2026-031.pdf",
+                        "version": "seed",
+                        "label": ""
+                    }
+                ],
+                "shareId": "seed-2",
+                "sharedBy": "seed-user-dia",
+                "sharedAt": "2026-11-10T10:00:00+00:00",
+                "expiresAt": "2026-11-24",
+                "note": "Juridisch adviseur",
+                "labelConfirmed": false,
+                "status": "active"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "documentShare",
+                    "slug": "demostad-share-revoked"
+                },
+                "kind": "document",
+                "files": [
+                    {
+                        "fileId": 0,
+                        "name": "rapport-inspectie-2026.pdf",
+                        "version": "seed",
+                        "label": "Confidential"
+                    }
+                ],
+                "shareId": "seed-3",
+                "sharedBy": "seed-user-dia",
+                "sharedAt": "2026-10-20T14:00:00+00:00",
+                "expiresAt": "2026-11-03",
+                "note": "Inspecteur provincie",
+                "labelConfirmed": true,
+                "revokedBy": "seed-user-dia",
+                "revokedAt": "2026-10-22T08:15:00+00:00",
+                "status": "revoked"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "signerRecord",
+                    "slug": "signerrecord-accept-2-4"
+                },
+                "signingRequestId": "Voorbeeld Signingrequestid 2",
+                "userId": "demo-accepter",
+                "displayName": "Ambtenaar Vergunningen",
+                "email": "vergunningen@demostad.example.nl",
+                "order": 1,
+                "status": "PENDING",
+                "role": "accept"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "mdtoSupplement",
+                    "slug": "demostad-vergunning-mdto"
+                },
+                "objectRef": "00000000-0000-0000-0000-000000000011",
+                "objectType": "document",
+                "aggregatieniveau": "archiefstuk",
+                "omschrijving": "Omgevingsvergunning Dorpsstraat 12 (demo)",
+                "taal": "nl",
+                "dekkingInTijdBegin": "2025-02-10",
+                "dekkingInTijdEind": "2025-04-22",
+                "beperkingGebruik": [
+                    {
+                        "type": "avg-persoonsgegevens",
+                        "grondslag": "AVG art. 6 lid 1 sub e",
+                        "omschrijving": "Bezwaar van een betrokkene tegen publicatie.",
+                        "proposed": true,
+                        "source": "consent"
+                    }
+                ],
+                "betrokkene": [
+                    {
+                        "rol": "aanvrager",
+                        "naamRef": "00000000-0000-0000-0000-0000000000c1"
+                    }
+                ],
+                "proposals": [
+                    "dekkingInTijdBegin",
+                    "dekkingInTijdEind"
+                ]
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "mdtoSupplement",
+                    "slug": "demostad-woo-dossier-mdto"
+                },
+                "objectRef": "00000000-0000-0000-0000-000000000012",
+                "objectType": "dossier",
+                "aggregatieniveau": "dossier",
+                "omschrijving": "Woo-verzoek subsidietoekenningen cultuur 2024 (demo)",
+                "taal": "nl",
+                "dekkingInTijdBegin": "2024-01-15",
+                "dekkingInTijdEind": "2024-12-20",
+                "beperkingGebruik": [
+                    {
+                        "type": "woo-uitzondering",
+                        "grondslag": "Woo art. 5.1 lid 2 sub e",
+                        "omschrijving": "Persoonlijke levenssfeer van ontvangers.",
+                        "proposed": false,
+                        "source": "prohibition"
+                    }
+                ],
+                "betrokkene": [],
+                "proposals": []
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "mdtoSupplement",
+                    "slug": "demostad-brief-mdto-incompleet"
+                },
+                "objectRef": "00000000-0000-0000-0000-000000000013",
+                "objectType": "document",
+                "aggregatieniveau": "archiefstuk",
+                "taal": "en",
+                "beperkingGebruik": [],
+                "betrokkene": [],
+                "proposals": [
+                    "aggregatieniveau"
+                ]
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "mailArchiveImport",
+                    "slug": "demostad-mail-archive-done"
+                },
+                "file": 812101,
+                "fileName": "mailbox-jansen.mbox",
+                "format": "mbox",
+                "folderMap": [
+                    {
+                        "archiveFolder": "mailbox-jansen",
+                        "messages": 214,
+                        "dossier": "dossier-voorbeeld-name-1-1"
+                    }
+                ],
+                "cursor": {
+                    "offset": 18234411,
+                    "ordinal": 214
+                },
+                "counts": {
+                    "found": 214,
+                    "filed": 212,
+                    "toInbox": 0,
+                    "skippedDuplicate": 0,
+                    "failed": 2
+                },
+                "failures": [
+                    {
+                        "messageId": "",
+                        "archiveFolder": "mailbox-jansen",
+                        "name": "uitnodiging.msg",
+                        "reason": "unsupported-format"
+                    },
+                    {
+                        "messageId": "<20190412.88213@demostad.nl>",
+                        "archiveFolder": "mailbox-jansen",
+                        "name": "mailbox-jansen-000117.eml",
+                        "reason": "unparseable"
+                    }
+                ],
+                "status": "done",
+                "requestedBy": "w.devries",
+                "startedAt": "2026-07-20T08:02:00Z",
+                "finishedAt": "2026-07-20T09:41:00Z"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "mailArchiveImport",
+                    "slug": "demostad-mail-archive-mapping"
+                },
+                "file": 812102,
+                "fileName": "archief-team-ruimte.zip",
+                "format": "zip",
+                "folderMap": [
+                    {
+                        "archiveFolder": "Inbox",
+                        "messages": 38,
+                        "dossier": ""
+                    },
+                    {
+                        "archiveFolder": "Projecten/Brug",
+                        "messages": 61,
+                        "dossier": ""
+                    }
+                ],
+                "cursor": {},
+                "counts": {
+                    "found": 99,
+                    "filed": 0,
+                    "toInbox": 0,
+                    "skippedDuplicate": 0,
+                    "failed": 0
+                },
+                "failures": [],
+                "status": "mapping",
+                "requestedBy": "w.devries",
+                "startedAt": "2026-07-21T10:15:00Z"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "mailArchiveImport",
+                    "slug": "demostad-mail-archive-importing"
+                },
+                "file": 812103,
+                "fileName": "postbus-vergunningen.pst",
+                "format": "pst",
+                "folderMap": [
+                    {
+                        "archiveFolder": "Postvak IN",
+                        "messages": 3120,
+                        "dossier": ""
+                    },
+                    {
+                        "archiveFolder": "Postvak IN/Bezwaren",
+                        "messages": 410,
+                        "dossier": "dossier-voorbeeld-name-1-1"
+                    }
+                ],
+                "cursor": {
+                    "index": 1200
+                },
+                "counts": {
+                    "found": 3530,
+                    "filed": 402,
+                    "toInbox": 790,
+                    "skippedDuplicate": 8,
+                    "failed": 0
+                },
+                "failures": [],
+                "status": "importing",
+                "requestedBy": "w.devries",
+                "startedAt": "2026-07-22T07:30:00Z"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "digitisationProject",
+                    "slug": "demostad-digitisation-bouwvergunningen"
+                },
+                "name": "Bouwvergunningen 1960-1990",
+                "archiveDescription": "Bouwvergunningen van de gemeente Demostad, 1960 tot 1990, depot stadhuis",
+                "boxes": [
+                    "117",
+                    "118"
+                ],
+                "scanProfile": "archief",
+                "target": {
+                    "register": "filinq",
+                    "schema": "dossier",
+                    "id": "demostad-dossier-archief"
+                },
+                "checkShare": 10,
+                "status": "scanning"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "digitisationProject",
+                    "slug": "demostad-digitisation-raadsbesluiten"
+                },
+                "name": "Raadsbesluiten 1945-1975",
+                "archiveDescription": "Raadsbesluiten en bijlagen, 1945 tot 1975",
+                "boxes": [
+                    "R-01"
+                ],
+                "scanProfile": "archief",
+                "target": {
+                    "register": "filinq",
+                    "schema": "dossier",
+                    "id": "demostad-dossier-archief"
+                },
+                "checkShare": 10,
+                "status": "open"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "digitisationProject",
+                    "slug": "demostad-digitisation-personeelsdossiers"
+                },
+                "name": "Personeelsdossiers afgesloten",
+                "archiveDescription": "Afgesloten personeelsdossiers tot 2000",
+                "boxes": [
+                    "P-12"
+                ],
+                "scanProfile": "archief",
+                "target": {
+                    "register": "filinq",
+                    "schema": "dossier",
+                    "id": "demostad-dossier-archief"
+                },
+                "checkShare": 10,
+                "status": "checking"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "paperOriginal",
+                    "slug": "demostad-original-117-001"
+                },
+                "project": "demostad-digitisation-bouwvergunningen",
+                "box": "117",
+                "shelfMark": "BV-1964-0012",
+                "description": "Bouwvergunning Marktstraat 4",
+                "dateRange": "1964",
+                "status": "registered"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "paperOriginal",
+                    "slug": "demostad-original-117-002"
+                },
+                "project": "demostad-digitisation-bouwvergunningen",
+                "box": "117",
+                "shelfMark": "BV-1964-0013",
+                "description": "Bouwvergunning Kerkplein 1",
+                "dateRange": "1964-1965",
+                "status": "scanned",
+                "scanBatch": "batch-2026-10-01",
+                "document": 913004,
+                "scannedAt": "2026-10-01T14:00:00Z"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "paperOriginal",
+                    "slug": "demostad-original-118-001"
+                },
+                "project": "demostad-digitisation-bouwvergunningen",
+                "box": "118",
+                "shelfMark": "BV-1971-0201",
+                "description": "Bouwvergunning Stationsweg 10",
+                "dateRange": "1971",
+                "status": "checked",
+                "scanBatch": "batch-2026-10-01",
+                "document": 913005,
+                "scannedAt": "2026-10-01T14:00:00Z",
+                "check": {
+                    "result": "passed",
+                    "checkedBy": "sample-not-drawn",
+                    "checkedAt": "2026-10-02T10:00:00Z",
+                    "note": ""
+                }
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "integrityScan",
+                    "slug": "integrityscan-1"
+                },
+                "trigger": "nightly",
+                "startedAt": "2026-11-10T02:00:00+00:00",
+                "finishedAt": "2026-11-10T02:00:41+00:00",
+                "checked": 412,
+                "missing": 0,
+                "changed": 0,
+                "orphaned": 0,
+                "findings": []
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "integrityScan",
+                    "slug": "integrityscan-2"
+                },
+                "trigger": "nightly",
+                "startedAt": "2026-11-11T02:00:00+00:00",
+                "finishedAt": "2026-11-11T02:00:44+00:00",
+                "checked": 415,
+                "missing": 2,
+                "changed": 0,
+                "orphaned": 0,
+                "findings": [
+                    {
+                        "kind": "missing",
+                        "schema": "dossier",
+                        "record": "00000000-0000-0000-0000-000000000301",
+                        "name": "Omgevingsvergunning Lindelaan 12",
+                        "fileId": 9301
+                    },
+                    {
+                        "kind": "missing",
+                        "schema": "dossier",
+                        "record": "00000000-0000-0000-0000-000000000301",
+                        "name": "Omgevingsvergunning Lindelaan 12",
+                        "fileId": 9302
+                    }
+                ]
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "integrityScan",
+                    "slug": "integrityscan-3"
+                },
+                "trigger": "admin",
+                "startedAt": "2026-11-12T09:15:00+00:00",
+                "finishedAt": "2026-11-12T09:15:38+00:00",
+                "checked": 416,
+                "missing": 0,
+                "changed": 1,
+                "orphaned": 1,
+                "findings": [
+                    {
+                        "kind": "changed",
+                        "schema": "documentVersion",
+                        "record": "00000000-0000-0000-0000-000000000302",
+                        "name": "besluit-woo-2025-017.pdf",
+                        "fileId": 9310
+                    },
+                    {
+                        "kind": "orphaned",
+                        "schema": "anonymizationLink",
+                        "record": "00000000-0000-0000-0000-000000000303",
+                        "name": "brief-bezwaar (geanonimiseerd).pdf",
+                        "fileId": 9320
+                    }
+                ]
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "selectielijstEntry",
+                    "slug": "demo-selectielijst-correspondentie"
+                },
+                "categorie": "DEMO-1.1",
+                "omschrijving": "Zakelijke correspondentie zonder blijvende waarde (demo, geen echte categorie).",
+                "archiefnominatie": "vernietigen",
+                "bewaartermijn": "P7Y",
+                "bron": "Demo selectielijst",
+                "toelichting": "Demo-rij: vervang door de selectielijst van de gemeente.",
+                "selectielijstVersie": "demo-1"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "selectielijstEntry",
+                    "slug": "demo-selectielijst-besluiten"
+                },
+                "categorie": "DEMO-1.2",
+                "omschrijving": "Besluiten met blijvende waarde (demo, geen echte categorie).",
+                "archiefnominatie": "bewaren",
+                "bron": "Demo selectielijst",
+                "selectielijstVersie": "demo-1"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "selectielijstEntry",
+                    "slug": "demo-selectielijst-publicaties"
+                },
+                "categorie": "DEMO-1.3",
+                "omschrijving": "Publicaties van tijdelijke waarde (demo, geen echte categorie).",
+                "archiefnominatie": "vernietigen",
+                "bewaartermijn": "P10Y",
+                "bron": "Demo selectielijst",
+                "selectielijstVersie": "demo-1"
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "destructionList",
+                    "slug": "demo-vernietigingslijst-in-review"
+                },
+                "status": "in_review",
+                "createdAt": "2026-10-01T09:00:00+00:00",
+                "objectCount": 2,
+                "objects": [
+                    {
+                        "uuid": "00000000-0000-0000-0000-000000000101",
+                        "schema": "correspondence",
+                        "classification": "DEMO-1.1"
+                    },
+                    {
+                        "uuid": "00000000-0000-0000-0000-000000000102",
+                        "schema": "correspondence",
+                        "classification": "DEMO-1.1"
+                    }
+                ],
+                "approvals": [],
+                "rejections": []
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "destructionList",
+                    "slug": "demo-vernietigingslijst-approved"
+                },
+                "status": "approved",
+                "createdAt": "2026-09-01T09:00:00+00:00",
+                "objectCount": 1,
+                "objects": [
+                    {
+                        "uuid": "00000000-0000-0000-0000-000000000103",
+                        "schema": "correspondence",
+                        "classification": "DEMO-1.1"
+                    }
+                ],
+                "approvals": [
+                    {
+                        "userId": "seed-user-archief",
+                        "approvedAt": "2026-09-05T10:00:00+00:00",
+                        "action": "approve"
+                    }
+                ],
+                "rejections": []
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "destructionList",
+                    "slug": "demo-vernietigingslijst-executed"
+                },
+                "status": "executed",
+                "createdAt": "2026-08-01T09:00:00+00:00",
+                "objectCount": 1,
+                "objects": [
+                    {
+                        "uuid": "00000000-0000-0000-0000-000000000104",
+                        "schema": "correspondence",
+                        "classification": "DEMO-1.1"
+                    }
+                ],
+                "approvals": [
+                    {
+                        "userId": "seed-user-archief",
+                        "approvedAt": "2026-08-03T10:00:00+00:00",
+                        "action": "approve"
+                    }
+                ],
+                "rejections": [],
+                "executingAt": "2026-08-10T02:00:00+00:00",
+                "executedAt": "2026-08-10T02:01:00+00:00",
+                "destroyedCount": 1,
+                "skippedHolds": 0,
+                "skippedErrors": 0,
+                "skippedDecisions": 0
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "destructionCertificate",
+                    "slug": "demo-verklaring-van-vernietiging-1"
+                },
+                "destructionDate": "2026-08-10T02:01:00+00:00",
+                "totalDestroyed": 1,
+                "groupedBySchema": [
+                    {
+                        "schema": "correspondence",
+                        "classification": "DEMO-1.1",
+                        "count": 1
+                    }
+                ],
+                "type": "verklaring_van_vernietiging",
+                "approvedBy": [
+                    "seed-user-archief"
+                ],
+                "selectielijstBron": [
+                    "Demo selectielijst"
+                ],
+                "complianceStatement": "Vernietiging conform Archiefwet 1995 en Archiefbesluit 1995",
+                "immutable": true
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "destructionCertificate",
+                    "slug": "demo-verklaring-van-vernietiging-2"
+                },
+                "destructionDate": "2026-06-12T02:01:00+00:00",
+                "totalDestroyed": 4,
+                "groupedBySchema": [
+                    {
+                        "schema": "correspondence",
+                        "classification": "DEMO-1.1",
+                        "count": 4
+                    }
+                ],
+                "type": "verklaring_van_vernietiging",
+                "approvedBy": [
+                    "seed-user-archief"
+                ],
+                "selectielijstBron": [
+                    "Demo selectielijst"
+                ],
+                "complianceStatement": "Vernietiging conform Archiefwet 1995 en Archiefbesluit 1995",
+                "immutable": true
+            },
+            {
+                "@self": {
+                    "register": "filinq",
+                    "schema": "destructionCertificate",
+                    "slug": "demo-verklaring-van-vernietiging-3"
+                },
+                "destructionDate": "2026-03-14T02:01:00+00:00",
+                "totalDestroyed": 2,
+                "groupedBySchema": [
+                    {
+                        "schema": "correspondence",
+                        "classification": "DEMO-1.1",
+                        "count": 2
+                    }
+                ],
+                "type": "verklaring_van_vernietiging",
+                "approvedBy": [
+                    "seed-user-archief"
+                ],
+                "selectielijstBron": [
+                    "Demo selectielijst"
+                ],
+                "complianceStatement": "Vernietiging conform Archiefwet 1995 en Archiefbesluit 1995",
+                "immutable": true
             }
         ]
     }

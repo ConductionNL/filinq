@@ -9,7 +9,7 @@ the same path as a direct generation and closes the draft, Discard removes
 it. A wizard run still being answered continues in the wizard. Another
 clerk's draft reads as not found: OpenRegister's private scope answers 404.
 
-@spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+@spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
 -->
 
 <template>
@@ -149,7 +149,7 @@ export default {
 		 * The draft id from the route.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
 		 */
 		id() {
 			return String(this.$route?.params?.id || '')
@@ -159,7 +159,7 @@ export default {
 		 * Whether the draft is closed.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
 		 */
 		finished() {
 			return this.draft?.stage === 'finished'
@@ -169,7 +169,7 @@ export default {
 		 * Whether the text differs from what was last saved.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
 		 */
 		dirty() {
 			return this.html !== this.savedHtml
@@ -179,7 +179,7 @@ export default {
 		 * Whether a save, finish or discard is under way.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
 		 */
 		busy() {
 			return this.saving || this.finishing
@@ -189,7 +189,7 @@ export default {
 		 * The warnings the render gave.
 		 *
 		 * @return {Array<string>}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
 		 */
 		warnings() {
 			return Array.isArray(this.draft?.warnings) ? this.draft.warnings.map(String) : []
@@ -199,7 +199,7 @@ export default {
 		 * When the draft last changed and when it is removed.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
 		 */
 		metaLine() {
 			const changed = this.draft?.['@self']?.updated || ''
@@ -226,7 +226,7 @@ export default {
 		 * Read the draft; a wizard run still being answered continues in the wizard.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
 		 */
 		async load() {
 			this.loading = true
@@ -252,7 +252,7 @@ export default {
 		 * Save the edited text.
 		 *
 		 * @return {Promise<boolean>} True when saved.
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
 		 */
 		async save() {
 			if (!this.draft || !isOpen(this.draft)) {
@@ -276,7 +276,7 @@ export default {
 		 * Save what changed, then file and log the document and close the draft.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
 		 */
 		async finish() {
 			if (this.dirty && !(await this.save())) {
@@ -303,7 +303,7 @@ export default {
 		 * Remove the draft and go back to the list.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
 		 */
 		async discard() {
 			this.confirmDiscard = false
@@ -320,7 +320,7 @@ export default {
 		 * Go to the drafts list.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/generate-draft-and-attended-edit/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-3.2
 		 */
 		toList() {
 			this.$router.push({ name: 'Drafts' })

@@ -32,8 +32,12 @@ holds no separator at all becomes one segment; that is not an error.
 
 An admin setting `scanProfiles[]`, each `{id, folder, separatorMode}`,
 stored through the existing settings plane. One watched folder per
-profile. The watch reuses `FolderExtractionJob`'s walk and hands every new
-PDF to `ScanBatchService::receive()` instead of to extraction.
+profile. The watch is integriq's watched folder, not a walk of filinq's own:
+integriq dispatches `WatchedFileArrivedEvent` for every new file, and
+filinq's `WatchedFileArrivedListener` hands a PDF in a profile folder to
+`ScanBatchService::take()` (change `scan-intake-from-a-watched-folder`, D4).
+This replaces the earlier plan to reuse `FolderExtractionJob`'s walk; the OCR
+watch keeps its own folders.
 
 ## D3. The separator sheet
 

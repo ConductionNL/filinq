@@ -29,6 +29,7 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\Filinq\Kernel\Contracts\MultiFormatOutputProducerInterface;
+use OCA\Filinq\Service\OfficeTemplate\OfficeTemplateRenderer;
 use OCA\Filinq\Service\Support\DocumentOutput;
 use OCP\IURLGenerator;
 use Throwable;
@@ -81,6 +82,7 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 	 * @param DocumentOutput $output The document store and the generation log.
 	 * @param PlainLanguageRenditionService|null $plainRendition Tells whether the template has a plain-language counterpart.
 	 * @param IURLGenerator|null                 $urls           Makes the download URLs absolute.
+	 * @param OfficeTemplateRenderer|null        $officeRenderer Converts an office template's filled DOCX to each format.
 	 */
 	public function __construct(
 		private readonly DocumentService $documents,
@@ -89,6 +91,7 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 		DocumentOutput $output,
 		private readonly ?PlainLanguageRenditionService $plainRendition = null,
 		private readonly ?IURLGenerator $urls = null,
+		private readonly ?OfficeTemplateRenderer $officeRenderer = null,
 	) {
 		$this->storage = $output->storage;
 		$this->auditLog = $output->log;
@@ -124,7 +127,13 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 			throw new Exception(message: 'options.formats cannot be used for a template with a plain-language counterpart yet; use options.format', code: 400);
 		}
 
-		$render = $this->documents->generatePreview(templateId: $templateId, dataRefs: $dataRefs, options: $options);
+		$office = ($this->officeRenderer !== null && $this->officeRenderer->isOffice(template: $template) === true);
+		// Every format of an office template starts from the one filled DOCX.
+		$render = match ($office) {
+			true => $this->documents->fillOfficeTemplate(template: $template, dataRefs: $dataRefs, options: $options),
+			false => $this->documents->generatePreview(templateId: $templateId, dataRefs: $dataRefs, options: $options),
+		};
+
 		$pdfOptions = $this->renderPipeline->buildPdfOptions(
 			template: $template,
 			huisstijl: $this->renderPipeline->loadHuisstijl(huisstijlId: ($options['huisstijlId'] ?? null)),
@@ -140,6 +149,8 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 			job: $job,
 			rendering: [
 				'html' => $render['html'],
+				'docx' => ($render['docx'] ?? null),
+				'options' => $options,
 				'pdfOptions' => $pdfOptions,
 				'targetPath' => $this->documents->buildOutputTargetPath(
 					templateId: $templateId,
@@ -252,7 +263,7 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 	 * Convert the rendered HTML to every format and file each result.
 	 *
 	 * @param MultiFormatJob $job       The formats and whose Files the outputs go in.
-	 * @param array{html: string, pdfOptions: array, targetPath: string, basename: string} $rendering The rendered
+	 * @param array{html: string, docx: ?string, options: array, pdfOptions: array, targetPath: string, basename: string} $rendering The rendered
 	 *        HTML (the one render), the PDF options, the folder relative to the user's Files and the file name
 	 *        without extension.
 	 *
@@ -264,8 +275,14 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 		foreach ($job->formats as $format) {
 			$output = ['format' => $format, 'status' => 'generated', 'fileId' => null, 'fileName' => null, 'path' => null, 'size' => null];
 			try {
-				$content = $this->renderPipeline->produceOutput(htmlContent: $rendering['html'], format: $format, pdfOptions: $rendering['pdfOptions']);
-				$warnings = array_merge($warnings, $this->renderPipeline->getLastOutputWarnings());
+				$fromDocx = (($rendering['docx'] ?? null) !== null && $this->officeRenderer !== null);
+				$content  = match ($fromDocx) {
+					true => $this->officeRenderer->convert(docx: $rendering['docx'], format: $format, options: $rendering['options']),
+					false => $this->renderPipeline->produceOutput(htmlContent: $rendering['html'], format: $format, pdfOptions: $rendering['pdfOptions']),
+				};
+				if ($fromDocx === false) {
+					$warnings = array_merge($warnings, $this->renderPipeline->getLastOutputWarnings());
+				}
 				$stored = $this->storage->store(
 					userId: $job->userId(),
 					targetPath: $rendering['targetPath'],
@@ -347,7 +364,7 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 				dataRefs: $job->dataRefs,
 				format: $job->formats[0],
 				userId: $job->userId(),
-				extra: ['outputs' => $lines]
+				extra: ['outputs' => $lines] + $this->officeRecord(template: $template)
 			),
 			outcome: [
 				'status' => 'generated',
@@ -360,4 +377,21 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 		);
 
 	}//end record()
+	/**
+	 * What the audit entry records about an office template: its type.
+	 *
+	 * @param array<string, mixed> $template The template.
+	 *
+	 * @return array<string, string>
+	 *
+	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 */
+	private function officeRecord(array $template): array {
+		if (($template['templateType'] ?? 'twig') !== 'office') {
+			return [];
+		}
+
+		return ['templateType' => 'office'];
+
+	}//end officeRecord()
 }//end class

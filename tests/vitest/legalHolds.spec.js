@@ -117,7 +117,7 @@ describe('the hold register surfaces', () => {
 	it('switches off removal on a held dossier', () => {
 		const dossier = read('../../src/views/dossier/DossierDetail.vue')
 		expect(dossier).toContain('@held="underLegalHold = $event"')
-		expect(dossier).toContain(':disabled="underLegalHold"')
+		expect(dossier).toContain(':disabled="underLegalHold || transferred"')
 	})
 
 	it('ships no review, tagging or export surface', () => {

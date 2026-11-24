@@ -53,11 +53,13 @@ class WooProfileService implements AnonymizationProfileServiceInterface {
 	 * Constructor for WooProfileService
 	 *
 	 * @param IAppConfig $appConfig App config store backing the persisted profile.
+	 * @param EffectiveSettings|null $effective The active organisation's own profile (REQ-DDMTH-008).
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly IAppConfig $appConfig,
+		private readonly ?EffectiveSettings $effective = null,
 	) {
 
 	}//end __construct()
@@ -68,8 +70,21 @@ class WooProfileService implements AnonymizationProfileServiceInterface {
 	 * @return array{anonymize: array<string>, keep: array<string>} Active profile (configured or default).
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
+	 * @spec openspec/changes/multi-tenant-hardening/tasks.md#task-3.1
 	 */
 	public function getProfile(): array {
+		// The active organisation's own profile first (REQ-DDMTH-008); it is
+		// stored as `keepVisible`, the instance profile as `keep`.
+		$override = $this->effective?->organisationAnonymizationProfile();
+		if ($override !== null) {
+			$profile = $this->normalised(
+				candidate: ['anonymize' => ($override['anonymize'] ?? null), 'keep' => ($override['keepVisible'] ?? ($override['keep'] ?? null))]
+			);
+			if ($profile !== null) {
+				return $profile;
+			}
+		}
+
 		$stored = $this->appConfig->getValueString('filinq', 'filinq_woo_entity_profiles', '');
 		if ($stored !== '') {
 			$profile = $this->normalised(candidate: json_decode($stored, true));

@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Support;
 
 use OCA\Filinq\Kernel\JobQueueInterface;
+use OCA\Filinq\Service\BatchRouting;
 use OCA\Filinq\Service\BatchStateService;
 
 /**
@@ -44,6 +45,8 @@ final class BatchQueue {
 	 *
 	 * @param BatchStateService $state Keeps the batch state
 	 * @param JobQueueInterface $jobs  Queues the batch jobs
+	 * @param BatchRouting|null $routing  Picks the in-request or background path by batch size; null
+	 *                                    keeps the synchronous cap as the only cap
 	 *
 	 * @return void
 	 *
@@ -52,6 +55,7 @@ final class BatchQueue {
 	public function __construct(
 		public readonly BatchStateService $state,
 		public readonly JobQueueInterface $jobs,
+		public readonly ?BatchRouting $routing=null,
 	) {
 
 	}//end __construct()

@@ -106,7 +106,7 @@ class CartesianFrame {
 			'marginLeft' => $marginLeft,
 			'plotWidth' => $plotWidth,
 			'plotHeight' => $plotHeight,
-			'baselineY' => ($marginTop + $plotHeight),
+			'baselineY' => ((float)$marginTop + $plotHeight),
 		];
 
 	}//end layout()
@@ -142,7 +142,7 @@ class CartesianFrame {
 			$tickText = new SvgText(content: $this->labels->formatValue(value: $value, format: $valueFmt), style: SvgTextStyle::Axis);
 			$gridLine = new SvgSegment(from: new SvgPoint(x: $marginLeft, y: $y), to: new SvgPoint(x: $marginLeft + $plotWidth, y: $y));
 			$parts[] = $this->svg->lineEl(segment: $gridLine, color: '#E2E2E2');
-			$parts[] = $this->svg->textEl(position: new SvgPoint(x: $marginLeft - 6, y: $y + 3), text: $tickText);
+			$parts[] = $this->svg->textEl(position: new SvgPoint(x: (float)$marginLeft - 6.0, y: (float)$y + 3.0), text: $tickText);
 		}
 
 		$baselineY = $plot['baselineY'];

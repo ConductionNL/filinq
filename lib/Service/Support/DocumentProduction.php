@@ -25,6 +25,7 @@ namespace OCA\Filinq\Service\Support;
 
 use OCA\Filinq\Service\DocumentJobStore;
 use OCA\Filinq\Service\DocumentRenderPipeline;
+use OCA\Filinq\Service\Vendor\VendorRenderService;
 
 /**
  * The render pipeline a generation runs through and the store of its jobs.
@@ -44,14 +45,17 @@ final class DocumentProduction {
 	 *
 	 * @param DocumentRenderPipeline $pipeline Renders the merged template to the output formats
 	 * @param DocumentJobStore       $jobs     Keeps the asynchronous generation jobs
+	 * @param VendorRenderService|null $vendor Hands a `vendor:<slug>` render to integriq
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
+	 * @spec openspec/changes/template-engine-renders-through-a-vendor/specs/document-creatie-sjablonen/spec.md#requirement-a-vendor-render-goes-to-integriq-and-never-falls-back-req-tev-002
 	 */
 	public function __construct(
 		public readonly DocumentRenderPipeline $pipeline,
 		public readonly DocumentJobStore $jobs,
+		public readonly ?VendorRenderService $vendor = null,
 	) {
 
 	}//end __construct()

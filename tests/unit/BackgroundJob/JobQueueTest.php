@@ -27,6 +27,7 @@ use OCA\Filinq\BackgroundJob\BatchPrintJob;
 use OCA\Filinq\BackgroundJob\BulkSigningJob;
 use OCA\Filinq\BackgroundJob\FolderExtractionJob;
 use OCA\Filinq\BackgroundJob\IntakeOcrJob;
+use OCA\Filinq\BackgroundJob\TemplateImportJob;
 use OCA\Filinq\BackgroundJob\JobQueue;
 use OCA\Filinq\Kernel\JobQueueInterface;
 use OCP\BackgroundJob\IJobList;
@@ -46,6 +47,7 @@ class JobQueueTest extends TestCase {
 			'bulk signing'         => [JobQueueInterface::BULK_SIGNING, BulkSigningJob::class],
 			'folder extraction'    => [JobQueueInterface::FOLDER_EXTRACTION, FolderExtractionJob::class],
 			'intake ocr'           => [JobQueueInterface::INTAKE_OCR, IntakeOcrJob::class],
+			'template import'      => [JobQueueInterface::TEMPLATE_IMPORT, TemplateImportJob::class],
 		];
 
 	}//end jobProvider()

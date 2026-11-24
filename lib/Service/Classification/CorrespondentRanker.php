@@ -122,7 +122,7 @@ class CorrespondentRanker {
 		}
 
 		// Ties go to the earlier mention.
-		return $score - ($candidate['first'] / 1000000.0);
+		return $score - ((float)$candidate['first'] / 1000000.0);
 
 	}//end score()
 

@@ -675,7 +675,7 @@ class Pdfa3ConversionService implements Pdfa3ConversionServiceInterface {
 	 * @return float microtime(true) deadline.
 	 */
 	private function deadline(): float {
-		return ($this->now() + $this->resolveMaxSeconds());
+		return ($this->now() + (float)$this->resolveMaxSeconds());
 	}//end deadline()
 
 	/**
