@@ -358,6 +358,10 @@
         {
             "name": "text-fragments",
             "description": "Text fragments (bouwstenen) reused across templates"
+        },
+        {
+            "name": "forms",
+            "description": "Checks document references in form fields and files a submitted form as a document on its record"
         }
     ],
     "paths": {
@@ -16032,6 +16036,168 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/forms/document-reference": {
+            "post": {
+                "operationId": "form-document-check-reference",
+                "summary": "Check the document reference a form field holds",
+                "description": "A form surface calls this when a field holds a document reference. It answers the reference and the record's title when the reference resolves and the caller may read it; a record the caller may not read answers 404 like one that does not exist. The file is never read or copied, so the field holds a pointer and the file is stored once.",
+                "tags": [
+                    "forms"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "id"
+                                ],
+                                "properties": {
+                                    "register": {
+                                        "type": "string",
+                                        "description": "The register; filinq when absent."
+                                    },
+                                    "schema": {
+                                        "type": "string",
+                                        "description": "The schema; document when absent."
+                                    },
+                                    "id": {
+                                        "type": "string",
+                                        "description": "The document record."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The checked reference: register, schema, id and title.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/forms/submissions": {
+            "post": {
+                "operationId": "form-document-submit",
+                "summary": "File a submitted form as a document on its record",
+                "description": "Render a submitted form through a filinq template from the values as submitted, never from the record afterwards, and file the document in the record's folder. Fields named in documentFields must hold references the caller may read; the template sees them under documents.<field>.",
+                "tags": [
+                    "forms"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "templateId",
+                                    "record",
+                                    "values"
+                                ],
+                                "properties": {
+                                    "templateId": {
+                                        "type": "string",
+                                        "description": "The template the form renders through."
+                                    },
+                                    "record": {
+                                        "type": "object",
+                                        "description": "The record to file on: register, schema and id.",
+                                        "additionalProperties": true
+                                    },
+                                    "values": {
+                                        "type": "object",
+                                        "description": "The values as submitted; the template sees them under form.",
+                                        "additionalProperties": true
+                                    },
+                                    "documentFields": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "The fields that hold a document reference."
+                                    },
+                                    "filename": {
+                                        "type": "string",
+                                        "description": "The file name; form-<time> when absent."
+                                    },
+                                    "format": {
+                                        "type": "string",
+                                        "enum": [
+                                            "pdf",
+                                            "docx",
+                                            "odf",
+                                            "html"
+                                        ],
+                                        "description": "The format; pdf when absent."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The filed document: fileName, fileId, format, sha256, templateVersion, record and references.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "502": {
+                        "$ref": "#/components/responses/Problem502"
                     }
                 }
             }

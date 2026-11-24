@@ -10,7 +10,7 @@ status: in-progress
 - [multi-format-output](../../changes/multi-format-output/) _(active)_ — `options.formats` produces multiple outputs from a single render pass with a JSON manifest; `docx` becomes a first-class editable generation format; every produced output is recorded on `generatedDocument.outputs` (REQ-DDMFO-001/003/006) (kind: code)
 - [document-generation-list-refs](../../changes/archive/2026-09-28-document-generation-list-refs/) _(archived 2026-09-28)_ — `options.listRefs` resolves an array of OpenRegister objects (via the slug-aware search path, including external DBAL registers) into the Twig context under a named key, alongside single-object `dataRefs`; scoped to generate/preview only (REQ-DDLR-001/002/003/004) (kind: code)
 - [documents-from-a-template](../../changes/archive/2026-09-28-documents-from-a-template/) _(archived 2026-09-28)_ — versioned page layouts with an admin surface, the case archive with its manifest and the download-all leaf, periodic documents, review dates, legible signature verification (REQ-DFT-01..04, 06) (kind: code)
-- [forms-as-documents](../../changes/forms-as-documents/) _(active)_ — a document reference as a form field value, and a submitted form filed as a document (REQ-DFT-05), waiting on which surface owns forms (kind: code)
+- [forms-as-documents](../../changes/archive/2026-11-24-forms-as-documents/) _(archived 2026-11-24)_ — a document reference as a form field value, and a submitted form filed as a document (REQ-DFT-05); the form surface owns the field type, filinq checks the reference and files the form (kind: code)
 
 ## Purpose
 Generates documents from templates by merging resolved data into a sandboxed Twig template. Merge data is resolved from OpenRegister objects by register, schema, and object UUID with nested resolution up to three levels deep, optional external data via OpenConnector, and ad-hoc JSON context, while rendering supports conditional sections, iteration, and per-field warnings for missing values. This enables automated creation of formal documents such as beschikkingen from structured case data.
@@ -524,6 +524,35 @@ dialect. The document MUST stay listed as due until somebody reviews it.
 - WHEN the list of due documents is opened
 - THEN the document is still listed as due
 - @e2e exclude notification delivery is OpenRegister's dialect; the due list is covered in tests/e2e/workflows/documents-from-a-template.spec.ts
+
+### Requirement: A file is a value a field can hold, and a form becomes a document (REQ-DFT-05)
+
+A form field MUST be able to hold a reference to a document record. The
+field MUST validate that the reference resolves and that the caller may
+read it, and MUST NOT copy the file into the field. A submitted form MUST
+be rendered to a document at submission, from the values as submitted,
+and filed on the record.
+
+#### Scenario: Evidence as a field value
+
+- GIVEN a permit form with a field "Overzicht DigiD-aansluitingen" holding a document reference
+- WHEN the applicant selects a document they may read
+- THEN the field holds the reference and the file is stored once
+- @e2e exclude API only: filinq has no form screen; the form surface's own e2e drives it, PHPUnit covers filinq's routes
+
+#### Scenario: The form in the dossier
+
+- GIVEN a submitted aanvraagformulier
+- WHEN it is submitted
+- THEN a document is generated from the values as submitted and filed on the case
+- @e2e exclude API only: filinq has no form screen; the form surface's own e2e drives it, PHPUnit covers filinq's routes
+
+#### Scenario: A later value change does not rewrite the form
+
+- GIVEN a filed aanvraagformulier document
+- WHEN a field on the case is changed afterwards
+- THEN the filed document still shows what was submitted
+- @e2e exclude API only: filinq has no form screen; the form surface's own e2e drives it, PHPUnit covers filinq's routes
 
 ### Requirement: A verified signature says what was verified (REQ-DFT-06)
 
