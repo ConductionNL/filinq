@@ -32,6 +32,7 @@ use Exception;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\Vendor\RenderEngine;
+use OCA\Filinq\Service\Vendor\VendorRenderOutcome;
 use OCA\Filinq\Service\Vendor\VendorRenderService;
 use OCA\Filinq\Service\Vendor\VendorRenderSources;
 use OCA\OpenRegister\Service\ObjectService;
@@ -128,10 +129,11 @@ class VendorRenderServiceTest extends TestCase {
 	 * @param callable|null $answer   What integriq does with the command; null answers job `job-42`.
 	 * @param bool          $integriq Whether integriq is enabled.
 	 * @param string        $event    The command class.
+	 * @param VendorRenderOutcome|null $outcome Settles an outcome that arrived before the entry.
 	 *
 	 * @return VendorRenderService The service.
 	 */
-	private function service(?callable $answer = null, bool $integriq = true, string $event = RenderRequestedEventDouble::class): VendorRenderService {
+	private function service(?callable $answer = null, bool $integriq = true, string $event = RenderRequestedEventDouble::class, ?VendorRenderOutcome $outcome = null): VendorRenderService {
 		$answer ??= static function (RenderRequestedEventDouble $command): void {
 			$command->setJobId('job-42');
 		};
@@ -154,7 +156,8 @@ class VendorRenderServiceTest extends TestCase {
 			sources: $sources,
 			dispatcher: $dispatcher,
 			log: new GeneratedDocumentLogger(objectResolver: $resolver, logger: $this->createMock(originalClassName: LoggerInterface::class)),
-			requestEvent: $event
+			requestEvent: $event,
+			outcome: $outcome
 		);
 
 	}//end service()
@@ -419,4 +422,60 @@ class VendorRenderServiceTest extends TestCase {
 		$this->assertSame(expected: [], actual: (new VendorRenderSources(appManager: $apps, objectResolver: $counting, logger: $this->createMock(originalClassName: LoggerInterface::class)))->active());
 
 	}//end testWithoutIntegriqOrARegisterNoSourceIsListed()
+
+	/**
+	 * An outcome integriq announced inside the request is settled right after the entry is written.
+	 *
+	 * @return void
+	 */
+	public function testAnOutcomeAnnouncedInsideTheRequestIsSettled(): void {
+		$outcome = $this->createMock(originalClassName: VendorRenderOutcome::class);
+		$outcome->expects($this->once())->method('settleEarly')->with('job-42')->willReturn(
+			['id' => 'entry-1', 'status' => 'generated', 'fileId' => 4711, 'filePath' => '/alice/files/DocuDesk/besluit.pdf']
+		);
+
+		$result = $this->service(outcome: $outcome)->render(slug: 'smartdocuments', run: $this->generationRun(), data: []);
+
+		$this->assertSame(expected: 'generated', actual: $result['status']);
+		$this->assertSame(expected: 4711, actual: $result['output']['fileId']);
+		$this->assertSame(expected: '/alice/files/DocuDesk/besluit.pdf', actual: $result['output']['path']);
+		$this->assertSame(expected: 'generated', actual: $result['metadata']['status']);
+
+	}//end testAnOutcomeAnnouncedInsideTheRequestIsSettled()
+
+	/**
+	 * A render that failed inside the request is refused naming the source and the vendor's error.
+	 *
+	 * @return void
+	 */
+	public function testARenderThatFailedInsideTheRequestIsRefused(): void {
+		$outcome = $this->createMock(originalClassName: VendorRenderOutcome::class);
+		$outcome->method('settleEarly')->willReturn(['id' => 'entry-1', 'status' => 'failed', 'errorMessage' => 'Template unknown at the vendor']);
+
+		try {
+			$this->service(outcome: $outcome)->render(slug: 'smartdocuments', run: $this->generationRun(), data: []);
+			$this->fail(message: 'A failed render was answered as a document.');
+		} catch (Exception $e) {
+			$this->assertSame(expected: 502, actual: $e->getCode());
+			$this->assertStringContainsString(needle: '"smartdocuments"', haystack: $e->getMessage());
+			$this->assertStringContainsString(needle: 'Template unknown at the vendor', haystack: $e->getMessage());
+		}
+
+	}//end testARenderThatFailedInsideTheRequestIsRefused()
+
+	/**
+	 * Without an early outcome the render stays pending.
+	 *
+	 * @return void
+	 */
+	public function testWithoutAnEarlyOutcomeTheRenderStaysPending(): void {
+		$outcome = $this->createMock(originalClassName: VendorRenderOutcome::class);
+		$outcome->expects($this->once())->method('settleEarly')->with('job-42')->willReturn(null);
+
+		$result = $this->service(outcome: $outcome)->render(slug: 'smartdocuments', run: $this->generationRun(), data: []);
+
+		$this->assertSame(expected: 'pending', actual: $result['status']);
+		$this->assertNull(actual: $result['output']['fileId']);
+
+	}//end testWithoutAnEarlyOutcomeTheRenderStaysPending()
 }//end class

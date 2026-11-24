@@ -31,12 +31,14 @@ require_once __DIR__ . '/RenderedEventDouble.php';
 
 use OCA\Filinq\EventListener\VendorRenderedListener;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\DocumentStorageService;
 use OCA\Filinq\Service\Vendor\VendorRenderOutcome;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use Exception;
 use RuntimeException;
 
 /**
@@ -82,11 +84,48 @@ class VendorRenderOutcomeTest extends TestCase {
 	private LoggerInterface $logger;
 
 	/**
+	 * The documents filed: [userId, targetPath, filename, content].
+	 *
+	 * @var array<int, array{0: string, 1: string, 2: string, 3: string}>
+	 */
+	private array $filed = [];
+
+	/**
+	 * Whether filing throws.
+	 *
+	 * @var boolean
+	 */
+	private bool $storeThrows = false;
+
+	/**
+	 * A storage double that records what it files.
+	 *
+	 * @return DocumentStorageService
+	 */
+	private function storage(): DocumentStorageService {
+		$storage = $this->createMock(DocumentStorageService::class);
+		$storage->method('store')->willReturnCallback(
+			function (string $userId, string $targetPath, string $filename, string $content): array {
+				if ($this->storeThrows === true) {
+					throw new Exception('Failed to store generated document in Files: disk full', 507);
+				}
+
+				$this->filed[] = [$userId, $targetPath, $filename, $content];
+				return ['fileId' => 4711, 'path' => '/' . $userId . '/files/' . $targetPath . '/' . $filename, 'name' => $filename, 'size' => strlen($content)];
+			}
+		);
+
+		return $storage;
+	}//end storage()
+
+	/**
 	 * Build the outcome service over doubled OpenRegister.
+	 *
+	 * @param boolean $withStorage Whether the service can file documents.
 	 *
 	 * @return VendorRenderOutcome
 	 */
-	private function outcome(): VendorRenderOutcome {
+	private function outcome(bool $withStorage = false): VendorRenderOutcome {
 		$objects = $this->getMockBuilder(ObjectService::class)->onlyMethods(['findAll', 'saveObject'])->getMock();
 		$objects->method('findAll')->willReturnCallback(
 			function (array $config = []): array {
@@ -109,6 +148,10 @@ class VendorRenderOutcomeTest extends TestCase {
 		$resolver->method('resolve')->willReturn($objects);
 
 		$this->logger = $this->createMock(LoggerInterface::class);
+
+		if ($withStorage === true) {
+			return new VendorRenderOutcome($resolver, $this->logger, $this->storage());
+		}
 
 		return new VendorRenderOutcome($resolver, $this->logger);
 	}//end outcome()
@@ -320,4 +363,169 @@ class VendorRenderOutcomeTest extends TestCase {
 	public function testTheEventNameIsIntegriqs(): void {
 		self::assertSame('OCA\Integriq\Event\DocumentRenderedEvent', VendorRenderedListener::RENDERED_EVENT);
 	}//end testTheEventNameIsIntegriqs()
+
+	/**
+	 * A pending entry that knows who it is for and where it goes.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function pendingWithTarget(): array {
+		return self::pending() + [
+			'generatedBy' => 'alice',
+			'format' => 'pdf',
+			'outputFolder' => 'DocuDesk/besluiten',
+			'outputName' => 'besluit.pdf',
+		];
+	}//end pendingWithTarget()
+
+	/**
+	 * A rendered outcome with the document files it and marks the entry generated with the file.
+	 *
+	 * @return void
+	 */
+	public function testARenderedDocumentIsFiledAndTheEntryGenerated(): void {
+		$this->rows = [self::pendingWithTarget()];
+		$written    = $this->outcome(withStorage: true)->settle(jobId: 'job-1', status: 'rendered', error: '', document: '%PDF-1.4 besluit');
+
+		self::assertSame([['alice', 'DocuDesk/besluiten', 'besluit.pdf', '%PDF-1.4 besluit']], $this->filed);
+		self::assertCount(1, $this->saved);
+		[$object, $uuid] = $this->saved[0];
+		self::assertSame('entry-1', $uuid);
+		self::assertSame('generated', $object['status']);
+		self::assertSame(4711, $object['fileId']);
+		self::assertSame('/alice/files/DocuDesk/besluiten/besluit.pdf', $object['filePath']);
+		self::assertNull($object['errorMessage']);
+		self::assertSame('generated', $written['status']);
+	}//end testARenderedDocumentIsFiledAndTheEntryGenerated()
+
+	/**
+	 * An entry without a recorded target is filed in the default folder under a name for its format.
+	 *
+	 * @return void
+	 */
+	public function testAnEntryWithoutATargetIsFiledByDefault(): void {
+		$this->rows = [self::pending() + ['generatedBy' => 'alice', 'format' => 'docx']];
+		$this->outcome(withStorage: true)->settle(jobId: 'job-1', status: 'rendered', error: '', document: 'PK docx');
+
+		self::assertSame(['alice', VendorRenderOutcome::DEFAULT_FOLDER, 'document.docx', 'PK docx'], $this->filed[0]);
+		self::assertSame('generated', $this->saved[0][0]['status']);
+	}//end testAnEntryWithoutATargetIsFiledByDefault()
+
+	/**
+	 * Each format is named as a filinq render names it.
+	 *
+	 * @return void
+	 */
+	public function testTheDefaultNameFollowsTheFormat(): void {
+		foreach (['odf' => 'document.odt', 'html' => 'document.html', '' => 'document.pdf'] as $format => $name) {
+			$this->rows  = [self::pending() + ['generatedBy' => 'alice', 'format' => $format]];
+			$this->filed = [];
+			$this->outcome(withStorage: true)->settle(jobId: 'job-1', status: 'rendered', error: '', document: 'x');
+			self::assertSame($name, $this->filed[0][2]);
+		}
+	}//end testTheDefaultNameFollowsTheFormat()
+
+	/**
+	 * A document that cannot be filed marks the entry failed with the reason.
+	 *
+	 * @return void
+	 */
+	public function testADocumentThatCannotBeFiledFailsTheEntry(): void {
+		$this->rows        = [self::pendingWithTarget()];
+		$this->storeThrows = true;
+		$this->outcome(withStorage: true)->settle(jobId: 'job-1', status: 'rendered', error: '', document: 'x');
+
+		self::assertSame('failed', $this->saved[0][0]['status']);
+		self::assertStringContainsString('could not be filed', $this->saved[0][0]['errorMessage']);
+		self::assertStringContainsString('disk full', $this->saved[0][0]['errorMessage']);
+	}//end testADocumentThatCannotBeFiledFailsTheEntry()
+
+	/**
+	 * A render that names no user is failed, never filed in somebody's Files.
+	 *
+	 * @return void
+	 */
+	public function testARenderWithoutAUserIsNotFiled(): void {
+		$this->rows = [['generatedBy' => '  '] + self::pendingWithTarget()];
+		$this->outcome(withStorage: true)->settle(jobId: 'job-1', status: 'rendered', error: '', document: 'x');
+
+		self::assertSame([], $this->filed);
+		self::assertSame('failed', $this->saved[0][0]['status']);
+		self::assertStringContainsString('names no user', $this->saved[0][0]['errorMessage']);
+	}//end testARenderWithoutAUserIsNotFiled()
+
+	/**
+	 * Without a way to file, a rendered document leaves the entry pending.
+	 *
+	 * @return void
+	 */
+	public function testWithoutStorageARenderedDocumentStaysPending(): void {
+		$this->rows = [self::pendingWithTarget()];
+		$outcome    = $this->outcome();
+		$this->logger->expects(self::once())->method('info');
+
+		self::assertNull($outcome->settle(jobId: 'job-1', status: 'rendered', error: '', document: 'x'));
+		self::assertSame([], $this->saved);
+	}//end testWithoutStorageARenderedDocumentStaysPending()
+
+	/**
+	 * An outcome that arrives before its entry is settled once the entry is written.
+	 *
+	 * @return void
+	 */
+	public function testAnEarlyOutcomeIsSettledOnceTheEntryExists(): void {
+		$outcome    = $this->outcome(withStorage: true);
+		$this->rows = [];
+		self::assertNull($outcome->settle(jobId: 'job-1', status: 'rendered', error: '', document: '%PDF early'));
+		self::assertSame([], $this->saved);
+
+		$this->rows = [self::pendingWithTarget()];
+		$written    = $outcome->settleEarly(jobId: 'job-1');
+
+		self::assertSame('generated', $written['status']);
+		self::assertSame('%PDF early', $this->filed[0][3]);
+		self::assertNull($outcome->settleEarly(jobId: 'job-1'), 'An early outcome is settled once.');
+	}//end testAnEarlyOutcomeIsSettledOnceTheEntryExists()
+
+	/**
+	 * A job without a kept outcome settles nothing early.
+	 *
+	 * @return void
+	 */
+	public function testNoEarlyOutcomeSettlesNothing(): void {
+		self::assertNull($this->outcome()->settleEarly(jobId: 'job-1'));
+		self::assertSame([], $this->searches);
+	}//end testNoEarlyOutcomeSettlesNothing()
+
+	/**
+	 * Only the latest outcomes of unknown jobs are kept.
+	 *
+	 * @return void
+	 */
+	public function testOnlyTheLatestEarlyOutcomesAreKept(): void {
+		$outcome    = $this->outcome();
+		$this->rows = [];
+		for ($i = 0; $i <= VendorRenderOutcome::EARLY_LIMIT; $i++) {
+			$outcome->settle(jobId: 'job-' . $i, status: 'failed', error: 'e' . $i);
+		}
+
+		$this->rows = [['vendorJobId' => 'job-' . VendorRenderOutcome::EARLY_LIMIT] + self::pending()];
+		self::assertNull($outcome->settleEarly(jobId: 'job-0'), 'The oldest outcome was dropped.');
+		self::assertNotNull($outcome->settleEarly(jobId: 'job-' . VendorRenderOutcome::EARLY_LIMIT));
+	}//end testOnlyTheLatestEarlyOutcomesAreKept()
+
+	/**
+	 * The listener hands integriq's document over, and it is filed.
+	 *
+	 * @return void
+	 */
+	public function testTheListenerFilesTheDocumentIntegriqHandsOver(): void {
+		$this->rows = [self::pendingWithTarget()];
+		$listener   = new VendorRenderedListener($this->outcome(withStorage: true));
+
+		$listener->handle(new RenderedEventDouble('job-1', 'rendered', 'alice', 'sd-doc-1', '', '%PDF from the vendor'));
+
+		self::assertSame('%PDF from the vendor', $this->filed[0][3]);
+		self::assertSame('generated', $this->saved[0][0]['status']);
+	}//end testTheListenerFilesTheDocumentIntegriqHandsOver()
 }//end class

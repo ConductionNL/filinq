@@ -281,6 +281,20 @@ class DocumentService implements DocumentServiceInterface {
 	private function renderThroughVendor(string $slug, array $run): array {
 		$resolved = $this->resolveTemplateData(run: $run);
 
+		// Where the vendor's document is filed once integriq hands it over:
+		// the same folder and name a filinq render of this run would get.
+		$run['recordFields'] = array_merge(
+			(array) ($run['recordFields'] ?? []),
+			[
+				'outputFolder' => $this->buildOutputTargetPath(
+					templateId: (string) $run['templateId'],
+					explicitTargetPath: ($run['options']['output']['targetPath'] ?? null),
+					template: $run['template']
+				),
+				'outputName' => $this->buildOutputFilename(filename: ($run['options']['filename'] ?? 'document'), format: (string) $run['format']),
+			]
+		);
+
 		$result = $this->production->vendor->render(slug: $slug, run: $run, data: $resolved['data']);
 		$result['warnings'] = array_merge($resolved['warnings'], $result['warnings']);
 
