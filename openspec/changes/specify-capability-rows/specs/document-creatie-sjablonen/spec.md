@@ -18,4 +18,4 @@ Rows: `wk-review-due` (filinq matrix)
 - WHEN its owner marks it reviewed on 1 March
 - THEN it leaves the due list
 - AND its next review date is 1 March next year
-- @e2e exclude specification only; the change that builds it adds the Playwright test
+- @e2e tests/e2e/workflows/documents-from-a-template.spec.ts

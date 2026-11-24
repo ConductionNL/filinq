@@ -19,6 +19,7 @@
  */
 
 import { expect, test } from '@playwright/test'
+import { go } from '../spec-coverage/_helpers.ts'
 import { API, harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures.ts'
 
 /** The OpenRegister objects endpoint for the page layouts. */
@@ -210,5 +211,48 @@ test.describe('Documents from a template', () => {
 			second.results.some((row: Record<string, unknown>) => row.uuid === uuid),
 			'a reviewed document leaves the list',
 		).toBe(false)
+	})
+
+	// @e2e openspec/changes/specify-capability-rows/specs/document-creatie-sjablonen/spec.md#a-beleidsregel-is-reviewed
+	test('the owner marks a due document reviewed on My documents and it leaves the list', async ({
+		page,
+	}) => {
+		const created = await page.request.post(OR_DOCUMENTS, {
+			headers: jsonHeaders(token),
+			data: {
+				templateName: `${TEST_PREFIX}-beleidsregel-op-het-scherm`,
+				format: 'pdf',
+				status: 'generated',
+				generatedAt: '2025-01-01T10:00:00+00:00',
+				reviewInterval: 'P12M',
+				reviewDate: '2026-01-01T10:00:00+00:00',
+			},
+		})
+		expect(created.status()).toBeLessThan(300)
+		const body = await created.json()
+		const uuid = body?.['@self']?.id || body?.id || ''
+		expect(uuid).not.toBe('')
+
+		await go(page, 'my-documents')
+		const list = page.getByTestId('due-for-review')
+		await expect(list.getByRole('heading', { name: 'Due for review' })).toBeVisible()
+		const mark = list.getByTestId(`mark-reviewed-${uuid}`)
+		await expect(mark).toBeVisible({ timeout: 30000 })
+
+		const reviewed = page.waitForResponse(
+			(response) =>
+				response.url().includes(`/apps/filinq/api/documents/${uuid}/reviewed`)
+				&& response.request().method() === 'POST',
+		)
+		await mark.click()
+		const answer = await reviewed
+		expect(answer.status(), await answer.text()).toBe(200)
+		const after = await answer.json()
+		expect(after.reviewedAt).not.toBe('')
+		// Twelve months on from the review, not from the old review date.
+		expect(String(after.reviewDate ?? '').slice(0, 4)).toBe(
+			String(new Date().getUTCFullYear() + 1),
+		)
+		await expect(list.getByTestId(`mark-reviewed-${uuid}`)).toHaveCount(0)
 	})
 })
