@@ -31,6 +31,15 @@ use PHPUnit\Framework\TestCase;
 class EmploymentContractParserTest extends TestCase {
 
 	/**
+	 * The parser under test.
+	 *
+	 * @return EmploymentContractParser
+	 */
+	private function parser(): EmploymentContractParser {
+		return new EmploymentContractParser(terms: new ContractTermExtractor());
+	}//end parser()
+
+	/**
 	 * The values of a parse, without confidences.
 	 *
 	 * @param string $text The contract text.
@@ -38,7 +47,7 @@ class EmploymentContractParserTest extends TestCase {
 	 * @return array<string, string|float>
 	 */
 	private function values(string $text): array {
-		return array_map(static fn (array $field): string|float => $field['value'], (new EmploymentContractParser(terms: new ContractTermExtractor()))->parse(text: $text));
+		return array_map(static fn (array $field): string|float => $field['value'], $this->parser()->parse(text: $text));
 	}//end values()
 
 	/**
@@ -100,7 +109,7 @@ class EmploymentContractParserTest extends TestCase {
 	 * @return void
 	 */
 	public function testConfidenceAndAbsence(): void {
-		$fields = (new EmploymentContractParser(terms: new ContractTermExtractor()))->parse(text: "Ingangsdatum: 31-02-2026\nStartdatum: 01-02-2026\n36 uur per week");
+		$fields = $this->parser()->parse(text: "Ingangsdatum: 31-02-2026\nStartdatum: 01-02-2026\n36 uur per week");
 
 		$this->assertSame(expected: EmploymentContractParser::LABELLED, actual: $fields['startDate']['confidence']);
 		$this->assertSame(expected: EmploymentContractParser::PHRASED, actual: $fields['hoursPerWeek']['confidence']);

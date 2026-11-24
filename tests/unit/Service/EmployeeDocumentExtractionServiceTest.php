@@ -55,7 +55,9 @@ class EmployeeDocumentExtractionServiceTest extends TestCase {
 		$time = $this->createMock(originalClassName: ITimeFactory::class);
 		$time->method('now')->willReturn(new DateTimeImmutable('2026-11-15'));
 
-		return new EmployeeDocumentExtractionService(textSource: $source, mrz: new MrzParser(), contract: new EmploymentContractParser(terms: new ContractTermExtractor()), time: $time);
+		$contract = new EmploymentContractParser(terms: new ContractTermExtractor());
+
+		return new EmployeeDocumentExtractionService(textSource: $source, mrz: new MrzParser(), contract: $contract, time: $time);
 	}//end service()
 
 	/**
