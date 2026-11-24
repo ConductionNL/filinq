@@ -36,6 +36,13 @@
 			"order": 58
 		},
 		{
+			"id": "TransferDue",
+			"label": "Due for transfer",
+			"icon": "ArchiveArrowUpOutline",
+			"route": "TransferDue",
+			"order": 58
+		},
+		{
 			"id": "SubjectErasures",
 			"label": "Erasure requests",
 			"icon": "AccountRemove",
@@ -163,6 +170,29 @@
 				]
 			},
 			"_note": "The verklaringen van vernietiging (archiefwet-retention-engine, REQ-DDARE-005) as an ordinary index over the endpoint source: OpenRegister's own GET api/archival/certificates, newest first, which checks the archivist role. Read only: a certificate is a permanent record and filinq adds no route. The per-schema totals and the approvers are written by the app's groupCounts and joinedList cell formatters."
+		},
+		{
+			"id": "TransferDue",
+			"route": "/transfer-due",
+			"type": "index",
+			"title": "Due for transfer",
+			"config": {
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/openregister/api/transfers/eligible",
+					"rowsPath": "results",
+					"refusedText": "Only an administrator can see the records due for transfer."
+				},
+				"emptyText": "No records are due for transfer to the e-depot.",
+				"columns": [
+					{ "key": "name", "label": "Record" },
+					{ "key": "schema", "label": "Schema" },
+					{ "key": "register", "label": "Register" },
+					{ "key": "archiefactiedatum", "label": "Archive action date", "formatter": "rowField", "formatterOptions": { "path": "retention.archiefactiedatum" } },
+					{ "key": "classification", "label": "Selection list category", "formatter": "rowField", "formatterOptions": { "path": "retention.classification" } }
+				]
+			},
+			"_note": "The overbrenging view (archiefwet-retention-engine 3.3, REQ-DDARE-006): the bewaren records whose archiefactiedatum has passed, not transferred or destroyed, without an active legal hold and not on an active transfer list yet, as OpenRegister's own GET api/transfers/eligible reads them with the rule of its daily transfer check. Read only: making and sending the transfer list stays OpenRegister's and tmlo-mdto-metadata's, and filinq adds no route. The action date and category sit in the row's retention block, so the rowField cell formatter reads them by path."
 		},
 		{
 			"id": "SubjectErasures",
