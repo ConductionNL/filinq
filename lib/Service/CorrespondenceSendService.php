@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use Throwable;
 /**
  * Sends a composed letter to the email address on its recipient object.
  *
- * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
  */
 class CorrespondenceSendService {
 
@@ -82,7 +82,7 @@ class CorrespondenceSendService {
 	 *
 	 * @var list<string>
 	 *
-	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
 	 */
 	private const ADDRESS_FIELDS = ['email', 'emailAddress', 'emailadres', 'e-mail', 'mail'];
 
@@ -122,7 +122,7 @@ class CorrespondenceSendService {
 	 *
 	 * @throws CorrespondenceSendRefused 400, 404 or 422.
 	 *
-	 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
 	 */
 	public function preview(string $templateId, array $dataRefs): array {
 		$address = $this->addressOf(recipient: $this->readRecipient(ref: self::recipientRef(dataRefs: $dataRefs)));
@@ -146,9 +146,14 @@ class CorrespondenceSendService {
 	 *
 	 * @throws CorrespondenceSendRefused 400, 404 or 422, before anything is composed.
 	 *
-	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md#requirement-a-composed-letter-can-be-sent-by-email-req-lcs-01
-	 * @spec openspec/changes/letter-email-sending/tasks.md#task-1
-	 * @spec openspec/changes/letter-email-sending/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md#requirement-a-composed-letter-can-be-sent-by-email-req-lcs-01
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-4
+	 *
+	 * The send never reaches OpenRegister's email leaf: the leaf links Mail-app
+	 * messages by account and message id, which a message sent through IMailer
+	 * does not have, so a send with or without the leaf installed is the same send.
 	 */
 	public function send(string $templateId, array $dataRefs, array $options = []): array {
 		$address = $this->addressOf(recipient: $this->readRecipient(ref: self::recipientRef(dataRefs: $dataRefs)));
@@ -201,7 +206,7 @@ class CorrespondenceSendService {
 	 *
 	 * @throws CorrespondenceSendRefused 400 when it names no recipient.
 	 *
-	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
 	 */
 	private static function recipientRef(array $dataRefs): array {
 		$first = ($dataRefs[0] ?? null);
@@ -232,7 +237,7 @@ class CorrespondenceSendService {
 	 *
 	 * @throws CorrespondenceSendRefused 404 when it is not there or the caller may not read it.
 	 *
-	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
 	 */
 	private function readRecipient(array $ref): array {
 		try {
@@ -266,7 +271,7 @@ class CorrespondenceSendService {
 	 *
 	 * @throws CorrespondenceSendRefused 422 when it has none.
 	 *
-	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
 	 */
 	private function addressOf(array $recipient): string {
 		foreach (self::ADDRESS_FIELDS as $field) {
@@ -287,7 +292,7 @@ class CorrespondenceSendService {
 	 *
 	 * @throws CorrespondenceSendRefused 422.
 	 *
-	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
 	 */
 	private function assertMailServer(): void {
 		if ($this->config->getSystemValueString('mail_smtpmode', 'smtp') === 'null') {
@@ -305,7 +310,7 @@ class CorrespondenceSendService {
 	 *
 	 * @return IMessage
 	 *
-	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
 	 */
 	private function message(string $address, string $subject, string $body): IMessage {
 		$message = $this->mailer->createMessage();
@@ -325,7 +330,7 @@ class CorrespondenceSendService {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
 	 */
 	private function deliver(IMessage $message): ?string {
 		try {
@@ -351,7 +356,7 @@ class CorrespondenceSendService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
 	 */
 	private static function subjectOf(array $template): string {
 		foreach (['subject', 'name'] as $field) {
@@ -372,7 +377,7 @@ class CorrespondenceSendService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
 	 */
 	private static function plainText(string $html): string {
 		$withBreaks = preg_replace('/<(br|\/p|\/div|\/h[1-6]|\/li|\/tr)\b[^>]*>/i', "\n", $html);
@@ -389,7 +394,7 @@ class CorrespondenceSendService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
 	 */
 	private static function pdfName(string $subject): string {
 		$name = trim((string)preg_replace('/[^\p{L}\p{N} ._-]+/u', '', $subject));

@@ -61,7 +61,7 @@ function requestError(err) {
  *
  * @param {object} state The store state.
  * @return {{templateId: string, dataRefs: Array<object>, options: {huisstijlId: (string|undefined), caseReference: (string|undefined)}}}
- * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
  */
 export function sendRequest(state) {
 	const { huisstijlId, caseReference } = letterOptions(state)
@@ -119,7 +119,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 		 *
 		 * @param {object} state The store state.
 		 * @return {object}
-		 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
 		 */
 		sendBody(state) {
 			return sendRequest(state)
@@ -254,7 +254,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 		 * @param {boolean} attachPdf Whether the PDF of the same letter goes along.
 		 * @return {Promise<object>} The send result: status, to, subject, sentAt.
 		 *
-		 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+		 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
 		 */
 		async sendByEmail(attachPdf = false) {
 			this.loading = true

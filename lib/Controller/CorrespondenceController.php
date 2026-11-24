@@ -411,8 +411,8 @@ class CorrespondenceController extends Controller {
 	 *
 	 * @return JSONResponse What the send did
 	 *
-	 * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md#requirement-a-composed-letter-can-be-sent-by-email-req-lcs-01
-	 * @spec openspec/changes/letter-email-sending/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md#requirement-a-composed-letter-can-be-sent-by-email-req-lcs-01
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-2
 	 */
 	#[NoAdminRequired]
 	public function send(): JSONResponse {
@@ -437,7 +437,7 @@ class CorrespondenceController extends Controller {
 	 *
 	 * @return JSONResponse {to, subject}, or the refusal send() would give
 	 *
-	 * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
 	 */
 	#[NoAdminRequired]
 	public function sendPreview(): JSONResponse {
@@ -456,7 +456,7 @@ class CorrespondenceController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/letter-email-sending/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-2
 	 */
 	private function sending(callable $action): JSONResponse {
 		if ($this->userSession->getUser() === null) {

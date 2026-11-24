@@ -7,7 +7,7 @@ import axios from '@nextcloud/axios'
  * the send route with the letter and the PDF choice, the sent letter kept,
  * and a refusal handed back with the server's message.
  *
- * @spec openspec/changes/letter-email-sending/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
  */
 import { createPinia, setActivePinia } from 'pinia'
 import { sendRequest, useCorrespondenceStore } from './correspondence.js'

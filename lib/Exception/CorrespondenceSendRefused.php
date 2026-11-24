@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/letter-email-sending/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,7 +32,7 @@ use RuntimeException;
 /**
  * A refused send, carrying its HTTP status as the code.
  *
- * @spec openspec/changes/letter-email-sending/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-2
  */
 class CorrespondenceSendRefused extends RuntimeException {
 }//end class

@@ -19,8 +19,8 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/letter-email-sending/tasks.md#task-1
- * @spec openspec/changes/letter-email-sending/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-1
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -61,7 +61,7 @@ use RuntimeException;
  * A letter goes to the recipient's address and is logged as sent; a send that
  * cannot happen is refused before anything is composed and logs nothing as sent.
  *
- * @spec openspec/changes/letter-email-sending/specs/letter-correspondence-generation/spec.md
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/specs/letter-correspondence-generation/spec.md
  */
 class CorrespondenceServiceSendTest extends TestCase {
 
@@ -423,6 +423,42 @@ class CorrespondenceServiceSendTest extends TestCase {
 		$this->assertSame([], $this->logged);
 
 	}//end testThePreviewNamesAddressAndSubjectOnly()
+
+	/**
+	 * A send works without the email leaf: the service depends on Nextcloud's
+	 * mailer only, so no link is attempted and the send is logged as sent.
+	 *
+	 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-4
+	 *
+	 * @return void
+	 */
+	public function testTheSendNeedsNoEmailLeafAndAttemptsNoLink(): void {
+		$constructor = (new \ReflectionClass(CorrespondenceSendService::class))->getConstructor();
+		$this->assertNotNull(actual: $constructor);
+		foreach ($constructor->getParameters() as $parameter) {
+			$type = (string) $parameter->getType();
+			$this->assertStringNotContainsStringIgnoringCase(
+				needle: 'Email',
+				haystack: $type,
+				message: 'the send takes no email-leaf service: '.$parameter->getName()
+			);
+			$this->assertStringNotContainsStringIgnoringCase(
+				needle: 'Link',
+				haystack: $type,
+				message: 'the send takes no link service: '.$parameter->getName()
+			);
+		}
+
+		$this->recipient(fields: ['email' => 'j.jansen@example.nl']);
+		$this->mailer->expects($this->once())->method('send')->willReturn([]);
+
+		$result = $this->sender->send(templateId: 'tmpl-1', dataRefs: self::RECIPIENT, options: ['userId' => 'officer']);
+
+		$this->assertSame(expected: 'sent', actual: $result['status']);
+		$this->assertCount(expectedCount: 1, haystack: $this->logged);
+		$this->assertArrayNotHasKey(key: 'emailLink', array: $this->logged[0]);
+
+	}//end testTheSendNeedsNoEmailLeafAndAttemptsNoLink()
 
 	/**
 	 * The send service over the same doubles, with another configuration.
