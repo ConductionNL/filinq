@@ -955,3 +955,17 @@ filinq SHALL offer a merge preview of a template for given data references. It S
 - GIVEN a template that uses `{{ title|upper }}`, `{{ chart(data) }}` and `{% for row in rows %}{{ row.name }}{% endfor %}`
 - WHEN its merge fields are extracted
 - THEN `title` is a field, and neither the filter, the function nor the loop variable is
+
+### Requirement: The owner marks a due document reviewed (REQ-SCR-014)
+
+A document due for review MUST offer a reviewed action to its owner. Marking it reviewed MUST record who reviewed it and when, take it off the due list, and set the next review date from its review interval.
+
+Rows: `wk-review-due` (filinq matrix)
+
+#### Scenario: A beleidsregel is reviewed
+
+- GIVEN a beleidsregel due for review with an interval of twelve months
+- WHEN its owner marks it reviewed on 1 March
+- THEN it leaves the due list
+- AND its next review date is 1 March next year
+- @e2e tests/e2e/workflows/documents-from-a-template.spec.ts

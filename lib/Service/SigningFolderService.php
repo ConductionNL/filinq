@@ -239,7 +239,7 @@ class SigningFolderService implements SigningFolderServiceInterface {
 	 *
 	 * @return array<string, mixed> The per-document result.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function delegatedOrRefused(string $requestId, string $userId, string $reason): array {
 		return $this->signDelegated(requestId: $requestId, userId: $userId)
@@ -259,7 +259,7 @@ class SigningFolderService implements SigningFolderServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The per-document result, or null.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function signDelegated(string $requestId, string $userId): ?array {
 		if ($this->delegations === null) {
@@ -288,7 +288,7 @@ class SigningFolderService implements SigningFolderServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The per-document result, or null.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function signForDelegator(SigningDelegationService $delegations, string $requestId, string $userId, string $delegator): ?array {
 		$request = $this->signingService->getRequest(requestId: $requestId, callerUserId: $delegator);
@@ -331,7 +331,7 @@ class SigningFolderService implements SigningFolderServiceInterface {
 	 *
 	 * @return list<array<string, mixed>> The entries, each naming `onBehalfOf`.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function delegatedEntries(string $userId): array {
 		if ($this->delegations === null) {
@@ -357,7 +357,7 @@ class SigningFolderService implements SigningFolderServiceInterface {
 	 *
 	 * @return list<array<string, mixed>> The entries, each naming `onBehalfOf`.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function coveredEntries(SigningDelegationService $delegations, string $delegator, string $userId): array {
 		$entries = [];

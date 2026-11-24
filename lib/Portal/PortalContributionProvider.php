@@ -212,7 +212,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<int, array<string, mixed>> The entry, or none.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-5.1
 	 */
 	public function releasedDocuments(string $releaseId): array {
 		if ($this->releases === null) {
@@ -235,7 +235,7 @@ class PortalContributionProvider {
 	 *
 	 * @return bool True only when the download may go ahead.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-3.3
 	 */
 	public function releasedDocumentOpened(string $releaseId, string $documentId, array $subject): bool {
 		$fileId = $this->releasedFileId(releaseId: $releaseId, documentId: $documentId);
@@ -268,7 +268,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed>|null `mayDownload`, and `agreement` with the terms and version when not.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-3.3
 	 */
 	public function releasedDocumentTerms(string $releaseId, string $documentId, array $subject): ?array {
 		$fileId = $this->releasedFileId(releaseId: $releaseId, documentId: $documentId);
@@ -301,7 +301,7 @@ class PortalContributionProvider {
 	 *
 	 * @return bool True when the download may now go ahead.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-3.3
 	 */
 	public function releasedDocumentAccept(string $releaseId, string $documentId, array $subject, string $version): bool {
 		$fileId = $this->releasedFileId(releaseId: $releaseId, documentId: $documentId);
@@ -483,7 +483,7 @@ class PortalContributionProvider {
 	 *
 	 * @return array<string, mixed> The collection.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-5.1
 	 */
 	private function subjectDocumentsCollection(): array {
 		return [

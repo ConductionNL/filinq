@@ -44,7 +44,7 @@ interface PersonalDataReportInterface {
 	 *
 	 * @return array<string, mixed> `results` (the rows {@see self::row()} builds), `available` and `truncated`.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/management-reports/spec.md#requirement-the-personal-data-report-lists-which-documents-hold-personal-data-req-scr-010
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/management-reports/spec.md#requirement-the-personal-data-report-lists-which-documents-hold-personal-data-req-scr-010
 	 */
 	public function forReader(): array;
 }//end interface
