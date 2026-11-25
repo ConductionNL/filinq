@@ -122,7 +122,7 @@ SPDX-License-Identifier: EUPL-1.2
 						<td :data-missing="missingOf(row).length">
 							{{
 								missingOf(row).length
-									? missingOf(row).join(', ')
+									? missingOf(row).map(fieldLabel).join(', ')
 									: t('filinq', 'Complete')
 							}}
 						</td>
@@ -265,7 +265,7 @@ SPDX-License-Identifier: EUPL-1.2
 				<p v-if="missing.length" class="publications__muted">
 					{{
 						t('filinq', 'Still missing: {fields}', {
-							fields: missing.join(', '),
+							fields: missing.map(fieldLabel).join(', '),
 						})
 					}}
 				</p>
@@ -363,6 +363,7 @@ import PublicationBulkMetadataDialog from '../../dialogs/PublicationBulkMetadata
 import {
 	canHandOff,
 	canWithdraw,
+	metadataLabel,
 	missingMetadata,
 	publicationStatusLabel,
 	readinessChecks,
@@ -524,6 +525,17 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The name a person reads for a missing DiWoo field.
+		 *
+		 * @param {string} field The field key.
+		 * @return {string} The label.
+		 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+		 */
+		fieldLabel(field) {
+			return metadataLabel(field, t)
+		},
+
 		t,
 
 		/**
