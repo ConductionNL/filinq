@@ -14,7 +14,7 @@ import { translate as t } from '@nextcloud/l10n'
  *
  * @param {string} role `sign` or `accept`; anything else signs.
  * @return {string}
- * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+ * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#4-screens
  */
 export function roleLabel(role) {
 	return role === 'accept' ? t('filinq', 'Accept only') : t('filinq', 'Sign')
@@ -25,7 +25,7 @@ export function roleLabel(role) {
  *
  * @param {string} status The recipient record's status.
  * @return {string}
- * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+ * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#4-screens
  */
 export function statusLabel(status) {
 	const labels = {
@@ -42,7 +42,7 @@ export function statusLabel(status) {
  *
  * @param {Array<object>} recipients The `recipients` of the signing request.
  * @return {Array<{id: string, name: string, role: string, status: string, at: string}>}
- * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+ * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#4-screens
  */
 export function recipientRows(recipients) {
 	if (!Array.isArray(recipients)) {

@@ -19,7 +19,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+ * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ use InvalidArgumentException;
 /**
  * The sign-or-accept role of a recipient.
  *
- * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+ * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
  */
 final class RecipientRole {
 
@@ -55,7 +55,7 @@ final class RecipientRole {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 */
 	public static function accepts(array $recipient): bool {
 		return strtolower(trim((string)($recipient['role'] ?? ''))) === self::ACCEPT;
@@ -68,7 +68,7 @@ final class RecipientRole {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 */
 	public static function isDone(array $recipient): bool {
 		$status = (string)($recipient['status'] ?? '');
@@ -88,7 +88,7 @@ final class RecipientRole {
 	 *
 	 * @throws InvalidArgumentException With code 400 when no entry signs.
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 */
 	public static function assertSomeoneSigns(array $entries): void {
 		foreach ($entries as $entry) {
@@ -107,7 +107,7 @@ final class RecipientRole {
 	 *
 	 * @return list<string>
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-backend
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-backend
 	 */
 	public static function accepterIds(array $signers): array {
 		$ids = [];
@@ -129,7 +129,7 @@ final class RecipientRole {
 	 *
 	 * @return array{signers: list<mixed>, accepted: list<string>}
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-backend
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-backend
 	 */
 	public static function split(array $request): array {
 		$accepted = array_values(array_map('strval', (array) ($request['accepterIds'] ?? [])));

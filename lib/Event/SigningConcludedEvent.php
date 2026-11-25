@@ -221,7 +221,7 @@ class SigningConcludedEvent extends Event {
 	 *
 	 * @return array<int, string> Their recipient ids.
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-backend
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-backend
 	 */
 	public function getAccepted(): array {
 		return $this->accepted;

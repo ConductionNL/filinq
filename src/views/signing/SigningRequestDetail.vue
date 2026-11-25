@@ -263,7 +263,7 @@ export default {
 		 *
 		 * @return {Array<object>} The recipient rows.
 		 *
-		 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+		 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#4-screens
 		 */
 		recipients() {
 			return recipientRows(this.signingStore.signingRequest?.recipients)

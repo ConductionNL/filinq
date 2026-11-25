@@ -339,7 +339,13 @@ On `signerRecord`, `role` was already `signer` or `guardian`; `accept` is its th
 In the app:
 
 - **New signing request**: every recipient row has a *Role*, *Sign* or *Accept only*. The form will not create a request without a recipient who signs.
+
+  ![A new signing request with a tenant who signs and a housing officer who only accepts](/screenshots/signing-accept-only-form.png)
+
 - **Signing folder**: a document you only accept shows an *Accept* button instead of the selection box, and is never part of *Sign selected*.
+
+  ![The signing folder of an accept-only recipient: an Accept button instead of the selection box](/screenshots/signing-accept-only-folder.png)
+
 - **Request detail**: the *Recipients* table lists each recipient in order with their role, state and when they signed or accepted. `GET /apps/filinq/api/signing/requests/{id}` returns that list as `recipients` (id, name, role, status, order, at); it holds no e-mail address, IP address or signature data.
 
 On the portal, the signer manifest declares a third act, `accept`, beside `sign` and `decline` (`POST /apps/filinq/api/portal/signing/accept`, `minTrust: substantial`). The receiver checks the portal assertion and the invited recipient exactly as for signing. The wrong act for a recipient's role answers 422 `wrong_act` with the message above, on both the sign and the accept act.

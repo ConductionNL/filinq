@@ -162,7 +162,7 @@ class SigningController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#4-screens
 	 */
 	public function showRequest(string $id): JSONResponse {
 		try {
@@ -296,7 +296,7 @@ class SigningController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 *
 	 * @no-admin-idor-exempt SigningActorResolver::loadAuthorisedSigner() refuses unless the signer record
 	 * belongs to this request and its userId is the session user.
