@@ -13,7 +13,7 @@
  *
  * @param {object} entry A signing folder entry.
  * @return {boolean}
- * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
  */
 export function hasFieldsToFillIn(entry) {
 	return Array.isArray(entry?.fields) && entry.fields.length > 0
@@ -28,7 +28,7 @@ export function hasFieldsToFillIn(entry) {
  * @param {Array<{placement: number}>} fields The signer's fields.
  * @param {object} values What was typed, by placement position.
  * @return {{signerId: string, fields: object}}
- * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
  */
 export function signBody(signerId, fields, values) {
 	const typed = {}
@@ -48,7 +48,7 @@ export function signBody(signerId, fields, values) {
  *
  * @param {object} error The request error.
  * @return {object} Messages by placement position.
- * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
  */
 export function fieldErrorsOf(error) {
 	const data = error?.response?.data
@@ -70,7 +70,7 @@ export function fieldErrorsOf(error) {
  * @param {object} error The request error.
  * @param {string} fallback The message when the server gave none.
  * @return {string}
- * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
  */
 export function signErrorOf(error, fallback) {
 	const message = error?.response?.data?.error

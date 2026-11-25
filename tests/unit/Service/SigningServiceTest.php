@@ -2875,7 +2875,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	public function testSignStoresTheTypedValuesWithTheSignature(): void {
 		['request' => $request, 'records' => $records] = $this->requestWithFields();
@@ -2895,7 +2895,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	public function testARefusedValueWritesNothing(): void {
 		['request' => $request, 'records' => $records] = $this->requestWithFields();
@@ -2919,7 +2919,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
 	 */
 	public function testSigningWithoutFieldsIsRefusedWhenTheSignerHasSome(): void {
 		['request' => $request, 'records' => $records] = $this->requestWithFields();
@@ -2943,7 +2943,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.4
 	 */
 	public function testCompletionHandsTheTypedValuesToTheProvider(): void {
 		['request' => $request, 'records' => $records] = $this->requestWithFields(

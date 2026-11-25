@@ -209,7 +209,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} No check, and the checks the server runs.
-		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.1
 		 */
 		checkOptions() {
 			const labels = {
@@ -493,7 +493,7 @@ export default {
 		 *
 		 * @param {number} index The box.
 		 * @param {object} settings What changes.
-		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.1
 		 */
 		setting(index, settings) {
 			this.$emit(

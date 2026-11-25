@@ -5,8 +5,8 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/signing-field-validation/tasks.md#task-3.1
- * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
  */
 
 import { describe, expect, it } from 'vitest'

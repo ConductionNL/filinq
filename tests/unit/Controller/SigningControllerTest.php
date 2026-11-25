@@ -228,7 +228,7 @@ class SigningControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.3
 	 */
 	public function testARefusedFieldAnswers422WithTheMessageOnThatField(): void {
 		$request = $this->createMock(IRequest::class);
@@ -270,7 +270,7 @@ class SigningControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.3
 	 */
 	public function testWithoutFieldsTheActCarriesNone(): void {
 		$this->signingService->expects($this->once())->method('sign')

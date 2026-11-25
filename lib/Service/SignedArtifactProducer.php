@@ -371,7 +371,7 @@ class SignedArtifactProducer {
 	 *
 	 * @return array<int, string> The values.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.4
 	 */
 	private function typedValues(array $record, int $signerIndex, array $placements): array {
 		$values = [];

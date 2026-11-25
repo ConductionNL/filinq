@@ -257,7 +257,7 @@ class SigningController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.3
 	 * @spec openspec/changes/digital-signing-integration/tasks.md#6-1
 	 *
 	 * @no-admin-idor-exempt SigningActorResolver::loadAuthorisedSigner() refuses unless the signer record

@@ -8675,8 +8675,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/signing-field-validation on 2026-09-27. Before: no signer form fields at all: the signingRequest and signerRecord schemas (lib/Settings/filinq_register.json:2353, :2714) carry level, mode, status and provider, no fields; src/views/signing/SigningRequestForm.vue collects signers only (:80). Field placement is designed only: openspec/changes/bulk-signing-field-builder/proposal.md:48 (0 tasks done). Corrections round 8 (2026-09-28), filinq#1209: the create form also offers no signer or field composition (src/views/signing/SigningRequestForm.vue:12-54), which openspec/specs/orphaned-surface-restoration/spec.md:106 requires, at 9fd042f.",
-				"change": "openspec/changes/signing-field-validation",
-				"requirement": "openspec/changes/signing-field-validation/specs/signing-field-validation :: A wrong value stops the signature (REQ-SFV-003)"
+				"change": "openspec/changes/archive/2026-11-25-signing-field-validation",
+				"requirement": "openspec/changes/archive/2026-11-25-signing-field-validation/specs/signing-field-validation :: A wrong value stops the signature (REQ-SFV-003)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",

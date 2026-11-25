@@ -18,7 +18,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
  */
 
 declare(strict_types=1);
@@ -39,7 +39,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
  */
 class SigningFieldsRefusedException extends RuntimeException {
 
@@ -51,7 +51,7 @@ class SigningFieldsRefusedException extends RuntimeException {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	public function __construct(
 		private readonly array $fieldErrors,
@@ -69,7 +69,7 @@ class SigningFieldsRefusedException extends RuntimeException {
 	 *
 	 * @return array<int, string> The field errors.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	public function fieldErrors(): array {
 		return $this->fieldErrors;
