@@ -87,3 +87,11 @@ Rows: `wk-fulltext` (filinq matrix)
 - WHEN the employee picks the document hit
 - THEN filinq's My documents opens with that document in the viewer
 - @e2e exclude cross-app path; needs openregister's file hits in unified search, and the `file` parameter is covered by task 2.4
+
+#### Scenario: A document link opens the viewer
+
+- GIVEN a document in the employee's own files
+- WHEN the employee opens `/apps/filinq/my-documents?file=<its file id>`
+- THEN My documents shows that document in the viewer
+- AND a link to a file the employee cannot open opens nothing and says so
+- @e2e tests/e2e/document-content-search.spec.ts
