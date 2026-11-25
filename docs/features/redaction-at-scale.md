@@ -60,6 +60,29 @@ sample's outcome comes from its `documentReview`: none yet is *pending*, a
 review that added manual entities is *corrected*, otherwise *confirmed*. A rate
 of 0 switches sampling off and the report says so.
 
+## The batch operations view
+
+*Batch operations* in the menu lists the batches you may see: your own, or
+every batch for a policy admin or an admin. Each row shows the phase, the
+progress, the documents per hour, the throttled flag and when the batch
+started.
+
+![Batch operations: three batches with their phase, progress, documents per hour and start date](/screenshots/redaction-at-scale-ops.png)
+
+A row opens the batch, with its counts and the QA sample. Each sampled file
+carries its review outcome.
+
+![A completed batch: 100%, and the one sampled file awaiting review](/screenshots/redaction-at-scale-detail.png)
+
+A batch that is still running or waiting for review can be cancelled: the
+file in progress is finished, and no further file is started. A cancelled or
+failed batch can be resumed: only the files that did not succeed are
+processed again. Both actions ask for confirmation first.
+
+![Cancel this batch?](/screenshots/redaction-at-scale-cancel.png)
+
+![Resume this batch?](/screenshots/redaction-at-scale-resume.png)
+
 ## Sizing
 
 Throughput is bounded by the cron cadence: with the defaults one instance does
