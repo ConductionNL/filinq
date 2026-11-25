@@ -23,6 +23,7 @@ namespace OCA\Filinq\Service\Waarmerk;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
@@ -150,7 +151,15 @@ class WaarmerkStore {
 			return null;
 		}
 
-		return self::firstWith(rows: $this->search(filters: ['verificationCode' => $code]), match: ['verificationCode' => $code]);
+		// Anyone may verify without an account, so the visitor's (empty) organisation must not scope this read:
+		// an anonymous check answered "unknown" for a waarmerk that exists (seen live). The unguessable,
+		// checksummed code is the capability; the answer carries only what the verification page shows.
+		$rows = $this->searchWith(
+			search: $this->objectResolver->slugSearch(_rbac: false, _multitenancy: false),
+			filters: ['verificationCode' => $code]
+		);
+
+		return self::firstWith(rows: $rows, match: ['verificationCode' => $code]);
 
 	}//end findByCode()
 
@@ -191,8 +200,25 @@ class WaarmerkStore {
 	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
 	 */
 	public function search(array $filters): array {
+		return $this->searchWith(search: $this->objectResolver->slugSearch(_rbac: false), filters: $filters);
+
+	}//end search()
+
+	/**
+	 * The stored seals matching the filters, read through the given slug search.
+	 *
+	 * @param SlugSearch           $search  The slug search, with its access flags.
+	 * @param array<string, mixed> $filters Field equality filters.
+	 *
+	 * @return array<int, array<string, mixed>> The matching seals.
+	 *
+	 * @throws WaarmerkRefusedException 503 when the register cannot be read.
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/tasks.md
+	 */
+	private function searchWith(SlugSearch $search, array $filters): array {
 		try {
-			$results = $this->objectResolver->slugSearch(_rbac: false)->search(
+			$results = $search->search(
 				register: self::REGISTER,
 				schema: self::SCHEMA,
 				filters: $filters
@@ -217,7 +243,7 @@ class WaarmerkStore {
 
 		return $rows;
 
-	}//end search()
+	}//end searchWith()
 
 	/**
 	 * Save a row.
