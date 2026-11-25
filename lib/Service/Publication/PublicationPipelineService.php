@@ -226,7 +226,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 *
 	 * @throws InvalidArgumentException When a field may not be bulk-set, a value is blank, or the category is unknown.
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 	 */
 	public function updateMetadataMany(array $records, array $values, string $actor): array {
 		$metadata = $this->bulkValues(values: $values);
@@ -256,7 +256,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 *
 	 * @throws InvalidArgumentException When a field is not bulk-settable or a value is blank.
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 	 */
 	private function bulkValues(array $values): array {
 		if ($values === []) {
@@ -289,7 +289,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 *
 	 * @throws InvalidArgumentException When the category is unknown.
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 	 */
 	private function assertKnownCategory(string $category): void {
 		$codes = array_column($this->platform->categories(), 'code');
@@ -304,7 +304,7 @@ class PublicationPipelineService implements PublicationPipelineServiceInterface 
 	 *
 	 * @return array<string, string> `['publisher' => uri]`, or [] when none is set.
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-new-records-start-with-the-organisations-publisher-req-wmw-003
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-new-records-start-with-the-organisations-publisher-req-wmw-003
 	 */
 	private function defaultPublisher(): array {
 		$config = $this->sources?->config;

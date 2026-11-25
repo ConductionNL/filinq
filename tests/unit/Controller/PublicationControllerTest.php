@@ -205,7 +205,7 @@ class PublicationControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-every-publication-record-says-which-diwoo-fields-it-misses-req-wmw-001
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-every-publication-record-says-which-diwoo-fields-it-misses-req-wmw-001
 	 */
 	public function testTheIndexShowsAndFiltersMissingMetadata(): void {
 		$complete = [
@@ -235,7 +235,7 @@ class PublicationControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 	 */
 	public function testABulkChangeReachesOnlyRecordsTheCallerMayActOn(): void {
 		$mine = ['uuid' => 'mine', 'documentFileRef' => '42'];

@@ -502,7 +502,7 @@ class SettingsService implements SettingsServiceInterface {
 	/**
 	 * The TOOI identifier a new publication's publisher is prefilled with.
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
 	 */
 	private const DEFAULT_PUBLISHER_KEY = 'woo.default_publisher';
 

@@ -8345,10 +8345,10 @@
 				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
 				"readOn": "2026-09-29",
 				"requirement": [
-					"openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist :: Every publication record says which DiWoo fields it misses (REQ-WMW-001)",
-					"openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist :: A coordinator fills one value on a selection (REQ-WMW-002)"
+					"openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist :: Every publication record says which DiWoo fields it misses (REQ-WMW-001)",
+					"openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist :: A coordinator fills one value on a selection (REQ-WMW-002)"
 				],
-				"plan": "openspec/changes/woo-metadata-worklist"
+				"plan": "openspec/changes/archive/2026-11-25-woo-metadata-worklist"
 			},
 			"reachedOn": "Publications menu entry (/publications), Missing metadata column",
 			"provider": "filinq",

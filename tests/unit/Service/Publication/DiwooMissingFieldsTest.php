@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The missing list a record carries, and the seed records the worklist shows.
  *
- * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-every-publication-record-says-which-diwoo-fields-it-misses-req-wmw-001
+ * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-every-publication-record-says-which-diwoo-fields-it-misses-req-wmw-001
  */
 class DiwooMissingFieldsTest extends TestCase {
 
