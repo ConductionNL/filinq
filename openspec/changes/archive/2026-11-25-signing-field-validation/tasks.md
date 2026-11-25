@@ -20,7 +20,8 @@
 
 ## 4. Strings, docs and siblings
 
-- [ ] 4.1 Dutch and English strings (ADR-005), `@spec` tags on new methods, and a section in `docs/features/` with a screenshot of the dialog (ADR-010). Verify: `npm run check:l10n`, `npm run lint` and `composer check:strict` pass; PHPUnit coverage on the new PHP is at least 75% (ADR-009).
+- [x] 4.1 Dutch and English strings (ADR-005), `@spec` tags on new methods, and a section in `docs/features/` with a screenshot of the dialog (ADR-010). Verify: `npm run check:l10n`, `npm run lint` and `composer check:strict` pass; PHPUnit coverage on the new PHP is at least 75% (ADR-009).
+  - 25 Nov 2026, live sandbox (Nextcloud 34, MariaDB, OpenRegister main with its `iban` format): `docs/features/signing-field-placement.md` carries the Fill in and sign dialog with a wrong check digit named on the field (`docs/static/screenshots/signing-field-validation-dialog.png`). `tests/e2e/signing-field-validation.spec.ts` ran live, 4 of 4 passed, after the placement editor fix in the same PR (pdf.js document kept out of Vue reactivity) and with `signing_verification_secret` set, which a deployment needs for native SES. Coverage with pcov over the full unit suite: 1398 of 1464 statements, 95.5%, over the 11 lib files carrying this change's `@spec` tag. `npm run test:l10n` and `npm run lint` (0 errors) pass; `composer check:strict` reports only findings inherited from development.
 - [x] 4.2 File openregister's IBAN format and portaliq's row-action inputs as issues on their repos and link them in this change's proposal. Verify: both issue URLs are in `proposal.md` under Cross-app dependencies.
   - IBAN built as ConductionNL/openregister#10571; portaliq filed as ConductionNL/portaliq#2664 (2026-11-24); both URLs in `proposal.md`.
 

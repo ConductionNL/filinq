@@ -495,7 +495,7 @@ class SigningFolderService implements SigningFolderServiceInterface {
 	 *
 	 * @return list<array{placement: int, label: string, required: bool, validation: string|null}> The fields.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
 	 */
 	private function fieldsOf(array $request, string $signerId): array {
 		$placements = ($request['fieldPlacements'] ?? []);

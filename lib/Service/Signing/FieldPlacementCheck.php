@@ -76,7 +76,7 @@ class FieldPlacementCheck {
 	 * @throws RuntimeException 400 when a placement breaks a rule or the provider cannot carry placements.
 	 * @throws \OCA\Filinq\Exception\SigningFieldsRefusedException 400 when a field's check is not available.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.1
 	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
 	 */
 	public function accept(mixed $placements, int $signerCount, string $provider): array {

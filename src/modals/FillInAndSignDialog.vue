@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+@spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
 -->
 
 <template>
@@ -117,7 +117,7 @@ export default {
 		 * @param {object} field The field.
 		 * @param {number} index Its place in the dialog.
 		 * @return {string}
-		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
 		 */
 		fieldLabel(field, index) {
 			return field.label || t('filinq', 'Field {number}', { number: index + 1 })
@@ -128,7 +128,7 @@ export default {
 		 *
 		 * @param {object} field The field.
 		 * @return {string}
-		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
 		 */
 		hintOf(field) {
 			if (field.validation === 'iban-nl') {
@@ -145,7 +145,7 @@ export default {
 		 *
 		 * @param {number} placement The field's placement position.
 		 * @param {string} value What was typed.
-		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
 		 */
 		setValue(placement, value) {
 			this.values = { ...this.values, [placement]: value }
@@ -160,7 +160,7 @@ export default {
 		 * Send the values with the sign act.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
 		 */
 		async submit() {
 			this.busy = true
