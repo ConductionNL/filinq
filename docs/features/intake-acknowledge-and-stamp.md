@@ -33,6 +33,8 @@ the order, a rule has two fields:
 - **Stamp received**: whether an arriving PDF (a scan is a PDF) gets a copy
   with the stamp on its first page.
 
+![The Intake rules list: the mail rule acknowledges with the template ontvangstbevestiging and stamps what arrives; the scanner rule does neither](/screenshots/intake-rules-acknowledge-and-stamp.png)
+
 ## How the sender is reached
 
 In this order:
@@ -52,6 +54,12 @@ registered as the outgoing entry that answers it.
 A send that fails, for example because the server's mail is not configured,
 records **Failed** with the reason. The document stays in the inbox as it
 arrived.
+
+The mail is plain text: the rendered template's paragraphs become lines, and
+the received date reads as day-month-year (25-11-2026). The intake inbox shows
+the outcome in its **Acknowledged** column.
+
+![The intake inbox with an Acknowledged column: mailed documents whose sender was told show Sent](/screenshots/intake-acknowledged.png)
 
 ## The stamped copy
 

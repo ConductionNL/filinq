@@ -20,8 +20,8 @@
 
 ## 4. Quality
 
-- [ ] 4.1 Dutch and English strings (ADR-005), `@spec` tags, and `docs/features/` with screenshots (ADR-010). Verify: `npm run check:l10n`, `npm run lint`, `composer check:strict`.
-- [ ] 4.2 One live check on a dev instance with mail configured: a mailed document gets an acknowledgement in the sender's mailbox. Verify: the mail arrives and `acknowledgement.status` is `sent`.
+- [x] 4.1 Dutch and English strings (ADR-005), `@spec` tags, and `docs/features/` with screenshots (ADR-010). Verify: `npm run check:l10n`, `npm run lint`, `composer check:strict`.
+- [x] 4.2 One live check on a dev instance with mail configured: a mailed document gets an acknowledgement in the sender's mailbox. Verify: the mail arrives and `acknowledgement.status` is `sent`.
 
 ## Build notes
 
@@ -33,5 +33,7 @@
 - 3.1: `IntakeIndex.vue` has an **Acknowledged** column (a badge for sent, queued as letter, refused or failed, with the reason or address as its tooltip; empty without an acknowledgement) and an **Open stamped copy** row action when `stampedRendition` is set, opening Nextcloud's `/f/{fileId}`. The labels live in `src/services/intakeAcknowledgement.js`, vitest `tests/vitest/intakeAcknowledgement.spec.js`. The Playwright check is left for the live pass.
 - 3.2: there was no intake rule form yet. `src/manifest.d/20-intake.json` adds the `IntakeRules` index page (`/intake/rules`, settings section) over `intakeDefaultRule`; create and edit are the object API's dialog over the schema, so `acknowledgeWith` and `stampReceived` are on the form. `manifestFragments.spec.js` lists the new page and menu entry. The Playwright check is left for the live pass.
 - 4.1: strings in en, nl, de, es, fr and it (`l10n/*.json`, `.js` rebuilt), `@spec` tags on the new code, and `docs/features/intake-acknowledge-and-stamp.md`. Open: the screenshots, which need a running instance.
-- Left: 4.1 (screenshots), 4.2 (live), and the Playwright checks of 3.1 and 3.2.
+- 4.1: screenshots taken from a live instance (Nextcloud 34 + MariaDB + OpenRegister main): the inbox's Acknowledged column (`docs/static/screenshots/intake-acknowledged.png`) and the rule list with Acknowledge with and Stamp received (`intake-rules-acknowledge-and-stamp.png`).
+- 4.2 (live, mail to a local SMTP catcher): a mailed `intakeDocument` created with the seeded mail rule got its acknowledgement in the sender's mailbox, `acknowledgement.status` is `sent`, and `<name> (ontvangen).pdf` reads "Ontvangen 25-11-2026" on page 1. The first run found three reds, fixed in `IntakeAcknowledgementService`: the subject came out as "Array" (translatable `subject` is a language map on the saved object; now nl, en, first), the date was raw ISO (now day-month-year, as on the stamp), and the HTML letter went out as a plain-text body with visible tags (OpenRegister's mail is plain text; the letter is now converted). PHPUnit `testTheLetterNamesTheSubjectTextAReadableDateAndGoesAsPlainText`, `testASubjectWithoutDutchFallsBackAndAnOddDateIsKept`.
+- Left: the Playwright checks of 3.1 and 3.2.
 
