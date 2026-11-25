@@ -161,6 +161,8 @@ class EmployerStatementTemplateTest extends TestCase {
 		$this->assertStringContainsString('Vakantietoeslag: niet opgegeven', $html);
 		$this->assertStringContainsString('Loonbeslag of looncessie: niet opgegeven', $html);
 		$this->assertStringContainsString('op niet opgegeven', $html, 'no request date is never printed as today');
+		$this->assertStringContainsString(needle: 'Aldus naar waarheid ingevuld op ', haystack: $html, message: 'no employer city leaves the place out');
+		$this->assertStringNotContainsString(needle: 'ingevuld te', haystack: $html, message: 'never "ingevuld te niet opgegeven"');
 		$this->assertStringNotContainsString('123456782', $html);
 
 	}//end testAFixedTermContractWithMissingItemsSaysNotStated()

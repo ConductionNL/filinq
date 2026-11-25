@@ -8,9 +8,15 @@
       still holds the `docudesk-signing` Source hop; shillinq dispatches
       `DocumentSigningRequestedEvent` from `SigningDelegationService`; neither
       dossiq nor decidiq dispatches the event. D1's facts stand as written.
-- [ ] 1.2 Raise the ownership question with Ruben as a product decision, with
+- [x] 1.2 Raise the ownership question with Ruben as a product decision, with
       the design's D1 as the briefing, and record the answer in the fleet ADR
       set rather than in this change.
+      Done (2026-11-25): raised through COORDINATOR-QUEUE (options a/b/c);
+      Ruben chose (c), split: decidiq and dossiq decide who may sign and when,
+      filinq performs the PDF signature through its rail and reports back with
+      `SigningConcludedEvent`. Recorded as hydra ADR-125
+      (`openspec/architecture/adr-125-the-domain-app-decides-filinq-signs.md`,
+      ConductionNL/hydra#794).
 
 ## 2. The noun on the record (REQ-DDSRC-002)
 
@@ -78,11 +84,21 @@
       `lib/Service/Signing/LibreSignProvider.php`), so this gate is met. 7.2 and
       7.3 still wait on the answer to 1.2: which app a beschikking's signature
       goes through decides what the dossiq and decidiq changes dispatch.
-- [ ] 7.2 Raise the dossiq change: retire `LibresignSigningAdapter`,
+- [x] 7.2 Raise the dossiq change: retire `LibresignSigningAdapter`,
       `LibresignApiClient`, `LibresignResultAssembler` and
       `LibresignStatusMapper`, dispatch the event, keep mandaat-based signer
       resolution.
-- [ ] 7.3 Raise the decidiq change: retire the `docudesk-signing` and
+      Done in dossiq before this task was reached: its change
+      `signing-through-filinq` is archived
+      (`openspec/changes/archive/2026-11-16-signing-through-filinq`).
+      `lib/Service/Signing/DocumentSigningRequester.php` raises
+      `DocumentSigningRequestedEvent`, `lib/Listener/SigningConcludedListener.php`
+      hears the outcome, and no `Libresign*` class is left in dossiq's `lib/`
+      (development ecbafa14, 2026-11-25). The 1.1 note above predates it.
+- [x] 7.3 Raise the decidiq change: retire the `docudesk-signing` and
       `eidas-qes` integriq Source hops in `EIDASSignatureService` and dispatch
       the event, after confirming on a live instance that nothing depends on
       the current dark path.
+      Done (2026-11-25): raised as decidiq `sign-through-the-filinq-rail`
+      (ConductionNL/decidiq#2475). It MODIFIES REQ-DCDH-005, and its task 1 is
+      the live check of the dark path, before the removal in task 4.
