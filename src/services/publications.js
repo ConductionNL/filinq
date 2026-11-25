@@ -101,7 +101,7 @@ export async function listCategories() {
  *
  * @param {string} id The publication.
  * @return {Promise<{blob: Blob|null, agreement: object|null}>} The file, or the agreement to show.
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-3.3
  */
 export async function downloadPublication(id) {
 	const response = await axios.get(`${base()}/${id}/download`, {
@@ -121,7 +121,7 @@ export async function downloadPublication(id) {
  * @param {string} document The document the agreement is on.
  * @param {string} version The version of the terms the caller read.
  * @return {Promise<object>} The decision.
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-3.3
  */
 export async function acceptDownloadAgreement(document, version) {
 	const response = await axios.post(generateUrl('/apps/filinq/api/redaction/agreement/accept'), { document, version })

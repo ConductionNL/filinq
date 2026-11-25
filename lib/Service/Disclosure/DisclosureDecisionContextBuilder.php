@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Woo Decision Context Builder
+ * Disclosure Decision Context Builder
  *
  * Checks a Woo decision against the `woo-decision` data contract and gives
  * the templates its grounds in words.
  *
  * @category  Service
- * @package   OCA\Filinq\Service\Woo
+ * @package   OCA\Filinq\Service\Disclosure
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -20,9 +20,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Service\Woo;
+namespace OCA\Filinq\Service\Disclosure;
 
-use OCA\Filinq\Exception\WooDecisionContractException;
+use OCA\Filinq\Exception\DisclosureDecisionContractException;
 use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
 
 /**
@@ -35,7 +35,7 @@ use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
  *
  * @spec openspec/changes/woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-woo-decision-data-contract-is-checked-before-anything-is-rendered-req-ddwrw-010
  */
-class WooDecisionContextBuilder {
+class DisclosureDecisionContextBuilder {
 
 	/**
 	 * The data contract this builder serves.
@@ -90,7 +90,7 @@ class WooDecisionContextBuilder {
 	 *
 	 * @return array<string, mixed> The decision for the templates.
 	 *
-	 * @throws WooDecisionContractException Naming every problem found.
+	 * @throws DisclosureDecisionContractException Naming every problem found.
 	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) The flag only widens which grounds count as
 	 * known (a redraft may cite a retired one); every other check is the same, so splitting
@@ -100,7 +100,7 @@ class WooDecisionContextBuilder {
 	 */
 	public function build(mixed $wooDecision, bool $allowRetiredGrounds = false): array {
 		if (is_array($wooDecision) === false) {
-			throw new WooDecisionContractException(problems: ['data.wooDecision is missing.']);
+			throw new DisclosureDecisionContractException(problems: ['data.wooDecision is missing.']);
 		}
 
 		$problems = self::topLevelProblems(decision: $wooDecision);
@@ -136,7 +136,7 @@ class WooDecisionContextBuilder {
 		}//end foreach
 
 		if ($problems !== []) {
-			throw new WooDecisionContractException(problems: array_values(array_unique($problems)));
+			throw new DisclosureDecisionContractException(problems: array_values(array_unique($problems)));
 		}
 
 		$wooDecision['documents'] = $built;

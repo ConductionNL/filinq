@@ -142,7 +142,7 @@ class IntakeFilePlacement {
 	 *
 	 * @return string|null The folder, or null when the record owns none or cannot be read.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
 	 */
 	public function folderFor(string $register, string $schema, string $id): ?string {
 		return $this->folderOf(register: $register, schema: $schema, id: $id);

@@ -308,7 +308,7 @@ class PublicationControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
 	 */
 	public function testTheActiveListHoldsWhatTheCallerMaySee(): void {
 		$pipeline = $this->createMock(PublicationPipelineService::class);
@@ -332,7 +332,7 @@ class PublicationControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-3.3
 	 */
 	public function testADownloadWaitsForTheAcceptedAgreement(): void {
 		$pipeline = $this->createMock(PublicationPipelineService::class);

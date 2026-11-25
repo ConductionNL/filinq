@@ -1,6 +1,12 @@
 OC.L10N.register(
     "filinq",
     {
+        "A document reference needs the id of a document record.": "Een documentverwijzing heeft het id van een documentrecord nodig.",
+        "A submitted form needs a templateId, the record and its values.": "Een ingediend formulier heeft een templateId, het record en de waarden nodig.",
+        "A submitted form is filed as pdf, docx, odf or html.": "Een ingediend formulier wordt opgeslagen als pdf, docx, odf of html.",
+        "The record to file the form on could not be found, or you do not have access to it.": "Het record waarop het formulier wordt opgeslagen is niet gevonden, of je hebt er geen toegang toe.",
+        "The submitted form could not be filed on the record.": "Het ingediende formulier kon niet bij het record worden opgeslagen.",
+        "The submitted form could not be filed as a document.": "Het ingediende formulier kon niet als document worden opgeslagen.",
         "The linked document could not be found, or you do not have access to it.": "Het gekoppelde document is niet gevonden, of je hebt er geen toegang toe.",
         "Activity": "Activiteit",
         "No activity recorded for this document yet": "Nog geen activiteit vastgelegd voor dit document",
@@ -4250,6 +4256,9 @@ OC.L10N.register(
         "Selection list": "Selectielijst",
         "Statement": "Verklaring",
         "Only an archivist can read destruction certificates.": "Alleen een archivaris kan verklaringen van vernietiging lezen.",
+        "Due for transfer": "Klaar voor overbrenging",
+        "Only an administrator can see the records due for transfer.": "Alleen een beheerder kan de records zien die klaar zijn voor overbrenging.",
+        "No records are due for transfer to the e-depot.": "Er zijn geen records klaar voor overbrenging naar het e-depot.",
         "Legal hold": "Juridische bewaring",
         "Under a legal hold": "Onder juridische bewaring",
         "Under a legal hold: {cases}": "Onder juridische bewaring: {cases}",

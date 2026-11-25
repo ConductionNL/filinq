@@ -419,7 +419,7 @@ export default {
 		 * server checks read on this record and write on the other one.
 		 *
 		 * @return {Promise<void>} Resolves once the answer is shown.
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
 		 */
 		async copyMergedPdf() {
 			const target = linkTarget(this.copyForm)

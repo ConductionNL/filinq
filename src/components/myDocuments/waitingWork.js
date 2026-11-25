@@ -16,7 +16,7 @@ import { translate as t } from '@nextcloud/l10n'
  *
  * @param {string} reason The reason the server gave.
  * @return {string}
- * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
  */
 export function reasonLabel(reason) {
 	const labels = {
@@ -36,7 +36,7 @@ export function reasonLabel(reason) {
  *
  * @param {Array<object>} items The `results` of `GET api/documents/waiting`.
  * @return {Array<{key: string, kind: string, name: string, reason: string, since: string}>}
- * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
  */
 export function waitingRows(items) {
 	if (!Array.isArray(items)) {
@@ -56,7 +56,7 @@ export function waitingRows(items) {
  *
  * @param {Array<object>} records The `results` of `GET api/case-documents/mine`.
  * @return {Array<{key: string, name: string, status: string, linkedTo: number}>}
- * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
  */
 export function recordRows(records) {
 	if (!Array.isArray(records)) {

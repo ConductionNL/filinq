@@ -13,7 +13,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -42,7 +42,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
  */
 class DocumentCopyController extends Controller {
 
@@ -74,7 +74,7 @@ class DocumentCopyController extends Controller {
 	 *
 	 * @return JSONResponse The copy; 403 when a check refuses, and nothing is written then.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
 	 */
 	#[NoAdminRequired]
 	public function copy(): JSONResponse {
@@ -105,7 +105,7 @@ class DocumentCopyController extends Controller {
 	 *
 	 * @return array{register: string, schema: string, id: string}
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
 	 */
 	private function record(string $prefix): array {
 		$reference = [];
