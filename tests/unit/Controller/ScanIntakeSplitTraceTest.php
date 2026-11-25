@@ -38,7 +38,7 @@ use RuntimeException;
  * @covers \OCA\Filinq\Controller\ScanIntakeController
  * @covers \OCA\Filinq\Controller\Support\ScanSetupServices
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  */
 class ScanIntakeSplitTraceTest extends TestCase {
 

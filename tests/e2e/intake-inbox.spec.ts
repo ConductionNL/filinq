@@ -31,7 +31,7 @@
  * Not run in the change that wrote it (decision 139): the live pass runs it.
  */
 
-// @e2e openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#the-clerk-sees-the-case-the-separator-named
+// @e2e openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md#the-clerk-sees-the-case-the-separator-named
 
 import type { APIRequestContext, Locator } from '@playwright/test'
 

@@ -47,8 +47,8 @@
  * Not run in the change that wrote it (decision 139): the live pass runs it.
  */
 
-// @e2e openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#a-clerk-prints-separators-for-three-cases
-// @e2e openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#an-administrator-adds-a-scanner-profile
+// @e2e openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md#a-clerk-prints-separators-for-three-cases
+// @e2e openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md#an-administrator-adds-a-scanner-profile
 
 import type { APIRequestContext, Locator, Page } from '@playwright/test'
 

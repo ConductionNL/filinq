@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -241,7 +241,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testABatchWithTwoSeparatorsYieldsThreeDocuments(): void {
 		$service = $this->service(
@@ -287,7 +287,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testABatchWithoutSeparatorsIsOneDocument(): void {
 		$service = $this->service(texts: ['blad 1', 'blad 2', 'blad 3', 'blad 4']);
@@ -311,7 +311,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testTheSeparatorBelongsToNeitherSide(): void {
 		$service = $this->service(
@@ -335,7 +335,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testTwoSeparatorsInARowProduceNoEmptyDocument(): void {
 		$service = $this->service(
@@ -359,7 +359,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testABlankPageSeparatesInBlankPageMode(): void {
 		$service = $this->service(
@@ -385,7 +385,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testALightPageWithTextIsNotBlank(): void {
 		$service = $this->service(
@@ -411,7 +411,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testAnInstanceThatCannotReadAPageFailsTheBatch(): void {
 		$service = $this->service(
@@ -438,7 +438,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testABatchOfNothingButSeparatorsFails(): void {
 		$service = $this->service(
@@ -462,7 +462,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testEverySegmentIsWrittenAsItsOwnFile(): void {
 		$service = $this->service(
@@ -485,7 +485,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testTheSplitterAssignsNothing(): void {
 		$service = $this->service(
@@ -512,7 +512,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-5.1
 	 */
 	public function testReceiveStoresABatchTheSchemaAdmits(): void {
 		$file = $this->createMock(File::class);
@@ -533,7 +533,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-5.1
 	 */
 	public function testAnUnknownModeIsReceivedAsQr(): void {
 		$file = $this->createMock(File::class);
@@ -552,7 +552,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
 	 */
 	public function testANoSplitProfileDeliversTheBatchAsOneDocument(): void {
 		$file = $this->createMock(File::class);
@@ -580,7 +580,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-5.1
 	 */
 	public function testEveryBatchASplitStoresIsOneTheSchemaAdmits(): void {
 		$this->service(texts: ['een', 'filinq:sep:v1:postkamer', 'twee'])->split(
@@ -644,7 +644,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testASplitStoresAndAnnouncesExactlyThis(): void {
 		$service = $this->service(texts: ['een', 'twee', 'filinq:sep:v1:postkamer:2026-0042', 'drie']);
@@ -688,7 +688,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testEveryFailureStoresExactlyThisReason(): void {
 		$cases = [
@@ -724,7 +724,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testASegmentThatCannotBeWrittenFailsTheBatch(): void {
 		$service = $this->service(texts: ['een', 'filinq:sep:v1:postkamer', 'twee']);

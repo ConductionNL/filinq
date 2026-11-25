@@ -19,7 +19,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  */
 class ScanProfileService implements ScanProfileServiceInterface {
 
@@ -89,7 +89,7 @@ class ScanProfileService implements ScanProfileServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The profiles.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function all(): array {
 		$raw = $this->config->getValueString(self::APP_ID, self::CONFIG_KEY, '');
@@ -130,7 +130,7 @@ class ScanProfileService implements ScanProfileServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The profile, or null when nobody declared it.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function find(string $id): ?array {
 		foreach ($this->all() as $profile) {
@@ -153,7 +153,7 @@ class ScanProfileService implements ScanProfileServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The profile, or null when the path is nobody's.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function forPath(string $path): ?array {
 		$path = '/' . trim($path, '/');
@@ -189,7 +189,7 @@ class ScanProfileService implements ScanProfileServiceInterface {
 	 *
 	 * @throws RuntimeException When a profile names no id or no folder.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function declare(array $profiles): array {
 		$stored = [];
@@ -236,7 +236,7 @@ class ScanProfileService implements ScanProfileServiceInterface {
 	 *
 	 * @throws RuntimeException When the value is not a whole number from 75 to 1200.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
 	 */
 	private function resolutionOf(array $profile): int {
 		$value = ($profile['resolution'] ?? self::DEFAULT_RESOLUTION);
@@ -265,7 +265,7 @@ class ScanProfileService implements ScanProfileServiceInterface {
 	 *
 	 * @throws RuntimeException When the mode is not one of COLOUR_MODES.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
 	 */
 	private function colourModeOf(array $profile): string {
 		$mode = (string)($profile['colourMode'] ?? self::COLOUR_MODES[0]);

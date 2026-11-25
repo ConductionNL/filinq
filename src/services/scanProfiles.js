@@ -6,7 +6,7 @@
  * becomes one profile, and the whole list is declared back to the server,
  * which validates and stores it (`scanIntake#declareProfiles`).
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
  */
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
@@ -24,7 +24,7 @@ export const RESOLUTION_RANGE = Object.freeze({ min: 75, max: 1200, default: 300
  * An empty add form.
  *
  * @return {{label: string, watchedFolder: string, resolution: number, colourMode: string, separatorMode: string}}
- * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
  */
 export function emptyProfileForm() {
 	return {
@@ -41,7 +41,7 @@ export function emptyProfileForm() {
  *
  * @param {object} form The add form.
  * @return {object} `label`, `watchedFolder` or `resolution` mapped to a reason code.
- * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
  */
 export function profileFormErrors(form) {
 	const errors = {}
@@ -65,7 +65,7 @@ export function profileFormErrors(form) {
  * @param {string} label The profile name.
  * @param {Array<{id: string}>} existing The declared profiles.
  * @return {string}
- * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
  */
 export function profileId(label, existing) {
 	const base = String(label ?? '')
@@ -88,7 +88,7 @@ export function profileId(label, existing) {
  * @param {Array<object>} existing The declared profiles.
  * @param {object} form The add form.
  * @return {Array<object>}
- * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
  */
 export function withNewProfile(existing, form) {
 	const label = String(form.label).trim()
@@ -110,7 +110,7 @@ export function withNewProfile(existing, form) {
  *
  * @param {Array<object>} profiles The profiles.
  * @return {Promise<Array<object>>} What the server stored.
- * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
  */
 export async function declareScanProfiles(profiles) {
 	const { data } = await axios.post(generateUrl('/apps/filinq/api/scan/profiles'), { profiles })

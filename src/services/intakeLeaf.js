@@ -20,7 +20,7 @@ import { generateUrl } from '@nextcloud/router'
  * @param {Array<object>} documents The waiting intake documents.
  * @param {{objectId?: string, reference?: string}} host The host record.
  * @return {Array<object>} The documents, each with `matchesHost`.
- * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.1
  */
 export function orderForHost(documents, host) {
 	const names = [host?.objectId, host?.reference]

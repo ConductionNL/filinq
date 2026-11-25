@@ -46,7 +46,7 @@ interface ScanBatchRepositoryInterface {
 	 *
 	 * @throws RuntimeException When the write fails.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function save(array $batch, string $uuid = ''): array;
 
@@ -57,7 +57,7 @@ interface ScanBatchRepositoryInterface {
 	 *
 	 * @return array<string, mixed>|null The batch, or null when there is none.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function find(string $uuid): ?array;
 
@@ -68,7 +68,7 @@ interface ScanBatchRepositoryInterface {
 	 *
 	 * @return array<string, mixed>|null The batch, or null when the file is not one.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function findByFile(int $fileId): ?array;
 }//end interface

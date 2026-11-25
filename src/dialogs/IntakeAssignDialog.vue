@@ -380,7 +380,7 @@ export default {
 		 * document filed on the wrong case.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 		 */
 		preselectFromSourceRef() {
 			const reference = String(this.document?.sourceRef || '').trim()

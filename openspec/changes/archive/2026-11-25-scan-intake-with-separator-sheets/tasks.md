@@ -34,7 +34,8 @@
 
 - [x] 5.1 PHPUnit for `ScanBatchService` with fixture batches (two separators, none, one undecodable page) inside the container; 75% on new code (ADR-009)
   - 2026-10-09: `receive()` is covered too, and every batch `receive()` and `split()` store is validated against the real `scanBatch` fragment of `lib/Settings/filinq_register.json` (tests/unit/Service/ScanBatchServiceTest.php, 13 tests).
-- [ ] 5.2 Playwright `tests/e2e/scan-separators.spec.ts` and the pre-fill case in `tests/e2e/intake-inbox.spec.ts`; Dutch and English strings; docs in `docs/features/scan-intake.md` with screenshots
+- [x] 5.2 Playwright `tests/e2e/scan-separators.spec.ts` and the pre-fill case in `tests/e2e/intake-inbox.spec.ts`; Dutch and English strings; docs in `docs/features/scan-intake.md` with screenshots
+  - 2026-11-25, live (NC 34 + MariaDB + OpenRegister main, Tesseract 5.3, imagick): `scan-separators.spec.ts` 4/4 (the batch case with a five-page batch, two separators, `FILINQ_E2E_SCAN_BATCH_SEGMENTS=3`) and `intake-inbox.spec.ts` 1/1. Three app reds found and fixed on the way: every print failed ('Mpdf\QrCode package was not found': the QR is now drawn by tc-lib-barcode); every assign answered 500 (`IntakeRepository::save()` wrote back the computed `daysLeft`); OCR never saw a separator (`readPayload()` now undoes Tesseract's slips). Strings are in en/nl; docs with three live screenshots.
 
 ## Status, 2026-09-18
 

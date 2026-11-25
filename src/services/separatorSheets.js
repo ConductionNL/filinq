@@ -6,7 +6,7 @@
  * case numbers a clerk types, and the PDF the server renders with one sheet per
  * case number. The scanner batch is later cut at each sheet.
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-2.2
  */
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
@@ -17,7 +17,7 @@ import { generateUrl } from '@nextcloud/router'
  *
  * @param {string|undefined} text The typed case numbers.
  * @return {string[]} The case numbers.
- * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-2.2
  */
 export function parseCaseNumbers(text) {
 	const seen = new Set()
@@ -34,7 +34,7 @@ export function parseCaseNumbers(text) {
  * The declared scan profiles.
  *
  * @return {Promise<Array<{id: string, label: string}>>} The profiles.
- * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-2.2
  */
 export async function listScanProfiles() {
 	const { data } = await axios.get(generateUrl('/apps/filinq/api/scan/profiles'))
@@ -47,7 +47,7 @@ export async function listScanProfiles() {
  * @param {string} profileId The scan profile the sheets belong to.
  * @param {string[]} caseNumbers One sheet per case number.
  * @return {Promise<Blob>} The PDF.
- * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-2.2
  */
 export async function renderSeparatorSheets(profileId, caseNumbers) {
 	const { data } = await axios.post(

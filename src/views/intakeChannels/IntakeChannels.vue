@@ -7,7 +7,7 @@ writes and how a batch landing there is cut, and a form to add one. Profiles
 are instance settings, not objects, so the page reads and declares them
 through the scan profile routes; declaring is for administrators only.
 
-@spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+@spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
 -->
 
 <template>
@@ -130,7 +130,7 @@ export default {
 	computed: {
 		/**
 		 * @return {Array<object>} The profile table's columns.
-		 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
 		 */
 		tableColumns() {
 			return [
@@ -144,7 +144,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The colour modes.
-		 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
 		 */
 		colourOptions() {
 			return [
@@ -156,7 +156,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} The separator modes.
-		 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
 		 */
 		separatorOptions() {
 			return [
@@ -170,7 +170,7 @@ export default {
 	/**
 	 * Read the profiles.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
 	 */
 	mounted() {
 		this.load()
@@ -182,7 +182,7 @@ export default {
 		 * Read the declared profiles.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
 		 */
 		async load() {
 			this.loading = true
@@ -201,7 +201,7 @@ export default {
 		 * @param {Array<object>} options The options.
 		 * @param {string} id The value.
 		 * @return {string}
-		 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
 		 */
 		optionLabel(options, id) {
 			return options.find((option) => option.id === id)?.label ?? id ?? ''
@@ -211,7 +211,7 @@ export default {
 		 * Add the profile in the form and declare the list.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-4.2
 		 */
 		async add() {
 			this.errors = profileFormErrors(this.form)

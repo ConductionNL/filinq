@@ -22,7 +22,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -46,7 +46,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  */
 class SeparatorSheetService implements SeparatorSheetServiceInterface {
 
@@ -71,7 +71,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string The payload.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function payload(string $profileId, string $caseNumber = ''): string {
 		$payload = self::PAYLOAD_PREFIX . $profileId;
@@ -90,8 +90,8 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string|null The case number, an empty string when the sheet named none, or null when this is not a separator.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.2
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-5.2
 	 */
 	public function readPayload(string $payload): ?string {
 		$payload  = $this->asPrinted(text: $payload);
@@ -134,7 +134,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string The text with the payload as printed.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.2
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-5.2
 	 */
 	private function asPrinted(string $text): string {
 		// A payload broken after a hyphen continues on the next line.
@@ -142,7 +142,14 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 		// The prefix, with the letters OCR mistakes for one another.
 		$text = (string) preg_replace_callback(
 			'/f*il[il1|]n[qg]\s*:\s*sep\s*:\s*v\s*([12lI|])[1lI|]?\s*:/i',
-			static fn (array $match): string => 'filinq:sep:v' . ($match[1] === '2' ? '2' : '1') . ':',
+			static function (array $match): string {
+				$version = '1';
+				if ($match[1] === '2') {
+					$version = '2';
+				}
+
+				return 'filinq:sep:v' . $version . ':';
+			},
 			$text
 		);
 		// No space around a colon inside a payload: one colon per pass.
@@ -249,7 +256,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @throws RuntimeException When the sheets do not render.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function render(string $profileId, array $caseNumbers = []): string {
 		if (trim($profileId) === '') {
@@ -310,7 +317,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string The HTML.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	private function sheetHtml(string $payload, string $caseNumber): string {
 		$heading = 'Scheidingsvel';
@@ -370,7 +377,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string The image tag, about 4 cm wide.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.2
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-5.2
 	 */
 	private function qrImage(string $payload): string {
 		$svg = (new Barcode())->getBarcodeObj('QRCODE,M', $payload, -4, -4, 'black', [0, 0, 0, 0])->getSvgCode();

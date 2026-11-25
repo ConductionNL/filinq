@@ -360,7 +360,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 * (every assign answered 500 on a live run, 25 Nov 2026).
 	 *
 	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.2
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-5.2
 	 */
 	public function save(array $document, ?string $uuid = null): array {
 		unset($document['uuid']);

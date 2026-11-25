@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -113,7 +113,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testThePayloadPrintedIsThePayloadRead(): void {
 		$service = $this->sheets();
@@ -137,7 +137,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testThePayloadIsFoundAmongTheRestOfTheSheet(): void {
 		$page = "Scheidingsvel voor zaak 2026-0042\nLeg dit vel tussen twee documenten.\n"
@@ -152,7 +152,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testAnOrdinaryPageIsNotASeparator(): void {
 		$service = $this->sheets();
@@ -171,7 +171,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testThreeCaseNumbersMakeThreeSheets(): void {
 		$html = $this->sheets()->render(
@@ -201,7 +201,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testAPrintWithoutCaseNumbersStillProducesOneSheet(): void {
 		$html = $this->sheets()->render(profileId: 'postkamer');
@@ -216,7 +216,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testSheetsWithoutAProfileAreRefused(): void {
 		$this->expectException(RuntimeException::class);
@@ -229,7 +229,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testARendererThatFailsSaysSo(): void {
 		$this->expectException(RuntimeException::class);
@@ -242,7 +242,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testTheDeepestWatchedFolderWins(): void {
 		$config = $this->createMock(IAppConfig::class);
@@ -268,7 +268,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testAProfileMustNameAnIdAFolderAndAKnownMode(): void {
 		$config = $this->createMock(IAppConfig::class);
@@ -298,7 +298,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testUnreadableProfilesWatchNothing(): void {
 		$config = $this->createMock(IAppConfig::class);
