@@ -86,6 +86,16 @@ afterEach(() => {
 })
 
 describe('ShareByLinkDialog', () => {
+	it('gives every field its own visible label (no outside label it never renders)', async () => {
+		await open([7], { maxDays: null, passwordRequired: false, labels: [] })
+
+		const html = rendered.html()
+		expect(html).not.toMatch(/label-?outside/i)
+		for (const label of ['Link works until', 'Password (optional)', 'Who is the link for?']) {
+			expect(html).toContain(`label="${label}"`)
+		}
+	})
+
 	it('asks the preflight on open and takes its default expiry', async () => {
 		await open([42], preflight)
 
