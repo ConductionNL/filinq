@@ -28,14 +28,29 @@
 
 ## 3. Verification
 
-- [ ] 3.1 Import-roundtrip unit test: `document` + `documentType` import via `ConfigurationService::importFromApp()` and the imported schemas expose `hardValidation`, the `x-openregister-lifecycle` block, the `x-openregister-archival` block, and `configuration.objectNameField` intact (REQ-DREG-D01, REQ-DREG-D05)
+- [x] 3.1 Import-roundtrip unit test: `document` + `documentType` import via `ConfigurationService::importFromApp()` and the imported schemas expose `hardValidation`, the `x-openregister-lifecycle` block, the `x-openregister-archival` block, and `configuration.objectNameField` intact (REQ-DREG-D01, REQ-DREG-D05)
   - If any key is dropped on import, file an OpenRegister issue; do not add a Filinq-side workaround.
+  - Verified live (2026-11-25) on a real import rather than a unit double, because OpenRegister's
+    `ConfigurationService` needs its database: Nextcloud 34.0.6 + MariaDB, OpenRegister main 2fc34e45,
+    filinq development, `app:enable` then `occ maintenance:repair`. Stored `document` (1.0.0):
+    `hard_validation` 1; `configuration` holds `objectNameField: title`, `objectDescriptionField`,
+    `x-openregister-lifecycle` (field `status`, initial `concept`, final `gearchiveerd`, five
+    transitions) and `x-openregister-archival` (retention default P10Y). Stored `documentType`
+    (1.0.0): `hard_validation` 1, `objectNameField: name`. No key dropped, so no OpenRegister issue.
 
 - [x] 3.2 Register-validity test: the full `filinq_register.json` still validates and imports cleanly with the two new schemas + seeds present (REQ-DREG-D05)
   - Run in the `nextcloud:34` container (host PHP too old): `docker run --rm -v $PWD:/app -w /app <nc-image> php vendor/bin/phpunit`.
   - Built (c5): `tests/unit/Settings/DocumentRegisterValidityTest.php` reads the whole descriptor as the import does: every schema a register lists is declared, every seed names a declared register and schema with a slug unique per schema, `document` and `documentType` keep `hardValidation`, a name field that exists and required properties that exist, the `document` lifecycle moves only between its own status values and it keeps its archival block, and every `document` and `documentType` seed fits its schema field by field (unknown field, missing required, type, enum, length, pattern, date), with a self-test that a broken seed is caught. Runs on host PHP 8.3 with the unit suite. The round trip through OpenRegister's `importFromApp()` is task 3.1, still open.
 
-- [ ] 3.3 Lifecycle/relation smoke: create a `document` via the generic `/api/objects/document` route, transition `status` through the lifecycle, and resolve a `documentType` + `relatedObjects` reference (REQ-DREG-D01, REQ-DREG-D06)
+- [x] 3.3 Lifecycle/relation smoke: create a `document` via the generic `/api/objects/document` route, transition `status` through the lifecycle, and resolve a `documentType` + `relatedObjects` reference (REQ-DREG-D01, REQ-DREG-D06)
+  - Verified live (2026-11-25, same instance), through OpenRegister's generic
+    `/api/objects/filinq/document` route only: POST created a `concept` document with
+    `documentType` = the seeded `besluit` and `relatedObjects` = a seeded document; PATCH
+    `concept -> definitief` answered 422 ("No transition allows moving status from concept to
+    definitief"); `in_bewerking`, `ter_vaststelling`, `definitief`, `gearchiveerd` each answered 200;
+    GET with `_extend=documentType,relatedObjects` resolved "Besluit" (`besluit`) and the related
+    document by title; `@self.retention.annotation` reads `effectiveRetention: P10Y` with its
+    `expiresAt`, from the archival annotation, with no filinq service in the path.
 
 Acceptance criteria:
 - A governed `document` object exists as an OpenRegister object, queryable via generic object routes, with no new Filinq PHP controller or service.
