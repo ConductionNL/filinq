@@ -10,6 +10,8 @@ a per-document "reviewed" mark that the anonymise commit checks.
 Screenshots of the split view, the badges, the grondslag pickers and the
 checked gate follow with the Playwright capture run (task 4.5).
 
+![The review workbench on an objection letter: the original as its reviewed PDF beside the not-yet-anonymised pane, and the findings with their rule badges, an always-anonymise rule pre-selecting the e-mail address and phone number, a never-anonymise rule pre-excluding the representative's address, and the count of uncertain findings](/screenshots/review-workbench.png)
+
 ## The review rendition
 
 Detection and review run on **one PDF per source file**, the review
