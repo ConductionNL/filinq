@@ -30,7 +30,6 @@ use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\EventDispatcher\IEventDispatcher;
-use OCP\Server;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -49,6 +48,13 @@ use Psr\Log\LoggerInterface;
  * registration number before the write lands.
  */
 class ObjectEventRegistrar {
+
+	/**
+	 * Where the unfiltered fallback is reported; taken from the container boot() is handed.
+	 *
+	 * @var LoggerInterface|null
+	 */
+	private ?LoggerInterface $logger = null;
 
 	/**
 	 * The document events handed to OpenRegister's webhooks: class => [name, description].
@@ -201,6 +207,7 @@ class ObjectEventRegistrar {
 	 */
 	public function boot(ContainerInterface $container, string $appName): void {
 		$dispatcher = $container->get(IEventDispatcher::class);
+		$this->logger = $container->get(LoggerInterface::class);
 		$this->registerFilteredObjectListener(
 			dispatcher: $dispatcher,
 			event: ObjectUpdatedEvent::class,
@@ -299,6 +306,8 @@ class ObjectEventRegistrar {
 	 * @param string $appName The filinq app id, for log context.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
 	 */
 	private function registerFilteredObjectListener(
 		IEventDispatcher $dispatcher,
@@ -322,7 +331,7 @@ class ObjectEventRegistrar {
 
 		// Loud on purpose. This fallback is correct but UNFILTERED, and while it
 		// was silent it was indistinguishable from a working narrowing.
-		Server::get(LoggerInterface::class)->warning(
+		$this->logger?->warning(
 			'OpenRegister ObjectEventSubscription unavailable: ' . $listener
 			. ' fell back to an UNFILTERED registration for ' . $event
 			. ' and will be invoked on every object write instance-wide.',
