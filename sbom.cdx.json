@@ -1214,10 +1214,10 @@
       ]
     },
     {
-      "bom-ref": "symfony/yaml-6.4.48.0",
+      "bom-ref": "symfony/yaml-6.4.50.0",
       "type": "library",
       "name": "yaml",
-      "version": "v6.4.48",
+      "version": "v6.4.50",
       "group": "symfony",
       "description": "Loads and dumps YAML files",
       "author": "Fabien Potencier, Symfony Community",
@@ -1228,17 +1228,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/symfony/yaml@v6.4.48",
+      "purl": "pkg:composer/symfony/yaml@v6.4.50",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/symfony/yaml/zipball/91288fddb497a598b564343ea663ea272370a7dc",
-          "comment": "dist reference: 91288fddb497a598b564343ea663ea272370a7dc"
+          "url": "https://api.github.com/repos/symfony/yaml/zipball/0dddc068a050ce2e3608506cd9def5396ee9c626",
+          "comment": "dist reference: 0dddc068a050ce2e3608506cd9def5396ee9c626"
         },
         {
           "type": "vcs",
           "url": "https://github.com/symfony/yaml.git",
-          "comment": "source reference: 91288fddb497a598b564343ea663ea272370a7dc"
+          "comment": "source reference: 0dddc068a050ce2e3608506cd9def5396ee9c626"
         },
         {
           "type": "website",
@@ -1247,18 +1247,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/symfony/yaml/tree/v6.4.48",
+          "url": "https://github.com/symfony/yaml/tree/v6.4.50",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "91288fddb497a598b564343ea663ea272370a7dc"
+          "value": "0dddc068a050ce2e3608506cd9def5396ee9c626"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "91288fddb497a598b564343ea663ea272370a7dc"
+          "value": "0dddc068a050ce2e3608506cd9def5396ee9c626"
         },
         {
           "name": "cdx:composer:package:type",
@@ -2137,10 +2137,10 @@
       ]
     },
     {
-      "bom-ref": "twig/twig-3.30.0.0",
+      "bom-ref": "twig/twig-3.31.1.0",
       "type": "library",
       "name": "twig",
-      "version": "v3.30.0",
+      "version": "v3.31.1",
       "group": "twig",
       "description": "Twig, the flexible, fast, and secure template language for PHP",
       "author": "Fabien Potencier, Twig Team, Armin Ronacher",
@@ -2151,17 +2151,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/twig/twig@v3.30.0",
+      "purl": "pkg:composer/twig/twig@v3.31.1",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/twigphp/Twig/zipball/8c737079b726af72ff8ef3c595be9f6a810ea1ef",
-          "comment": "dist reference: 8c737079b726af72ff8ef3c595be9f6a810ea1ef"
+          "url": "https://api.github.com/repos/twigphp/Twig/zipball/6f6ec372231b53d1d564567a78beb8844cafa132",
+          "comment": "dist reference: 6f6ec372231b53d1d564567a78beb8844cafa132"
         },
         {
           "type": "vcs",
           "url": "https://github.com/twigphp/Twig.git",
-          "comment": "source reference: 8c737079b726af72ff8ef3c595be9f6a810ea1ef"
+          "comment": "source reference: 6f6ec372231b53d1d564567a78beb8844cafa132"
         },
         {
           "type": "website",
@@ -2175,18 +2175,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/twigphp/Twig/tree/v3.30.0",
+          "url": "https://github.com/twigphp/Twig/tree/v3.31.1",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "8c737079b726af72ff8ef3c595be9f6a810ea1ef"
+          "value": "6f6ec372231b53d1d564567a78beb8844cafa132"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "8c737079b726af72ff8ef3c595be9f6a810ea1ef"
+          "value": "6f6ec372231b53d1d564567a78beb8844cafa132"
         },
         {
           "name": "cdx:composer:package:type",
@@ -26382,7 +26382,7 @@
       ]
     },
     {
-      "ref": "symfony/yaml-6.4.48.0",
+      "ref": "symfony/yaml-6.4.50.0",
       "dependsOn": [
         "symfony/deprecation-contracts-3.8.1.0",
         "symfony/polyfill-ctype-1.37.0.0"
@@ -26474,7 +26474,7 @@
       "ref": "thiagoalessio/tesseract_ocr-2.13.0.0"
     },
     {
-      "ref": "twig/twig-3.30.0.0",
+      "ref": "twig/twig-3.31.1.0",
       "dependsOn": [
         "symfony/deprecation-contracts-3.8.1.0",
         "symfony/polyfill-ctype-1.37.0.0",
@@ -26491,10 +26491,10 @@
         "psr/log-3.0.2.0",
         "setasign/fpdf-1.9.0.0",
         "symfony/uid-6.4.32.0",
-        "symfony/yaml-6.4.48.0",
+        "symfony/yaml-6.4.50.0",
         "tecnickcom/tc-lib-pdf-8.84.3.0",
         "thiagoalessio/tesseract_ocr-2.13.0.0",
-        "twig/twig-3.30.0.0"
+        "twig/twig-3.31.1.0"
       ]
     }
   ]
