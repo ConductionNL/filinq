@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
  */
 class MdtoTransferService {
 
@@ -85,7 +85,7 @@ class MdtoTransferService {
 	 * @param IAppConfig                 $appConfig Reads OpenRegister's transport choice.
 	 * @param LoggerInterface            $logger    Logs transfer outcomes.
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
 	 */
 	public function __construct(
 		private readonly MdtoRecordReader $reader,
@@ -106,10 +106,11 @@ class MdtoTransferService {
 	 *
 	 * @return array<string, mixed> complete, missing, transportConfigured, supplement, proposals.
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-completeness-validation-gates-overbrenging-req-ddtmm-004
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-completeness-validation-gates-overbrenging-req-ddtmm-004
 	 */
 	public function status(string $uuid): array {
-		$input   = $this->input(uuid: $uuid);
+		$entity  = $this->reader->entity(uuid: $uuid);
+		$input   = $this->inputFor(entity: $entity);
 		$verdict = $this->verdict(input: $input);
 
 		return [
@@ -119,7 +120,7 @@ class MdtoTransferService {
 			'retention' => $input->retention(),
 			'supplement' => $input->supplement,
 			'proposals' => $this->mapping->prefill(
-				recordType: self::recordType(input: $input),
+				recordType: $this->recordType(entity: $entity, supplement: $input->supplement),
 				record: $input->record,
 				members: $input->members,
 				sources: $this->reader->restrictionSources(uuid: $uuid, files: $input->files)
@@ -136,7 +137,7 @@ class MdtoTransferService {
 	 *
 	 * @return array{fileName: string, mimeType: string, content: string}
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
 	 */
 	public function export(string $uuid, string $format='xml'): array {
 		$input = $this->input(uuid: $uuid);
@@ -166,7 +167,7 @@ class MdtoTransferService {
 	 *
 	 * @return array<string, mixed> `status`: blocked (with `missing`), manual, transferred or failed (with `transferStatus`).
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
 	 */
 	public function transfer(string $uuid): array {
 		$entity  = $this->reader->entity(uuid: $uuid);
@@ -296,7 +297,7 @@ class MdtoTransferService {
 		$record     = $this->reader->record(entity: $entity);
 		$supplement = $this->reader->supplement(uuid: (string) $record['uuid']);
 		$members    = [];
-		if (($supplement['objectType'] ?? '') === 'dossier') {
+		if ($this->recordType(entity: $entity, supplement: $supplement) === 'dossier') {
 			$members = $this->reader->members(record: $record);
 		}
 
@@ -312,14 +313,24 @@ class MdtoTransferService {
 	}//end inputFor()
 
 	/**
-	 * `dossier` or `document`, from the supplement.
+	 * `dossier` or `document`: the supplement's `objectType` when it names
+	 * one, otherwise the record's own schema, so a dossier without a
+	 * supplement is still read as a dossier.
 	 *
-	 * @param MdtoSidecarInput $input The input.
+	 * @param object               $entity     The ObjectEntity.
+	 * @param array<string, mixed> $supplement The record's supplement.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
 	 */
-	private static function recordType(MdtoSidecarInput $input): string {
-		if (($input->supplement['objectType'] ?? '') === 'dossier') {
+	private function recordType(object $entity, array $supplement): string {
+		$named = (string) ($supplement['objectType'] ?? '');
+		if ($named === 'dossier' || $named === 'document') {
+			return $named;
+		}
+
+		if ($this->reader->isDossier(entity: $entity) === true) {
 			return 'dossier';
 		}
 

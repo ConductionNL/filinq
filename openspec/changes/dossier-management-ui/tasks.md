@@ -68,4 +68,5 @@
   - Keys in English.
 
 - [ ] 4.5 Documentation `docs/features/dossier-management.md` with Playwright MCP screenshots (ADR-010); run `openspec validate dossier-management-ui --strict`
+  - 2026-11-25 (live sandbox): screenshots of the index and the detail page are in `docs/features/dossier-management.md`. Still open: `openspec validate dossier-management-ui --strict` fails on warnings only (seven ADDED requirements and one MODIFIED requirement over 500 characters, text above the first `##` in both spec deltas); they need rewording without changing an obligation.
   - Documents the home-folder + `documents[]` union membership model (multi-dossier membership), the rename-folder-sync behaviour, the lifecycle semantics and the GH #47/#48/#50/#51 behaviours.
