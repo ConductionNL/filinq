@@ -9,12 +9,12 @@
 
 ## 2. Render
 
-- [ ] 2.1 Use the managed house style when no `huisstijlId` is given, and apply fonts and cover in `buildPdfOptions()` (REQ-HSP-002). Verify: PHPUnit renders a letter without an id and finds the profile's footer line; a local run with thematiq and two groups on two token sets gives two different letters, noted in the PR body.
+- [x] 2.1 Use the managed house style when no `huisstijlId` is given, and apply fonts and cover in `buildPdfOptions()` (REQ-HSP-002). Verify: PHPUnit renders a letter without an id and finds the profile's footer line; a local run with thematiq and two groups on two token sets gives two different letters, noted in the PR body.
 - [x] 2.2 Refuse an update of a managed house style through filinq (REQ-HSP-003). Verify: PHPUnit and a Newman call answering 409 with the message.
 
 ## 3. Docs
 
-- [ ] 3.1 Add a section to `docs/features/` on house styles from Theming, with a screenshot of a letter in the house style (REQ-HSP-002). Verify: the docs page renders with the screenshot.
+- [x] 3.1 Add a section to `docs/features/` on house styles from Theming, with a screenshot of a letter in the house style (REQ-HSP-002). Verify: the docs page renders with the screenshot.
 
 ## Build notes (continuation)
 
@@ -34,3 +34,24 @@
   the embedded fallback.
 - 3.1: the section is in `docs/features/letter-correspondence-generation.md`;
   the screenshot of a letter is not, so 3.1 stays open.
+- Live (25 Nov 2026, sandbox: Nextcloud 34 + MariaDB + Redis, OpenRegister
+  main, thematiq and filinq development): groups `bergen` and `uitgeest`
+  mapped to the token sets `example-gemeente` and `example-college`; one
+  clerk in each generated "Algemene Correspondentiebrief" without a
+  `huisstijlId`. The sync made one managed house style per token set, but
+  both PDFs were byte-identical apart from their timestamps. The managed
+  house style carried a logo and a primary colour that no part of the
+  letter used, because only `headerHtml`/`footerHtml` reach the letter, and
+  the footer is the instance's (empty) Theming footer. Fixed: the mapping
+  now writes a `headerHtml` letterhead (the logo over a rule in the primary
+  colour, escaped, colour only when hex). The sync stores thematiq's
+  server-relative logo and cover at an absolute address, so mPDF can fetch
+  them. A mapping version in the hash rewrites house styles stored by the
+  older mapping. Re-run: two different letters (Esdoornstad logo with a
+  #12506B rule; College logo with a #7A1F6E rule), screenshot in
+  `docs/features/letter-correspondence-generation.md`.
+- Decision (fonts): the uploaded font file is not embedded. thematiq stores
+  WOFF2 only, and mPDF embeds TTF/OTF only, so the PDF names the token set's
+  family with DejaVu Sans after it. Embedding needs thematiq to keep a
+  TTF/OTF next to the WOFF2. That is a thematiq change, outside REQ-HSP-002,
+  which asks for the logo, colours and footer.

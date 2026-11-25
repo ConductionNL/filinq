@@ -45,6 +45,11 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 	public const FALLBACK_FONT = 'DejaVu Sans';
 
 	/**
+	 * The version of this mapping; raised when the stored fields change.
+	 */
+	public const MAPPING_VERSION = '2';
+
+	/**
 	 * Map a thematiq profile onto the `huisstijl` fields.
 	 *
 	 * The only place that knows the profile's shape:
@@ -74,13 +79,17 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 			$name = $tokenSetId;
 		}
 
+		$logo = $this->urlOf(asset: ($profile['logo'] ?? null));
+		$primary = $this->stringOrNull(value: ($this->arrayOf(value: ($profile['colours'] ?? null))['primary'] ?? null));
+
 		return [
 			'name' => $name,
 			'managedBy' => HuisstijlProfileSync::MANAGED_BY,
 			'tokenSetId' => $tokenSetId,
 			'profileHash' => $this->profileHash(profile: $profile),
-			'logo' => $this->urlOf(asset: ($profile['logo'] ?? null)),
-			'primaryColor' => $this->stringOrNull(value: ($this->arrayOf(value: ($profile['colours'] ?? null))['primary'] ?? null)),
+			'logo' => $logo,
+			'primaryColor' => $primary,
+			'headerHtml' => $this->headerHtml(logo: $logo, colour: $primary, name: $name),
 			'fonts' => [
 				'heading' => $this->fontOf(font: ($fonts['heading'] ?? null)),
 				'body' => $this->fontOf(font: ($fonts['body'] ?? null)),
@@ -97,6 +106,46 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 		];
 
 	}//end mapProfile()
+
+	/**
+	 * The letterhead: the token set's logo over a rule in its primary colour.
+	 *
+	 * Without it a managed house style reached the letter only through its
+	 * footer, so two token sets gave the same letter. The colour is used only
+	 * when it is a hex colour, and every value is escaped, so nothing from the
+	 * profile can be read as markup, CSS or Twig.
+	 *
+	 * @param string|null $logo   The logo's address.
+	 * @param string|null $colour The primary colour.
+	 * @param string      $name   The house style's name, the logo's alternative text.
+	 *
+	 * @return string The header HTML, or '' with neither a logo nor a colour.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-document-without-a-named-house-style-uses-the-user-s-own-req-hsp-002
+	 */
+	private function headerHtml(?string $logo, ?string $colour, string $name): string {
+		$hex = null;
+		if ($colour !== null && preg_match('/^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/', $colour) === 1) {
+			$hex = $colour;
+		}
+
+		if ($logo === null && $hex === null) {
+			return '';
+		}
+
+		$style = 'margin-bottom: 12pt; padding-bottom: 6pt;';
+		if ($hex !== null) {
+			$style .= ' border-bottom: 3pt solid ' . $hex . ';';
+		}
+
+		$image = '';
+		if ($logo !== null) {
+			$image = '<img src="' . $this->escape(text: $logo) . '" alt="' . $this->escape(text: $name) . '" style="height: 40pt;">';
+		}
+
+		return '<div class="huisstijl-header" style="' . $style . '">' . $image . '</div>';
+
+	}//end headerHtml()
 
 	/**
 	 * Whether a house style follows thematiq.
@@ -230,11 +279,15 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 	 * @param array<string, mixed> $profile The profile.
 	 *
 	 * @return string The sha256 hash.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-document-without-a-named-house-style-uses-the-user-s-own-req-hsp-002
 	 */
 	private function profileHash(array $profile): string {
 		unset($profile['warnings']);
 
-		return hash('sha256', (string) json_encode($profile, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+		// The mapping version is part of the hash, so a house style stored by an
+		// older mapping (one without the letterhead) is rewritten on its next use.
+		return hash('sha256', self::MAPPING_VERSION . (string) json_encode($profile, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
 	}//end profileHash()
 
