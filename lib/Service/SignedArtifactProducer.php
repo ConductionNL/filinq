@@ -43,6 +43,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Service\Signing\LibreSignProvider;
+use OCA\Filinq\Service\Signing\NativeSigningProvider;
 use OCA\Filinq\Service\Signing\RecipientRole;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\Files\File;
@@ -194,6 +195,28 @@ class SignedArtifactProducer {
 		// original file id.
 		return $fileId . ':signed:' . substr(hash('sha256', $signedBytes), 0, 16);
 	}//end produce()
+
+	/**
+	 * Refuse a signature whose completion could never produce the artifact,
+	 * before the signer is recorded as signed. Without this a native request
+	 * on a server with no signing secret stored the signature and its SIGNED
+	 * audit entry, then failed at completion: the request stayed in progress
+	 * and the signer could not sign again.
+	 *
+	 * @param array<string, mixed> $request The signing request.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the request's provider cannot produce an artifact.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function assertCanProduce(array $request): void {
+		$provider = $this->providerFactory->getProvider(identifier: (string)($request['provider'] ?? 'native'));
+		if ($provider instanceof NativeSigningProvider) {
+			$provider->assertCanProduce(level: (string)($request['signatureLevel'] ?? 'SES'));
+		}
+	}//end assertCanProduce()
 
 	/**
 	 * Mint the public verification record for a request's stored signed artifact.

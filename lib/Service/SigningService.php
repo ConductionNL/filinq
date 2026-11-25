@@ -746,6 +746,9 @@ class SigningService implements SigningServiceInterface {
 		}
 		// Typed field values are checked before anything is written (REQ-SFV-003).
 		$typed = $this->fieldValueChecker->valuesForAct(request: $request, signerId: $signerId, fields: $fields);
+		// A signature the request's provider could never complete is refused
+		// here, while nothing is written yet, not after the signer is stored.
+		$this->outputs->artifactProducer->assertCanProduce(request: $request);
 
 		$signer['identityEvidence'] = $this->guards->assuranceGate->evidenceForAct(
 			request: $request + ['id' => $requestId],
