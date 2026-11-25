@@ -197,7 +197,7 @@ class ObjectEventRegistrar {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
+	 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
 	 */
 	public function boot(ContainerInterface $container, string $appName): void {
 		$dispatcher = $container->get(IEventDispatcher::class);
@@ -250,7 +250,7 @@ class ObjectEventRegistrar {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-delivery-is-openregister-s-req-cdw-004
+	 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-delivery-is-openregister-s-req-cdw-004
 	 */
 	private function declareWebhookEvents(IEventDispatcher $dispatcher): void {
 		$registry = '\\OCA\\OpenRegister\\Event\\AppWebhookEvents';

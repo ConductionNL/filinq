@@ -12,7 +12,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-1.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use Throwable;
  * or stored. A file that is not a PDF, is encrypted, or is larger than the
  * `stamp_max_bytes` app setting (default 50 MB) is refused with its code.
  *
- * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-1.1
+ * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-1.1
  */
 class PdfStampService implements PdfStampServiceInterface {
 
@@ -100,7 +100,7 @@ class PdfStampService implements PdfStampServiceInterface {
 	 *
 	 * @throws PdfStampRefusal When the file is not a PDF, encrypted, too large, or cannot be stamped.
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-1.1
 	 */
 	public function stamp(string $pdf, string $text, array $options = []): string {
 		$this->refuseUnstampable(pdf: $pdf);

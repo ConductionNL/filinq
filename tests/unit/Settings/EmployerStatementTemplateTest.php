@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/templates-employer-statement/specs
+ * @spec openspec/changes/archive/2026-11-25-templates-employer-statement/specs
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -173,7 +173,7 @@ class EmployerStatementTemplateTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/templates-employer-statement/specs/hr-document-templates/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-templates-employer-statement/specs/hr-document-templates/spec.md
 	 */
 	public function testTheNameAndDescriptionHaveADutchAndAnEnglishForm(): void {
 		$register = json_decode((string)file_get_contents(__DIR__ . '/../../../lib/Settings/filinq_register.json'), true);

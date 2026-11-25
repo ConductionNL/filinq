@@ -26,7 +26,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md
  * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md
  */
 

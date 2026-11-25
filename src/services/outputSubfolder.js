@@ -17,7 +17,7 @@ const ALLOWED = /^[a-z0-9_-]$/
  *
  * @param {string} name The name as typed.
  * @return {string[]} The disallowed characters; empty when there are none.
- * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-2
  */
 export function disallowedSubfolderCharacters(name) {
 	const found = []
@@ -34,7 +34,7 @@ export function disallowedSubfolderCharacters(name) {
  *
  * @param {string} name The name as typed.
  * @return {boolean} True when the server will accept it.
- * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-2
  */
 export function isValidSubfolderName(name) {
 	return (name || '') !== '' && disallowedSubfolderCharacters(name).length === 0

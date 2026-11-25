@@ -4680,7 +4680,7 @@
 					"openspec/specs/folder-batch-analysis :: Folder batch initiation from existing Nextcloud folder",
 					"openspec/specs/folder-batch-analysis :: Background extraction via QueuedJob"
 				],
-				"plan": "openspec/changes/anonymisation-batch-output-folder-layout"
+				"plan": "openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout"
 			},
 			"reachedOn": "/folder-anonymization (FolderAnonymizationView.vue); extraction/review/status/report all work, the anonymise step always fails per document",
 			"provider": "filinq",
@@ -5483,7 +5483,7 @@
 					"openspec/specs/anonymisation-prohibition-gate :: The anonymise endpoint MUST consult the prohibition cache before forwarding the request",
 					"openspec/specs/anonymisation-prohibition-gate :: High-confidence prohibition matches MUST be present in the to-be-anonymised set"
 				],
-				"plan": "openspec/changes/anonymise-prohibition-consent-guard"
+				"plan": "openspec/changes/archive/2026-11-25-anonymise-prohibition-consent-guard"
 			},
 			"reachedOn": "/anonymization and /folder-anonymization (any anonymise action)",
 			"provider": "filinq",
@@ -7709,7 +7709,7 @@
 				"change": "openspec/changes/archive/2026-06-14-document-creatie-sjablonen",
 				"spec": "openspec/specs/document-creatie-sjablonen",
 				"requirement": "openspec/specs/document-creatie-sjablonen :: REQ-DCS-07 Document Generation API (Priority: Must)",
-				"plan": "openspec/changes/templates-employer-statement"
+				"plan": "openspec/changes/archive/2026-11-25-templates-employer-statement"
 			},
 			"reachedOn": "machine consumer: dossiq (FilinqTemplateEngineAdapter, via direct DI to DocumentService::generateDocument())",
 			"provider": "filinq",
@@ -7773,18 +7773,18 @@
 			"name": "Call an outside system when something happens to a document.",
 			"source": "competitor-derived",
 			"sourceRef": "canonical webhook-support",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/connect-document-webhooks on 2026-09-27. Before: Grepped lib/ for 'webhook': no match anywhere in the app.",
-				"change": "openspec/changes/connect-document-webhooks",
+				"evidence": "Built and verified live (archived 2026-11-25, filinq#2400): lib/EventListener/DocumentEventTranslator.php raises DocumentSigned/Anonymised/Generated/Registered events (lib/Event/Webhook) whatever path wrote the record, and OpenRegister delivers them to the receivers an admin sets up in filinq settings (src/views/settings/DocumentWebhooksSection.vue). Live: e2e tests/e2e/workflows/document-webhooks.spec.ts 3/3.",
+				"change": "openspec/changes/archive/2026-11-25-connect-document-webhooks",
 				"requirement": [
-					"openspec/changes/connect-document-webhooks/specs/document-webhooks :: Filinq raises four document events whatever path wrote the record (REQ-CDW-001)",
-					"openspec/changes/connect-document-webhooks/specs/document-webhooks :: An admin sets up a receiver from filinq's settings (REQ-CDW-003)"
+					"openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks :: Filinq raises four document events whatever path wrote the record (REQ-CDW-001)",
+					"openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks :: An admin sets up a receiver from filinq's settings (REQ-CDW-003)"
 				]
 			},
-			"reachedOn": "nothing reaches it (not built)",
+			"reachedOn": "filinq admin settings, Document webhooks section (DocumentWebhooksSection.vue)",
 			"provider": "filinq",
 			"providerHow": "read-from-code",
 			"feature": "api-and-integrations",
@@ -8462,7 +8462,7 @@
 				"evidence": "Built and verified live (archived 2026-11-25, filinq#2401): lib/Service/ReceivedStampService.php writes '<name> (ontvangen).pdf' beside the arrived file with 'Ontvangen', the day-month-year date and the registration number on page 1; the arrived file is only read (checksum unchanged). The inbox row opens the stamped copy. Live 4.2: the copy reads 'Ontvangen 25-11-2026'. PHPUnit ReceivedStampServiceTest.",
 				"change": "openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp",
 				"requirement": "openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement :: A received stamp goes on a copy, never on what arrived (REQ-IAS-003)",
-				"plan": "openspec/changes/work-stamp-text-on-every-page"
+				"plan": "openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",

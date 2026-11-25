@@ -49,8 +49,8 @@ interface OutputLayoutMoverInterface {
 	 * @return array{path: string, warning: array{code: string, message: string}|null} Where the
 	 *         output is now, plus a warning when it stayed at the legacy path.
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-3
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-4
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-4
 	 */
 	public function relocate(string $userId, int $anonymizedFileId, string $legacyPath): array;
 }//end interface

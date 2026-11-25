@@ -21,7 +21,7 @@
  * instance can reach makes "Send a test" arrive; without one the test checks
  * that the send was answered, not that it arrived.
  *
- * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md
+ * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md
  */
 
 import type { Locator, Page } from '@playwright/test'
@@ -86,7 +86,7 @@ test.describe('Document webhooks in the admin settings', () => {
 	})
 
 	/**
-	 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinqs-settings-req-cdw-003
+	 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinqs-settings-req-cdw-003
 	 */
 	test('refuses to save a receiver without a secret @spec REQ-CDW-003', async ({ page }) => {
 		const form = await section(page)
@@ -103,7 +103,7 @@ test.describe('Document webhooks in the admin settings', () => {
 	})
 
 	/**
-	 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinqs-settings-req-cdw-003
+	 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinqs-settings-req-cdw-003
 	 */
 	test('adds a receiver for Document signed, sends a test and deletes it @spec REQ-CDW-003', async ({ page, request }) => {
 		const form = await section(page)
@@ -154,7 +154,7 @@ test.describe('Document webhooks in the admin settings', () => {
 	/**
 	 * A plain account cannot read the receivers or their secrets.
 	 *
-	 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinqs-settings-req-cdw-003
+	 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinqs-settings-req-cdw-003
 	 */
 	test('a plain account cannot list the receivers @spec REQ-CDW-003', async ({ playwright, baseURL }) => {
 		const basic = (user: string, pass: string) => `Basic ${Buffer.from(`${user}:${pass}`).toString('base64')}`
