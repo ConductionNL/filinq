@@ -344,15 +344,7 @@ TEXT;
 			->method('saveObject')
 			->willReturnCallback(function ($object) use (&$stored) {
 				$stored = $object;
-				return new class($object) implements \JsonSerializable {
-					public function __construct(
-						private array $data,
-					) {
-					}
-					public function jsonSerialize(): array {
-						return $this->data;
-					}
-				};
+				return $object;
 			});
 
 		$this->service->extractFinancial(
@@ -361,10 +353,11 @@ TEXT;
 		);
 
 		$this->assertNotSame(expected: [], actual: $stored['fieldConfidence']);
-		$this->assertSame(
-			expected: ['supplierName', 'supplierIban', 'supplierKvk', 'supplierVatId', 'invoiceNumber', 'issueDate', 'dueDate', 'currency', 'totalExcl', 'totalVat', 'totalIncl'],
-			actual: array_keys($stored['fieldConfidence'])
-		);
+		$singleValued = [
+			'supplierName', 'supplierIban', 'supplierKvk', 'supplierVatId', 'invoiceNumber', 'issueDate',
+			'dueDate', 'currency', 'totalExcl', 'totalVat', 'totalIncl',
+		];
+		$this->assertSame(expected: $singleValued, actual: array_keys($stored['fieldConfidence']));
 		$this->assertSame(expected: [0.0], actual: array_values(array_unique($stored['fieldConfidence'])));
 	}//end testAReadThatFoundNothingStoresEveryFieldAtZero()
 
@@ -763,7 +756,7 @@ TEXT;
 
 		$this->assertNull($saved['fields']['supplierIban']);
 		// Nothing was read, so every single-value field is stored at 0.0: OpenRegister refuses an empty object here.
-		$this->assertSame([0.0], array_values(array_unique($saved['fieldConfidence'])));
+		$this->assertSame(expected: [0.0], actual: array_values(array_unique($saved['fieldConfidence'])));
 
 	}//end testOcrFailureFallsBackToEmptyText()
 
