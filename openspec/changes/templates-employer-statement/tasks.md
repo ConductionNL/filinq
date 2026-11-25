@@ -12,7 +12,8 @@
 
 - [x] 2.1 Add a PHPUnit test that renders the seeded content through `TemplateRenderer` with a permanent and a fixed-term fixture, asserting the merged values, "niet opgegeven" for a missing item and no BSN (REQ-TES-002). Verify: the test passes in the Nextcloud container.
   - `tests/unit/Settings/EmployerStatementTemplateTest.php`: exactly one hrmq/werkgeversverklaring template; a permanent and a fixed-term fixture rendered through the real `TemplateRenderer` sandbox; "niet opgegeven" for missing items; no BSN.
-- [ ] 2.2 Run the humaniq occ trigger against a local install with both apps (REQ-TES-001). Verify: `occ humaniq:documents:generate --type werkgeversverklaring` for the demo employee ends `generated`; the result is noted in the PR body.
+- [x] 2.2 Run the humaniq occ trigger against a local install with both apps (REQ-TES-001). Verify: `occ humaniq:documents:generate --type werkgeversverklaring` for the demo employee ends `generated`; the result is noted in the PR body.
+  - Live (Nextcloud 34 + MariaDB, OpenRegister main, humaniq and filinq development): `occ humaniq:documents:generate --type werkgeversverklaring --employee <demo employee> --as-user admin` ends `generated`, for all 26 demo employees. Without a session every attempt failed ("User 'Anonymous' does not have permission to 'read' objects in schema 'Document Template'"); `--as-user` was added in ConductionNL/humaniq#1357. From an employment contract (`POST /apps/humaniq/api/documents/generate` with `contractId`) the contract lines are filled as well.
 
 ## 3. Docs
 
