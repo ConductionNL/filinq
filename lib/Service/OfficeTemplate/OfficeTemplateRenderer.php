@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -41,7 +41,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
  */
 class OfficeTemplateRenderer {
 
@@ -65,7 +65,7 @@ class OfficeTemplateRenderer {
 	 * @param PdfConversionService       $pdf         The conversion cascade.
 	 * @param LibreOfficeHeadlessBackend $libreOffice Converts to ODT and HTML.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
 	 */
 	public function __construct(
 		private readonly OfficeSourceStore $store,
@@ -84,7 +84,7 @@ class OfficeTemplateRenderer {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-files-are-accepted-as-first-class-templates-req-ddota-001
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-files-are-accepted-as-first-class-templates-req-ddota-001
 	 */
 	public function isOffice(array $template): bool {
 		return ($template['templateType'] ?? 'twig') === self::TYPE_OFFICE;
@@ -103,7 +103,7 @@ class OfficeTemplateRenderer {
 	 *
 	 * @throws Exception When the source is missing (404) or unreadable (422), or conversion fails.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
 	 */
 	public function render(array $template, array $data, string $format, array $options=[]): array {
 		$filled = $this->fill(template: $template, data: $data);
@@ -127,7 +127,7 @@ class OfficeTemplateRenderer {
 	 *
 	 * @throws Exception With code 400 for another format; the conversion's own failure (503 without LibreOffice).
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function convert(string $docx, string $format, array $options=[]): string {
 		return match ($format) {
@@ -149,7 +149,7 @@ class OfficeTemplateRenderer {
 	 *
 	 * @throws Exception When the source is missing (404) or unreadable (422).
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
 	 */
 	public function fill(array $template, array $data): array {
 		$source = $this->source(template: $template);
@@ -183,7 +183,7 @@ class OfficeTemplateRenderer {
 	 *
 	 * @return array{content: string, warnings: array<int, string>, fragments: array<int, string>}
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	public function resolveTwigFragments(string $content, string $namespace): array {
 		if (preg_match_all(self::FRAGMENT_REFERENCE, $content, $matches) < 1) {

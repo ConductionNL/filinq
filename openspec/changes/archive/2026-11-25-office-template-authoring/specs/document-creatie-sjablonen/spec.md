@@ -1,9 +1,5 @@
 # document-creatie-sjablonen Specification (delta)
 
----
-status: proposed
----
-
 ## Purpose
 
 The office half of multi-format output, moved here from `multi-format-output`
@@ -19,18 +15,13 @@ shared pieces already exist: `Conversion\HtmlToOfficeConverter`,
 
 ### Requirement: Office templates produce HTML output via LibreOffice DOCX→HTML (REQ-DDMFO-007)
 
-The document generation path MUST accept `html` as an output format for
-`office` templates (full format parity with `twig` templates, which already
-produce `html` as a render passthrough). Office HTML MUST be produced from the
-filled DOCX intermediate via a shared local LibreOffice DOCX→HTML converter
-(`soffice --headless --convert-to html`), which MUST reuse the cascade's
-soffice serialization lock, temp-dir hygiene, and timeout discipline (exactly
-one soffice invocation pattern in the app). Because it depends on LibreOffice,
-office `html` MUST be gated on LibreOffice-backend availability in the matrix
-(REQ-DDMFO-002) and, when no capable backend is available, a forced office
-`html` generation MUST fail with HTTP 503 carrying the matrix reason (no
-silent substitution). `twig` `html` output MUST remain the existing render
-passthrough, unchanged.
+The generation path MUST accept `html` for `office` templates, produced from
+the filled DOCX by the shared local LibreOffice DOCX→HTML converter, which
+MUST reuse the cascade's soffice lock, temp-dir hygiene and timeouts (one
+soffice invocation pattern in the app). Office `html` MUST be gated on
+LibreOffice availability in the matrix; without it a forced office `html`
+generation MUST fail with HTTP 503 and the matrix reason. `twig` `html`
+output MUST stay the existing render passthrough.
 
 #### Scenario: Office template delivers HTML via DOCX→HTML
 
@@ -66,3 +57,10 @@ passthrough, unchanged.
 - WHEN `GET /api/templates/{id}/formats` is fetched
 - THEN `html`, `docx`, and `odf` are reported unavailable with a reason and only `pdf` is available
 - @e2e exclude requires an instance-level LibreOffice teardown — covered by PHPUnit (tests/unit/Service/FormatMatrixServiceTest.php::testOfficeHtmlGatedOnLibreOffice)
+
+#### Scenario: The converter command
+- GIVEN the shared converter
+- WHEN it converts a filled DOCX to HTML
+- THEN it runs `soffice --headless --convert-to html` under the cascade's serialization lock
+- @e2e exclude converter wiring; covered by PHPUnit (tests/unit/Service/MultiFormatOfficeOutputTest.php::testTheMatrixGatesOfficeHtmlOnLibreOffice, tests/unit/Service/Conversion/HtmlToOfficeConverterTest.php::testWithoutLibreOfficeItIsA503WithTheMatrixReasonAndSofficeNeverRuns)
+

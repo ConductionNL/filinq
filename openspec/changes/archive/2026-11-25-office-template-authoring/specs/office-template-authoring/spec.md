@@ -1,9 +1,5 @@
 # office-template-authoring Specification (delta)
 
----
-status: proposed
----
-
 ## Purpose
 
 Accept real DOCX/ODT office files with `${field}` merge tags as first-class
@@ -18,20 +14,12 @@ developer help.
 
 ### Requirement: Office files are accepted as first-class templates (REQ-DDOTA-001)
 
-The app MUST accept a DOCX or ODT file upload as a template of
-`templateType: office` via `POST /api/templates/office` (multipart), storing
-the office source as a Nextcloud file referenced from the template object by
-`sourceFileId` together with a sha256 `contentHash`. Merge tags MUST use the
-PhpWord macro syntax `${field}` (dotted paths such as `${aanvrager.naam}`
-allowed; repeating regions via `${block}`…`${/block}`); the upload MUST
-extract all tags with PhpWord `TemplateProcessor::getVariables()` and persist
-them as `mergeFields` on the template. ODT uploads MUST be normalised to DOCX
-via the LibreOffice headless backend at upload time (the original ODT
-retained; the response MUST flag the conversion). Uploads MUST be rejected
-with HTTP 422 when macro-enabled (`.docm`/`.dotm` or containing
-`vbaProject.bin`), when exceeding the configured size cap, or when the
-sniffed mime type contradicts the extension. Existing Twig/HTML templates
-MUST be unaffected: absent `templateType` MUST read as `twig`.
+The app MUST accept a DOCX or ODT upload as a template of `templateType:
+office` via `POST /api/templates/office`, storing the source as a Nextcloud
+file referenced by `sourceFileId` with a sha256 `contentHash`. Merge tags use
+the PhpWord macro syntax `${field}`; the upload MUST extract them and persist
+them as `mergeFields`. Unsafe uploads MUST be refused with HTTP 422. Existing
+Twig/HTML templates MUST be unaffected: absent `templateType` reads `twig`.
 
 #### Scenario: Communications officer uploads a DOCX house-style template
 
@@ -57,21 +45,39 @@ MUST be unaffected: absent `templateType` MUST read as `twig`.
 - AND the upload response carries a `converted: true` flag
 - @e2e exclude conversion fidelity requires the LibreOffice binary in the test container; covered by PHPUnit integration test gated on soffice availability (tests/unit/Service/OfficeTemplateServiceTest.php)
 
+#### Scenario: The tag syntax and how tags are read
+- GIVEN an office source
+- WHEN its tags are extracted
+- THEN dotted paths such as `${aanvrager.naam}` and repeating regions `${block}`…`${/block}` are recognised
+- AND the tags are read with PhpWord `TemplateProcessor::getVariables()`
+- @e2e exclude extraction detail; covered by PHPUnit (tests/unit/Service/OfficeTemplate/MergeTagReaderTest.php::testTheTagsAreReadOnceEachWithoutBlockClosings)
+
+#### Scenario: What counts as an unsafe upload
+- GIVEN an upload that is macro-enabled (`.docm`/`.dotm` or containing `vbaProject.bin`), over the configured size cap, or whose sniffed mime type contradicts its extension
+- WHEN it is uploaded
+- THEN it is refused with HTTP 422 naming the reason
+- @e2e exclude refusal matrix; covered by PHPUnit (tests/unit/Service/OfficeTemplate/OfficeSourceGuardTest.php)
+
+#### Scenario: An ODT is converted by the LibreOffice backend
+- GIVEN an ODT upload
+- WHEN it is stored
+- THEN it is normalised to DOCX through the LibreOffice headless backend, the original ODT is retained, and the response flags the conversion
+- @e2e exclude conversion path; covered by PHPUnit (tests/unit/Service/OfficeTemplate/OfficeTemplateServiceTest.php::testAnOdtIsConvertedAndKept)
+
+#### Scenario: A template without a type stays Twig
+- GIVEN a template object without `templateType`
+- WHEN it is read anywhere
+- THEN it is treated as `twig`
+- @e2e exclude default reading; covered by PHPUnit (tests/unit/Service/OfficeTemplate/OfficeTemplateRendererTest.php::testAbsentTypeReadsAsTwig)
+
 ### Requirement: Uploaded tags are validated against the bound register schema (REQ-DDOTA-002)
 
-The app MUST validate extracted merge tags against the bound register schema.
-A template MAY declare `boundRegister` and `boundSchema` (OpenRegister
-slugs). On every office upload (create and new-version), the service MUST
-classify each extracted tag as `known` (matches a property or dotted
-sub-path of the bound schema), `fragment` (`fragment:` prefix), or `unknown`,
-and MUST persist the structured result as `tagReport` on the template.
-Unknown tags on a bound template MUST be reported at the severity configured
-in `filinq.templates.unknown_tag_severity` (`warning` default, `blocking`
-optional); at `blocking` the upload MUST be refused with HTTP 422 listing the
-unknown tags. A template without a schema binding MUST never be blocked on
-tag validation and its report MUST state that no schema validation was
-performed. The schema properties MUST be read from OpenRegister (no property
-list duplicated in Filinq).
+The app MUST validate extracted merge tags against the template's bound
+register schema (`boundRegister`/`boundSchema`, OpenRegister slugs) on every
+office upload, classifying each tag as `known`, `fragment` or `unknown` and
+persisting the result as `tagReport`. Unknown tags MUST be reported at the
+configured severity; a template without a binding MUST never be blocked. The
+schema properties MUST be read from OpenRegister, not duplicated in Filinq.
 
 #### Scenario: Unknown tag is reported on upload
 
@@ -91,20 +97,23 @@ list duplicated in Filinq).
 - AND no template object is created
 - @e2e exclude admin-config permutation of the same validation path; covered by PHPUnit (tests/unit/Service/OfficeTemplateServiceTest.php)
 
+#### Scenario: How tags are classified and how severity applies
+- GIVEN a bound template
+- WHEN its tags are classified
+- THEN `known` matches a property or dotted sub-path of the bound schema, `fragment` has the `fragment:` prefix, and anything else is `unknown`
+- AND `filinq.templates.unknown_tag_severity` decides the reaction: `warning` (default) stores the report, `blocking` refuses the upload with HTTP 422 listing the unknown tags
+- AND a template without a binding gets a report stating that no schema validation was performed
+- @e2e exclude classification rules; covered by PHPUnit (tests/unit/Service/OfficeTemplate/MergeTagClassifierTest.php)
+
 ### Requirement: Office templates render through the conversion cascade (REQ-DDOTA-003)
 
 Document generation MUST render office templates through the existing
-conversion cascade. `DocumentService::generateDocument()` (and the
-corresponding `documents/generate`, `preview`, and `bulk` endpoints) MUST support
-`templateType: office`: resolve data through the existing
-`DataResolverService` contract, fill tags with PhpWord `TemplateProcessor`
-(`setValue` for scalars — XML-escaped, `cloneBlock`/`cloneRow` for arrays),
-and produce output as `docx` (the filled file) or `pdf`/`pdfa` by converting
-the filled DOCX through `PdfConversionService::convertToPdf()` (the existing
-backend cascade). Tags with no value in the resolved data MUST render as
-empty with a generation warning naming the tag. Filling MUST execute no
-template-authored logic and MUST make no external network call. Each office
-generation MUST log a `generatedDocument` object recording the template type.
+conversion cascade, on the generate, preview and bulk routes: data resolves
+through `DataResolverService`, tags are filled with PhpWord, and the output
+is the filled DOCX or a PDF/PDF-A converted from it. A tag without a value
+MUST render empty with a warning naming it. Filling MUST run no
+template-authored logic and make no external network call, and each
+generation MUST log a `generatedDocument` with the template type.
 
 #### Scenario: Office template generates a PDF via the cascade
 
@@ -122,18 +131,21 @@ generation MUST log a `generatedDocument` object recording the template type.
 - AND the response `warnings` name `besluit.datum`
 - @e2e exclude warning-payload assertion on the generation API; covered by PHPUnit (tests/unit/Service/DocumentServiceTest.php)
 
+#### Scenario: How tags are filled
+- GIVEN an office template and resolved data
+- WHEN it is filled
+- THEN scalars are written with `setValue` and XML-escaped, and arrays repeat with `cloneBlock`/`cloneRow`
+- AND PDF and PDF/A come from `PdfConversionService::convertToPdf()` on the filled DOCX
+- @e2e exclude filling detail; covered by PHPUnit (tests/unit/Service/OfficeTemplate/OfficeTemplateFillerTest.php, tests/unit/Service/OfficeTemplate/OfficeTemplateRendererTest.php::testPdfGoesThroughTheCascadeAndCleansUp)
+
 ### Requirement: Reusable text fragments (bouwstenen) resolve in templates (REQ-DDOTA-004)
 
-The app MUST provide CRUD for `textFragment` objects (name, unique
-per-namespace `slug`, `content`, `namespace`, `category`, `tags`,
-`language`) stored in the templates register via OpenRegister. A template —
-office or Twig — MUST be able to reference a fragment as `${fragment:slug}`;
-rendering MUST resolve fragment references in a pre-processing pass before
-field filling (fragments MAY themselves contain `${field}` tags, one level
-deep — no recursive fragment nesting). A missing fragment MUST render a
-visible `[ontbrekende bouwsteen: <slug>]` marker and produce a generation
-warning, never silent omission. The Twig sandbox whitelist MUST NOT be
-extended for fragment support.
+The app MUST provide CRUD for `textFragment` objects in the templates
+register, each with a slug unique per namespace. Any template, office or
+Twig, MUST be able to reference a fragment as `${fragment:slug}`, resolved
+before field filling. A missing fragment MUST render a visible
+`[ontbrekende bouwsteen: <slug>]` marker and a generation warning. The Twig
+sandbox whitelist MUST NOT be extended for fragment support.
 
 #### Scenario: Fragment content is rendered into a generated document
 
@@ -151,22 +163,21 @@ extended for fragment support.
 - AND the generation response carries a warning naming the slug
 - @e2e exclude negative-path rendering assertion; covered by PHPUnit (tests/unit/Service/OfficeTemplateServiceTest.php)
 
+#### Scenario: Fragment fields and nesting
+- GIVEN a fragment with name, slug, content, namespace and optionally category, tags and language
+- WHEN a template that references it is rendered
+- THEN `${field}` tags inside the fragment are filled from the same data, one level deep
+- AND a fragment that references another fragment is not expanded (no recursive nesting)
+- @e2e exclude resolution rules; covered by PHPUnit (tests/unit/Service/OfficeTemplate/OfficeTemplateFillerTest.php::testFragmentsAreFilledAndAMissingOneIsMarked, tests/unit/Service/OfficeTemplate/TextFragmentServiceTest.php)
+
 ### Requirement: Bulk import migrates existing template estates (REQ-DDOTA-005)
 
-The app MUST provide `POST /api/templates/import` accepting a ZIP upload (or
-a Files-app folder path) of DOCX/ODT templates and optional text fragments,
-processed as an asynchronous job whose state is persisted as a
-`templateImportJob` object via OpenRegister (never in memory). The job MUST
-create one office template per office file (running tag
-extraction/validation per REQ-DDOTA-001/002), import `fragments/` entries as
-`textFragment` objects, and record a per-file report (created id, tag
-counts, unknown tags, failures — failures skip the file and continue). Job
-progress MUST be queryable via `GET /api/templates/import/{jobId}`. The UI
-MUST provide an interactive mapping step where the operator maps unknown
-tags to bound-schema properties, persisted as `fieldMap` on the template and
-applied as a tag→property aliasing layer at fill time. The flow MUST handle
-estates of hundreds of files (Den Helder scale: 486 templates + 433
-fragments).
+The app MUST provide `POST /api/templates/import` for a ZIP or a Files-app
+folder of DOCX/ODT templates and optional fragments, run as an asynchronous
+job persisted as a `templateImportJob` (never in memory) and queryable via
+`GET /api/templates/import/{jobId}`. The UI MUST offer a step that maps
+unknown tags to schema properties, stored as `fieldMap` and applied at fill
+time. The flow MUST handle estates of hundreds of files.
 
 #### Scenario: ZIP of house-style templates imports with a report
 
@@ -191,3 +202,11 @@ fragments).
 - THEN the two valid files import normally
 - AND the report marks the corrupt file as failed with a reason
 - @e2e exclude corrupt-fixture negative path; covered by PHPUnit (tests/unit/Service/TemplateImportServiceTest.php)
+
+#### Scenario: What the job creates and reports
+- GIVEN an import job
+- WHEN it runs
+- THEN each office file becomes an office template with tag extraction and validation per REQ-DDOTA-001/002, and each `fragments/` entry becomes a `textFragment`
+- AND a per-file report records the created id, tag counts, unknown tags and failures; a failing file is skipped and the job continues
+- @e2e exclude job detail; covered by PHPUnit (tests/unit/Service/OfficeTemplate/TemplateImportServiceTest.php::testARunImportsTemplatesAndFragmentsAndReportsEachFile)
+

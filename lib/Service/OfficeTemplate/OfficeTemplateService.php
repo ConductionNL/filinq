@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -45,7 +45,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 class OfficeTemplateService {
 
@@ -78,7 +78,7 @@ class OfficeTemplateService {
 	 * @param SchemaMapper                  $schemas   Reads the bound schema's properties.
 	 * @param IAppConfig                    $config    The template limits.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function __construct(
 		private readonly OfficeSourceTools $tools,
@@ -101,7 +101,7 @@ class OfficeTemplateService {
 	 * @throws OfficeSourceRefusedException When the file or its tags are refused (422).
 	 * @throws Exception                    When name or namespace is missing or invalid (400).
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function create(array $fields, string $fileName, string $bytes): array {
 		$data = array_intersect_key($fields, array_flip(self::FIELDS));
@@ -145,7 +145,7 @@ class OfficeTemplateService {
 	 * @throws OfficeSourceRefusedException When the file or its tags are refused (422).
 	 * @throws Exception                    When the template is unknown (404), not an office template (409) or locked (409).
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/template-management/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/template-management/spec.md
 	 */
 	public function replaceSource(string $id, string $fileName, string $bytes, ?string $changelog=null): array {
 		$template = $this->templates->getTemplate(id: $id);
@@ -186,7 +186,7 @@ class OfficeTemplateService {
 	 *                   path that is no field path, 404 for an unknown template,
 	 *                   409 for a Twig or locked template.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
 	 */
 	public function setFieldMap(string $id, array $fieldMap): array {
 		$template = $this->templates->getTemplate(id: $id);

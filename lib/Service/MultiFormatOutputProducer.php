@@ -384,7 +384,7 @@ class MultiFormatOutputProducer implements MultiFormatOutputProducerInterface {
 	 *
 	 * @return array<string, string>
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
 	 */
 	private function officeRecord(array $template): array {
 		if (($template['templateType'] ?? 'twig') !== 'office') {
