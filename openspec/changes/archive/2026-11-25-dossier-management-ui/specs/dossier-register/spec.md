@@ -1,9 +1,5 @@
 # dossier-register Specification (delta)
 
----
-status: proposed
----
-
 ## Purpose
 
 Adds an optional, declaratively-guarded `status` lifecycle and an optional
@@ -20,11 +16,12 @@ as `open` with their membership derived from the home folder alone.
 
 ### Requirement: Dossier schema captures folder-level anonymisation metadata
 
-The system SHALL define a `dossier` schema with the following properties: `name` (string, required, mirrors the bound home-folder name at creation and kept in sync on rename), `description` (string, optional), `bases` (array of strings, optional, no `minItems` — each string is the slug of a `base` object), `checkedOn` (date-time, optional), `status` (string, optional — the dossier lifecycle state), and `documents` (array of strings, optional, no `minItems` — each string is a Nextcloud file node reference recording an explicit membership so one document may belong to several dossiers). The schema SHALL be stored under `components.schemas.dossier` in `filinq_register.json`, follow OpenRegister's OpenAPI 3.0.0 schema conventions (ADR-006), and MUST include `slug: "dossier"`, `title`, `description`, and `configuration.objectNameField: "name"` so list UIs render the stored name.
-
-The `documents` property SHALL be optional for backwards compatibility: a dossier without it SHALL have its membership derived from the files in its bound `@self.folder` home folder alone, and existing objects SHALL NOT be migrated. When present, a dossier's effective membership SHALL be the deduplicated union of its home-folder files and its `documents` references; a reference whose target no longer exists SHALL be surfaced as a visible marker, never silently dropped.
-
-The `status` property SHALL be governed by an `x-openregister-lifecycle` annotation on the schema using the canonical `initial` key (`initial: open`) with exactly the transitions `open → in-review`, `in-review → processed`, `in-review → open` (reopen), `processed → published`, `processed → closed`, and `published → closed`. OpenRegister's lifecycle guard SHALL reject any out-of-order status write. `status` SHALL be optional for backwards compatibility: a dossier without it SHALL be treated by consumers as `open`, and existing objects SHALL NOT be migrated.
+The system SHALL define a `dossier` schema under `components.schemas.dossier`
+in `filinq_register.json` (OpenAPI 3.0.0, ADR-006) with `slug: "dossier"`,
+`title`, `description` and `configuration.objectNameField: "name"`, and the
+properties `name` (required, kept in sync with the home folder), and the
+optional `description`, `bases`, `checkedOn`, `status` and `documents`, as
+the scenarios below define. Existing objects SHALL NOT be migrated.
 
 #### Scenario: A dossier can be created with all fields set
 - **GIVEN** the dossier register has been installed and the six canonical seed `base` objects exist
@@ -53,3 +50,25 @@ The `status` property SHALL be governed by an `x-openregister-lifecycle` annotat
 - **WHEN** a client saves `status: "in-review"` and subsequently attempts `status: "closed"` directly
 - **THEN** the first save succeeds and the second is rejected by OpenRegister's lifecycle guard (`in-review → closed` is not a declared transition)
 - @e2e exclude server-side declarative lifecycle guard — covered by PHPUnit transition tests (tests/unit/Service/DossierManagementServiceTest.php); the UI transition happy path is covered in tests/e2e/spec-coverage/dossier-management.spec.ts
+
+#### Scenario: The properties have their declared shapes
+- **GIVEN** the shipped `dossier` schema
+- **WHEN** its properties are read
+- **THEN** `name` is a required string that mirrors the bound home-folder name at creation and is kept in sync on rename, `description` is an optional string, and `checkedOn` an optional date-time
+- **AND** `bases` is an optional array of strings with no `minItems`, each the slug of a `base` object
+- **AND** `status` is an optional string (the lifecycle state) and `documents` an optional array of strings with no `minItems`, each a Nextcloud file node reference recording an explicit membership
+- @e2e exclude schema shape — covered by register-import PHPUnit assertions
+
+#### Scenario: Membership without documents comes from the home folder
+- **GIVEN** a dossier without `documents`
+- **WHEN** its membership is read
+- **THEN** it is the files in its bound `@self.folder` home folder alone
+- **AND** with `documents` present, membership is the deduplicated union of the home-folder files and the references, and a reference whose target no longer exists is surfaced as a visible marker, never silently dropped
+- @e2e exclude covered by PHPUnit (tests/unit/Service/DossierManagementServiceTest.php::testUnresolvableMembershipReferenceIsSurfaced)
+
+#### Scenario: The lifecycle is declared on the schema
+- **GIVEN** the shipped `dossier` schema
+- **WHEN** its `x-openregister-lifecycle` annotation is read
+- **THEN** it uses the canonical `initial` key (`initial: open`) with exactly the transitions `open → in-review`, `in-review → processed`, `in-review → open` (reopen), `processed → published`, `processed → closed` and `published → closed`
+- **AND** OpenRegister's lifecycle guard rejects any out-of-order status write, and a dossier without `status` is treated by consumers as `open`
+- @e2e exclude covered by PHPUnit transition tests (tests/unit/Service/DossierManagementServiceTest.php::testOnlyDeclaredTransitionsAreOffered, ::testAbsentStatusReadsAsOpen)

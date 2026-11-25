@@ -1,9 +1,5 @@
 # dossier-management-ui Specification (delta)
 
----
-status: proposed
----
-
 ## Purpose
 
 First-class dossier surface: a browsable dossier index and a dossier detail
@@ -40,18 +36,13 @@ Manifest schema references MUST use slugs.
 
 ### Requirement: Dossier detail aggregates documents, grondslagen, batch runs and publication state (REQ-DDDMU-002)
 
-The app MUST provide a dossier detail view aggregating: the documents in the
-bound folder (name, per-document anonymisation state via `anonymizationLink`,
-checked state via the review-workbench `documentReview` gate when installed),
-the grondslagen section, the folder-batch runs for the dossier's folder
-(deep-linking to the redaction-at-scale progress view when installed), and
-the publication section (`publicationRecord` state, when the pipeline is
-installed). Selecting a document MUST switch the inline viewer without a page
-reload (GH #50). Each document row MUST offer a mini-menu with "mark as
-checked" (hidden without the review workbench) and "remove". All document
-listings MUST honour the caller's Nextcloud filesystem ACLs, and the detail
-endpoint MUST verify the caller can read the dossier object before
-aggregating (no IDOR via dossier id).
+The app MUST provide a dossier detail view aggregating the dossier's
+documents, its grondslagen, the folder-batch runs for its folder and, when
+the publication pipeline is installed, its publication state. Selecting a
+document MUST switch the inline viewer without a page reload (GH #50). Each
+document row MUST offer a mini-menu with "mark as checked" (hidden without
+the review workbench) and "remove". Listings MUST honour the caller's
+access, as the scenarios below state.
 
 #### Scenario: Detail shows the aggregated dossier
 
@@ -66,6 +57,23 @@ aggregating (no IDOR via dossier id).
 - WHEN the operator clicks the second document
 - THEN the viewer swaps to it without a route navigation or page reload
 - @e2e tests/e2e/spec-coverage/dossier-management.spec.ts
+
+#### Scenario: Each section shows what its source holds
+
+- GIVEN a dossier detail
+- WHEN the sections render
+- THEN each document in the bound folder shows its name, its anonymisation state from `anonymizationLink` and, when the review workbench is installed, its checked state from the `documentReview` gate
+- AND the batch-runs section lists the folder-batch runs for the dossier's folder, deep-linking to the redaction-at-scale progress view when installed
+- AND the publication section shows the `publicationRecord` state when the pipeline is installed
+- @e2e exclude moved out of the requirement text unchanged; no dedicated test yet
+
+#### Scenario: The detail reads only what the caller may read
+
+- GIVEN a caller and a dossier id
+- WHEN the detail endpoint is called
+- THEN it verifies the caller can read the dossier object before aggregating anything (no IDOR via the dossier id)
+- AND every document listing runs through the caller's Nextcloud filesystem ACLs, so a file the caller cannot see is not listed
+- @e2e exclude moved out of the requirement text unchanged; no dedicated test yet
 
 ### Requirement: Create dossier and inline title rename (REQ-DDDMU-003)
 
@@ -88,21 +96,12 @@ MUST carry all schema fields forward — a rename MUST NOT null `bases`,
 ### Requirement: Add and remove documents in a dossier (REQ-DDDMU-004)
 
 The dossier detail MUST offer an "Add document" action (GH #48) that takes
-the operator to Folder Analysis, the surface that owns upload and folder
-selection; the dossier page itself carries no second uploader or picker
-(the filinq dossier board `FqDossier` draws none; decision 130). The
-membership API it feeds MUST add an uploaded or copied file to the bound
-home folder and record it in `documents[]`, and MUST add a file picked from
-elsewhere by reference (its node id appended to `documents[]`) without
-moving it (see REQ-DDDMU-008). The documents list MUST show a member
-without a page reload. Removing a document (GH #50) MUST require
-confirmation; the confirmation MUST state whether the file will be trashed
-or merely unlinked. When the document lives in this dossier's home folder
-and is a member of no other dossier, removal MUST move the file to the
-Nextcloud trashbin (recoverable) — never a silent hard delete; when the
-document is a referenced member (lives elsewhere or is also a member of
-another dossier), removal MUST drop only this dossier's membership reference
-and MUST NOT delete the underlying file.
+the operator to Folder Analysis, which owns upload and folder selection; the
+dossier page carries no second uploader or picker (decision 130). The
+membership API MUST add documents as the scenarios below state, and the list
+MUST show a new member without a page reload. Removing a document (GH #50)
+MUST require a confirmation that states whether the file will be trashed or
+only unlinked.
 
 #### Scenario: Added document appears immediately
 
@@ -120,16 +119,30 @@ and MUST NOT delete the underlying file.
 - AND restoring it from the trashbin returns it to the dossier folder
 - @e2e tests/e2e/spec-coverage/dossier-management.spec.ts
 
+#### Scenario: The membership API adds by upload or by reference
+
+- GIVEN a dossier with a bound home folder
+- WHEN a file is uploaded or copied into the dossier through the membership API
+- THEN it is placed in the home folder and recorded in `documents[]`
+- AND a file picked from elsewhere is added by reference only: its node id is appended to `documents[]` and the file is not moved (see REQ-DDDMU-008)
+- @e2e exclude covered by PHPUnit (tests/unit/Service/DossierManagementServiceTest.php::testLinkingAppendsAReferenceWithoutMoving)
+
+#### Scenario: Removal trashes an owned file and unlinks a referenced one
+
+- GIVEN a document in this dossier's home folder that no other dossier holds, and a document that lives elsewhere or that another dossier also holds
+- WHEN the operator removes each and confirms
+- THEN the first is moved to the Nextcloud trashbin (recoverable), never silently hard-deleted
+- AND for the second only this dossier's membership reference is dropped and the underlying file is not deleted
+- @e2e exclude covered by PHPUnit (tests/unit/Service/DossierManagementServiceTest.php::testAFileOnlyThisDossierHoldsIsTrashed, ::testAFileAnotherDossierAlsoHoldsIsUnlinkedEvenFromItsOwnFolder, ::testAFileOutsideTheDossierFolderIsUnlinked)
+
 ### Requirement: Auto-dossier on multi-upload (REQ-DDDMU-005)
 
 The upload dialog of a Filinq upload surface MUST offer to create a dossier
-(GH #47) when more than one document is uploaded in a single action: it
-asks for a dossier name beside the grondslagen choice it already confirms
-for every upload. One dialog serves both cases (the filinq boards draw no
-separate auto-dossier modal; decision 130). Confirming with a name MUST
-create the dossier bound to a new folder containing the uploads; leaving
-the name empty or cancelling MUST NOT create a dossier. A single-document
-upload MUST NOT ask for a dossier name.
+(GH #47) when more than one document is uploaded in one action, asking for a
+dossier name beside the grondslagen choice; one dialog serves both cases
+(decision 130). Confirming with a name MUST create the dossier bound to a
+new folder holding the uploads; an empty name or cancel MUST NOT create one.
+A single-document upload MUST NOT ask for a dossier name.
 
 #### Scenario: Multi-upload triggers the modal, single upload does not
 
@@ -141,17 +154,12 @@ upload MUST NOT ask for a dossier name.
 
 ### Requirement: Dossier-level actions wire existing capabilities (REQ-DDDMU-006)
 
-The dossier detail header MUST offer: **batch anonymize** — starting/linking
-the existing folder-batch flow for the bound folder (deep-linking to the
-redaction-at-scale progress view when installed); **generate grondslagen
-PDF** — calling the existing
-`POST api/anonymization/dossier/{dossierId}/grondslagen-pdf` endpoint, which
-requires the sibling `fix-dossier-grondslagen-route-mismatch` change (this
-change MUST declare that dependency and MUST NOT duplicate the fix); and
-**publish** — the woo-publicatie-pipeline publish entry with the dossier
-preselected, hidden when the pipeline is not installed. No action may
-re-implement batch, report or publication logic. Every presence-gated action
-MUST be hidden, not broken, when its capability is absent.
+The dossier detail header MUST offer **batch anonymize**, **generate
+grondslagen PDF** and **publish**, each wired to the existing capability as
+the scenarios below state. No action may re-implement batch, report or
+publication logic. Every presence-gated action MUST be hidden, not broken,
+when its capability is absent. The change MUST declare its dependency on
+`fix-dossier-grondslagen-route-mismatch` and MUST NOT duplicate that fix.
 
 #### Scenario: Grondslagen PDF from the detail
 
@@ -159,6 +167,15 @@ MUST be hidden, not broken, when its capability is absent.
 - WHEN the operator clicks "Generate grondslagen PDF"
 - THEN the existing endpoint is called and the produced PDF is offered
 - @e2e tests/e2e/workflows/dossier-management.spec.ts
+
+#### Scenario: Each action reuses its existing flow
+
+- GIVEN the dossier detail header
+- WHEN the operator uses an action
+- THEN **batch anonymize** starts or links the existing folder-batch flow for the bound folder, deep-linking to the redaction-at-scale progress view when installed
+- AND **generate grondslagen PDF** calls `POST api/anonymization/dossier/{dossierId}/grondslagen-pdf`
+- AND **publish** opens the woo-publicatie-pipeline publish entry with the dossier preselected, and is hidden when the pipeline is not installed
+- @e2e exclude moved out of the requirement text unchanged; no dedicated test yet
 
 #### Scenario: Publish action is presence-gated
 
@@ -171,12 +188,10 @@ MUST be hidden, not broken, when its capability is absent.
 
 The index and detail MUST render the dossier `status` as a chip (absent =
 `open`) and the detail MUST offer only the transitions the declarative
-lifecycle allows from the current status (`open → in-review`,
-`in-review → processed`, `in-review → open`, `processed → published`,
-`processed → closed`, `published → closed`). A transition writes `status`
-via a full-payload save; an out-of-order direct write is rejected by
-OpenRegister's lifecycle guard (declared in the `dossier-register` delta).
-The UI MUST surface the rejection as a readable error, never silently.
+lifecycle allows from the current status (declared in the `dossier-register`
+delta). A transition writes `status` through a full-payload save;
+OpenRegister's lifecycle guard rejects an out-of-order write. The UI MUST
+surface a rejection as a readable error, never silently.
 
 #### Scenario: Only legal transitions are offered
 
@@ -192,24 +207,21 @@ The UI MUST surface the rejection as a readable error, never silently.
 - THEN OpenRegister rejects the transition and the dossier stays `open`
 - @e2e exclude server-side lifecycle guard — covered by PHPUnit transition tests (tests/unit/Service/DossierManagementServiceTest.php)
 
+#### Scenario: The offered transitions are the declared ones
+
+- GIVEN the declarative lifecycle
+- WHEN the detail lists the targets for each status
+- THEN they are exactly `open → in-review`, `in-review → processed`, `in-review → open`, `processed → published`, `processed → closed` and `published → closed`
+- @e2e exclude covered by PHPUnit (tests/unit/Service/DossierManagementServiceTest.php::testOnlyDeclaredTransitionsAreOffered)
+
 ### Requirement: Multi-dossier membership via an explicit relation list (REQ-DDDMU-008)
 
 A document MAY belong to several dossiers. Membership MUST be tracked by an
 explicit `documents[]` relation list on the `dossier` schema (NC file node
-references — see the `dossier-register` delta) rather than by the bound home
-folder alone; the strict folder=dossier equivalence is relaxed. A dossier's
-membership set that the index count and detail list render MUST be the union
-of the files physically present in its bound home folder and the files
-referenced in `documents[]` (deduplicated). Files uploaded or created through
-the dossier MUST land in the home folder AND be recorded in `documents[]`;
-adding an existing document to a second dossier MUST append its node
-reference to that dossier's `documents[]` and MUST NOT move or copy the file
-(link semantics), so the same document appears in every dossier that
-references it. A `documents[]` entry whose target file no longer exists (or
-the caller cannot read) MUST be rendered as a visible "missing/inaccessible"
-marker, never silently dropped, and MUST NOT break the detail view. All
-membership writes are full-payload PUTs (the saveObject PUT-semantic rule)
-and MUST NOT null the dossier's other fields.
+references), not by the bound home folder alone. The membership the index
+count and the detail list render MUST be the deduplicated union of the files
+in the home folder and those referenced in `documents[]`. All membership
+writes are full-payload saves and MUST NOT null the dossier's other fields.
 
 #### Scenario: One document is a member of two dossiers
 
@@ -225,19 +237,30 @@ and MUST NOT null the dossier's other fields.
 - THEN only B's membership reference is dropped, the underlying file is untouched, and the document still lists in dossier A
 - @e2e tests/e2e/spec-coverage/dossier-management.spec.ts
 
+#### Scenario: Files land in the home folder; existing files are linked
+
+- GIVEN a dossier
+- WHEN a file is uploaded or created through the dossier
+- THEN it lands in the home folder AND is recorded in `documents[]`
+- AND adding an existing document to a second dossier appends its node reference to that dossier's `documents[]` without moving or copying it, so it appears in every dossier that references it
+- @e2e exclude covered by PHPUnit (tests/unit/Service/DossierManagementServiceTest.php::testLinkingAppendsAReferenceWithoutMoving, ::testLinkingIsIdempotent)
+
+#### Scenario: A reference to a missing or unreadable file stays visible
+
+- GIVEN a `documents[]` entry whose file no longer exists or the caller cannot read
+- WHEN the index and the detail render
+- THEN the entry shows as a visible "missing/inaccessible" marker, never silently dropped
+- AND the detail view still renders
+- @e2e exclude covered by PHPUnit (tests/unit/Service/DossierManagementServiceTest.php::testUnresolvableMembershipReferenceIsSurfaced, ::testIndexReportsMissingSeparately)
+
 ### Requirement: Renaming a dossier keeps the bound home folder in sync (REQ-DDDMU-009)
 
-Renaming a dossier MUST attempt to rename the dossier's bound home folder
-(`@self.folder`) to match — whether the rename comes from the inline title
-rename (REQ-DDDMU-003) or the create-time name — keeping the object name and
-its physical home folder in sync rather than diverging. The rename MUST run under the caller's
-NC filesystem ACLs. If the folder cannot be renamed — the caller lacks write
-permission, or a sibling node with the target name already exists — the
-dossier object rename MUST still succeed and the UI MUST surface a readable
-warning that the bound folder was not renamed (a name collision MUST NOT
-silently overwrite or merge folders). Only the dossier's own bound home
-folder is renamed; folders bound to other dossiers and referenced documents
-that live elsewhere are never touched.
+Renaming a dossier, inline (REQ-DDDMU-003) or at creation, MUST attempt to
+rename its bound home folder (`@self.folder`) to match, under the caller's NC
+filesystem ACLs. When the folder cannot be renamed (no write permission, or
+a sibling already has the name), the object rename MUST still succeed and
+the UI MUST show a readable warning; a collision MUST NOT overwrite or merge
+folders. Only the dossier's own home folder is ever renamed.
 
 #### Scenario: Inline rename renames the bound folder
 

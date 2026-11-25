@@ -116,7 +116,7 @@ import { dossierPlan, partitionFiles } from '../../services/anonymizationUpload.
  * @param {Array<File>} files The files to upload.
  * @param {string} name The dossier title, empty for a loose upload.
  * @return {Promise<void>}
- * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
+ * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
  */
 async function uploadPendingFiles(files, name) {
 	if (!name) {
@@ -459,7 +459,7 @@ export default {
 		 * user sees the error inline.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
+		 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
 		 */
 		async confirmDossier() {
 			const name = dossierPlan(this.pendingFiles, this.dossierName).dossierName
@@ -487,7 +487,7 @@ export default {
 		 * open the first uploaded file and close the dialog.
 		 *
 		 * @param {{before: number, firstMime: string}} upload The queue length before the upload and the first file's type.
-		 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
+		 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
 		 */
 		finishUpload(upload) {
 			// The store marks a failed upload on its entry instead of

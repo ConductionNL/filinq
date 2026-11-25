@@ -30,7 +30,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+ * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
  */
 
 declare(strict_types=1);
@@ -49,7 +49,7 @@ use Throwable;
 /**
  * Aggregates and mutates dossiers for the dossier-management surface.
  *
- * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+ * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The aggregation deliberately
  *     wires existing capabilities (bases, folder enumeration, batch state,
@@ -129,7 +129,7 @@ class DossierManagementService implements DossierManagementServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> Index rows.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function index(): array {
 		$objectService = $this->requireObjectService();
@@ -171,7 +171,7 @@ class DossierManagementService implements DossierManagementServiceInterface {
 	 *
 	 * @throws RuntimeException When the caller cannot read the dossier.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 * @spec openspec/changes/companion-knows-the-open-document/specs/companion-page-context/spec.md#requirement-the-dossier-detail-names-its-home-folder-req-ckod-002
 	 */
 	public function detail(string $dossierId): array {
@@ -223,7 +223,7 @@ class DossierManagementService implements DossierManagementServiceInterface {
 	 *
 	 * @throws RuntimeException When the name is empty or the save fails.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function create(string $name, string $description = '', array $bases = []): array {
 		$name = trim($name);
@@ -277,7 +277,7 @@ class DossierManagementService implements DossierManagementServiceInterface {
 	 *
 	 * @throws RuntimeException When the name is empty or the caller cannot read the dossier.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function rename(string $dossierId, string $name): array {
 		$name = trim($name);
@@ -308,7 +308,7 @@ class DossierManagementService implements DossierManagementServiceInterface {
 	 *
 	 * @throws RuntimeException When the transition is not declared, or the save is refused.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function transition(string $dossierId, string $status): array {
 		$object = $this->requireReadable(dossierId: $dossierId);
@@ -353,7 +353,7 @@ class DossierManagementService implements DossierManagementServiceInterface {
 	 *
 	 * @throws RuntimeException When the caller cannot read the dossier or the file.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function linkDocument(string $dossierId, int $fileId): array {
 		$object = $this->requireReadable(dossierId: $dossierId);
@@ -393,7 +393,7 @@ class DossierManagementService implements DossierManagementServiceInterface {
 	 *
 	 * @throws RuntimeException When the caller cannot read the dossier, or with 423 while it is under a legal hold.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function removeDocument(string $dossierId, int $fileId): array {
 		$object = $this->requireReadable(dossierId: $dossierId);
@@ -432,7 +432,7 @@ class DossierManagementService implements DossierManagementServiceInterface {
 	 *
 	 * @return string Either 'trash' or 'unlink'.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function removalMode(string $dossierId, int $fileId): string {
 		try {

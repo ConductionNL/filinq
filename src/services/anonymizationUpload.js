@@ -81,7 +81,7 @@ export function partitionFiles(files) {
  * @param {FileList | File[]} files Files pending upload.
  * @param {string} name The dossier name as typed.
  * @return {{ asksDossierName: boolean, dossierName: string|null }}
- * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
+ * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
  */
 export function dossierPlan(files, name) {
 	const asksDossierName = Array.from(files).length > 1
