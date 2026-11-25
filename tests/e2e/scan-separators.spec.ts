@@ -50,7 +50,7 @@
 // @e2e openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#a-clerk-prints-separators-for-three-cases
 // @e2e openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#an-administrator-adds-a-scanner-profile
 
-import type { APIRequestContext } from '@playwright/test'
+import type { APIRequestContext, Locator, Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
 import { createHash } from 'node:crypto'
@@ -212,6 +212,19 @@ async function deleteIntakeDocuments(request: APIRequestContext, fileIds: number
 	}
 }
 
+/**
+ * An open select's option by its text. NcSelect renders a long label as two
+ * spans (NcEllipsisedOption), so the accessible name reads "Black an d white"
+ * while the text is whole (seen on a live run, 25 Nov 2026).
+ *
+ * @param page The page.
+ * @param text The option text.
+ * @return The option locator.
+ */
+function option(page: Page, text: string | RegExp): Locator {
+	return page.getByRole('option').filter({ hasText: text }).first()
+}
+
 test.describe('scan intake with separator sheets', () => {
 	test.setTimeout(180_000)
 
@@ -241,10 +254,12 @@ test.describe('scan intake with separator sheets', () => {
 		const picker = page.getByTestId('separator-profile')
 		await expect(picker).toBeVisible({ timeout: 15_000 })
 		await picker.locator('.vs__dropdown-toggle').click()
-		await page.getByRole('option', { name: profile.label }).click()
+		await option(page, String(profile.label)).click()
 		await expect(picker).toContainText(String(profile.label))
 
-		await page.getByTestId('separator-case-numbers').locator('textarea').fill(caseNumbers.join('\n'))
+		// NcTextArea hands its data-testid to the textarea itself (Vue 3), so
+		// the box is found by its label (seen on a live run, 25 Nov 2026).
+		await page.getByRole('textbox', { name: /Case numbers, one per line|Zaaknummers, één per regel/ }).fill(caseNumbers.join('\n'))
 
 		const submit = page.getByTestId('cn-dialog-actions-submit')
 		await expect(submit).toHaveText(/Print 3 sheets|3 vellen afdrukken/)
@@ -289,9 +304,9 @@ test.describe('scan intake with separator sheets', () => {
 
 		const selects = form.locator('.v-select')
 		await selects.nth(0).locator('.vs__dropdown-toggle').click()
-		await page.getByRole('option', { name: /^(Black and white|Zwart-wit)$/ }).click()
+		await option(page, /Black and white|Zwart-wit/).click()
 		await selects.nth(1).locator('.vs__dropdown-toggle').click()
-		await page.getByRole('option', { name: /^(Separator sheet with QR code|Scheidingsvel met QR-code)$/ }).click()
+		await option(page, /Separator sheet with QR code|Scheidingsvel met QR-code/).click()
 
 		const declared = page.waitForResponse((res) => res.url().includes('/api/scan/profiles') && res.request().method() === 'POST')
 		await page.getByTestId('scan-profile-add').click()

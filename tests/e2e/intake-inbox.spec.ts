@@ -116,8 +116,11 @@ async function pickerTitles(request: APIRequestContext): Promise<{ register: str
  */
 async function pick(select: Locator, label: string): Promise<void> {
 	await select.locator('.vs__dropdown-toggle').click()
-	await select.locator('input.vs__search').fill(label)
-	await select.page().getByRole('option', { name: label, exact: true }).click()
+	// The opened select has focus on its search box: type into it. Its
+	// options are matched by text, as NcSelect may split a long label over
+	// two spans and so its accessible name (seen on a live run, 25 Nov 2026).
+	await select.page().keyboard.type(label)
+	await select.page().getByRole('option').filter({ hasText: label }).first().click()
 	await expect(select).toContainText(label)
 }
 

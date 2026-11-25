@@ -56,6 +56,16 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	private const REGISTRATION_SCHEMA = 'documentRegistration';
 
 	/**
+	 * The intake document's read-only fields: computed on every read, refused
+	 * by OpenRegister on a save. Kept equal to the `readOnly`/`computed`
+	 * properties of `intakeDocument` in lib/Settings/filinq_register.json
+	 * (IntakeRepositoryTest pins that).
+	 *
+	 * @var array<int, string>
+	 */
+	public const READ_ONLY_FIELDS = ['daysLeft'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
@@ -345,10 +355,16 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 *
 	 * @throws RuntimeException When the write fails.
 	 *
+	 * A document as read carries computed fields (`daysLeft`); they are left
+	 * out, as OpenRegister refuses a save that writes a read-only field
+	 * (every assign answered 500 on a live run, 25 Nov 2026).
+	 *
 	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.2
 	 */
 	public function save(array $document, ?string $uuid = null): array {
 		unset($document['uuid']);
+		$document = array_diff_key($document, array_flip(self::READ_ONLY_FIELDS));
 
 		try {
 			$arguments = [

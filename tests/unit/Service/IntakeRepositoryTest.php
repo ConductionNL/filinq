@@ -237,6 +237,51 @@ class IntakeRepositoryTest extends TestCase {
 	}//end testSaveKeepsTheUuidOutOfThePayload()
 
 	/**
+	 * A document as read carries the computed daysLeft; the save leaves it
+	 * out, as OpenRegister refuses a write of a read-only field.
+	 *
+	 * @return void
+	 */
+	public function testSaveLeavesTheComputedFieldsOut(): void {
+		$this->objectService->expects($this->once())
+			->method('saveObject')
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => ['title' => 'Brief', 'status' => 'assigned'],
+					'register' => 'filinq',
+					'schema' => 'intakeDocument',
+					'uuid' => 'u-1',
+				]))
+			->willReturn(['title' => 'Brief', 'status' => 'assigned', 'daysLeft' => 3]);
+
+		$stored = $this->repository->save(['title' => 'Brief', 'status' => 'assigned', 'daysLeft' => 3], 'u-1');
+		$this->assertSame('assigned', $stored['status']);
+
+	}//end testSaveLeavesTheComputedFieldsOut()
+
+	/**
+	 * The list of read-only fields is the schema's: every intakeDocument
+	 * property marked readOnly or computed in the register, and no other.
+	 *
+	 * @return void
+	 */
+	public function testTheReadOnlyFieldsAreTheSchemasOwn(): void {
+		$register   = json_decode((string) file_get_contents(__DIR__.'/../../../lib/Settings/filinq_register.json'), true);
+		$properties = $register['components']['schemas']['intakeDocument']['properties'];
+		$fromSchema = [];
+		foreach ($properties as $name => $property) {
+			if (is_array($property) === true && (($property['readOnly'] ?? false) === true || isset($property['computed']) === true)) {
+				$fromSchema[] = $name;
+			}
+		}
+
+		sort($fromSchema);
+		$declared = IntakeRepository::READ_ONLY_FIELDS;
+		sort($declared);
+		$this->assertSame($fromSchema, $declared);
+
+	}//end testTheReadOnlyFieldsAreTheSchemasOwn()
+
+	/**
 	 * A failed write is logged and raised.
 	 *
 	 * @return void
