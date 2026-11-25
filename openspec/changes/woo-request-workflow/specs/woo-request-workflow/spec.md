@@ -53,13 +53,13 @@ The error SHALL name every problem found, not only the first.
 - GIVEN a `wooDecision` whose document 3 has assessment `withhold` and no ground code
 - WHEN dossiq dispatches the generation for `woo-besluit`
 - THEN `isHandled()` is false, `getError()` names document 3 and the missing ground, and no file exists
-- @e2e exclude an in-process command; covered by PHPUnit `WooDecisionContextBuilderTest::testAWithheldDocumentNeedsAGround`
+- @e2e exclude an in-process command; covered by PHPUnit `DisclosureDecisionContextBuilderTest::testAWithheldDocumentNeedsAGround`
 
 #### Scenario: every problem is named at once
 - GIVEN a `wooDecision` without `decisionDate` and with two documents numbered 4
 - WHEN the generation is dispatched
 - THEN `getError()` names the missing `decisionDate` and the duplicate number 4
-- @e2e exclude an in-process command; covered by PHPUnit `WooDecisionContextBuilderTest::testAllProblemsAreReported`
+- @e2e exclude an in-process command; covered by PHPUnit `DisclosureDecisionContextBuilderTest::testAllProblemsAreReported`
 
 ### Requirement: Grounds are printed by label and article, never as a bare code (REQ-DDWRW-011)
 
@@ -75,13 +75,13 @@ an old decision.
 - GIVEN a partly disclosed document citing ground code `5.1.2.e`
 - WHEN the decision letter is rendered
 - THEN the letter cites article 5.1, second paragraph, under e, with its label, and the code alone appears nowhere without its label
-- @e2e exclude needs dossiq's list; covered by PHPUnit `WooDecisionContextBuilderTest::testGroundsAreResolvedToLabels` with the real `WooRefusalGrounds` return shape
+- @e2e exclude needs dossiq's list; covered by PHPUnit `DisclosureDecisionContextBuilderTest::testGroundsAreResolvedToLabels` with the real `WooRefusalGrounds` return shape
 
 #### Scenario: an unknown ground is refused
 - GIVEN a ground code `5.9.9` the list does not hold
 - WHEN the generation is dispatched
 - THEN it is refused naming `5.9.9`
-- @e2e exclude an in-process command; covered by PHPUnit `WooDecisionContextBuilderTest::testAnUnknownGroundIsRefused`
+- @e2e exclude an in-process command; covered by PHPUnit `DisclosureDecisionContextBuilderTest::testAnUnknownGroundIsRefused`
 
 ### Requirement: The decision letter and the inventory agree (REQ-DDWRW-007)
 

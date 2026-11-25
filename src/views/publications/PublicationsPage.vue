@@ -501,7 +501,7 @@ export default {
 		 * Whether the record has a published copy to download.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-3.3
 		 */
 		downloadAllowed() {
 			return ['handed_off', 'published'].includes(this.record?.status) && Boolean(this.record?.redactedFileRef)
@@ -704,7 +704,7 @@ export default {
 		/**
 		 * Download the published copy, or show the agreement to accept first.
 		 *
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-3.3
 		 */
 		async download() {
 			this.busy = true
@@ -730,7 +730,7 @@ export default {
 		/**
 		 * Accept the agreement shown, then download.
 		 *
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-3.3
 		 */
 		async acceptAndDownload() {
 			const pending = this.pendingAgreement

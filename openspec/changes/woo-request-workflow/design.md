@@ -12,11 +12,11 @@ package assembly half of D6 moves to dossiq.
 
 ### R1. Where the contract check runs
 
-`WooDecisionContextBuilder::build(array $wooDecision, bool $allowRetiredGrounds): array`
+`DisclosureDecisionContextBuilder::build(array $wooDecision, bool $allowRetiredGrounds): array`
 runs inside `DocumentGenerationRequestService::generate()` after the template
 is resolved and before `generateFromTemplate()`, only when the resolved
 template declares `dataContract: woo-decision`. It throws
-`WooDecisionContractException` carrying every problem; the listener already
+`DisclosureDecisionContractException` carrying every problem; the listener already
 turns an exception into `setError()`, so no file is written. The enriched
 context replaces `data.wooDecision` and adds `grounds` per document as
 `{code, article, label}`.

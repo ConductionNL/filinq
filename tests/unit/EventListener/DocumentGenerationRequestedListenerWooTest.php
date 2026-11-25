@@ -46,7 +46,7 @@ use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateSlugResolver;
-use OCA\Filinq\Service\Woo\WooDecisionContextBuilder;
+use OCA\Filinq\Service\Disclosure\DisclosureDecisionContextBuilder;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IUser;
@@ -62,10 +62,10 @@ use Psr\Log\NullLogger;
  * @covers \OCA\Filinq\Service\DocumentGenerationRequestService
  * @uses   \OCA\Filinq\Event\DocumentGenerationRequestedEvent
  * @uses   \OCA\Filinq\Event\DocumentGeneratedEvent
- * @uses   \OCA\Filinq\Exception\WooDecisionContractException
+ * @uses   \OCA\Filinq\Exception\DisclosureDecisionContractException
  * @uses   \OCA\Filinq\Service\DocumentGenerationRequestRules
  * @uses   \OCA\Filinq\Service\DocumentService
- * @uses   \OCA\Filinq\Service\Woo\WooDecisionContextBuilder
+ * @uses   \OCA\Filinq\Service\Disclosure\DisclosureDecisionContextBuilder
  * @uses   \OCA\Filinq\Service\Grounds\RefusalGroundsResolver
  * @uses   \OCA\Filinq\Service\TemplateRenderer
  * @uses   \OCA\Filinq\Service\Charts\ChartSvgRenderer
@@ -163,7 +163,13 @@ final class DocumentGenerationRequestedListenerWooTest extends TestCase {
 			objectResolver: $objects,
 			userSession: $session,
 			eventDispatcher: $dispatcher,
-			wooDecisions: new WooDecisionContextBuilder(new RefusalGroundsResolver($apps, $this->createMock(ContainerInterface::class), new NullLogger()))
+			wooDecisions: new DisclosureDecisionContextBuilder(
+				grounds: new RefusalGroundsResolver(
+					appManager: $apps,
+					container: $this->createMock(originalClassName: ContainerInterface::class),
+					logger: new NullLogger()
+				)
+			)
 		);
 
 		return new DocumentGenerationRequestedListener(generator: $service, logger: new NullLogger());

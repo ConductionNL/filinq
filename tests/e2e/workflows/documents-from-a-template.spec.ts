@@ -213,7 +213,7 @@ test.describe('Documents from a template', () => {
 		).toBe(false)
 	})
 
-	// @e2e openspec/changes/specify-capability-rows/specs/document-creatie-sjablonen/spec.md#a-beleidsregel-is-reviewed
+	// @e2e openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-creatie-sjablonen/spec.md#a-beleidsregel-is-reviewed
 	test('the owner marks a due document reviewed on My documents and it leaves the list', async ({
 		page,
 	}) => {

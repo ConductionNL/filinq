@@ -19,7 +19,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Throwable;
 /**
  * Lists the work that waits for one person (REQ-SCR-006).
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
  */
 class WaitingWorkService implements WaitingWorkServiceInterface {
 
@@ -103,7 +103,7 @@ class WaitingWorkService implements WaitingWorkServiceInterface {
 	 *
 	 * @throws RuntimeException When there is no person.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
 	 */
 	public function listFor(string $userId): array {
 		if ($userId === '') {

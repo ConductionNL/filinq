@@ -983,7 +983,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-a-publication-goes-offline-when-its-source-document-is-destroyed-req-scr-009
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-a-publication-goes-offline-when-its-source-document-is-destroyed-req-scr-009
 	 */
 	public function testADestroyedSourceWithdrawsItsPublication(): void {
 		$pipeline = $this->pipeline();

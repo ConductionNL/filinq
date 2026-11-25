@@ -22,27 +22,27 @@ renders any data it is given.
 
 ## 2. The contract
 
-- [x] 2.1 `WooDecisionContextBuilder` and its hook in the generator (REQ-DDWRW-010, design R1). Files: `lib/Service/Woo/WooDecisionContextBuilder.php`, `lib/Exception/WooDecisionContractException.php`, `lib/Service/DocumentGenerationRequestService.php` (call the builder only for `dataContract: woo-decision`).
+- [x] 2.1 `DisclosureDecisionContextBuilder` and its hook in the generator (REQ-DDWRW-010, design R1). Files: `lib/Service/Disclosure/DisclosureDecisionContextBuilder.php`, `lib/Exception/DisclosureDecisionContractException.php`, `lib/Service/DocumentGenerationRequestService.php` (call the builder only for `dataContract: woo-decision`).
   - GIVEN a withheld document without a ground WHEN dispatched THEN refused naming it, and no file.
   - GIVEN a missing `decisionDate` and a duplicate inventory number WHEN dispatched THEN both named in one error.
   - GIVEN a template without the contract WHEN generated THEN behaviour is as today.
-  - Test: PHPUnit `WooDecisionContextBuilderTest::testAWithheldDocumentNeedsAGround`, `::testAllProblemsAreReported`, `::testOtherTemplatesAreUntouched`. `testAWithheldDocumentNeedsAGround` must be shown failing on `development` first; paste the line in the PR body.
-- [x] 2.2 Grounds by label (REQ-DDWRW-011). Files: `lib/Service/Woo/WooDecisionContextBuilder.php`, the grounds resolver class shared with `grondslagen-read-from-dossiq` (`lib/Service/Grounds/RefusalGroundsResolver.php`; whichever change lands first creates it, the other reuses it).
+  - Test: PHPUnit `DisclosureDecisionContextBuilderTest::testAWithheldDocumentNeedsAGround`, `::testAllProblemsAreReported`, `::testOtherTemplatesAreUntouched`. `testAWithheldDocumentNeedsAGround` must be shown failing on `development` first; paste the line in the PR body.
+- [x] 2.2 Grounds by label (REQ-DDWRW-011). Files: `lib/Service/Disclosure/DisclosureDecisionContextBuilder.php`, the grounds resolver class shared with `grondslagen-read-from-dossiq` (`lib/Service/Grounds/RefusalGroundsResolver.php`; whichever change lands first creates it, the other reuses it).
   - GIVEN code `5.1.2.e` WHEN resolved THEN `{code, article, label}` reaches the template.
   - GIVEN an unknown code, or a retired one without `allowRetiredGrounds` WHEN dispatched THEN refused naming it.
-  - Test: PHPUnit `WooDecisionContextBuilderTest::testGroundsAreResolvedToLabels`, `::testAnUnknownGroundIsRefused`, `::testARetiredGroundNeedsTheFlag`. Double the resolver from the real return shape of `OCA\Dossiq\Woo\WooRefusalGrounds::byCode()` (keys `id, code, article, paragraph, letter, label, description, parent, status, legalSource`, as `dossiq/woo-refusal-grounds-list` design D-3 fixes it). Read the class on dossiq `development` before writing the double; if it is not merged yet, say so in the PR body.
+  - Test: PHPUnit `DisclosureDecisionContextBuilderTest::testGroundsAreResolvedToLabels`, `::testAnUnknownGroundIsRefused`, `::testARetiredGroundNeedsTheFlag`. Double the resolver from the real return shape of `OCA\Dossiq\Woo\WooRefusalGrounds::byCode()` (keys `id, code, article, paragraph, letter, label, description, parent, status, legalSource`, as `dossiq/woo-refusal-grounds-list` design D-3 fixes it). Read the class on dossiq `development` before writing the double; if it is not merged yet, say so in the PR body.
 
 ## 3. The two documents
 
 - [x] 3.1 Template bodies and agreement (REQ-DDWRW-007). Files: the two template bodies in the seed, `tests/fixtures/woo-decision.json` (three documents: disclose, partially disclose, withhold).
   - GIVEN the fixture WHEN both templates render THEN the letter cites documents 2 and 3 with grounds in words, the inventory lists 1 to 3 with the same numbers and assessments, and document 2 is never shown as disclosed.
-  - Test: PHPUnit `WooDecisionTemplatesTest::testTheLetterAndTheInventoryAgree` renders the real seeded bodies through the real generator with only storage doubled.
+  - Test: PHPUnit `DisclosureDecisionTemplatesTest::testTheLetterAndTheInventoryAgree` renders the real seeded bodies through the real generator with only storage doubled.
 - [x] 3.2 Through the command, as dossiq calls it (wiring). Files: `tests/Unit/EventListener/DocumentGenerationRequestedListenerWooTest.php`, `docs/features/woo-decision-templates.md` (the `wooDecision` keys, the refusals, the result keys, and that dossiq or decidiq is the caller).
   - GIVEN the real `DocumentGenerationRequestedEvent` with `templateSlug: woo-besluit` and the fixture, dispatched through a real `IEventDispatcher` wired by `Application::register()` THEN `isHandled()` is true and `getResult()['fileId']` is set.
   - GIVEN the same with a withheld document without a ground THEN `getError()` is set and `isHandled()` is false.
   - Test: the listener test above.
   - Cross-app: record in the PR body that dossiq's `FilinqTemplateEngineAdapter` (or decidiq's, if the besluit raise moves) must send `templateSlug` and `data.wooDecision` in this shape, with a test on that side using the same event class.
-  - As built: Dutch bodies (letter: decision kind, then disclosed / partly disclosed / withheld sections by inventory number with grounds as label, article and code; inventory: one row per document in the caller's order). `WooDecisionTemplatesTest` renders both through `DocumentService` with the real Twig renderer and the real contract builder over the shipped grounds snapshot; the template store and data resolver are doubled as well as storage.
+  - As built: Dutch bodies (letter: decision kind, then disclosed / partly disclosed / withheld sections by inventory number with grounds as label, article and code; inventory: one row per document in the caller's order). `DisclosureDecisionTemplatesTest` renders both through `DocumentService` with the real Twig renderer and the real contract builder over the shipped grounds snapshot; the template store and data resolver are doubled as well as storage.
   - As built: `tests/unit/EventListener/DocumentGenerationRequestedListenerWooTest.php` (the repo keeps unit tests under `tests/unit/`) sends the real event through the real listener, request service, contract builder, generator and Twig renderer; the template store, data resolver, Files storage and the outgoing dispatcher are doubled, because the unit suite has no Nextcloud server to build `Application::register()`'s dispatcher. The caller sends `templateNamespace: woo` with the slug. `docs/features/woo-decision-templates.md` documents the keys, the refusals, the result keys and the callers.
 
 ## 4. Delivery

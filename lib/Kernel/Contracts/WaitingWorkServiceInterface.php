@@ -48,7 +48,7 @@ interface WaitingWorkServiceInterface {
 	 *
 	 * @throws RuntimeException When there is no person.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
 	 */
 	public function listFor(string $userId): array;
 }//end interface

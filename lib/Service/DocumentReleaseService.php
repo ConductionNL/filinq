@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-5.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -53,7 +53,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-5.1
  */
 class DocumentReleaseService implements DocumentReleaseServiceInterface {
 	use ReadsCurrentUserId;
@@ -115,7 +115,7 @@ class DocumentReleaseService implements DocumentReleaseServiceInterface {
 	 * @throws DomainLinkRefusedException When the caller may not write the record.
 	 * @throws RuntimeException When the request is incomplete or the release cannot be stored.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-5.1
 	 */
 	public function release(string $uuid, array $record, string $contactRef, string $kind = 'document'): array {
 		$record = $this->requireRecord(record: $record);
@@ -162,7 +162,7 @@ class DocumentReleaseService implements DocumentReleaseServiceInterface {
 	 * @throws DomainLinkRefusedException When the caller may not write the release's record.
 	 * @throws RuntimeException When there is no such release or it cannot be stored.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-5.1
 	 */
 	public function withdraw(string $releaseId): array {
 		$release = $this->find(releaseId: $releaseId);
@@ -201,7 +201,7 @@ class DocumentReleaseService implements DocumentReleaseServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The entry, or none.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-5.1
 	 */
 	public function portalEntries(string $releaseId): array {
 		try {

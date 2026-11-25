@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Woo Decision Contract Exception
+ * Disclosure Decision Contract Exception
  *
  * A Woo decision the generator was asked to render does not meet the
  * `woo-decision` data contract.
@@ -29,7 +29,7 @@ use UnexpectedValueException;
  *
  * @spec openspec/changes/woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-woo-decision-data-contract-is-checked-before-anything-is-rendered-req-ddwrw-010
  */
-final class WooDecisionContractException extends UnexpectedValueException {
+final class DisclosureDecisionContractException extends UnexpectedValueException {
 
 	/**
 	 * Constructor.

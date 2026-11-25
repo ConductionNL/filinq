@@ -54,7 +54,7 @@ export default {
 	/**
 	 * Read what is due for review.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.4
 	 */
 	mounted() {
 		this.load()
@@ -69,7 +69,7 @@ export default {
 		 * @param {object} document The document.
 		 * @return {string} The uuid.
 		 *
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.4
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.4
 		 */
 		uuidOf(document) {
 			return document.uuid || document.id || document['@self']?.id || ''
@@ -88,7 +88,7 @@ export default {
 		/**
 		 * Read the documents due for review.
 		 *
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.4
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.4
 		 */
 		async load() {
 			this.loading = true
@@ -107,7 +107,7 @@ export default {
 		 * Mark one document reviewed; it leaves the list.
 		 *
 		 * @param {object} document The document.
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.4
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.4
 		 */
 		async markReviewed(document) {
 			this.busy = true

@@ -6,7 +6,7 @@
 /**
  * The columns of the flat file list a user may sort on.
  *
- * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-the-flat-file-list-sorts-on-any-column-req-scr-005
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-the-flat-file-list-sorts-on-any-column-req-scr-005
  */
 export const SORT_KEYS = ['name', 'mtime', 'size', 'status']
 
@@ -36,7 +36,7 @@ function valueOf(row, key) {
  * @param {{key: string, direction: string}} sort The column and `asc` or `desc`.
  * @return {Array<object>} The sorted rows.
  *
- * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-the-flat-file-list-sorts-on-any-column-req-scr-005
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-the-flat-file-list-sorts-on-any-column-req-scr-005
  */
 export function sortDocumentRows(rows, sort) {
 	const key = SORT_KEYS.includes(sort?.key) ? sort.key : 'name'
@@ -61,7 +61,7 @@ export function sortDocumentRows(rows, sort) {
  * @param {string} key The column chosen.
  * @return {{key: string, direction: string}} The next order.
  *
- * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-the-flat-file-list-sorts-on-any-column-req-scr-005
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-the-flat-file-list-sorts-on-any-column-req-scr-005
  */
 export function nextSort(current, key) {
 	if (current?.key === key) {

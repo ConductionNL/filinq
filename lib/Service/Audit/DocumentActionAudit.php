@@ -45,7 +45,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
  */
 class DocumentActionAudit {
 
@@ -97,7 +97,7 @@ class DocumentActionAudit {
 	 *
 	 * @throws InvalidArgumentException For an action not in {@see self::ACTIONS}.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
 	 */
 	public function record(int $fileId, string $action, array $context = []): bool {
 		if (in_array($action, self::ACTIONS, true) === false) {
@@ -145,7 +145,7 @@ class DocumentActionAudit {
 	 *
 	 * @return list<array{id: string, action: string, user: string, userName: string, created: string}> The entries; empty without a record.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
 	 */
 	public function trail(int $fileId): array {
 		$uuid = $this->recordUuid(fileId: $fileId);
@@ -183,7 +183,7 @@ class DocumentActionAudit {
 	 *
 	 * @return array{id: string, action: string, user: string, userName: string, created: string}
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
 	 */
 	private function entry(array $data): array {
 		$created = $data['created'] ?? '';
