@@ -190,7 +190,11 @@ class WaarmerkStore {
 			operation: $search
 		);
 
-		return is_array($rows) === true ? $rows : [];
+		if (is_array($rows) === false) {
+			return [];
+		}
+
+		return $rows;
 
 	}//end acrossOrganisations()
 

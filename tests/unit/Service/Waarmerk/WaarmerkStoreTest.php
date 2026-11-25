@@ -230,9 +230,9 @@ class WaarmerkStoreTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheLookupByCodeRunsThroughTheSystemContextSeam(): void {
-		$objects = $this->createMock(ObjectService::class);
-		$contract = $this->createMock(ObjectServiceInterface::class);
-		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
+		$objects = $this->createMock(originalClassName: ObjectService::class);
+		$contract = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$resolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objects);
 		$resolver->method('contract')->willReturn($contract);
 		$asSystem = 0;
@@ -243,10 +243,10 @@ class WaarmerkStoreTest extends TestCase {
 			}
 		);
 		$objects->method('searchObjectsBySlug')->willReturn([$this->seal()]);
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->once())->method('info')->with(
 			$this->anything(),
-			$this->callback(fn (array $context): bool => str_contains((string) $context['reason'], 'verification code'))
+			$this->callback(callback: fn (array $context): bool => str_contains((string) $context['reason'], 'verification code'))
 		);
 
 		$store = new WaarmerkStore(objectResolver: $resolver, seam: new SystemContextSeam(logger: $logger));
