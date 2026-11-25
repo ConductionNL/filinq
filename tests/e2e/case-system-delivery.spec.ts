@@ -21,7 +21,7 @@
  *   REQ-GSC-002 a generation stored with a case-system destination is queued
  *   REQ-GSC-003 a written-back delivery shows its badge on /my-documents
  *
- * @spec openspec/changes/generate-store-in-case-system/specs
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs
  */
 import type { Page } from '@playwright/test'
 

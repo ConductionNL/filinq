@@ -2201,7 +2201,7 @@
 				"evidence": "lib/Service/DocumentService.php:734 storeOutputIfRequested() + options.output.mode/caseId (line 258); reached by dossiq: procest/lib/Service/Beschikking/FilinqTemplateEngineAdapter.php:152-169 calls generateDocument(..., ['output'=>['mode'=>'both'], 'caseId'=>$caseId, ...]) for every beschikking, and dossiq's CaseDocumentGenerationController files the returned informatieobject on the case.",
 				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template",
 				"requirement": "openspec/specs/document-creatie-sjablonen :: REQ-DCS-08 Zaaksysteem Integration (Priority: Should)",
-				"plan": "openspec/changes/generate-store-in-case-system"
+				"plan": "openspec/changes/archive/2026-11-25-generate-store-in-case-system"
 			},
 			"reachedOn": "machine consumer: dossiq (procest/dq-flow) CaseDocumentGenerationController -> BeschikkingGenerationService/FilinqTemplateEngineAdapter",
 			"provider": "filinq",

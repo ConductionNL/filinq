@@ -72,4 +72,4 @@ delivery goes back to Waiting, without its error, and no second delivery is
 made (`POST api/bridge/deliveries/{id}/retry`, administrators only). Only a
 failed delivery can be retried; any other state answers `409`.
 
-<!-- Screenshot of the case-system panel with a delivery: to be captured on a live instance. -->
+![The case-system section of the admin settings with a waiting and a failed delivery](/screenshots/case-system-delivery-panel.png)
