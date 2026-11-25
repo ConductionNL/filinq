@@ -111,12 +111,16 @@ class PolicyRuleScopeTest extends TestCase {
 			 * @return mixed
 			 */
 			public function __call(string $name, array $arguments): mixed {
-				return ($name === 'getUuid') ? 'org-magic' : null;
+				if ($name === 'getUuid') {
+					return 'org-magic';
+				}
+
+				return null;
 			}
 		};
 
-		self::assertFalse(method_exists($organisation, 'getUuid'));
-		self::assertSame('org-magic', $this->scope(signedIn: true, answer: $organisation)->organisation());
+		self::assertFalse(condition: method_exists($organisation, 'getUuid'));
+		self::assertSame(expected: 'org-magic', actual: $this->scope(signedIn: true, answer: $organisation)->organisation());
 	}//end testAnOrganisationWithAMagicGetterIsTheScope()
 
 	/**

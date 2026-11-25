@@ -82,17 +82,21 @@ class LegalHoldRecordFreezeTest extends TestCase {
 			 * @return mixed
 			 */
 			public function __call(string $name, array $arguments): mixed {
-				return ($name === 'getRetention') ? [] : null;
+				if ($name === 'getRetention') {
+					return [];
+				}
+
+				return null;
 			}
 		};
-		$objects = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+		$objects = $this->createMock(originalClassName: \OCA\OpenRegister\Service\ObjectService::class);
 		$objects->method('find')->willReturn($record);
-		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
+		$resolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objects);
-		$freeze = new LegalHoldRecordFreeze(objectResolver: $resolver, locator: $this->createMock(OpenRegisterServiceLocator::class));
+		$freeze = new LegalHoldRecordFreeze(objectResolver: $resolver, locator: $this->createMock(originalClassName: OpenRegisterServiceLocator::class));
 
-		self::assertFalse(method_exists($record, 'getRetention'));
-		self::assertSame($record, $freeze->load(ref: 'doc-1'));
+		self::assertFalse(condition: method_exists($record, 'getRetention'));
+		self::assertSame(expected: $record, actual: $freeze->load(ref: 'doc-1'));
 	}//end testARecordWithAMagicRetentionGetterLoads()
 
 	/**
