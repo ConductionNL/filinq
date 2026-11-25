@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
  * Resolves `verify/<id>` against routes.php the way the router does: the
  * first route whose path and requirements match wins.
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
  */
 class VerifyPageRoutingTest extends TestCase {
 
@@ -60,7 +60,7 @@ class VerifyPageRoutingTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
 	 */
 	public function testASignatureTokenOpensTheSignaturePage(): void {
 		$token = bin2hex(random_bytes(16));
@@ -75,7 +75,7 @@ class VerifyPageRoutingTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
 	 */
 	public function testAWaarmerkCodeStillOpensTheWaarmerkPage(): void {
 		$uuid = '3b4c187c-d7b8-4b23-a0db-abaa2382215e';

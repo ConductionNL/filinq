@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -48,7 +48,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.1
  */
 class SignatureVerificationLinkService implements SignatureVerificationLinksInterface {
 	use ReadsStoredObjectRows;
@@ -105,7 +105,7 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @return bool True for a well-formed, non-nil token.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.1
 	 */
 	public static function isWellFormed(string $token): bool {
 		return preg_match('/^[0-9a-f]{32}$/', $token) === 1 && $token !== self::NIL_TOKEN;
@@ -119,7 +119,7 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @return string The token.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function newToken(): string {
 		do {
@@ -142,8 +142,8 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @throws RuntimeException When the token is malformed or the record cannot be stored.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function mint(string $signedBytes, string $fileRef, string $fileName, ?string $waarmerkRef = null, ?string $token = null): array {
 		$record = [
@@ -212,7 +212,7 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @return array<string, mixed> The neutral `unknown` verdict.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
 	 */
 	public static function unknownVerdict(): array {
 		return SigningVerificationService::unknownVerdict();
@@ -228,7 +228,7 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @throws RuntimeException When the records cannot be read.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
 	 */
 	public function verdictFor(string $token): array {
 		$record = $this->findByToken(token: $token);
@@ -252,7 +252,7 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @throws RuntimeException When the records cannot be read, as opposed to finding nothing.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.1
 	 */
 	public function findByToken(string $token): ?array {
 		if (self::isWellFormed(token: $token) === false) {

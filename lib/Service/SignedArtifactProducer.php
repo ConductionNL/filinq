@@ -109,7 +109,7 @@ class SignedArtifactProducer {
 	 *
 	 * @return string|null The token, or null when verification records are not available.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function newVerificationToken(): ?string {
 		return $this->verificationLinks?->newToken();
@@ -138,7 +138,7 @@ class SignedArtifactProducer {
 	 * @spec openspec/specs/document-signing/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function produce(array $request, ?array $verifiedActor = null, array $signers = [], ?string $verificationToken = null): string {
 		$fileId = (int)($request['documentFileId'] ?? 0);
@@ -210,7 +210,7 @@ class SignedArtifactProducer {
 	 *
 	 * @return string|null The verification token, or null when none was minted.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function recordVerification(array $request, string $signedDocumentRef, ?string $token = null): ?string {
 		if ($this->verificationLinks === null) {

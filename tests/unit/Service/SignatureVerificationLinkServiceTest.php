@@ -9,7 +9,7 @@
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-4.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -338,7 +338,7 @@ class SignatureVerificationLinkServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.1
 	 */
 	public function testTheTokenLookupRunsThroughTheSeam(): void {
 		$seam = new class($this->createMock(originalClassName: LoggerInterface::class)) extends SystemContextSeam {
