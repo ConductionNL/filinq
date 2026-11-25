@@ -206,7 +206,7 @@ class IntakeDefaultRuleService {
 	 *
 	 * @return array<string, mixed>|null The rule, or null when none has that uuid.
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
 	 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-the-brp-is-asked-only-under-a-declared-purpose-req-ibr-002
 	 */
 	public function findRule(string $uuid): ?array {

@@ -347,7 +347,10 @@ class RedactionIrreversibilityVerifier {
 			$needles[$text] = true;
 		}
 
-		return array_keys($needles);
+		// A key of digits only becomes an int in PHP, so a phone number or a
+		// BSN came back as an int and str_contains() refused it: every copy
+		// that redacted a number answered 500. The keys are text again here.
+		return array_map(strval(...), array_keys($needles));
 	}//end needles()
 
 	/**

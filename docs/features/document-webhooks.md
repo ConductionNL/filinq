@@ -33,6 +33,11 @@ As an admin, open filinq's admin settings and go to **Document webhooks**.
 4. Add the receiver, then **Send a test**. The row shows whether the last
    delivery arrived.
 
+![The Document webhooks section in filinq's admin settings: one receiver for Document signed and Document registered with its Send a test and Delete buttons, above the form to add another](/screenshots/document-webhooks-settings.png)
+
+When the receiver cannot be reached, **Send a test** says *The test did not
+arrive*; OpenRegister keeps the failed attempt in the delivery log.
+
 The receiver is an ordinary OpenRegister webhook, so it is also listed on
 OpenRegister's own webhook page. When the OpenRegister on the server cannot
 deliver filinq's events yet, the section says *Delivery is not available on

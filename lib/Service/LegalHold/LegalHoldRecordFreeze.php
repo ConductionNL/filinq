@@ -104,7 +104,7 @@ class LegalHoldRecordFreeze {
 	 */
 	public function load(string $ref): ?object {
 		$entity = $this->objectResolver->resolve()->find(id: $ref, options: new ObjectFindOptions(render: false), _rbac: false);
-		if (is_object($entity) === false || method_exists($entity, 'getRetention') === false) {
+		if (is_object($entity) === false || is_callable([$entity, 'getRetention']) === false) {
 			return null;
 		}
 
@@ -131,7 +131,7 @@ class LegalHoldRecordFreeze {
 			return null;
 		}
 
-		if (is_object($entity) === false || method_exists($entity, 'getRetention') === false) {
+		if (is_object($entity) === false || is_callable([$entity, 'getRetention']) === false) {
 			return null;
 		}
 
