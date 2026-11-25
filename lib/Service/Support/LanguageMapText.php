@@ -49,18 +49,16 @@ final class LanguageMapText {
 			return '';
 		}
 
-		foreach (['nl', 'en'] as $language) {
-			if (is_scalar($value[$language] ?? null) === true && (string) $value[$language] !== '') {
-				return (string) $value[$language];
-			}
+		$texts = array_filter(
+			$value,
+			static fn (mixed $candidate): bool => is_scalar($candidate) === true && (string) $candidate !== ''
+		);
+		$preferred = ($texts['nl'] ?? $texts['en'] ?? reset($texts));
+
+		if ($preferred === false) {
+			return '';
 		}
 
-		foreach ($value as $candidate) {
-			if (is_scalar($candidate) === true && (string) $candidate !== '') {
-				return (string) $candidate;
-			}
-		}
-
-		return '';
+		return (string) $preferred;
 	}//end text()
 }//end class

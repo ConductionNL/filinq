@@ -24,8 +24,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Controller\Support;
 
-use OCA\Filinq\Service\Support\LanguageMapText;
-
 /**
  * Resolves language-keyed values in rows an answer is about to show.
  *
@@ -101,6 +99,12 @@ final class TranslatableDisplay {
 			}
 		}
 
-		return (new LanguageMapText())->text(value: $map);
+		foreach ($map as $candidate) {
+			if (is_scalar($candidate) === true && (string) $candidate !== '') {
+				return (string) $candidate;
+			}
+		}
+
+		return '';
 	}//end text()
 }//end class
