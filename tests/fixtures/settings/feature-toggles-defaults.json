@@ -96,6 +96,7 @@
         "string pseudonymisation_restore_allowed_groups []",
         "string legal_hold_authority_groups []",
         "string filinq.confidentiality.label_vocabulary ",
+        "string filinq.confidentiality.prioritise_analysis ",
         "bool filinq.confidentiality.prioritise_analysis false"
     ]
 }
