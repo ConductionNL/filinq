@@ -8640,8 +8640,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/intake-pdf-password-removal on 2026-09-27. Before: filinq detects and refuses, it does not decrypt: lib/Service/DocumentValidationService.php:306 encryptionFindings() reports 'The PDF is encrypted or password-protected and cannot be anonymised.' (:323); grep -ri 'decrypt|qpdf|pikepdf|password' lib finds no removal step.",
-				"change": "openspec/changes/intake-pdf-password-removal",
-				"requirement": "openspec/changes/intake-pdf-password-removal/specs/pdf-password-removal :: A clerk unlocks a locked PDF into a copy (REQ-PPR-001)"
+				"change": "openspec/changes/archive/2026-11-25-intake-pdf-password-removal",
+				"requirement": "openspec/changes/archive/2026-11-25-intake-pdf-password-removal/specs/pdf-password-removal :: A clerk unlocks a locked PDF into a copy (REQ-PPR-001)"
 			},
 			"reachedOn": "nothing reaches it (the encrypted-PDF check is shown at /my-documents via ValidationResultModal.vue)",
 			"provider": "filinq",

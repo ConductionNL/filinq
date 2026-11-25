@@ -4,7 +4,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+ * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
  */
 
 import axios from '@nextcloud/axios'
@@ -19,7 +19,7 @@ import { generateUrl } from '@nextcloud/router'
  * @param {number} fileId The Nextcloud file id.
  * @param {string} password The PDF's password.
  * @return {Promise<object>} The copy: `fileId`, `name`, `validationStatus`, `validationFindings`.
- * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+ * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
  */
 export async function removePassword(fileId, password) {
 	const response = await axios.post(
@@ -37,7 +37,7 @@ export async function removePassword(fileId, password) {
  * @param {string} uuid The intake document.
  * @param {string} password The PDF's password.
  * @return {Promise<object>} The copy (`fileId`, `name`, findings) and the `intakeDocument`.
- * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+ * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
  */
 export async function removeIntakePassword(uuid, password) {
 	const response = await axios.post(
@@ -53,7 +53,7 @@ export async function removeIntakePassword(uuid, password) {
  *
  * @param {object} row The intake document (`fileName`, `lockedOriginal`).
  * @return {boolean}
- * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+ * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
  */
 export function mayRemovePassword(row) {
 	return /\.pdf$/i.test(String(row?.fileName || '')) && !(Number(row?.lockedOriginal) > 0)
@@ -64,7 +64,7 @@ export function mayRemovePassword(row) {
  *
  * @param {object} error The axios error.
  * @return {string}
- * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+ * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
  */
 export function removePasswordError(error) {
 	const reason = error?.response?.data?.error

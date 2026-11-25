@@ -17,7 +17,7 @@
  *
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+ * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -42,7 +42,7 @@ use OCP\IRequest;
 /**
  * Remove the password of a PDF into a copy.
  *
- * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+ * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
  */
 class PdfPasswordController extends Controller {
 
@@ -76,7 +76,7 @@ class PdfPasswordController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
 	 */
 	#[NoAdminRequired]
 	public function remove(int $fileId): JSONResponse {
@@ -108,7 +108,7 @@ class PdfPasswordController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
 	 */
 	#[NoAdminRequired]
 	public function removeForIntake(string $uuid): JSONResponse {

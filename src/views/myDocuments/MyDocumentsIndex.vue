@@ -1363,7 +1363,7 @@ export default {
 		 * Open the password dialog for the locked PDF of the validation result.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
 		 */
 		openPasswordDialog() {
 			this.unlock.show = true
@@ -1375,7 +1375,7 @@ export default {
 		 *
 		 * @param {object} copy The copy: fileId, name, validationStatus, validationFindings.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
 		 */
 		async onUnlocked(copy) {
 			this.validation.fileId = copy.fileId

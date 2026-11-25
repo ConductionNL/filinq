@@ -368,7 +368,7 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @return array{available: bool, version: string|null} The qpdf status.
 	 *
-	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
 	 */
 	public function getQpdfStatus(): array {
 		$version = $this->qpdf?->version();
