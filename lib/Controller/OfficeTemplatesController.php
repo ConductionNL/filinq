@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -45,7 +45,7 @@ use OCP\IUserSession;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 class OfficeTemplatesController extends Controller {
 	use AnswersNotAuthenticated;
@@ -60,7 +60,7 @@ class OfficeTemplatesController extends Controller {
 	 * @param IUserSession           $userSession    The signed-in user.
 	 * @param OfficeTemplateReading  $reading        Reads, renders and serves a template's office source.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function __construct(
 		string $appName,
@@ -84,7 +84,7 @@ class OfficeTemplatesController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function create(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -125,7 +125,7 @@ class OfficeTemplatesController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/template-management/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/template-management/spec.md
 	 */
 	public function newSource(string $id): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -168,7 +168,7 @@ class OfficeTemplatesController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-files-are-accepted-as-first-class-templates-req-ddota-001
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-files-are-accepted-as-first-class-templates-req-ddota-001
 	 */
 	public function source(string $id): JSONResponse|DataDownloadResponse {
 		if ($this->userSession->getUser() === null) {
@@ -206,7 +206,7 @@ class OfficeTemplatesController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/template-management/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/template-management/spec.md
 	 */
 	public function preview(string $id, array $dataRefs=[], array $adHocData=[]): JSONResponse|DataDownloadResponse {
 		if ($this->userSession->getUser() === null) {
@@ -247,7 +247,7 @@ class OfficeTemplatesController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
 	 */
 	public function fieldMap(string $id, array $fieldMap=[]): JSONResponse {
 		if ($this->userSession->getUser() === null) {

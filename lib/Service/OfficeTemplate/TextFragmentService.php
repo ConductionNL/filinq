@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -39,7 +39,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
  */
 class TextFragmentService {
 
@@ -63,7 +63,7 @@ class TextFragmentService {
 	 *
 	 * @param TemplatesRegisterObjects $objects The templates register.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	public function __construct(
 		private readonly TemplatesRegisterObjects $objects,
@@ -79,7 +79,7 @@ class TextFragmentService {
 	 *
 	 * @return array{results: array<int, array<string, mixed>>, total: int}
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	public function list(array $filters=[], int $limit=20, int $offset=0): array {
 		return $this->objects->search(schema: self::SCHEMA, query: $filters + ['_limit' => $limit, '_offset' => $offset]);
@@ -94,7 +94,7 @@ class TextFragmentService {
 	 *
 	 * @throws Exception With code 404 when there is no such fragment.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	public function get(string $id): array {
 		return $this->objects->get(schema: self::SCHEMA, id: $id);
@@ -110,7 +110,7 @@ class TextFragmentService {
 	 * @throws Exception With code 400 when a required field is missing or the slug is malformed,
 	 *                   409 when the slug is taken in the namespace.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	public function create(array $data): array {
 		$fragment = $this->validated(data: array_intersect_key($data, array_flip(self::FIELDS)));
@@ -129,7 +129,7 @@ class TextFragmentService {
 	 *
 	 * @throws Exception With code 404, 400 or 409 as for create().
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	public function update(string $id, array $data): array {
 		$current = $this->get(id: $id);
@@ -152,7 +152,7 @@ class TextFragmentService {
 	 *
 	 * @throws Exception With code 404 when there is no such fragment.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	public function delete(string $id): void {
 		$this->objects->delete(schema: self::SCHEMA, id: $id);
@@ -169,7 +169,7 @@ class TextFragmentService {
 	 *
 	 * @return array<string, string> The texts by slug.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	public function texts(array $slugs, string $namespace): array {
 		$texts = [];
@@ -191,7 +191,7 @@ class TextFragmentService {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	public function findBySlug(string $namespace, string $slug): ?array {
 		try {
