@@ -7,7 +7,7 @@
  * compares the two. The widget lists the documents waiting in filinq's intake
  * inbox on another app's record and assigns one to that record.
  *
- * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/tasks.md#task-3.2
  */
 import { translate as t } from '@nextcloud/l10n'
 import CnFilinqDocumentIntakeWidget from './CnFilinqDocumentIntakeWidget.vue'
@@ -45,7 +45,7 @@ export const documentIntakeLeafDescriptor = {
  *
  * @return {void}
  *
- * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/tasks.md#task-3.2
  */
 export function registerDocumentIntakeLeaf(globalRef) {
 	const integrations = integrationRegistry(globalRef)

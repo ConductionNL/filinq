@@ -44,7 +44,7 @@ interface CaseSystemDeliveredFilesInterface {
 	 *
 	 * @return array<int, int> The file ids among them with a written-back delivery, in the order asked.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 	 */
 	public function deliveredFileIds(array $fileIds): array;
 }//end interface

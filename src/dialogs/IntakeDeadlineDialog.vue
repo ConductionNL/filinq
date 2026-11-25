@@ -5,7 +5,7 @@ SPDX-License-Identifier: EUPL-1.2
 Move a waiting document's handling deadline. The reason is required and stays
 on the document.
 
-@spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+@spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
 -->
 
 <template>

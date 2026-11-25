@@ -17,7 +17,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -40,7 +40,7 @@ use Throwable;
 /**
  * Per-box progress and the check of a scan (REQ-PAD-001, REQ-PAD-004).
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
  */
 class DigitisationWorklist implements DigitisationWorklistInterface {
 
@@ -76,7 +76,7 @@ class DigitisationWorklist implements DigitisationWorklistInterface {
 	 *
 	 * @return array<string, mixed>|null
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
 	 */
 	public function project(string $projectId): ?array {
 		return $this->find(id: $projectId, schema: self::PROJECT);
@@ -91,7 +91,7 @@ class DigitisationWorklist implements DigitisationWorklistInterface {
 	 *
 	 * @return array<int, array<string, mixed>> Each with its `id`.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	public function originals(string $projectId, ?string $box = null): array {
 		$filters = ['project' => $projectId, '_limit' => self::LIMIT];
@@ -132,7 +132,7 @@ class DigitisationWorklist implements DigitisationWorklistInterface {
 	 *
 	 * @return array<int, array<string, mixed>> Rows of id (the box), project, box, registered, scanned, checked, rejected and total.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
 	 */
 	public function boxCounts(array $project): array {
 		$projectId = (string)($project['id'] ?? '');
@@ -170,7 +170,7 @@ class DigitisationWorklist implements DigitisationWorklistInterface {
 	 *
 	 * @throws InvalidArgumentException When the verdict is unknown, a rejection has no note or the original is not waiting for a check.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
 	 */
 	public function check(string $originalId, string $result, string $note, string $checkedBy): ?array {
 		if (in_array($result, [self::PASSED, self::REJECTED], true) === false) {

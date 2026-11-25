@@ -19,7 +19,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
  */
 
 declare(strict_types=1);
@@ -77,7 +77,7 @@ class PaperOriginalImportTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/tasks.md#task-3.2
 	 */
 	public function testABadRowIsListedAndTheOthersImported(): void {
 		$csv = "box,shelfMark,description,dateFrom,dateTo\n"

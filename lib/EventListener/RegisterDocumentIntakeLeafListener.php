@@ -23,7 +23,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/tasks.md#task-3.2
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ use OCA\OpenRegister\Service\Integration\LeafRendering;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/tasks.md#task-3.2
  */
 class RegisterDocumentIntakeLeafListener extends MountedLeafListener {
 
@@ -79,7 +79,7 @@ class RegisterDocumentIntakeLeafListener extends MountedLeafListener {
 	 *
 	 * @return LeafDescriptor The leaf.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/tasks.md#task-3.2
 	 */
 	protected function descriptor(): LeafDescriptor {
 		return new LeafDescriptor(

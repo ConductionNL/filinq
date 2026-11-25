@@ -18,7 +18,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
  */
 class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 
@@ -161,7 +161,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @throws Exception Code 400 when `output.caseSystem` is set with mode `return`.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
 	 */
 	public static function assertStoredMode(array $options, string $mode): void {
 		$override = ($options['output']['caseSystem'] ?? null);
@@ -184,7 +184,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 * @return array{document: array<string, mixed>, delivery: array<string, mixed>|null, warnings: array<int, string>}
 	 *         The entry (with `caseSystemDeliveryId` when linked), the delivery and any warnings.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
 	 */
 	public function recordGeneration(array $template, array $document, array $generation): array {
 		$outcome = ['document' => $document, 'delivery' => null, 'warnings' => []];
@@ -256,7 +256,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The destinations.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
 	 */
 	public function listDestinations(): array {
 		return $this->destinations();
@@ -268,7 +268,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The deliveries, waiting ones first.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 	 */
 	public function openDeliveries(): array {
 		$open = [];
@@ -291,7 +291,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 * @throws InvalidArgumentException When it names neither a template nor a namespace, has no source,
 	 *                                  or would be a second active destination.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
 	 */
 	public function saveDestination(array $input): array {
 		$destination = [];
@@ -336,7 +336,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @throws RuntimeException 404 when there is no such delivery, 409 when it is not in `writeback_failed`.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 	 */
 	public function retry(string $id): array {
 		$row = null;
@@ -382,7 +382,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<string, mixed> The context deliver() takes.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private function contextFor(array $options, string $format): array {
 		$userId = (string) ($options['userId'] ?? '');
@@ -413,7 +413,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<string, mixed> The entry as stored.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private function link(array $document, string $deliveryId): array {
 		if ($deliveryId === '' || (string) ($document['caseSystemDeliveryId'] ?? '') === $deliveryId) {
@@ -448,7 +448,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The destination.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
 	 */
 	public function destinationFor(array $template, ?array $override=null): ?array {
 		if ($override !== null && $override !== []) {
@@ -471,7 +471,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The destination.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private static function firstMatch(array $destinations, array $template, bool $byTemplate): ?array {
 		$probe = ['templateId' => '', 'templateNamespace' => (string) ($template['namespace'] ?? '')];
@@ -502,7 +502,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @throws InvalidArgumentException When another active destination covers the same template or namespace.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
 	 */
 	public function assertSingleActive(array $destination): void {
 		if (($destination['active'] ?? false) !== true) {
@@ -531,7 +531,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<string, mixed> The delivery.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
 	 */
 	public function deliver(array $document, array $destination, array $context): array {
 		$documentId    = (string) ($document['id'] ?? '');
@@ -573,7 +573,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<string, mixed> The metadata.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private static function metadata(array $document, array $destination, array $context): array {
 		$fileName = basename((string) ($document['filePath'] ?? ''));
@@ -601,7 +601,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private static function coverSame(array $first, array $second): bool {
 		$template = (string) ($first['templateId'] ?? '');
@@ -620,7 +620,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The destinations.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private function destinations(): array {
 		return $this->rows(schema: self::DESTINATION_SCHEMA, filters: [], limit: self::DESTINATION_LIMIT);
@@ -635,7 +635,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The delivery.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private function existingDelivery(string $documentId, string $destinationId): ?array {
 		if ($documentId === '') {
@@ -662,7 +662,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The rows.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private function rows(string $schema, array $filters, int $limit): array {
 		$found = $this->objects->resolve()->findAll(
@@ -692,7 +692,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The row.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md
 	 */
 	private static function rowOf(mixed $entry): ?array {
 		$row = $entry;

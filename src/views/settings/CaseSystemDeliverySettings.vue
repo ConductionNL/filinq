@@ -185,7 +185,7 @@ export default {
 		 *
 		 * @return {Array<string>} The levels.
 		 *
-		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+		 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
 		 */
 		confidentialityOptions() {
 			return [
@@ -214,7 +214,7 @@ export default {
 		 * @param {string} path The path under api/bridge.
 		 * @return {string} The URL.
 		 *
-		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+		 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 		 */
 		url(path) {
 			return generateUrl('/apps/filinq/api/bridge/' + path)
@@ -226,7 +226,7 @@ export default {
 		 * @param {object} destination The destination.
 		 * @return {string} The template or the namespace.
 		 *
-		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+		 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
 		 */
 		scopeOf(destination) {
 			if (destination.templateId) {
@@ -241,7 +241,7 @@ export default {
 		 * @param {object} delivery The delivery.
 		 * @return {string} The file name, else the document id.
 		 *
-		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+		 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 		 */
 		documentName(delivery) {
 			return delivery.metadata?.bestandsnaam || delivery.generatedDocumentId || ''
@@ -253,7 +253,7 @@ export default {
 		 * @param {object} delivery The delivery.
 		 * @return {string} Waiting or Failed.
 		 *
-		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+		 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 		 */
 		statusLabel(delivery) {
 			return delivery.deliveryStatus === 'writeback_failed'
@@ -266,7 +266,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+		 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 		 */
 		async load() {
 			try {
@@ -286,7 +286,7 @@ export default {
 		 * @param {object} destination The destination.
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+		 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
 		 */
 		edit(destination) {
 			this.form = { ...EMPTY_FORM }
@@ -302,7 +302,7 @@ export default {
 		 *
 		 * @return {void}
 		 *
-		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+		 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
 		 */
 		reset() {
 			this.form = { ...EMPTY_FORM }
@@ -313,7 +313,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+		 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
 		 */
 		async save() {
 			this.saving = true
@@ -338,7 +338,7 @@ export default {
 		 * @param {object} delivery The delivery.
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+		 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 		 */
 		async retry(delivery) {
 			this.retrying = delivery.id

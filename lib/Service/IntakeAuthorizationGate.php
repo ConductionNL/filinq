@@ -22,7 +22,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -47,7 +47,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 class IntakeAuthorizationGate {
 
@@ -85,7 +85,7 @@ class IntakeAuthorizationGate {
 	 *
 	 * @return bool True when the write is allowed.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function mayWrite(string $register, string $schema): bool {
 		$user = $this->userSession->getUser();
@@ -141,7 +141,7 @@ class IntakeAuthorizationGate {
 	 *
 	 * @return bool True when the user may write the schema and can see the record.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function mayFileOnto(string $register, string $schema, string $id): bool {
 		if ($this->mayWrite(register: $register, schema: $schema) === false) {
@@ -169,7 +169,7 @@ class IntakeAuthorizationGate {
 	 *
 	 * @return bool True when the declaration lets this user write.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	private function allows(array $groups, string $userId): bool {
 		if ($groups === []) {

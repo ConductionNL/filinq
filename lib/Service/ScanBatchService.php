@@ -444,7 +444,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @return array{original: array<string, mixed>, project: array<string, mixed>, folder: \OCP\Files\Folder}|null
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
 	 */
 	private function placeOf(array $segment): ?array {
 		$reference = (string)($segment['caseNumber'] ?? '');
@@ -466,7 +466,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @return array<string, mixed> What the batch records about this segment.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
 	 */
 	private function deliverOriginal(array $segment, ScanDelivery $delivery, array $place): array {
 		$name = $place['folder']->getNonExistingName($this->originals->fileName(original: $place['original']));

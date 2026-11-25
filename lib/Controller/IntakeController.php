@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Controller\Support\IntakeHandling;
+use OCA\Filinq\Controller\Support\TranslatableDisplay;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
 use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
@@ -49,11 +50,18 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 class IntakeController extends Controller {
 	use AnswersIntakeRefusals;
 	use ReadsTypedRequestParameters;
+
+	/**
+	 * The intakeDocument properties the register declares translatable.
+	 *
+	 * @var array<int, string>
+	 */
+	private const TRANSLATABLE = ['subject', 'rejectReason', 'detachReason'];
 
 	/**
 	 * Constructor.
@@ -86,8 +94,8 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The documents.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
 	 */
 	#[NoAdminRequired]
 	public function index(string $mode = 'waiting'): JSONResponse {
@@ -97,8 +105,10 @@ class IntakeController extends Controller {
 		}
 
 		try {
+			// A translatable subject or reason is a language map in the slug search's rows; show its text.
+			$display = new TranslatableDisplay(acceptLanguage: $this->request->getHeader('Accept-Language'));
 			if ($mode === 'overdue') {
-				$overdue = $this->handling->overdue->list();
+				$overdue = $display->rows(rows: $this->handling->overdue->list(), fields: self::TRANSLATABLE);
 
 				return new JSONResponse(
 					data: ['results' => $overdue, 'total' => count($overdue), 'mode' => 'overdue'],
@@ -106,7 +116,7 @@ class IntakeController extends Controller {
 				);
 			}
 
-			$waiting = $this->handling->intake->listWaiting();
+			$waiting = $display->rows(rows: $this->handling->intake->listWaiting(), fields: self::TRANSLATABLE);
 
 			return new JSONResponse(
 				data: [
@@ -174,7 +184,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return Response The assigned document, or the refusal.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	#[NoAdminRequired]
 	public function assign(string $uuid): Response {
@@ -226,7 +236,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The rejected document, or the refusal.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	#[NoAdminRequired]
 	public function reject(string $uuid, string $reason = ''): JSONResponse {
@@ -254,7 +264,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The document, or the refusal.
 	 *
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
 	 */
 	#[NoAdminRequired]
 	public function changeDeadline(string $uuid, string $deadline = '', string $reason = ''): JSONResponse {
@@ -477,7 +487,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse|null The refusal, or null when somebody is logged in.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	private function requireUser(): ?JSONResponse {
 		if ($this->userSession->getUser() !== null) {

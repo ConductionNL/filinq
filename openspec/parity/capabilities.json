@@ -1032,8 +1032,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/views/intake/IntakeIndex.vue (CnIndexPage listing 'documents', mode='waiting') calls src/services/intakeService.js:21 listWaitingDocuments() -> GET api/intake/documents (routes.php:77) -> lib/Controller/IntakeController.php:89 index() -> lib/Service/IntakeService.php:230 listWaiting() -> IntakeRepository::findWaiting().",
-				"change": "openspec/changes/document-intake-inbox",
-				"requirement": "openspec/changes/document-intake-inbox/specs/document-intake-inbox :: The intake inbox page (REQ-DII-04)"
+				"change": "openspec/changes/archive/2026-11-25-document-intake-inbox",
+				"requirement": "openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox :: The intake inbox page (REQ-DII-04)"
 			},
 			"reachedOn": "/intake (IntakeIndex.vue)",
 			"provider": "filinq",
@@ -1066,8 +1066,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/views/intake/IntakeIndex.vue:67-72 (Assign action) opens src/dialogs/IntakeAssignDialog.vue -> src/services/intakeService.js:35 assignIntakeDocument() -> POST api/intake/documents/{uuid}/assign (routes.php:78) -> IntakeController.php:131 assign() -> IntakeService.php:254 assign(); reject is symmetric via routes.php:79 -> IntakeController.php:182 reject() -> IntakeService.php:392 reject(), reason required.",
-				"change": "openspec/changes/document-intake-inbox",
-				"requirement": "openspec/changes/document-intake-inbox/specs/document-intake-inbox :: Assign or reject with server-side checks (REQ-DII-03)"
+				"change": "openspec/changes/archive/2026-11-25-document-intake-inbox",
+				"requirement": "openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox :: Assign or reject with server-side checks (REQ-DII-03)"
 			},
 			"reachedOn": "/intake (IntakeIndex.vue, IntakeAssignDialog.vue, FinalDocumentReasonDialog.vue)",
 			"provider": "filinq",
@@ -1354,9 +1354,9 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/IntakeService.php:119-127 receive() stores 'sender', 'channel' (direction/way it arrived) and 'receivedAt' on every intake document; src/views/intake/IntakeIndex.vue:174-181 tableColumns render 'sender' and 'receivedAt' (formatted via formatDate()).",
-				"change": "openspec/changes/document-intake-inbox",
+				"change": "openspec/changes/archive/2026-11-25-document-intake-inbox",
 				"requirement": [
-					"openspec/changes/document-intake-inbox/specs/document-intake-inbox :: Intake document schema (REQ-DII-01)",
+					"openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox :: Intake document schema (REQ-DII-01)",
 					"openspec/changes/documents-in-and-out-of-the-building/specs/document-register :: A registered document carries a direction, a unit and a number (REQ-DIO-01)"
 				]
 			},
@@ -1426,8 +1426,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/intake-worklist-deadline-and-duplicates on 2026-09-27. Before: lib/Service/IntakeService.php:104-117 receive() de-duplicates silently on sourceRef: it logs an info-level message and returns the existing document unchanged. No field or UI surfaces a 'this looks like a duplicate' warning to a clerk; IntakeIndex.vue has no duplicate indicator.",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/intake-worklist-deadline-and-duplicates",
-				"requirement": "openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals :: An arrival whose content came before is marked, never refused (REQ-IWS-003)"
+				"change": "openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates",
+				"requirement": "openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals :: An arrival whose content came before is marked, never refused (REQ-IWS-003)"
 			},
 			"reachedOn": "nothing detects content-level duplicates; the sourceRef re-delivery skip is intended",
 			"provider": "filinq",
@@ -1460,10 +1460,10 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/intake-worklist-deadline-and-duplicates on 2026-09-27. Before: Searched lib/Service/Intake*, lib/Service/IntakeService.php, lib/Service/IntakeRepository.php and lib/Settings/filinq_register.json for handlingDeadline/afhandeltermijn/overdue: no match. lib/Service/ObjectionDeadlineChecker.php exists but is unrelated - it checks GDPR publication-objection deadlines on consent records (openspec/specs/consent-management), not intake handling deadlines.",
-				"change": "openspec/changes/intake-worklist-deadline-and-duplicates",
+				"change": "openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates",
 				"requirement": [
-					"openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals :: Every waiting document has a handling deadline (REQ-IWS-001)",
-					"openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals :: The worklist shows what is overdue (REQ-IWS-002)"
+					"openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals :: Every waiting document has a handling deadline (REQ-IWS-001)",
+					"openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals :: The worklist shows what is overdue (REQ-IWS-002)"
 				]
 			},
 			"reachedOn": "nothing reaches it (not built)",
@@ -1673,10 +1673,10 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/intake-paper-archive-digitisation on 2026-09-27. Before: openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/proposal.md:38 lists 'C-intake-13 retro-digitisation of a paper archive, with OCR and metadata' as 'should', status 'partial' in the competitor gap register, with no linked build. Grepped lib/ and src/ for digitis*/paperOriginal/paper.*archive: no implementation found.",
-				"change": "openspec/changes/intake-paper-archive-digitisation",
+				"change": "openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation",
 				"requirement": [
-					"openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation :: An archivist runs a digitisation project (REQ-PAD-001)",
-					"openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation :: A scan of an original is filed on the project's record (REQ-PAD-003)"
+					"openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation :: An archivist runs a digitisation project (REQ-PAD-001)",
+					"openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation :: A scan of an original is filed on the project's record (REQ-PAD-003)"
 				]
 			},
 			"reachedOn": "nothing reaches it (not built)",
@@ -2201,7 +2201,7 @@
 				"evidence": "lib/Service/DocumentService.php:734 storeOutputIfRequested() + options.output.mode/caseId (line 258); reached by dossiq: procest/lib/Service/Beschikking/FilinqTemplateEngineAdapter.php:152-169 calls generateDocument(..., ['output'=>['mode'=>'both'], 'caseId'=>$caseId, ...]) for every beschikking, and dossiq's CaseDocumentGenerationController files the returned informatieobject on the case.",
 				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template",
 				"requirement": "openspec/specs/document-creatie-sjablonen :: REQ-DCS-08 Zaaksysteem Integration (Priority: Should)",
-				"plan": "openspec/changes/generate-store-in-case-system"
+				"plan": "openspec/changes/archive/2026-11-25-generate-store-in-case-system"
 			},
 			"reachedOn": "machine consumer: dossiq (procest/dq-flow) CaseDocumentGenerationController -> BeschikkingGenerationService/FilinqTemplateEngineAdapter",
 			"provider": "filinq",
@@ -8712,10 +8712,10 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/signing-accept-only-recipient on 2026-09-27. Before: no accept-without-signing role: signerRecord status is PENDING, SIGNED, DECLINED, EXPIRED or CANCELLED (lib/Settings/filinq_register.json:2831) and the schema has no role property; grep -ri 'accept|acknowledg|role' lib/Service/SigningService.php finds nothing. SignerStepApprovedEvent (lib/Event/SignerStepApprovedEvent.php) is the completion of a signing step in an OR task sequence, not an acceptance role.",
-				"change": "openspec/changes/signing-accept-only-recipient",
+				"change": "openspec/changes/archive/2026-11-25-signing-accept-only-recipient",
 				"requirement": [
-					"openspec/changes/signing-accept-only-recipient/specs/signing-accept-only :: A recipient is a signer or accept-only (REQ-SAO-001)",
-					"openspec/changes/signing-accept-only-recipient/specs/signing-accept-only :: An accept-only recipient accepts and never signs (REQ-SAO-002)"
+					"openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only :: A recipient is a signer or accept-only (REQ-SAO-001)",
+					"openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only :: An accept-only recipient accepts and never signs (REQ-SAO-002)"
 				]
 			},
 			"reachedOn": "nothing reaches it",

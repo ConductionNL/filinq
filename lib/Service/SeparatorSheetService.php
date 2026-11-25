@@ -125,7 +125,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string The payload.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	public function originalPayload(string $profileId, string $originalId): string {
 		return self::PAYLOAD_PREFIX_V2 . trim($profileId) . ':' . self::ORIGINAL_MARKER . trim($originalId);
@@ -142,7 +142,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @throws RuntimeException When there is no original to print or the sheets do not render.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	public function renderOriginals(string $profileId, array $originals): string {
 		if (trim($profileId) === '') {
@@ -172,7 +172,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	private function readOriginal(string $payload): ?string {
 		$position = stripos($payload, self::PAYLOAD_PREFIX_V2);
@@ -301,7 +301,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string The HTML.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	private function originalSheetHtml(string $payload, array $original): string {
 		$shelfMark = htmlspecialchars(trim((string)($original['shelfMark'] ?? '')), ENT_QUOTES);

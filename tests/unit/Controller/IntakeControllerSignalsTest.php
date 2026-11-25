@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link https://conduction.nl
  *
- * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md
+ * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,6 +44,7 @@ use PHPUnit\Framework\TestCase;
  * @uses   \OCA\Filinq\Controller\Support\IntakeHandling
  * @uses   \OCA\Filinq\Exception\IntakeRefusedException
  * @uses   \OCA\Filinq\Service\Intake\IntakeNotificationReach
+ * @uses   \OCA\Filinq\Controller\Support\TranslatableDisplay
  */
 class IntakeControllerSignalsTest extends TestCase {
 
@@ -125,6 +126,25 @@ class IntakeControllerSignalsTest extends TestCase {
 		self::assertSame([['uuid' => 'w']], $data['results']);
 		self::assertSame(1, $data['total']);
 	}//end testTheDefaultModeIsWaiting()
+
+	/**
+	 * A translatable subject in the worklist is answered as text, in both modes (seen live as raw JSON).
+	 *
+	 * @return void
+	 */
+	public function testATranslatableSubjectIsAnsweredAsText(): void {
+		$this->intake = $this->createMock(originalClassName: IntakeServiceInterface::class);
+		$this->intake->method('listWaiting')->willReturn([['uuid' => 'w', 'subject' => ['nl' => 'Bezwaarschrift']]]);
+		$this->overdue = $this->createMock(originalClassName: IntakeOverdueList::class);
+		$this->overdue->method('list')->willReturn([['uuid' => 'late', 'subject' => ['nl' => 'Aanvraag'], 'rejectReason' => ['nl' => 'Niet voor ons']]]);
+
+		$waiting = $this->controller()->index()->getData();
+		$overdue = $this->controller()->index(mode: 'overdue')->getData();
+
+		self::assertSame(expected: 'Bezwaarschrift', actual: $waiting['results'][0]['subject']);
+		self::assertSame(expected: 'Aanvraag', actual: $overdue['results'][0]['subject']);
+		self::assertSame(expected: 'Niet voor ons', actual: $overdue['results'][0]['rejectReason']);
+	}//end testATranslatableSubjectIsAnsweredAsText()
 
 	/**
 	 * A moved deadline answers the document; a refusal answers its status.

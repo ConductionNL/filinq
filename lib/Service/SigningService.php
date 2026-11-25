@@ -876,7 +876,7 @@ class SigningService implements SigningServiceInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
 	 * (sign or accept); an instance would add nothing.
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 */
 	public function accept(string $requestId, string $signerId, ?array $verifiedActor = null): array {
 		[$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
@@ -946,7 +946,7 @@ class SigningService implements SigningServiceInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
 	 * (sign or accept); an instance would add nothing.
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 */
 	private function assertEarlierRecipientsDone(array $request, string $signerId, array $signer): void {
 		if (($request['signingMode'] ?? 'sequential') !== 'sequential') {
@@ -1529,7 +1529,7 @@ class SigningService implements SigningServiceInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
 	 * (sign or accept); an instance would add nothing.
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#4-screens
 	 */
 	public function recipientsOf(array $request): array {
 		$signerIds = (array)($request['signerIds'] ?? []);

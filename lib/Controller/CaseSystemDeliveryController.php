@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
  */
 
 declare(strict_types=1);
@@ -54,7 +54,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
  */
 class CaseSystemDeliveryController extends Controller {
 
@@ -111,7 +111,7 @@ class CaseSystemDeliveryController extends Controller {
 	 *
 	 * @return JSONResponse 200 with `destinations` and the waiting and failed `deliveries`; 401 or 403.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function index(): JSONResponse {
@@ -136,7 +136,7 @@ class CaseSystemDeliveryController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the destination; 400 naming what is wrong, such as a second active destination; 401 or 403.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function saveDestination(): JSONResponse {
@@ -160,7 +160,7 @@ class CaseSystemDeliveryController extends Controller {
 	 *
 	 * @return JSONResponse 200 with the waiting delivery; 401, 403, 404, or 409 when it did not fail.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function retry(string $id): JSONResponse {
@@ -187,7 +187,7 @@ class CaseSystemDeliveryController extends Controller {
 	 *
 	 * @return JSONResponse|null 401, 403, or null when allowed.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 	 */
 	private function refusal(): ?JSONResponse {
 		$user = $this->userSession->getUser();

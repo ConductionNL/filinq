@@ -284,7 +284,7 @@ export default {
 		 * @param {object} entry The folder entry.
 		 * @return {boolean}
 		 *
-		 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+		 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#4-screens
 		 */
 		acceptsOnly(entry) {
 			return entry?.role === 'accept'
@@ -295,7 +295,7 @@ export default {
 		 *
 		 * @param {object} entry The folder entry.
 		 *
-		 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+		 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#4-screens
 		 */
 		async acceptEntry(entry) {
 			const recipient = await this.signingStore.acceptDocument(

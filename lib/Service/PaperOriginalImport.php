@@ -18,7 +18,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use Throwable;
 /**
  * Import a CSV box list as paper originals of one project (design D5).
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
  */
 class PaperOriginalImport implements PaperOriginalImportInterface {
 
@@ -81,7 +81,7 @@ class PaperOriginalImport implements PaperOriginalImportInterface {
 	 *
 	 * @throws InvalidArgumentException When the list has no header with the required columns.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/tasks.md#task-3.2
 	 */
 	public function import(string $projectId, string $csv): array {
 		$projectId = trim($projectId);

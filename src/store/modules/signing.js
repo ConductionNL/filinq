@@ -130,7 +130,7 @@ export const useSigningStore = defineStore('signing', {
 		 * @param {string} requestId The signing request.
 		 * @param {string} signerId The caller's recipient record.
 		 * @return {Promise<object|null>} The updated recipient record, or null on failure.
-		 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+		 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#4-screens
 		 */
 		async acceptDocument(requestId, signerId) {
 			this.loading = true
