@@ -56,6 +56,11 @@ route.
 
 **D1. The ownership question is recorded as open, not answered here.**
 
+> Answered 2026-11-25 by Ruben: option (c), split. The domain app (decidiq,
+> dossiq) decides who may sign and when; filinq performs the signature of the
+> PDF through its rail and reports back with `SigningConcludedEvent`. Fleet
+> record: hydra ADR-125. The analysis below is kept as the briefing it was.
+
 Ruben's position: signing belongs in decidiq.
 
 *What it rests on.* A signature is the moment a bevoegd gezag commits. Decidiq
