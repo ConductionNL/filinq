@@ -101,11 +101,10 @@ class LegalHoldCaseRepository {
 	 */
 	public function search(array $filters): array {
 		try {
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false))->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
-				filters: $filters,
-				_rbac: false
+				filters: $filters
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The hold register could not be read: ' . $e->getMessage(), code: 0, previous: $e);

@@ -855,4 +855,19 @@ class SettingsServiceTest extends TestCase {
 
 	}//end testUpdateSettingsWrapsAWriteFailure()
 
+	/**
+	 * Without an ObjectService the slug search refuses instead of failing on null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/openregister-bridge/spec.md
+	 */
+	public function testSlugSearchRefusesWithoutAnObjectService(): void {
+		$this->mockOpenRegister->method('getObjectService')->willReturn(null);
+
+		$this->expectException(\RuntimeException::class);
+		$this->settingsService->slugSearch();
+
+	}//end testSlugSearchRefusesWithoutAnObjectService()
+
 }//end class

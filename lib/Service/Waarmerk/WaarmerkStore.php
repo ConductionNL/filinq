@@ -193,11 +193,10 @@ class WaarmerkStore {
 	 */
 	public function search(array $filters): array {
 		try {
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false))->search(
 				register: self::REGISTER,
 				schema: self::SCHEMA,
-				filters: $filters,
-				_rbac: false
+				filters: $filters
 			);
 		} catch (Throwable $e) {
 			throw new WaarmerkRefusedException(message: 'The waarmerk register could not be read', status: 503, previous: $e);

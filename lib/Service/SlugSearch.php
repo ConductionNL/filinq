@@ -52,47 +52,43 @@ final class SlugSearch {
 	/**
 	 * Constructor.
 	 *
-	 * @param object $objects The OpenRegister object service (or a test double of it).
+	 * The access flags are passed on only when given, so OpenRegister's own
+	 * defaults apply otherwise, exactly as in a direct call.
 	 *
-	 * @spec openspec/specs/openregister-bridge/spec.md
-	 */
-	public function __construct(
-		private readonly object $objects,
-	) {
-	}//end __construct()
-
-	/**
-	 * Search the objects of one schema in one register, both named by slug.
-	 *
-	 * Only the arguments the caller gives are passed on, so OpenRegister's own
-	 * defaults apply to the rest, exactly as in a direct call.
-	 *
-	 * @param string                    $register      The register slug.
-	 * @param string                    $schema        The schema slug.
-	 * @param array<string, mixed>|null $filters       Search filters, as OpenRegister takes them.
-	 * @param bool|null                 $_rbac         Whether OpenRegister applies role-based access.
-	 * @param bool|null                 $_multitenancy Whether OpenRegister scopes to the active organisation.
-	 *
-	 * @return mixed What OpenRegister returns, unchanged (rows, or a count when the filters ask for one); callers keep their own checks.
+	 * @param object    $objects       The OpenRegister object service (or a test double of it).
+	 * @param bool|null $_rbac         Whether OpenRegister applies role-based access.
+	 * @param bool|null $_multitenancy Whether OpenRegister scopes to the active organisation.
 	 *
 	 * @SuppressWarnings(PHPMD.CamelCaseParameterName) The names mirror OpenRegister's own parameters.
 	 * @SuppressWarnings(PHPMD.CamelCaseVariableName)  The names mirror OpenRegister's own parameters.
 	 *
 	 * @spec openspec/specs/openregister-bridge/spec.md
 	 */
-	public function search(
-		string $register,
-		string $schema,
-		?array $filters=null,
-		?bool $_rbac=null,
-		?bool $_multitenancy=null
-	): mixed {
+	public function __construct(
+		private readonly object $objects,
+		private readonly ?bool $_rbac=null,
+		private readonly ?bool $_multitenancy=null,
+	) {
+	}//end __construct()
+
+	/**
+	 * Search the objects of one schema in one register, both named by slug.
+	 *
+	 * @param string                    $register The register slug.
+	 * @param string                    $schema   The schema slug.
+	 * @param array<string, mixed>|null $filters  Search filters, as OpenRegister takes them; passed on only when given.
+	 *
+	 * @return mixed What OpenRegister returns, unchanged (rows, or a count when the filters ask for one); callers keep their own checks.
+	 *
+	 * @spec openspec/specs/openregister-bridge/spec.md
+	 */
+	public function search(string $register, string $schema, ?array $filters=null): mixed {
 		$arguments = ['registerSlug' => $register, 'schemaSlug' => $schema];
 		if ($this->takesTarget() === true) {
 			$arguments = ['target' => new RegisterSchemaSlugs(register: $register, schema: $schema)];
 		}
 
-		$optional = ['filters' => $filters, '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
+		$optional = ['filters' => $filters, '_rbac' => $this->_rbac, '_multitenancy' => $this->_multitenancy];
 		foreach ($optional as $name => $value) {
 			if ($value !== null) {
 				$arguments[$name] = $value;

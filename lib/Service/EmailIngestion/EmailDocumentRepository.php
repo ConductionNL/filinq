@@ -167,12 +167,10 @@ class EmailDocumentRepository implements EmailDocumentRepositoryInterface {
 	 */
 	public function search(array $filters): array {
 		// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
-		$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+		$rows = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false, _multitenancy: false))->search(
 			register: self::REGISTER,
 			schema: self::SCHEMA,
-			filters: $filters,
-			_rbac: false,
-			_multitenancy: false
+			filters: $filters
 		);
 
 		if (is_array($rows) === false) {

@@ -194,12 +194,10 @@ class BatchStateRepository {
 			$filters['_limit'] = self::LIST_LIMIT;
 		}
 
-		$rows = (new SlugSearch(objects: $this->openRegister->getObjectService()))->search(
+		$rows = (new SlugSearch(objects: $this->openRegister->getObjectService(), _rbac: false, _multitenancy: false))->search(
 			register: self::REGISTER,
 			schema: self::SCHEMA,
-			filters: $filters,
-			_rbac: false,
-			_multitenancy: false
+			filters: $filters
 		);
 		if (is_array($rows) === false) {
 			return [];

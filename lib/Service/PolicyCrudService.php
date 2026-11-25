@@ -546,10 +546,9 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 	 * @throws Exception On query failure.
 	 */
 	private function listByRegisterSchema(string $register, string $schema): array {
-		$objectService = $this->settingsService->getObjectService();
 		// Use the slug-aware variant — OR's standard searchObjects requires
 		// numeric register/schema IDs and silently returns nothing otherwise.
-		$results = (new SlugSearch(objects: $objectService))->search(
+		$results = $this->settingsService->slugSearch()->search(
 			register: $register,
 			schema: $schema
 		);

@@ -73,4 +73,17 @@ class DocumentObjectServiceResolver {
 
 		throw new RuntimeException(message: 'OpenRegister service is not available.');
 	}//end resolve()
+
+	/**
+	 * A slug search on the resolved ObjectService, in the form the installed OpenRegister declares.
+	 *
+	 * @return SlugSearch The search.
+	 *
+	 * @throws RuntimeException If OpenRegister is not available
+	 *
+	 * @spec openspec/specs/openregister-bridge/spec.md
+	 */
+	public function slugSearch(): SlugSearch {
+		return new SlugSearch(objects: $this->resolve());
+	}//end slugSearch()
 }//end class

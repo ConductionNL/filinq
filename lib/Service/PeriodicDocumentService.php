@@ -305,7 +305,7 @@ class PeriodicDocumentService implements PeriodicDocumentServiceInterface {
 	 */
 	private function activeSchedules(): array {
 		try {
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
 				filters: ['active' => true]

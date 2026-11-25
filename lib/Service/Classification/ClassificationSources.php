@@ -98,12 +98,10 @@ class ClassificationSources {
 	public function dossiers(): array {
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
-			$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$rows = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false, _multitenancy: false))->search(
 				register: 'filinq',
 				schema: 'dossier',
-				filters: [],
-				_rbac: false,
-				_multitenancy: false
+				filters: []
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('[Classification] dossiers cannot be read', ['exception' => $e->getMessage()]);

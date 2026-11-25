@@ -83,11 +83,10 @@ class PseudonymMapRepository {
 		}
 
 		try {
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false))->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
-				filters: ['anonymizationLink' => $linkId],
-				_rbac: false
+				filters: ['anonymizationLink' => $linkId]
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The pseudonym map could not be read: ' . $e->getMessage(), code: 0, previous: $e);
@@ -120,11 +119,10 @@ class PseudonymMapRepository {
 	 */
 	public function findForSource(int $sourceFileId): array {
 		try {
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false))->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
-				filters: ['sourceFileId' => $sourceFileId],
-				_rbac: false
+				filters: ['sourceFileId' => $sourceFileId]
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The pseudonym maps could not be read: ' . $e->getMessage(), code: 0, previous: $e);

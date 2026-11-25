@@ -186,12 +186,10 @@ class FlowOperationRunRepository {
 	 */
 	private function search(array $filters): array {
 		try {
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false, _multitenancy: false))->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
-				filters: $filters,
-				_rbac: false,
-				_multitenancy: false
+				filters: $filters
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(

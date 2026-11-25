@@ -128,12 +128,10 @@ class LegalBasisCatalog {
 		}
 
 		try {
-			$result = (new SlugSearch(objects: $objectService))->search(
+			$result = (new SlugSearch(objects: $objectService, _rbac: false, _multitenancy: false))->search(
 				register: 'filinq',
 				schema: 'base',
-				filters: [],
-				_rbac: false,
-				_multitenancy: false
+				filters: []
 			);
 		} catch (Exception $e) {
 			$this->logger->warning(

@@ -289,12 +289,10 @@ class IntegrityScanService {
 	 */
 	private function rows(string $schema): array {
 		try {
-			$found = (new SlugSearch(objects: $this->objects->resolve()))->search(
+			$found = (new SlugSearch(objects: $this->objects->resolve(), _rbac: false, _multitenancy: false))->search(
 				register: self::REGISTER,
 				schema: $schema,
-				filters: [],
-				_rbac: false,
-				_multitenancy: false
+				filters: []
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('[IntegrityScan] a schema could not be read', ['schema' => $schema, 'error' => $e->getMessage()]);

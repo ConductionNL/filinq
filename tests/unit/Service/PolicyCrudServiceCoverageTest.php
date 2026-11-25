@@ -24,6 +24,7 @@ use Exception;
 use InvalidArgumentException;
 use JsonSerializable;
 use OCA\Filinq\Service\ConsentService;
+use OCA\Filinq\Service\SlugSearch;
 use OCA\Filinq\Service\PolicyCrudService;
 use OCA\Filinq\Service\SettingsService;
 use OCA\OpenRegister\Db\ObjectEntity;
@@ -107,6 +108,7 @@ class PolicyCrudServiceCoverageTest extends TestCase {
 	private function service(): PolicyCrudService {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getObjectService')->willReturn($this->objectService);
+		$settings->method('slugSearch')->willReturnCallback(fn (): SlugSearch => new SlugSearch(objects: $this->objectService));
 
 		return new PolicyCrudService(
 			$settings,
