@@ -47,8 +47,9 @@ renders any data it is given.
 
 ## 4. Delivery
 
-- [ ] 4.1 Strings, docs and end-to-end. Files: `l10n/en.json`, `l10n/nl.json`, `docs/features/woo-decision-templates.md`, `tests/e2e/workflows/woo-request-workflow.spec.ts` (edit `woo-besluit` in the template editor, generate through the API with the fixture, open the stored PDF).
+- [x] 4.1 Strings, docs and end-to-end. Files: `l10n/en.json`, `l10n/nl.json`, `docs/features/woo-decision-templates.md`, `tests/e2e/workflows/woo-request-workflow.spec.ts` (edit `woo-besluit` in the template editor, generate through the API with the fixture, open the stored PDF).
   - Test: the Playwright spec.
+  - 25 Nov 2026, live (Nextcloud 34.0.6, MariaDB, Redis, OpenRegister main): `tests/e2e/workflows/woo-request-workflow.spec.ts` 1/1, four runs in a row. Before the fix it failed 3 of 6 runs: the editor releases its lock after Save, and `releaseLock()` wrote the whole template back from its own read even though the save had already cleared the lock, so a publish that landed in between was undone (status back to draft, `publishedVersion` on the old version) and the letter rendered without the edit. `releaseLock()` now writes nothing when the template holds no lock (`TemplateServiceLockTest::testReleasingAnUnlockedTemplateWritesNothing`, fails without the fix).
 
 Verification (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 
