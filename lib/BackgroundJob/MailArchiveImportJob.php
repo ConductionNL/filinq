@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ use Throwable;
 /**
  * One work unit of a mail archive import per run.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
  */
 class MailArchiveImportJob extends TimedJob {
 
@@ -70,7 +70,7 @@ class MailArchiveImportJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) `$argument` is Nextcloud's
 	 * TimedJob signature; this job takes its work from the importing imports.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	protected function run(mixed $argument): void {
 		try {

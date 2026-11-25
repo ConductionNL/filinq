@@ -33,7 +33,7 @@ use RuntimeException;
 /**
  * Background work runs as the user who asked for it.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
  */
 #[CoversClass(ActingUser::class)]
 final class ActingUserTest extends TestCase {

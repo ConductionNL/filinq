@@ -6,7 +6,7 @@ Mail archive import settings: whether readpst is installed on the server, so
 an admin knows whether Outlook PST archives can be imported, and how many
 messages one background run takes.
 
-@spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-the-container-format-is-detected-and-split-on-the-server-req-mai-002
+@spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-the-container-format-is-detected-and-split-on-the-server-req-mai-002
 -->
 
 <template>
@@ -89,7 +89,7 @@ export default {
 	/**
 	 * Load the settings and the readpst status.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-the-container-format-is-detected-and-split-on-the-server-req-mai-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-the-container-format-is-detected-and-split-on-the-server-req-mai-002
 	 */
 	async mounted() {
 		const result = await loadImportSettings()
@@ -110,7 +110,7 @@ export default {
 		/**
 		 * Save the messages per run.
 		 *
-		 * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+		 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
 		 */
 		async save() {
 			this.saving = true

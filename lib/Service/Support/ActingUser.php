@@ -17,7 +17,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use OCP\IUserSession;
  * with the requester's own rights, the same rights that were checked when
  * they started it; nothing is widened. The same pattern as FlowOperationJob.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
  */
 final class ActingUser {
 
@@ -46,7 +46,7 @@ final class ActingUser {
 	 * @param IUserManager $users   The users.
 	 * @param IUserSession $session The session whose active user is set for the work.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
 	 */
 	public function __construct(
 		private readonly IUserManager $users,
@@ -62,7 +62,7 @@ final class ActingUser {
 	 *
 	 * @return mixed What the work returns.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
 	 */
 	public function run(string $userId, callable $operation): mixed {
 		$user = null;

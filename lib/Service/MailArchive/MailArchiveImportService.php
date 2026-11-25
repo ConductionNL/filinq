@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -41,7 +41,7 @@ use Psr\Log\LoggerInterface;
  * 404 for an import or file the user cannot see, 400 for a bad mapping,
  * 403 for a dossier they may not write to, 409 for a wrong state.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
  */
 class MailArchiveImportService {
 
@@ -102,7 +102,7 @@ class MailArchiveImportService {
 	 *
 	 * @throws InvalidArgumentException 404 when the user cannot read the file.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	public function start(string $userId, int $fileId): array {
 		$archive = $this->workspace->userArchive(userId: $userId, fileId: $fileId);
@@ -159,7 +159,7 @@ class MailArchiveImportService {
 	 *
 	 * @throws InvalidArgumentException 404, 409 when not in `mapping`, 400 for an unknown folder, 403 for a dossier the user may not write.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	public function map(string $userId, string $uuid, array $folderMap): array {
 		$record = $this->own(userId: $userId, uuid: $uuid);
@@ -210,7 +210,7 @@ class MailArchiveImportService {
 	 *
 	 * @throws InvalidArgumentException 404 when it is not theirs.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	public function get(string $userId, string $uuid): array {
 		return $this->own(userId: $userId, uuid: $uuid);
@@ -224,7 +224,7 @@ class MailArchiveImportService {
 	 *
 	 * @return list<array<string, mixed>> The imports.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	public function mine(string $userId): array {
 		$rows = array_values(
@@ -249,7 +249,7 @@ class MailArchiveImportService {
 	 *
 	 * @throws InvalidArgumentException 404, or 409 when it has ended.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	public function cancel(string $userId, string $uuid): array {
 		$record = $this->own(userId: $userId, uuid: $uuid);
@@ -270,7 +270,7 @@ class MailArchiveImportService {
 	 *
 	 * @return string The user id; '' when nothing is importing or nobody is named.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
 	 */
 	public function nextRequester(): string {
 		return (string) (($this->repository->oldestImporting() ?? [])['requestedBy'] ?? '');
@@ -281,7 +281,7 @@ class MailArchiveImportService {
 	 *
 	 * @return array<string, mixed>|null The import after the unit, or null when none is importing.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function runUnit(): ?array {
 		$record = $this->repository->oldestImporting();

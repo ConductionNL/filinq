@@ -8,7 +8,7 @@ its mails one by one. The dialog does not judge whether the archivist may
 write to a dossier: the server refuses the whole mapping when they may not,
 and the dialog shows that answer.
 
-@spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+@spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
 -->
 
 <template>

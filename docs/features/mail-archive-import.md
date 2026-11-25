@@ -12,11 +12,15 @@ Filinq reads the file you already have in Nextcloud Files. It does not connect t
 4. In **Map the folders to dossiers**, pick a dossier for each folder whose mail belongs to one. Leave a folder on **Intake inbox** when its mail is mixed.
 5. Click **Start import**.
 
+![Map the folders to dossiers: one folder to a dossier, the other to the intake inbox](/screenshots/mail-archive-import-mapping.png)
+
 You can only pick dossiers you may write to. If one of them is not, the whole mapping is refused and nothing is imported yet.
 
 ## How the import runs
 
-A large archive is not imported in one request. A background job takes a few hundred messages every five minutes (**Messages per run** in the admin settings, default 200) and saves where it stopped. When the server restarts halfway, the next run carries on from that point.
+![Imports with their progress: mails to the inbox, duplicates already there, and failed messages](/screenshots/mail-archive-import-progress.png)
+
+A large archive is not imported in one request. A background job, running with the rights of the person who started the import, takes a few hundred messages every five minutes (**Messages per run** in the admin settings, default 200) and saves where it stopped. When the server restarts halfway, the next run carries on from that point.
 
 The page shows for each import:
 

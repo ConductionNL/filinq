@@ -39,7 +39,7 @@ use RuntimeException;
 /**
  * What the filer does when storing a message breaks.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-2
  */
 class MailArchiveMessageFilerTest extends TestCase {
 

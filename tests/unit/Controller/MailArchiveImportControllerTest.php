@@ -39,7 +39,7 @@ use RuntimeException;
 /**
  * The routes act as the session user, keep a refusal's status, and hide anything else behind a 500.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
  */
 class MailArchiveImportControllerTest extends TestCase {
 

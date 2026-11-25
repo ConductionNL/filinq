@@ -35,7 +35,7 @@ use RuntimeException;
 /**
  * One work unit per run; a failing unit is logged and retried next run.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  */
 class MailArchiveImportJobTest extends TestCase {
 

@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use Throwable;
 /**
  * The archive, its local copy, a converted PST and the folder messages are written to.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
  */
 class MailArchiveWorkspace {
 
@@ -75,7 +75,7 @@ class MailArchiveWorkspace {
 	 *
 	 * @return File|null The file.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	public function userArchive(string $userId, int $fileId): ?File {
 		try {
@@ -99,7 +99,7 @@ class MailArchiveWorkspace {
 	 *
 	 * @return File|null The file, or null when it is gone.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function archive(int $fileId): ?File {
 		try {
@@ -127,7 +127,7 @@ class MailArchiveWorkspace {
 	 *
 	 * @throws MailArchiveRefused When the archive cannot be read or a PST not converted.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function source(File $archive, string $format, string $importKey): array {
 		if ($format !== MailArchiveSplitter::FORMAT_PST) {
@@ -156,7 +156,7 @@ class MailArchiveWorkspace {
 	 *
 	 * @throws MailArchiveRefused When the archive cannot be read.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function localPath(File $archive): string {
 		$fileId = (int) $archive->getId();
@@ -212,7 +212,7 @@ class MailArchiveWorkspace {
 	 *
 	 * @throws MailArchiveRefused When the folder beside the archive cannot be written.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-2
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-2
 	 */
 	public function stage(File $archive, string $folder, string $name, string $raw): File {
 		try {
@@ -241,7 +241,7 @@ class MailArchiveWorkspace {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function discard(string $importKey): void {
 		$this->remove(path: $this->workDir(importKey: $importKey));
@@ -254,7 +254,7 @@ class MailArchiveWorkspace {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function releaseCopies(): void {
 		foreach ($this->copies as $copy) {

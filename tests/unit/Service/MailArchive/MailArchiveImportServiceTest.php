@@ -55,7 +55,7 @@ use ZipArchive;
 /**
  * Start, map, drain in units from a cursor, file or receive, and never twice.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  */
 class MailArchiveImportServiceTest extends TestCase {
 
