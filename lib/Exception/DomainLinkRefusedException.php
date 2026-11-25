@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
  */
 class DomainLinkRefusedException extends RuntimeException {
 }//end class

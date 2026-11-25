@@ -59,7 +59,7 @@ export default {
 		/**
 		 * Store the routing declaration for one record type over intake#declareRouting.
 		 *
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-7.1
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-7.1
 		 */
 		async declare() {
 			this.busy = true

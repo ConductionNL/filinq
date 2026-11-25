@@ -405,7 +405,7 @@ export default {
 		 * Whether the template is on a draft version users are not offered.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-4.2
 		 */
 		isDraft() {
 			return !this.isNew && this.templateStore.templateItem?.status === 'draft'
@@ -688,7 +688,7 @@ export default {
 		/**
 		 * Publish the version the template is on, so users may generate from it.
 		 *
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-4.2
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-4.2
 		 */
 		async publishTemplate() {
 			this.saving = true

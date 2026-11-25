@@ -14,7 +14,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
  */
 
 declare(strict_types=1);
@@ -53,7 +53,7 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
  */
 class DocumentFileActionListener implements IEventListener {
 
@@ -79,7 +79,7 @@ class DocumentFileActionListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
 	 */
 	public function handle(Event $event): void {
 		try {
@@ -104,7 +104,7 @@ class DocumentFileActionListener implements IEventListener {
 	 *
 	 * @return array{0: int, 1: string, 2: array<string, mixed>}
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
 	 */
 	private function actionOf(Event $event): array {
 		if ($event instanceof DocumentSignedEvent) {
@@ -153,7 +153,7 @@ class DocumentFileActionListener implements IEventListener {
 	 *
 	 * @return array{0: int, 1: string, 2: array<string, mixed>}
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
 	 */
 	private function signedOf(DocumentSignedEvent $event): array {
 		$payload = $event->getPayload();

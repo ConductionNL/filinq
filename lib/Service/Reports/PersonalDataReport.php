@@ -44,7 +44,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/specs/management-reports/spec.md#requirement-the-personal-data-report-lists-which-documents-hold-personal-data-req-scr-010
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/management-reports/spec.md#requirement-the-personal-data-report-lists-which-documents-hold-personal-data-req-scr-010
  */
 class PersonalDataReport implements PersonalDataReportInterface {
 
@@ -107,7 +107,7 @@ class PersonalDataReport implements PersonalDataReportInterface {
 	 *
 	 * @return array<string, mixed> `results` (the rows {@see self::row()} builds), `available` and `truncated`.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/management-reports/spec.md#requirement-the-personal-data-report-lists-which-documents-hold-personal-data-req-scr-010
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/management-reports/spec.md#requirement-the-personal-data-report-lists-which-documents-hold-personal-data-req-scr-010
 	 */
 	public function forReader(): array {
 		$mapper = $this->stats->tryGetEntityRelationMapper();

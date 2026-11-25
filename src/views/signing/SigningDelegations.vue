@@ -73,7 +73,7 @@ export default {
 	/**
 	 * Read the caller's delegations.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-1.1
 	 */
 	mounted() {
 		this.load()
@@ -85,7 +85,7 @@ export default {
 		/**
 		 * Read the delegations the caller gave and received.
 		 *
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-1.1
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-1.1
 		 */
 		async load() {
 			try {
@@ -100,7 +100,7 @@ export default {
 		/**
 		 * Declare a delegation from the form.
 		 *
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-1.1
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-1.1
 		 */
 		async declare() {
 			this.busy = true
@@ -125,7 +125,7 @@ export default {
 		 * Withdraw a delegation the caller gave.
 		 *
 		 * @param {string} id The delegation.
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-1.1
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-1.1
 		 */
 		async withdraw(id) {
 			this.busy = true
@@ -146,7 +146,7 @@ export default {
 		 * @param {string} person The other party.
 		 * @return {string} The line.
 		 *
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-1.1
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-1.1
 		 */
 		describe(delegation, person) {
 			return t('filinq', '{person}, {from} to {until}: {types}', {

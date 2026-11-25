@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/extraction-employee-document/specs/employee-document-extraction/spec.md
+ * @spec openspec/changes/archive/2026-11-24-extraction-employee-document/specs/employee-document-extraction/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -39,7 +39,7 @@ use OCP\AppFramework\Utility\ITimeFactory;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/extraction-employee-document/specs/employee-document-extraction/spec.md
+ * @spec openspec/changes/archive/2026-11-24-extraction-employee-document/specs/employee-document-extraction/spec.md
  */
 class EmployeeDocumentExtractionService {
 
@@ -82,7 +82,7 @@ class EmployeeDocumentExtractionService {
 	 *
 	 * @return array{status: string, docType: string, fields: array<string, array{value: string|float, confidence: float}>, message: string}
 	 *
-	 * @spec openspec/changes/extraction-employee-document/specs/employee-document-extraction/spec.md#REQ-EDE-003
+	 * @spec openspec/changes/archive/2026-11-24-extraction-employee-document/specs/employee-document-extraction/spec.md#REQ-EDE-003
 	 *
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $requestedBy keeps the extractFinancial() call shape; the read is the session user's.
 	 */
