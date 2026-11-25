@@ -87,10 +87,21 @@ async function api(
  * @return The new id.
  */
 async function seed(page: Page, schema: string, object: Record<string, unknown>): Promise<string> {
-	const res = await api(page, 'POST', `${OBJECTS}/${schema}`, object)
+	// OpenRegister starts a delivery in ready_for_writeback and refuses any
+	// other state on create; a later state is reached by its transition.
+	const target = object.deliveryStatus
+	const initial = schema === 'caseSystemDelivery' && target !== undefined && target !== 'ready_for_writeback'
+		? { ...object, deliveryStatus: 'ready_for_writeback' }
+		: object
+	const res = await api(page, 'POST', `${OBJECTS}/${schema}`, initial)
 	expect(res.status, `could not seed a ${schema} — ${JSON.stringify(res.body).slice(0, 300)}`).toBeLessThan(400)
 	const created = res.body as Record<string, never>
-	return (created?.id ?? created?.['@self']?.id) as string
+	const id = (created?.id ?? created?.['@self']?.id) as string
+	if (initial !== object) {
+		const moved = await api(page, 'PUT', `${OBJECTS}/${schema}/${id}`, object)
+		expect(moved.status, `could not move the ${schema} to ${String(target)} — ${JSON.stringify(moved.body).slice(0, 300)}`).toBeLessThan(400)
+	}
+	return id
 }
 
 /**
@@ -222,6 +233,9 @@ test.describe('case-system delivery in the admin settings', () => {
 		expect(template.status, JSON.stringify(template.body).slice(0, 300)).toBe(200)
 		const templateId = String(template.body.id)
 		created.push({ schema: 'template', id: templateId })
+		// A new template is a draft; users generate only from a published one.
+		const published = await api(page, 'POST', `/index.php/apps/filinq/api/templates/${templateId}/publish`)
+		expect(published.status, JSON.stringify(published.body).slice(0, 300)).toBe(200)
 
 		const generated = await page.evaluate(
 			async ({ templateId, destination, stamp }) => {
@@ -235,8 +249,9 @@ test.describe('case-system delivery in the admin settings', () => {
 					body: JSON.stringify({
 						templateId,
 						filename: `${stamp}-contract`,
-						dataRefs: { name: 'A. Employee' },
-						options: { format: 'pdf', output: { mode: 'both', caseSystem: destination } },
+						// dataRefs lists OpenRegister references; literal values go as adHocData.
+						dataRefs: [],
+						options: { format: 'pdf', adHocData: { name: 'A. Employee' }, output: { mode: 'both', caseSystem: destination } },
 					}),
 				})
 				return { status: res.status, fileId: res.headers.get('X-Docudesk-File-Id') ?? '' }
@@ -272,6 +287,7 @@ test.describe('case-system delivery in the admin settings', () => {
 		// Only integriq's write-back sets written_back, so the delivery is seeded.
 		const delivered = await seed(page, 'caseSystemDelivery', {
 			generatedDocumentId: randomUUID(),
+			destinationId: randomUUID(),
 			sourceId: `source-${STAMP}`,
 			fileId,
 			deliveryStatus: 'written_back',

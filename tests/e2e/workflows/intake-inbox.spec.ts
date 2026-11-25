@@ -169,7 +169,7 @@ test.describe('The intake inbox', () => {
 		const row = page.getByRole('row', { name: new RegExp(subject) })
 		await expect(row).toBeVisible({ timeout: 15000 })
 		await row.getByRole('button').last().click()
-		await page.getByRole('button', { name: 'Reject' }).first().click()
+		await page.getByRole('menuitem', { name: 'Reject' }).first().click()
 
 		await page
 			.getByTestId('final-reason-input')

@@ -452,7 +452,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 */
 	public function destinationFor(array $template, ?array $override=null): ?array {
 		if ($override !== null && $override !== []) {
-			return $override + ['id' => ''];
+			return $override + ['id' => self::inlineDestinationId(destination: $override)];
 		}
 
 		$active = array_values(array_filter($this->destinations(), static fn (array $d): bool => ($d['active'] ?? false) === true));
@@ -461,6 +461,32 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 			?? self::firstMatch(destinations: $active, template: $template, byTemplate: false));
 
 	}//end destinationFor()
+
+	/**
+	 * A stable uuid for a destination a request names inline.
+	 *
+	 * A delivery requires a uuid `destinationId`, and an inline destination is
+	 * not a stored object, so it had none: the delivery was refused and the
+	 * document never queued for the case system (only a warning said so; live,
+	 * 25 Nov 2026). The id is a name-based (version 5 style) uuid of the
+	 * destination's own fields, so the same destination always gets the same
+	 * id and a repeated request finds its existing delivery.
+	 *
+	 * @param array<string, mixed> $destination The request's destination.
+	 *
+	 * @return string The uuid.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+	 */
+	public static function inlineDestinationId(array $destination): string {
+		unset($destination['id']);
+		ksort($destination);
+		$hash = sha1('filinq:case-system-destination:'.json_encode($destination));
+		$hex  = substr($hash, 0, 12).'5'.substr($hash, 13, 3).dechex((hexdec($hash[16]) & 0x3) | 0x8).substr($hash, 17, 15);
+
+		return implode('-', [substr($hex, 0, 8), substr($hex, 8, 4), substr($hex, 12, 4), substr($hex, 16, 4), substr($hex, 20, 12)]);
+
+	}//end inlineDestinationId()
 
 	/**
 	 * The first destination for this template (by its id), or for its namespace without a template id.

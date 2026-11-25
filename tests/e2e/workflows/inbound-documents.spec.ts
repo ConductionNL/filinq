@@ -25,6 +25,9 @@ import { expect, test } from '@playwright/test'
 import { API, harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures.ts'
 
 /** The OpenRegister objects endpoint for the intake documents. */
+/** A file id of this run only: an earlier run's record of a fixed id would be found first. */
+const DETACH_FILE = 900000 + Math.floor(Math.random() * 99999)
+
 const OR_INTAKE = '/index.php/apps/openregister/api/objects/filinq/intakeDocument'
 
 /** The OpenRegister objects endpoint for the routing declarations. */
@@ -50,8 +53,8 @@ async function seed(
 			channel: 'mail',
 			sender: `${TEST_PREFIX}@voorbeeld.nl`,
 			receivedAt: new Date().toISOString(),
-			status: 'received',
 			...fields,
+			status: 'received',
 		},
 	})
 	expect(created.status(), 'seeding an intake document must succeed').toBeLessThan(
@@ -60,6 +63,17 @@ async function seed(
 	const body = await created.json()
 	const uuid = body?.['@self']?.id || body?.id || body?.uuid || ''
 	expect(uuid, 'seeding must yield a uuid').not.toBe('')
+	// OpenRegister starts an intake document in received and refuses any
+	// other state on create; assigned is reached by its transition.
+	if (fields.status !== undefined && fields.status !== 'received') {
+		const stored = await (await req.get(`${OR_INTAKE}/${uuid}`, { headers: jsonHeaders(token) })).json()
+		const own = Object.fromEntries(Object.entries(stored).filter(([key, value]) => !key.startsWith('@') && key !== 'daysLeft' && value !== null))
+		const moved = await req.put(`${OR_INTAKE}/${uuid}`, {
+			headers: jsonHeaders(token),
+			data: { ...own, ...fields },
+		})
+		expect(moved.status(), `moving the seed to ${String(fields.status)}: ${await moved.text()}`).toBeLessThan(300)
+	}
 	return uuid
 }
 
@@ -140,13 +154,13 @@ test.describe('Inbound documents and the worklist', () => {
 		const uuid = await seed(page.request, token, {
 			subject: `${TEST_PREFIX}-verkeerde-zaak`,
 			sourceRef: `${TEST_PREFIX}-detach`,
-			file: 999999,
+			file: DETACH_FILE,
 			status: 'assigned',
 		})
 
 		const detached = await page.request.post(`${API}/intake/documents/detach`, {
 			headers: jsonHeaders(token),
-			data: { fileId: 999999, reason: 'verkeerde zaak' },
+			data: { fileId: DETACH_FILE, reason: 'verkeerde zaak' },
 		})
 		expect(detached.status()).toBe(200)
 
@@ -268,7 +282,8 @@ test.describe('Inbound documents and the worklist', () => {
 		expect(assigned.status()).toBe(200)
 
 		const stored = await readBack(page.request, token, uuid)
-		expect(stored.routing).toBe('')
+		// An empty routing is left out of the stored object.
+		expect(stored.routing ?? '').toBe('')
 	})
 
 	// @e2e openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md#a-rejection-teaches-the-corpus

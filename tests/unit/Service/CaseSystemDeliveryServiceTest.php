@@ -136,7 +136,15 @@ class CaseSystemDeliveryServiceTest extends TestCase {
 		$this->assertNull($service->destinationFor(['id' => 'template-1', 'namespace' => 'hrmq']));
 		$override = $service->destinationFor(['id' => 'template-1', 'namespace' => 'hrmq'], ['sourceId' => 'zgw-other', 'zaakUrl' => 'https://zaken.example.nl/zaken/api/v1/zaken/1']);
 		$this->assertSame('zgw-other', $override['sourceId']);
-		$this->assertSame('', $override['id']);
+		$this->assertMatchesRegularExpression(
+			pattern: '/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/',
+			string: $override['id'],
+			message: 'An inline destination gets a uuid, as a delivery requires one.'
+		);
+		$again = $service->destinationFor(['id' => 'template-1', 'namespace' => 'hrmq'], ['zaakUrl' => 'https://zaken.example.nl/zaken/api/v1/zaken/1', 'sourceId' => 'zgw-other']);
+		$this->assertSame(expected: $override['id'], actual: $again['id'], message: 'The same destination gets the same id, whatever the key order.');
+		$other = $service->destinationFor(['id' => 'template-1', 'namespace' => 'hrmq'], ['sourceId' => 'zgw-third']);
+		$this->assertNotSame(expected: $override['id'], actual: $other['id']);
 
 	}//end testARequestDestinationWinsAndAnInactiveOneIsIgnored()
 
@@ -320,7 +328,7 @@ class CaseSystemDeliveryServiceTest extends TestCase {
 	}//end testAFailingDeliveryWriteBecomesAWarningAndLeavesTheDocumentUnlinked()
 
 	public function testARequestDestinationIsUsedAndAnAlreadyLinkedDocumentIsNotRewritten(): void {
-		$existing = ['id' => 'delivery-9', 'generatedDocumentId' => 'doc-1', 'destinationId' => ''];
+		$existing = ['id' => 'delivery-9', 'generatedDocumentId' => 'doc-1', 'destinationId' => CaseSystemDeliveryService::inlineDestinationId(destination: ['sourceId' => 'zgw-other'])];
 		$service  = $this->service(['caseSystemDelivery' => [$existing]]);
 		$document = ['id' => 'doc-1', 'caseSystemDeliveryId' => 'delivery-9'];
 
