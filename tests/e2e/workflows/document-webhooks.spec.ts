@@ -131,9 +131,18 @@ test.describe('Document webhooks in the admin settings', () => {
 		const tested = page.waitForResponse((res) => res.request().method() === 'POST' && /\/api\/webhooks\/\d+\/test$/.test(res.url()))
 		await row.getByRole('button', { name: 'Send a test' }).click()
 		const answer = await tested
-		expect(answer.status(), 'OpenRegister answers the test send').toBeLessThan(500)
 		if (process.env.WEBHOOK_RECEIVER_URL) {
+			expect(answer.status(), 'OpenRegister delivered the test').toBeLessThan(500)
 			await expect(page.getByText('The test arrived')).toBeVisible({ timeout: 15_000 })
+		} else {
+			// No reachable receiver: OpenRegister answers a failed delivery
+			// as a 500 that still carries `success: false` and the reason
+			// (WebhooksController::test). Answered means that body, not a
+			// crash, and the section tells the admin the test did not arrive.
+			const body = await answer.json().catch(() => null)
+			expect(body?.success, 'OpenRegister answered the test send as a failed delivery').toBe(false)
+			expect(String(body?.message ?? ''), 'the failed delivery names its reason').not.toBe('')
+			await expect(page.getByText('The test did not arrive')).toBeVisible({ timeout: 15_000 })
 		}
 
 		await row.getByRole('button', { name: 'Delete' }).click()
