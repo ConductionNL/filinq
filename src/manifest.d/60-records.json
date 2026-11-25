@@ -91,6 +91,7 @@
 			"type": "index",
 			"title": "Destruction lists",
 			"config": {
+				"actionToggles": {"showAdd": false},
 				"entitySource": "endpoint",
 				"sourceConfig": {
 					"url": "/apps/openregister/api/archival/destruction-lists",
@@ -149,6 +150,7 @@
 			"type": "index",
 			"title": "Destruction certificates",
 			"config": {
+				"actionToggles": {"showAdd": false},
 				"entitySource": "endpoint",
 				"sourceConfig": {
 					"url": "/apps/openregister/api/archival/certificates",
@@ -177,6 +179,7 @@
 			"type": "index",
 			"title": "Due for transfer",
 			"config": {
+				"actionToggles": {"showAdd": false},
 				"entitySource": "endpoint",
 				"sourceConfig": {
 					"url": "/apps/openregister/api/transfers/eligible",

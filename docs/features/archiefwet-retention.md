@@ -33,12 +33,20 @@ archiefregister*) points OpenRegister's archival settings at filinq's
 register, after you confirm. Nothing is linked without that click: no
 update step and no background job writes these settings.
 
+![The Archiefbeheer section asking to confirm before it links the archive register](/screenshots/archiefwet-link-confirm.png)
+
+![The Archiefbeheer section once linked: OpenRegister reads the selectielijst and keeps its destruction lists in filinq's register](/screenshots/archiefwet-linked.png)
+
 ## Destruction lists (archivist)
 
 **Destruction lists** shows the vernietigingslijsten OpenRegister proposed
 for records whose term has passed. Open a list to see each record, its
 schema, its archive action date and its category. A record under a legal
 hold says so, and names the case to those allowed to see it.
+
+![Destruction lists: one list in review with two records](/screenshots/archiefwet-destruction-lists.png)
+
+![A destruction list in review: each record with its schema, register, archive action date and category, Keep this record per row, and Approve list and Reject list](/screenshots/archiefwet-destruction-list-detail.png)
 
 - **Keep this record** takes the record off the list. A reason is
   required.
@@ -57,6 +65,8 @@ destroyed, the totals per schema and category, the approvers, the
 selectielijst used and the compliance statement. A certificate is a
 permanent record and cannot be changed.
 
+![Destruction certificates: the certificate of the approved list, with the number destroyed, the totals per schema and category, the approver and the compliance statement](/screenshots/archiefwet-certificates.png)
+
 ## Records due for transfer
 
 **Due for transfer** lists the records to keep permanently (`bewaren`)
@@ -66,6 +76,8 @@ are the records OpenRegister's daily transfer check puts on its next
 transfer list for the e-depot. The page is read only: OpenRegister makes and
 sends the transfer list. Only an administrator can see this list, and it
 needs an OpenRegister release with `GET /api/transfers/eligible`.
+
+![Due for transfer with no records due](/screenshots/archiefwet-transfer-due.png)
 
 A record that has been transferred (`archiefstatus` `overgebracht`) is
 shown read only on its document or dossier, marked as transferred to the

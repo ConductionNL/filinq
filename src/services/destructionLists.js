@@ -229,6 +229,35 @@ export async function loadHolds(uuids, read = holdStatus) {
 }
 
 /**
+ * The titles of the schemas or registers a destruction list names by id.
+ * OpenRegister gives a proposed record's schema and register as numeric ids;
+ * an archivist reads names. Each distinct id is asked once; an id whose title
+ * cannot be read is left out, so the page falls back to the id.
+ *
+ * @param {'schemas'|'registers'} kind What the ids are.
+ * @param {Array<string>} ids The ids, duplicates allowed.
+ * @param {Function} read Reads one URL and answers its body (injectable for tests).
+ * @return {Promise<Object<string, string>>} Title per id.
+ * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
+ */
+export async function loadTitles(kind, ids, read = (url) => axios.get(url).then((response) => response.data)) {
+	const unique = [
+		...new Set((Array.isArray(ids) ? ids : []).filter((id) => typeof id === 'string' && id !== '')),
+	]
+	const bodies = await Promise.all(
+		unique.map((id) => read(generateUrl(`/apps/openregister/api/${kind}/${encodeURIComponent(id)}`)).catch(() => null)),
+	)
+	const titles = {}
+	unique.forEach((id, index) => {
+		const title = bodies[index]?.title
+		if (typeof title === 'string' && title.trim() !== '') {
+			titles[id] = title
+		}
+	})
+	return titles
+}
+
+/**
  * What the destruction list says about a record's legal hold: nothing when it
  * is not held, the holding cases by name when the server gave them, and
  * "Under a legal hold" without a name otherwise.
