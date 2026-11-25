@@ -78,6 +78,23 @@ class RedactionIrreversibilityVerifierTest extends TestCase {
 	}//end testTextLeftUnderTheMarkIsFound()
 
 	/**
+	 * A value of digits only (a phone number, a BSN) is looked for as text.
+	 * Live, such a value became an int array key and every anonymisation
+	 * that redacted one answered 500 from str_contains().
+	 *
+	 * @return void
+	 */
+	public function testAValueOfDigitsOnlyIsLookedForAsText(): void {
+		$clean = $this->verifier->verify(bytes: $this->cleanPdf(), redactedValues: ['111222333', '0612345678'], outputMode: 'pdf');
+		$this->assertSame(expected: RedactionIrreversibilityVerifier::CLEAN, actual: $clean['verdict']);
+
+		$bytes  = "%PDF-1.7\n1 0 obj\nstream\n0 0 0 rg 100 100 200 20 re f\nBT (111222333) Tj ET\nendstream\nendobj\ntrailer\n%%EOF\n";
+		$leaked = $this->verifier->verify(bytes: $bytes, redactedValues: ['111222333'], outputMode: 'pdf');
+		$this->assertSame(expected: RedactionIrreversibilityVerifier::LEAKING, actual: $leaked['verdict']);
+		$this->assertSame(expected: ['111222333'], actual: $leaked['findings'][0]['values']);
+	}//end testAValueOfDigitsOnlyIsLookedForAsText()
+
+	/**
 	 * The finding is described in words an archivist can act on, not by a
 	 * route name only a developer recognises.
 	 *
