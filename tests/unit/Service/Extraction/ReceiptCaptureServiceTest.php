@@ -232,13 +232,19 @@ class ReceiptCaptureServiceTest extends TestCase {
 		}
 
 		$policy = $this->createMock(UploadPolicyServiceInterface::class);
-		$policy->method('check')->willThrowException(new UploadRefusedException(message: 'This file type is not allowed.'));
+		$policy->method('check')->willThrowException(new UploadRefusedException(message: 'This file is a application/zip, which the policy does not allow.'));
 		$this->policy = $policy;
-		$this->expectException(UploadRefusedException::class);
 		try {
-			$this->service()->capture(userId: 'alice', fileName: 'x.exe', contents: 'MZ', request: []);
-		} finally {
-			$this->assertSame([], $this->written);
+			$this->service()->capture(userId: 'alice', fileName: 'bon.jpg', contents: "PK\x03\x04", request: []);
+			$this->fail('A file the policy refuses must be refused.');
+		} catch (ReceiptCaptureRefusedException $e) {
+			// The route answers 415 with the policy's reason, as REQ-ERP-002 asks; found live, where the policy refused first.
+			$this->assertSame(
+				expected: [415, 'This file is a application/zip, which the policy does not allow.'],
+				actual: [$e->getCode(), $e->getMessage()]
+			);
 		}
+
+		$this->assertSame(expected: [], actual: $this->written);
 	}//end testARefusalFromTheNormaliserOrThePolicyStoresNothing()
 }//end class

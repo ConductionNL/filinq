@@ -254,7 +254,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 			'requestedBy' => $requestedBy,
 			'sourceApp' => $request['sourceApp'],
 			'fields' => $pipeline['fields'],
-			'fieldConfidence' => $pipeline['fieldConfidence'],
+			'fieldConfidence' => $this->storableConfidence(confidence: $pipeline['fieldConfidence']),
 			'overallConfidence' => $pipeline['overallConfidence'],
 			'corrections' => [],
 		];
@@ -592,6 +592,30 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 
 		return $confidence;
 	}//end confidenceOf()
+
+	/**
+	 * The confidences as the register stores them.
+	 *
+	 * `fieldConfidence` is a required object, and OpenRegister refuses an
+	 * empty one. A read that found nothing (a photo without a text layer on a
+	 * server without OCR, say) still names every field, each at 0.0, so the
+	 * extraction is saved and answered instead of failing with a 500.
+	 *
+	 * @param array<string, float> $confidence Confidence per field that was read.
+	 *
+	 * @return array<string, float> The same, or every single-value field at 0.0 when none was read.
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/receipt-photo-capture/spec.md#requirement-one-call-stores-a-photo-and-starts-the-read-req-erp-001
+	 */
+	private function storableConfidence(array $confidence): array {
+		if ($confidence !== []) {
+			return $confidence;
+		}
+
+		$singleValued = array_filter(self::FIELD_DEFAULTS, static fn (mixed $default): bool => $default === null);
+
+		return array_map(static fn (): float => 0.0, $singleValued);
+	}//end storableConfidence()
 
 	/**
 	 * Apply an optional AI-backend enhancement pass to fill null/low-confidence

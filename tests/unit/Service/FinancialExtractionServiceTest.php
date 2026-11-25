@@ -329,6 +329,46 @@ TEXT;
 	}//end testExtractFinancialHappyPathPersistsWithoutEvent()
 
 	/**
+	 * A read that found nothing still stores a confidence for every single-value field, at 0.0,
+	 * because OpenRegister refuses an empty `fieldConfidence` (seen live as a 500 on the capture route).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/receipt-photo-capture/spec.md#requirement-one-call-stores-a-photo-and-starts-the-read-req-erp-001
+	 */
+	public function testAReadThatFoundNothingStoresEveryFieldAtZero(): void {
+		$this->mockResolvableImageFile(fileId: 42, text: 'PARKEERGARAGE');
+
+		$stored = null;
+		$this->objectService->expects($this->once())
+			->method('saveObject')
+			->willReturnCallback(function ($object) use (&$stored) {
+				$stored = $object;
+				return new class($object) implements \JsonSerializable {
+					public function __construct(
+						private array $data,
+					) {
+					}
+					public function jsonSerialize(): array {
+						return $this->data;
+					}
+				};
+			});
+
+		$this->service->extractFinancial(
+			data: ['fileId' => 42, 'docType' => 'receipt', 'sourceApp' => 'shillinq', 'callbackEvent' => false],
+			requestedBy: 'annemarie'
+		);
+
+		$this->assertNotSame(expected: [], actual: $stored['fieldConfidence']);
+		$this->assertSame(
+			expected: ['supplierName', 'supplierIban', 'supplierKvk', 'supplierVatId', 'invoiceNumber', 'issueDate', 'dueDate', 'currency', 'totalExcl', 'totalVat', 'totalIncl'],
+			actual: array_keys($stored['fieldConfidence'])
+		);
+		$this->assertSame(expected: [0.0], actual: array_values(array_unique($stored['fieldConfidence'])));
+	}//end testAReadThatFoundNothingStoresEveryFieldAtZero()
+
+	/**
 	 * A receipt that came in through the capture route keeps the photo it was read from (REQ-ERP-001);
 	 * any other extraction carries no capturedFileId.
 	 *
@@ -722,7 +762,8 @@ TEXT;
 		$this->service->extractFinancial(data: ['fileId' => 42, 'docType' => 'receipt'], requestedBy: 'annemarie');
 
 		$this->assertNull($saved['fields']['supplierIban']);
-		$this->assertSame([], $saved['fieldConfidence']);
+		// Nothing was read, so every single-value field is stored at 0.0: OpenRegister refuses an empty object here.
+		$this->assertSame([0.0], array_values(array_unique($saved['fieldConfidence'])));
 
 	}//end testOcrFailureFallsBackToEmptyText()
 

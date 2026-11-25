@@ -100,8 +100,8 @@ class ReceiptCaptureService {
 	 *
 	 * @return array<string, mixed> The stored `financialExtraction`, with `capturedFileId`.
 	 *
-	 * @throws ReceiptCaptureRefusedException (413) When the photo is above 20 MB, (415) when its type or format is not taken.
-	 * @throws UploadRefusedException When the upload policy refuses the file.
+	 * @throws ReceiptCaptureRefusedException (413) When the photo is above 20 MB, (415) when its type or format is not taken,
+	 *                                        including every refusal of the upload policy.
 	 *
 	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
 	 */
@@ -110,7 +110,13 @@ class ReceiptCaptureService {
 			throw new ReceiptCaptureRefusedException(message: 'This photo is larger than 20 MB. Take it again at a lower resolution.', code: 413);
 		}
 
-		$detected = (string)($this->uploadPolicy->check(fileName: $fileName, contents: $contents)['detectedType'] ?? '');
+		try {
+			$detected = (string)($this->uploadPolicy->check(fileName: $fileName, contents: $contents)['detectedType'] ?? '');
+		} catch (UploadRefusedException $e) {
+			// The policy's refusal of a type is this route's 415, with the policy's own reason (REQ-ERP-002).
+			throw new ReceiptCaptureRefusedException(message: $e->getMessage(), code: 415, previous: $e);
+		}
+
 		$extension = (self::ACCEPTED[$detected] ?? null);
 		if ($extension === null) {
 			throw new ReceiptCaptureRefusedException(message: 'Only a JPEG, PNG or HEIC photo or a PDF can be captured.', code: 415);
