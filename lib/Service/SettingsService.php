@@ -291,8 +291,7 @@ class SettingsService implements SettingsServiceInterface {
 			// batch/folder analysis, never gates/blocks/redacts (design.md D3).
 			// Stored as a string by updateSettings(): a typed boolean read
 			// threw and answered every settings read 500 after a save.
-			'filinq.confidentiality.prioritise_analysis' => AppConfigFlag::isOn(
-				config: $this->config,
+			'filinq.confidentiality.prioritise_analysis' => (new AppConfigFlag(config: $this->config))->isOn(
 				app: $this->appName,
 				key: 'filinq.confidentiality.prioritise_analysis'
 			),

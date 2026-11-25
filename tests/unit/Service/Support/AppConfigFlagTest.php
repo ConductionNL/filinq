@@ -56,7 +56,7 @@ class AppConfigFlagTest extends TestCase {
 		$config->method('getValueString')->willReturn($stored);
 		$config->expects($this->never())->method('getValueBool');
 
-		$this->assertSame(expected: $expected, actual: AppConfigFlag::isOn(config: $config, app: 'filinq', key: 'k'));
+		$this->assertSame(expected: $expected, actual: (new AppConfigFlag(config: $config))->isOn(app: 'filinq', key: 'k'));
 	}//end testAStoredStringIsReadAsAFlag()
 
 	/**
@@ -69,20 +69,19 @@ class AppConfigFlagTest extends TestCase {
 		$config->method('getValueString')->willThrowException(new AppConfigTypeConflictException('typed'));
 		$config->method('getValueBool')->willReturn(true);
 
-		$this->assertTrue(condition: AppConfigFlag::isOn(config: $config, app: 'filinq', key: 'k'));
+		$this->assertTrue(condition: (new AppConfigFlag(config: $config))->isOn(app: 'filinq', key: 'k'));
 	}//end testATypedBooleanIsReadAsOne()
 
 	/**
-	 * An unset flag answers the default.
+	 * An unset flag is off.
 	 *
 	 * @return void
 	 */
-	public function testAnUnsetFlagAnswersTheDefault(): void {
+	public function testAnUnsetFlagIsOff(): void {
 		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturn('');
 		$config->method('getValueBool')->willReturnArgument(2);
 
-		$this->assertTrue(condition: AppConfigFlag::isOn(config: $config, app: 'filinq', key: 'k', default: true));
-		$this->assertFalse(condition: AppConfigFlag::isOn(config: $config, app: 'filinq', key: 'k'));
-	}//end testAnUnsetFlagAnswersTheDefault()
+		$this->assertFalse(condition: (new AppConfigFlag(config: $config))->isOn(app: 'filinq', key: 'k'));
+	}//end testAnUnsetFlagIsOff()
 }//end class

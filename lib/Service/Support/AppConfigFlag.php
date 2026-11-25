@@ -43,26 +43,34 @@ final class AppConfigFlag {
 	private const ON = ['1', 'true', 'yes', 'on'];
 
 	/**
-	 * Whether the flag is on.
+	 * Constructor.
 	 *
-	 * @param IAppConfig $config  The app config.
-	 * @param string     $app     The app id.
-	 * @param string     $key     The key.
-	 * @param bool       $default The value when the key is not set.
+	 * @param IAppConfig $config The app config.
+	 */
+	public function __construct(
+		private readonly IAppConfig $config,
+	) {
+	}//end __construct()
+
+	/**
+	 * Whether the flag is on; an unset flag is off.
+	 *
+	 * @param string $app The app id.
+	 * @param string $key The key.
 	 *
 	 * @return bool Whether the flag is on.
 	 *
 	 * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
 	 */
-	public static function isOn(IAppConfig $config, string $app, string $key, bool $default=false): bool {
+	public function isOn(string $app, string $key): bool {
 		try {
-			$stored = trim($config->getValueString($app, $key, ''));
+			$stored = trim($this->config->getValueString($app, $key, ''));
 		} catch (AppConfigTypeConflictException) {
-			return $config->getValueBool($app, $key, $default);
+			return $this->config->getValueBool($app, $key, false);
 		}
 
 		if ($stored === '') {
-			return $config->getValueBool($app, $key, $default);
+			return $this->config->getValueBool($app, $key, false);
 		}
 
 		return in_array(strtolower($stored), self::ON, true);

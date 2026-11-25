@@ -478,7 +478,7 @@ class CaseSystemDeliveryService implements CaseSystemDeliveryServiceInterface {
 	 *
 	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
 	 */
-	public static function inlineDestinationId(array $destination): string {
+	private static function inlineDestinationId(array $destination): string {
 		unset($destination['id']);
 		ksort($destination);
 		$hash = sha1('filinq:case-system-destination:'.json_encode($destination));

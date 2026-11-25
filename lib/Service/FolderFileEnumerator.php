@@ -314,7 +314,7 @@ class FolderFileEnumerator {
 	 * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
 	 */
 	private function applyConfidentialityPriorityOrdering(array $files): array {
-		if (AppConfigFlag::isOn(config: $this->appConfig, app: 'filinq', key: self::PRIORITISE_ANALYSIS_KEY) === false) {
+		if ((new AppConfigFlag(config: $this->appConfig))->isOn(app: 'filinq', key: self::PRIORITISE_ANALYSIS_KEY) === false) {
 			return $files;
 		}
 
