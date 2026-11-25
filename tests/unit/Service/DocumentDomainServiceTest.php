@@ -277,7 +277,7 @@ class DocumentDomainServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
 	 */
 	public function testALinkIsCheckedAgainstTheTargetRecord(): void {
 		$service = $this->service(rows: [['uuid' => 'record-1', 'domains' => []]]);
@@ -295,7 +295,7 @@ class DocumentDomainServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
 	 */
 	public function testALinkToARecordICannotWriteIsRefused(): void {
 		$service = $this->service(rows: [['uuid' => 'record-1', 'domains' => []]], mayWrite: false);
@@ -316,7 +316,7 @@ class DocumentDomainServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
 	 */
 	public function testAnUnlinkFromARecordICannotWriteIsRefused(): void {
 		$service = $this->service(

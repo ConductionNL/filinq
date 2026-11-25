@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ use OCP\IRequest;
 /**
  * Serves `GET api/documents/{fileId}/audit` and `POST api/documents/{fileId}/opened`.
  *
- * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
  */
 class DocumentAuditController extends Controller {
 
@@ -67,7 +67,7 @@ class DocumentAuditController extends Controller {
 	 *
 	 * @return JSONResponse `{results, total}`, or 404.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
 	 */
 	#[NoAdminRequired]
 	public function index(int $fileId): JSONResponse {
@@ -92,7 +92,7 @@ class DocumentAuditController extends Controller {
 	 *
 	 * @return JSONResponse `{recorded}`, or 404.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
 	 */
 	#[NoAdminRequired]
 	public function opened(int $fileId): JSONResponse {
@@ -115,7 +115,7 @@ class DocumentAuditController extends Controller {
 	 *
 	 * @return bool True when the caller may read the file.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
 	 */
 	private function mayAccessFile(int $fileId): bool {
 		return $this->files->node(fileId: $fileId) !== null;

@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -52,7 +52,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
  */
 class DocumentCopyService {
 	use ReadsCurrentUserId;
@@ -110,7 +110,7 @@ class DocumentCopyService {
 	 * @throws DomainLinkRefusedException When the caller may not read the source or write the target.
 	 * @throws RuntimeException When the request is incomplete or the target has no folder to write to.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
 	 */
 	public function copy(int $fileId, array $source, array $target): array {
 		$source = $this->reference(record: $source);

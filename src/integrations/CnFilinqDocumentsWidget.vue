@@ -212,7 +212,7 @@ export default {
 		 * The rows in the order the user chose; it lasts while the case stays open.
 		 *
 		 * @return {Array<object>} The sorted rows.
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.1
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.1
 		 */
 		sortedRows() {
 			return sortDocumentRows(this.rows, this.sort)
@@ -222,7 +222,7 @@ export default {
 		 * The columns to sort on, with their labels.
 		 *
 		 * @return {Array<{key: string, label: string}>} The columns.
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.1
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.1
 		 */
 		sortColumns() {
 			return [
@@ -260,7 +260,7 @@ export default {
 		 * Sort on a column; choosing it again flips the order.
 		 *
 		 * @param {string} key The column.
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.1
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.1
 		 */
 		sortOn(key) {
 			this.sort = nextSort(this.sort, key)
@@ -272,7 +272,7 @@ export default {
 		 * @param {number} mtime Seconds since the epoch.
 		 * @return {string} The date.
 		 *
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.1
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.1
 		 */
 		asDate(mtime) {
 			return new Date(mtime * 1000).toLocaleDateString()
@@ -295,8 +295,8 @@ export default {
 		 *
 		 * @param {object} row One flat-list row.
 		 * @param {'link'|'copy'} [mode] Link the document, or copy it.
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
 		 */
 		toggleLinkForm(row, mode = 'link') {
 			this.linkMessage = ''
@@ -313,7 +313,7 @@ export default {
 		 *
 		 * @param {object} row One flat-list row.
 		 * @return {Promise<void>} Resolves once the answer is shown.
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-6.1
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
 		 */
 		async copyToOtherRecord(row) {
 			const target = linkTarget(this.linkForm)
@@ -345,7 +345,7 @@ export default {
 		 *
 		 * @param {object} row One flat-list row.
 		 * @return {Promise<void>} Resolves once the answer is shown.
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
 		 */
 		async linkToRecord(row) {
 			const target = linkTarget(this.linkForm)
@@ -370,7 +370,7 @@ export default {
 		 *
 		 * @param {object} row One flat-list row.
 		 * @return {Promise<void>} Resolves once the list reflects the answer.
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
 		 */
 		async removeLink(row) {
 			this.busy = true
@@ -394,7 +394,7 @@ export default {
 		 *
 		 * @param {{status: number, error: string}} answer The answer.
 		 * @return {string} The sentence.
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
 		 */
 		refusal(answer) {
 			if (answer.status === 403) {

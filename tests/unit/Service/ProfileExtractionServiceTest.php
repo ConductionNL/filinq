@@ -13,7 +13,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/extraction-cv-profile/specs/cv-profile-extraction/spec.md
+ * @spec openspec/changes/archive/2026-11-24-extraction-cv-profile/specs/cv-profile-extraction/spec.md
  */
 
 declare(strict_types=1);

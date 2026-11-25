@@ -107,7 +107,7 @@ class ContractTermExtractor {
 	 *
 	 * @return string|null The date, or null when it is not a real date.
 	 *
-	 * @spec openspec/changes/extraction-employee-document/specs/employee-document-extraction/spec.md#REQ-EDE-002
+	 * @spec openspec/changes/archive/2026-11-24-extraction-employee-document/specs/employee-document-extraction/spec.md#REQ-EDE-002
 	 */
 	public function normaliseDate(string $raw): ?string {
 		$parts = $this->dateParts(raw: $raw);

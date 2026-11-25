@@ -43,7 +43,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
  */
 class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 
@@ -98,7 +98,7 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @return string `phone-code`.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
 	 */
 	public function getIdentifier(): string {
 		return self::IDENTIFIER;
@@ -110,7 +110,7 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @return list<string> `['phone-code']`.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
 	 */
 	public function getSupportedMeans(): array {
 		return [self::MEANS];
@@ -122,7 +122,7 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @return list<string> `['low']`.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
 	 */
 	public function getSupportedAssurance(): array {
 		return ['low'];
@@ -138,7 +138,7 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @throws RuntimeException When no gateway is bound or the signer has no phone number.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
 	 */
 	public function initiateAuthentication(SignerAuthContext $context): AuthChallenge {
 		if ($this->sender === null) {
@@ -172,7 +172,7 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @throws RuntimeException When the code is missing, wrong, expired, used or for another act.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
 	 */
 	public function completeAuthentication(array $callbackData): IdentityEvidence {
 		$requestId = (string) ($callbackData['requestId'] ?? '');
@@ -216,7 +216,7 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @throws RuntimeException When no code is pending, or it has expired (and is then dropped).
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
 	 */
 	private function pendingCode(string $key, int $now): array {
 		$pending = $this->cache()->get($key);
@@ -242,7 +242,7 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
 	 */
 	private function countWrongAttempt(string $key, array $pending, int $now): void {
 		$pending['attempts'] = ((int) ($pending['attempts'] ?? 0) + 1);
@@ -289,7 +289,7 @@ class PhoneCodeProvider implements SignerAuthenticationProviderInterface {
 	 *
 	 * @throws RuntimeException When signer records are not configured.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-can-be-verified-with-a-code-sent-to-their-phone-req-scr-004
 	 */
 	private function signerRecord(string $signerId): array {
 		$binding = $this->settings->resolveSignerRecordBinding();

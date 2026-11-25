@@ -79,7 +79,7 @@ export default {
 	/**
 	 * Read the records the reader created.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
 	 */
 	mounted() {
 		this.load()
@@ -93,7 +93,7 @@ export default {
 		 * Switch between My records and Waiting for me, and read that list.
 		 *
 		 * @param {string} view `mine` or `waiting`.
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
 		 */
 		choose(view) {
 			this.view = view
@@ -103,7 +103,7 @@ export default {
 		/**
 		 * Read the list on show.
 		 *
-		 * @spec openspec/changes/specify-capability-rows/tasks.md#2-documents
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#2-documents
 		 */
 		async load() {
 			this.loading = true

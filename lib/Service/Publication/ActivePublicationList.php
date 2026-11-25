@@ -35,7 +35,7 @@ use OCP\IAppConfig;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
  */
 class ActivePublicationList {
 
@@ -87,7 +87,7 @@ class ActivePublicationList {
 	 *
 	 * @return list<string> The codes, empty when none are configured or the value is unreadable.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
 	 */
 	public function categories(): array {
 		$decoded = json_decode($this->config->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, '[]'), true);
@@ -113,7 +113,7 @@ class ActivePublicationList {
 	 *
 	 * @return list<array{record: array<string, mixed>, published: bool, blockers: list<string>}> One entry per record, in the order given.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/woo-publicatie-pipeline/spec.md#requirement-documents-that-must-be-published-actively-are-listed-with-what-they-still-lack-req-scr-008
 	 */
 	public function entries(array $records): array {
 		$categories = $this->categories();

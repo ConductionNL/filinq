@@ -41,7 +41,7 @@ namespace OCA\Filinq\Service;
 use OCA\Filinq\Event\DocumentGeneratedEvent;
 use OCA\Filinq\Kernel\Contracts\GenerationRequestServiceInterface;
 use OCA\Filinq\Service\Support\TemplateLookup;
-use OCA\Filinq\Service\Woo\WooDecisionContextBuilder;
+use OCA\Filinq\Service\Disclosure\DisclosureDecisionContextBuilder;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -103,7 +103,7 @@ class DocumentGenerationRequestService implements GenerationRequestServiceInterf
 	 * @param DocumentObjectServiceResolver $objectResolver  Reaches OpenRegister for the field write.
 	 * @param IUserSession                  $userSession     The acting user, whose Files receive the document.
 	 * @param IEventDispatcher              $eventDispatcher Announces the generated document.
-	 * @param WooDecisionContextBuilder|null $wooDecisions   Checks a `woo-decision` template's data.
+	 * @param DisclosureDecisionContextBuilder|null $wooDecisions   Checks a `woo-decision` template's data.
 	 *
 	 * @return void
 	 */
@@ -114,7 +114,7 @@ class DocumentGenerationRequestService implements GenerationRequestServiceInterf
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly IUserSession $userSession,
 		private readonly IEventDispatcher $eventDispatcher,
-		private readonly ?WooDecisionContextBuilder $wooDecisions = null,
+		private readonly ?DisclosureDecisionContextBuilder $wooDecisions = null,
 	) {
 		$this->rules = new DocumentGenerationRequestRules();
 
@@ -229,13 +229,13 @@ class DocumentGenerationRequestService implements GenerationRequestServiceInterf
 	 *
 	 * @return array<string, mixed> The data to render.
 	 *
-	 * @throws \OCA\Filinq\Exception\WooDecisionContractException When the data does not meet the contract.
+	 * @throws \OCA\Filinq\Exception\DisclosureDecisionContractException When the data does not meet the contract.
 	 * @throws RuntimeException When the contract cannot be checked.
 	 *
 	 * @spec openspec/changes/woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-woo-decision-data-contract-is-checked-before-anything-is-rendered-req-ddwrw-010
 	 */
 	private function withContract(array $template, array $data, array $request): array {
-		if ((string)($template['dataContract'] ?? '') !== WooDecisionContextBuilder::CONTRACT) {
+		if ((string)($template['dataContract'] ?? '') !== DisclosureDecisionContextBuilder::CONTRACT) {
 			return $data;
 		}
 

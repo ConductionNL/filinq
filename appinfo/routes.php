@@ -115,6 +115,9 @@ $extra = [
         ['name' => 'documentRelease#release', 'url' => 'api/case-documents/{uuid}/releases', 'verb' => 'POST'],
         ['name' => 'documentRelease#withdraw', 'url' => 'api/document-releases/{releaseId}', 'verb' => 'DELETE'],
         ['name' => 'waitingWork#index', 'url' => 'api/documents/waiting', 'verb' => 'GET'],
+        // A form surface checks the document reference a field holds and files a submitted form (forms-as-documents, REQ-DFT-05).
+        ['name' => 'formDocument#checkReference', 'url' => 'api/forms/document-reference', 'verb' => 'POST'],
+        ['name' => 'formDocument#submit', 'url' => 'api/forms/submissions', 'verb' => 'POST'],
         // Which of the caller's listed documents hold some words (My documents, REQ-WCS-001).
         ['name' => 'caseDocuments#searchFiles', 'url' => 'api/documents/content-search', 'verb' => 'POST'],
         ['name' => 'personalDataReport#index', 'url' => 'api/reports/personal-data', 'verb' => 'GET'],
