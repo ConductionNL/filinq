@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -35,7 +35,7 @@ use OCP\Files\File;
 /**
  * Whether a message waits in the inbox already, and receiving one.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-mapped-folders-go-to-dossiers-the-rest-to-the-intake-inbox-req-mai-003
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-mapped-folders-go-to-dossiers-the-rest-to-the-intake-inbox-req-mai-003
  */
 class MailArchiveInboxDelivery {
 
@@ -61,7 +61,7 @@ class MailArchiveInboxDelivery {
 	 *
 	 * @return bool True when it was received before.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-3
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-3
 	 */
 	public function received(string $sourceRef): bool {
 		return $this->intake->findBySourceRef(sourceRef: $sourceRef) !== null;
@@ -77,7 +77,7 @@ class MailArchiveInboxDelivery {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-2
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-2
 	 */
 	public function deliver(File $message, array $fields, string $sourceRef): void {
 		$sentAt = $fields['sentAt'] ?? null;

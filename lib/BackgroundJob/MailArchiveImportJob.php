@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ use Throwable;
 /**
  * One work unit of a mail archive import per run.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
  */
 class MailArchiveImportJob extends TimedJob {
 
@@ -44,6 +44,7 @@ class MailArchiveImportJob extends TimedJob {
 	 * @param ITimeFactory             $clock   The clock.
 	 * @param MailArchiveImportService $imports The imports.
 	 * @param LoggerInterface          $logger  The logger.
+	 * @param ActingUser               $acting  Runs the unit as the user who started the import.
 	 *
 	 * @return void
 	 */
@@ -51,6 +52,7 @@ class MailArchiveImportJob extends TimedJob {
 		ITimeFactory $clock,
 		private readonly MailArchiveImportService $imports,
 		private readonly LoggerInterface $logger,
+		private readonly ActingUser $acting,
 	) {
 		parent::__construct(time: $clock);
 		$this->setInterval(seconds: 300);
@@ -67,11 +69,12 @@ class MailArchiveImportJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) `$argument` is Nextcloud's
 	 * TimedJob signature; this job takes its work from the importing imports.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	protected function run(mixed $argument): void {
 		try {
-			$import = $this->imports->runUnit();
+			// With the rights of the user who started it: a job has no user, and OpenRegister refuses an anonymous write.
+			$import = $this->acting->run(userId: $this->imports->nextRequester(), operation: fn (): ?array => $this->imports->runUnit());
 		} catch (Throwable $e) {
 			// The cursor was not saved, so the next run takes the same unit again.
 			$this->logger->error('[MailArchiveImportJob] a work unit failed', ['exception' => $e->getMessage()]);

@@ -7,7 +7,7 @@ archive's folders to dossiers, and follow the import while cron drains it,
 with the counts and every message that failed. The user sees their own
 imports only, like the api/mail-archive-imports routes behind it.
 
-@spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+@spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
 -->
 
 <template>
@@ -184,7 +184,7 @@ export default {
 		/**
 		 * The columns of the import table.
 		 *
-		 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
 		 */
 		tableColumns() {
 			return [
@@ -211,7 +211,7 @@ export default {
 		/**
 		 * Load the user's imports.
 		 *
-		 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
 		 */
 		async load() {
 			const result = await listImports()
@@ -226,7 +226,7 @@ export default {
 		/**
 		 * Reload the list on the refresh action.
 		 *
-		 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
 		 */
 		async refresh() {
 			this.refreshing = true
@@ -237,7 +237,7 @@ export default {
 		/**
 		 * Pick an archive in Files and start an import of it.
 		 *
-		 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
 		 */
 		async pickArchive() {
 			let nodes
@@ -247,6 +247,13 @@ export default {
 				)
 					.setMultiSelect(false)
 					.allowDirectories(false)
+					// Without a button the picker has no way to confirm a choice (seen live, 25 Nov 2026).
+					.setButtonFactory((selected) => [{
+						label: t('filinq', 'Import'),
+						variant: 'primary',
+						disabled: selected.length === 0,
+						callback: () => {},
+					}])
 					.build()
 					.pickNodes()
 			} catch {
@@ -275,7 +282,7 @@ export default {
 		 * Open the folder mapping of an import.
 		 *
 		 * @param {object} row The import in mapping.
-		 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
 		 */
 		async openMapping(row) {
 			this.mappingError = ''
@@ -294,7 +301,7 @@ export default {
 		 * Send the mapping and start importing.
 		 *
 		 * @param {Array<object>} folderMap Rows of { archiveFolder, dossier }.
-		 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
 		 */
 		async confirmMapping(folderMap) {
 			this.saving = true
@@ -321,7 +328,7 @@ export default {
 		 * Cancel an import; what was filed stays filed.
 		 *
 		 * @param {object} row The import.
-		 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+		 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
 		 */
 		async cancel(row) {
 			this.cancelling = row.uuid

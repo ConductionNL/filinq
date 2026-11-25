@@ -20,9 +20,13 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\BackgroundJob;
 
+use OCA\Filinq\BackgroundJob\ActingUser;
 use OCA\Filinq\BackgroundJob\MailArchiveImportJob;
 use OCA\Filinq\Service\MailArchive\MailArchiveImportService;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use ReflectionMethod;
@@ -31,7 +35,7 @@ use RuntimeException;
 /**
  * One work unit per run; a failing unit is logged and retried next run.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  */
 class MailArchiveImportJobTest extends TestCase {
 
@@ -43,8 +47,17 @@ class MailArchiveImportJobTest extends TestCase {
 	 *
 	 * @return void
 	 */
-	private function runJob(MailArchiveImportService $imports, LoggerInterface $logger): void {
-		$job = new MailArchiveImportJob(clock: $this->createMock(ITimeFactory::class), imports: $imports, logger: $logger);
+	private function runJob(MailArchiveImportService $imports, LoggerInterface $logger, ?ActingUser $acting=null): void {
+		$acting ??= new ActingUser(
+			users: $this->createMock(originalClassName: IUserManager::class),
+			session: $this->createMock(originalClassName: IUserSession::class)
+		);
+		$job      = new MailArchiveImportJob(
+			clock: $this->createMock(originalClassName: ITimeFactory::class),
+			imports: $imports,
+			logger: $logger,
+			acting: $acting
+		);
 		(new ReflectionMethod($job, 'run'))->invoke($job, null);
 
 	}//end runJob()
@@ -94,4 +107,38 @@ class MailArchiveImportJobTest extends TestCase {
 		$this->runJob(imports: $imports, logger: $logger);
 
 	}//end testAFailingUnitIsLogged()
+	/**
+	 * The unit runs as the user who started the import, and the previous user is restored after.
+	 *
+	 * Seen live: run without a user, every message failed on OpenRegister's RBAC ("User 'Anonymous'").
+	 *
+	 * @return void
+	 */
+	public function testTheUnitRunsAsTheUserWhoStartedTheImport(): void {
+		$anna  = $this->createMock(originalClassName: IUser::class);
+		$users = $this->createMock(originalClassName: IUserManager::class);
+		$users->method('get')->with('anna')->willReturn($anna);
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$active = [];
+		$session->method('setVolatileActiveUser')->willReturnCallback(
+			function (?IUser $user) use (&$active): void {
+				$active[] = $user;
+			}
+		);
+		$imports = $this->createMock(originalClassName: MailArchiveImportService::class);
+		$imports->method('nextRequester')->willReturn('anna');
+		$imports->expects($this->once())->method('runUnit')->willReturnCallback(
+			function () use (&$active, $anna): ?array {
+				$this->assertSame(expected: [$anna], actual: $active, message: 'the unit runs as anna');
+				return null;
+			}
+		);
+
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$this->runJob(imports: $imports, logger: $logger, acting: new ActingUser(users: $users, session: $session));
+
+		$this->assertSame(expected: [$anna, null], actual: $active);
+	}//end testTheUnitRunsAsTheUserWhoStartedTheImport()
+
 }//end class
