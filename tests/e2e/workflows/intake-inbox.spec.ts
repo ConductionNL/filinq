@@ -104,7 +104,7 @@ test.describe('The intake inbox', () => {
 		await seedWaiting(page.request, token, 'scan', subject)
 		await seedWaiting(page.request, token, 'mail', `${TEST_PREFIX}-bezwaar-mail`)
 
-		await page.goto('/index.php/apps/filinq/#/intake')
+		await page.goto('/index.php/apps/filinq/intake')
 		const row = page.getByRole('row', { name: new RegExp(subject) })
 		await expect(row).toBeVisible({ timeout: 15000 })
 		await expect(row).toContainText('Scan')
@@ -148,7 +148,7 @@ test.describe('The intake inbox', () => {
 		).toBe('assigned')
 
 		// And it is gone from the inbox, which is the thing a clerk notices.
-		await page.goto('/index.php/apps/filinq/#/intake')
+		await page.goto('/index.php/apps/filinq/intake')
 		await expect(page.getByTestId('intake-index')).toBeVisible({
 			timeout: 15000,
 		})
@@ -165,7 +165,7 @@ test.describe('The intake inbox', () => {
 		const subject = `${TEST_PREFIX}-afwijzen`
 		const uuid = await seedWaiting(page.request, token, 'scan', subject)
 
-		await page.goto('/index.php/apps/filinq/#/intake')
+		await page.goto('/index.php/apps/filinq/intake')
 		const row = page.getByRole('row', { name: new RegExp(subject) })
 		await expect(row).toBeVisible({ timeout: 15000 })
 		await row.getByRole('button').last().click()

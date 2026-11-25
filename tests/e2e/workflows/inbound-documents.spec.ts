@@ -154,7 +154,7 @@ test.describe('Inbound documents and the worklist', () => {
 		expect(stored.status).toBe('detached')
 		expect(stored.detachReason).toBe('verkeerde zaak')
 
-		await page.goto('/index.php/apps/filinq/#/intake')
+		await page.goto('/index.php/apps/filinq/intake')
 		await expect(page.getByTestId('intake-index')).toBeVisible({
 			timeout: 15000,
 		})

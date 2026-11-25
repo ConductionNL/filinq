@@ -123,9 +123,8 @@ test.describe('extraction verdict: the unattended threshold', () => {
 		})
 
 		await field.fill('0.5')
-		await expect(
-			page.getByTestId('settings-unattended-threshold'),
-		).toContainText(REFUSAL)
+		// The test id sits on the <input>; the refusal is its helper text.
+		await expect(page.getByText(REFUSAL).first()).toBeVisible()
 		await page.getByRole('button', { name: SAVE_ALL }).click()
 
 		await expect(page.getByText(REFUSAL).first()).toBeVisible()

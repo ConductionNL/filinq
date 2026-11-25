@@ -121,7 +121,7 @@ async function stubProvider(page: Page): Promise<{ asked: any[]; decided: any[];
  * @return The row.
  */
 async function openIntakeRow(page: Page) {
-	await page.goto(`${APP}/#/intake`)
+	await page.goto(`${APP}/intake`)
 	await expect(page.getByTestId('intake-index')).toBeVisible({ timeout: 30_000 })
 	const row = page.getByRole('row', { name: new RegExp(DOCUMENT.subject) })
 	await expect(row).toBeVisible({ timeout: 15_000 })
@@ -176,7 +176,7 @@ test.describe('fields filled from a document by a model', () => {
 		await expect(section.getByTestId('model-filling-switch').locator('xpath=descendant-or-self::input')).toBeDisabled()
 
 		// The worklist offers no fill action without a model, on any row.
-		await page.goto(`${APP}/#/intake`)
+		await page.goto(`${APP}/intake`)
 		await expect(page.getByTestId('intake-index')).toBeVisible({ timeout: 30_000 })
 		await expect(page.getByTestId('intake-fill-fields')).toHaveCount(0)
 	})

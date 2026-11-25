@@ -200,9 +200,11 @@ test.describe('admin-settings — documentation links', () => {
 		await goSettings(page)
 		await expect(page.locator('body')).toBeVisible()
 		// Look for any anchor linking to filinq documentation
+		// Hidden anchors (icon-only section links) match the selector too;
+		// only a link the admin can see counts.
 		const docLinks = page.locator(
 			'a[href*="filinq"], a[href*="conduction.gitbook"]',
-		)
+		).filter({ visible: true })
 		const count = await docLinks.count()
 		// If Vue is mounted, a doc link should be present
 		if (count > 0) {
