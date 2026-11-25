@@ -24,6 +24,8 @@ use OCA\Filinq\Service\ConsentScopeValidator;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\ConsentUpdateHandler;
 use OCA\Filinq\Service\CorrespondenceService;
+use OCA\Filinq\Service\ObjectBoundMail;
+use OCA\Filinq\Service\ObjectBoundMailTarget;
 use OCA\Filinq\Service\ObjectionDeadlineChecker;
 use OCA\Filinq\Service\PolicyMatchService;
 use OCP\IAppConfig;
@@ -119,13 +121,13 @@ class ConsentRequestSenderTest extends TestCase {
 		$this->assertArrayNotHasKey('objectionDeadline', $outcome);
 	}
 
-	public function testAPartyWithoutAnyAddressIsNotSentAndTheRecordSaysItHasNoAddress(): void {
+	public function testAPartyWithoutAnyAddressIsSkippedAndTheRecordSaysItHasNoAddress(): void {
 		$this->mailer->expects($this->never())->method('send');
 		$this->correspondence->expects($this->never())->method('generate');
 
 		$outcome = $this->sender->send(['id' => 'c-1'], $this->context(['contactEmail' => ' ']));
 
-		$this->assertSame('failed', $outcome['notificationStatus']);
+		$this->assertSame('skipped', $outcome['notificationStatus']);
 		$this->assertNull($outcome['notificationSentAt']);
 		$this->assertStringContainsString('no email or postal address', $outcome['notificationError']);
 	}
@@ -138,6 +140,80 @@ class ConsentRequestSenderTest extends TestCase {
 
 		$this->assertSame('failed', $outcome['notificationStatus']);
 		$this->assertStringContainsString('SMTP refused', $outcome['notificationError']);
+	}
+
+	public function testAnEmailGoesOutBoundToTheConsentObjectAndTheMailerIsNotUsed(): void {
+		$bound = $this->createMock(ObjectBoundMail::class);
+		$bound->expects($this->once())->method('toAddress')
+			->with(
+				'info@bakkerij-jansen.nl',
+				'',
+				$this->stringContains('doc-7'),
+				$this->stringContains('28 days'),
+				$this->callback(static fn (ObjectBoundMailTarget $t): bool => [$t->uuid, $t->register, $t->schema] === ['c-1', 'r', 's'])
+			)
+			->willReturn(ObjectBoundMail::OUTCOME_DISPATCHED);
+		$this->mailer->expects($this->never())->method('send');
+
+		$outcome = $this->boundSender(bound: $bound)->send(['id' => 'c-1'], $this->context(['contactEmail' => 'info@bakkerij-jansen.nl']));
+
+		$this->assertSame(['sent', 'email', null], [$outcome['notificationStatus'], $outcome['notificationChannel'], $outcome['notificationError']]);
+		$this->assertArrayHasKey('objectionDeadline', $outcome);
+	}
+
+	public function testAMailOpenRegisterDidNotSendIsFailedWithTheCause(): void {
+		$cases = [
+			'failed' => 'could not be sent: failed',
+			'no-address' => 'email address is empty',
+			'kill-switch' => 'switched off',
+		];
+		foreach ($cases as $result => $reason) {
+			$bound = $this->createMock(ObjectBoundMail::class);
+			$bound->method('toAddress')->willReturn($result);
+
+			$outcome = $this->boundSender(bound: $bound)->send(['id' => 'c-1'], $this->context(['contactEmail' => 'a@b.nl']));
+
+			$this->assertSame('failed', $outcome['notificationStatus'], $result);
+			$this->assertNull($outcome['notificationSentAt'], $result);
+			$this->assertStringContainsString($reason, $outcome['notificationError'], $result);
+		}
+	}
+
+	public function testWithoutOpenRegistersMailSenderTheMailerSendsIt(): void {
+		$bound = $this->createMock(ObjectBoundMail::class);
+		$bound->method('toAddress')->willReturn(ObjectBoundMail::OUTCOME_UNAVAILABLE);
+		$this->mailer->method('createMessage')->willReturn($this->createMock(IMessage::class));
+		$this->mailer->expects($this->once())->method('send');
+
+		$outcome = $this->boundSender(bound: $bound)->send(['id' => 'c-1'], $this->context(['contactEmail' => 'a@b.nl']));
+
+		$this->assertSame('sent', $outcome['notificationStatus']);
+	}
+
+	public function testARecordWithoutAChannelLinksNothing(): void {
+		$bound = $this->createMock(ObjectBoundMail::class);
+		$bound->expects($this->never())->method('toAddress');
+
+		$outcome = $this->boundSender(bound: $bound)->send(['id' => 'c-1'], $this->context([]));
+
+		$this->assertSame('skipped', $outcome['notificationStatus']);
+	}
+
+	private function boundSender(ObjectBoundMail $bound): ConsentRequestSender {
+		$deadlines = $this->createMock(ObjectionDeadlineChecker::class);
+		$deadlines->method('getObjectionPeriodDays')->willReturn(28);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(static fn (string $text, array $p = []): string => vsprintf($text, $p));
+
+		return new ConsentRequestSender(
+			mailer: $this->mailer,
+			correspondence: $this->correspondence,
+			deadlines: $deadlines,
+			config: $this->config,
+			l10n: $l10n,
+			logger: $this->createMock(LoggerInterface::class),
+			boundMail: $bound
+		);
 	}
 
 	public function testANewPendingRecordIsSentAndTheOutcomeStored(): void {

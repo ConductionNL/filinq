@@ -57,6 +57,10 @@ class ConsentRequestSender {
 	 * @param IAppConfig               $config          The consent letter template setting.
 	 * @param IL10N                    $l10n            Words the email.
 	 * @param LoggerInterface          $logger          Logger.
+	 * @param ObjectBoundMail|null     $boundMail       Sends the email bound to the consent object, so OpenRegister links it there;
+	 *                                                  null, or an OpenRegister without it, sends through the mailer unlinked.
+	 *
+	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-2-consent-notification-via-the-email-leaf-drive-notificationstatus-m
 	 */
 	public function __construct(
 		private readonly IMailer $mailer,
@@ -65,6 +69,7 @@ class ConsentRequestSender {
 		private readonly IAppConfig $config,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
+		private readonly ?ObjectBoundMail $boundMail = null,
 	) {
 	}//end __construct()
 
@@ -77,8 +82,10 @@ class ConsentRequestSender {
 	 * @return array<string, mixed> The fields to store on the record: `notificationStatus`, and
 	 *                              `notificationChannel`, `notificationSentAt` and `objectionDeadline`
 	 *                              when it went, or `notificationError` when it did not.
+	 *                              A record that names no channel at all is `skipped`.
 	 *
 	 * @spec openspec/changes/archive/2026-11-20-finish-half-built-capabilities/specs/consent-management/spec.md
+	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-2-consent-notification-via-the-email-leaf-drive-notificationstatus-m
 	 */
 	public function send(array $record, array $context): array {
 		$email   = trim((string)($context['contactEmail'] ?? ''));
@@ -86,8 +93,7 @@ class ConsentRequestSender {
 
 		try {
 			if ($email !== '') {
-				$this->sendEmail(email: $email, context: $context);
-				return $this->sent(channel: 'email');
+				return $this->sendEmail(email: $email, record: $record, context: $context);
 			}
 
 			if ($address !== '') {
@@ -101,30 +107,78 @@ class ConsentRequestSender {
 			return $this->unsent(reason: $this->l10n->t('The consent request could not be sent: %s', [$e->getMessage()]));
 		}
 
-		return $this->unsent(reason: $this->l10n->t('The third party has no email or postal address, so no consent request was sent.'));
+		return $this->skipped(reason: $this->l10n->t('The third party has no email or postal address, so no consent request was sent.'));
 	}//end send()
 
 	/**
 	 * Email the request: what will be published, the objection period and how to respond.
 	 *
+	 * The mail goes out through OpenRegister bound to the consent object, so the
+	 * sent mail is linked to that object and its outcome is the record's status.
+	 * Without OpenRegister's mail sender it goes through Nextcloud's mailer, unlinked.
+	 *
 	 * @param string               $email   The third party's email address.
+	 * @param array<string, mixed> $record  The stored consent record.
 	 * @param array<string, mixed> $context The request.
 	 *
-	 * @return void
+	 * @return array<string, mixed> The outcome.
+	 *
+	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-2-consent-notification-via-the-email-leaf-drive-notificationstatus-m
 	 */
-	private function sendEmail(string $email, array $context): void {
-		$days    = $this->deadlines->getObjectionPeriodDays();
-		$message = $this->mailer->createMessage();
-		$message->setTo([$email]);
-		$message->setSubject($this->l10n->t('Request for consent to publish document %s', [(string)($context['documentId'] ?? '')]));
-		$message->setPlainBody(
-			$this->l10n->t(
-				'We intend to publish document %1$s, which names %2$s. You have %3$d days from today to object. To object or consent, reply to this email.',
-				[(string)($context['documentId'] ?? ''), (string)($context['entityText'] ?? ''), $days]
-			)
+	private function sendEmail(string $email, array $record, array $context): array {
+		$subject = $this->l10n->t('Request for consent to publish document %s', [(string)($context['documentId'] ?? '')]);
+		$body    = $this->l10n->t(
+			'We intend to publish document %1$s, which names %2$s. You have %3$d days from today to object. To object or consent, reply to this email.',
+			[(string)($context['documentId'] ?? ''), (string)($context['entityText'] ?? ''), $this->deadlines->getObjectionPeriodDays()]
 		);
-		$this->mailer->send($message);
+
+		$outcome = ObjectBoundMail::OUTCOME_UNAVAILABLE;
+		if ($this->boundMail !== null) {
+			$outcome = $this->boundMail->toAddress(
+				address: $email,
+				displayName: '',
+				subject: $subject,
+				body: $body,
+				object: ObjectBoundMailTarget::ofRecord(
+					record: $record,
+					register: (string)($context['register'] ?? ''),
+					schema: (string)($context['schema'] ?? '')
+				)
+			);
+		}
+
+		if ($outcome === ObjectBoundMail::OUTCOME_UNAVAILABLE) {
+			$message = $this->mailer->createMessage();
+			$message->setTo([$email]);
+			$message->setSubject($subject);
+			$message->setPlainBody($body);
+			$this->mailer->send($message);
+			$outcome = ObjectBoundMail::OUTCOME_DISPATCHED;
+		}
+
+		if ($outcome !== ObjectBoundMail::OUTCOME_DISPATCHED) {
+			return $this->unsent(reason: $this->undeliveredReason(outcome: $outcome));
+		}
+
+		return $this->sent(channel: 'email');
 	}//end sendEmail()
+
+	/**
+	 * Why OpenRegister did not send the mail, in words.
+	 *
+	 * @param string $outcome OpenRegister's outcome.
+	 *
+	 * @return string The reason.
+	 *
+	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-2-consent-notification-via-the-email-leaf-drive-notificationstatus-m
+	 */
+	private function undeliveredReason(string $outcome): string {
+		return match ($outcome) {
+			'kill-switch' => $this->l10n->t('Email is switched off in OpenRegister\'s notification settings, so no consent request was sent.'),
+			'no-address' => $this->l10n->t('The third party\'s email address is empty, so no consent request was sent.'),
+			default => $this->l10n->t('The consent request could not be sent: %s', [$outcome]),
+		};
+	}//end undeliveredReason()
 
 	/**
 	 * Generate the request as a letter from the configured correspondence template.
@@ -188,4 +242,17 @@ class ConsentRequestSender {
 			'notificationError' => $reason,
 		];
 	}//end unsent()
+
+	/**
+	 * The outcome of a record that names no channel: nothing was sent and nothing is linked.
+	 *
+	 * @param string $reason Why.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-2-consent-notification-via-the-email-leaf-drive-notificationstatus-m
+	 */
+	private function skipped(string $reason): array {
+		return ['notificationStatus' => 'skipped'] + $this->unsent(reason: $reason);
+	}//end skipped()
 }//end class

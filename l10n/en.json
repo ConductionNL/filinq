@@ -4737,7 +4737,13 @@
         "Weergavenaam": "Display name",
         "Wettelijke grondslag of besluitnummer (e.g. AVG art. 17, Rechtbank Den Haag KG ZA 24/123).": "Legal basis or decision number (e.g. GDPR (AVG) art. 17, Rechtbank Den Haag KG ZA 24/123).",
         "Zaaknummer / dossiernummer voor traceability.": "Case number / dossier number for traceability.",
-        "eIDAS niveau": "eIDAS level"
+        "eIDAS niveau": "eIDAS level",
+        "Email is switched off in OpenRegister's notification settings, so no consent request was sent.": "Email is switched off in OpenRegister's notification settings, so no consent request was sent.",
+        "The third party's email address is empty, so no consent request was sent.": "The third party's email address is empty, so no consent request was sent.",
+        "The consent request could not be sent: %s": "The consent request could not be sent: %s",
+        "The third party has no email or postal address, so no consent request was sent.": "The third party has no email or postal address, so no consent request was sent.",
+        "Request for consent to publish document %s": "Request for consent to publish document %s",
+        "We intend to publish document %1$s, which names %2$s. You have %3$d days from today to object. To object or consent, reply to this email.": "We intend to publish document %1$s, which names %2$s. You have %3$d days from today to object. To object or consent, reply to this email."
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
