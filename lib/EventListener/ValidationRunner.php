@@ -51,6 +51,14 @@ use Throwable;
  * @spec openspec/specs/document-validation-checks/spec.md
  */
 class ValidationRunner {
+
+	/**
+	 * OpenRegister's schema mapper, named by string because OpenRegister is optional at runtime.
+	 *
+	 * @var string
+	 */
+	private const SCHEMA_MAPPER = 'OCA\\OpenRegister\\Db\\SchemaMapper';
+
 	/**
 	 * Constructor.
 	 *
@@ -87,7 +95,7 @@ class ValidationRunner {
 			$object = $event->getNewObject();
 		}
 
-		if ($object === null) {
+		if ($object === null || $this->schemaHoldsNoVerdict(object: $object) === true) {
 			return;
 		}
 
@@ -107,6 +115,42 @@ class ValidationRunner {
 		}
 
 	}//end runFallbackForEvent()
+
+	/**
+	 * Whether the object's schema declares no `validationStatus`, so a verdict has nowhere to go.
+	 *
+	 * Only the document schemas declare the verdict (`generatedDocument`). Any
+	 * other object that names a `fileId` (a Flow operation run, an intake
+	 * record) was validated as well, and OpenRegister dropped the two fields
+	 * on every such write with a warning (seen live, Flow runs). When the
+	 * schema cannot be read the fallback runs as before.
+	 *
+	 * @param mixed $object The OpenRegister object.
+	 *
+	 * @return bool True when the schema is known and declares no verdict.
+	 *
+	 * @spec openspec/specs/document-validation-checks/spec.md
+	 */
+	private function schemaHoldsNoVerdict(mixed $object): bool {
+		$schemaId = '';
+		if (method_exists($object, 'getSchema') === true) {
+			$schemaId = (string) ($object->getSchema() ?? '');
+		}
+
+		if ($schemaId === '') {
+			return false;
+		}
+
+		try {
+			$schema = $this->container->get(self::SCHEMA_MAPPER)->find(id: $schemaId);
+			$properties = $schema->getProperties();
+		} catch (Throwable) {
+			return false;
+		}
+
+		return array_key_exists('validationStatus', (array) $properties) === false;
+
+	}//end schemaHoldsNoVerdict()
 
 	/**
 	 * Compute + store the validation verdict for an OpenRegister object.
