@@ -39,6 +39,11 @@ humaniq does not hold everything a lender asks for. These items come from the `s
 - `remarks`
 
 Any item that is missing is printed as **niet opgegeven**, so a missing value never breaks the statement and never looks like a filled-in one. A missing date is never printed as today.
+Without an employer city the closing line leaves the place out ("Aldus naar waarheid ingevuld op 25-11-2026").
+
+![A rendered employer statement from humaniq's example data: employer, employee, a permanent contract of 40 hours a week, and the items humaniq does not hold printed as niet opgegeven](/screenshots/employer-statement-rendered.png)
+
+humaniq renders it from an employment contract's page action, which fills the contract lines. `occ humaniq:documents:generate --type=werkgeversverklaring --employee=<id> --as-user=<admin>` renders it for an employee without a contract, so those lines read niet opgegeven. The console has no signed-in user, and Filinq's templates are readable only by a signed-in user, so the command needs `--as-user`.
 
 ## Changing the wording
 
