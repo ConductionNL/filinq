@@ -30,7 +30,6 @@ namespace OCA\Filinq\Service\EmailIngestion;
 use OCA\Filinq\Kernel\Contracts\EmailDocumentRepositoryInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
-use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -167,7 +166,7 @@ class EmailDocumentRepository implements EmailDocumentRepositoryInterface {
 	 */
 	public function search(array $filters): array {
 		// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
-		$rows = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false, _multitenancy: false))->search(
+		$rows = $this->objectResolver->slugSearch(_rbac: false, _multitenancy: false)->search(
 			register: self::REGISTER,
 			schema: self::SCHEMA,
 			filters: $filters

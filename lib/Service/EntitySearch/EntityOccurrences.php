@@ -25,7 +25,6 @@ namespace OCA\Filinq\Service\EntitySearch;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\Redaction\AnonymizationLinkReader;
-use OCA\Filinq\Service\SlugSearch;
 use OCP\Files\File;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -263,7 +262,7 @@ class EntityOccurrences {
 	 */
 	private function dossiers(): array {
 		try {
-			$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(register: IntakeRepository::REGISTER, schema: 'dossier', filters: []);
+			$rows = $this->objectResolver->slugSearch()->search(register: IntakeRepository::REGISTER, schema: 'dossier', filters: []);
 		} catch (Throwable) {
 			return [];
 		}

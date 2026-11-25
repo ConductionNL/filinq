@@ -23,7 +23,6 @@ namespace OCA\Filinq\Service\Redaction;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
-use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Log\LoggerInterface;
@@ -82,7 +81,7 @@ class AnonymizationLinkReader {
 			// PublicationListComposer refused the whole list with
 			// "N of N records have no redacted copy yet" even when every one
 			// had been redacted.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
 				filters: ['sourceFileId' => $sourceFileId]
@@ -124,7 +123,7 @@ class AnonymizationLinkReader {
 		}
 
 		try {
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
 				filters: ['anonymizedFileId' => $anonymizedFileId]

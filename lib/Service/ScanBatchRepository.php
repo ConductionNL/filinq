@@ -165,7 +165,7 @@ class ScanBatchRepository implements ScanBatchRepositoryInterface {
 			// ScanIntakeController never found the existing batch and
 			// re-splitting the same scanned PDF created a second one every
 			// time instead of resuming.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: IntakeRepository::REGISTER,
 				schema: ScanBatchService::SCHEMA,
 				filters: ['file' => $fileId]

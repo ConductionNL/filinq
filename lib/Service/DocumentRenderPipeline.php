@@ -169,7 +169,7 @@ class DocumentRenderPipeline {
 	 */
 	private function soleOrganisationHuisstijl(): ?array {
 		try {
-			$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$rows = $this->objectResolver->slugSearch()->search(
 				register: 'filinq',
 				schema: 'huisstijl',
 				filters: []

@@ -116,7 +116,7 @@ class FileRecordReferences {
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects answers a
 			// slug with zero rows and no error.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: IntakeRepository::REGISTER,
 				schema: $schema,
 				filters: [$field => $fileId]

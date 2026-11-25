@@ -163,7 +163,7 @@ class PrintJobRepository implements PrintJobRepositoryInterface {
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects answers a
 			// slug with zero rows and no error.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false))->search(
+			$results = $this->objectResolver->slugSearch(_rbac: false)->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
 				filters: ['requestedBy' => $userId]

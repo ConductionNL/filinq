@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Sanitization;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
@@ -110,7 +109,7 @@ class SanitizationRecordRepository {
 	 */
 	private function search(array $filters): array {
 		// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
-		$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(register: 'filinq', schema: self::SCHEMA, filters: $filters);
+		$rows = $this->objectResolver->slugSearch()->search(register: 'filinq', schema: self::SCHEMA, filters: $filters);
 
 		if (is_array($rows) === false) {
 			return [];

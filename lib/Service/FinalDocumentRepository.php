@@ -97,7 +97,7 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 			// rather than `null`, so FinalDocumentService::refusalFor() walks
 			// an empty list, returns no refusal, and assertWritable() lets the
 			// write through. Every final document was writable.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: self::REGISTER,
 				schema: self::SCHEMA,
 				filters: ['fileId' => $fileId]
@@ -185,7 +185,7 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 
 		try {
 			// Slugs, so `searchObjectsBySlug`. See findForFile() above.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: self::REGISTER,
 				schema: self::SCHEMA,
 				filters: ['createdByUser' => $userId]
@@ -238,7 +238,7 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 	 */
 	public function dossierIndex(): DossierFileIndex {
 		try {
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: self::REGISTER,
 				schema: self::DOSSIER_SCHEMA,
 				filters: []
@@ -325,7 +325,7 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 		try {
 			// Slugs, so `searchObjectsBySlug`. See findForFile() above. No
 			// filter: the domain match is done in PHP below, deliberately.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: self::REGISTER,
 				schema: self::SCHEMA,
 				filters: []

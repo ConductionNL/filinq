@@ -23,7 +23,6 @@ namespace OCA\Filinq\Service\Waarmerk;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
-use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
@@ -193,7 +192,7 @@ class WaarmerkStore {
 	 */
 	public function search(array $filters): array {
 		try {
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false))->search(
+			$results = $this->objectResolver->slugSearch(_rbac: false)->search(
 				register: self::REGISTER,
 				schema: self::SCHEMA,
 				filters: $filters

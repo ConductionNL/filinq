@@ -23,7 +23,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Share;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -155,7 +154,7 @@ class DocumentShareStore {
 	public function active(): array {
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects reads them as ids.
-			$rows = (new SlugSearch(objects: $this->objects->resolve(), _rbac: false, _multitenancy: false))->search(
+			$rows = $this->objects->slugSearch(_rbac: false, _multitenancy: false)->search(
 				register: self::REGISTER,
 				schema: self::SCHEMA,
 				filters: ['status' => 'active']

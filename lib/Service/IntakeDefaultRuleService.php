@@ -238,7 +238,7 @@ class IntakeDefaultRuleService {
 			// `searchObjects` answers a slug with zero rows and no error, so
 			// match() never matched and every inbound document arrived
 			// unstamped, indistinguishable from an instance with no rules.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
 				filters: []

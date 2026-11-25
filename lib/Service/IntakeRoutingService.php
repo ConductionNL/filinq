@@ -151,7 +151,7 @@ class IntakeRoutingService implements IntakeRoutingServiceInterface {
 			// every routing declaration read as absent and apply() stamped
 			// `acceptance.required = false` on documents whose declaring app
 			// had asked for acceptance. Filters stay BARE keys.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
 				filters: [

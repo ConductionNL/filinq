@@ -164,14 +164,16 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @return SlugSearch The search.
 	 *
-	 * @throws \RuntimeException If the ObjectService is not available
+	 * Final, so a test double of this service still runs it over its own getObjectService().
+	 *
+	 * @throws RuntimeException If the ObjectService is not available
 	 *
 	 * @spec openspec/specs/openregister-bridge/spec.md
 	 */
-	public function slugSearch(): SlugSearch {
+	final public function slugSearch(): SlugSearch {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
-			throw new \RuntimeException(message: 'OpenRegister ObjectService is not available.');
+			throw new RuntimeException(message: 'OpenRegister ObjectService is not available.');
 		}
 
 		return new SlugSearch(objects: $objectService);

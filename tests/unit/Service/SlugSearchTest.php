@@ -208,13 +208,13 @@ final class SlugSearchTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheResolverHandsOutASlugSearchOverItsObjectService(): void {
-		$objects = $this->createMock(ObjectService::class);
+		$objects = $this->createMock(originalClassName: ObjectService::class);
 		$objects->expects($this->once())->method('searchObjectsBySlug')
 			->with('filinq', 'x')
 			->willReturn([['id' => 'row']]);
-		$container = $this->createMock(ContainerInterface::class);
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
 		$container->method('get')->willReturn($objects);
-		$apps = $this->createMock(IAppManager::class);
+		$apps = $this->createMock(originalClassName: IAppManager::class);
 		$apps->method('getInstalledApps')->willReturn(['openregister']);
 
 		$resolver = new DocumentObjectServiceResolver(container: $container, appManager: $apps);

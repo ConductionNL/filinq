@@ -59,7 +59,7 @@ class BridgeRecordReader {
 	 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-destruction-dates-propagate-to-the-publication-pipeline-with-source-precedence-req-ddare-007
 	 */
 	public function rows(string $schema, array $filters): array {
-		$results = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false))->search(
+		$results = $this->objectResolver->slugSearch(_rbac: false)->search(
 			register: BridgeService::REGISTER,
 			schema: $schema,
 			filters: $filters

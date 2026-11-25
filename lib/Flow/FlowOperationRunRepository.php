@@ -32,7 +32,6 @@ namespace OCA\Filinq\Flow;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
-use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use RuntimeException;
@@ -186,7 +185,7 @@ class FlowOperationRunRepository {
 	 */
 	private function search(array $filters): array {
 		try {
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false, _multitenancy: false))->search(
+			$results = $this->objectResolver->slugSearch(_rbac: false, _multitenancy: false)->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
 				filters: $filters

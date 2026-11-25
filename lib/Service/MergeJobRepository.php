@@ -165,7 +165,7 @@ class MergeJobRepository implements MergeJobRepositoryInterface {
 			// `searchObjects` answers a slug with zero rows and no error, so
 			// MergeDocumentsJob iterated nothing, logged nothing and reported
 			// a clean run every interval while every queued merge sat there.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: IntakeRepository::REGISTER,
 				schema: DocumentMergeService::SCHEMA,
 				filters: ['status' => DocumentMergeService::STATUS_QUEUED]

@@ -24,7 +24,6 @@ use OCA\Filinq\Exception\AgreementStoreUnreadableException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
-use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -255,7 +254,7 @@ class DownloadAgreementRepository {
 			// tell a gated document from one nobody had ever declared anything
 			// about. The document filter stays a BARE key beside the `@self`
 			// block, which is the spelling the objects path reads.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
 				filters: ['document' => $document]

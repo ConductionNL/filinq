@@ -225,7 +225,7 @@ class EffectiveSettings {
 
 		$this->overrides = [];
 		try {
-			$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$rows = $this->objectResolver->slugSearch()->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
 				filters: []

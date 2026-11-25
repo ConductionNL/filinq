@@ -22,7 +22,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Intake;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\Filinq\Service\SlugSearch;
 use OCA\Filinq\Service\StoredRecordFields;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -86,7 +85,7 @@ class AnsweringRegistration {
 		try {
 			// Bare keys through searchObjectsBySlug: a `filter[...]` wrapper or
 			// searchObjects with slugs answers zero rows and no error.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: self::REGISTER,
 				schema: self::SCHEMA,
 				filters: ['document' => $uuid, 'direction' => 'inbound']

@@ -25,7 +25,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Sanitization;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\Filinq\Service\SlugSearch;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -70,7 +69,7 @@ class SealLookup {
 
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
-			$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$rows = $this->objectResolver->slugSearch()->search(
 				register: 'filinq',
 				schema: self::SCHEMA,
 				filters: ['documentFileId' => $fileId]

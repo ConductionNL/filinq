@@ -198,7 +198,7 @@ class DocumentReviewService implements DocumentReviewServiceInterface {
 			// `searchObjects` answers a slug with zero rows and no error, so
 			// the review-due screen reported `total: 0` forever and a
 			// document past its review date reached nobody.
-			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			$results = $this->objectResolver->slugSearch()->search(
 				register: IntakeRepository::REGISTER,
 				schema: self::SCHEMA,
 				filters: []

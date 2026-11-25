@@ -21,7 +21,6 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use DateTimeImmutable;
 use Exception;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
-use OCA\Filinq\Service\SlugSearch;
 use OCA\Filinq\Service\DocumentService;
 use OCA\Filinq\Service\PageLayoutService;
 use OCA\Filinq\Service\PeriodicCadence;
@@ -83,7 +82,6 @@ class PeriodicDocumentServiceTest extends TestCase {
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(fn (): array => $this->stored);
 		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objectService);
-		$resolver->method('slugSearch')->willReturnCallback(static fn (): SlugSearch => new SlugSearch(objects: $objectService));
 
 		$views = $this->createMock(SavedViewReader::class);
 		$views->method('records')->willReturn($records);

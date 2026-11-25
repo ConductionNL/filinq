@@ -224,7 +224,7 @@ class HuisstijlProfileSync {
 	 * @return array<string, mixed>|null The house style.
 	 */
 	private function findManaged(string $tokenSetId): ?array {
-		$rows = (new SlugSearch(objects: $this->objectResolver->resolve(), _rbac: false, _multitenancy: false))->search(
+		$rows = $this->objectResolver->slugSearch(_rbac: false, _multitenancy: false)->search(
 			register: self::REGISTER,
 			schema: self::SCHEMA,
 			filters: ['managedBy' => self::MANAGED_BY, 'tokenSetId' => $tokenSetId]
