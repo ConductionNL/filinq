@@ -8712,10 +8712,10 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/signing-accept-only-recipient on 2026-09-27. Before: no accept-without-signing role: signerRecord status is PENDING, SIGNED, DECLINED, EXPIRED or CANCELLED (lib/Settings/filinq_register.json:2831) and the schema has no role property; grep -ri 'accept|acknowledg|role' lib/Service/SigningService.php finds nothing. SignerStepApprovedEvent (lib/Event/SignerStepApprovedEvent.php) is the completion of a signing step in an OR task sequence, not an acceptance role.",
-				"change": "openspec/changes/signing-accept-only-recipient",
+				"change": "openspec/changes/archive/2026-11-25-signing-accept-only-recipient",
 				"requirement": [
-					"openspec/changes/signing-accept-only-recipient/specs/signing-accept-only :: A recipient is a signer or accept-only (REQ-SAO-001)",
-					"openspec/changes/signing-accept-only-recipient/specs/signing-accept-only :: An accept-only recipient accepts and never signs (REQ-SAO-002)"
+					"openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only :: A recipient is a signer or accept-only (REQ-SAO-001)",
+					"openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only :: An accept-only recipient accepts and never signs (REQ-SAO-002)"
 				]
 			},
 			"reachedOn": "nothing reaches it",

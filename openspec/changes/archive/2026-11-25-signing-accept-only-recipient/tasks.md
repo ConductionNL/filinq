@@ -28,6 +28,7 @@
 
 ## 5. Strings and docs
 
-- [ ] 5.1 Dutch and English strings (ADR-005), `@spec` tags on new methods, and a section in `docs/features/` with a screenshot of the form and the folder (ADR-010). Verify: `npm run check:l10n`, `npm run lint` and `composer check:strict` pass; PHPUnit coverage on the new PHP is at least 75% (ADR-009).
+- [x] 5.1 Dutch and English strings (ADR-005), `@spec` tags on new methods, and a section in `docs/features/` with a screenshot of the form and the folder (ADR-010). Verify: `npm run check:l10n`, `npm run lint` and `composer check:strict` pass; PHPUnit coverage on the new PHP is at least 75% (ADR-009).
+  - 25 Nov 2026, live sandbox (Nextcloud 34, MariaDB, OpenRegister main): `docs/features/digital-signing.md` carries the form with a Sign and an Accept only row and an accept-only recipient's signing folder with its Accept button (`docs/static/screenshots/signing-accept-only-*.png`). `tests/e2e/signing-accept-only.spec.ts` ran live, 4 of 4 passed (covering the Playwright checks of 4.1 and 4.2), once its second user logs in through the form instead of `httpCredentials` alone, which left the app shell unmounted. Coverage with pcov over the full unit suite: 1216 of 1268 statements, 95.9%, over the 9 lib files carrying this change's `@spec` tag. `npm run test:l10n` and `npm run lint` (0 errors) pass; `composer check:strict` reports only findings inherited from development.
 - [x] 5.2 Link the portaliq issue for the row-action normaliser and the `signerEmail` claim in this change's proposal. Verify: the issue URL is in `proposal.md` under Cross-app dependencies.
   - ConductionNL/portaliq#804 carries both gaps; its URL is in `proposal.md` under Cross-app dependencies.

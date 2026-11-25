@@ -107,7 +107,7 @@ class SigningRequestValidator {
 	 *
 	 * @throws RuntimeException With code 400 when no signer, or an unreachable one, is given.
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only/spec.md
 	 */
 	public function validateSigners(array $signers): void {
 		if ($signers === []) {

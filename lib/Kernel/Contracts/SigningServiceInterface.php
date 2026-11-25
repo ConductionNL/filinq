@@ -178,7 +178,7 @@ interface SigningServiceInterface {
 	 *
 	 * @throws RuntimeException With code 422 for a recipient who signs, or when the request or recipient cannot accept.
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 */
 	public function accept(string $requestId, string $signerId, ?array $verifiedActor = null): array;
 
@@ -193,7 +193,7 @@ interface SigningServiceInterface {
 	 *
 	 * @return list<array<string, mixed>> The recipients.
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#4-screens
 	 */
 	public function recipientsOf(array $request): array;
 
