@@ -86,11 +86,6 @@
       "count": 1
     }
   },
-  "src/main.js": {
-    "no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/mixins/documentViewer.js": {
     "no-console": {
       "count": 1
@@ -103,11 +98,6 @@
   },
   "src/modals/Modals.vue": {
     "vue/multi-word-component-names": {
-      "count": 1
-    }
-  },
-  "src/services/bases.js": {
-    "no-unused-vars": {
       "count": 1
     }
   },
@@ -229,16 +219,6 @@
       "count": 1
     }
   },
-  "src/views/policy/ProhibitionIndex.vue": {
-    "vue/prefer-define-options": {
-      "count": 1
-    }
-  },
-  "src/views/policy/StandingConsentIndex.vue": {
-    "vue/prefer-define-options": {
-      "count": 1
-    }
-  },
   "src/views/settings/Settings.vue": {
     "@nextcloud/l10n-non-breaking-space": {
       "count": 1
@@ -271,7 +251,7 @@
   },
   "src/views/templates/TemplateDetail.vue": {
     "jsdoc/require-param-type": {
-      "count": 10
+      "count": 7
     }
   },
   "src/views/templates/TemplateIndex.vue": {
