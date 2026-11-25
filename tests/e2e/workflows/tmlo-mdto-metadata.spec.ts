@@ -46,11 +46,11 @@
  * Not run in the change that wrote it (decision 139): the live pass runs it.
  */
 
-// @e2e openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#core-fields-render-from-retention-read-only
-// @e2e openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#objection-state-proposes-an-avg-use-restriction
-// @e2e openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#incomplete-record-cannot-be-transferred
-// @e2e openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#document-sidecar-carries-core-supplement-and-bestand
-// @e2e openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#missing-transport-degrades-to-manual-export
+// @e2e openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#core-fields-render-from-retention-read-only
+// @e2e openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#objection-state-proposes-an-avg-use-restriction
+// @e2e openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#incomplete-record-cannot-be-transferred
+// @e2e openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#document-sidecar-carries-core-supplement-and-bestand
+// @e2e openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#missing-transport-degrades-to-manual-export
 
 import type { APIRequestContext, Locator, Page } from '@playwright/test'
 

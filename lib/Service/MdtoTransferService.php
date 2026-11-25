@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
  */
 
 declare(strict_types=1);
@@ -47,7 +47,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
  */
 class MdtoTransferService {
 
@@ -85,7 +85,7 @@ class MdtoTransferService {
 	 * @param IAppConfig                 $appConfig Reads OpenRegister's transport choice.
 	 * @param LoggerInterface            $logger    Logs transfer outcomes.
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
 	 */
 	public function __construct(
 		private readonly MdtoRecordReader $reader,
@@ -106,7 +106,7 @@ class MdtoTransferService {
 	 *
 	 * @return array<string, mixed> complete, missing, transportConfigured, supplement, proposals.
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-completeness-validation-gates-overbrenging-req-ddtmm-004
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-completeness-validation-gates-overbrenging-req-ddtmm-004
 	 */
 	public function status(string $uuid): array {
 		$entity  = $this->reader->entity(uuid: $uuid);
@@ -137,7 +137,7 @@ class MdtoTransferService {
 	 *
 	 * @return array{fileName: string, mimeType: string, content: string}
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
 	 */
 	public function export(string $uuid, string $format='xml'): array {
 		$input = $this->input(uuid: $uuid);
@@ -167,7 +167,7 @@ class MdtoTransferService {
 	 *
 	 * @return array<string, mixed> `status`: blocked (with `missing`), manual, transferred or failed (with `transferStatus`).
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
 	 */
 	public function transfer(string $uuid): array {
 		$entity  = $this->reader->entity(uuid: $uuid);
@@ -322,7 +322,7 @@ class MdtoTransferService {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
 	 */
 	private function recordType(object $entity, array $supplement): string {
 		$named = (string) ($supplement['objectType'] ?? '');

@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ namespace OCA\Filinq\Service;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
  */
 final class MdtoSidecarInput {
 
@@ -48,7 +48,7 @@ final class MdtoSidecarInput {
 	 * @param array<int, array<string, mixed>> $files            File facts (name, format, size, checksum, checksumDate).
 	 * @param array<int, array<string, mixed>> $members          A dossier's member documents (`uuid`, `title`).
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
 	 */
 	public function __construct(
 		public readonly array $record,
@@ -66,7 +66,7 @@ final class MdtoSidecarInput {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
 	 */
 	public function uuid(): string {
 		return (string) ($this->record['uuid'] ?? '');
@@ -78,7 +78,7 @@ final class MdtoSidecarInput {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
 	 */
 	public function name(): string {
 		return trim((string) ($this->record['title'] ?? ($this->record['naam'] ?? '')));
@@ -90,7 +90,7 @@ final class MdtoSidecarInput {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-mdto-core-attributes-have-a-single-source-of-truth-req-ddtmm-001
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-mdto-core-attributes-have-a-single-source-of-truth-req-ddtmm-001
 	 */
 	public function retention(): array {
 		return (array) ($this->record['retention'] ?? []);

@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
  */
 
 declare(strict_types=1);
@@ -371,7 +371,7 @@ class MdtoTransferServiceTest extends TestCase {
 	 * A dossier with no supplement yet is read as a dossier from its schema:
 	 * the panel proposes aggregation level `dossier` and the members are loaded.
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
 	 */
 	public function testADossierWithoutASupplementIsProposedAsADossier(): void {
 		$dossier = 'd0551e00-0000-4000-8000-000000000009';
@@ -394,7 +394,7 @@ class MdtoTransferServiceTest extends TestCase {
 	 * A record in another schema, or whose schema cannot be resolved, stays a
 	 * document when its supplement names no type.
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
 	 */
 	public function testARecordInAnotherSchemaWithoutASupplementIsADocument(): void {
 		$other   = 'b0000000-0000-4000-8000-000000000001';
@@ -411,7 +411,7 @@ class MdtoTransferServiceTest extends TestCase {
 	/**
 	 * The supplement's own `objectType` wins over the schema.
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
 	 */
 	public function testTheSupplementTypeWinsOverTheSchema(): void {
 		$this->openRegister->objects['43'] = self::entity(uuid: 'schema-43', data: ['slug' => 'dossier']);

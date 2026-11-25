@@ -6,7 +6,7 @@ Edit the MDTO supplement of a record: the attributes OpenRegister does not
 model. The core archival attributes are not on this form; they come from the
 record's retention block and are read only.
 
-@spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+@spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 -->
 
 <template>
@@ -29,7 +29,7 @@ import { saveSupplement } from '../services/mdto.js'
  * The editable supplement fields as a form schema.
  *
  * @return {object} The schema.
- * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
  */
 export function supplementFormSchema() {
 	return {
@@ -97,7 +97,7 @@ export default {
 		 * The form schema.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		schema() {
 			return supplementFormSchema()
@@ -107,7 +107,7 @@ export default {
 		 * The values the form opens with: the stored supplement.
 		 *
 		 * @return {object}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		item() {
 			return { ...this.supplement }
@@ -123,7 +123,7 @@ export default {
 		 *
 		 * @param {object} formData The form values.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		async onConfirm(formData) {
 			const edited = Object.keys(supplementFormSchema().properties)
