@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+@spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
 -->
 
 <template>
@@ -95,7 +95,7 @@ import {
  * signatures guarantee, for a visitor with no account. It shows the file
  * name only, serves no document and offers no download.
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 export default {
 	name: 'PublicSignatureVerification',
@@ -118,7 +118,7 @@ export default {
 		 * The headline for the overall status.
 		 *
 		 * @return {{type: string, text: string}}
-		 * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
 		 */
 		headline() {
 			return verdictHeadline(this.verdict.status)
@@ -128,7 +128,7 @@ export default {
 		 * The audit summary.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
 		 */
 		audit() {
 			return auditLine(this.verdict.audit)
@@ -138,7 +138,7 @@ export default {
 		 * The seal line, or ''.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
 		 */
 		seal() {
 			return sealLine(this.verdict.seal)
@@ -149,7 +149,7 @@ export default {
 	 * Fetch the verdict for the token in the link.
 	 *
 	 * @return {Promise<void>}
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
 	 */
 	async mounted() {
 		this.verdict = await fetchVerdict(this.token)
@@ -166,7 +166,7 @@ export default {
 		 *
 		 * @param {Event} event The file input's change.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
 		 */
 		async compareCopy(event) {
 			const file = event?.target?.files?.[0]

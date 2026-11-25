@@ -46,7 +46,7 @@ interface SignatureVerificationLinksInterface {
 	 *
 	 * @throws RuntimeException When the records cannot be read.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
 	 */
 	public function verdictFor(string $token): array;
 
@@ -55,7 +55,7 @@ interface SignatureVerificationLinksInterface {
 	 *
 	 * @return array<string, mixed> The neutral `unknown` verdict.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
 	 */
 	public static function unknownVerdict(): array;
 }//end interface

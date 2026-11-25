@@ -1,8 +1,4 @@
-# signature-verification-portal Specification (delta)
-
----
-status: proposed
----
+# signature-verification-portal Specification
 
 ## Purpose
 
@@ -21,21 +17,16 @@ portal + QR only; the internal operator verify page is owned by the parallel
 `orphaned-surface-restoration` change, and the identity-bound MAC by
 `signing-trust-rebuild`.
 
-## ADDED Requirements
+## Requirements
 
 ### Requirement: Public verification portal page (REQ-DDSVP-001)
 
 The app MUST provide a `#[PublicPage]` route `verify/{token}` that renders,
-with no Nextcloud account and no file-read access, the verification outcome of
-one signed or waarmerked document: an overall verdict, per-signature status,
-signature level, the signer as asserted, an audit summary, and — when the
-document carries a seal — its waarmerk status. The page MUST serve no document
-bytes, MUST offer no download, and MUST expose the file name only (never a path
-or content). The page MAY offer an optional client-side WebCrypto re-hash of a
-locally selected copy so a verifier can confirm their file matches the recorded
-`contentHash` without uploading it. When the token is unknown the page MUST
-render a neutral "unknown" outcome, never a 404 or any response that reveals
-whether a token exists.
+with no account and no file-read access, the verification outcome of one
+signed or waarmerked document. The page MUST serve no document bytes, offer
+no download and expose the file name only. An unknown token MUST render a
+neutral "unknown" outcome, never a 404 or anything that reveals whether a
+token exists. What the page shows is set out in the scenarios below.
 
 #### Scenario: Anonymous visitor verifies a signed document via its QR
 
@@ -53,21 +44,21 @@ whether a token exists.
 - THEN the response is a neutral `unknown` outcome with a shape identical to a valid verdict, not a 404
 - @e2e exclude oracle/shape-parity is asserted at the API layer — covered by PHPUnit (tests/unit/Controller/PublicVerificationControllerTest.php)
 
+#### Scenario: What the page shows
+- GIVEN a token that names a record
+- WHEN the page renders
+- THEN it shows an overall verdict, per-signature status, signature level, the signer as asserted, an audit summary and, when the document carries a seal, its waarmerk status
+- AND it MAY offer a client-side WebCrypto re-hash of a locally selected copy against the recorded `contentHash`, without uploading the file
+- @e2e exclude page content detail; covered by vitest (src/views/verify/PublicSignatureVerification.spec.js)
+
 ### Requirement: Content integrity and signer identity are presented as distinct guarantees (REQ-DDSVP-002)
 
-The portal MUST distinguish "content integrity verified" from "signer identity
-verified" and MUST NOT assert signer identity that the signature MAC does not
-cover. While the native signing MAC excludes the assertion fields (`signer`,
-`timestamp`, `level`, `ip`) — the state at HEAD until the active
-`signing-trust-rebuild` change lands — each signature's `identityBound` flag
-MUST be false and the page MUST show the signer as *asserted, not
-cryptographically bound*, never as an unqualified "signed by X". Per-signature
-status MUST be tri-state: `verified` (content integrity cryptographically
-confirmed), `unverifiable` (an external `/Type /Sig` signature Filinq cannot
-yet validate — reported as such, never as tamper), or `invalid` (a Filinq
-marker whose MAC does not match). When `signing-trust-rebuild` ships the
-identity-bound MAC and the mint step records `identityBound: true`, the same
-signer field MUST reflect the bound verdict without further portal changes.
+The portal MUST distinguish "content integrity verified" from "signer
+identity verified" and MUST NOT assert a signer identity the signature MAC
+does not cover: an unbound signer is shown as *asserted, not
+cryptographically bound*, never as an unqualified "signed by X".
+Per-signature status MUST be tri-state (`verified`, `unverifiable`,
+`invalid`), as the scenarios below define.
 
 #### Scenario: Signer identity shown as asserted while the MAC excludes it
 
@@ -91,17 +82,27 @@ signer field MUST reflect the bound verdict without further portal changes.
 - THEN the signature status is `unverifiable`, not `invalid`
 - @e2e exclude external-signature classification is backend logic — covered by PHPUnit (tests/unit/Service/SigningVerificationServiceTest.php)
 
+#### Scenario: The three statuses
+- GIVEN a signature on a verified document
+- WHEN its status is reported
+- THEN `verified` means content integrity is cryptographically confirmed, `unverifiable` means an external `/Type /Sig` signature Filinq cannot validate yet (never reported as tamper), and `invalid` means a Filinq marker whose MAC does not match
+- @e2e exclude status semantics; covered by PHPUnit (tests/unit/Service/SigningVerificationServiceTest.php::testComputeVerdictDistinguishesStates, ::testExternalSignatureIsUnverifiableNotInvalid)
+
+#### Scenario: Identity follows what the MAC covers
+- GIVEN a signature whose MAC excludes the assertion fields (`signer`, `timestamp`, `level`, `ip`)
+- WHEN it is summarised
+- THEN its `identityBound` flag is false and the page shows the signer as asserted
+- AND once the identity-bound MAC of `signing-trust-rebuild` records `identityBound: true`, the same field shows the bound verdict without portal changes
+- @e2e exclude binding rule; covered by PHPUnit (tests/unit/Service/SigningVerificationServiceTest.php::testAGenuineSignatureIsSummarisedAsBound, ::testRewrittenSignerNotVerifiedIdentity)
+
 ### Requirement: Non-enumerable verification token backs anonymous verification (REQ-DDSVP-003)
 
 Signing completion and waarmerk sealing MUST mint a `signatureVerification`
-object (`document` register) keyed by a high-entropy (≥ 128-bit),
-non-enumerable `token`, carrying the captured signature summary, `contentHash`,
-optional `waarmerkRef`, and lifecycle flags — and MUST NOT store the signing
-secret or the document bytes in that record. The public verify endpoints MUST
-resolve outcomes from this record so that no file-read access is required of
-the verifier. The `signatureVerification` schema MUST be added to the register
-with a register version bump and register-i18n tags on user-facing string
-fields.
+record keyed by a high-entropy (≥ 128-bit), non-enumerable `token`, and MUST
+NOT store the signing secret or the document bytes in it. The public verify
+endpoints MUST resolve outcomes from this record, so the verifier needs no
+file-read access. The record's contents and schema are set out in the
+scenarios below.
 
 #### Scenario: Signing completion mints a verification record
 
@@ -118,16 +119,21 @@ fields.
 - THEN neither is derivable from the other and both are ≥ 128-bit random
 - @e2e exclude entropy/non-derivability is a unit property — covered by PHPUnit (tests/unit/Service/SignatureVerificationLinkServiceTest.php)
 
+#### Scenario: What the record holds and where it lives
+- GIVEN a minted record
+- WHEN it is read
+- THEN it carries the captured signature summary, `contentHash`, an optional `waarmerkRef` and lifecycle flags
+- AND the `signatureVerification` schema is in the register, added with a register version bump and register-i18n tags on its user-facing string fields
+- @e2e exclude record shape; covered by PHPUnit (tests/unit/Service/SignatureVerificationLinkServiceTest.php::testMintStoresTheOutcomeNotTheDocument, ::testMintKeepsASealReference)
+
 ### Requirement: Public endpoints are fail-closed and rate-limited (REQ-DDSVP-004)
 
 The public routes `verify/{token}` and `GET /api/verify/{token}` MUST be
-`#[PublicPage]`, MUST carry Nextcloud brute-force/rate-limit protection keyed by
-token and client IP, and MUST fail closed — any unverifiable state (unknown
-token, malformed token, verification failure) MUST NOT report a valid outcome.
-The application MUST NOT be group-restricted in `appinfo/info.xml`, because a
-group restriction makes public pages unreachable to anonymous visitors (the
-app-group-vs-PublicPage constraint). No public endpoint may act as an existence
-oracle.
+`#[PublicPage]`, carry brute-force/rate-limit protection keyed by token and
+client IP, and fail closed: an unknown or malformed token or a failed
+verification MUST NOT report a valid outcome. The app MUST NOT be
+group-restricted in `appinfo/info.xml`, which would make public pages
+unreachable. No public endpoint may act as an existence oracle.
 
 #### Scenario: Repeated verification attempts are throttled
 
@@ -143,17 +149,20 @@ oracle.
 - THEN the page loads (not redirected to login) AND `appinfo/info.xml` declares no group restriction
 - @e2e tests/e2e/spec-coverage/signature-verification-portal.spec.ts
 
+#### Scenario: The token lookup reaches the record for a visitor without an organisation
+- GIVEN a record minted in an organisation and a visitor with no account
+- WHEN the visitor opens the token's page or endpoint
+- THEN the one exact-token lookup runs as the system through `SystemContextSeam` with a logged reason, so OpenRegister's organisation filter does not hide the record
+- @e2e exclude lookup path; covered by PHPUnit (tests/unit/Service/SignatureVerificationLinkServiceTest.php::testTheTokenLookupRunsThroughTheSeam)
+
 ### Requirement: Signed and waarmerked PDFs carry a QR to the portal (REQ-DDSVP-005)
 
 Signed and waarmerked PDFs MUST carry a visible QR code encoding the absolute
-`verify/{token}` URL, composed into the produced PDF bytes so a printed or
-downloaded copy remains verifiable. When a document carries both a signature
-and a waarmerk, a single QR/token MUST resolve to the unified portal outcome
-(signature + seal status). QR rendering MUST NOT introduce a new heavy
-dependency (reusing the dependency-free approach of the
-`document-waarmerk-certification` change). The internal, logged-in operator
-verify page is out of scope here and is owned by the parallel
-`orphaned-surface-restoration` change.
+`verify/{token}` URL, composed into the PDF bytes so a printed or downloaded
+copy stays verifiable. A document with both a signature and a waarmerk MUST
+resolve through one QR/token to the unified outcome. QR rendering MUST NOT
+add a heavy dependency (reuse the waarmerk change's dependency-free
+approach). The logged-in operator verify page is out of scope.
 
 #### Scenario: A downloaded signed PDF is verifiable from its stamped QR
 
@@ -168,3 +177,9 @@ verify page is out of scope here and is owned by the parallel
 - WHEN its QR is opened
 - THEN the portal shows the signature verdict and the waarmerk seal status on one page
 - @e2e exclude requires a live waarmerk seal fixture — covered by PHPUnit presence-gated integration (tests/unit/Service/SignatureVerificationLinkServiceTest.php)
+
+#### Scenario: The QR address opens the signature page, not the waarmerk page
+- GIVEN the waarmerk page also lives under `verify/...`
+- WHEN the `verify/{token}` address of a signature token is opened
+- THEN the signature page answers, and a waarmerk code under the same prefix still opens the waarmerk page
+- @e2e exclude routing; covered by PHPUnit (tests/unit/AppInfo/VerifyPageRoutingTest.php)

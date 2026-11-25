@@ -12,7 +12,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,7 +33,7 @@ use InvalidArgumentException;
  * encoding follows ISO/IEC 18004 directly: data and Reed-Solomon codewords,
  * the function patterns, the data walk, and the mask with the lowest penalty.
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
  */
 class QrCodeEncoder {
 
@@ -146,7 +146,7 @@ class QrCodeEncoder {
 	 *
 	 * @throws InvalidArgumentException When the text is empty or longer than version 10 holds.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function encode(string $text): array {
 		if ($text === '') {

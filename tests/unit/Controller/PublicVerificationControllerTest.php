@@ -9,8 +9,8 @@
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-4.1
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-4.3
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-4.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-4.3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -238,7 +238,7 @@ class PublicVerificationControllerTest extends TestCase {
 			$routes
 		);
 		$this->assertContains(
-			['name' => 'publicVerification#page', 'url' => 'verify/{token}', 'verb' => 'GET'],
+			['name' => 'publicVerification#page', 'url' => 'verify/{token}', 'verb' => 'GET', 'requirements' => ['token' => '[0-9a-f]{32}']],
 			$routes
 		);
 		$names = array_column($routes, 'name');

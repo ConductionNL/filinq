@@ -6,7 +6,7 @@
  * verdict that is never more than the endpoint said, a signer named "signed
  * by" only when bound, and a local re-hash that uploads nothing.
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 
 jest.mock('@nextcloud/l10n', () => {

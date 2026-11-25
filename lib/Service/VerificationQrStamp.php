@@ -12,7 +12,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ use Throwable;
  * The QR is drawn as filled squares from {@see QrCodeEncoder}, so no QR
  * library is needed. The result is a new PDF; the input is never changed.
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
  */
 class VerificationQrStamp {
 
@@ -89,7 +89,7 @@ class VerificationQrStamp {
 	 *
 	 * @return bool True for an unencrypted PDF.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function canStamp(string $content): bool {
 		if (str_starts_with(ltrim(substr($content, 0, 1024)), '%PDF-') === false) {
@@ -110,7 +110,7 @@ class VerificationQrStamp {
 	 *
 	 * @throws RuntimeException When the bytes are not a stampable PDF or cannot be stamped.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function stamp(string $pdf, string $url, string $caption): string {
 		if ($this->canStamp(content: $pdf) === false) {

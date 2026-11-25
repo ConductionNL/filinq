@@ -112,7 +112,7 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 	 *
 	 * @return array<int, array<string, mixed>> One summary per signature.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.2
 	 */
 	public function summarise(string $pdfContent): array {
 		$summaries = [];
@@ -146,7 +146,7 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 	 *
 	 * @return array<string, mixed> The verdict, in the shape unknownVerdict() also has.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.2
 	 */
 	public function verifyByRecord(array $record): array {
 		$stored = ($record['signatures'] ?? null);
@@ -181,7 +181,7 @@ class SigningVerificationService implements SigningVerificationServiceInterface 
 	 *
 	 * @return array<string, mixed> The neutral `unknown` verdict.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
 	 */
 	public static function unknownVerdict(): array {
 		return [

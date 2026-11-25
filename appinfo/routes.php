@@ -425,6 +425,13 @@ $extra = [
         ['name' => 'waarmerkSettings#update', 'url' => 'api/waarmerk/settings', 'verb' => 'PUT'],
         ['name' => 'waarmerkSettings#testSeal', 'url' => 'api/waarmerk/settings/test', 'verb' => 'POST'],
         ['name' => 'waarmerkVerify#verify', 'url' => 'api/waarmerk/verify', 'verb' => 'POST'],
+        // The verify/{...} address serves two pages. A signature token (32 hex,
+        // no dashes) opens the signature page a signed PDF's QR stamp points at
+        // (signature-verification-portal REQ-DDSVP-001); everything else, a
+        // waarmerk code (UUIDv4 plus a check part) above all, opens the waarmerk
+        // page. The token route comes first and only matches the token shape,
+        // so neither page shadows the other and no printed link changes.
+        ['name' => 'publicVerification#page', 'url' => 'verify/{token}', 'verb' => 'GET', 'requirements' => ['token' => '[0-9a-f]{32}']],
         ['name' => 'waarmerkVerify#verifyPage', 'url' => '/verify/{code}', 'verb' => 'GET'],
         ['name' => 'waarmerk#seal', 'url' => 'api/waarmerk/seal', 'verb' => 'POST'],
         ['name' => 'waarmerk#certify', 'url' => 'api/waarmerk/anonymization/{linkId}', 'verb' => 'POST'],
@@ -447,8 +454,7 @@ $extra = [
         ['name' => 'signing#verify', 'url' => 'api/signing/verify/{fileId}', 'verb' => 'GET'],
         // Public, account-free signature verification by token (signature-verification-portal REQ-DDSVP-001/004).
         ['name' => 'publicVerification#verify', 'url' => 'api/verify/{token}', 'verb' => 'GET'],
-        // The page a QR stamp points at; it reads the verdict from the route above (REQ-DDSVP-001).
-        ['name' => 'publicVerification#page', 'url' => 'verify/{token}', 'verb' => 'GET'],
+        // The signature page (publicVerification#page, REQ-DDSVP-001) is registered above the waarmerk page: both live at verify/{...}.
         ['name' => 'signing#getAudit', 'url' => 'api/signing/requests/{id}/audit', 'verb' => 'GET'],
         // Bulk send (bulk-signing-field-builder REQ-DDBSF-002): upload + report, confirm, progress, cancel.
         ['name' => 'bulkSigning#index', 'url' => 'api/signing/batches', 'verb' => 'GET'],
