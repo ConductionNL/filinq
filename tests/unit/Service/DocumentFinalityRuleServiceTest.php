@@ -193,6 +193,27 @@ class DocumentFinalityRuleServiceTest extends TestCase {
 	}//end testADeclaredReasonTemplateIsUsed()
 
 	/**
+	 * A reason template OpenRegister answers as a language map is used as text.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+	 */
+	public function testATranslatedReasonTemplateIsUsedAsText(): void {
+		$this->service(rows: [$this->declaration(['reasonTemplate' => ['nl' => 'Het besluit is genomen', 'en' => 'The decision was made']])])
+			->applyStateChange(
+				declaringApp: 'dossiq',
+				typeReference: 'bezwaarschrift',
+				state: 'besluit genomen',
+				fileIds: [4711],
+				documentRole: 'besluit'
+			);
+
+		$this->assertSame(expected: [[4711, 'Het besluit is genomen']], actual: $this->finalised);
+
+	}//end testATranslatedReasonTemplateIsUsedAsText()
+
+	/**
 	 * A declaration names the app, the type and at least one state.
 	 *
 	 * @return void

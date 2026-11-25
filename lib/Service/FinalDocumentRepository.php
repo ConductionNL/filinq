@@ -55,6 +55,12 @@ use Throwable;
 class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 
 	/**
+	 * The fields the register declares translatable.
+	 */
+	private const TRANSLATABLE = ['documentName', 'finalReason', 'unfrozenReason'];
+
+
+	/**
 	 * Constructor.
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
@@ -410,6 +416,36 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 	public function save(array $record, ?string $uuid = null): array {
 		unset($record['uuid']);
 
+		// OpenRegister starts a version in draft and refuses any other state
+		// on create; final is reached by its draft -> final transition. Writing
+		// final straight away made every finalisation fail (live, 25 Nov 2026).
+		$status = (string) ($record['status'] ?? '');
+		if ($uuid === null && $status !== '' && $status !== self::STATUS_DRAFT) {
+			$created = $this->write(record: ['status' => self::STATUS_DRAFT] + $record, uuid: null);
+			$uuid = (string) ($created['uuid'] ?? '');
+			if ($uuid === '') {
+				throw new RuntimeException(message: 'Could not store the finalisation record: the draft has no uuid.');
+			}
+		}
+
+		return $this->write(record: $record, uuid: $uuid);
+
+	}//end save()
+
+	/**
+	 * Write one finalisation record as given.
+	 *
+	 * @param array<string, mixed> $record The record to store.
+	 * @param string|null $uuid The uuid to write under, or null to create one.
+	 *
+	 * @return array<string, mixed> The stored record.
+	 *
+	 * @throws RuntimeException When the write fails.
+	 *
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+	 */
+	private function write(array $record, ?string $uuid): array {
+
 		try {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $record,
@@ -440,7 +476,7 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 
 		return $normalised;
 
-	}//end save()
+	}//end write()
 
 	/**
 	 * Read one OpenRegister row into the flat record shape this app uses.
@@ -456,7 +492,43 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 	 * @spec exclude Shape adapter over an OpenRegister response; no behaviour of its own.
 	 */
 	private function normalise(mixed $row): array {
-		return (new StoredRecordFields())->read(row: $row);
+		$record = (new StoredRecordFields())->read(row: $row);
+
+		// The register declares these translatable, so OpenRegister answers
+		// them as a language map; every reader here wants the text (the
+		// refusal sentence and the final panel showed no reason, and building
+		// the sentence raised "Array to string conversion"; live, 25 Nov 2026).
+		foreach (self::TRANSLATABLE as $field) {
+			if (is_array($record[$field] ?? null) === true) {
+				$record[$field] = self::textOf(map: $record[$field]);
+			}
+		}
+
+		return $record;
 
 	}//end normalise()
+
+	/**
+	 * The text of a language map: Dutch, else English, else the first.
+	 *
+	 * @param array<mixed> $map The language map.
+	 *
+	 * @return string The text, or '' when there is none.
+	 */
+	private static function textOf(array $map): string {
+		foreach (['nl', 'en'] as $language) {
+			if (is_scalar($map[$language] ?? null) === true && (string) $map[$language] !== '') {
+				return (string) $map[$language];
+			}
+		}
+
+		foreach ($map as $candidate) {
+			if (is_scalar($candidate) === true && (string) $candidate !== '') {
+				return (string) $candidate;
+			}
+		}
+
+		return '';
+
+	}//end textOf()
 }//end class

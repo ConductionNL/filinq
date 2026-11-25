@@ -291,7 +291,13 @@ class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterfac
 			return [];
 		}
 
-		$reason = (string)($rule['reasonTemplate'] ?? '');
+		// reasonTemplate is translatable: OpenRegister answers a language map.
+		$template = ($rule['reasonTemplate'] ?? '');
+		if (is_array($template) === true) {
+			$template = ($template['nl'] ?? $template['en'] ?? (reset($template) ?: ''));
+		}
+
+		$reason = is_scalar($template) === true ? (string) $template : '';
 		if ($reason === '') {
 			$reason = sprintf('%s reached the status "%s".', $typeReference, $state);
 		}
