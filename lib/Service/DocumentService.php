@@ -642,7 +642,7 @@ class DocumentService implements DocumentServiceInterface {
 	 *
 	 * @return array<string, mixed> The outcome with the linked audit entry and any delivery warning.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-stored-document-gets-a-delivery-for-its-destination-req-gsc-002
 	 */
 	private function deliverToCaseSystem(array $run, array $outcome): array {
 		if ($this->caseSystem === null || $run['outputMode'] === 'return') {

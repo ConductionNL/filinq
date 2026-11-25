@@ -1503,7 +1503,7 @@ export default {
 		 *
 		 * @param {Array<object>} rows The rows on the page.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+		 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 		 */
 		async loadCaseSystemFiles(rows) {
 			const ids = (rows || [])

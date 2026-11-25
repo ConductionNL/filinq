@@ -35,7 +35,7 @@ use RuntimeException;
 /**
  * The bridge panel's calls on CaseSystemDeliveryService.
  *
- * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
  */
 #[CoversClass(CaseSystemDeliveryService::class)]
 final class CaseSystemDeliveryAdminTest extends TestCase {

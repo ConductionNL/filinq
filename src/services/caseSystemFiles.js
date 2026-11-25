@@ -5,7 +5,7 @@
  * Which documents on a page of My Documents are in the case system: their
  * case-system delivery was written back. One request per page, not per row.
  *
- * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
  */
 
 import axios from '@nextcloud/axios'
@@ -16,7 +16,7 @@ import { generateUrl } from '@nextcloud/router'
  *
  * @param {Array<number>} fileIds The files on the page.
  * @return {Promise<object>} A map of file id (as a string) to true.
- * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
  */
 export async function fetchCaseSystemFiles(fileIds = []) {
 	if (fileIds.length === 0) {
