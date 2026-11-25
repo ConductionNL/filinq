@@ -68,7 +68,7 @@ class IntakePasswordRemoval implements IntakePasswordRemovalInterface {
 	 *
 	 * @throws IntakeRefusedException 404 unknown document or unreadable file, 409 not waiting, 403 no right to change it.
 	 *
-	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/specs/intake-pdf-password-removal/spec.md#requirement-an-intake-document-keeps-what-arrived-req-ppr-004
+	 * @spec openspec/specs/pdf-password-removal/spec.md#requirement-an-intake-document-keeps-what-arrived-req-ppr-004
 	 */
 	public function unlock(string $uuid, string $password): array {
 		$document = $this->repository->findByUuid(uuid: $uuid);

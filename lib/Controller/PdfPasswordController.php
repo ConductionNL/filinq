@@ -38,6 +38,7 @@ use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
+use Throwable;
 
 /**
  * Remove the password of a PDF into a copy.
@@ -76,7 +77,11 @@ class PdfPasswordController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
+	 * @no-admin-idor-exempt the file is looked up in the session user's own
+	 *       folder (SessionUserFileInterface::find()), so a file id the caller
+	 *       cannot open answers 404 and nothing is read.
+	 *
+	 * @spec openspec/specs/pdf-password-removal/spec.md#requirement-a-clerk-unlocks-a-locked-pdf-into-a-copy-req-ppr-001
 	 */
 	#[NoAdminRequired]
 	public function remove(int $fileId): JSONResponse {
@@ -91,8 +96,14 @@ class PdfPasswordController extends Controller {
 			return new JSONResponse(['error' => $this->l10n->t('Type the password of the PDF.')], Http::STATUS_BAD_REQUEST);
 		}
 
-		$result = $this->removal->unlock(file: $file, password: $password);
-		unset($password);
+		try {
+			$result = $this->removal->unlock(file: $file, password: $password);
+		} catch (Throwable) {
+			// An unexpected failure answers in JSON like every other refusal, never with the server's error page.
+			return new JSONResponse(['error' => $this->l10n->t('The password could not be removed from this PDF.')], Http::STATUS_INTERNAL_SERVER_ERROR);
+		} finally {
+			unset($password);
+		}
 
 		return $this->answer(result: $result);
 	}//end remove()
@@ -108,7 +119,11 @@ class PdfPasswordController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
+	 * @no-admin-idor-exempt the intake service checks that the caller may
+	 *       change intake documents before the file is read (403 otherwise),
+	 *       and reads the document through OpenRegister with RBAC on.
+	 *
+	 * @spec openspec/specs/pdf-password-removal/spec.md#requirement-an-intake-document-keeps-what-arrived-req-ppr-004
 	 */
 	#[NoAdminRequired]
 	public function removeForIntake(string $uuid): JSONResponse {

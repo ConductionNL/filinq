@@ -71,6 +71,22 @@ class PdfPasswordControllerTest extends TestCase {
 		$this->assertSame(Http::STATUS_NOT_FOUND, $this->controller(null, 'pw', $removal)->remove(41)->getStatus());
 	}
 
+	/**
+	 * An unexpected failure answers in JSON with a 500, not the server's error page.
+	 *
+	 * @spec openspec/specs/pdf-password-removal/spec.md#requirement-a-clerk-unlocks-a-locked-pdf-into-a-copy-req-ppr-001
+	 */
+	public function testAnUnexpectedFailureIsAJson500(): void {
+		$removal = $this->createMock(PdfPasswordRemovalService::class);
+		$removal->method('unlock')->willThrowException(new \RuntimeException('disk full'));
+		$file = $this->createMock(File::class);
+
+		$response = $this->controller($file, 'pw', $removal)->remove(41);
+
+		$this->assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+		$this->assertSame(['error' => 'The password could not be removed from this PDF.'], $response->getData());
+	}
+
 	public function testWithoutAPasswordNothingRuns(): void {
 		$removal = $this->createMock(PdfPasswordRemovalService::class);
 		$removal->expects($this->never())->method('unlock');
