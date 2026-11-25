@@ -509,9 +509,16 @@ test.describe('agent document editing', () => {
 		// applies a signature. Curated tools are two-segment
 		// (`filinq.generateCorrespondence`); a three-segment id is a
 		// schema-derived verb, already covered by the write-verb check above.
+		//
+		// STARTING a signing request is the one signing write on the surface, by
+		// decision (hermiq-ai-tooling; lib/Mcp/FilinqScannableServices.php): it
+		// creates the request for a person to approve and never signs, declines,
+		// cancels or verifies. So it is named here, and every other curated id
+		// that mentions signing or batches still fails the check.
 		const curated = filinq.filter((n) => n.split('.').length === 2)
+		const startsARequest = 'filinq.startSigningRequest'
 		expect(
-			curated.filter((n) => /batch|sign/i.test(n)),
+			curated.filter((n) => n !== startsARequest && /batch|sign/i.test(n)),
 			'no curated tool may run a batch or apply a signature',
 		).toEqual([])
 

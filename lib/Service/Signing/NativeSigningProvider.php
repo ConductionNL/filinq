@@ -360,6 +360,23 @@ class NativeSigningProvider implements SigningProviderInterface {
 	}//end produceSignedArtifact()
 
 	/**
+	 * Refuse, before anything is written, a signature this provider could
+	 * never complete: an unsupported level or no signing secret. The same
+	 * checks run again when the artifact is produced.
+	 *
+	 * @param string $level The request's signature level.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When no artifact could be produced.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function assertCanProduce(string $level): void {
+		$this->signingSecret(level: $level);
+	}//end assertCanProduce()
+
+	/**
 	 * The signing secret, after refusing a level this provider cannot sign at.
 	 *
 	 * @param string $level The requested signature level.

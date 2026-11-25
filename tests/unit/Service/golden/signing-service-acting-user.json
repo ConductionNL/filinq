@@ -767,6 +767,22 @@
             }
         },
         {
+            "SignedArtifactProducer::assertCanProduce": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                }
+            }
+        },
+        {
             "SigningAssuranceGate::evidenceForAct": {
                 "request": {
                     "id": "req-1",
@@ -1375,6 +1391,22 @@
                 },
                 "requestId": "req-1",
                 "userId": ""
+            }
+        },
+        {
+            "SignedArtifactProducer::assertCanProduce": {
+                "request": {
+                    "id": "req-1",
+                    "status": "PENDING",
+                    "signatureLevel": "AdES",
+                    "provider": "native",
+                    "initiatorUserId": "griffier",
+                    "signerIds": [
+                        "s-1"
+                    ],
+                    "sourceApp": "dossiq",
+                    "subjectSchema": "besluit"
+                }
             }
         },
         {

@@ -126,7 +126,7 @@ class MdtoRecordReader {
 	public function record(object $entity): array {
 		$data      = (array) $entity->getObject();
 		$retention = [];
-		if (method_exists($entity, 'getRetention') === true) {
+		if (is_callable([$entity, 'getRetention']) === true) {
 			$retention = (array) ($entity->getRetention() ?? []);
 		}
 

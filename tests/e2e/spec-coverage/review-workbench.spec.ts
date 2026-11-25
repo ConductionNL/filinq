@@ -443,7 +443,8 @@ async function addSelectionAsPerson(page: Page, text: string): Promise<any> {
 	await expect(dialog).toBeVisible()
 	await expect(dialog.getByLabel('Selected text'), 'the modal is pre-filled with the selection').toHaveValue(text)
 	await dialog.getByLabel('Entity type').click()
-	await page.getByRole('option', { name: /^PERSON$/ }).click()
+	// The table's type filter keeps its own (hidden) option list in the page: take the open one.
+	await page.getByRole('option', { name: /^PERSON$/ }).filter({ visible: true }).click()
 
 	const saved = page.waitForResponse((r) => r.url().includes('/manual-entities') && r.request().method() === 'POST')
 	await dialog.getByRole('button', { name: 'Add as entity' }).click()
@@ -460,8 +461,14 @@ async function addSelectionAsPerson(page: Page, text: string): Promise<any> {
  * @return Resolves once every uncertain finding is decided.
  */
 async function confirmUncertain(page: Page): Promise<void> {
-	for (const button of await page.getByTestId('confirm-uncertain').all()) {
-		await button.click()
+	// A confirmed row loses its button, so the list shrinks under the loop:
+	// `.all()` hands out nth(i) locators and the second one then points past
+	// the end. Click the first remaining one until none is left.
+	const buttons = page.getByTestId('confirm-uncertain')
+	for (let left = await buttons.count(), guard = 0; left > 0 && guard < 50; guard++) {
+		await buttons.first().click()
+		await expect(buttons).toHaveCount(left - 1)
+		left = await buttons.count()
 	}
 }
 

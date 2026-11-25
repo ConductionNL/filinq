@@ -8,7 +8,7 @@
  * A document without an acknowledgement matched no rule that asks for one and
  * shows nothing, so a clerk can tell "nobody was told" from "not asked to".
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-the-worklist-shows-both-outcomes-req-ias-004
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-the-worklist-shows-both-outcomes-req-ias-004
  */
 
 import { translate as t } from '@nextcloud/l10n'
@@ -19,7 +19,7 @@ import { generateUrl } from '@nextcloud/router'
  *
  * @param {object|null|undefined} acknowledgement The document's acknowledgement.
  * @return {string} Sent, Queued as letter, Refused, Failed, or '' when there is none.
- * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-the-worklist-shows-both-outcomes-req-ias-004
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-the-worklist-shows-both-outcomes-req-ias-004
  */
 export function acknowledgementLabel(acknowledgement) {
 	const status = acknowledgement?.status
@@ -39,7 +39,7 @@ export function acknowledgementLabel(acknowledgement) {
  * The badge colour per label.
  *
  * @return {object} Label to CnStatusBadge variant.
- * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-the-worklist-shows-both-outcomes-req-ias-004
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-the-worklist-shows-both-outcomes-req-ias-004
  */
 export function acknowledgementColorMap() {
 	return {
@@ -55,7 +55,7 @@ export function acknowledgementColorMap() {
  *
  * @param {object|null|undefined} acknowledgement The document's acknowledgement.
  * @return {string} The reason, else the address, else ''.
- * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-the-worklist-shows-both-outcomes-req-ias-004
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-the-worklist-shows-both-outcomes-req-ias-004
  */
 export function acknowledgementDetail(acknowledgement) {
 	return acknowledgement?.reason || acknowledgement?.address || ''
@@ -67,7 +67,7 @@ export function acknowledgementDetail(acknowledgement) {
  *
  * @param {object} document The intake document.
  * @return {string} The URL, or '' when no stamped copy was made.
- * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-the-worklist-shows-both-outcomes-req-ias-004
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-the-worklist-shows-both-outcomes-req-ias-004
  */
 export function stampedCopyUrl(document) {
 	const fileId = Number(document?.stampedRendition)

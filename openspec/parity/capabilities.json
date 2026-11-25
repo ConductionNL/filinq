@@ -1491,13 +1491,13 @@
 			"name": "Send the sender an acknowledgement of receipt automatically when a document is registered.",
 			"source": "category-derived",
 			"sourceRef": "journey \"Generate Acknowledgement of Receipt\"",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-acknowledge-and-stamp on 2026-09-27. Before: Grepped lib/ for 'acknowledg*': all hits are print-job acknowledgement (PrintJobController) or anonymisation-override acknowledgement (AnonymizeRequestValidator, ProhibitionGateService) - none is a sender acknowledgement-of-receipt on document registration. No template or auto-send-on-registration found.",
-				"change": "openspec/changes/intake-acknowledge-and-stamp",
-				"requirement": "openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement :: A matching rule acknowledges receipt to the sender (REQ-IAS-001)"
+				"evidence": "Built and verified live (archived 2026-11-25, filinq#2401): lib/Service/IntakeAcknowledgementService.php renders the rule's acknowledgeWith template with subject, day-month-year received date and registration number and sends it after the intake document is saved (IntakeArrivalFollowUpListener); a sender without mail gets a stored letter, a refuse-send party gets refused; the outcome is on intakeDocument.acknowledgement and in the Acknowledged column of /intake. Live 4.2: mail to an SMTP catcher arrived, acknowledgement.status sent. PHPUnit IntakeAcknowledgementServiceTest, IntakeArrivalFollowUpListenerTest.",
+				"change": "openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp",
+				"requirement": "openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement :: A matching rule acknowledges receipt to the sender (REQ-IAS-001)"
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -8455,13 +8455,13 @@
 			"sourceRef": "featureRequest: https://github.com/paperless-ngx/paperless-ngx/discussions/3744",
 			"origin": "featureRequest",
 			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/discussions/3744",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-acknowledge-and-stamp on 2026-09-27. Before: no visible stamp on a document: grep -ri 'stamp|stempel|watermark' lib src finds only metadata stamps (lib/Service/IntakeDefaultRuleService.php:135 stamps default metadata onto the record, lib/Service/PageLayoutService.php:208 attaches a layout to a generated document). A visible waarmerk stamp page is designed only: openspec/changes/document-waarmerk-certification/proposal.md:48 (0 tasks done).",
-				"change": "openspec/changes/intake-acknowledge-and-stamp",
-				"requirement": "openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement :: A received stamp goes on a copy, never on what arrived (REQ-IAS-003)",
+				"evidence": "Built and verified live (archived 2026-11-25, filinq#2401): lib/Service/ReceivedStampService.php writes '<name> (ontvangen).pdf' beside the arrived file with 'Ontvangen', the day-month-year date and the registration number on page 1; the arrived file is only read (checksum unchanged). The inbox row opens the stamped copy. Live 4.2: the copy reads 'Ontvangen 25-11-2026'. PHPUnit ReceivedStampServiceTest.",
+				"change": "openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp",
+				"requirement": "openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement :: A received stamp goes on a copy, never on what arrived (REQ-IAS-003)",
 				"plan": "openspec/changes/work-stamp-text-on-every-page"
 			},
 			"reachedOn": "nothing reaches it",
