@@ -42,7 +42,8 @@ final class BatchProgress {
 	 * @param array<string, mixed> $batch The batch.
 	 * @param int                  $now   The current time (unix seconds).
 	 *
-	 * @return array{filesSucceeded: int, filesFailed: int, filesPending: int, progressPercent: float, documentsPerHour: float|null, startedOn: string|null}
+	 * @return array{filesSucceeded: int, filesFailed: int, filesPending: int, progressPercent: float,
+	 *     documentsPerHour: float|null, startedOn: string|null}
 	 *
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
 	 */
@@ -107,7 +108,7 @@ final class BatchProgress {
 	/**
 	 * When the batch started, as an ISO 8601 date and time, or null before it started.
 	 *
-	 * startedAt is unix seconds, which a list would show as a bare number;
+	 * The stored startedAt is unix seconds, which a list shows as a bare number;
 	 * this is the same moment in the form a list shows as a date.
 	 *
 	 * @param array<string, mixed> $batch The batch.
