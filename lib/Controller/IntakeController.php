@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -50,7 +50,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 class IntakeController extends Controller {
 	use AnswersIntakeRefusals;
@@ -94,8 +94,8 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The documents.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
 	 */
 	#[NoAdminRequired]
 	public function index(string $mode = 'waiting'): JSONResponse {
@@ -184,7 +184,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return Response The assigned document, or the refusal.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	#[NoAdminRequired]
 	public function assign(string $uuid): Response {
@@ -236,7 +236,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The rejected document, or the refusal.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	#[NoAdminRequired]
 	public function reject(string $uuid, string $reason = ''): JSONResponse {
@@ -264,7 +264,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse The document, or the refusal.
 	 *
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
 	 */
 	#[NoAdminRequired]
 	public function changeDeadline(string $uuid, string $deadline = '', string $reason = ''): JSONResponse {
@@ -487,7 +487,7 @@ class IntakeController extends Controller {
 	 *
 	 * @return JSONResponse|null The refusal, or null when somebody is logged in.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	private function requireUser(): ?JSONResponse {
 		if ($this->userSession->getUser() !== null) {

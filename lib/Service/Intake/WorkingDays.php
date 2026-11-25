@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+ * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,7 +29,7 @@ use DateTimeImmutable;
 /**
  * Working-day arithmetic over the calendar week.
  *
- * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+ * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
  */
 final class WorkingDays {
 
@@ -44,7 +44,7 @@ final class WorkingDays {
 	 *
 	 * @return DateTimeImmutable The resulting day, at the time of day of $from.
 	 *
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
 	 */
 	public static function after(DateTimeImmutable $from, int $days): DateTimeImmutable {
 		$date = $from;

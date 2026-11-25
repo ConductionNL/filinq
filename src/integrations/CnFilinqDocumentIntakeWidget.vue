@@ -7,7 +7,7 @@ be filed, those whose source reference names this record first, and an assign
 button that files one on this record through filinq's own route. Plain markup
 only, because the leaves bundle loads on other apps' pages.
 
-@spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+@spec openspec/changes/archive/2026-11-25-document-intake-inbox/tasks.md#task-3.2
 -->
 
 <template>
@@ -56,7 +56,7 @@ import { listWaitingDocuments } from '../services/intakeService.js'
 /**
  * The waiting documents for one host record.
  *
- * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/tasks.md#task-3.2
  */
 export default {
 	name: 'CnFilinqDocumentIntakeWidget',
@@ -83,7 +83,7 @@ export default {
 	/**
 	 * Read the waiting documents and order them for this record.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/tasks.md#task-3.2
 	 */
 	async mounted() {
 		try {
@@ -107,7 +107,7 @@ export default {
 		 *
 		 * @param {object} row The waiting document.
 		 * @return {Promise<void>} Resolves once the answer is in.
-		 * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+		 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/tasks.md#task-3.2
 		 */
 		async assign(row) {
 			this.busy = row.uuid

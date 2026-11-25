@@ -20,7 +20,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
  */
 
 declare(strict_types=1);

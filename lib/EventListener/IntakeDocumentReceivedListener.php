@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -45,7 +45,7 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 class IntakeDocumentReceivedListener implements IEventListener {
 
@@ -74,7 +74,7 @@ class IntakeDocumentReceivedListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof IntakeDocumentReceivedEvent) === false) {

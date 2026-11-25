@@ -19,7 +19,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
  */
 
 declare(strict_types=1);
@@ -134,7 +134,7 @@ class DigitisationControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	public function testSeparatorsDownloadTheBoxsSheets(): void {
 		$originals = [['id' => 'po-1', 'shelfMark' => '117/1']];
@@ -171,7 +171,7 @@ class DigitisationControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
 	 */
 	public function testImportAnswersTheResult(): void {
 		$this->worklist->method('project')->willReturn(['id' => 'prj-1']);
@@ -204,7 +204,7 @@ class DigitisationControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
 	 */
 	public function testCheckIsRecordedAsTheCaller(): void {
 		$saved = ['id' => 'po-1', 'status' => 'registered'];

@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -338,7 +338,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testAScannedFileBecomesAWaitingIntakeDocument(): void {
 		$service = $this->service(rows: []);
@@ -366,7 +366,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testASecondDeliveryOfTheSameMessageDoesNotMakeASecondDocument(): void {
 		$service = $this->service(rows: [$this->waitingRow()]);
@@ -389,7 +389,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testAnUnknownChannelIsRefused(): void {
 		$service = $this->service(rows: []);
@@ -404,7 +404,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testAssigningRecordsTheRecordTheClerkAndTheMoment(): void {
 		$service = $this->service(
@@ -438,7 +438,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testAssignToARecordTheClerkMayNotWriteIsRefused(): void {
 		$service = $this->service(rows: [$this->waitingRow()], mayWriteTarget: false);
@@ -462,7 +462,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testAssignByAClerkWhoMayNotWriteTheIntakeRegisterIsRefused(): void {
 		$service = $this->service(rows: [$this->waitingRow()], mayWriteIntake: false);
@@ -480,7 +480,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testAnAssignmentWithoutARecordIsRefused(): void {
 		$service = $this->service(rows: [$this->waitingRow()]);
@@ -499,7 +499,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testADocumentThatHasLeftTheInboxCannotBeAssignedAgain(): void {
 		$row = ($this->waitingRow() + []);
@@ -525,7 +525,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testARejectionRecordsTheReasonTheClerkAndTheMoment(): void {
 		$service = $this->service(rows: [$this->waitingRow()]);
@@ -544,7 +544,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testARejectionWithoutAReasonIsRefused(): void {
 		$service = $this->service(rows: [$this->waitingRow()]);
@@ -565,7 +565,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testTheInboxListsOnlyWhatIsWaiting(): void {
 		$assigned = ($this->waitingRow() + []);
@@ -721,7 +721,7 @@ class IntakeServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testAnUnknownDocumentAnswersNotFound(): void {
 		$service = $this->service(rows: []);

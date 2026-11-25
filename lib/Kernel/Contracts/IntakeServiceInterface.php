@@ -51,7 +51,7 @@ interface IntakeServiceInterface {
 	 *
 	 * @throws IntakeRefusedException When the channel is not one this app accepts.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-intake-ocr-on-arrival/tasks.md#task-1.3
 	 */
 	public function receive(IntakeDocumentReceivedEvent $event): array;
@@ -101,7 +101,7 @@ interface IntakeServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The waiting documents.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function listWaiting(): array;
 
@@ -114,7 +114,7 @@ interface IntakeServiceInterface {
 	 *
 	 * @return array<string, mixed> The document.
 	 *
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
 	 */
 	public function changeDeadline(string $uuid, string $deadline, string $reason): array;
 
@@ -134,7 +134,7 @@ interface IntakeServiceInterface {
 	 *                                has already left the inbox, or the clerk may
 	 *                                not write one of the two schemas.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
 	 */
 	public function assign(string $uuid, array $target): array;
@@ -171,7 +171,7 @@ interface IntakeServiceInterface {
 	 *                                already left the inbox, or the clerk may not
 	 *                                write the intake register.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function reject(string $uuid, string $reason): array;
 }//end interface

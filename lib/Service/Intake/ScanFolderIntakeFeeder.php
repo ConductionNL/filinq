@@ -35,7 +35,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 
 declare(strict_types=1);
@@ -102,7 +102,7 @@ final class ScanFolderIntakeFeeder {
 	 *
 	 * @return array<string, mixed> What happened and what must happen next.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function outcomeFor(string $outcome, string $fileName, string $reason = ''): array {
 		if ($outcome === self::RECEIVED) {
@@ -160,7 +160,7 @@ final class ScanFolderIntakeFeeder {
 	 *
 	 * @return bool True when the file may leave the watched folder.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function mayMoveOn(array $outcome): bool {
 		return (($outcome['disposition'] ?? self::LEAVE_FOR_A_PERSON) === self::MOVE_TO_PROCESSED);
@@ -177,7 +177,7 @@ final class ScanFolderIntakeFeeder {
 	 *
 	 * @return array<string, mixed> The summary.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function summarise(array $outcomes): array {
 		$received = 0;

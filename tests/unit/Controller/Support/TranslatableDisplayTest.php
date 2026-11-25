@@ -29,7 +29,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * A translatable value is shown as one text.
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 #[CoversClass(TranslatableDisplay::class)]
 final class TranslatableDisplayTest extends TestCase {

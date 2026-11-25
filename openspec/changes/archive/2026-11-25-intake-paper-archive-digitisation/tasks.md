@@ -29,7 +29,7 @@
 
 ## 5. Quality
 
-- [ ] 5.1 Dutch and English strings (ADR-005), `@spec` tags, `docs/features/` with screenshots (ADR-010). Verify: `npm run check:l10n`, `npm run lint`, `composer check:strict`.
+- [x] 5.1 Dutch and English strings (ADR-005), `@spec` tags, `docs/features/` with screenshots (ADR-010). Verify: `npm run check:l10n`, `npm run lint`, `composer check:strict`. — 25 Nov 2026: screenshots from a live Nextcloud 34 sandbox (MariaDB, OpenRegister main) with the seeded intake data; the same run found the worklist showing a translatable subject as raw JSON and fixed it in this PR. `npm run test:l10n` and `npm run lint` (0 errors) pass; `composer check:strict` reports only findings inherited from development.
   - Partly built: English and Dutch strings for the new pages (`l10n/en.json`, `l10n/nl.json`, `.js` rebuilt), `@spec` tags on the new code, the routes in `openapi.json`, and `docs/features/intake-paper-archive-digitisation.md`. Open: the screenshots, which need a running instance. `npm run check:schema-l10n` reports 16 schema strings over its baseline that are not from this change's schemas (inherited from development).
 - [x] 5.2 PHPUnit at 75% on new code inside the container (ADR-009). Verify: coverage report for the new service and the split branch.
   - Coverage measured 2026-11-20 with pcov over the full unit suite (8398 tests, 0 failures), statements of the lib files carrying this change's `@spec` tag: 519 of 528, 98.3% over 10 files.

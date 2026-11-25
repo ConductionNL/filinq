@@ -17,7 +17,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 
 declare(strict_types=1);
@@ -34,7 +34,7 @@ namespace OCA\Filinq\Controller\Support;
  * named fields for display only: the reader's language, then nl, then en,
  * then the first text there is. Nothing is written back.
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 final class TranslatableDisplay {
 
@@ -50,7 +50,7 @@ final class TranslatableDisplay {
 	 *
 	 * @param string $acceptLanguage The request's Accept-Language header, such as `en-US,en;q=0.9`.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function __construct(string $acceptLanguage) {
 		$first          = trim(explode(';', trim(explode(',', $acceptLanguage)[0]))[0]);
@@ -65,7 +65,7 @@ final class TranslatableDisplay {
 	 *
 	 * @return array<int, mixed> The same rows; a field that is a language map becomes its text.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function rows(array $rows, array $fields): array {
 		foreach ($rows as $index => $row) {
@@ -90,7 +90,7 @@ final class TranslatableDisplay {
 	 *
 	 * @return string The text in the reader's language, else nl, else en, else the first; '' when there is none.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function text(array $map): string {
 		foreach (array_unique([$this->language, 'nl', 'en']) as $language) {

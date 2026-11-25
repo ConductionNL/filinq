@@ -20,6 +20,9 @@ What happens to the paper afterwards is OpenRegister's archiving process.
 
 ## The project
 
+![Digitisation projects with their scan profile, check share and status](/screenshots/intake-digitisation-projects.png)
+
+
 Open **Digitisation** in the menu and create a project. A project names:
 
 - the archive it digitises and its boxes;

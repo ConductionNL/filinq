@@ -175,7 +175,7 @@ class IntakeDefaultRuleService {
 	 *
 	 * @return array<string, string> Rule uuid => `assigned` or `answered`.
 	 *
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
 	 */
 	public function handledWhenByRule(): array {
 		$handledWhen = [];
