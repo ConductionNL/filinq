@@ -163,7 +163,13 @@ final class DocumentGenerationRequestedListenerWooTest extends TestCase {
 			objectResolver: $objects,
 			userSession: $session,
 			eventDispatcher: $dispatcher,
-			wooDecisions: new DisclosureDecisionContextBuilder(new RefusalGroundsResolver($apps, $this->createMock(ContainerInterface::class), new NullLogger()))
+			wooDecisions: new DisclosureDecisionContextBuilder(
+				grounds: new RefusalGroundsResolver(
+					appManager: $apps,
+					container: $this->createMock(originalClassName: ContainerInterface::class),
+					logger: new NullLogger()
+				)
+			)
 		);
 
 		return new DocumentGenerationRequestedListener(generator: $service, logger: new NullLogger());

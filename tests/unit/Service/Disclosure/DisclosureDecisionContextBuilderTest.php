@@ -87,7 +87,13 @@ final class DisclosureDecisionContextBuilderTest extends TestCase {
 		$apps->method('isEnabledForAnyone')->willReturn(false);
 
 		return new DisclosureDecisionContextBuilder(
-			new RefusalGroundsResolver($apps, $this->createMock(ContainerInterface::class), new NullLogger(), RefusalGroundsResolver::DOSSIQ_GROUNDS, $this->snapshot)
+			grounds: new RefusalGroundsResolver(
+				appManager: $apps,
+				container: $this->createMock(originalClassName: ContainerInterface::class),
+				logger: new NullLogger(),
+				groundsClass: RefusalGroundsResolver::DOSSIQ_GROUNDS,
+				snapshotPath: $this->snapshot
+			)
 		);
 	}//end builder()
 
@@ -242,7 +248,7 @@ final class DisclosureDecisionContextBuilderTest extends TestCase {
 		[$service, $documents] = $this->generation(['id' => 't-1', 'slug' => 'woo-besluit', 'dataContract' => 'woo-decision', 'content' => 'x'], $this->builder());
 		$documents->expects($this->never())->method('generateFromTemplate');
 
-		$this->expectException(DisclosureDecisionContractException::class);
+		$this->expectException(exception: DisclosureDecisionContractException::class);
 		$this->expectExceptionMessage('The Woo decision cannot be rendered: Document 3 is assessed withhold but cites no ground.');
 
 		$service->generate(['templateSlug' => 'woo-besluit', 'templateNamespace' => 'filinq', 'data' => ['wooDecision' => $decision]], 'dossiq');
