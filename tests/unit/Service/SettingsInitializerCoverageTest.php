@@ -177,7 +177,9 @@ class SettingsInitializerCoverageTest extends TestCase {
 	 */
 	protected function setUp(): void {
 		parent::setUp();
-		$this->values = ['configuration_version' => $this->shippedVersion()];
+		// The object type bindings were provisioned for this version already, so
+		// these tests see only the templateVersion provisioning.
+		$this->values = ['configuration_version' => $this->shippedVersion(), 'object_type_bindings_version' => $this->shippedVersion()];
 		$this->writes = [];
 
 	}//end setUp()

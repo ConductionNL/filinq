@@ -111,6 +111,13 @@ On application boot, Filinq automatically imports its register/schema definition
 - AND the Filinq Register and PublicationConsent schema are auto-created from `filinq_register.json`
 - AND the `configuration_version` is updated to the version in the JSON file
 
+#### Scenario: First boot binds the object types to the app's register
+@e2e exclude pure backend initialization — verified by PHPUnit (tests/unit/Service/ObjectTypeBindingProvisionerTest.php, tests/unit/Service/SettingsInitializerFlowTest.php::testBindingsAreProvisionedOncePerVersion)
+- GIVEN Filinq's register has been imported and an object type has no `<type>_register` app-config key yet
+- WHEN the app boots
+- THEN `<type>_register`, `<type>_schema` and `<type>_source` are written from the schema of that slug in the `filinq` register
+- AND a binding an administrator chose is never changed, and this runs once per configuration version (again on the next boot while the register is not found)
+
 #### Scenario: Version-gated configuration import
 @e2e exclude pure backend version-gate on initialization — verified by PHPUnit; not UI-observable
 - GIVEN Filinq has been initialized with configuration_version "0.0.1"
