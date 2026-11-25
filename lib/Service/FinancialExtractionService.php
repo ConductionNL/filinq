@@ -304,7 +304,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	 *
 	 * @return UnattendedOutcome|null The verdict.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
 	 */
 	private function unattendedOutcome(array $heuristic, array $pipeline): ?UnattendedOutcome {
 		if ($this->unattendedVerdict === null) {
@@ -325,7 +325,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	 *
 	 * @return list<string> The field names.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
 	 */
 	public static function modelFilledFields(array $heuristic, array $final): array {
 		$filled = [];
@@ -350,7 +350,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-the-verdict-is-sent-as-a-sibling-event-req-erp-004
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-the-verdict-is-sent-as-a-sibling-event-req-erp-004
 	 */
 	private function dispatchVerdictEvent(array $saved, array $payload, UnattendedOutcome $outcome): void {
 		try {
@@ -605,7 +605,7 @@ class FinancialExtractionService implements FinancialExtractionServiceInterface 
 	 *
 	 * @return array<string, float> The same, or every single-value field at 0.0 when none was read.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/receipt-photo-capture/spec.md#requirement-one-call-stores-a-photo-and-starts-the-read-req-erp-001
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/receipt-photo-capture/spec.md#requirement-one-call-stores-a-photo-and-starts-the-read-req-erp-001
 	 */
 	private function storableConfidence(array $confidence): array {
 		if ($confidence !== []) {

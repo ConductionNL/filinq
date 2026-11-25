@@ -491,7 +491,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
 	 */
 	public function testTheUnattendedThresholdIsWritableWithinItsBounds(): void {
 		$this->mockConfig->expects($this->once())
@@ -510,7 +510,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
 	 */
 	public function testAnUnattendedThresholdOutsideItsBoundsIsRefused(): void {
 		$this->mockConfig->expects($this->never())->method('setValueString');

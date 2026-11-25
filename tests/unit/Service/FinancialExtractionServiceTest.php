@@ -334,7 +334,7 @@ TEXT;
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/receipt-photo-capture/spec.md#requirement-one-call-stores-a-photo-and-starts-the-read-req-erp-001
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/receipt-photo-capture/spec.md#requirement-one-call-stores-a-photo-and-starts-the-read-req-erp-001
 	 */
 	public function testAReadThatFoundNothingStoresEveryFieldAtZero(): void {
 		$this->mockResolvableImageFile(fileId: 42, text: 'PARKEERGARAGE');
@@ -374,7 +374,7 @@ TEXT;
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
 	 */
 	public function testACapturedReceiptKeepsItsPhoto(): void {
 		$this->mockResolvableImageFile(fileId: 42, text: self::INVOICE_TEXT);

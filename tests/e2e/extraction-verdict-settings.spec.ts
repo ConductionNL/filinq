@@ -18,7 +18,7 @@
  * Not run in the change that wrote it (decision 139): the live pass runs it.
  */
 
-// @e2e openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#an-admin-raises-the-threshold
+// @e2e openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#an-admin-raises-the-threshold
 
 import type { APIRequestContext, Page } from '@playwright/test'
 

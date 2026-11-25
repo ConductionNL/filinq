@@ -1777,7 +1777,7 @@
 				"change": "openspec/changes/archive/2026-07-12-financial-document-field-extraction",
 				"spec": "openspec/specs/financial-document-field-extraction",
 				"requirement": "openspec/specs/financial-document-field-extraction :: Extracted Field Set and Totals Reconciliation (REQ-FIN-03)",
-				"plan": "openspec/changes/extraction-receipt-photo-and-invoice-agent"
+				"plan": "openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent"
 			},
 			"reachedOn": "machine consumer: shillinq (lib/Service/Extraction/DocudeskExtractionClient.php POSTs api/extraction/financial directly; lib/Listener/ExtractionCompletedListener.php consumes filinq's FinancialExtractionCompletedEvent)",
 			"provider": "filinq",

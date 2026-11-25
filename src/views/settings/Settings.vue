@@ -1207,7 +1207,7 @@ export default {
 		 * Why the unattended confidence threshold cannot be saved, or '' when it can.
 		 *
 		 * @return {string} Localised reason.
-		 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+		 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
 		 */
 		unattendedThresholdError() {
 			const raw = String(this.settings.extraction_unattended_threshold ?? '').trim()

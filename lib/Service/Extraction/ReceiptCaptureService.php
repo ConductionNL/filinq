@@ -20,7 +20,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -41,7 +41,7 @@ use OCP\Files\IRootFolder;
 /**
  * Stores a captured receipt in the user's Files and extracts it.
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
  */
 class ReceiptCaptureService {
 
@@ -103,7 +103,7 @@ class ReceiptCaptureService {
 	 * @throws ReceiptCaptureRefusedException (413) When the photo is above 20 MB, (415) when its type or format is not taken,
 	 *                                        including every refusal of the upload policy.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
 	 */
 	public function capture(string $userId, string $fileName, string $contents, array $request): array {
 		if (strlen($contents) > self::MAX_BYTES) {
