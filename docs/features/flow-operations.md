@@ -7,6 +7,8 @@ such as "when a file is created in /Inkomend, run OCR" processes documents
 without anyone opening Filinq. Flow owns the triggers ("File created",
 "Tag assigned", ...) and the rule checks; Filinq only ships the operations.
 
+![Settings, Flow: Filinq's operations among the available flows, and a configured rule that runs OCR when a file whose name matches scan-*.png is created](/screenshots/flow-operations-rule.png)
+
 | Operation | What it does | Options |
 |-----------|--------------|---------|
 | Anonymise document | Detects the personal data and puts the document in the anonymisation review queue. It never produces the anonymised copy and never marks the document reviewed. | none |
@@ -40,6 +42,14 @@ findings for validation.
 The **Flow runs** page in Filinq's settings menu lists recent runs. A failed run
 notifies the file owner through a Nextcloud notification naming the file, the
 operation and the reason.
+
+![The Flow runs page: two OCR runs on scan-001.png and scan-002.png, both failed with reason tesseract_unavailable](/screenshots/flow-operations-runs.png)
+
+The notification is sent by OpenRegister's scheduled notifications for failed
+runs (`flowOperationFailed` on the `flowOperationRun` schema), so it arrives
+with the next scheduled sweep, not during the run.
+
+![The notification panel: "Automated operation failed: scan-002.png" and the same for scan-001.png](/screenshots/flow-operations-failure-notification.png)
 
 ## Gates that still apply
 
