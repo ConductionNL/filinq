@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\BackgroundJob;
 
 use OCA\Filinq\Service\MailArchive\MailArchiveImportService;
+use OCA\Filinq\Service\Support\ActingUser;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -44,6 +45,7 @@ class MailArchiveImportJob extends TimedJob {
 	 * @param ITimeFactory             $clock   The clock.
 	 * @param MailArchiveImportService $imports The imports.
 	 * @param LoggerInterface          $logger  The logger.
+	 * @param ActingUser               $acting  Runs the unit as the user who started the import.
 	 *
 	 * @return void
 	 */
@@ -51,6 +53,7 @@ class MailArchiveImportJob extends TimedJob {
 		ITimeFactory $clock,
 		private readonly MailArchiveImportService $imports,
 		private readonly LoggerInterface $logger,
+		private readonly ActingUser $acting,
 	) {
 		parent::__construct(time: $clock);
 		$this->setInterval(seconds: 300);
@@ -71,7 +74,8 @@ class MailArchiveImportJob extends TimedJob {
 	 */
 	protected function run(mixed $argument): void {
 		try {
-			$import = $this->imports->runUnit();
+			// With the rights of the user who started it: a job has no user, and OpenRegister refuses an anonymous write.
+			$import = $this->acting->run(userId: $this->imports->nextRequester(), operation: fn (): ?array => $this->imports->runUnit());
 		} catch (Throwable $e) {
 			// The cursor was not saved, so the next run takes the same unit again.
 			$this->logger->error('[MailArchiveImportJob] a work unit failed', ['exception' => $e->getMessage()]);

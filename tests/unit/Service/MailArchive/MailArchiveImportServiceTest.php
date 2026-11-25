@@ -601,6 +601,20 @@ class MailArchiveImportServiceTest extends TestCase {
 	}//end testOneRunTakesOneUnitAndTheNextResumesAtTheCursor()
 
 	/**
+	 * The next unit names the user who started its import, so the job can run it with their rights.
+	 *
+	 * @return void
+	 */
+	public function testTheNextUnitNamesWhoStartedTheImport(): void {
+		$this->useMbox();
+		$this->assertSame(expected: '', actual: $this->service()->nextRequester());
+
+		$this->startAndMap(service: $this->service(), folderMap: []);
+
+		$this->assertSame(expected: self::USER, actual: $this->service()->nextRequester());
+	}//end testTheNextUnitNamesWhoStartedTheImport()
+
+	/**
 	 * Mapped folders are filed to their dossier, the rest go to the inbox as mail, a .msg fails visibly.
 	 *
 	 * @return void

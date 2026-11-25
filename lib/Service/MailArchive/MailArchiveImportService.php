@@ -266,6 +266,17 @@ class MailArchiveImportService {
 	}//end cancel()
 
 	/**
+	 * Who started the import the next unit belongs to, so the unit runs with their rights.
+	 *
+	 * @return string The user id; '' when nothing is importing or nobody is named.
+	 *
+	 * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+	 */
+	public function nextRequester(): string {
+		return (string) (($this->repository->oldestImporting() ?? [])['requestedBy'] ?? '');
+	}//end nextRequester()
+
+	/**
 	 * One work unit: the oldest importing import takes at most the per-run limit from its cursor.
 	 *
 	 * @return array<string, mixed>|null The import after the unit, or null when none is importing.
