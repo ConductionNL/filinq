@@ -111,6 +111,17 @@ export async function userBrowser(browser: Browser, user: TenantUser): Promise<B
 	// Basic auth signs in API calls but not Nextcloud's pages (they redirect
 	// to the login form), so the browser signs in through the form.
 	const context = await browser.newContext({ storageState: EMPTY_STATE })
+	// A new user is shown the one-time support dialog and the walkthrough,
+	// whose overlays swallow clicks; global-setup seeds the same flags for
+	// the admin's stored state.
+	await context.addInitScript(() => {
+		try {
+			window.localStorage.setItem('cn-support-dialog-shown:filinq', '1')
+			window.localStorage.setItem('cn-walkthrough-seen:filinq', '999.0.0')
+		} catch {
+			/* localStorage unavailable: the overlays stay, the spec fails visibly */
+		}
+	})
 	const page = await context.newPage()
 	await page.goto('/index.php/login', { waitUntil: 'domcontentloaded', timeout: 45_000 })
 	await page.locator('#user').fill(user.userId)

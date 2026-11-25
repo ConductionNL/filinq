@@ -75,7 +75,7 @@ test.describe('organisation settings override the instance default', () => {
 		await expect(page.getByTestId('organisation-settings')).toBeVisible({ timeout: 20_000 })
 		await expect(page.getByTestId('organisation-settings-readonly')).toHaveCount(0)
 
-		const period = page.getByTestId('organisation-settings-period').locator('input')
+		const period = page.getByTestId('organisation-settings-period')
 		await period.fill('42')
 		await page.getByTestId('organisation-settings-save').click()
 		await expect(page.getByText('Organisation settings saved')).toBeVisible({ timeout: 20_000 })
