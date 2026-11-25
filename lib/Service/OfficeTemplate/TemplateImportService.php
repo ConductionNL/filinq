@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -52,7 +52,7 @@ use ZipArchive;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the sum of small independent
  * steps of one office template (tags, fragments, conditions, tables).
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
  */
 class TemplateImportService {
 
@@ -96,7 +96,7 @@ class TemplateImportService {
 	 * @param JobQueueInterface             $jobs      Queues the import.
 	 * @param OpenRegisterResolverInterface $resolver  Checks the namespace.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
 	 */
 	public function __construct(
 		private readonly TemplatesRegisterObjects $objects,
@@ -119,7 +119,7 @@ class TemplateImportService {
 	 *
 	 * @throws Exception With code 400 when the namespace, archive or folder is missing or unreadable.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
 	 */
 	public function start(array $fields, ?string $archive, string $userId): array {
 		$namespace = trim((string) ($fields['namespace'] ?? ''));
@@ -202,7 +202,7 @@ class TemplateImportService {
 	 *
 	 * @throws Exception With code 404 when there is no such job.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
 	 */
 	public function get(string $jobId): array {
 		return $this->objects->get(schema: self::SCHEMA, id: $jobId);
@@ -217,7 +217,7 @@ class TemplateImportService {
 	 *
 	 * @throws Exception With code 404 when there is no such job.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
 	 */
 	public function run(string $jobId): array {
 		$job = $this->get(jobId: $jobId);

@@ -2746,9 +2746,9 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/TemplatesController.php has only index/show/create/update/destroy/duplicate/lock/unlock (no upload/import endpoint); no docx/odt template upload found in routes.php or src/. openspec/changes/office-template-authoring/tasks.md: 0/17 done.",
-				"change": "openspec/changes/office-template-authoring",
-				"requirement": "openspec/changes/office-template-authoring/specs/office-template-authoring :: Office files are accepted as first-class templates (REQ-DDOTA-001)"
+				"evidence": "lib/Controller/TemplatesController.php has only index/show/create/update/destroy/duplicate/lock/unlock (no upload/import endpoint); no docx/odt template upload found in routes.php or src/. openspec/changes/archive/2026-11-25-office-template-authoring/tasks.md: 0/17 done.",
+				"change": "openspec/changes/archive/2026-11-25-office-template-authoring",
+				"requirement": "openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring :: Office files are accepted as first-class templates (REQ-DDOTA-001)"
 			},
 			"reachedOn": "nothing reaches it; not built",
 			"provider": "filinq",

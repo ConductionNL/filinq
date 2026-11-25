@@ -67,7 +67,8 @@
 - [x] 5.3 i18n: all new UI strings with English source keys + NL translations (ADR-005)
   - Built: every new UI and schema string in `l10n/en.json` and `l10n/nl.json`, `.js` rebuilt with `npm run l10n:build`.
 
-- [ ] 5.4 Docs in `docs/features/` (office templates, fragments, bulk import) with Playwright MCP screenshots (ADR-010); `openspec validate office-template-authoring --strict` passes
+- [x] 5.4 Docs in `docs/features/` (office templates, fragments, bulk import) with Playwright MCP screenshots (ADR-010); `openspec validate office-template-authoring --strict` passes
+  - Done 2026-11-25 on a live sandbox (NC 34, MariaDB, OpenRegister main, LibreOffice): `docs/features/office-templates.md` with three screenshots. A ZIP import through the UI ran as a background job: DOCX and ODT templates imported (the ODT converted, 4 merge tags each, category from the first folder) and `fragments/*.txt` became text fragments; a failing file was reported and skipped. Note: the sample `tests/sample-documents/office/letter.odt` is a minimal fixture LibreOffice cannot open, so a live import of it fails at conversion; a real ODT imports. Strict validate: eight long requirements tightened under 500 characters with no obligation dropped (detail clauses moved into named scenarios naming their PHPUnit tests), `status` front matter moved to `proposal.md`; the change validates.
 
 ## Quality checklist
 

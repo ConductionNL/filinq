@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -42,7 +42,7 @@ namespace OCA\Filinq\Service\OfficeTemplate;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 class MergeTagClassifier {
 
@@ -70,7 +70,7 @@ class MergeTagClassifier {
 	 *
 	 * @return array<string, mixed> `validated`, `severity`, `tags` (each `tag` and `status`), `unknown`, and `notice` when nothing was checked.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function report(array $tags, ?array $properties, string $severity): array {
 		$severity = $this->severity(value: $severity);
@@ -104,7 +104,7 @@ class MergeTagClassifier {
 	 *
 	 * @return bool True for unknown tags on a checked template under blocking severity.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function blocks(array $report): bool {
 		return ($report['validated'] ?? false) === true

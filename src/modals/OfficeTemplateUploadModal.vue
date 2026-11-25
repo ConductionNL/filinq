@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-files-are-accepted-as-first-class-templates-req-ddota-001
+@spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-files-are-accepted-as-first-class-templates-req-ddota-001
 -->
 
 <template>
@@ -68,7 +68,7 @@ export default {
 		/**
 		 * pick.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		pick(event) {
 			this.file = (event.target.files && event.target.files[0]) || null
@@ -80,7 +80,7 @@ export default {
 		/**
 		 * submit.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		async submit() {
 			this.saving = true

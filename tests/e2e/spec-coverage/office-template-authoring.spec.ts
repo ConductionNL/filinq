@@ -38,15 +38,15 @@
  * Not run in the change that wrote it (decision 139): the live pass runs it.
  */
 
-// @e2e openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#communications-officer-uploads-a-docx-house-style-template
-// @e2e openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#unknown-tag-is-reported-on-upload
-// @e2e openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#office-template-generates-a-pdf-via-the-cascade
-// @e2e openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#fragment-content-is-rendered-into-a-generated-document
-// @e2e openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#zip-of-house-style-templates-imports-with-a-report
-// @e2e openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#operator-maps-an-unknown-tag-interactively
-// @e2e openspec/changes/office-template-authoring/specs/template-management/spec.md#office-template-object-carries-source-reference-and-hash
-// @e2e openspec/changes/office-template-authoring/specs/template-management/spec.md#new-source-upload-creates-a-version-and-restore-brings-it-back
-// @e2e openspec/changes/office-template-authoring/specs/template-management/spec.md#office-template-preview-renders-through-the-cascade
+// @e2e openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#communications-officer-uploads-a-docx-house-style-template
+// @e2e openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#unknown-tag-is-reported-on-upload
+// @e2e openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#office-template-generates-a-pdf-via-the-cascade
+// @e2e openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#fragment-content-is-rendered-into-a-generated-document
+// @e2e openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#zip-of-house-style-templates-imports-with-a-report
+// @e2e openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#operator-maps-an-unknown-tag-interactively
+// @e2e openspec/changes/archive/2026-11-25-office-template-authoring/specs/template-management/spec.md#office-template-object-carries-source-reference-and-hash
+// @e2e openspec/changes/archive/2026-11-25-office-template-authoring/specs/template-management/spec.md#new-source-upload-creates-a-version-and-restore-brings-it-back
+// @e2e openspec/changes/archive/2026-11-25-office-template-authoring/specs/template-management/spec.md#office-template-preview-renders-through-the-cascade
 
 import type { APIRequestContext } from '@playwright/test'
 

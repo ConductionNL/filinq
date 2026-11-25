@@ -105,7 +105,7 @@ class FormatMatrixService implements FormatMatrixServiceInterface {
 	 * does (office-template-authoring REQ-DDMFO-007).
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-multi-format-output/tasks.md#task-2.3
-	 * @spec openspec/changes/office-template-authoring/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function forTemplate(array $template): array {
 		$matrix = $this->forInstance(flow: 'documents');

@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 class OfficeSourceStore {
 
@@ -58,7 +58,7 @@ class OfficeSourceStore {
 	 *
 	 * @param IRootFolder $rootFolder The file system root.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function __construct(
 		private readonly IRootFolder $rootFolder,
@@ -74,7 +74,7 @@ class OfficeSourceStore {
 	 *
 	 * @return array{fileId: int, contentHash: string} The stored file's id and the content's checksum.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function store(string $bytes, string $extension, string $name=''): array {
 		$hash = hash('sha256', $bytes);
@@ -100,7 +100,7 @@ class OfficeSourceStore {
 	 *
 	 * @return string|null The content, or null when no source has that id.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function read(int $fileId): ?string {
 		foreach ($this->folder()->getById($fileId) as $node) {
@@ -121,7 +121,7 @@ class OfficeSourceStore {
 	 *
 	 * @return File
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
 	 */
 	public function scratch(string $bytes, string $extension): File {
 		$folder = $this->child(parent: $this->folder(), name: 'work');

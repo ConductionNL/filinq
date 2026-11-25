@@ -16,7 +16,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/tasks.md#task-5.1
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/tasks.md#task-5.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -101,7 +101,7 @@ class OfficeSampleFilesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/office-template-authoring/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/tasks.md#task-5.1
 	 */
 	public function testTheValidDocxIsAccepted(): void {
 		$bytes = $this->fixture(name: 'beschikking-parkeervergunning.docx');
@@ -118,7 +118,7 @@ class OfficeSampleFilesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/office-template-authoring/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/tasks.md#task-5.1
 	 */
 	public function testTheOdtIsAccepted(): void {
 		$bytes = $this->fixture(name: 'office/letter.odt');
@@ -134,7 +134,7 @@ class OfficeSampleFilesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/office-template-authoring/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/tasks.md#task-5.1
 	 */
 	public function testTheMacroDocxIsRefused(): void {
 		$this->assertSame(
@@ -148,7 +148,7 @@ class OfficeSampleFilesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/office-template-authoring/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/tasks.md#task-5.1
 	 */
 	public function testTheCorruptDocxIsRefused(): void {
 		$this->assertSame(

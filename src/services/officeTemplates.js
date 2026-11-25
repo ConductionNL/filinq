@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 
 import axios from '@nextcloud/axios'
@@ -24,7 +24,7 @@ export const FINISHED_IMPORT = ['completed', 'failed']
  * @param {File|Blob} file The file.
  * @param {object} fields The form fields.
  * @return {FormData}
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 export function multipart(file, fields = {}) {
 	const body = new FormData()
@@ -45,7 +45,7 @@ export function multipart(file, fields = {}) {
  * @param {File} file The file.
  * @param {object} fields name, namespace and the optional category, description, boundRegister, boundSchema.
  * @return {Promise<object>}
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 export function uploadOfficeTemplate(file, fields) {
 	return answer(axios.post(generateUrl('/apps/filinq/api/templates/office'), multipart(file, fields)))
@@ -58,7 +58,7 @@ export function uploadOfficeTemplate(file, fields) {
  * @param {File} file The file.
  * @param {string} changelog What changed.
  * @return {Promise<object>}
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 export function uploadNewSource(id, file, changelog = '') {
 	return answer(axios.post(generateUrl('/apps/filinq/api/templates/{id}/office', { id }), multipart(file, { changelog })))
@@ -69,7 +69,7 @@ export function uploadNewSource(id, file, changelog = '') {
  *
  * @param {string} id The template's id.
  * @return {string}
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 export function sourceUrl(id) {
 	return generateUrl('/apps/filinq/api/templates/{id}/office/source', { id })
@@ -80,7 +80,7 @@ export function sourceUrl(id) {
  *
  * @param {string} id The template's id.
  * @return {string}
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 export function previewUrl(id) {
 	return generateUrl('/apps/filinq/api/templates/{id}/office/preview', { id })
@@ -92,7 +92,7 @@ export function previewUrl(id) {
  * @param {string} id The template's id.
  * @param {object} fieldMap Tag => data path.
  * @return {Promise<object>}
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 export function saveFieldMap(id, fieldMap) {
 	return answer(axios.put(generateUrl('/apps/filinq/api/templates/{id}/field-map', { id }), { fieldMap }))
@@ -104,7 +104,7 @@ export function saveFieldMap(id, fieldMap) {
  * @param {File|null} file The ZIP, or null to import `fields.path`.
  * @param {object} fields namespace and the optional boundRegister, boundSchema, path.
  * @return {Promise<object>}
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 export function startImport(file, fields) {
 	return answer(axios.post(generateUrl('/apps/filinq/api/templates/import'), multipart(file, fields)))
@@ -115,7 +115,7 @@ export function startImport(file, fields) {
  *
  * @param {string} jobId The job's id.
  * @return {Promise<object>}
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 export function fetchImport(jobId) {
 	return answer(axios.get(generateUrl('/apps/filinq/api/templates/import/{jobId}', { jobId })))
@@ -127,7 +127,7 @@ export function fetchImport(jobId) {
  *
  * @param {object} template The template (tagReport, fieldMap).
  * @return {Array<{tag: string, path: string}>}
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 export function unknownTags(template) {
 	const map = (template && template.fieldMap) || {}
@@ -141,7 +141,7 @@ export function unknownTags(template) {
  * @param {Array<{tag: string, path: string}>} rows The rows.
  * @param {object} current The mapping so far, kept for tags not in the rows.
  * @return {object}
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 export function fieldMapFrom(rows, current = {}) {
 	const map = { ...(current || {}) }
