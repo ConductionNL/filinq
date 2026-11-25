@@ -123,6 +123,7 @@
 </template>
 
 <script>
+import { markRaw } from 'vue'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -327,7 +328,8 @@ export default {
 						),
 					),
 				])
-				this.pdfDoc = await pdfjsLib.getDocument({ data }).promise
+				// markRaw: pdf.js keeps its state in private class fields, which a reactive proxy cannot reach.
+				this.pdfDoc = markRaw(await pdfjsLib.getDocument({ data }).promise)
 				this.pageCount = this.pdfDoc.numPages
 				await this.showPage(1)
 			} catch {
