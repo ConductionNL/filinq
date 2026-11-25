@@ -64,43 +64,42 @@ final class SlugSearch {
 	/**
 	 * Search the objects of one schema in one register, both named by slug.
 	 *
-	 * @param string               $register      The register slug.
-	 * @param string               $schema        The schema slug.
-	 * @param array<string, mixed> $filters       Search filters, as OpenRegister takes them.
-	 * @param bool                 $_rbac         Whether OpenRegister applies role-based access.
-	 * @param bool                 $_multitenancy Whether OpenRegister scopes to the active organisation.
+	 * Only the arguments the caller gives are passed on, so OpenRegister's own
+	 * defaults apply to the rest, exactly as in a direct call.
 	 *
-	 * @return array|int What OpenRegister returns: the rows, or a count when the filters ask for one.
+	 * @param string                    $register      The register slug.
+	 * @param string                    $schema        The schema slug.
+	 * @param array<string, mixed>|null $filters       Search filters, as OpenRegister takes them.
+	 * @param bool|null                 $_rbac         Whether OpenRegister applies role-based access.
+	 * @param bool|null                 $_multitenancy Whether OpenRegister scopes to the active organisation.
+	 *
+	 * @return mixed What OpenRegister returns, unchanged (rows, or a count when the filters ask for one); callers keep their own checks.
 	 *
 	 * @SuppressWarnings(PHPMD.CamelCaseParameterName) The names mirror OpenRegister's own parameters.
 	 * @SuppressWarnings(PHPMD.CamelCaseVariableName)  The names mirror OpenRegister's own parameters.
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag)    OpenRegister's own flags, passed through.
 	 *
 	 * @spec openspec/specs/openregister-bridge/spec.md
 	 */
 	public function search(
 		string $register,
 		string $schema,
-		array $filters=[],
-		bool $_rbac=true,
-		bool $_multitenancy=true
-	): array|int {
+		?array $filters=null,
+		?bool $_rbac=null,
+		?bool $_multitenancy=null
+	): mixed {
+		$arguments = ['registerSlug' => $register, 'schemaSlug' => $schema];
 		if ($this->takesTarget() === true) {
-			return $this->objects->searchObjectsBySlug(
-				target: new RegisterSchemaSlugs(register: $register, schema: $schema),
-				filters: $filters,
-				_rbac: $_rbac,
-				_multitenancy: $_multitenancy
-			);
+			$arguments = ['target' => new RegisterSchemaSlugs(register: $register, schema: $schema)];
 		}
 
-		return $this->objects->searchObjectsBySlug(
-			registerSlug: $register,
-			schemaSlug: $schema,
-			filters: $filters,
-			_rbac: $_rbac,
-			_multitenancy: $_multitenancy
-		);
+		$optional = ['filters' => $filters, '_rbac' => $_rbac, '_multitenancy' => $_multitenancy];
+		foreach ($optional as $name => $value) {
+			if ($value !== null) {
+				$arguments[$name] = $value;
+			}
+		}
+
+		return $this->objects->searchObjectsBySlug(...$arguments);
 	}//end search()
 
 	/**
