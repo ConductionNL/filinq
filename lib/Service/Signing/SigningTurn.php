@@ -91,6 +91,62 @@ final class SigningTurn {
 	}//end assertTurn()
 
 	/**
+	 * The signers whose turn it is now, so each is told once.
+	 *
+	 * A parallel request has every pending signer's turn at once, so only its
+	 * creation tells anyone. A request signed in order has the turn of the
+	 * pending signers at the first position someone still has to act on; after
+	 * a signature only those placed after the one who signed are new. A signer
+	 * on an envelope is told by the envelope, and one who is done or declined is
+	 * told nothing.
+	 *
+	 * @param array<string, mixed>                $request The signing request.
+	 * @param array<string, array<string, mixed>> $signers Every signer record, by id.
+	 * @param string|null                         $after   The signer who just acted, or null at creation.
+	 *
+	 * @return list<string> The signer ids to tell.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role.
+	 *
+	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-1-signerinitiator-notifications-via-the-email-leaf-m
+	 */
+	public static function due(array $request, array $signers, ?string $after = null): array {
+		$parallel = (string)($request['signingMode'] ?? '') === self::PARALLEL;
+		if ($parallel === true && $after !== null) {
+			return [];
+		}
+
+		$positions = self::positions(request: $request, signers: $signers);
+		$first     = null;
+		foreach ($positions as $signerId => $position) {
+			if (RecipientRole::isDone(recipient: ($signers[$signerId] ?? [])) === false && ($first === null || $position < $first)) {
+				$first = $position;
+			}
+		}
+
+		$floor = null;
+		if ($after !== null && isset($positions[$after]) === true) {
+			$floor = $positions[$after];
+		}
+
+		$due = [];
+		foreach ($positions as $signerId => $position) {
+			$signer = ($signers[$signerId] ?? []);
+			if ((string)($signer['status'] ?? '') !== 'PENDING' || (string)($signer['envelopeRef'] ?? '') !== '') {
+				continue;
+			}
+
+			if ($parallel === false && ($position !== $first || ($floor !== null && $position <= $floor))) {
+				continue;
+			}
+
+			$due[] = (string)$signerId;
+		}
+
+		return $due;
+	}//end due()
+
+	/**
 	 * Each signer's place in the order.
 	 *
 	 * @param array<string, mixed>                $request The signing request.
@@ -113,14 +169,16 @@ final class SigningTurn {
 	}//end positions()
 
 	/**
-	 * A signer's name for the refusal: display name, else email, else id.
+	 * A signer's name for a refusal or a mail: display name, else email, else the fallback.
 	 *
-	 * @param string               $signerId The id.
+	 * @param string               $signerId The fallback: the id, or another name.
 	 * @param array<string, mixed> $signer   The record.
 	 *
 	 * @return string The name.
+	 *
+	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-1-signerinitiator-notifications-via-the-email-leaf-m
 	 */
-	private static function nameOf(string $signerId, array $signer): string {
+	public static function nameOf(string $signerId, array $signer): string {
 		foreach (['displayName', 'name', 'email'] as $key) {
 			$value = trim((string)($signer[$key] ?? ''));
 			if ($value !== '') {

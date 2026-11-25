@@ -317,6 +317,7 @@ class SigningService implements SigningServiceInterface {
 			initiator: [$initiatorUserId, $initiatorDisplayName],
 			attribution: new SigningAttribution(via: $via)
 		);
+		$this->mailTurn(request: $createdRequest, after: null);
 
 		return $createdRequest;
 	}//end createRequest()
@@ -1119,6 +1120,12 @@ class SigningService implements SigningServiceInterface {
 		// Cross-app delegated-signing contract: a declined request is terminal —
 		// emit SigningConcludedEvent (status=declined) for a delegated request.
 		$this->outputs->emitter->emitIfDelegated(request: $request, status: 'declined');
+		$this->outputs->mail?->declined(
+			request: $request,
+			declinedBy: SigningTurn::nameOf(signerId: $actorDisplayName, signer: $signer),
+			reason: $reason,
+			target: new ObjectBoundMailTarget(uuid: $requestId, register: $register, schema: $schema)
+		);
 
 		$metadata = $this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor);
 		$metadata['reason'] = $reason;
@@ -1325,6 +1332,7 @@ class SigningService implements SigningServiceInterface {
 				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 				_rbac: false
 			);
+			$this->mailTurn(request: $freshRequest + ['id' => $requestId], after: $act->signerId);
 			return;
 		}
 
@@ -1405,6 +1413,50 @@ class SigningService implements SigningServiceInterface {
 		);
 
 	}//end updateRequestStatus()
+
+	/**
+	 * Mail the signers whose turn it now is, bound to the request.
+	 *
+	 * Every signer record is read, because who is next depends on all of them.
+	 * Reading or mailing never stops the act it follows.
+	 *
+	 * @param array<string, mixed> $request The signing request, with its id and signerIds.
+	 * @param string|null          $after   The signer who just acted, or null at creation.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-1-signerinitiator-notifications-via-the-email-leaf-m
+	 */
+	private function mailTurn(array $request, ?string $after): void {
+		if ($this->outputs->mail === null) {
+			return;
+		}
+
+		try {
+			$objectService = $this->settingsService->getObjectService();
+			['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+			['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
+			$signers = [];
+			foreach (($request['signerIds'] ?? []) as $signerId) {
+				$signers[(string)$signerId] = $this->toArray(
+					object: $objectService->find(
+						id: (string)$signerId,
+						options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema),
+						_rbac: false
+					)
+				);
+			}
+
+			$this->outputs->mail->turnStarted(
+				request: $request,
+				signers: $signers,
+				target: new ObjectBoundMailTarget(uuid: (string)($request['id'] ?? ($request['uuid'] ?? '')), register: $register, schema: $schema),
+				after: $after
+			);
+		} catch (\Throwable $e) {
+			return;
+		}
+	}//end mailTurn()
 
 	/**
 	 * The signer records listed before one signer on a request, plus that signer, by id.
