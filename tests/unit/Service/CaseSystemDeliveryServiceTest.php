@@ -331,7 +331,7 @@ class CaseSystemDeliveryServiceTest extends TestCase {
 	}//end testAFailingDeliveryWriteBecomesAWarningAndLeavesTheDocumentUnlinked()
 
 	public function testARequestDestinationIsUsedAndAnAlreadyLinkedDocumentIsNotRewritten(): void {
-		$inlineId = $this->service([])->destinationFor(['id' => 'template-1'], ['sourceId' => 'zgw-other'])['id'];
+		$inlineId = $this->service(stored: [])->destinationFor(['id' => 'template-1'], ['sourceId' => 'zgw-other'])['id'];
 		$existing = ['id' => 'delivery-9', 'generatedDocumentId' => 'doc-1', 'destinationId' => $inlineId];
 		$service  = $this->service(['caseSystemDelivery' => [$existing]]);
 		$document = ['id' => 'doc-1', 'caseSystemDeliveryId' => 'delivery-9'];
