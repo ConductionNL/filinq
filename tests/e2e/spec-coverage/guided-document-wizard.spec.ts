@@ -136,7 +136,7 @@ test.describe('guided document wizard: runner', () => {
 		await open(page, WizardRunner)
 
 		await expect(page.getByTestId('wizard-progress')).toContainText('1 of 1')
-		await page.getByTestId('wizard-choice-afgewezen').click()
+		await page.getByTestId('wizard-choice-afgewezen').check({ force: true })
 		await expect(page.getByTestId('wizard-progress')).toContainText('1 of 2')
 		await page.getByTestId('wizard-next').click()
 		await expect(page.getByTestId('wizard-step')).toContainText(
@@ -144,7 +144,7 @@ test.describe('guided document wizard: runner', () => {
 		)
 
 		await page.getByRole('button', { name: 'Previous' }).click()
-		await page.getByTestId('wizard-choice-toegewezen').click()
+		await page.getByTestId('wizard-choice-toegewezen').check({ force: true })
 		await page.getByTestId('wizard-next').click()
 		await expect(page.getByTestId('wizard-step')).toContainText('Effective date')
 		await expect(page.getByTestId('wizard-step')).not.toContainText(
@@ -161,7 +161,7 @@ test.describe('guided document wizard: runner', () => {
 		const sent = await captureGenerate(page)
 		await open(page, WizardRunner)
 
-		await page.getByTestId('wizard-choice-afgewezen').click()
+		await page.getByTestId('wizard-choice-afgewezen').check({ force: true })
 		await page.getByTestId('wizard-next').click()
 		await page
 			.getByTestId('wizard-answer-text')
@@ -240,7 +240,7 @@ test.describe('guided document wizard: runner', () => {
 		)
 		await open(page, WizardRunner)
 
-		await page.getByTestId('wizard-choice-afgewezen').click()
+		await page.getByTestId('wizard-choice-afgewezen').check({ force: true })
 		await page.getByTestId('wizard-next').click()
 		await page.getByTestId('wizard-answer-text').locator('xpath=descendant-or-self::input').fill('x')
 		await page.getByTestId('wizard-next').click()
@@ -299,7 +299,7 @@ test.describe('guided document wizard: runner', () => {
 			await serveWizard(page, { ...WIZARD, templateType })
 			const sent = await captureGenerate(page)
 			await open(page, WizardRunner)
-			await page.getByTestId('wizard-choice-toegewezen').click()
+			await page.getByTestId('wizard-choice-toegewezen').check({ force: true })
 			await page.getByTestId('wizard-next').click()
 			await page
 				.getByTestId('wizard-answer-date')
