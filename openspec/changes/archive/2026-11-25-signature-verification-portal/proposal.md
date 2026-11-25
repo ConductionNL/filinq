@@ -1,5 +1,6 @@
 ---
 kind: code
+status: proposed
 ---
 
 # Proposal: signature-verification-portal

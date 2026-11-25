@@ -6094,7 +6094,7 @@
 				"evidence": "GET api/signing/verify/{fileId} (routes.php:247, FE, signing#verify) -> SigningController::verify (line 389) -> SigningVerificationService::verifyDocument (line 73), which checks every embedded signature assertion (verifyAssertion, line 255) and works on any document, not only ones the caller signed themselves.",
 				"change": "openspec/changes/archive/2026-06-14-document-signing",
 				"requirement": "openspec/specs/document-signing :: Signature verification",
-				"plan": "openspec/changes/signature-verification-portal"
+				"plan": "openspec/changes/archive/2026-11-25-signature-verification-portal"
 			},
 			"reachedOn": "/signing/verify/:fileId (SignatureVerification.vue)",
 			"provider": "filinq",

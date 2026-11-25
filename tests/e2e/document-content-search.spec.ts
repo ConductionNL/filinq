@@ -39,6 +39,7 @@ import { go } from './spec-coverage/_helpers.ts'
 import {
 	API,
 	createDavFile,
+	createDavFolder,
 	harvestToken,
 	jsonHeaders,
 	TEST_PREFIX,
@@ -93,6 +94,8 @@ async function seed(
 	contents: string,
 	extract = true,
 ): Promise<string> {
+	// A fresh instance has no DocuDesk folder yet; MKCOL is 201 or 405 (exists).
+	expect([201, 405]).toContain(await createDavFolder(req, token, DOCS_FOLDER))
 	const seeded = await createDavFile(
 		req,
 		token,
@@ -224,8 +227,13 @@ test.describe('Documents are found by the words in them', () => {
 		const readNow = page.getByTestId('my-documents-read-now')
 		await expect(readNow).toHaveText('Read them now')
 		await readNow.click()
-		// The reading runs on the server; the search then runs again.
-		await expect(readNow).toBeEnabled({ timeout: 60000 })
+		// The reading runs on the server; the search then runs again. With
+		// every listed document read, nothing is unread any more, so the
+		// count line and its action go away (seen on a live run, 25 Nov 2026).
+		await expect(page.getByTestId('my-documents-search-note')).toHaveCount(0, {
+			timeout: 60000,
+		})
+		await expect(readNow).toHaveCount(0)
 	})
 
 	// @e2e document-content-search::a-colleagues-private-document-stays-out
@@ -254,15 +262,19 @@ test.describe('Documents are found by the words in them', () => {
 			`Afspraak over de ${WORD} met de wethouder.`,
 		)
 
+		// A real session through the login form: with httpCredentials alone
+		// the browser has no Nextcloud session and the app shell never mounts
+		// `#filinq-app` (seen on a live run, 25 Nov 2026).
 		const context = await browser.newContext({
 			storageState: { cookies: [], origins: [] },
-			httpCredentials: {
-				username: coordinator.userid,
-				password: coordinator.password,
-			},
 		})
 		try {
 			const own = await context.newPage()
+			await own.goto('/index.php/login', { waitUntil: 'domcontentloaded' })
+			await own.locator('#user').fill(coordinator.userid)
+			await own.locator('#password').fill(coordinator.password)
+			await own.locator('button[type="submit"]').click()
+			await own.waitForURL(/\/apps\//, { timeout: 60000 })
 			await go(own, 'my-documents')
 			await searchContent(own, WORD)
 			await own.waitForTimeout(2000)

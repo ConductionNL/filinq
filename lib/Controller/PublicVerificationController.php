@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -54,7 +54,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
  */
 class PublicVerificationController extends Controller {
 	/**
@@ -100,7 +100,7 @@ class PublicVerificationController extends Controller {
 	 *
 	 * @return JSONResponse Always 200, `status` `unknown` when nothing can be said.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -138,7 +138,7 @@ class PublicVerificationController extends Controller {
 	 *
 	 * @return TemplateResponse The public page.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]

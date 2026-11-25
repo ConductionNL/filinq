@@ -13,6 +13,8 @@ document the reader could not have found otherwise.
   holds the words first, then the documents that hold the words in their
   text, best match first. Each content match shows a short passage with
   the words marked.
+
+  ![My documents searching by name and content: a letter found by a word in its text, with the passage and the word marked](/screenshots/document-content-search-hit.png)
 - **The documents of a record.** The documents card on a record (a case, a
   dossier, any object with documents) has a **Find in name and content**
   field that works the same way, for the documents of that record only.
