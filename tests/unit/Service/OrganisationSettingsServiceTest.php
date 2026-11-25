@@ -131,6 +131,14 @@ class OrganisationSettingsServiceTest extends TestCase {
 					public function __construct(private string $uuid) {
 					}
 
+					/**
+					 * The getters, answered through __call.
+					 *
+					 * @param string       $method    The getter.
+					 * @param array<mixed> $arguments Unused.
+					 *
+					 * @return mixed
+					 */
 					public function __call(string $method, array $arguments): mixed {
 						return match ($method) {
 							'getUuid' => $this->uuid,

@@ -95,11 +95,11 @@ class ConsentCrudServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testGetConsentAnswersNullWhenOpenRegisterFindsNothing(): void {
-		$objectService = $this->createMock(ObjectService::class);
+		$objectService = $this->createMock(originalClassName: ObjectService::class);
 		$objectService->method('find')->willThrowException(new DoesNotExistException('not found in any magic table'));
 		$this->mockSettingsService->method('getObjectService')->willReturn($objectService);
 
-		$this->assertNull($this->service->getConsent(consentId: 'c-of-b', register: 'reg-1', schema: 'schema-1'));
+		$this->assertNull(actual: $this->service->getConsent(consentId: 'c-of-b', register: 'reg-1', schema: 'schema-1'));
 
 	}//end testGetConsentAnswersNullWhenOpenRegisterFindsNothing()
 

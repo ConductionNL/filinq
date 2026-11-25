@@ -65,7 +65,11 @@ class EntityCatalogueScopeTest extends TestCase {
 			 * @return mixed
 			 */
 			public function __call(string $method, array $arguments): mixed {
-				return $method === 'getUuid' ? $this->uuid : null;
+				if ($method === 'getUuid') {
+					return $this->uuid;
+				}
+
+				return null;
 			}//end __call()
 		};
 
