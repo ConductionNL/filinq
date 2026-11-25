@@ -112,17 +112,17 @@ class IntakeAcknowledgementServiceTest extends TestCase {
 				'adHocData' => [
 					'subject' => 'Bezwaar parkeervergunning',
 					'sender' => 'j.devries@example.nl',
-					'receivedAt' => '2026-10-14T09:12:00+00:00',
+					'receivedAt' => '14-10-2026',
 					'channel' => 'mail',
 					'registrationNumber' => '',
 				],
 			]
 		)->willReturn(['html' => '<p>Ontvangen op 14 oktober</p>', 'content' => 'x']);
 		$this->reach->expects($this->once())->method('notifySenderParties')
-			->with('doc-1', 'Acknowledgement of receipt: Bezwaar parkeervergunning', '<p>Ontvangen op 14 oktober</p>')
+			->with('doc-1', 'Acknowledgement of receipt: Bezwaar parkeervergunning', 'Ontvangen op 14 oktober')
 			->willReturn([]);
 		$this->reach->expects($this->once())->method('mailAddress')
-			->with('j.devries@example.nl', 'Acknowledgement of receipt: Bezwaar parkeervergunning', '<p>Ontvangen op 14 oktober</p>')
+			->with('j.devries@example.nl', 'Acknowledgement of receipt: Bezwaar parkeervergunning', 'Ontvangen op 14 oktober')
 			->willReturn('dispatched');
 
 		$this->assertSame(
@@ -130,6 +130,40 @@ class IntakeAcknowledgementServiceTest extends TestCase {
 			$service->acknowledge(self::mailed(), self::rule())
 		);
 	}//end testAMailedLetterIsAcknowledgedToItsAddress()
+
+	/**
+	 * A translatable subject reads as its Dutch text and the HTML letter goes out as plain text.
+	 *
+	 * Seen live (NC 34, OpenRegister main): the subject read "Array" and the mail showed `<p>` tags.
+	 *
+	 * @return void
+	 */
+	public function testATranslatableSubjectAndAnHtmlLetterReadAsText(): void {
+		$service = $this->service();
+		$this->documents->expects($this->once())->method('generateDocument')
+			->with(
+				'tpl-ontvangst',
+				[],
+				$this->callback(callback: static fn (array $o): bool => $o['adHocData']['subject'] === 'Aanvraag parkeervergunning')
+			)
+			->willReturn(['html' => "<p>Geachte heer, mevrouw,</p>\n<p>Uw stuk is ontvangen &amp; geregistreerd.<br>Met groet,</p>"]);
+		$this->reach->method('notifySenderParties')->willReturn([]);
+		$this->reach->expects($this->once())->method('mailAddress')
+			->with(
+				'j.devries@example.nl',
+				'Acknowledgement of receipt: Aanvraag parkeervergunning',
+				"Geachte heer, mevrouw,\n\nUw stuk is ontvangen & geregistreerd.\nMet groet,"
+			)
+			->willReturn('dispatched');
+
+		$outcome = $service->acknowledge(
+			document: self::mailed(extra: ['subject' => ['nl' => 'Aanvraag parkeervergunning', 'en' => 'Parking permit application']]),
+			rule: self::rule()
+		);
+
+		$this->assertSame(expected: 'sent', actual: $outcome['status']);
+
+	}//end testATranslatableSubjectAndAnHtmlLetterReadAsText()
 
 	/**
 	 * A party linked as sender is reached first, and its address recorded.

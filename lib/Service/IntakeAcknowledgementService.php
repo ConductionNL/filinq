@@ -106,9 +106,9 @@ class IntakeAcknowledgementService {
 		$data = self::letterData(document: $document, inbound: $inbound);
 		try {
 			$rendered = $this->render(template: $template, data: $data, format: 'html');
-			$subject = $this->l10n->t('Acknowledgement of receipt: %s', [(string)($document['subject'] ?? '')]);
+			$subject = $this->l10n->t('Acknowledgement of receipt: %s', [$data['subject']]);
 
-			$outcome = $this->reachSender(document: $document, message: ['subject' => $subject, 'body' => $rendered['body']]);
+			$outcome = $this->reachSender(document: $document, message: ['subject' => $subject, 'body' => self::plainText(html: $rendered['body'])]);
 			if ($outcome['status'] === self::STATUS_QUEUED_AS_LETTER) {
 				$letter = $this->render(template: $template, data: $data, format: 'pdf');
 				$outcome['letter'] = $letter['fileId'];
@@ -136,13 +136,85 @@ class IntakeAcknowledgementService {
 	 */
 	private static function letterData(array $document, array|null $inbound): array {
 		return [
-			'subject' => (string)($document['subject'] ?? ''),
-			'sender' => (string)($document['sender'] ?? ''),
-			'receivedAt' => (string)($document['receivedAt'] ?? ''),
+			'subject' => self::text(value: ($document['subject'] ?? '')),
+			'sender' => self::text(value: ($document['sender'] ?? '')),
+			'receivedAt' => self::receivedDate(receivedAt: (string)($document['receivedAt'] ?? '')),
 			'channel' => (string)($document['channel'] ?? ''),
 			'registrationNumber' => (string)($inbound['registrationNumber'] ?? ''),
 		];
 	}//end letterData()
+
+	/**
+	 * A field as text. OpenRegister hands a translatable field to a service as a
+	 * map of language to text (`{"nl": "Aanvraag"}`), which a cast turns into
+	 * "Array" (seen live in the subject of a sent acknowledgement, 25 Nov 2026).
+	 * The letter is Dutch, so nl comes first, then en, then the first text.
+	 *
+	 * @param mixed $value The field.
+	 *
+	 * @return string The text; '' when there is none.
+	 *
+	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
+	 */
+	private static function text(mixed $value): string {
+		if (is_array($value) === false) {
+			return is_scalar($value) === true ? (string)$value : '';
+		}
+
+		foreach (['nl', 'en'] as $language) {
+			if (isset($value[$language]) === true && is_scalar($value[$language]) === true && (string)$value[$language] !== '') {
+				return (string)$value[$language];
+			}
+		}
+
+		foreach ($value as $candidate) {
+			if (is_scalar($candidate) === true && (string)$candidate !== '') {
+				return (string)$candidate;
+			}
+		}
+
+		return '';
+	}//end text()
+
+	/**
+	 * The arrival as the letter shows it: day-month-year, as on the received stamp.
+	 *
+	 * @param string $receivedAt The arrival moment, ISO 8601.
+	 *
+	 * @return string The date, or the value as given when it is not a date.
+	 *
+	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
+	 */
+	private static function receivedDate(string $receivedAt): string {
+		if (trim($receivedAt) === '') {
+			return '';
+		}
+
+		try {
+			return (new \DateTimeImmutable($receivedAt))->format('d-m-Y');
+		} catch (Throwable) {
+			return $receivedAt;
+		}
+	}//end receivedDate()
+
+	/**
+	 * The rendered HTML as the plain text a mail body carries: one paragraph per
+	 * block, line breaks kept, no markup (seen live: the mail showed `<p>` tags).
+	 *
+	 * @param string $html The rendered letter.
+	 *
+	 * @return string The text.
+	 *
+	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
+	 */
+	private static function plainText(string $html): string {
+		$text = (string)preg_replace('~<br\s*/?>~i', "\n", $html);
+		$text = (string)preg_replace('~</(p|div|h[1-6]|li|tr)\s*>~i', "\n\n", $text);
+		$text = html_entity_decode(strip_tags($text), (ENT_QUOTES | ENT_HTML5), 'UTF-8');
+		$text = (string)preg_replace("~[ \t]+\n~", "\n", $text);
+
+		return trim((string)preg_replace("~\n{3,}~", "\n\n", $text));
+	}//end plainText()
 
 	/**
 	 * The acknowledgement rendered from the rule's template: as HTML for a

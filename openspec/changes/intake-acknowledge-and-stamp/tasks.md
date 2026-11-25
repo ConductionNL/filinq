@@ -21,7 +21,17 @@
 ## 4. Quality
 
 - [ ] 4.1 Dutch and English strings (ADR-005), `@spec` tags, and `docs/features/` with screenshots (ADR-010). Verify: `npm run check:l10n`, `npm run lint`, `composer check:strict`.
-- [ ] 4.2 One live check on a dev instance with mail configured: a mailed document gets an acknowledgement in the sender's mailbox. Verify: the mail arrives and `acknowledgement.status` is `sent`.
+- [x] 4.2 One live check on a dev instance with mail configured: a mailed document gets an acknowledgement in the sender's mailbox. Verify: the mail arrives and `acknowledgement.status` is `sent`.
+  - Passed live (2026-11-25): Nextcloud 34.0.6 + MariaDB, OpenRegister main, filinq development, Nextcloud's
+    mailer on SMTP to a local mail sink (aiosmtpd). An `intakeDocument` created through OpenRegister's objects
+    API with `channel: mail`, a sender address and the seeded rule `intake-default-mail-ontvangst` stored
+    `acknowledgement.status: sent` with that address, and one message arrived in the sink for that address,
+    subject "Acknowledgement of receipt: <subject>", the seeded Dutch letter as the body. With a real PDF as
+    the arrived file the rule's stamp stored `<name> (ontvangen).pdf` as `stampedRendition`.
+  - The first live run found three faults in what the mail said, fixed with it: the subject read "Array"
+    (OpenRegister hands the translatable `subject` to a service as a language map), the plain-text body
+    carried the letter's `<p>` tags, and the date was the raw ISO timestamp; now the Dutch text, plain
+    paragraphs and day-month-year as on the stamp (`IntakeAcknowledgementServiceTest::testATranslatableSubjectAndAnHtmlLetterReadAsText`).
 
 ## Build notes
 
