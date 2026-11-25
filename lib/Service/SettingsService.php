@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Support\AppConfigFlag;
 use Exception;
 use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Filinq\Service\Review\ReviewSettingsRules;
@@ -288,10 +289,12 @@ class SettingsService implements SettingsServiceInterface {
 			'filinq.confidentiality.label_vocabulary' => $this->getConfidentialityVocabulary(),
 			// Off by default: purely a suggestion signal that reorders
 			// batch/folder analysis, never gates/blocks/redacts (design.md D3).
-			'filinq.confidentiality.prioritise_analysis' => $this->config->getValueBool(
-				$this->appName,
-				'filinq.confidentiality.prioritise_analysis',
-				false
+			// Stored as a string by updateSettings(): a typed boolean read
+			// threw and answered every settings read 500 after a save.
+			'filinq.confidentiality.prioritise_analysis' => AppConfigFlag::isOn(
+				config: $this->config,
+				app: $this->appName,
+				key: 'filinq.confidentiality.prioritise_analysis'
 			),
 		];
 
