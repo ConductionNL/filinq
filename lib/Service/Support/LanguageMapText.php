@@ -40,7 +40,7 @@ final class LanguageMapText {
 	 *
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
-	public function of(mixed $value): string {
+	public function text(mixed $value): string {
 		if (is_scalar($value) === true) {
 			return (string) $value;
 		}
@@ -62,5 +62,5 @@ final class LanguageMapText {
 		}
 
 		return '';
-	}//end of()
+	}//end text()
 }//end class

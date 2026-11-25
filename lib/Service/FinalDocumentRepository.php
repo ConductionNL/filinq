@@ -502,7 +502,7 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 		$text = new LanguageMapText();
 		foreach (self::TRANSLATABLE as $field) {
 			if (array_key_exists($field, $record) === true) {
-				$record[$field] = $text->of(value: $record[$field]);
+				$record[$field] = $text->text(value: $record[$field]);
 			}
 		}
 

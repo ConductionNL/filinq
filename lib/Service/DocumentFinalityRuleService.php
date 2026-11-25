@@ -293,7 +293,7 @@ class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterfac
 		}
 
 		// The reasonTemplate is translatable: OpenRegister answers a language map.
-		$reason = (new LanguageMapText())->of(value: ($rule['reasonTemplate'] ?? ''));
+		$reason = (new LanguageMapText())->text(value: ($rule['reasonTemplate'] ?? ''));
 		if ($reason === '') {
 			$reason = sprintf('%s reached the status "%s".', $typeReference, $state);
 		}
