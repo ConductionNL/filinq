@@ -221,7 +221,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse {given: delegation[], received: delegation[]}
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	#[NoAdminRequired]
 	public function delegations(): JSONResponse {
@@ -243,7 +243,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse The stored delegation, 201.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	#[NoAdminRequired]
 	public function declareDelegation(): JSONResponse {
@@ -278,7 +278,7 @@ class SigningFolderController extends Controller {
 	 *
 	 * @return JSONResponse {withdrawn: true}, or 404 when the caller gave no such delegation.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	#[NoAdminRequired]
 	public function withdrawDelegation(string $id): JSONResponse {

@@ -7,7 +7,7 @@
  * anonymised, signed, deleted), shown beside the viewer, and the report that
  * filinq's viewer opened a document.
  *
- * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
  */
 
 import axios from '@nextcloud/axios'
@@ -27,7 +27,7 @@ export const DOCUMENT_ACTIVITY_ENDPOINT = '/apps/filinq/api/documents/{id}/audit
  * filinq writes, and the record's own registration and change.
  *
  * @return {Object<string, string>} Label by action.
- * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
  */
 export function documentActivityLabels() {
 	return {
@@ -53,7 +53,7 @@ export function documentActivityLabels() {
  *
  * @param {number|string} fileId The opened file.
  * @return {Promise<boolean>} Whether an entry was written.
- * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-every-action-on-a-document-is-in-its-audit-trail-req-scr-007
  */
 export async function recordDocumentOpened(fileId) {
 	const id = Number(fileId)

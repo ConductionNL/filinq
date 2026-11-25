@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
+ * @spec openspec/changes/archive/2026-11-24-extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use DateTimeImmutable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
+ * @spec openspec/changes/archive/2026-11-24-extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
  */
 class CvProfileParser {
 
@@ -99,7 +99,7 @@ class CvProfileParser {
 	 *
 	 * @return array{educationLevel: int|null, experienceYears: float|null, competenceCodes: list<string>}
 	 *
-	 * @spec openspec/changes/extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
+	 * @spec openspec/changes/archive/2026-11-24-extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
 	 */
 	public function parse(string $text, array $competenceCodes, DateTimeImmutable $today): array {
 		return [
@@ -116,7 +116,7 @@ class CvProfileParser {
 	 *
 	 * @return int|null NLQF 1 to 8.
 	 *
-	 * @spec openspec/changes/extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
+	 * @spec openspec/changes/archive/2026-11-24-extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
 	 */
 	public function educationLevel(string $text): ?int {
 		foreach (self::EDUCATION as $level => $patterns) {
@@ -140,7 +140,7 @@ class CvProfileParser {
 	 *
 	 * @return float|null Years, one decimal.
 	 *
-	 * @spec openspec/changes/extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
+	 * @spec openspec/changes/archive/2026-11-24-extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
 	 */
 	public function experienceYears(string $text, DateTimeImmutable $today): ?float {
 		$section = $this->experienceSection(text: $text);
@@ -184,7 +184,7 @@ class CvProfileParser {
 	 *
 	 * @return list<string>
 	 *
-	 * @spec openspec/changes/extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
+	 * @spec openspec/changes/archive/2026-11-24-extraction-cv-profile/specs/cv-profile-extraction/spec.md#REQ-CVP-001
 	 */
 	public function competences(string $text, array $codes): array {
 		$found = [];

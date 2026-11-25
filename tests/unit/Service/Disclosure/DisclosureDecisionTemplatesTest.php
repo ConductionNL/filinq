@@ -5,7 +5,7 @@
  * real generator from the fixture decision: the letter and the inventory agree.
  *
  * @category Tests
- * @package  OCA\Filinq\Tests\Unit\Service\Woo
+ * @package  OCA\Filinq\Tests\Unit\Service\Disclosure
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -17,7 +17,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Tests\Unit\Service\Woo;
+namespace OCA\Filinq\Tests\Unit\Service\Disclosure;
 
 use OCA\Filinq\Service\Charts\ChartSvgRenderer;
 use OCA\Filinq\Service\Charts\SvgRasterizer;
@@ -38,7 +38,7 @@ use OCA\Filinq\Service\Support\PdfRendering;
 use OCA\Filinq\Service\Support\TemplateSources;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
-use OCA\Filinq\Service\Woo\WooDecisionContextBuilder;
+use OCA\Filinq\Service\Disclosure\DisclosureDecisionContextBuilder;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -48,7 +48,7 @@ use Psr\Log\NullLogger;
  * The two Woo documents from one decision.
  *
  * @covers \OCA\Filinq\Service\DocumentService
- * @uses   \OCA\Filinq\Service\Woo\WooDecisionContextBuilder
+ * @uses   \OCA\Filinq\Service\Disclosure\DisclosureDecisionContextBuilder
  * @uses   \OCA\Filinq\Service\Grounds\RefusalGroundsResolver
  * @uses   \OCA\Filinq\Service\TemplateRenderer
  * @uses   \OCA\Filinq\Service\Charts\ChartSvgRenderer
@@ -62,7 +62,7 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Filinq\Service\Support\PdfRendering
  * @uses   \OCA\Filinq\Service\Support\TemplateSources
  */
-final class WooDecisionTemplatesTest extends TestCase {
+final class DisclosureDecisionTemplatesTest extends TestCase {
 
 	/**
 	 * The seeded template with this slug.
@@ -94,8 +94,12 @@ final class WooDecisionTemplatesTest extends TestCase {
 		$apps = $this->createMock(IAppManager::class);
 		$apps->method('isEnabledForAnyone')->willReturn(false);
 		$apps->method('getInstalledApps')->willReturn([]);
-		$builder  = new WooDecisionContextBuilder(
-			new RefusalGroundsResolver($apps, $this->createMock(ContainerInterface::class), new NullLogger())
+		$builder  = new DisclosureDecisionContextBuilder(
+			grounds: new RefusalGroundsResolver(
+				appManager: $apps,
+				container: $this->createMock(originalClassName: ContainerInterface::class),
+				logger: new NullLogger()
+			)
 		);
 		$decision = $builder->build(json_decode((string) file_get_contents(__DIR__.'/../../../fixtures/woo-decision.json'), true));
 

@@ -4,7 +4,7 @@
  * Unit tests for the woo-decision data contract.
  *
  * @category  Test
- * @package   OCA\Filinq\Tests\Unit\Service\Woo
+ * @package   OCA\Filinq\Tests\Unit\Service\Disclosure
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -18,9 +18,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Tests\Unit\Service\Woo;
+namespace OCA\Filinq\Tests\Unit\Service\Disclosure;
 
-use OCA\Filinq\Exception\WooDecisionContractException;
+use OCA\Filinq\Exception\DisclosureDecisionContractException;
 use OCA\Filinq\Service\DocumentGenerationRequestService;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\DocumentService;
@@ -29,7 +29,7 @@ use OCA\Filinq\Service\Support\TemplateLookup;
 use OCA\Filinq\Service\TemplateRenderer;
 use OCA\Filinq\Service\TemplateService;
 use OCA\Filinq\Service\TemplateSlugResolver;
-use OCA\Filinq\Service\Woo\WooDecisionContextBuilder;
+use OCA\Filinq\Service\Disclosure\DisclosureDecisionContextBuilder;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\IUser;
@@ -46,14 +46,14 @@ use Psr\Log\NullLogger;
  * (keys id, code, article, paragraph, letter, label, description, parent,
  * status, legalSource), read through the real resolver.
  *
- * @covers \OCA\Filinq\Service\Woo\WooDecisionContextBuilder
- * @covers \OCA\Filinq\Exception\WooDecisionContractException
+ * @covers \OCA\Filinq\Service\Disclosure\DisclosureDecisionContextBuilder
+ * @covers \OCA\Filinq\Exception\DisclosureDecisionContractException
  * @covers \OCA\Filinq\Service\DocumentGenerationRequestService
  * @uses   \OCA\Filinq\Service\Grounds\RefusalGroundsResolver
  * @uses   \OCA\Filinq\Service\Support\TemplateLookup
  * @uses   \OCA\Filinq\Service\DocumentGenerationRequestRules
  */
-final class WooDecisionContextBuilderTest extends TestCase {
+final class DisclosureDecisionContextBuilderTest extends TestCase {
 
 	private string $snapshot = '';
 
@@ -80,14 +80,20 @@ final class WooDecisionContextBuilderTest extends TestCase {
 	/**
 	 * The builder over the snapshot, dossiq absent.
 	 *
-	 * @return WooDecisionContextBuilder
+	 * @return DisclosureDecisionContextBuilder
 	 */
-	private function builder(): WooDecisionContextBuilder {
+	private function builder(): DisclosureDecisionContextBuilder {
 		$apps = $this->createMock(IAppManager::class);
 		$apps->method('isEnabledForAnyone')->willReturn(false);
 
-		return new WooDecisionContextBuilder(
-			new RefusalGroundsResolver($apps, $this->createMock(ContainerInterface::class), new NullLogger(), RefusalGroundsResolver::DOSSIQ_GROUNDS, $this->snapshot)
+		return new DisclosureDecisionContextBuilder(
+			grounds: new RefusalGroundsResolver(
+				appManager: $apps,
+				container: $this->createMock(originalClassName: ContainerInterface::class),
+				logger: new NullLogger(),
+				groundsClass: RefusalGroundsResolver::DOSSIQ_GROUNDS,
+				snapshotPath: $this->snapshot
+			)
 		);
 	}//end builder()
 
@@ -124,7 +130,7 @@ final class WooDecisionContextBuilderTest extends TestCase {
 		try {
 			$this->builder()->build($decision, $retired);
 			return null;
-		} catch (WooDecisionContractException $refusal) {
+		} catch (DisclosureDecisionContractException $refusal) {
 			return $refusal->problems;
 		}
 	}//end problems()
@@ -208,11 +214,11 @@ final class WooDecisionContextBuilderTest extends TestCase {
 	 * The generation service over a template; returns the documents double.
 	 *
 	 * @param array<string, mixed>          $template The template the slug resolves to.
-	 * @param WooDecisionContextBuilder|null $builder  The builder.
+	 * @param DisclosureDecisionContextBuilder|null $builder  The builder.
 	 *
 	 * @return array{0: DocumentGenerationRequestService, 1: DocumentService&MockObject}
 	 */
-	private function generation(array $template, ?WooDecisionContextBuilder $builder): array {
+	private function generation(array $template, ?DisclosureDecisionContextBuilder $builder): array {
 		$documents = $this->createMock(DocumentService::class);
 		$documents->method('buildOutputTargetPath')->willReturn('Filinq/woo');
 		$slugs = $this->createMock(TemplateSlugResolver::class);
@@ -242,7 +248,7 @@ final class WooDecisionContextBuilderTest extends TestCase {
 		[$service, $documents] = $this->generation(['id' => 't-1', 'slug' => 'woo-besluit', 'dataContract' => 'woo-decision', 'content' => 'x'], $this->builder());
 		$documents->expects($this->never())->method('generateFromTemplate');
 
-		$this->expectException(WooDecisionContractException::class);
+		$this->expectException(exception: DisclosureDecisionContractException::class);
 		$this->expectExceptionMessage('The Woo decision cannot be rendered: Document 3 is assessed withhold but cites no ground.');
 
 		$service->generate(['templateSlug' => 'woo-besluit', 'templateNamespace' => 'filinq', 'data' => ['wooDecision' => $decision]], 'dossiq');

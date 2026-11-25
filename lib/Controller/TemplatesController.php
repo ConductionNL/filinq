@@ -396,7 +396,7 @@ class TemplatesController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
 	 *
 	 * @no-admin-idor-exempt the publish is a save on the template, which OpenRegister refuses unless
 	 * the user is in the group the template schema grants update to.

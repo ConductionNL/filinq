@@ -88,7 +88,7 @@ class DocumentDomainService implements DocumentDomainServiceInterface {
 	 * @throws DomainLinkRefusedException When the caller may not write the record the link points at.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
 	 */
 	public function link(string $uuid, array $domain): array {
 		$domain = $this->requireDomain(domain: $domain);
@@ -124,7 +124,7 @@ class DocumentDomainService implements DocumentDomainServiceInterface {
 	 * @throws DomainLinkRefusedException When the caller may not write the record the link points at.
 	 *
 	 * @spec openspec/changes/archive/2026-10-09-case-documents-and-the-flat-list/specs/document-register/spec.md
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
 	 */
 	public function unlink(string $uuid, array $domain): array {
 		$domain = $this->requireDomain(domain: $domain);
@@ -241,7 +241,7 @@ class DocumentDomainService implements DocumentDomainServiceInterface {
 	 *
 	 * @throws DomainLinkRefusedException When the caller may not write it.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
 	 */
 	private function requireWritableTarget(array $domain): void {
 		if ($this->targetGate->mayFileOnto(register: $domain['register'], schema: $domain['schema'], id: $domain['id']) === true) {
