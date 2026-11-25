@@ -26,7 +26,6 @@ declare(strict_types=1);
 namespace OCA\Filinq\BackgroundJob;
 
 use OCA\Filinq\Service\MailArchive\MailArchiveImportService;
-use OCA\Filinq\Service\Support\ActingUser;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;

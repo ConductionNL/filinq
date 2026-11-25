@@ -6,8 +6,8 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @category Service
- * @package  OCA\Filinq\Service\Support
+ * @category BackgroundJob
+ * @package  OCA\Filinq\BackgroundJob
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -22,7 +22,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Service\Support;
+namespace OCA\Filinq\BackgroundJob;
 
 use OCP\IUserManager;
 use OCP\IUserSession;

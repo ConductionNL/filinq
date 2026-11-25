@@ -7,7 +7,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Tests
- * @package  OCA\Filinq\Tests\Unit\Service\Support
+ * @package  OCA\Filinq\Tests\Unit\BackgroundJob
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -20,9 +20,9 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Tests\Unit\Service\Support;
+namespace OCA\Filinq\Tests\Unit\BackgroundJob;
 
-use OCA\Filinq\Service\Support\ActingUser;
+use OCA\Filinq\BackgroundJob\ActingUser;
 use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;

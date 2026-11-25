@@ -20,9 +20,9 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\BackgroundJob;
 
+use OCA\Filinq\BackgroundJob\ActingUser;
 use OCA\Filinq\BackgroundJob\MailArchiveImportJob;
 use OCA\Filinq\Service\MailArchive\MailArchiveImportService;
-use OCA\Filinq\Service\Support\ActingUser;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -48,8 +48,16 @@ class MailArchiveImportJobTest extends TestCase {
 	 * @return void
 	 */
 	private function runJob(MailArchiveImportService $imports, LoggerInterface $logger, ?ActingUser $acting=null): void {
-		$acting ??= new ActingUser(users: $this->createMock(IUserManager::class), session: $this->createMock(IUserSession::class));
-		$job      = new MailArchiveImportJob(clock: $this->createMock(ITimeFactory::class), imports: $imports, logger: $logger, acting: $acting);
+		$acting ??= new ActingUser(
+			users: $this->createMock(originalClassName: IUserManager::class),
+			session: $this->createMock(originalClassName: IUserSession::class)
+		);
+		$job      = new MailArchiveImportJob(
+			clock: $this->createMock(originalClassName: ITimeFactory::class),
+			imports: $imports,
+			logger: $logger,
+			acting: $acting
+		);
 		(new ReflectionMethod($job, 'run'))->invoke($job, null);
 
 	}//end runJob()
@@ -127,7 +135,8 @@ class MailArchiveImportJobTest extends TestCase {
 			}
 		);
 
-		$this->runJob(imports: $imports, logger: $this->createMock(originalClassName: LoggerInterface::class), acting: new ActingUser(users: $users, session: $session));
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$this->runJob(imports: $imports, logger: $logger, acting: new ActingUser(users: $users, session: $session));
 
 		$this->assertSame(expected: [$anna, null], actual: $active);
 	}//end testTheUnitRunsAsTheUserWhoStartedTheImport()
