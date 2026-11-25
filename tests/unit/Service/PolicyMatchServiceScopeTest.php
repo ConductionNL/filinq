@@ -52,6 +52,31 @@ class PolicyMatchServiceScopeTest extends TestCase {
 	private array $schemasSearched = [];
 
 	/**
+	 * What OpenRegister answers inside the seam: the `@self.organisation`
+	 * metadata filter is applied in the query (a rule without an organisation
+	 * never equals one), and the rows carry only their id in `@self`.
+	 *
+	 * @param array<int, array<string, mixed>> $rows    The stored rules.
+	 * @param array<string, mixed>             $filters The search filters.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function asOpenRegisterAnswers(array $rows, array $filters): array {
+		$organisation = ($filters['@self']['organisation'] ?? null);
+		$answers      = [];
+		foreach ($rows as $row) {
+			if ($organisation !== null && ($row['@self']['organisation'] ?? null) !== $organisation) {
+				continue;
+			}
+
+			$row['@self'] = ['id' => $row['@self']['id']];
+			$answers[]    = $row;
+		}
+
+		return $answers;
+	}//end asOpenRegisterAnswers()
+
+	/**
 	 * A prohibition on "Pieter de Vries" in org-a and one on "Jan Jansen" in org-b,
 	 * and a standing consent for "Pieter de Vries" in org-b.
 	 *
@@ -64,17 +89,9 @@ class PolicyMatchServiceScopeTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('runAsSystem')->willReturnCallback(static fn (callable $operation): mixed => $operation());
 		$objectService->method('searchObjectsBySlug')->willReturnCallback(
-			function (string $registerSlug, string $schemaSlug): array {
+			function (string $registerSlug, string $schemaSlug, ?array $filters = null): array {
 				$this->schemasSearched[] = $schemaSlug;
-				if ($schemaSlug === 'publicationProhibition') {
-					return [
-						self::prohibition(id: 'p-a', name: 'Pieter de Vries', organisation: 'org-a'),
-						self::prohibition(id: 'p-b', name: 'Jan Jansen', organisation: 'org-b'),
-						self::prohibition(id: 'p-none', name: 'Karel Klaassen', organisation: null),
-					];
-				}
-
-				return [
+				$rows = [
 					[
 						'@self' => ['id' => 'c-b', 'organisation' => 'org-b'],
 						'scope' => 'entity',
@@ -84,6 +101,15 @@ class PolicyMatchServiceScopeTest extends TestCase {
 						'matchRules' => [['type' => 'exact', 'value' => 'Pieter de Vries']],
 					],
 				];
+				if ($schemaSlug === 'publicationProhibition') {
+					$rows = [
+						self::prohibition(id: 'p-a', name: 'Pieter de Vries', organisation: 'org-a'),
+						self::prohibition(id: 'p-b', name: 'Jan Jansen', organisation: 'org-b'),
+						self::prohibition(id: 'p-none', name: 'Karel Klaassen', organisation: null),
+					];
+				}
+
+				return self::asOpenRegisterAnswers(rows: $rows, filters: ($filters ?? []));
 			}
 		);
 

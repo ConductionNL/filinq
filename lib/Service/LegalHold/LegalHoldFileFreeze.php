@@ -223,7 +223,7 @@ class LegalHoldFileFreeze {
 	 */
 	private function folderFiles(object $entity): array {
 		$folderId = null;
-		if (method_exists($entity, 'getFolder') === true) {
+		if (is_callable([$entity, 'getFolder']) === true) {
 			$folderId = $entity->getFolder();
 		}
 
