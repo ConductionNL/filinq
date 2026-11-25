@@ -200,7 +200,7 @@ class DocumentFinalityRuleServiceTest extends TestCase {
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
 	 */
 	public function testATranslatedReasonTemplateIsUsedAsText(): void {
-		$this->service(rows: [$this->declaration(['reasonTemplate' => ['nl' => 'Het besluit is genomen', 'en' => 'The decision was made']])])
+		$this->service(rows: [$this->declaration(overrides: ['reasonTemplate' => ['nl' => 'Het besluit is genomen', 'en' => 'The decision was made']])])
 			->applyStateChange(
 				declaringApp: 'dossiq',
 				typeReference: 'bezwaarschrift',

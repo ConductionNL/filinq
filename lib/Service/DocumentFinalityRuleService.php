@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Support\LanguageMapText;
 use DateTimeImmutable;
 use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Kernel\Contracts\DocumentFinalityRuleServiceInterface;
@@ -291,13 +292,8 @@ class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterfac
 			return [];
 		}
 
-		// reasonTemplate is translatable: OpenRegister answers a language map.
-		$template = ($rule['reasonTemplate'] ?? '');
-		if (is_array($template) === true) {
-			$template = ($template['nl'] ?? $template['en'] ?? (reset($template) ?: ''));
-		}
-
-		$reason = is_scalar($template) === true ? (string) $template : '';
+		// The reasonTemplate is translatable: OpenRegister answers a language map.
+		$reason = (new LanguageMapText())->of(value: ($rule['reasonTemplate'] ?? ''));
 		if ($reason === '') {
 			$reason = sprintf('%s reached the status "%s".', $typeReference, $state);
 		}

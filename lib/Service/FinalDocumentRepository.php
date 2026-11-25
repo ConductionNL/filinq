@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Support\LanguageMapText;
 use OCA\Filinq\Kernel\Contracts\FinalDocumentRepositoryInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
@@ -498,37 +499,14 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 		// them as a language map; every reader here wants the text (the
 		// refusal sentence and the final panel showed no reason, and building
 		// the sentence raised "Array to string conversion"; live, 25 Nov 2026).
+		$text = new LanguageMapText();
 		foreach (self::TRANSLATABLE as $field) {
-			if (is_array($record[$field] ?? null) === true) {
-				$record[$field] = self::textOf(map: $record[$field]);
+			if (array_key_exists($field, $record) === true) {
+				$record[$field] = $text->of(value: $record[$field]);
 			}
 		}
 
 		return $record;
 
 	}//end normalise()
-
-	/**
-	 * The text of a language map: Dutch, else English, else the first.
-	 *
-	 * @param array<mixed> $map The language map.
-	 *
-	 * @return string The text, or '' when there is none.
-	 */
-	private static function textOf(array $map): string {
-		foreach (['nl', 'en'] as $language) {
-			if (is_scalar($map[$language] ?? null) === true && (string) $map[$language] !== '') {
-				return (string) $map[$language];
-			}
-		}
-
-		foreach ($map as $candidate) {
-			if (is_scalar($candidate) === true && (string) $candidate !== '') {
-				return (string) $candidate;
-			}
-		}
-
-		return '';
-
-	}//end textOf()
 }//end class
