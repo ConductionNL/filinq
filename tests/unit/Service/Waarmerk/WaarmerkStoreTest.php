@@ -19,11 +19,14 @@ namespace OCA\Filinq\Tests\Unit\Service\Waarmerk;
 
 use OCA\Filinq\Exception\WaarmerkRefusedException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\SystemContextSeam;
 use OCA\Filinq\Service\Waarmerk\WaarmerkStore;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -32,6 +35,8 @@ use RuntimeException;
  * @covers \OCA\Filinq\Service\Waarmerk\WaarmerkStore
  * @uses   \OCA\Filinq\Service\ReadsStoredObjectRows
  * @uses   \OCA\Filinq\Exception\WaarmerkRefusedException
+ * @uses   \OCA\Filinq\Service\SystemContextSeam
+ * @uses   \OCA\Filinq\Service\SlugSearch
  */
 class WaarmerkStoreTest extends TestCase {
 
@@ -211,10 +216,46 @@ class WaarmerkStoreTest extends TestCase {
 		$store->search(filters: ['status' => 'active']);
 
 		$this->assertSame(
-			expected: [['rbac' => false, 'multitenancy' => false], ['rbac' => false, 'multitenancy' => true]],
+			expected: [['rbac' => false, 'multitenancy' => true], ['rbac' => false, 'multitenancy' => true]],
 			actual: $calls
 		);
 	}//end testTheLookupByCodeIsNotScopedToTheVisitorsOrganisation()
+
+	/**
+	 * With the seam, the lookup by code runs as the system with a literal reason; other searches do not.
+	 *
+	 * Seen live: scoped to an anonymous visitor's (empty) organisation, a check answered "unknown"
+	 * for a waarmerk that exists. The seam lifts the organisation filter without a bypass flag.
+	 *
+	 * @return void
+	 */
+	public function testTheLookupByCodeRunsThroughTheSystemContextSeam(): void {
+		$objects = $this->createMock(originalClassName: ObjectService::class);
+		$contract = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$resolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
+		$resolver->method('resolve')->willReturn($objects);
+		$resolver->method('contract')->willReturn($contract);
+		$asSystem = 0;
+		$contract->method('runAsSystem')->willReturnCallback(
+			function (callable $operation) use (&$asSystem): mixed {
+				$asSystem++;
+				return $operation();
+			}
+		);
+		$objects->method('searchObjectsBySlug')->willReturn([$this->seal()]);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$logger->expects($this->once())->method('info')->with(
+			$this->anything(),
+			$this->callback(callback: fn (array $context): bool => str_contains((string) $context['reason'], 'verification code'))
+		);
+
+		$store = new WaarmerkStore(objectResolver: $resolver, seam: new SystemContextSeam(logger: $logger));
+
+		$this->assertSame(expected: 'w-1', actual: $store->findByCode(code: 'code-1')['uuid']);
+		$this->assertSame(expected: 1, actual: $asSystem);
+		$this->assertSame(expected: 'w-1', actual: $store->find(uuid: 'w-1')['uuid']);
+		$this->assertSame(expected: 1, actual: $asSystem, message: 'Only the public lookup by code runs as the system');
+	}//end testTheLookupByCodeRunsThroughTheSystemContextSeam()
 
 	/**
 	 * A register failure is a 503, on read and on write.
