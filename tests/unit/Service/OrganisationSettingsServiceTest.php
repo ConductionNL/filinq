@@ -125,16 +125,18 @@ class OrganisationSettingsServiceTest extends TestCase {
 					return null;
 				}
 
+				// OpenRegister's Organisation is a Nextcloud Entity: its
+				// getters answer through __call, so method_exists() is false.
 				return new class($this->active) {
 					public function __construct(private string $uuid) {
 					}
 
-					public function getUuid(): string {
-						return $this->uuid;
-					}
-
-					public function getName(): string {
-						return 'Demostad';
+					public function __call(string $method, array $arguments): mixed {
+						return match ($method) {
+							'getUuid' => $this->uuid,
+							'getName' => 'Demostad',
+							default   => null,
+						};
 					}
 				};
 			}

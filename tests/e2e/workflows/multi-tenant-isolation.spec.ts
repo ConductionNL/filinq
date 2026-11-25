@@ -107,7 +107,8 @@ test.describe('multi-tenant isolation between two organisations', () => {
 		expect(stored.status).toBe(200)
 		const record = (stored.body.consent ?? stored.body) as Record<string, unknown>
 		expect(record.consentStatus).toBe('pending')
-		expect(record.publicationDecision ?? null).toBeNull()
+		// The schema defaults publicationDecision to 'pending'; unchanged means still that.
+		expect(record.publicationDecision ?? 'pending').toBe('pending')
 	})
 
 	test('B\'s objects are absent from A\'s filinq routes and OpenRegister listings', async () => {

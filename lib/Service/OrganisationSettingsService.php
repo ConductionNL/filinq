@@ -278,7 +278,7 @@ class OrganisationSettingsService {
 	 * @return array{uuid: string, name: string}|null
 	 */
 	private function organisationOf(mixed $organisation): ?array {
-		if (is_object($organisation) === false || method_exists($organisation, 'getUuid') === false) {
+		if (is_object($organisation) === false || is_callable([$organisation, 'getUuid']) === false) {
 			return null;
 		}
 
@@ -298,7 +298,7 @@ class OrganisationSettingsService {
 	 * @return string The name.
 	 */
 	private function organisationName(object $organisation): string {
-		if (method_exists($organisation, 'getName') === false) {
+		if (is_callable([$organisation, 'getName']) === false) {
 			return '';
 		}
 

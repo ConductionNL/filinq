@@ -56,13 +56,17 @@ class EntityCatalogueScopeTest extends TestCase {
 			}//end __construct()
 
 			/**
-			 * The uuid.
+			 * The getters, answered the way a Nextcloud Entity answers them
+			 * (through __call, so method_exists() is false).
+			 *
+			 * @param string       $method    The getter.
+			 * @param array<mixed> $arguments Unused.
 			 *
 			 * @return mixed
 			 */
-			public function getUuid(): mixed {
-				return $this->uuid;
-			}//end getUuid()
+			public function __call(string $method, array $arguments): mixed {
+				return $method === 'getUuid' ? $this->uuid : null;
+			}//end __call()
 		};
 
 	}//end organisation()

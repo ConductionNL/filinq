@@ -32,6 +32,7 @@ use Exception;
 use OCA\Filinq\Kernel\ConsentUpdate;
 use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -146,6 +147,7 @@ class ConsentCrudService implements ConsentCrudServiceInterface {
 	 * @throws Exception If retrieval fails
 	 *
 	 * @spec openspec/specs/consent-management/spec.md
+	 * @spec openspec/changes/multi-tenant-hardening/tasks.md
 	 */
 	public function getConsent(string $consentId, string $register, string $schema): ?array {
 		// Do NOT pass `_rbac: false` / `_multitenancy: false` here — bypassing
@@ -165,10 +167,17 @@ class ConsentCrudService implements ConsentCrudServiceInterface {
 		// server-side owner filter on the list paths. Do not delete either as
 		// "redundant with OpenRegister RBAC" — measured, it is not redundant.
 		$objectService = $this->settingsService->getObjectService();
-		$object = $objectService->find(
-			id: $consentId,
-			options: new ObjectFindOptions(register: $register, schema: $schema)
-		);
+		// OpenRegister answers an id the caller cannot see (another
+		// organisation's record) or that does not exist by throwing, not with
+		// null; both are "not found" here, so callers answer 404, not 500.
+		try {
+			$object = $objectService->find(
+				id: $consentId,
+				options: new ObjectFindOptions(register: $register, schema: $schema)
+			);
+		} catch (DoesNotExistException) {
+			return null;
+		}
 
 		if ($object === null) {
 			return null;
