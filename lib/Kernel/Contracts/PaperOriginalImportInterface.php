@@ -51,7 +51,7 @@ interface PaperOriginalImportInterface {
 	 *
 	 * @throws InvalidArgumentException When the list has no header with the required columns.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/tasks.md#task-3.2
 	 */
 	public function import(string $projectId, string $csv): array;
 }//end interface

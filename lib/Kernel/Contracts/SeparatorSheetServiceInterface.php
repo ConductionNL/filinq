@@ -96,7 +96,7 @@ interface SeparatorSheetServiceInterface {
 	 *
 	 * @return string The payload.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	public function originalPayload(string $profileId, string $originalId): string;
 
@@ -112,7 +112,7 @@ interface SeparatorSheetServiceInterface {
 	 *
 	 * @throws RuntimeException When there is no original to print or the sheets do not render.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	public function renderOriginals(string $profileId, array $originals): string;
 

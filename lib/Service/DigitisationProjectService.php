@@ -18,7 +18,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
  */
 
 declare(strict_types=1);
@@ -42,7 +42,7 @@ use Random\Randomizer;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
  */
 class DigitisationProjectService {
 
@@ -94,7 +94,7 @@ class DigitisationProjectService {
 	 * @return array<string, mixed> `status` `scanned` (in the checking queue), or
 	 *                              `status` `checked` with a passed check by `sample-not-drawn`.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
 	 */
 	public function afterScan(array $project, bool $separatorReadable, int $pageCount, string $now): array {
 		if ($this->drawn(project: $project, separatorReadable: $separatorReadable, pageCount: $pageCount) === true) {
@@ -117,7 +117,7 @@ class DigitisationProjectService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
 	 */
 	public function drawn(array $project, bool $separatorReadable, int $pageCount): bool {
 		if ($separatorReadable === false || $pageCount <= 0) {
@@ -140,7 +140,7 @@ class DigitisationProjectService {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
 	 */
 	public static function checkShare(array $project): int {
 		$share = ($project['checkShare'] ?? null);

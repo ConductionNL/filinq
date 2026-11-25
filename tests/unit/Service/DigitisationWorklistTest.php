@@ -20,7 +20,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
  */
 
 declare(strict_types=1);
@@ -163,7 +163,7 @@ class DigitisationWorklistTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
 	 */
 	public function testBoxesAreCountedPerState(): void {
 		$this->found = [
@@ -213,7 +213,7 @@ class DigitisationWorklistTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
 	 */
 	public function testARejectedScanGoesBackToRegistered(): void {
 		$this->objects['paperOriginal/po-1'] = ['project' => 'prj-1', 'box' => '117', 'status' => 'scanned'];

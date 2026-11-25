@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -39,7 +39,7 @@ use OCP\EventDispatcher\Event;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 class IntakeDocumentReceivedEvent extends Event {
 
@@ -108,7 +108,7 @@ class IntakeDocumentReceivedEvent extends Event {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function __construct(
 		private readonly string $channel,
@@ -131,7 +131,7 @@ class IntakeDocumentReceivedEvent extends Event {
 	 *
 	 * @return string The channel.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getChannel(): string {
 		return $this->channel;
@@ -143,7 +143,7 @@ class IntakeDocumentReceivedEvent extends Event {
 	 *
 	 * @return int|null The file id.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getFileId(): ?int {
 		return $this->fileId;
@@ -155,7 +155,7 @@ class IntakeDocumentReceivedEvent extends Event {
 	 *
 	 * @return string The file name.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getFileName(): string {
 		return $this->fileName;
@@ -167,7 +167,7 @@ class IntakeDocumentReceivedEvent extends Event {
 	 *
 	 * @return string The subject.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getSubject(): string {
 		return $this->subject;
@@ -179,7 +179,7 @@ class IntakeDocumentReceivedEvent extends Event {
 	 *
 	 * @return string The sender.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getSender(): string {
 		return $this->sender;
@@ -191,7 +191,7 @@ class IntakeDocumentReceivedEvent extends Event {
 	 *
 	 * @return string The reference.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getSourceRef(): string {
 		return $this->sourceRef;
@@ -203,7 +203,7 @@ class IntakeDocumentReceivedEvent extends Event {
 	 *
 	 * @return string|null The ISO 8601 timestamp, or null when the channel did not say.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getReceivedAt(): ?string {
 		return $this->receivedAt;
@@ -220,7 +220,7 @@ class IntakeDocumentReceivedEvent extends Event {
 	 *
 	 * @return string The intake document uuid of the message, or an empty string.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function getArrivedWith(): string {
 		return $this->arrivedWith;

@@ -85,7 +85,7 @@ interface IntakeRepositoryInterface {
 	 *
 	 * @throws RuntimeException When the register could not be read.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function findWaiting(): array;
 
@@ -135,7 +135,7 @@ interface IntakeRepositoryInterface {
 	 *
 	 * @return array<string, mixed>|null The stored document, or null when this is the first delivery.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function findBySourceRef(string $sourceRef): ?array;
 
@@ -146,7 +146,7 @@ interface IntakeRepositoryInterface {
 	 *
 	 * @return array<string, mixed>|null The document, or null when there is none.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function findByUuid(string $uuid): ?array;
 
@@ -157,7 +157,7 @@ interface IntakeRepositoryInterface {
 	 *
 	 * @return array<string, mixed>|null The document, or null.
 	 *
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-an-arrival-whose-content-came-before-is-marked-never-refused-req-iws-003
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-an-arrival-whose-content-came-before-is-marked-never-refused-req-iws-003
 	 */
 	public function findByContentHash(string $contentHash): ?array;
 
@@ -169,7 +169,7 @@ interface IntakeRepositoryInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The overdue documents.
 	 *
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
 	 */
 	public function findOverdue(string $today, array $handledWhen): array;
 
@@ -183,7 +183,7 @@ interface IntakeRepositoryInterface {
 	 *
 	 * @throws RuntimeException When the write fails.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function save(array $document, ?string $uuid = null): array;
 }//end interface

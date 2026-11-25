@@ -17,6 +17,9 @@ A scanned letter, a mail attachment or a message from digital post often arrives
 
 ## What the clerk sees
 
+![The intake worklist: waiting documents with their channel, sender, subject and deadline](/screenshots/intake-worklist.png)
+
+
 Open **Intake** in the Filinq navigation. The inbox lists every document that is still waiting:
 
 | Column | Meaning |

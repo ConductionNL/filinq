@@ -759,7 +759,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
 	 */
 	public function testAV2SegmentIsFiledOnTheProjectAndAV1SegmentGoesToTheInbox(): void {
 		$projectFiles = [];
@@ -807,7 +807,7 @@ class ScanBatchServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
 	 */
 	public function testAnOriginalThatCannotBePlacedGoesToTheInbox(): void {
 		$originals = $this->createMock(PaperOriginalFiling::class);

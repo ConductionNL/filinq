@@ -7,7 +7,7 @@
  * this record first, and assign one to this record through filinq's own route.
  * The leaf never calls the host app (ADR-066 decision 2).
  *
- * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/tasks.md#task-3.2
  */
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
@@ -45,7 +45,7 @@ export function orderForHost(documents, host) {
  * @param {string} uuid The intake document.
  * @param {{register: string, schema: string, objectId: string}} host The host record.
  * @return {Promise<object>} The assigned document.
- * @spec openspec/changes/document-intake-inbox/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/tasks.md#task-3.2
  */
 export async function assignToHost(uuid, host) {
 	const url = generateUrl('/apps/filinq/api/intake/documents/{uuid}/assign', {

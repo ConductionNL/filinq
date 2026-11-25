@@ -361,7 +361,7 @@ class SlugContractReadPathTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testAnInstanceWithoutTheIntakeSchemaHasAnEmptyInbox(): void {
 		$repository = new IntakeRepository($this->resolver(rows: [], schemaAbsent: true), new NullLogger());
@@ -394,7 +394,7 @@ class SlugContractReadPathTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function testARedeliveredMessageIsRecognised(): void {
 		$repository = new IntakeRepository($this->resolver(rows: [['uuid' => 'intake-1', 'sourceRef' => 'msg-7']]), new NullLogger());

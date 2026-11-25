@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -50,7 +50,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
  */
 class DigitisationController extends Controller {
 	use AnswersNotAuthenticated;
@@ -89,7 +89,7 @@ class DigitisationController extends Controller {
 	 *       project() and originals()), so a caller who may not read the
 	 *       project gets a 404 and sees only the originals they may read.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
 	 */
 	#[NoAdminRequired]
 	public function boxes(string $id): JSONResponse {
@@ -118,7 +118,7 @@ class DigitisationController extends Controller {
 	 *       through OpenRegister with RBAC and multitenancy on, so a caller
 	 *       prints sheets only for originals they may read.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
@@ -156,7 +156,7 @@ class DigitisationController extends Controller {
 	 *       may not read the project gets a 404, and a row the caller may not
 	 *       create is listed as failed with OpenRegister's reason.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-an-archivist-runs-a-digitisation-project-req-pad-001
 	 */
 	#[NoAdminRequired]
 	public function importOriginals(string $id, string $csv = ''): JSONResponse {
@@ -200,7 +200,7 @@ class DigitisationController extends Controller {
 	 *       caller who may not read it gets a 404 and one who may not update
 	 *       it gets OpenRegister's refusal.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-sampled-share-is-checked-by-a-person-req-pad-004
 	 */
 	#[NoAdminRequired]
 	public function check(string $id, string $result = '', string $note = ''): JSONResponse {

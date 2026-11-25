@@ -11,8 +11,8 @@ to a record or rejects it with a reason, and either way it leaves the inbox.
 	reaches it by URL rather than by component name. Its baseline in tests/e2e/visual is not collected
 	by the CI Playwright project.
 
-@spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
-@spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md
+@spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
+@spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md
 -->
 
 <template>
@@ -532,7 +532,7 @@ export default {
 		 *
 		 * @param {object} row The possible duplicate.
 		 * @return {string} The first document's subject, or its id when it is not in this list.
-		 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-a-registrar-resolves-a-duplicate-in-one-step-req-iws-004
+		 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-a-registrar-resolves-a-duplicate-in-one-step-req-iws-004
 		 */
 		firstSubject(row) {
 			const first = this.documents.find((document) => document.uuid === row.duplicateOf)
@@ -584,7 +584,7 @@ export default {
 		 * Load what is waiting.
 		 *
 		 * @return {Promise<void>} Resolves once the list has settled.
-		 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 		 */
 		async load() {
 			this.loading = true
@@ -779,7 +779,7 @@ export default {
 		 *
 		 * @param {object} change The new deadline and the reason.
 		 * @return {Promise<void>} Resolves once the server has answered.
-		 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+		 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
 		 */
 		async changeDeadline(change) {
 			const uuid = this.deadlineTarget?.uuid
@@ -806,7 +806,7 @@ export default {
 		 *
 		 * @param {object} row The possible duplicate.
 		 * @return {Promise<void>} Resolves once the server has answered.
-		 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-a-registrar-resolves-a-duplicate-in-one-step-req-iws-004
+		 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-a-registrar-resolves-a-duplicate-in-one-step-req-iws-004
 		 */
 		async rejectAsDuplicate(row) {
 			this.rejectTarget = row
@@ -818,7 +818,7 @@ export default {
 		 *
 		 * @param {object} target The record, as register, schema and id.
 		 * @return {Promise<void>} Resolves once the server has answered.
-		 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 		 */
 		async assign(target) {
 			const uuid = this.assignTarget?.uuid
@@ -847,7 +847,7 @@ export default {
 		 *
 		 * @param {string} reason Why it does not belong here.
 		 * @return {Promise<void>} Resolves once the server has answered.
-		 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 		 */
 		async reject(reason) {
 			const uuid = this.rejectTarget?.uuid
