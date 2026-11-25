@@ -22,11 +22,11 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 /**
- * Reads a rule's translatable fields as text.
+ * Reads a rule's translatable fields as text (used by PolicyCrudService).
  *
  * @spec openspec/specs/entity-publication-policies/spec.md
  */
-final class PolicyRuleText
+trait PolicyRuleText
 {
 
 	/**
@@ -35,7 +35,7 @@ final class PolicyRuleText
 	 *
 	 * @var string[]
 	 */
-	private const TRANSLATABLE = ['primaryName', 'reason', 'notes', 'objectionReason', 'publicationDecision'];
+	private const TRANSLATABLE_FIELDS = ['primaryName', 'reason', 'notes', 'objectionReason', 'publicationDecision'];
 
 	/**
 	 * A rule with its translatable fields as text.
@@ -53,8 +53,8 @@ final class PolicyRuleText
 	 *
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
-	public static function withText(array $row): array {
-		foreach (self::TRANSLATABLE as $field) {
+	private static function withText(array $row): array {
+		foreach (self::TRANSLATABLE_FIELDS as $field) {
 			if (is_array($row[$field] ?? null) === false) {
 				continue;
 			}
@@ -87,4 +87,4 @@ final class PolicyRuleText
 
 		return '';
 	}//end textOf()
-}//end class
+}//end trait

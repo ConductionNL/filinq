@@ -53,6 +53,8 @@ use RuntimeException;
  * @link     https://www.filinq.app
  */
 class PolicyCrudService implements PolicyCrudServiceInterface {
+	use PolicyRuleText;
+
 
 
 
@@ -546,8 +548,6 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 	 * @return array<int, array<string, mixed>>
 	 *
 	 * @throws Exception On query failure.
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) PolicyRuleText is a stateless helper.
 	 */
 	private function listByRegisterSchema(string $register, string $schema): array {
 		// Use the slug-aware variant — OR's standard searchObjects requires
@@ -564,12 +564,12 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		$rows = [];
 		foreach ($results as $result) {
 			if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-				$rows[] = PolicyRuleText::withText(row: $result->jsonSerialize());
+				$rows[] = self::withText(row: $result->jsonSerialize());
 				continue;
 			}
 
 			if (is_array($result) === true) {
-				$rows[] = PolicyRuleText::withText(row: $result);
+				$rows[] = self::withText(row: $result);
 			}
 		}
 
@@ -586,8 +586,6 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 	 * @return array<string, mixed>|null
 	 *
 	 * @throws Exception On lookup failure.
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) PolicyRuleText is a stateless helper.
 	 */
 	private function findOne(string $register, string $schema, string $uuid): ?array {
 		$objectService = $this->settingsService->getObjectService();
@@ -601,10 +599,10 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		}
 
 		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			return PolicyRuleText::withText(row: $object->jsonSerialize());
+			return self::withText(row: $object->jsonSerialize());
 		}
 
-		return PolicyRuleText::withText(row: (array)$object);
+		return self::withText(row: (array)$object);
 	}//end findOne()
 
 	/**
@@ -618,8 +616,6 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 	 * @return array<string, mixed>
 	 *
 	 * @throws Exception On write failure.
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) PolicyRuleText is a stateless helper.
 	 */
 	private function saveObject(
 		string $register,
@@ -636,7 +632,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 					uuid: $uuid
 				)
 			);
-			return PolicyRuleText::withText(row: $saved->getObject());
+			return self::withText(row: $saved->getObject());
 		} catch (Exception $e) {
 			$this->logger->error(
 				'PolicyCrudService: save failed',
