@@ -2954,8 +2954,8 @@
       "type": "library",
       "name": "nextcloud-vue",
       "group": "@conduction",
-      "version": "2.215.0",
-      "bom-ref": "filinq@1.0.0|@conduction/nextcloud-vue@2.215.0",
+      "version": "2.223.1",
+      "bom-ref": "filinq@1.0.0|@conduction/nextcloud-vue@2.223.1",
       "licenses": [
         {
           "license": {
@@ -2963,15 +2963,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40conduction/nextcloud-vue@2.215.0",
+      "purl": "pkg:npm/%40conduction/nextcloud-vue@2.223.1",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@conduction/nextcloud-vue/-/nextcloud-vue-2.215.0.tgz",
+          "url": "https://registry.npmjs.org/@conduction/nextcloud-vue/-/nextcloud-vue-2.223.1.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "3dcfb8f8aab7ac32b39d3e9c6598fa14d2aaa5a17ef0e97cff8e1d3f169541f622b6f47000c84fc97bd73ff478712bd08ff44b3ce5cd8bbdd29cc80be109f732"
+              "content": "d69f74d50cf3c055314e6c8eee5ac2ffa98b85996d22fbddf94450331aa4601ac8e0c59d5dd05c0e4cbaa39d38c1c2de4e879bfa2c1b815ef7e4dfdab676b34b"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6215,76 +6215,6 @@
           "name": "cdx:npm:package:path",
           "value": "node_modules/@nextcloud/dialogs"
         }
-      ],
-      "components": [
-        {
-          "type": "library",
-          "name": "core",
-          "group": "@vueuse",
-          "version": "15.0.0",
-          "bom-ref": "filinq@1.0.0|@nextcloud/dialogs@7.6.0|@vueuse/core@15.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40vueuse/core@15.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@vueuse/core/-/core-15.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "66febb8799ab93b6070c9b1139bc7e0d7682073e91281529c6a2deb09fb7c5934f1bacae42cee36bb920def785aeba2e60b580ab2750ec2c0611b2d5c41e3736"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/@nextcloud/dialogs/node_modules/@vueuse/core"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "metadata",
-          "group": "@vueuse",
-          "version": "15.0.0",
-          "bom-ref": "filinq@1.0.0|@nextcloud/dialogs@7.6.0|@vueuse/metadata@15.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40vueuse/metadata@15.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@vueuse/metadata/-/metadata-15.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "b1f584e4b00300a2742a78ed1a588c75237c223fcbeee3faad72199603e5a00238cefbde7dbc3a1f92edeca240e91a90398815a961791ae8f9d071cc233ca006"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/@nextcloud/dialogs/node_modules/@vueuse/metadata"
-            }
-          ]
-        }
       ]
     },
     {
@@ -6843,40 +6773,6 @@
       "components": [
         {
           "type": "library",
-          "name": "core",
-          "group": "@vueuse",
-          "version": "15.0.0",
-          "bom-ref": "filinq@1.0.0|@nextcloud/vue@9.14.1|@vueuse/core@15.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40vueuse/core@15.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@vueuse/core/-/core-15.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "66febb8799ab93b6070c9b1139bc7e0d7682073e91281529c6a2deb09fb7c5934f1bacae42cee36bb920def785aeba2e60b580ab2750ec2c0611b2d5c41e3736"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/@nextcloud/vue/node_modules/@vueuse/core"
-            }
-          ]
-        },
-        {
-          "type": "library",
           "name": "p-queue",
           "version": "10.0.0",
           "bom-ref": "filinq@1.0.0|@nextcloud/vue@9.14.1|p-queue@10.0.0",
@@ -6938,40 +6834,6 @@
             {
               "name": "cdx:npm:package:path",
               "value": "node_modules/@nextcloud/vue/node_modules/vue-router"
-            }
-          ]
-        },
-        {
-          "type": "library",
-          "name": "metadata",
-          "group": "@vueuse",
-          "version": "15.0.0",
-          "bom-ref": "filinq@1.0.0|@nextcloud/vue@9.14.1|@vueuse/metadata@15.0.0",
-          "licenses": [
-            {
-              "license": {
-                "id": "MIT"
-              }
-            }
-          ],
-          "purl": "pkg:npm/%40vueuse/metadata@15.0.0",
-          "externalReferences": [
-            {
-              "url": "https://registry.npmjs.org/@vueuse/metadata/-/metadata-15.0.0.tgz",
-              "type": "distribution",
-              "hashes": [
-                {
-                  "alg": "SHA-512",
-                  "content": "b1f584e4b00300a2742a78ed1a588c75237c223fcbeee3faad72199603e5a00238cefbde7dbc3a1f92edeca240e91a90398815a961791ae8f9d071cc233ca006"
-                }
-              ],
-              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
-            }
-          ],
-          "properties": [
-            {
-              "name": "cdx:npm:package:path",
-              "value": "node_modules/@nextcloud/vue/node_modules/@vueuse/metadata"
             }
           ]
         }
@@ -9403,8 +9265,8 @@
       "type": "library",
       "name": "web-bluetooth",
       "group": "@types",
-      "version": "0.0.21",
-      "bom-ref": "filinq@1.0.0|@types/web-bluetooth@0.0.21",
+      "version": "0.0.22",
+      "bom-ref": "filinq@1.0.0|@types/web-bluetooth@0.0.22",
       "licenses": [
         {
           "license": {
@@ -9412,15 +9274,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40types/web-bluetooth@0.0.21",
+      "purl": "pkg:npm/%40types/web-bluetooth@0.0.22",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@types/web-bluetooth/-/web-bluetooth-0.0.21.tgz",
+          "url": "https://registry.npmjs.org/@types/web-bluetooth/-/web-bluetooth-0.0.22.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "a0840b0865ad705672d895bbee3f64f271f300ea6a3072d07a30c0e3c5d73161fab630901f3e51085cf56f3b2644ec8be8f526f8b2e75222380429f6db58a7c4"
+              "content": "e0eee453452dd22ad9bc5ca4dc4be00ebcc5601408f343ee8646fae48ede57a593657e223a8e73a03ac47e30c1441ef1e52b73df572ca073b88408d28914c02f"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -10835,6 +10697,40 @@
         },
         {
           "type": "library",
+          "name": "web-bluetooth",
+          "group": "@types",
+          "version": "0.0.21",
+          "bom-ref": "filinq@1.0.0|@vueuse/components@15.0.0|@types/web-bluetooth@0.0.21",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/%40types/web-bluetooth@0.0.21",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/@types/web-bluetooth/-/web-bluetooth-0.0.21.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "a0840b0865ad705672d895bbee3f64f271f300ea6a3072d07a30c0e3c5d73161fab630901f3e51085cf56f3b2644ec8be8f526f8b2e75222380429f6db58a7c4"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/@vueuse/components/node_modules/@types/web-bluetooth"
+            }
+          ]
+        },
+        {
+          "type": "library",
           "name": "metadata",
           "group": "@vueuse",
           "version": "15.0.0",
@@ -10873,8 +10769,8 @@
       "type": "library",
       "name": "core",
       "group": "@vueuse",
-      "version": "14.4.0",
-      "bom-ref": "filinq@1.0.0|@vueuse/core@14.4.0",
+      "version": "15.1.0",
+      "bom-ref": "filinq@1.0.0|@vueuse/core@15.1.0",
       "licenses": [
         {
           "license": {
@@ -10882,15 +10778,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40vueuse/core@14.4.0",
+      "purl": "pkg:npm/%40vueuse/core@15.1.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@vueuse/core/-/core-14.4.0.tgz",
+          "url": "https://registry.npmjs.org/@vueuse/core/-/core-15.1.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "5f8587cf51e50b3081a185deb149227f3cd60407198171bc162e6234f420fdea5dcce07782ef056b08f786fbb0611d6719c5c69efc706187140bfef5fbeb2fb5"
+              "content": "3ae67979c2f0fec8a45f41c58e524cfe9fcf91f2f4e7aecdb5fa2ff46d23625c3dd90a99a4f5629193a80753297b8ba767eec4fd043eb85a448008e3d856116f"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -10907,8 +10803,8 @@
           "type": "library",
           "name": "shared",
           "group": "@vueuse",
-          "version": "14.4.0",
-          "bom-ref": "filinq@1.0.0|@vueuse/core@14.4.0|@vueuse/shared@14.4.0",
+          "version": "15.1.0",
+          "bom-ref": "filinq@1.0.0|@vueuse/core@15.1.0|@vueuse/shared@15.1.0",
           "licenses": [
             {
               "license": {
@@ -10916,15 +10812,15 @@
               }
             }
           ],
-          "purl": "pkg:npm/%40vueuse/shared@14.4.0",
+          "purl": "pkg:npm/%40vueuse/shared@15.1.0",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/@vueuse/shared/-/shared-14.4.0.tgz",
+              "url": "https://registry.npmjs.org/@vueuse/shared/-/shared-15.1.0.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "251818f744b3f030ed3ccb1a0df96f3cca7dc5893af4964099bb83bc0aae5155caaf68048eab7318d4d3b612df7241f407306abe7bb7d606f86bc4c62d17bbf6"
+                  "content": "2406d02cefaf3942edf0c3d1e2845bbecb41bb3b534cc217e0b39f086781be9f494a08f93a9a590e29e0de0283ae6972510bd860548f217e1dc647c981db3159"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -10943,8 +10839,8 @@
       "type": "library",
       "name": "metadata",
       "group": "@vueuse",
-      "version": "14.4.0",
-      "bom-ref": "filinq@1.0.0|@vueuse/metadata@14.4.0",
+      "version": "15.1.0",
+      "bom-ref": "filinq@1.0.0|@vueuse/metadata@15.1.0",
       "licenses": [
         {
           "license": {
@@ -10952,15 +10848,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40vueuse/metadata@14.4.0",
+      "purl": "pkg:npm/%40vueuse/metadata@15.1.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@vueuse/metadata/-/metadata-14.4.0.tgz",
+          "url": "https://registry.npmjs.org/@vueuse/metadata/-/metadata-15.1.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "b30c7fdb9e51e89c87645261c7ce398b3e424560d97427ef9193a900259ce7e739587706db89aff20513d5621d150687b7a76aefdaef20b77d4270968b2566f6"
+              "content": "c872857a5453750769eef7635d7130ebc5a1f6ff0e832c569b5bf56876c633a678a9ba87841e90801f0c4cd07bea9658876db03de00b09dafcaa34a19713c11c"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
