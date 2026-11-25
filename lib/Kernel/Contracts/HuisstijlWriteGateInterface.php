@@ -41,7 +41,7 @@ interface HuisstijlWriteGateInterface {
 	 *
 	 * @return mixed What the write returns.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.2
 	 */
 	public function during(callable $write): mixed;
 
@@ -50,7 +50,7 @@ interface HuisstijlWriteGateInterface {
 	 *
 	 * @return bool Whether the gate is open.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.2
 	 */
 	public function isOpen(): bool;
 }//end interface

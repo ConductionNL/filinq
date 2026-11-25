@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-1.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -61,7 +61,7 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 	 *
 	 * @return array<string, mixed> The house style, `profileHash` included.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-1.2
 	 */
 	public function mapProfile(array $profile): array {
 		$tokenSet = $this->arrayOf(value: ($profile['tokenSet'] ?? null));
@@ -121,7 +121,7 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 	 *
 	 * @return string The header HTML, or '' with neither a logo nor a colour.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-document-without-a-named-house-style-uses-the-user-s-own-req-hsp-002
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-document-without-a-named-house-style-uses-the-user-s-own-req-hsp-002
 	 */
 	private function headerHtml(?string $logo, ?string $colour, string $name): string {
 		$hex = null;
@@ -154,7 +154,7 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 	 *
 	 * @return bool Whether it is managed.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.2
 	 */
 	public function isManaged(array $huisstijl): bool {
 		return ($huisstijl['managedBy'] ?? null) === ManagedHuisstijlInterface::MANAGED_BY;
@@ -171,7 +171,7 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 	 *
 	 * @return array<string, mixed> `fonts` and `coverImage` where they apply; [] otherwise.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	public function pdfAssets(array $template, ?array $huisstijl): array {
 		if ($huisstijl === null) {
@@ -200,7 +200,7 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 	 *
 	 * @return array{heading: array{family: string, url: string|null}, body: array{family: string, url: string|null}}|null The fonts.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	private function pdfFonts(mixed $fonts): ?array {
 		if (is_array($fonts) === false) {
@@ -222,7 +222,7 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 	 *
 	 * @return string|null The cover image, or null.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	private function coverOf(array $template, array $huisstijl): ?string {
 		if (($template['coverPage'] ?? false) !== true) {
@@ -280,7 +280,7 @@ class HuisstijlProfileMapper implements ManagedHuisstijlInterface {
 	 *
 	 * @return string The sha256 hash.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-document-without-a-named-house-style-uses-the-user-s-own-req-hsp-002
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-document-without-a-named-house-style-uses-the-user-s-own-req-hsp-002
 	 */
 	private function profileHash(array $profile): string {
 		unset($profile['warnings']);

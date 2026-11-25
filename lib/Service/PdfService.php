@@ -307,7 +307,7 @@ class PdfService implements PdfServiceInterface {
 	 *
 	 * @return string The HTML with the house style applied.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	public function applyHouseStyle(string $html, array $options): string {
 		$prefix = $this->fontStyle(fonts: ($options['fonts'] ?? null)) . $this->coverBlock(cover: ($options['coverImage'] ?? null));
@@ -322,7 +322,7 @@ class PdfService implements PdfServiceInterface {
 	 *
 	 * @return string The style block.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	private function fontStyle(mixed $fonts): string {
 		if (is_array($fonts) === false) {
@@ -352,7 +352,7 @@ class PdfService implements PdfServiceInterface {
 	 *
 	 * @return string The cover page block.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	private function coverBlock(mixed $cover): string {
 		if (is_string($cover) === false || trim($cover) === '') {

@@ -116,7 +116,7 @@ class DocumentRenderPipeline {
 	 *
 	 * @spec openspec/specs/document-register/spec.md
 	 * @spec openspec/changes/multi-tenant-hardening/tasks.md#task-3.1
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	public function loadHuisstijl(?string $huisstijlId, ?string $uid = null): ?array {
 		// A request that names no huisstijl uses its organisation's default (REQ-DDMTH-004).
@@ -207,7 +207,7 @@ class DocumentRenderPipeline {
 	 * @return array The merged PDF options
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-pdfua-accessible-output/tasks.md#task-1.3
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	public function buildPdfOptions(array $template, ?array $huisstijl, array $options): array {
 		$pdfOptions = [
