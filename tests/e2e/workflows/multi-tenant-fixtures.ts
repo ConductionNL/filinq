@@ -46,6 +46,9 @@ export interface Tenants {
 
 const EMPTY_STATE = { cookies: [], origins: [] }
 
+/** The group the register lets write templates and house styles. */
+const TEMPLATE_EDITORS = 'filinq-template-editors'
+
 /**
  * Parse a JSON body, tolerating an empty or HTML answer.
  *
@@ -92,7 +95,7 @@ async function userApi(playwright: Playwright, baseURL: string, userId: string, 
 	return await playwright.request.newContext({
 		baseURL,
 		storageState: EMPTY_STATE,
-		httpCredentials: { username: userId, password },
+		httpCredentials: { username: userId, password, send: 'always' },
 		extraHTTPHeaders: { 'OCS-APIRequest': 'true', Accept: 'application/json' },
 	})
 }
@@ -105,10 +108,19 @@ async function userApi(playwright: Playwright, baseURL: string, userId: string, 
  * @return The context.
  */
 export async function userBrowser(browser: Browser, user: TenantUser): Promise<BrowserContext> {
-	return await browser.newContext({
-		storageState: EMPTY_STATE,
-		httpCredentials: { username: user.userId, password: user.password },
-	})
+	// Basic auth signs in API calls but not Nextcloud's pages (they redirect
+	// to the login form), so the browser signs in through the form.
+	const context = await browser.newContext({ storageState: EMPTY_STATE })
+	const page = await context.newPage()
+	await page.goto('/index.php/login', { waitUntil: 'domcontentloaded', timeout: 45_000 })
+	await page.locator('#user').fill(user.userId)
+	await page.locator('#password').fill(user.password)
+	await Promise.all([
+		page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 45_000 }),
+		page.locator('button[type=submit]').first().click(),
+	])
+	await page.close()
+	return context
 }
 
 /**
@@ -124,6 +136,13 @@ async function createUser(admin: APIRequestContext, userId: string, password: st
 		form: { userid: userId, password },
 	})
 	expect(res.status(), `could not create user ${userId}: ${(await res.text()).slice(0, 200)}`).toBeLessThan(400)
+	// The tenant users seed templates and house styles, which the register
+	// lets template editors write only (docs/authorization-decisions.md).
+	const joined = await admin.post(`/ocs/v2.php/cloud/users/${userId}/groups?format=json`, {
+		headers: { 'OCS-APIRequest': 'true' },
+		form: { groupid: TEMPLATE_EDITORS },
+	})
+	expect(joined.status(), `could not add ${userId} to ${TEMPLATE_EDITORS}`).toBeLessThan(400)
 }
 
 /**
@@ -169,6 +188,10 @@ export async function setUpTenants(playwright: Playwright, admin: APIRequestCont
 	const stamp = `${Date.now()}`
 	const password = `E2e-mt-${stamp}-pw!`
 	const ids = { adminA: `e2e-mt-a-${stamp}`, adminB: `e2e-mt-b-${stamp}`, memberA: `e2e-mt-m-${stamp}` }
+	await admin.post('/ocs/v2.php/cloud/groups?format=json', {
+		headers: { 'OCS-APIRequest': 'true' },
+		form: { groupid: TEMPLATE_EDITORS },
+	})
 	for (const id of Object.values(ids)) {
 		await createUser(admin, id, password)
 	}
@@ -191,7 +214,20 @@ export async function setUpTenants(playwright: Playwright, admin: APIRequestCont
 	expect(joined.status, `could not add ${memberA.userId} to A: ${JSON.stringify(joined.body).slice(0, 200)}`).toBeLessThan(400)
 	await setActive(memberA, orgA)
 
-	return { stamp, orgA, orgB, orgAName, orgBName, adminA, adminB, memberA, admin }
+	// The caller's `request` fixture belongs to its beforeAll and cannot be
+	// used again in afterAll, so the teardown gets an admin context of its own.
+	const teardownAdmin = await playwright.request.newContext({
+		baseURL,
+		storageState: EMPTY_STATE,
+		httpCredentials: {
+			username: process.env.NC_ADMIN_USER ?? 'admin',
+			password: process.env.NC_ADMIN_PASS ?? 'admin',
+			send: 'always',
+		},
+		extraHTTPHeaders: { 'OCS-APIRequest': 'true', Accept: 'application/json' },
+	})
+
+	return { stamp, orgA, orgB, orgAName, orgBName, adminA, adminB, memberA, admin: teardownAdmin }
 }
 
 /**
@@ -207,6 +243,7 @@ export async function tearDownTenants(tenants: Tenants | undefined): Promise<voi
 			headers: { 'OCS-APIRequest': 'true' },
 		})
 	}
+	await tenants.admin.dispose()
 }
 
 /**
