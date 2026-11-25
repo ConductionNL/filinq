@@ -206,9 +206,9 @@ class ValidationRunnerTest extends TestCase {
 
 		$this->fallback(event: new ObjectCreatedEvent($object), options: ['schemaProperties' => ['operation' => [], 'fileId' => [], 'status' => []]]);
 
-		$this->assertSame([], $this->validations);
-		$this->assertSame([], $this->saves);
-		$this->assertSame([['schema', '9', []]], $this->lines);
+		$this->assertSame(expected: [], actual: $this->validations);
+		$this->assertSame(expected: [], actual: $this->saves);
+		$this->assertSame(expected: [['schema', '9', []]], actual: $this->lines);
 
 	}//end testASchemaWithoutAVerdictIsNotValidated()
 
@@ -220,10 +220,14 @@ class ValidationRunnerTest extends TestCase {
 	public function testASchemaWithAVerdictIsValidated(): void {
 		$object = $this->object();
 
-		$this->fallback(event: new ObjectCreatedEvent($object), options: ['schemaProperties' => ['fileId' => [], 'validationStatus' => [], 'validationFindings' => []]]);
+		$declared = ['fileId' => [], 'validationStatus' => [], 'validationFindings' => []];
+		$this->fallback(event: new ObjectCreatedEvent($object), options: ['schemaProperties' => $declared]);
 
-		$this->assertCount(1, $this->validations);
-		$this->assertSame([['obj-1', '7', '9', ['validationStatus' => 'warning', 'validationFindings' => [['rule' => 'r1']]]]], $this->saves);
+		$this->assertCount(expectedCount: 1, haystack: $this->validations);
+		$this->assertSame(
+			expected: [['obj-1', '7', '9', ['validationStatus' => 'warning', 'validationFindings' => [['rule' => 'r1']]]]],
+			actual: $this->saves
+		);
 
 	}//end testASchemaWithAVerdictIsValidated()
 
