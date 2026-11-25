@@ -1601,23 +1601,30 @@ class SigningServiceTest extends TestCase {
 	 * @return void
 	 */
 	public function testASignatureThatCouldNeverCompleteIsRefusedBeforeAnythingIsWritten(): void {
-		$request = ['id' => 'req-001', 'status' => 'PENDING', 'signatureLevel' => 'SES', 'provider' => 'native', 'initiatorUserId' => 'bob', 'signerIds' => ['signer-001']];
+		$request = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+			'initiatorUserId' => 'bob',
+			'signerIds' => ['signer-001'],
+		];
 		$signer  = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
 		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signer, $request, $request, $signer);
 		$this->objectService->expects($this->never())->method('saveObject');
 		$this->auditService->expects($this->never())->method('logEvent');
 
-		$config = $this->createMock(\OCP\IAppConfig::class);
+		$config = $this->createMock(originalClassName: \OCP\IAppConfig::class);
 		$config->method('getValueString')->willReturn('');
 		$native = new \OCA\Filinq\Service\Signing\NativeSigningProvider(
-			logger: $this->createMock(\Psr\Log\LoggerInterface::class),
+			logger: $this->createMock(originalClassName: \Psr\Log\LoggerInterface::class),
 			settingsService: $this->settingsService,
 			config: $config
 		);
 		$this->providerFactory->method('getProvider')->willReturn($native);
 
-		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('signing_verification_secret is unset');
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'signing_verification_secret is unset');
 		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
 
 	}//end testASignatureThatCouldNeverCompleteIsRefusedBeforeAnythingIsWritten()

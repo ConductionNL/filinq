@@ -50,15 +50,15 @@ class SignedArtifactProducerPreflightTest extends TestCase {
 	 * @return SignedArtifactProducer
 	 */
 	private function producer(SigningProviderInterface $provider): SignedArtifactProducer {
-		$factory = $this->createMock(SigningProviderFactory::class);
+		$factory = $this->createMock(originalClassName: SigningProviderFactory::class);
 		$factory->method('getProvider')->willReturn($provider);
 
 		return new SignedArtifactProducer(
 			providerFactory: $factory,
-			userSession: $this->createMock(IUserSession::class),
-			request: $this->createMock(IRequest::class),
-			rootFolder: $this->createMock(IRootFolder::class),
-			finalDocuments: $this->createMock(FinalDocumentService::class)
+			userSession: $this->createMock(originalClassName: IUserSession::class),
+			request: $this->createMock(originalClassName: IRequest::class),
+			rootFolder: $this->createMock(originalClassName: IRootFolder::class),
+			finalDocuments: $this->createMock(originalClassName: FinalDocumentService::class)
 		);
 	}//end producer()
 
@@ -70,12 +70,12 @@ class SignedArtifactProducerPreflightTest extends TestCase {
 	 * @return NativeSigningProvider
 	 */
 	private function native(string $secret): NativeSigningProvider {
-		$config = $this->createMock(IAppConfig::class);
+		$config = $this->createMock(originalClassName: IAppConfig::class);
 		$config->method('getValueString')->willReturn($secret);
 
 		return new NativeSigningProvider(
-			logger: $this->createMock(LoggerInterface::class),
-			settingsService: $this->createMock(SettingsService::class),
+			logger: $this->createMock(originalClassName: LoggerInterface::class),
+			settingsService: $this->createMock(originalClassName: SettingsService::class),
 			config: $config
 		);
 	}//end native()
@@ -86,8 +86,8 @@ class SignedArtifactProducerPreflightTest extends TestCase {
 	 * @return void
 	 */
 	public function testANativeRequestWithoutASecretIsRefused(): void {
-		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('signing_verification_secret is unset');
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'signing_verification_secret is unset');
 
 		$this->producer(provider: $this->native(secret: ''))->assertCanProduce(request: ['provider' => 'native', 'signatureLevel' => 'SES']);
 	}//end testANativeRequestWithoutASecretIsRefused()
@@ -98,8 +98,8 @@ class SignedArtifactProducerPreflightTest extends TestCase {
 	 * @return void
 	 */
 	public function testANativeRequestAtALevelItCannotSignIsRefused(): void {
-		$this->expectException(RuntimeException::class);
-		$this->expectExceptionMessage('unsupported level "QES"');
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'unsupported level "QES"');
 
 		$this->producer(provider: $this->native(secret: 'configured'))->assertCanProduce(request: ['provider' => 'native', 'signatureLevel' => 'QES']);
 	}//end testANativeRequestAtALevelItCannotSignIsRefused()
@@ -123,7 +123,7 @@ class SignedArtifactProducerPreflightTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnotherProviderIsNotAsked(): void {
-		$provider = $this->createMock(SigningProviderInterface::class);
+		$provider = $this->createMock(originalClassName: SigningProviderInterface::class);
 		$provider->expects($this->never())->method('produceSignedArtifact');
 
 		$this->producer(provider: $provider)->assertCanProduce(request: ['provider' => 'libresign', 'signatureLevel' => 'QES']);

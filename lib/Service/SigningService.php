@@ -745,10 +745,7 @@ class SigningService implements SigningServiceInterface {
 			);
 		}
 		// Typed field values are checked before anything is written (REQ-SFV-003).
-		$typed = $this->fieldValueChecker->valuesForAct(request: $request, signerId: $signerId, fields: $fields);
-		// A signature the request's provider could never complete is refused
-		// here, while nothing is written yet, not after the signer is stored.
-		$this->outputs->artifactProducer->assertCanProduce(request: $request);
+		$typed = $this->checkBeforeWrite(request: $request, signerId: $signerId, fields: $fields);
 
 		$signer['identityEvidence'] = $this->guards->assuranceGate->evidenceForAct(
 			request: $request + ['id' => $requestId],
@@ -783,6 +780,30 @@ class SigningService implements SigningServiceInterface {
 
 		return $signer;
 	}//end signAct()
+
+	/**
+	 * What a signature checks while nothing is written yet: its typed field
+	 * values (REQ-SFV-003), and that the request's provider could complete
+	 * it at all. Without the second, a native request on a server with no
+	 * signing secret stored the signature and its SIGNED audit entry and then
+	 * failed at completion, leaving a request no signer could finish.
+	 *
+	 * @param array<string, mixed>      $request  The signing request.
+	 * @param string                    $signerId The signer record id.
+	 * @param array<string, mixed>|null $fields   The typed field values sent with the act.
+	 *
+	 * @return array<string, mixed> The checked typed values to store on the signer.
+	 *
+	 * @throws RuntimeException When a value is refused or no artifact could be produced.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	private function checkBeforeWrite(array $request, string $signerId, ?array $fields): array {
+		$typed = $this->fieldValueChecker->valuesForAct(request: $request, signerId: $signerId, fields: $fields);
+		$this->outputs->artifactProducer->assertCanProduce(request: $request);
+
+		return $typed;
+	}//end checkBeforeWrite()
 
 	/**
 	 * The user whose signing authority a signature exercises.
