@@ -123,7 +123,6 @@
 </template>
 
 <script>
-import { markRaw } from 'vue'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -133,6 +132,7 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import { markRaw } from 'vue'
 import { fetchUrlAsArrayBuffer } from '../../services/fileViewerService.js'
 import { loadPdfjs } from '../../services/pdfjsLoader.js'
 import {

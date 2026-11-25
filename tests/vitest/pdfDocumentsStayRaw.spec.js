@@ -16,8 +16,8 @@
  */
 
 import { join } from 'node:path'
-import { reactive } from 'vue'
 import { describe, expect, it, vi } from 'vitest'
+import { reactive } from 'vue'
 import { createInstance, loadSfcOptions } from './sfc/sfcOptions.js'
 
 /** A pdf.js document double that, like pdf.js, keeps its page count in a private field. */
