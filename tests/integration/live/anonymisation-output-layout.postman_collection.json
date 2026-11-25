@@ -1,10 +1,115 @@
 {
 	"info": {
 		"name": "Filinq batch anonymisation output folder layout",
-		"description": "anonymisation-batch-output-folder-layout task 11. Three text files in one folder go through a folder batch: extract, anonymise (format kept). The anonymised copies land in the folder's anonymised/ subfolder under their own names, and no _anonymized file is left beside the sources. It needs a live instance with entity detection, so it sits in tests/integration/live/, outside the flat glob the CI Newman job runs. Run it with: npx newman run tests/integration/live/anonymisation-output-layout.postman_collection.json --env-var baseUrl=$BASE_URL --env-var adminUser=$ADMIN_USER --env-var adminPass=$ADMIN_PASS",
+		"description": "anonymisation-batch-output-folder-layout task 11. Three text files in one folder go through a folder batch: extract, anonymise (format kept). The anonymised copies land in the folder's anonymised/ subfolder under their own names, and no _anonymized file is left beside the sources. It needs a live instance with entity detection, so it sits in tests/integration/live/, outside the flat glob the CI Newman job runs. Run it with: npx newman run tests/integration/live/anonymisation-output-layout.postman_collection.json --env-var baseUrl=$BASE_URL --env-var adminUser=$ADMIN_USER --env-var adminPass=$ADMIN_PASS. Before anonymising, a second account (created here, reviewerUser) checks each document in the review workbench and sets the redaction mark, because four eyes are required: whoever checked may not also anonymise",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
+		{
+			"name": "Setup: a second person who reviews",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"// Four eyes: the person who checks a document may not also anonymise it, so a colleague checks.",
+							"const meta = pm.response.json().ocs.meta;",
+							"pm.test('The reviewer exists', () => pm.expect([100, 200, 102]).to.include(meta.statuscode));"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": "{{baseUrl}}/ocs/v2.php/cloud/users?format=json",
+				"body": {
+					"mode": "raw",
+					"raw": "userid={{reviewerUser}}&password={{reviewerPass}}&displayName=Layout%20reviewer"
+				}
+			}
+		},
+		{
+			"name": "Setup: the reviewer is a Woo officer (may record review marks)",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"// documentReview and redactionReviewMark are created by filinq-woo-officers or filinq-policy-admins.",
+							"pm.test('The reviewer is in filinq-woo-officers', () => pm.expect(pm.response.json().ocs.meta.statuscode).to.be.oneOf([100, 200]));"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": "{{baseUrl}}/ocs/v2.php/cloud/users/{{reviewerUser}}/groups?format=json",
+				"body": {
+					"mode": "raw",
+					"raw": "groupid=filinq-woo-officers"
+				}
+			}
+		},
 		{
 			"name": "MKCOL the batch folder",
 			"request": {
@@ -30,9 +135,7 @@
 						}
 					]
 				},
-				"url": {
-					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}"
-				}
+				"url": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}"
 			},
 			"event": [
 				{
@@ -56,6 +159,57 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "Setup: share the batch folder with the reviewer",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('The folder is shared', () => pm.expect(pm.response.json().ocs.meta.statuscode).to.be.oneOf([100, 200]));"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": "{{baseUrl}}/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json",
+				"body": {
+					"mode": "raw",
+					"raw": "path=/{{layoutFolder}}&shareType=0&shareWith={{reviewerUser}}&permissions=31"
+				}
+			}
 		},
 		{
 			"name": "PUT verslag-a.txt",
@@ -86,9 +240,7 @@
 						}
 					]
 				},
-				"url": {
-					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}/verslag-a.txt"
-				},
+				"url": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}/verslag-a.txt",
 				"body": {
 					"mode": "raw",
 					"raw": "Gesprek met Jan Jansen op 3 maart. BSN 111222333. Telefoon 06-12345678."
@@ -135,9 +287,7 @@
 						}
 					]
 				},
-				"url": {
-					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}/verslag-b.txt"
-				},
+				"url": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}/verslag-b.txt",
 				"body": {
 					"mode": "raw",
 					"raw": "Gesprek met Jan Jansen op 3 maart. BSN 111222333. Telefoon 06-12345678."
@@ -184,9 +334,7 @@
 						}
 					]
 				},
-				"url": {
-					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}/verslag-c.txt"
-				},
+				"url": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}/verslag-c.txt",
 				"body": {
 					"mode": "raw",
 					"raw": "Gesprek met Jan Jansen op 3 maart. BSN 111222333. Telefoon 06-12345678."
@@ -233,9 +381,7 @@
 						}
 					]
 				},
-				"url": {
-					"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/folder"
-				},
+				"url": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/folder",
 				"body": {
 					"mode": "raw",
 					"raw": "{\"folderPath\": \"/{{layoutFolder}}\"}"
@@ -250,7 +396,8 @@
 							"pm.test('Status is 200', () => pm.response.to.have.status(200));",
 							"const body = pm.response.json();",
 							"pm.test('The three files are in the batch', () => pm.expect(body.fileCount).to.equal(3));",
-							"pm.collectionVariables.set('layoutBatchId', body.batchId);"
+							"pm.collectionVariables.set('layoutBatchId', body.batchId);",
+							"pm.collectionVariables.set('layoutFileIds', JSON.stringify((body.files || []).map((f) => f.fileId)));"
 						]
 					}
 				}
@@ -281,9 +428,7 @@
 						}
 					]
 				},
-				"url": {
-					"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{layoutBatchId}}/extract"
-				}
+				"url": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{layoutBatchId}}/extract"
 			},
 			"event": [
 				{
@@ -322,9 +467,7 @@
 						}
 					]
 				},
-				"url": {
-					"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{layoutBatchId}}/entities"
-				}
+				"url": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{layoutBatchId}}/entities"
 			},
 			"event": [
 				{
@@ -348,6 +491,97 @@
 					}
 				}
 			]
+		},
+		{
+			"name": "Review: a person checks each document (deciding its uncertain findings)",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"// Two marks gate the write today. The review workbench's check (anonymization-review-workbench)",
+							"// gates the batch and every document; a document cannot be marked there while an uncertain",
+							"// finding is undecided, so a check that names undecided findings is sent again deciding them.",
+							"// The redaction mark (RedactionOutputGuard, set by the folder view's 'checked' button) gates",
+							"// each copy, over exactly the entities the anonymise call sends.",
+							"const ids = JSON.parse(pm.collectionVariables.get('layoutFileIds') || '[]');",
+							"pm.collectionVariables.set('layoutReviewFileId', String(ids[0] || 0));",
+							"// The reviewer checks; the admin anonymises below, so four eyes see each document.\nconst auth = 'Basic ' + btoa(pm.variables.get('reviewerUser') + ':' + pm.variables.get('reviewerPass'));",
+							"// Newman keeps the admin's Nextcloud session cookie, and Nextcloud prefers a session over the",
+							"// Basic header: without clearing the jar the reviewer's calls would run as the admin.",
+							"pm.cookies.jar().clear(pm.variables.get('baseUrl'), () => {",
+							"\tconst check = (id, decided, retry) => pm.sendRequest({",
+							"\t\turl: pm.variables.get('baseUrl') + '/index.php/apps/filinq/api/review/' + id + '/check',",
+							"\t\tmethod: 'POST',",
+							"\t\theader: { 'OCS-APIREQUEST': 'true', 'Content-Type': 'application/json', Authorization: auth },",
+							"\t\tbody: { mode: 'raw', raw: JSON.stringify({ decided }) },",
+							"\t}, (err, res) => {",
+							"\t\tif (err) { console.error('check ' + id + ' failed', err); return; }",
+							"\t\tconst body = res.json();",
+							"\t\tif (res.code === 409 && body.reason === 'uncertain_undecided' && retry) {",
+							"\t\t\tcheck(id, (body.undecidedFindings || []).map((f) => f.relationId), false);",
+							"\t\t} else if (res.code >= 300) {",
+							"\t\t\tconsole.error('check ' + id + ' refused', res.code, body.reason);",
+							"\t\t}",
+							"\t});",
+							"\tids.forEach((id) => check(id, [], true));",
+							"\tconst entities = JSON.parse(pm.collectionVariables.get('layoutEntities') || '[]')",
+							"\t\t.filter((e) => e.included !== false)",
+							"\t\t.map((e) => ({ type: e.type, value: e.value, confidence: e.highestConfidence ?? e.confidence }))",
+							"\t\t.sort((a, b) => (b.value || '').length - (a.value || '').length);",
+							"\tids.forEach((id) => pm.sendRequest({",
+							"\t\turl: pm.variables.get('baseUrl') + '/index.php/apps/filinq/api/redaction/documents/' + id + '/checked',",
+							"\t\tmethod: 'POST',",
+							"\t\theader: { 'OCS-APIREQUEST': 'true', 'Content-Type': 'application/json', Authorization: auth },",
+							"\t\tbody: { mode: 'raw', raw: JSON.stringify({ entities }) },",
+							"\t}, (err, res) => { if (err || res.code >= 300) { console.error('redaction mark ' + id + ' refused', err || res.code); } }));",
+							"});"
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"pm.test('The document reads as checked', () => {",
+							"\tpm.expect(pm.response.code).to.equal(200);",
+							"\tpm.expect(pm.response.json().checked).to.equal(true);",
+							"});"
+						]
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "OCS-APIREQUEST",
+						"value": "true"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "{{adminUser}}",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "{{adminPass}}",
+							"type": "string"
+						}
+					]
+				},
+				"url": "{{baseUrl}}/index.php/apps/filinq/api/review/{{layoutReviewFileId}}"
+			}
 		},
 		{
 			"name": "POST batch/{id}/anonymize - keep the format",
@@ -378,9 +612,7 @@
 						}
 					]
 				},
-				"url": {
-					"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{layoutBatchId}}/anonymize"
-				},
+				"url": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{layoutBatchId}}/anonymize",
 				"body": {
 					"mode": "raw",
 					"raw": "{\"entities\": {{layoutEntities}}, \"outputFormat\": \"preserve\"}"
@@ -388,12 +620,29 @@
 			},
 			"event": [
 				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							"// The reviewer's session cookie is in Newman's jar now and would win over the admin's Basic",
+							"// header: clear it, so the admin (who did not check) anonymises.",
+							"pm.cookies.jar().clear(pm.variables.get('baseUrl'), () => {});"
+						]
+					}
+				},
+				{
 					"listen": "test",
 					"script": {
 						"type": "text/javascript",
 						"exec": [
 							"pm.test('Anonymisation ran', () => pm.expect(pm.response.code).to.be.oneOf([200, 207]));",
-							"const files = pm.response.json().files || [];",
+							"const result = pm.response.json();",
+							"// A batch that skipped every file still answers 200: count what was written.",
+							"pm.test('All three copies were written, none skipped', () => {",
+							"\tpm.expect(result.skippedFiles || [], JSON.stringify(result.skippedFiles)).to.eql([]);",
+							"\tpm.expect(result.processedFiles).to.equal(3);",
+							"});",
+							"const files = result.files || [];",
 							"pm.test('Every recorded path is in the anonymised subfolder', () => {",
 							"    files.filter((f) => f.anonymizedFilePath).forEach((f) => pm.expect(f.anonymizedFilePath).to.match(/\\/anonymised\\/[^/]+$/));",
 							"});"
@@ -431,9 +680,7 @@
 						}
 					]
 				},
-				"url": {
-					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}"
-				}
+				"url": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}"
 			},
 			"event": [
 				{
@@ -479,9 +726,7 @@
 						}
 					]
 				},
-				"url": {
-					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}/anonymised"
-				}
+				"url": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}/anonymised"
 			},
 			"event": [
 				{
@@ -525,9 +770,7 @@
 						}
 					]
 				},
-				"url": {
-					"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}"
-				}
+				"url": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{layoutFolder}}"
 			},
 			"event": [
 				{
@@ -570,6 +813,22 @@
 		{
 			"key": "extractTries",
 			"value": "0"
+		},
+		{
+			"key": "layoutFileIds",
+			"value": ""
+		},
+		{
+			"key": "layoutReviewFileId",
+			"value": ""
+		},
+		{
+			"key": "reviewerUser",
+			"value": "layout-reviewer"
+		},
+		{
+			"key": "reviewerPass",
+			"value": "Layout-Reviewer-pass-2026"
 		}
 	]
 }
