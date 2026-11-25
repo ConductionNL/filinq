@@ -64,7 +64,7 @@ final class CaseSystemDeliveryAdminTest extends TestCase {
 	private function service(array $stored=[]): CaseSystemDeliveryService {
 		$this->stored = $stored;
 		$this->saved  = [];
-		$objects      = $this->getMockBuilder(ObjectService::class)->onlyMethods(['findAll', 'find', 'saveObject'])->getMock();
+		$objects      = $this->getMockBuilder(className: ObjectService::class)->onlyMethods(['findAll', 'find', 'saveObject'])->getMock();
 		$objects->method('findAll')->willReturnCallback(
 			function (array $config=[]): array {
 				$filters = $config['filters'];
@@ -108,7 +108,7 @@ final class CaseSystemDeliveryAdminTest extends TestCase {
 		$resolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objects);
 
-		return new CaseSystemDeliveryService($resolver, null);
+		return new CaseSystemDeliveryService(objects: $resolver, users: null);
 
 	}//end service()
 
