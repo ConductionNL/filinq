@@ -155,13 +155,31 @@ class MdtoTransferServiceTest extends TestCase {
 	 */
 	private static function entity(string $uuid, array $data, array $retention=[], string $schema=''): object {
 		return new class($uuid, $data, $retention, $schema) {
+			/**
+			 * Constructor.
+			 *
+			 * @param string               $uuid      The UUID.
+			 * @param array<string, mixed> $data      The object data.
+			 * @param array<string, mixed> $retention The retention block.
+			 * @param string               $schema    The schema id.
+			 */
 			public function __construct(private string $uuid, private array $data, private array $retention, private string $schema) {
 			}
 
+			/**
+			 * The schema id the object is in.
+			 *
+			 * @return string
+			 */
 			public function getSchema(): string {
 				return $this->schema;
 			}
 
+			/**
+			 * The slug, when the stand-in plays a schema.
+			 *
+			 * @return string
+			 */
 			public function getSlug(): string {
 				return (string) ($this->data['slug'] ?? '');
 			}
@@ -372,6 +390,8 @@ class MdtoTransferServiceTest extends TestCase {
 	 * the panel proposes aggregation level `dossier` and the members are loaded.
 	 *
 	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 *
+	 * @return void
 	 */
 	public function testADossierWithoutASupplementIsProposedAsADossier(): void {
 		$dossier = 'd0551e00-0000-4000-8000-000000000009';
@@ -381,12 +401,13 @@ class MdtoTransferServiceTest extends TestCase {
 			data: ['name' => 'Woo-verzoek 2025-017', 'documents' => ['a0000000-0000-4000-8000-000000000001']],
 			schema: '43'
 		);
-		$this->openRegister->objects['a0000000-0000-4000-8000-000000000001'] = self::entity(uuid: 'a0000000-0000-4000-8000-000000000001', data: ['title' => 'Verzoek']);
+		$member = 'a0000000-0000-4000-8000-000000000001';
+		$this->openRegister->objects[$member] = self::entity(uuid: $member, data: ['title' => 'Verzoek']);
 		$this->openRegister->files = [];
 
 		$status = $this->service()->status($dossier);
 
-		$this->assertSame(['value' => 'dossier', 'proposed' => true], $status['proposals']['aggregatieniveau']);
+		$this->assertSame(expected: ['value' => 'dossier', 'proposed' => true], actual: $status['proposals']['aggregatieniveau']);
 
 	}//end testADossierWithoutASupplementIsProposedAsADossier()
 
@@ -395,6 +416,8 @@ class MdtoTransferServiceTest extends TestCase {
 	 * document when its supplement names no type.
 	 *
 	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 *
+	 * @return void
 	 */
 	public function testARecordInAnotherSchemaWithoutASupplementIsADocument(): void {
 		$other   = 'b0000000-0000-4000-8000-000000000001';
@@ -403,8 +426,8 @@ class MdtoTransferServiceTest extends TestCase {
 		$this->openRegister->objects[$other]   = self::entity(uuid: $other, data: ['title' => 'Brief'], schema: '12');
 		$this->openRegister->objects[$unknown] = self::entity(uuid: $unknown, data: ['title' => 'Notitie'], schema: '999');
 
-		$this->assertSame('archiefstuk', $this->service()->status($other)['proposals']['aggregatieniveau']['value']);
-		$this->assertSame('archiefstuk', $this->service()->status($unknown)['proposals']['aggregatieniveau']['value']);
+		$this->assertSame(expected: 'archiefstuk', actual: $this->service()->status($other)['proposals']['aggregatieniveau']['value']);
+		$this->assertSame(expected: 'archiefstuk', actual: $this->service()->status($unknown)['proposals']['aggregatieniveau']['value']);
 
 	}//end testARecordInAnotherSchemaWithoutASupplementIsADocument()
 
@@ -412,6 +435,8 @@ class MdtoTransferServiceTest extends TestCase {
 	 * The supplement's own `objectType` wins over the schema.
 	 *
 	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 *
+	 * @return void
 	 */
 	public function testTheSupplementTypeWinsOverTheSchema(): void {
 		$this->openRegister->objects['43'] = self::entity(uuid: 'schema-43', data: ['slug' => 'dossier']);
@@ -422,7 +447,7 @@ class MdtoTransferServiceTest extends TestCase {
 			schema: '43'
 		);
 
-		$this->assertSame('archiefstuk', $this->service()->status(self::UUID)['proposals']['aggregatieniveau']['value']);
+		$this->assertSame(expected: 'archiefstuk', actual: $this->service()->status(self::UUID)['proposals']['aggregatieniveau']['value']);
 
 	}//end testTheSupplementTypeWinsOverTheSchema()
 }//end class
