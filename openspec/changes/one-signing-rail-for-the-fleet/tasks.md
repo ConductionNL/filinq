@@ -52,7 +52,13 @@
       Done: no request (or no configured register) answers an empty list and the section says no app has raised one; only a failed load shows an error.
 - [x] 5.3 Add Dutch and English strings.
       Done: `l10n/en.json` and `l10n/nl.json`, `.js` rebuilt.
-- [ ] 5.4 Add the Playwright spec the requirement names.
+- [x] 5.4 Add the Playwright spec the requirement names.
+      Done (2026-11-25): `tests/e2e/spec-coverage/one-signing-rail-for-the-fleet.spec.ts`
+      ran live, 3/3 passed (13.7 s) on Nextcloud 34 + MariaDB + OpenRegister
+      main 0e1d0609 + filinq development ab415214 (php -S sandbox). The
+      unhandled endpoint `GET api/settings/signing-sources` answered
+      `{"sources":[],"total":0,"truncated":false}` on the fresh instance, so
+      the empty case is real, not only route-handled.
 
 ## 6. Verification
 
