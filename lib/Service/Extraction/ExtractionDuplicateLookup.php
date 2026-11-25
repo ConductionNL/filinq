@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -74,7 +74,7 @@ class ExtractionDuplicateLookup {
 	 *
 	 * @return bool True when a match exists or the lookup could not run.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
 	 */
 	public function hasEarlier(array $fields): bool {
 		$invoiceNumber = self::normalised(value: ($fields['invoiceNumber'] ?? null));
@@ -106,7 +106,7 @@ class ExtractionDuplicateLookup {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
 	 */
 	public static function matches(array $row, string $invoiceNumber, array $identifiers): bool {
 		$fields = ($row['fields'] ?? []);

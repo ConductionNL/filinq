@@ -17,7 +17,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,7 +32,7 @@ use RuntimeException;
 /**
  * Refuses an unattended threshold outside its bounds.
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
  */
 class UnattendedThresholdSetting {
 
@@ -54,7 +54,7 @@ class UnattendedThresholdSetting {
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) UnattendedVerdict::isValidThreshold() is the one reading of a valid threshold.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
 	 */
 	public function assertValid(array $data): void {
 		if (array_key_exists(UnattendedVerdict::SETTING_KEY, $data) === false

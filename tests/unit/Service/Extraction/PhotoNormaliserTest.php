@@ -12,7 +12,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -117,7 +117,7 @@ class PhotoNormaliserTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
 	 */
 	public function testATurnedPhotoWithBrokenImageDataIsUnchanged(): void {
 		$photo = $this->photo(orientation: 6);
@@ -133,7 +133,7 @@ class PhotoNormaliserTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
 	 */
 	public function testAHeicPhotoThatCannotBeDecodedIsRefused(): void {
 		$normaliser = new class extends PhotoNormaliser {

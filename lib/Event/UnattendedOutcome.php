@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -40,7 +40,7 @@ final class UnattendedOutcome {
 	 * @param list<string> $reasons   The reason codes; empty for `pass`.
 	 * @param float        $threshold The confidence threshold used.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
 	 */
 	public function __construct(
 		public readonly string $verdict,
@@ -54,7 +54,7 @@ final class UnattendedOutcome {
 	 *
 	 * @return array{unattendedVerdict: string, verdictReasons: list<string>, verdictThreshold: float}
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
 	 */
 	public function toStored(): array {
 		return [

@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * REQ-ERP-004: the verdict event's payload.
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#3.2
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#3.2
  */
 class ExtractionVerdictEventTest extends TestCase {
 

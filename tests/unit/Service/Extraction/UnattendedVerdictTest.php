@@ -19,7 +19,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * REQ-ERP-003: the unattended verdict and its reason codes.
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#3.1
  */
 class UnattendedVerdictTest extends TestCase {
 

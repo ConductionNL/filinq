@@ -12,7 +12,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -232,13 +232,20 @@ class ReceiptCaptureServiceTest extends TestCase {
 		}
 
 		$policy = $this->createMock(UploadPolicyServiceInterface::class);
-		$policy->method('check')->willThrowException(new UploadRefusedException(message: 'This file type is not allowed.'));
+		$refusal = 'This file is a application/zip, which the policy does not allow.';
+		$policy->method('check')->willThrowException(new UploadRefusedException(message: $refusal));
 		$this->policy = $policy;
-		$this->expectException(UploadRefusedException::class);
 		try {
-			$this->service()->capture(userId: 'alice', fileName: 'x.exe', contents: 'MZ', request: []);
-		} finally {
-			$this->assertSame([], $this->written);
+			$this->service()->capture(userId: 'alice', fileName: 'bon.jpg', contents: "PK\x03\x04", request: []);
+			$this->fail(message: 'A file the policy refuses must be refused.');
+		} catch (ReceiptCaptureRefusedException $e) {
+			// The route answers 415 with the policy's reason, as REQ-ERP-002 asks; found live, where the policy refused first.
+			$this->assertSame(
+				expected: [415, $refusal],
+				actual: [$e->getCode(), $e->getMessage()]
+			);
 		}
+
+		$this->assertSame(expected: [], actual: $this->written);
 	}//end testARefusalFromTheNormaliserOrThePolicyStoresNothing()
 }//end class
