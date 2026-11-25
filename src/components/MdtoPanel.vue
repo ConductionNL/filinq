@@ -7,7 +7,7 @@ the record's retention block (read only), the supplement with Filinq's
 proposals to accept or reject, the completeness banner, and the export and
 overbrengen actions.
 
-@spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+@spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 -->
 
 <template>
@@ -229,7 +229,7 @@ export default {
 		 * The record the supplement describes.
 		 *
 		 * @return {{objectRef: string, objectType: string}}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		subject() {
 			return { objectRef: this.objectId, objectType: this.objectType }
@@ -239,7 +239,7 @@ export default {
 		 * The core archival attributes, read from the retention block only.
 		 *
 		 * @return {Array<{key: string, label: string, value: string}>}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		coreRows() {
 			const retention = this.status?.retention || {}
@@ -256,7 +256,7 @@ export default {
 		 * The supplement fields, each flagged when it is an unconfirmed proposal.
 		 *
 		 * @return {Array<{key: string, label: string, value: string, unconfirmed: boolean}>}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		supplementRows() {
 			const supplement = this.status?.supplement || {}
@@ -275,7 +275,7 @@ export default {
 		 * The derived field values the supplement lacks or holds unconfirmed.
 		 *
 		 * @return {Array<{field: string, label: string, value: string}>}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		fieldProposals() {
 			const supplement = this.status?.supplement || {}
@@ -295,7 +295,7 @@ export default {
 		 * The use restrictions Filinq proposes that nobody decided on yet.
 		 *
 		 * @return {object[]}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		restrictionProposals() {
 			return openRestrictionProposals(this.status)
@@ -305,7 +305,7 @@ export default {
 		 * The confirmed use restrictions: the ones the sidecar exports.
 		 *
 		 * @return {object[]}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		confirmedRestrictions() {
 			return (this.status?.supplement?.beperkingGebruik || []).filter((entry) => entry.proposed !== true)
@@ -315,7 +315,7 @@ export default {
 		 * The XML sidecar download.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		xmlUrl() {
 			return sidecarUrl(this.objectId, 'xml')
@@ -325,7 +325,7 @@ export default {
 		 * The JSON sidecar download.
 		 *
 		 * @return {string}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		jsonUrl() {
 			return sidecarUrl(this.objectId, 'json')
@@ -337,7 +337,7 @@ export default {
 			/**
 			 * Load the record's MDTO status.
 			 *
-			 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+			 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 			 */
 			handler() {
 				this.transferMessage = null
@@ -357,7 +357,7 @@ export default {
 		 * its own changes off too.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-transfer-to-archive-state-for-permanent-records-req-ddare-006
 		 */
 		async load() {
@@ -379,7 +379,7 @@ export default {
 		 *
 		 * @param {object} restriction The restriction.
 		 * @return {string}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		restrictionLabel(restriction) {
 			return [restriction.type, restriction.grondslag, restriction.omschrijving].filter(Boolean).join(' — ')
@@ -390,7 +390,7 @@ export default {
 		 *
 		 * @param {{field: string, value: string}} proposal The proposal.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		accept(proposal) {
 			return this.save(acceptProposal(this.status.supplement, proposal.field, proposal.value))
@@ -402,7 +402,7 @@ export default {
 		 * @param {object} restriction The proposal.
 		 * @param {boolean} accepted Whether it is accepted.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		decide(restriction, accepted) {
 			return this.save(decideRestriction(this.status.supplement, restriction, accepted))
@@ -413,7 +413,7 @@ export default {
 		 *
 		 * @param {object} changes The fields to change.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		async save(changes) {
 			this.busy = true
@@ -430,7 +430,7 @@ export default {
 		 * After the form saved: close it and reload.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		async onSaved() {
 			this.editing = false
@@ -441,7 +441,7 @@ export default {
 		 * Transfer the record and say what happened.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+		 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
 		 */
 		async transfer() {
 			this.busy = true

@@ -5,7 +5,7 @@
  * The MDTO supplement form: it edits only the supplement fields, never a
  * retention-owned one, and an edited field stops counting as a proposal.
  *
- * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
  */
 
 const { nextTick } = require('vue')

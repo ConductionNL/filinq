@@ -15295,7 +15295,7 @@
                 "uri": null,
                 "slug": "mdtoSupplement",
                 "title": "MDTO supplement",
-                "description": "The MDTO archival metadata OpenRegister does not model for a Filinq document or dossier: aggregation level, description, language, coverage in time, use restrictions, parties and an archive creator override. The core archival attributes (appraisal, retention period, disposal date, archival status, classification) live in the record's OpenRegister retention block only and are never copied here. One supplement per record; it lives as long as the record it describes. See openspec/changes/tmlo-mdto-metadata.",
+                "description": "The MDTO archival metadata OpenRegister does not model for a Filinq document or dossier: aggregation level, description, language, coverage in time, use restrictions, parties and an archive creator override. The core archival attributes (appraisal, retention period, disposal date, archival status, classification) live in the record's OpenRegister retention block only and are never copied here. One supplement per record; it lives as long as the record it describes. See openspec/changes/archive/2026-11-25-tmlo-mdto-metadata.",
                 "version": "1.0.0",
                 "summary": "",
                 "icon": "FolderZip",

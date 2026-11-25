@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
  */
 
 declare(strict_types=1);
@@ -44,7 +44,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
  */
 class MdtoRecordReader {
 
@@ -64,12 +64,22 @@ class MdtoRecordReader {
 	private const FILE_SERVICE = 'OCA\OpenRegister\Service\FileService';
 
 	/**
+	 * OpenRegister's schema mapper.
+	 */
+	private const SCHEMA_MAPPER = 'OCA\OpenRegister\Db\SchemaMapper';
+
+	/**
+	 * The slug of the dossier schema.
+	 */
+	private const DOSSIER_SCHEMA = 'dossier';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param OpenRegisterServiceLocator $locator   Resolves OpenRegister's services.
 	 * @param IAppConfig                 $appConfig Reads OpenRegister's organisation settings.
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
 	 */
 	public function __construct(
 		private readonly OpenRegisterServiceLocator $locator,
@@ -87,7 +97,7 @@ class MdtoRecordReader {
 	 *
 	 * @throws RuntimeException When the record cannot be read (404).
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-e-depot-handoff-rides-openregisters-transfer-stack-req-ddtmm-006
 	 */
 	public function entity(string $uuid): object {
 		try {
@@ -111,7 +121,7 @@ class MdtoRecordReader {
 	 *
 	 * @return array<string, mixed> `uuid`, `title`, `retention` and the object's own fields.
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-mdto-core-attributes-have-a-single-source-of-truth-req-ddtmm-001
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-mdto-core-attributes-have-a-single-source-of-truth-req-ddtmm-001
 	 */
 	public function record(object $entity): array {
 		$data      = (array) $entity->getObject();
@@ -132,13 +142,48 @@ class MdtoRecordReader {
 	}//end record()
 
 	/**
+	 * Whether the record is a dossier, by the slug of its OpenRegister schema.
+	 *
+	 * A dossier that has no supplement yet names its type nowhere else, so
+	 * the record type cannot be read from the supplement alone.
+	 *
+	 * @param object $entity The ObjectEntity.
+	 *
+	 * @return bool True when the record's schema is the dossier schema.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 */
+	public function isDossier(object $entity): bool {
+		if (method_exists($entity, 'getSchema') === false) {
+			return false;
+		}
+
+		$schema = trim((string) $entity->getSchema());
+		if ($schema === self::DOSSIER_SCHEMA) {
+			return true;
+		}
+
+		if ($schema === '') {
+			return false;
+		}
+
+		// The schema entity's getters are magic (__call), so they are called, not probed.
+		try {
+			return $this->locator->get(className: self::SCHEMA_MAPPER)->find($schema)->getSlug() === self::DOSSIER_SCHEMA;
+		} catch (Throwable) {
+			return false;
+		}
+
+	}//end isDossier()
+
+	/**
 	 * The record's supplement; empty when it has none.
 	 *
 	 * @param string $uuid The record UUID.
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-mdtosupplement-schema-models-the-attributes-or-lacks-req-ddtmm-002
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-mdtosupplement-schema-models-the-attributes-or-lacks-req-ddtmm-002
 	 */
 	public function supplement(string $uuid): array {
 		return ($this->search(schema: 'mdtoSupplement', filters: ['objectRef' => $uuid])[0] ?? []);
@@ -152,7 +197,7 @@ class MdtoRecordReader {
 	 *
 	 * @return array<int, array<string, mixed>> Each member's `uuid` and `title`.
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
 	 */
 	public function members(array $record): array {
 		$members = [];
@@ -189,7 +234,7 @@ class MdtoRecordReader {
 	 *
 	 * @return MdtoRestrictionSources
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
 	 */
 	public function restrictionSources(string $uuid, array $files): MdtoRestrictionSources {
 		$fileIds  = array_values(array_filter(array_map(static fn (array $file): int => (int) ($file['fileId'] ?? 0), $files)));
@@ -285,7 +330,7 @@ class MdtoRecordReader {
 	 *
 	 * @return array<int, array<string, mixed>> name, format, size, checksum, checksumDate.
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-deterministic-mdto-sidecar-per-document-and-dossier-req-ddtmm-005
 	 */
 	public function files(object $entity): array {
 		$facts = [];
@@ -315,7 +360,7 @@ class MdtoRecordReader {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-mdto-core-attributes-have-a-single-source-of-truth-req-ddtmm-001
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-mdto-core-attributes-have-a-single-source-of-truth-req-ddtmm-001
 	 */
 	public function organisationId(): string {
 		return $this->appConfig->getValueString('openregister', 'organisation_identifier', '');
@@ -327,7 +372,7 @@ class MdtoRecordReader {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-mdto-core-attributes-have-a-single-source-of-truth-req-ddtmm-001
+	 * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-mdto-core-attributes-have-a-single-source-of-truth-req-ddtmm-001
 	 */
 	public function organisationName(): string {
 		return $this->appConfig->getValueString('openregister', 'organisation_name', 'OpenRegister');

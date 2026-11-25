@@ -6702,7 +6702,7 @@
 				"owner": "ConductionNL/openregister",
 				"evidence": "Same source: OpenRegister ships an EdepotTransferService (SIPs over configurable transports/profiles) and MdtoXmlGenerator, but per the proposal these are not populated from filinq's records ('no transfer state'), and the tmlo-mdto-metadata + archiefwet-retention-engine changes that would connect filinq documents to it are both unbuilt (0/15 tasks each).",
 				"change": "openspec/changes/archiefwet-retention-engine",
-				"requirement": "openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata :: e-Depot handoff rides OpenRegister's transfer stack (REQ-DDTMM-006)"
+				"requirement": "openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata :: e-Depot handoff rides OpenRegister's transfer stack (REQ-DDTMM-006)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",
@@ -6936,9 +6936,9 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/DossierManagementService.php:301-324 transition() only checks that the target status is a legal lifecycle transition (TRANSITIONS map), never dossier metadata completeness. openspec/changes/tmlo-mdto-metadata/proposal.md:39,79,90 names 'completeness validation before overbrenging' and an 'MdtoMappingService (prefill + completeness + sidecar assembly)' as still-to-build (0 of 15 tasks done).",
-				"change": "openspec/changes/tmlo-mdto-metadata",
-				"requirement": "openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata :: Completeness validation gates overbrenging (REQ-DDTMM-004)"
+				"evidence": "lib/Service/DossierManagementService.php:301-324 transition() only checks that the target status is a legal lifecycle transition (TRANSITIONS map), never dossier metadata completeness. openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/proposal.md:39,79,90 names 'completeness validation before overbrenging' and an 'MdtoMappingService (prefill + completeness + sidecar assembly)' as still-to-build (0 of 15 tasks done).",
+				"change": "openspec/changes/archive/2026-11-25-tmlo-mdto-metadata",
+				"requirement": "openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata :: Completeness validation gates overbrenging (REQ-DDTMM-004)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -9321,8 +9321,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/openregister",
-				"evidence": "openspec/changes/tmlo-mdto-metadata/proposal.md (0 of 15 tasks done) states OpenRegister already ships a real TMLO/MDTO stack (ObjectEntity.tmlo, TmloService, MDTO XML export) but 'Neither emits the full MDTO informatieobject attribute set' and filinq has not wired its document/dossier objects to it: grep for tmlo/Tmlo/TMLO in filinq's lib/ and src/ (excluding the phrase 'MDTO/archival' in comments) found zero hits. The existing lib/Service/Pdfa3MetadataAssembler.php:70-82 'MDTO XMP sidecar' is just a catch-all for arbitrary caller-supplied metadata keys (title/author/creator/subject/keywords), not the standardised MDTO field set.",
-				"change": "openspec/changes/tmlo-mdto-metadata"
+				"evidence": "openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/proposal.md (0 of 15 tasks done) states OpenRegister already ships a real TMLO/MDTO stack (ObjectEntity.tmlo, TmloService, MDTO XML export) but 'Neither emits the full MDTO informatieobject attribute set' and filinq has not wired its document/dossier objects to it: grep for tmlo/Tmlo/TMLO in filinq's lib/ and src/ (excluding the phrase 'MDTO/archival' in comments) found zero hits. The existing lib/Service/Pdfa3MetadataAssembler.php:70-82 'MDTO XMP sidecar' is just a catch-all for arbitrary caller-supplied metadata keys (title/author/creator/subject/keywords), not the standardised MDTO field set.",
+				"change": "openspec/changes/archive/2026-11-25-tmlo-mdto-metadata"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",
