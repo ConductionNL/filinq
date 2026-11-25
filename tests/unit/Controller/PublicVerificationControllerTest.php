@@ -238,7 +238,7 @@ class PublicVerificationControllerTest extends TestCase {
 			$routes
 		);
 		$this->assertContains(
-			['name' => 'publicVerification#page', 'url' => 'verify/{token}', 'verb' => 'GET'],
+			['name' => 'publicVerification#page', 'url' => 'verify/{token}', 'verb' => 'GET', 'requirements' => ['token' => '[0-9a-f]{32}']],
 			$routes
 		);
 		$names = array_column($routes, 'name');

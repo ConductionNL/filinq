@@ -22,10 +22,12 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\SignatureVerificationLinkService;
 use OCA\Filinq\Service\SigningVerificationService;
+use OCA\Filinq\Service\SystemContextSeam;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -329,4 +331,51 @@ class SignatureVerificationLinkServiceTest extends TestCase {
 		$this->service->verdictFor(token: str_repeat('ab', 16));
 
 	}//end testVerdictForAnUnreadableStoreThrows()
+
+	/**
+	 * A visitor has no organisation, so the token lookup runs as the system
+	 * through the logged seam, with its reason written at the call site.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
+	 */
+	public function testTheTokenLookupRunsThroughTheSeam(): void {
+		$seam = new class($this->createMock(originalClassName: LoggerInterface::class)) extends SystemContextSeam {
+			/**
+			 * The reasons the seam was run with.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $reasons = [];
+
+			/**
+			 * Record the reason and run the operation.
+			 *
+			 * @param mixed    $objectService The object service.
+			 * @param string   $reason        Why.
+			 * @param callable $operation     The operation.
+			 *
+			 * @return mixed
+			 */
+			public function run(mixed $objectService, string $reason, callable $operation): mixed {
+				$this->reasons[] = $reason;
+				return $operation();
+			}
+		};
+		$resolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
+		$resolver->method('resolve')->willReturn($this->objects);
+		$service = new SignatureVerificationLinkService(objectResolver: $resolver, verifier: $this->verifier, seam: $seam);
+		$token = str_repeat('ab', 16);
+		$this->objects->method('searchObjectsBySlug')->willReturn([['token' => $token, 'fileName' => 'mine.pdf']]);
+
+		$record = $service->findByToken(token: $token);
+
+		$this->assertSame(expected: 'mine.pdf', actual: $record['fileName']);
+		$this->assertSame(
+			expected: ["a public verification link names its record by token, whatever the visitor's organisation"],
+			actual: $seam->reasons
+		);
+
+	}//end testTheTokenLookupRunsThroughTheSeam()
 }//end class

@@ -86,12 +86,14 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
 	 * @param SigningVerificationService    $verifier       Checks the signatures in the signed bytes.
+	 * @param SystemContextSeam|null        $seam           Reads the record across organisations for a visitor with no account.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly SigningVerificationService $verifier,
+		private readonly ?SystemContextSeam $seam=null,
 	) {
 
 	}//end __construct()
@@ -277,12 +279,26 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 * @throws RuntimeException When the records cannot be read.
 	 */
 	private function rowsFor(string $token): array {
+		$search = fn (): mixed => $this->objectResolver->slugSearch(_rbac: false)->search(
+			register: self::REGISTER,
+			schema: self::SCHEMA,
+			filters: ['token' => $token]
+		);
+
 		try {
-			$rows = $this->objectResolver->slugSearch(_rbac: false)->search(
-				register: self::REGISTER,
-				schema: self::SCHEMA,
-				filters: ['token' => $token]
-			);
+			// The visitor has no account and so no organisation, and OpenRegister's
+			// organisation filter would hide every record from them. The token is
+			// the capability (REQ-DDSVP-001), so this one exact-token lookup runs as
+			// the system, through the logged seam.
+			if ($this->seam !== null) {
+				$rows = $this->seam->run(
+					objectService: $this->objectResolver->resolve(),
+					reason: 'a public verification link names its record by token, whatever the visitor\'s organisation',
+					operation: $search
+				);
+			} else {
+				$rows = $search();
+			}
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'Could not read the signature verification records: ' . $e->getMessage(), code: 0, previous: $e);
 		}
