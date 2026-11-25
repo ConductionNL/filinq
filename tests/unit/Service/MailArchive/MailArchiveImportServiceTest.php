@@ -55,7 +55,7 @@ use ZipArchive;
 /**
  * Start, map, drain in units from a cursor, file or receive, and never twice.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  */
 class MailArchiveImportServiceTest extends TestCase {
 
@@ -599,6 +599,20 @@ class MailArchiveImportServiceTest extends TestCase {
 		$this->assertNull($this->service()->runUnit(), 'nothing is importing any more');
 
 	}//end testOneRunTakesOneUnitAndTheNextResumesAtTheCursor()
+
+	/**
+	 * The next unit names the user who started its import, so the job can run it with their rights.
+	 *
+	 * @return void
+	 */
+	public function testTheNextUnitNamesWhoStartedTheImport(): void {
+		$this->useMbox();
+		$this->assertSame(expected: '', actual: $this->service()->nextRequester());
+
+		$this->startAndMap(service: $this->service(), folderMap: []);
+
+		$this->assertSame(expected: self::USER, actual: $this->service()->nextRequester());
+	}//end testTheNextUnitNamesWhoStartedTheImport()
 
 	/**
 	 * Mapped folders are filed to their dossier, the rest go to the inbox as mail, a .msg fails visibly.

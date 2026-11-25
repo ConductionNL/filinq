@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,7 +27,7 @@ namespace OCA\Filinq\Service\MailArchive;
 /**
  * Probes and runs `readpst` on the server. No message leaves the server.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-the-container-format-is-detected-and-split-on-the-server-req-mai-002
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-the-container-format-is-detected-and-split-on-the-server-req-mai-002
  */
 class ReadpstCommand {
 
@@ -36,7 +36,7 @@ class ReadpstCommand {
 	 *
 	 * @return bool True when the binary answers its version flag.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#2-1
 	 */
 	public function isAvailable(): bool {
 		if (function_exists('exec') === false) {
@@ -59,7 +59,7 @@ class ReadpstCommand {
 	 *
 	 * @return bool True when readpst finished without an error.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#2-1
 	 */
 	public function convert(string $pstPath, string $outputDir): bool {
 		$output = [];

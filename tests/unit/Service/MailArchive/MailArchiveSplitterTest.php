@@ -31,7 +31,7 @@ use ZipArchive;
 /**
  * MBOX, ZIP and a converted PST split into messages, in resumable units.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#2-1
  */
 class MailArchiveSplitterTest extends TestCase {
 
@@ -229,7 +229,7 @@ class MailArchiveSplitterTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-2
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#2-2
 	 */
 	public function testFoldersAreListedWithTheirMessageCounts(): void {
 		$this->assertSame(

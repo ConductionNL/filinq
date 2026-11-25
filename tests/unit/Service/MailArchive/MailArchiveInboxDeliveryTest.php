@@ -30,7 +30,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * An inbox-bound message arrives as mail under its source reference, once.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-2
  */
 class MailArchiveInboxDeliveryTest extends TestCase {
 

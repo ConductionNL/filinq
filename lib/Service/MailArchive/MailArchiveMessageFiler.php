@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -40,7 +40,7 @@ use Throwable;
 /**
  * One archive message to its dossier or to the intake inbox.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-mapped-folders-go-to-dossiers-the-rest-to-the-intake-inbox-req-mai-003
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-mapped-folders-go-to-dossiers-the-rest-to-the-intake-inbox-req-mai-003
  */
 class MailArchiveMessageFiler {
 
@@ -90,7 +90,7 @@ class MailArchiveMessageFiler {
 	 *
 	 * @return array{outcome: string, failure?: array{messageId: string, archiveFolder: string, name: string, reason: string}} What happened.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-2
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-2
 	 */
 	public function file(File $archive, array $message, string $dossier): array {
 		$failure = ['messageId' => '', 'archiveFolder' => (string) ($message['folder'] ?? ''), 'name' => (string) ($message['name'] ?? '')];

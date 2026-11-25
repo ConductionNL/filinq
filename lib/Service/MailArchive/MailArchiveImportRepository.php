@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 /**
  * Mail archive imports in OpenRegister.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-an-archivist-starts-an-import-from-a-file-in-nextcloud-req-mai-001
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-an-archivist-starts-an-import-from-a-file-in-nextcloud-req-mai-001
  */
 class MailArchiveImportRepository {
 
@@ -68,7 +68,7 @@ class MailArchiveImportRepository {
 	 *
 	 * @return array<string, mixed> The stored import with its uuid.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function save(array $record, ?string $uuid = null): array {
 		unset($record['uuid']);
@@ -98,7 +98,7 @@ class MailArchiveImportRepository {
 	 *
 	 * @return array<string, mixed>|null The import, or null.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function find(string $uuid): ?array {
 		$row = $this->objectResolver->resolve()->find(
@@ -127,7 +127,7 @@ class MailArchiveImportRepository {
 	 *
 	 * @return list<array<string, mixed>> The imports.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function search(array $filters): array {
 		$rows = $this->objectResolver->slugSearch(_rbac: false, _multitenancy: false)->search(
@@ -149,7 +149,7 @@ class MailArchiveImportRepository {
 	 *
 	 * @return array<string, mixed>|null The import, or null when none is importing.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function oldestImporting(): ?array {
 		$rows = $this->search(filters: ['status' => MailArchiveImportService::STATUS_IMPORTING]);

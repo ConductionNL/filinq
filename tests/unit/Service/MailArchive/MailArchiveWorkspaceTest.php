@@ -35,7 +35,7 @@ use RuntimeException;
 /**
  * The archive with the user's access, its local path, a kept PST conversion and the messages folder.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  */
 class MailArchiveWorkspaceTest extends TestCase {
 

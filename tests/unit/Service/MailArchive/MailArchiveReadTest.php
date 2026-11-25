@@ -26,7 +26,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * A read starts at the beginning with the bytes, and each change is a copy.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#2-1
  */
 class MailArchiveReadTest extends TestCase {
 

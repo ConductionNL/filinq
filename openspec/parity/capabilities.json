@@ -1742,8 +1742,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/intake-mailbox-archive-import on 2026-09-27. Before: openspec/changes/email-ingestion/design.md Non-Goals: 'No native .msg (Outlook CFBF) parsing and no PST/MBOX bulk-archive splitter in v1 (the cluster's bulk import PST/MBOX story needs a container-format decision first - deferred).' email-ingestion itself is entirely unbuilt.",
-				"change": "openspec/changes/intake-mailbox-archive-import",
-				"requirement": "openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import :: Mapped folders go to dossiers, the rest to the intake inbox (REQ-MAI-003)"
+				"change": "openspec/changes/archive/2026-11-25-intake-mailbox-archive-import",
+				"requirement": "openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import :: Mapped folders go to dossiers, the rest to the intake inbox (REQ-MAI-003)"
 			},
 			"reachedOn": "nothing reaches it (explicit non-goal, unbuilt)",
 			"provider": "filinq",
