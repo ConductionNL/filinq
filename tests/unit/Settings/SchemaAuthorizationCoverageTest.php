@@ -138,7 +138,7 @@ class SchemaAuthorizationCoverageTest extends TestCase {
 		'lib/Service/SubjectErasure/SubjectErasureStore.php' => 3,
 		'lib/Service/Vendor/VendorRenderOutcome.php' => 1,
 		'lib/Service/Vendor/VendorRenderSources.php' => 1,
-		'lib/Service/Waarmerk/WaarmerkStore.php' => 2,
+		'lib/Service/Waarmerk/WaarmerkStore.php' => 3,
 	];
 
 	/**

@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -30,7 +30,7 @@ use Throwable;
  * D3). Classes are named by string: openregister is an optional peer, and
  * without it nothing is reached and the caller says so.
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
  */
 class SenderReach {
 
@@ -83,7 +83,7 @@ class SenderReach {
 	 *
 	 * @return array<int, array<string, mixed>> One outcome per party (party, address, outcome); empty when none is linked.
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
 	 */
 	public function notifySenderParties(string $objectUuid, string $subject, string $body): array {
 		if (class_exists(self::PARTY_MESSAGE) === false) {
@@ -108,7 +108,7 @@ class SenderReach {
 	 *
 	 * @return string The send unit's outcome, or OUTCOME_UNAVAILABLE.
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
 	 */
 	public function mailAddress(string $address, string $subject, string $body): string {
 		if (class_exists(self::MAIL_ADDRESSEE) === false || class_exists(self::MAIL_CONTENT) === false) {

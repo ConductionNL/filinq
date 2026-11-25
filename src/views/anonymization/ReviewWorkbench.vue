@@ -606,6 +606,10 @@ export default {
 	flex-direction: column;
 	gap: 8px;
 	min-height: 0;
+	/* A grid item keeps its content's width unless told otherwise: without
+	   this the findings table widened the column past the page and slid under
+	   the document panes. Now it scrolls inside its own pane. */
+	min-width: 0;
 	overflow: auto;
 }
 

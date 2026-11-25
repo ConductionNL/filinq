@@ -98,8 +98,8 @@ class ReportOrganisationLabel {
 
 		foreach ((array)$organisations as $organisation) {
 			if (is_object($organisation) === false
-				|| method_exists($organisation, 'getUuid') === false
-				|| method_exists($organisation, 'getName') === false
+				|| is_callable([$organisation, 'getUuid']) === false
+				|| is_callable([$organisation, 'getName']) === false
 			) {
 				continue;
 			}
