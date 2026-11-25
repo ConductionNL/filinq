@@ -86,7 +86,7 @@ describe('partitionFiles', () => {
 })
 
 describe('dossierPlan (REQ-DDDMU-005)', () => {
-	// @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
+	// @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
 	it('asks no dossier name for a single document, even if one was typed', () => {
 		const plan = dossierPlan([file('a.pdf')], 'Havenkwartier')
 		expect(plan.asksDossierName).toBe(false)

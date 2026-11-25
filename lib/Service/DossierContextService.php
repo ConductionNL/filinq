@@ -22,7 +22,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+ * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -41,7 +41,7 @@ use Throwable;
 /**
  * Assembles the live context a dossier row or detail is shown with.
  *
- * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+ * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
  */
 class DossierContextService {
 
@@ -83,7 +83,7 @@ class DossierContextService {
 	 *
 	 * @return array{documents: array<int, array<string, mixed>>, missing: int} Members and the missing count.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function members(object $object, array $payload): array {
 		$documents = $this->folderRows(object: $object, payload: $payload);
@@ -181,7 +181,7 @@ class DossierContextService {
 	 *
 	 * @return array<string, mixed> The row.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function documentRow(Node $node, bool $referenced): array {
 		return [
@@ -212,7 +212,7 @@ class DossierContextService {
 	 *
 	 * @return array<int, array{slug: string, label: string, known: bool}> The resolved bases.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function resolveBases(array $payload): array {
 		$slugs = ($payload['bases'] ?? []);
@@ -264,7 +264,7 @@ class DossierContextService {
 	 *
 	 * @return array<string, string> The labels, empty when OpenRegister is unavailable.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function baseLabels(): array {
 		if ($this->baseLabels !== null) {
@@ -345,7 +345,7 @@ class DossierContextService {
 	 *
 	 * @return array<int, array<string, mixed>> The batch runs, newest first.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function batchRuns(object $object, array $payload): array {
 		$objectService = $this->repository->objectService();
@@ -424,7 +424,7 @@ class DossierContextService {
 	 *
 	 * @return array{installed: bool, state: string} The publication state.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function publication(): array {
 		// The woo-publicatie-pipeline has not shipped. Reporting `installed:

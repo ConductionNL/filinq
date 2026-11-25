@@ -42,7 +42,7 @@ interface DossierObjectReaderInterface {
 	 *
 	 * @return array<string, mixed> The payload.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function payloadOf(object $object): array;
 
@@ -54,7 +54,7 @@ interface DossierObjectReaderInterface {
 	 *
 	 * @return array<int, object> The objects.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function findAllOf(object $objectService, string $schema): array;
 }//end interface

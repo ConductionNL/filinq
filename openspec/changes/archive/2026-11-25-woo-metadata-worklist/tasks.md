@@ -20,7 +20,7 @@
 
 ## 3. Quality
 
-- [ ] 3.1 Dutch and English strings (ADR-005), `@spec` tags, `docs/features/` with screenshots (ADR-010). Verify: `npm run check:l10n`, `npm run lint`, `composer check:strict`.
+- [x] 3.1 Dutch and English strings (ADR-005), `@spec` tags, `docs/features/` with screenshots (ADR-010). Verify: `npm run check:l10n`, `npm run lint`, `composer check:strict`. — 25 Nov 2026, live sandbox (Nextcloud 34, MariaDB, OpenRegister main, seeded publications): screenshots of the worklist with Metadata incomplete on and of Set metadata in `docs/features/woo-metadata-worklist.md`. The live run found the Missing metadata column printing field keys (`wooCategory`, `publicatiedatum`) instead of names; fixed in the same PR with one new string, Publication date / Publicatiedatum. `npm run test:l10n` and `npm run lint` (0 errors) pass; `composer check:strict` reports only findings inherited from development.
 - [x] 3.2 PHPUnit at 75% on new code inside the container (ADR-009). Verify: coverage report for the calculation backend and `updateMetadata()`.
   - Coverage measured 2026-11-20 with pcov over the full unit suite (8398 tests, 0 failures), statements of the lib files carrying this change's `@spec` tag: 471 of 499, 94.4% over 5 files; `DiwooMissingFields` 8/8, `PublicationPipelineService::updateMetadata()` 11/11 and `updateMetadataMany()` 10/10. The pcov run outside the container uses the same unit suite and stubs.
   - Built (3.1): the new strings are in en and nl (`npm run test:l10n` and `check:l10n-js` pass), every new method carries its `@spec` tag, and `docs/features/woo-metadata-worklist.md` describes the worklist. Left: the screenshots, which need a live instance.

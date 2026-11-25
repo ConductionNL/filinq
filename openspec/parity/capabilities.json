@@ -6876,8 +6876,8 @@
 				"evidence": "src/views/dossier/DossierDetail.vue:61-73 lifecycle transition buttons call dossierStore.transitionDossier() -> PUT /api/dossiers/{id}/status -> lib/Service/DossierManagementService.php:301 transition(), which enforces a declared state machine (open/processed/published/closed). Documents are linked via POST /api/dossiers/{id}/documents.",
 				"spec": "openspec/specs/dossier-register",
 				"requirement": [
-					"openspec/changes/dossier-management-ui/specs/dossier-management-ui :: Add and remove documents in a dossier (REQ-DDDMU-004)",
-					"openspec/changes/dossier-management-ui/specs/dossier-management-ui :: Lifecycle rendering and transitions (REQ-DDDMU-007)"
+					"openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui :: Add and remove documents in a dossier (REQ-DDDMU-004)",
+					"openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui :: Lifecycle rendering and transitions (REQ-DDDMU-007)"
 				]
 			},
 			"reachedOn": "/dossiers and /dossiers/:id (DossierIndex.vue, DossierDetail.vue)",
@@ -6909,7 +6909,7 @@
 			"built": {
 				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No document-ordering or printable-index capability found in lib/Controller/DossierManagementController.php, lib/Service/DossierManagementService.php, or src/views/dossier/DossierDetail.vue. grep for 'printable', 'print.*index', 'inhoudsopgave' across lib/ and src/ found no matches. Not covered by openspec/changes/dossier-management-ui's remaining unchecked tasks (create dialog, auto-dossier modal, docs) either."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No document-ordering or printable-index capability found in lib/Controller/DossierManagementController.php, lib/Service/DossierManagementService.php, or src/views/dossier/DossierDetail.vue. grep for 'printable', 'print.*index', 'inhoudsopgave' across lib/ and src/ found no matches. Not covered by openspec/changes/archive/2026-11-25-dossier-management-ui's remaining unchecked tasks (create dialog, auto-dossier modal, docs) either."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -8345,10 +8345,10 @@
 				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
 				"readOn": "2026-09-29",
 				"requirement": [
-					"openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist :: Every publication record says which DiWoo fields it misses (REQ-WMW-001)",
-					"openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist :: A coordinator fills one value on a selection (REQ-WMW-002)"
+					"openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist :: Every publication record says which DiWoo fields it misses (REQ-WMW-001)",
+					"openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist :: A coordinator fills one value on a selection (REQ-WMW-002)"
 				],
-				"plan": "openspec/changes/woo-metadata-worklist"
+				"plan": "openspec/changes/archive/2026-11-25-woo-metadata-worklist"
 			},
 			"reachedOn": "Publications menu entry (/publications), Missing metadata column",
 			"provider": "filinq",
@@ -8749,8 +8749,8 @@
 				"state": "built",
 				"owner": "nextcloud/server",
 				"evidence": "filinq sends a removed document to the Nextcloud trash: src/views/dossier/DossierDetail.vue:390 tells the user it 'will be moved to the trash, where you can still restore it' -> lib/Controller/DossierManagementController.php:201 removeDocument() -> lib/Service/DossierManagementService.php:401 -> lib/Service/DossierFileService.php:324 $node->delete(), which routes through files_trashbin. Restore and the automatic expiry are Nextcloud Files' trashbin, not filinq code.",
-				"change": "openspec/changes/dossier-management-ui",
-				"requirement": "openspec/changes/dossier-management-ui/specs/dossier-management-ui :: Add and remove documents in a dossier (REQ-DDDMU-004)"
+				"change": "openspec/changes/archive/2026-11-25-dossier-management-ui",
+				"requirement": "openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui :: Add and remove documents in a dossier (REQ-DDDMU-004)"
 			},
 			"reachedOn": "/dossiers/:id (DossierDetail.vue) remove action; restore in Nextcloud Files, Deleted files",
 			"provider": "nextcloud",
