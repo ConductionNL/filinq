@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service\Support;
 use OCA\Filinq\Service\SignedArtifactProducer;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningConclusionEmitter;
+use OCA\Filinq\Service\Signing\SigningMail;
 
 /**
  * What a signing act leaves behind.
@@ -47,15 +48,18 @@ final class SigningOutputs {
 	 * @param SigningAuditService      $auditService     Writes the signing audit trail
 	 * @param SignedArtifactProducer   $artifactProducer Produces the signed document and the initiator's source document
 	 * @param SigningConclusionEmitter $emitter          Emits the conclusion event for a delegated request
+	 * @param SigningMail|null         $mail             Mails a signer whose turn it is and the initiator on a decline; null mails nobody
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/document-signing/spec.md
+	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-1-signerinitiator-notifications-via-the-email-leaf-m
 	 */
 	public function __construct(
 		public readonly SigningAuditService $auditService,
 		public readonly SignedArtifactProducer $artifactProducer,
 		public readonly SigningConclusionEmitter $emitter,
+		public readonly ?SigningMail $mail = null,
 	) {
 
 	}//end __construct()
