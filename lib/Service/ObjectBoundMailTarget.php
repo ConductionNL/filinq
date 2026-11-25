@@ -44,24 +44,4 @@ final class ObjectBoundMailTarget {
 		public readonly string $schema,
 	) {
 	}//end __construct()
-
-	/**
-	 * The target of a stored record: its id (or uuid) in the given register and schema.
-	 *
-	 * @param array<string, mixed> $record   The stored record.
-	 * @param string               $register The register, by id or slug.
-	 * @param string               $schema   The schema, by id or slug.
-	 *
-	 * @return self The target.
-	 *
-	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-2-consent-notification-via-the-email-leaf-drive-notificationstatus-m
-	 */
-	public static function ofRecord(array $record, string $register, string $schema): self {
-		$uuid = ($record['uuid'] ?? ($record['id'] ?? ''));
-		if (is_string($uuid) === false) {
-			$uuid = '';
-		}
-
-		return new self(uuid: $uuid, register: $register, schema: $schema);
-	}//end ofRecord()
 }//end class

@@ -273,11 +273,7 @@ class SigningService implements SigningServiceInterface {
 		$this->guards->validator->validateSigners(signers: $signers);
 		// A request of accept-only recipients signs nothing (signing-accept-only-recipient D1).
 		RecipientRole::assertSomeoneSigns(entries: $signers);
-		$prepared = $this->guards->consentGuard->prepareSigners(
-			signers: $signers,
-			age: $request['guardianConsentAge'],
-			now: new DateTimeImmutable()
-		);
+		$prepared = $this->guards->consentGuard->prepareSigners(signers: $signers, age: $request['guardianConsentAge'], now: new DateTimeImmutable());
 
 		$request = $this->withInitiatorDocument(request: $request);
 		// Cross-app delegated-signing contract (filinq-signing-events): when a
@@ -1120,12 +1116,7 @@ class SigningService implements SigningServiceInterface {
 		// Cross-app delegated-signing contract: a declined request is terminal —
 		// emit SigningConcludedEvent (status=declined) for a delegated request.
 		$this->outputs->emitter->emitIfDelegated(request: $request, status: 'declined');
-		$this->outputs->mail?->declined(
-			request: $request,
-			declinedBy: SigningTurn::nameOf(signerId: $actorDisplayName, signer: $signer),
-			reason: $reason,
-			target: new ObjectBoundMailTarget(uuid: $requestId, register: $register, schema: $schema)
-		);
+		$this->mailDeclined(request: $request + ['id' => $requestId], signer: $signer, actorName: $actorDisplayName, reason: $reason);
 
 		$metadata = $this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor);
 		$metadata['reason'] = $reason;
@@ -1457,6 +1448,34 @@ class SigningService implements SigningServiceInterface {
 			return;
 		}
 	}//end mailTurn()
+
+	/**
+	 * Mail the initiator that a signer declined, bound to the request.
+	 *
+	 * @param array<string, mixed> $request   The signing request, with its id.
+	 * @param array<string, mixed> $signer    The signer record that declined.
+	 * @param string               $actorName The acting user's name, when the record names nobody.
+	 * @param string               $reason    The reason given.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SigningTurn is the stateless rule for a signer's name.
+	 *
+	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-1-signerinitiator-notifications-via-the-email-leaf-m
+	 */
+	private function mailDeclined(array $request, array $signer, string $actorName, string $reason): void {
+		if ($this->outputs->mail === null) {
+			return;
+		}
+
+		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
+		$this->outputs->mail->declined(
+			request: $request,
+			declinedBy: SigningTurn::nameOf(signerId: $actorName, signer: $signer),
+			reason: $reason,
+			target: new ObjectBoundMailTarget(uuid: (string)$request['id'], register: $register, schema: $schema)
+		);
+	}//end mailDeclined()
 
 	/**
 	 * The signer records listed before one signer on a request, plus that signer, by id.

@@ -27,7 +27,6 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use OCP\IAppConfig;
 use OCP\IL10N;
-use OCP\Mail\IMailer;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
@@ -51,25 +50,22 @@ class ConsentRequestSender {
 	/**
 	 * Constructor.
 	 *
-	 * @param IMailer                  $mailer          Sends the email.
+	 * @param ObjectBoundMail          $mail            Sends the email bound to the consent object, so OpenRegister links it there.
 	 * @param CorrespondenceService    $correspondence  Generates the letter.
 	 * @param ObjectionDeadlineChecker $deadlines       The objection period.
 	 * @param IAppConfig               $config          The consent letter template setting.
 	 * @param IL10N                    $l10n            Words the email.
 	 * @param LoggerInterface          $logger          Logger.
-	 * @param ObjectBoundMail|null     $boundMail       Sends the email bound to the consent object, so OpenRegister links it there;
-	 *                                                  null, or an OpenRegister without it, sends through the mailer unlinked.
 	 *
 	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-2-consent-notification-via-the-email-leaf-drive-notificationstatus-m
 	 */
 	public function __construct(
-		private readonly IMailer $mailer,
+		private readonly ObjectBoundMail $mail,
 		private readonly CorrespondenceService $correspondence,
 		private readonly ObjectionDeadlineChecker $deadlines,
 		private readonly IAppConfig $config,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
-		private readonly ?ObjectBoundMail $boundMail = null,
 	) {
 	}//end __construct()
 
@@ -116,6 +112,7 @@ class ConsentRequestSender {
 	 * The mail goes out through OpenRegister bound to the consent object, so the
 	 * sent mail is linked to that object and its outcome is the record's status.
 	 * Without OpenRegister's mail sender it goes through Nextcloud's mailer, unlinked.
+	 * A mailer that refuses it throws, and send() keeps the record open with the reason.
 	 *
 	 * @param string               $email   The third party's email address.
 	 * @param array<string, mixed> $record  The stored consent record.
@@ -132,29 +129,19 @@ class ConsentRequestSender {
 			[(string)($context['documentId'] ?? ''), (string)($context['entityText'] ?? ''), $this->deadlines->getObjectionPeriodDays()]
 		);
 
-		$outcome = ObjectBoundMail::OUTCOME_UNAVAILABLE;
-		if ($this->boundMail !== null) {
-			$outcome = $this->boundMail->toAddress(
-				address: $email,
-				displayName: '',
+		$outcome = $this->mail->toAddress(
+			address: $email,
+			displayName: '',
+			message: new ObjectBoundMessage(
 				subject: $subject,
 				body: $body,
-				object: ObjectBoundMailTarget::ofRecord(
-					record: $record,
+				object: new ObjectBoundMailTarget(
+					uuid: (string)($record['uuid'] ?? ($record['id'] ?? '')),
 					register: (string)($context['register'] ?? ''),
 					schema: (string)($context['schema'] ?? '')
 				)
-			);
-		}
-
-		if ($outcome === ObjectBoundMail::OUTCOME_UNAVAILABLE) {
-			$message = $this->mailer->createMessage();
-			$message->setTo([$email]);
-			$message->setSubject($subject);
-			$message->setPlainBody($body);
-			$this->mailer->send($message);
-			$outcome = ObjectBoundMail::OUTCOME_DISPATCHED;
-		}
+			)
+		);
 
 		if ($outcome !== ObjectBoundMail::OUTCOME_DISPATCHED) {
 			return $this->unsent(reason: $this->undeliveredReason(outcome: $outcome));

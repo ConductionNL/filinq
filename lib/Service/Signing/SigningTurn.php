@@ -117,34 +117,49 @@ final class SigningTurn {
 		}
 
 		$positions = self::positions(request: $request, signers: $signers);
-		$first     = null;
+		$first     = self::firstOpenPosition(positions: $positions, signers: $signers);
+		$floor     = ($positions[(string)$after] ?? null);
+
+		$due = [];
+		foreach ($positions as $signerId => $position) {
+			$atTurn = $parallel === true || ($position === $first && ($floor === null || $position > $floor));
+			if ($atTurn === true && self::waits(signer: ($signers[$signerId] ?? [])) === true) {
+				$due[] = (string)$signerId;
+			}
+		}
+
+		return $due;
+	}//end due()
+
+	/**
+	 * The lowest position a signer who is not done yet holds.
+	 *
+	 * @param array<string, int>                  $positions The position per signer id.
+	 * @param array<string, array<string, mixed>> $signers   The signer records, by id.
+	 *
+	 * @return integer|null The position, or null when everyone is done.
+	 */
+	private static function firstOpenPosition(array $positions, array $signers): ?int {
+		$first = null;
 		foreach ($positions as $signerId => $position) {
 			if (RecipientRole::isDone(recipient: ($signers[$signerId] ?? [])) === false && ($first === null || $position < $first)) {
 				$first = $position;
 			}
 		}
 
-		$floor = null;
-		if ($after !== null && isset($positions[$after]) === true) {
-			$floor = $positions[$after];
-		}
+		return $first;
+	}//end firstOpenPosition()
 
-		$due = [];
-		foreach ($positions as $signerId => $position) {
-			$signer = ($signers[$signerId] ?? []);
-			if ((string)($signer['status'] ?? '') !== 'PENDING' || (string)($signer['envelopeRef'] ?? '') !== '') {
-				continue;
-			}
-
-			if ($parallel === false && ($position !== $first || ($floor !== null && $position <= $floor))) {
-				continue;
-			}
-
-			$due[] = (string)$signerId;
-		}
-
-		return $due;
-	}//end due()
+	/**
+	 * Whether a signer waits on this request itself: pending, and not on an envelope.
+	 *
+	 * @param array<string, mixed> $signer The signer record.
+	 *
+	 * @return bool
+	 */
+	private static function waits(array $signer): bool {
+		return (string)($signer['status'] ?? '') === 'PENDING' && (string)($signer['envelopeRef'] ?? '') === '';
+	}//end waits()
 
 	/**
 	 * Each signer's place in the order.

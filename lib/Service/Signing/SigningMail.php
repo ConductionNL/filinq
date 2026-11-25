@@ -26,6 +26,7 @@ namespace OCA\Filinq\Service\Signing;
 
 use OCA\Filinq\Service\ObjectBoundMail;
 use OCA\Filinq\Service\ObjectBoundMailTarget;
+use OCA\Filinq\Service\ObjectBoundMessage;
 use OCP\IL10N;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -82,19 +83,15 @@ class SigningMail {
 		}
 
 		$document = $this->documentOf(request: $request);
-		$subject  = $this->l10n->t('A document is waiting for your signature: %s', [$document]);
+		$message  = new ObjectBoundMessage(
+			subject: $this->l10n->t('A document is waiting for your signature: %s', [$document]),
+			body: $this->l10n->t('It is your turn to act on %1$s. Open the signing request in Filinq to sign or decline it.', [$document]),
+			object: $target
+		);
 		$outcomes = [];
 		foreach (SigningTurn::due(request: $request, signers: $signers, after: $after) as $signerId) {
-			$signer  = $signers[$signerId];
-			$body    = $this->l10n->t(
-				'It is your turn to act on %1$s. Open the signing request in Filinq to sign or decline it.',
-				[$document]
-			);
-			$outcome = $this->deliver(
-				signer: $signer,
-				mail: ['subject' => $subject, 'body' => $body],
-				target: $target
-			);
+			$outcome = $this->deliver(signer: $signers[$signerId], message: $message);
+			$this->logUndelivered(outcome: $outcome, requestId: $target->uuid);
 			$outcomes[] = $signerId . ':' . $outcome;
 		}
 
@@ -128,9 +125,11 @@ class SigningMail {
 		try {
 			$outcome = $this->mail->toUser(
 				uid: $initiator,
-				subject: $this->l10n->t('%1$s declined to sign %2$s', [$declinedBy, $document]),
-				body: $this->l10n->t('%1$s declined to sign %2$s. The reason given: %3$s', [$declinedBy, $document, $reason]),
-				object: $target
+				message: new ObjectBoundMessage(
+					subject: $this->l10n->t('%1$s declined to sign %2$s', [$declinedBy, $document]),
+					body: $this->l10n->t('%1$s declined to sign %2$s. The reason given: %3$s', [$declinedBy, $document, $reason]),
+					object: $target
+				)
 			);
 		} catch (Throwable $e) {
 			$outcome = 'failed';
@@ -144,37 +143,28 @@ class SigningMail {
 	/**
 	 * Mail one signer: at the address on their record, else at their account's.
 	 *
-	 * @param array<string, mixed>  $signer The signer record.
-	 * @param array<string, string> $mail   The subject and body.
-	 * @param ObjectBoundMailTarget $target The signing request.
+	 * @param array<string, mixed> $signer  The signer record.
+	 * @param ObjectBoundMessage   $message The mail.
 	 *
-	 * @return string The outcome; `no-address` when the record names neither.
+	 * @return string The outcome; `no-address` when the record names neither, `failed` when sending threw.
 	 */
-	private function deliver(array $signer, array $mail, ObjectBoundMailTarget $target): string {
+	private function deliver(array $signer, ObjectBoundMessage $message): string {
 		$email  = trim((string)($signer['email'] ?? ''));
 		$userId = trim((string)($signer['userId'] ?? ''));
 
 		try {
 			if ($email !== '') {
-				$outcome = $this->mail->toAddress(
-					address: $email,
-					displayName: trim((string)($signer['displayName'] ?? '')),
-					subject: $mail['subject'],
-					body: $mail['body'],
-					object: $target
-				);
-			} else if ($userId !== '') {
-				$outcome = $this->mail->toUser(uid: $userId, subject: $mail['subject'], body: $mail['body'], object: $target);
-			} else {
-				$outcome = 'no-address';
+				return $this->mail->toAddress(address: $email, displayName: trim((string)($signer['displayName'] ?? '')), message: $message);
+			}
+
+			if ($userId !== '') {
+				return $this->mail->toUser(uid: $userId, message: $message);
 			}
 		} catch (Throwable $e) {
-			$outcome = 'failed';
+			return 'failed';
 		}
 
-		$this->logUndelivered(outcome: $outcome, requestId: $target->uuid);
-
-		return $outcome;
+		return 'no-address';
 	}//end deliver()
 
 	/**

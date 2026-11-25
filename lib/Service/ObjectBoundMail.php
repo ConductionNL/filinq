@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCP\IUserSession;
+use OCP\Mail\IMailer;
 use Psr\Container\ContainerInterface;
 use Throwable;
 
@@ -36,8 +37,9 @@ use Throwable;
  * mail names the object it is sent from, writes an `outbound` e-mail link with
  * the minted `Message-ID` on that object. So filinq keeps no state of its own
  * about the mail: the link is the record. OpenRegister is an optional peer, so
- * its classes are named by string; without them the outcome is
- * {@see OUTCOME_UNAVAILABLE} and the caller decides what to do.
+ * its classes are named by string. Without them a mail to an address still
+ * goes, through Nextcloud's mailer and unlinked; a mail to a user answers
+ * {@see OUTCOME_UNAVAILABLE}, as there is no address to send it to.
  *
  * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-2-consent-notification-via-the-email-leaf-drive-notificationstatus-m
  */
@@ -93,56 +95,63 @@ class ObjectBoundMail {
 	 *
 	 * @param ContainerInterface $container   Resolves OpenRegister's services.
 	 * @param IUserSession       $userSession The acting user, recorded on the link.
+	 * @param IMailer            $mailer      Sends a mail to an address when OpenRegister cannot.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private readonly IUserSession $userSession,
+		private readonly IMailer $mailer,
 	) {
 	}//end __construct()
 
 	/**
 	 * Mail a bare address, bound to an object.
 	 *
-	 * @param string              $address     The recipient address.
-	 * @param string              $displayName The name to address it to, '' for none.
-	 * @param string              $subject     The subject line.
-	 * @param string              $body        The plain-text body.
-	 * @param ObjectBoundMailTarget $object    The object the mail is about.
+	 * @param string             $address     The recipient address.
+	 * @param string             $displayName The name to address it to, '' for none.
+	 * @param ObjectBoundMessage $message     The subject, the body and the object.
 	 *
-	 * @return string OpenRegister's outcome (`dispatched`, `failed`, `no-address`, `kill-switch`), or OUTCOME_UNAVAILABLE.
+	 * @return string OpenRegister's outcome (`dispatched`, `failed`, `no-address`, `kill-switch`);
+	 *                `dispatched` when Nextcloud's mailer sent it without OpenRegister.
+	 *
+	 * @throws \Throwable When Nextcloud's mailer refuses the mail sent without OpenRegister.
 	 *
 	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-2-consent-notification-via-the-email-leaf-drive-notificationstatus-m
 	 */
-	public function toAddress(string $address, string $displayName, string $subject, string $body, ObjectBoundMailTarget $object): string {
+	public function toAddress(string $address, string $displayName, ObjectBoundMessage $message): string {
 		$sender = $this->sender();
 		if ($sender === null) {
-			return self::OUTCOME_UNAVAILABLE;
+			$mail = $this->mailer->createMessage();
+			$mail->setTo([$address]);
+			$mail->setSubject($message->subject);
+			$mail->setPlainBody($message->body);
+			$this->mailer->send($mail);
+
+			return self::OUTCOME_DISPATCHED;
 		}
 
 		$addressee = self::MAIL_ADDRESSEE;
 
-		return (string)$sender->sendMailTo(new $addressee($address, $displayName), $this->content(subject: $subject, body: $body, object: $object));
+		return (string)$sender->sendMailTo(new $addressee($address, $displayName), $this->content(message: $message));
 	}//end toAddress()
 
 	/**
 	 * Mail a Nextcloud user at the address their account holds, bound to an object.
 	 *
-	 * @param string                $uid     The recipient's user id.
-	 * @param string                $subject The subject line.
-	 * @param string                $body    The plain-text body.
-	 * @param ObjectBoundMailTarget $object  The object the mail is about.
+	 * @param string             $uid     The recipient's user id.
+	 * @param ObjectBoundMessage $message The subject, the body and the object.
 	 *
 	 * @return string OpenRegister's outcome, or OUTCOME_UNAVAILABLE.
 	 *
 	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-1-signerinitiator-notifications-via-the-email-leaf-m
 	 */
-	public function toUser(string $uid, string $subject, string $body, ObjectBoundMailTarget $object): string {
+	public function toUser(string $uid, ObjectBoundMessage $message): string {
 		$sender = $this->sender();
 		if ($sender === null) {
 			return self::OUTCOME_UNAVAILABLE;
 		}
 
-		return (string)$sender->sendMail($uid, $this->content(subject: $subject, body: $body, object: $object));
+		return (string)$sender->sendMail($uid, $this->content(message: $message));
 	}//end toUser()
 
 	/**
@@ -174,16 +183,14 @@ class ObjectBoundMail {
 	 * An OpenRegister without the binding, or an object whose register cannot
 	 * be resolved, still sends the mail; it is then not linked.
 	 *
-	 * @param string                $subject The subject line.
-	 * @param string                $body    The body.
-	 * @param ObjectBoundMailTarget $object  The object.
+	 * @param ObjectBoundMessage $message The subject, the body and the object.
 	 *
 	 * @return object The MailContent.
 	 */
-	private function content(string $subject, string $body, ObjectBoundMailTarget $object): object {
+	private function content(ObjectBoundMessage $message): object {
 		$content = self::MAIL_CONTENT;
 
-		return new $content($subject, $body, null, $this->binding(object: $object));
+		return new $content($message->subject, $message->body, null, $this->binding(object: $message->object));
 	}//end content()
 
 	/**
