@@ -27,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use OCA\Filinq\Controller\Support\IntakeHandling;
+use OCA\Filinq\Controller\Support\TranslatableDisplay;
 use OCA\Filinq\Kernel\AppIdentity;
 use OCA\Filinq\Kernel\Contracts\IntakeNotificationReachInterface;
 use OCA\Filinq\Kernel\Contracts\PartySuggestionServiceInterface;
@@ -54,6 +55,13 @@ use Throwable;
 class IntakeController extends Controller {
 	use AnswersIntakeRefusals;
 	use ReadsTypedRequestParameters;
+
+	/**
+	 * The intakeDocument properties the register declares translatable.
+	 *
+	 * @var array<int, string>
+	 */
+	private const TRANSLATABLE = ['subject', 'rejectReason', 'detachReason'];
 
 	/**
 	 * Constructor.
@@ -97,8 +105,10 @@ class IntakeController extends Controller {
 		}
 
 		try {
+			// A translatable subject or reason is a language map in the slug search's rows; show its text.
+			$display = new TranslatableDisplay(acceptLanguage: $this->request->getHeader('Accept-Language'));
 			if ($mode === 'overdue') {
-				$overdue = $this->handling->overdue->list();
+				$overdue = $display->rows(rows: $this->handling->overdue->list(), fields: self::TRANSLATABLE);
 
 				return new JSONResponse(
 					data: ['results' => $overdue, 'total' => count($overdue), 'mode' => 'overdue'],
@@ -106,7 +116,7 @@ class IntakeController extends Controller {
 				);
 			}
 
-			$waiting = $this->handling->intake->listWaiting();
+			$waiting = $display->rows(rows: $this->handling->intake->listWaiting(), fields: self::TRANSLATABLE);
 
 			return new JSONResponse(
 				data: [
