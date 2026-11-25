@@ -108,7 +108,7 @@ export function canWithdraw(record) {
  * the worklist shows the label the Set metadata dialog uses for the same field.
  *
  * @param {string} field The field key.
- * @param {Function} t The translate function, `(app, text) => string`.
+ * @param {(app: string, text: string) => string} t The translate function.
  * @return {string} The label, or the key for a field without one.
  * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
  */
