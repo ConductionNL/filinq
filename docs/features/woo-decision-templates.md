@@ -77,7 +77,7 @@ installed, else from the snapshot filinq ships.
 
 - `tests/unit/Settings/WooTemplateSeedTest.php`: both seeds, and that an edit
   survives an upgrade.
-- `tests/unit/Service/Woo/WooDecisionTemplatesTest.php`: the letter and the
+- `tests/unit/Service/Disclosure/DisclosureDecisionTemplatesTest.php`: the letter and the
   inventory agree, from `tests/fixtures/woo-decision.json`.
 - `tests/unit/EventListener/DocumentGenerationRequestedListenerWooTest.php`:
   the request as dossiq sends it, filed and refused.
