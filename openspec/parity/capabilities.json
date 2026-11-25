@@ -8778,16 +8778,16 @@
 			"area": "records",
 			"name": "File a submitted form on its case as a document, and let a form field point at a document the organisation already holds.",
 			"source": "change-derived",
-			"sourceRef": "openspec/changes/forms-as-documents (closing audit 2026-11-12, decision 395)",
-			"filinq": "no",
+			"sourceRef": "openspec/changes/archive/2026-11-24-forms-as-documents (closing audit 2026-11-12, decision 395)",
+			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Not built: forms-as-documents task 0.1 (which surface owns forms and the document-reference field type) is open; nothing below it has started.",
-				"plan": "openspec/changes/forms-as-documents",
-				"requirement": "openspec/changes/forms-as-documents/specs/document-creatie-sjablonen :: A file is a value a field can hold, and a form becomes a document (REQ-DFT-05)"
+				"evidence": "Decided 2026-11-24: the surface that defines a form owns the document-reference field type; filinq answers POST api/forms/document-reference (the reference and title when the caller may read the record, 404 otherwise, the file never copied) and POST api/forms/submissions (renders the template from the values as submitted and files the document in the record's folder through OpenRegister's FileService). FormDocumentFiling + FormDocumentController; tests FormDocumentFilingTest, FormDocumentControllerTest. Partial: no form surface calls it yet.",
+				"plan": "openspec/changes/archive/2026-11-24-forms-as-documents",
+				"requirement": "openspec/changes/archive/2026-11-24-forms-as-documents/specs/document-creatie-sjablonen :: A file is a value a field can hold, and a form becomes a document (REQ-DFT-05)"
 			},
-			"reachedOn": "nothing reaches it yet",
+			"reachedOn": "api/forms/document-reference and api/forms/submissions; no form surface calls them yet",
 			"provider": "filinq",
 			"screen": {
 				"canvas": "design-system",

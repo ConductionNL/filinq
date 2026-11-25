@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/extraction-employee-document/specs/employee-document-extraction/spec.md#REQ-EDE-001
+ * @spec openspec/changes/archive/2026-11-24-extraction-employee-document/specs/employee-document-extraction/spec.md#REQ-EDE-001
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use DateTimeImmutable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/extraction-employee-document/specs/employee-document-extraction/spec.md#REQ-EDE-001
+ * @spec openspec/changes/archive/2026-11-24-extraction-employee-document/specs/employee-document-extraction/spec.md#REQ-EDE-001
  */
 class MrzParser {
 
@@ -60,7 +60,7 @@ class MrzParser {
 	 *
 	 * @return array<string, array{value: string, confidence: float}>|null
 	 *
-	 * @spec openspec/changes/extraction-employee-document/specs/employee-document-extraction/spec.md#REQ-EDE-001
+	 * @spec openspec/changes/archive/2026-11-24-extraction-employee-document/specs/employee-document-extraction/spec.md#REQ-EDE-001
 	 */
 	public function parse(string $text, DateTimeImmutable $today): ?array {
 		$lines = $this->zoneLines(text: $text);
@@ -85,7 +85,7 @@ class MrzParser {
 	 *
 	 * @return int
 	 *
-	 * @spec openspec/changes/extraction-employee-document/specs/employee-document-extraction/spec.md#REQ-EDE-001
+	 * @spec openspec/changes/archive/2026-11-24-extraction-employee-document/specs/employee-document-extraction/spec.md#REQ-EDE-001
 	 */
 	public static function checkDigit(string $field): int {
 		$weights = [7, 3, 1];

@@ -7,15 +7,13 @@
  * files she can open come back, and a list says how many documents have not
  * been read yet.
  *
- * ⚠️ THE FEATURE IS NOT BUILT YET. Tasks 1.1 to 2.4 of the change are open:
- * there is no "Name and content" switch, no content mode on
- * `caseDocuments#files`, and OpenRegister has no access-checked, file-scoped
- * content query yet (task 3.2). This spec is written from the scenarios and
- * design.md D2 to D4 against the PLANNED screen, and every test is
- * `test.fixme` (with the reason in NOT_BUILT) so the suite does not go red. Names marked PLANNED below
- * (the switch label, the snippet's <mark>, the unread line, the `mode`
- * parameter) follow the design; the builder of tasks 1.2 to 2.3 checks
- * them against what they build and lifts the fixme.
+ * Built: tasks 1.1 to 2.4 of the change (the switch on My documents, the
+ * content mode of `caseDocuments#files`, the unread count with Read them
+ * now, the `file` route parameter), and OpenRegister's scoped content query
+ * (ConductionNL/openregister#11044). The selectors below are the built
+ * screen's `data-testid`s. Written in the cloud lane without a live
+ * instance: this spec runs in CI and the nightly, against an OpenRegister
+ * that carries `ScopedContentSearchService`.
  *
  * WHAT IS DRIVEN THROUGH THE UI AND WHAT IS NOT
  * --------------------------------------------
@@ -29,10 +27,12 @@
  * EMPTY storage state.
  *
  * "An older OpenRegister" and "A hit in the top bar opens in filinq" are
- * `@e2e exclude` in the spec.
+ * `@e2e exclude` in the spec; the second waits for OpenRegister's file
+ * deep-link hook (#11037 item 3). The page half of REQ-WCS-004, My documents
+ * opening the viewer from a `file` route parameter, is driven here.
  */
 
-import type { APIRequestContext } from '@playwright/test'
+import type { APIRequestContext, Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
 import { go } from './spec-coverage/_helpers.ts'
@@ -55,9 +55,22 @@ function extractRoute(fileId: string) {
 	return `/index.php/apps/openregister/api/files/${fileId}/extract`
 }
 
-/** Why every test waits. */
-const NOT_BUILT =
-	'work-content-search tasks 1.1 to 2.3 are not built; OpenRegister has no scoped content query yet'
+/** The OpenRegister objects endpoint for the document records. */
+const OR_RECORDS = '/index.php/apps/openregister/api/objects/filinq/documentVersion'
+
+/**
+ * Switch My documents to "Name and content" and type the words.
+ *
+ * @param page  The page, on My documents.
+ * @param words The words to search for.
+ */
+async function searchContent(page: Page, words: string): Promise<void> {
+	await page.getByTestId('my-documents-search-mode-content').click()
+	await expect(
+		page.getByTestId('my-documents-search-mode-content'),
+	).toHaveAttribute('aria-pressed', 'true')
+	await page.locator('.my-documents-search input').fill(words)
+}
 
 /** Provisioning. */
 const USERS_API = '/ocs/v1.php/cloud/users'
@@ -103,7 +116,6 @@ test.describe('Documents are found by the words in them', () => {
 	test('My documents finds a letter by a word in its text, with the word marked', async ({
 		page,
 	}) => {
-		test.fixme(true, NOT_BUILT)
 		await page.goto('/index.php/apps/filinq/')
 		const token = await harvestToken(page)
 		const name = `${TEST_PREFIX}-brief-aan-bewoners.txt`
@@ -114,10 +126,19 @@ test.describe('Documents are found by the words in them', () => {
 			`Beste bewoners van de ${WORD}, de werkzaamheden beginnen maandag.`,
 		)
 
+		const fileId = await seed(
+			page.request,
+			token,
+			`${TEST_PREFIX}-brief-${WORD.length}.txt`,
+			`Tweede brief over de ${WORD}.`,
+		)
+
 		await go(page, 'my-documents')
-		// PLANNED (design D3): a switch beside the search bar, "Name" by default.
-		await page.getByRole('radio', { name: 'Name and content' }).check()
-		await page.locator('.my-documents-search input').fill(WORD)
+		await expect(
+			page.getByTestId('my-documents-search-mode-name'),
+			'Name is the default mode',
+		).toHaveAttribute('aria-pressed', 'true')
+		await searchContent(page, WORD)
 
 		const row = page
 			.locator('tr')
@@ -127,11 +148,13 @@ test.describe('Documents are found by the words in them', () => {
 		await expect(row.locator('mark'), 'the snippet marks the word').toHaveText(
 			WORD,
 		)
+		await expect(
+			page.getByTestId(`my-documents-snippet-${fileId}`).locator('mark'),
+		).toHaveText(WORD)
 	})
 
 	// @e2e document-content-search::a-clerk-searches-the-documents-of-a-record
 	test("a record's documents are searched by content", async ({ page }) => {
-		test.fixme(true, NOT_BUILT)
 		await page.goto('/index.php/apps/filinq/')
 		const token = await harvestToken(page)
 		const record = {
@@ -140,23 +163,45 @@ test.describe('Documents are found by the words in them', () => {
 			id: `${TEST_PREFIX}-record`,
 		}
 
-		const unique = `${TEST_PREFIX}-only-here`
+		// One word, no hyphen, so every database's text query reads it whole.
+		const unique = `Kastanjeweg${Date.now()}`
+		const fileId = await seed(
+			page.request,
+			token,
+			`${TEST_PREFIX}-record-letter.txt`,
+			`Het bezwaar over de ${unique} is ontvangen.`,
+		)
+		const linked = await page.request.post(OR_RECORDS, {
+			headers: jsonHeaders(token),
+			data: {
+				fileId: Number(fileId),
+				documentName: `${TEST_PREFIX}-record-letter`,
+				status: 'draft',
+				domains: [record],
+			},
+		})
+		expect(linked.status(), 'linking the letter to the record').toBeLessThan(300)
+
+		// The content mode of the flat list the documents widget reads (design D2).
 		const answer = await page.request.get(`${API}/case-documents/files`, {
 			headers: jsonHeaders(token),
-			// PLANNED (design D2): the content mode of the flat list.
 			params: { ...record, search: unique, mode: 'content' },
 		})
 		expect(answer.status(), await answer.text()).toBe(200)
 		const body = await answer.json()
-		expect(body.results).toHaveLength(1)
-		expect(String(body.results[0].snippet ?? '')).toContain(unique)
+		expect(body.content?.available, 'OpenRegister answers the content query').toBe(true)
+		const hits = (body.results ?? []).filter(
+			(row: { fileId?: number | string }) => String(row.fileId) === String(fileId),
+		)
+		expect(hits, 'the letter is found by a word that is not in its name').toHaveLength(1)
+		expect(hits[0].match).toBe('content')
+		expect(String(hits[0].snippet ?? '')).toContain(unique)
 	})
 
 	// @e2e document-content-search::unread-documents-are-named-not-hidden
 	test('a content search names the documents that were never read', async ({
 		page,
 	}) => {
-		test.fixme(true, NOT_BUILT)
 		await page.goto('/index.php/apps/filinq/')
 		const token = await harvestToken(page)
 		for (let index = 0; index < 3; index++) {
@@ -170,17 +215,17 @@ test.describe('Documents are found by the words in them', () => {
 		}
 
 		await go(page, 'my-documents')
-		await page.getByRole('radio', { name: 'Name and content' }).check()
-		await page.locator('.my-documents-search input').fill(WORD)
-		// PLANNED (design D4): the count line and its action.
-		await expect(
-			page.getByText(
-				/\d+ documents have not been read yet and cannot be found by content/,
-			),
-		).toBeVisible({ timeout: 30000 })
-		await expect(
-			page.getByRole('button', { name: 'Read them now' }),
-		).toBeVisible()
+		await searchContent(page, WORD)
+		// Design D4: the count line and its action.
+		await expect(page.getByTestId('my-documents-search-note')).toContainText(
+			/\d+ documents? (has|have) not been read yet and cannot be found by content/,
+			{ timeout: 30000 },
+		)
+		const readNow = page.getByTestId('my-documents-read-now')
+		await expect(readNow).toHaveText('Read them now')
+		await readNow.click()
+		// The reading runs on the server; the search then runs again.
+		await expect(readNow).toBeEnabled({ timeout: 60000 })
 	})
 
 	// @e2e document-content-search::a-colleagues-private-document-stays-out
@@ -188,7 +233,6 @@ test.describe('Documents are found by the words in them', () => {
 		browser,
 		page,
 	}) => {
-		test.fixme(true, NOT_BUILT)
 		await page.goto('/index.php/apps/filinq/')
 		const adminToken = await harvestToken(page)
 		const coordinator = {
@@ -220,8 +264,7 @@ test.describe('Documents are found by the words in them', () => {
 		try {
 			const own = await context.newPage()
 			await go(own, 'my-documents')
-			await own.getByRole('radio', { name: 'Name and content' }).check()
-			await own.locator('.my-documents-search input').fill(WORD)
+			await searchContent(own, WORD)
 			await own.waitForTimeout(2000)
 			await expect(
 				own.getByText(privateName.replace(/\.txt$/, '')),
@@ -233,5 +276,30 @@ test.describe('Documents are found by the words in them', () => {
 				headers: OCS,
 			})
 		}
+	})
+
+	// @e2e document-content-search::a-document-link-opens-the-viewer
+	test('My documents opens the viewer on the file a link names', async ({
+		page,
+	}) => {
+		await page.goto('/index.php/apps/filinq/')
+		const token = await harvestToken(page)
+		const name = `${TEST_PREFIX}-deep-link.txt`
+		const fileId = await seed(page.request, token, name, 'Een document met een eigen link.', false)
+
+		// REQ-WCS-004, the page half: `?file=<id>` opens the viewer on that file.
+		await go(page, `my-documents?file=${fileId}`)
+		const viewer = page.locator('.file-viewer-page')
+		await expect(viewer).toBeVisible({ timeout: 30000 })
+		await expect(viewer).toContainText(name.replace(/\.txt$/, ''))
+	})
+
+	// @e2e document-content-search::a-document-link-opens-the-viewer
+	test('a link to a file one cannot open does not open it', async ({ page }) => {
+		await go(page, 'my-documents?file=999999999')
+		await expect(
+			page.getByText('The linked document could not be found, or you do not have access to it.'),
+		).toBeVisible({ timeout: 30000 })
+		await expect(page.locator('.file-viewer-page')).toHaveCount(0)
 	})
 })

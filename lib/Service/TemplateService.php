@@ -480,7 +480,7 @@ class TemplateService implements TemplateServiceInterface {
 	 *
 	 * @throws Exception 404 when the template does not exist, 409 while another user holds its lock
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
 	 */
 	public function publishTemplate(string $id): array {
 		$existing = $this->getTemplate(id: $id);
@@ -510,7 +510,7 @@ class TemplateService implements TemplateServiceInterface {
 	 *
 	 * @throws Exception 404 when the template does not exist, 409 when it has no published version
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
 	 */
 	public function getPublishedTemplate(string $id): array {
 		$template = $this->getTemplate(id: $id);

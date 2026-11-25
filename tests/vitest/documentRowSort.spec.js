@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/specify-capability-rows/specs/document-register/spec.md#requirement-the-flat-file-list-sorts-on-any-column-req-scr-005
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-register/spec.md#requirement-the-flat-file-list-sorts-on-any-column-req-scr-005
  */
 import { describe, expect, it } from 'vitest'
 import { nextSort, sortDocumentRows } from '../../src/integrations/documentRowSort.js'

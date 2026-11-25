@@ -647,7 +647,7 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @throws RuntimeException When no delegation covers it, or signing fails
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	public function signOnBehalfOf(string $requestId, string $signerId, string $delegator): array {
 		if (trim($delegator) === '') {
@@ -798,7 +798,7 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @throws RuntimeException When no delegation covers it
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function delegatedSignerUserId(?string $onBehalfOf, string $actorUserId): string {
 		if ($onBehalfOf === null) {
@@ -825,7 +825,7 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @throws RuntimeException When no delegation covers the document type
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function assertDelegationCoversType(?string $onBehalfOf, string $actorUserId, array $request): void {
 		if ($onBehalfOf === null || $this->guards->delegations === null) {
@@ -845,7 +845,7 @@ class SigningService implements SigningServiceInterface {
 	 *
 	 * @return array<string, mixed> The signer record, stamped when delegated
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function stampDelegation(array $signer, ?string $onBehalfOf, string $actorUserId): array {
 		if ($onBehalfOf !== null) {

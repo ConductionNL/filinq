@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/specs/batch-anonymization/spec.md#requirement-an-anonymisation-profile-is-kept-per-document-type-req-scr-013
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/batch-anonymization/spec.md#requirement-an-anonymisation-profile-is-kept-per-document-type-req-scr-013
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2

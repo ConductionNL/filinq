@@ -45,7 +45,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
  */
 class SigningDelegationService implements SigningDelegationServiceInterface {
 
@@ -82,7 +82,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @throws InvalidArgumentException When a party, a date or the types are missing or wrong.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	public function declare(string $delegator, string $delegate, string $from, string $until, array $types): array {
 		$delegator = trim($delegator);
@@ -118,7 +118,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @throws InvalidArgumentException When a party is missing or both are the same.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function assertParties(string $delegator, string $delegate): void {
 		if ($delegator === '' || $delegate === '') {
@@ -141,7 +141,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @throws InvalidArgumentException When a date is missing or wrong, or the period ends before it starts.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function assertPeriod(string $from, string $until): void {
 		if ($this->isDate(value: $from) === false || $this->isDate(value: $until) === false) {
@@ -163,7 +163,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @throws InvalidArgumentException When a type is not a reference, or none is given.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function cleanTypes(array $types): array {
 		$cleanTypes = [];
@@ -192,7 +192,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @return bool True when it was withdrawn, false when the signer gave no such delegation.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	public function withdraw(string $id, string $delegator): bool {
 		$kept = [];
@@ -223,7 +223,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function isGivenBy(array $delegation, string $id, string $delegator): bool {
 		return $delegation['id'] === $id && $delegation['delegator'] === $delegator && $delegator !== '';
@@ -237,7 +237,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @return array{given: list<array<string, mixed>>, received: list<array<string, mixed>>}
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	public function forUser(string $userId): array {
 		$given = [];
@@ -270,7 +270,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @return string|null The refusal, naming the delegation; null when a delegation covers it.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	public function refusal(string $delegator, string $delegate, ?string $typeReference): ?string {
 		$today = $this->today();
@@ -301,7 +301,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @return string|null The refusal, naming the delegation; null when it covers the signature.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function delegationRefusal(array $delegation, string $today, ?string $typeReference): ?string {
 		$delegator = $delegation['delegator'];
@@ -325,7 +325,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @return string|null The refusal naming the type; null when the type is covered or not asked.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function typeRefusal(array $delegation, ?string $typeReference): ?string {
 		if ($typeReference === null || in_array($typeReference, $delegation['types'], true) === true) {
@@ -350,7 +350,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	private function isBetween(array $delegation, string $delegator, string $delegate): bool {
 		return $delegation['delegator'] === $delegator && $delegation['delegate'] === $delegate;
@@ -368,7 +368,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @throws RuntimeException Naming the delegation, when it does not cover the signature.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	public function assertMayActFor(string $delegator, string $delegate, ?string $typeReference): void {
 		$refusal = $this->refusal(delegator: $delegator, delegate: $delegate, typeReference: $typeReference);
@@ -385,7 +385,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @return list<string> The signers' user ids.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	public function activeDelegators(string $delegate): array {
 		$delegators = [];
@@ -406,7 +406,7 @@ class SigningDelegationService implements SigningDelegationServiceInterface {
 	 *
 	 * @return list<string> The signers' user ids.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	public function delegatorsOf(string $delegate): array {
 		return array_values(array_unique(array_column($this->forUser(userId: $delegate)['received'], 'delegator')));

@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-5.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -43,7 +43,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+ * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-5.1
  */
 class DocumentReleaseController extends Controller {
 
@@ -78,7 +78,7 @@ class DocumentReleaseController extends Controller {
 	 *
 	 * @return JSONResponse The release; 403 when the caller may not write the record.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-5.1
 	 */
 	#[NoAdminRequired]
 	public function release(string $uuid): JSONResponse {
@@ -104,7 +104,7 @@ class DocumentReleaseController extends Controller {
 	 *
 	 * @return JSONResponse The withdrawn release; 403 when the caller may not write its record.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/tasks.md#task-5.1
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-5.1
 	 */
 	#[NoAdminRequired]
 	public function withdraw(string $releaseId): JSONResponse {

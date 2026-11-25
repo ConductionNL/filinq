@@ -1,6 +1,12 @@
 OC.L10N.register(
     "filinq",
     {
+        "A document reference needs the id of a document record.": "A document reference needs the id of a document record.",
+        "A submitted form needs a templateId, the record and its values.": "A submitted form needs a templateId, the record and its values.",
+        "A submitted form is filed as pdf, docx, odf or html.": "A submitted form is filed as pdf, docx, odf or html.",
+        "The record to file the form on could not be found, or you do not have access to it.": "The record to file the form on could not be found, or you do not have access to it.",
+        "The submitted form could not be filed on the record.": "The submitted form could not be filed on the record.",
+        "The submitted form could not be filed as a document.": "The submitted form could not be filed as a document.",
         "The linked document could not be found, or you do not have access to it.": "The linked document could not be found, or you do not have access to it.",
         "Activity": "Activity",
         "No activity recorded for this document yet": "No activity recorded for this document yet",
@@ -4121,6 +4127,9 @@ OC.L10N.register(
         "Selection list": "Selection list",
         "Statement": "Statement",
         "Only an archivist can read destruction certificates.": "Only an archivist can read destruction certificates.",
+        "Due for transfer": "Due for transfer",
+        "Only an administrator can see the records due for transfer.": "Only an administrator can see the records due for transfer.",
+        "No records are due for transfer to the e-depot.": "No records are due for transfer to the e-depot.",
         "Legal hold": "Legal hold",
         "Under a legal hold": "Under a legal hold",
         "Under a legal hold: {cases}": "Under a legal hold: {cases}",

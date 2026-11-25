@@ -106,7 +106,7 @@ class WooProfileService implements AnonymizationProfileServiceInterface {
 	 *
 	 * @return array{anonymize: array<string>, keep: array<string>} The profile.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/batch-anonymization/spec.md#requirement-an-anonymisation-profile-is-kept-per-document-type-req-scr-013
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/batch-anonymization/spec.md#requirement-an-anonymisation-profile-is-kept-per-document-type-req-scr-013
 	 */
 	public function getProfileFor(?string $documentType): array {
 		$type = trim((string)$documentType);
@@ -125,7 +125,7 @@ class WooProfileService implements AnonymizationProfileServiceInterface {
 	 *
 	 * @return array<string, array{anonymize: array<string>, keep: array<string>}> The profiles.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/batch-anonymization/spec.md#requirement-an-anonymisation-profile-is-kept-per-document-type-req-scr-013
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/batch-anonymization/spec.md#requirement-an-anonymisation-profile-is-kept-per-document-type-req-scr-013
 	 */
 	public function typeProfiles(): array {
 		$decoded = json_decode($this->appConfig->getValueString('filinq', self::TYPE_PROFILES_KEY, ''), true);
@@ -155,7 +155,7 @@ class WooProfileService implements AnonymizationProfileServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/batch-anonymization/spec.md#requirement-an-anonymisation-profile-is-kept-per-document-type-req-scr-013
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/batch-anonymization/spec.md#requirement-an-anonymisation-profile-is-kept-per-document-type-req-scr-013
 	 */
 	public function saveProfileFor(string $documentType, array $profile): void {
 		$type = trim($documentType);
@@ -176,7 +176,7 @@ class WooProfileService implements AnonymizationProfileServiceInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/batch-anonymization/spec.md#requirement-an-anonymisation-profile-is-kept-per-document-type-req-scr-013
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/batch-anonymization/spec.md#requirement-an-anonymisation-profile-is-kept-per-document-type-req-scr-013
 	 */
 	public function removeProfileFor(string $documentType): void {
 		$profiles = $this->typeProfiles();

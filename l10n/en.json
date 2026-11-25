@@ -1,5 +1,11 @@
 {
     "translations": {
+        "A document reference needs the id of a document record.": "A document reference needs the id of a document record.",
+        "A submitted form needs a templateId, the record and its values.": "A submitted form needs a templateId, the record and its values.",
+        "A submitted form is filed as pdf, docx, odf or html.": "A submitted form is filed as pdf, docx, odf or html.",
+        "The record to file the form on could not be found, or you do not have access to it.": "The record to file the form on could not be found, or you do not have access to it.",
+        "The submitted form could not be filed on the record.": "The submitted form could not be filed on the record.",
+        "The submitted form could not be filed as a document.": "The submitted form could not be filed as a document.",
         "The linked document could not be found, or you do not have access to it.": "The linked document could not be found, or you do not have access to it.",
         "Activity": "Activity",
         "No activity recorded for this document yet": "No activity recorded for this document yet",

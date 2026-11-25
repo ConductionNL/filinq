@@ -49,7 +49,7 @@ interface SigningDelegationServiceInterface {
 	 *
 	 * @throws InvalidArgumentException When a party, a date or the types are missing or wrong.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	public function declare(string $delegator, string $delegate, string $from, string $until, array $types): array;
 
@@ -62,7 +62,7 @@ interface SigningDelegationServiceInterface {
 	 *
 	 * @return bool True when it was withdrawn, false when the signer gave no such delegation.
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	public function withdraw(string $id, string $delegator): bool;
 
@@ -74,7 +74,7 @@ interface SigningDelegationServiceInterface {
 	 *
 	 * @return array{given: list<array<string, mixed>>, received: list<array<string, mixed>>}
 	 *
-	 * @spec openspec/changes/specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/document-signing/spec.md#requirement-a-signer-delegates-signing-authority-for-a-period-and-for-named-document-types-req-scr-003
 	 */
 	public function forUser(string $userId): array;
 }//end interface
