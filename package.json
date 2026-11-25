@@ -151,6 +151,7 @@
     "vite": "^7.3.6",
     "dompurify": "$dompurify",
     "stylelint": "$stylelint",
+    "stylelint-config-recommended-scss": "$stylelint-config-recommended-scss",
     "stylelint-config-recommended-vue": "$stylelint-config-recommended-vue",
     "gridstack": "$gridstack"
   },
