@@ -12,8 +12,8 @@
  * @spec ADR-124 (speed budget: page usable <= 300 ms warm)
  */
 
-import { createRequire } from 'node:module'
 import { readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 
@@ -39,10 +39,16 @@ function jsonTranslations(locale) {
 
 describe('browserEntries', () => {
 	it('drops identity entries for English only', () => {
-		const translations = { Save: 'Save', 'Sign …': 'Sign…', Close: 'Close' }
-		expect(browserEntries('en', translations)).toEqual({ 'Sign …': 'Sign…' })
+		const translations = {
+			Save: 'Save',
+			'Sign doc': 'Sign the document',
+			Close: 'Close',
+		}
+		expect(browserEntries('en', translations)).toEqual({
+			'Sign doc': 'Sign the document',
+		})
 		expect(browserEntries('en_GB', translations)).toEqual({
-			'Sign …': 'Sign…',
+			'Sign doc': 'Sign the document',
 		})
 	})
 
