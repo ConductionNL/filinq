@@ -4743,7 +4743,13 @@
         "The consent request could not be sent: %s": "The consent request could not be sent: %s",
         "The third party has no email or postal address, so no consent request was sent.": "The third party has no email or postal address, so no consent request was sent.",
         "Request for consent to publish document %s": "Request for consent to publish document %s",
-        "We intend to publish document %1$s, which names %2$s. You have %3$d days from today to object. To object or consent, reply to this email.": "We intend to publish document %1$s, which names %2$s. You have %3$d days from today to object. To object or consent, reply to this email."
+        "We intend to publish document %1$s, which names %2$s. You have %3$d days from today to object. To object or consent, reply to this email.": "We intend to publish document %1$s, which names %2$s. You have %3$d days from today to object. To object or consent, reply to this email.",
+        "A document is waiting for your signature: %s": "A document is waiting for your signature: %s",
+        "It is your turn to act on %1$s. Open the signing request in Filinq to sign or decline it.": "It is your turn to act on %1$s. Open the signing request in Filinq to sign or decline it.",
+        "No reason was given.": "No reason was given.",
+        "%1$s declined to sign %2$s": "%1$s declined to sign %2$s",
+        "%1$s declined to sign %2$s. The reason given: %3$s": "%1$s declined to sign %2$s. The reason given: %3$s",
+        "a document": "a document"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
