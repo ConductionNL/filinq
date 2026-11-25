@@ -236,7 +236,7 @@ export async function loadHolds(uuids, read = holdStatus) {
  *
  * @param {'schemas'|'registers'} kind What the ids are.
  * @param {Array<string>} ids The ids, duplicates allowed.
- * @param {Function} read Reads one URL and answers its body (injectable for tests).
+ * @param {function(string): Promise<object>} read Reads one URL and answers its body (injectable for tests).
  * @return {Promise<Object<string, string>>} Title per id.
  * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
  */
