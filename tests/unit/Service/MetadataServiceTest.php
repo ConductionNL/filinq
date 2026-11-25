@@ -231,9 +231,9 @@ class MetadataServiceTest extends TestCase {
 	 * @return void
 	 */
 	private function wireSave(array $stored, ?array $properties, array &$saved): void {
-		$entity = $this->createMock(ObjectEntityInterface::class);
+		$entity = $this->createMock(originalClassName: ObjectEntityInterface::class);
 		$entity->method('getObject')->willReturn($stored);
-		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objectService->method('find')->willReturn($entity);
 		$objectService->method('saveObject')->willReturnCallback(
 			function (array $object) use (&$saved, $entity): object {
