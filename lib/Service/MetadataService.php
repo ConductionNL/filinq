@@ -342,7 +342,7 @@ class MetadataService implements MetadataServiceInterface {
 	 *
 	 * @return array<int, string> The field names.
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-4
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-4
 	 */
 	private function readOnlyFields(string $schema): array {
 		try {

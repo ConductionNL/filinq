@@ -54,7 +54,7 @@ class EnrichmentRunner {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-3
 	 */
 	public function __construct(
 		private readonly ?InboundClassificationServiceInterface $classification = null,
@@ -70,7 +70,7 @@ class EnrichmentRunner {
 	 *
 	 * @return self The runner.
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-3
 	 */
 	public function withClassificationFrom(ContainerInterface $container): self {
 		try {
@@ -98,7 +98,7 @@ class EnrichmentRunner {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-3
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-3
 	 */
 	public function classify(mixed $object, LoggerInterface $logger): void {
 		if ($this->classification === null) {

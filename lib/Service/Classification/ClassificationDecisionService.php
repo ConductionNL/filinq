@@ -24,7 +24,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/inbound-auto-classification/tasks.md#2-4
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-4
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -49,7 +49,7 @@ use Throwable;
 /**
  * Confirm, correct or reject one suggestion.
  *
- * @spec openspec/changes/inbound-auto-classification/tasks.md#2-4
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-4
  */
 class ClassificationDecisionService implements ClassificationDecisionServiceInterface {
 
@@ -88,7 +88,7 @@ class ClassificationDecisionService implements ClassificationDecisionServiceInte
 	 *
 	 * @return array<int, array<string, mixed>> The records.
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-4
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-4
 	 */
 	public function pending(string $userId): array {
 		$reachable = [];
@@ -111,7 +111,7 @@ class ClassificationDecisionService implements ClassificationDecisionServiceInte
 	 *
 	 * @return bool True when the file resolves in the reviewer's folder.
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-4
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-4
 	 */
 	public function canAccessFile(int $fileId, string $userId): bool {
 		return $this->nodeFor(userId: $userId, fileId: $fileId) !== null;
@@ -126,7 +126,7 @@ class ClassificationDecisionService implements ClassificationDecisionServiceInte
 	 *
 	 * @return array<string, mixed>|null The record, or null for a file the reviewer cannot reach or without one.
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#3-2
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-2
 	 */
 	public function forFile(int $fileId, string $userId): ?array {
 		if ($this->nodeFor(userId: $userId, fileId: $fileId) === null) {
@@ -150,7 +150,7 @@ class ClassificationDecisionService implements ClassificationDecisionServiceInte
 	 * @throws ClassificationRefused 404 for a file the reviewer cannot reach or without a suggestion,
 	 *                               409 when it was already decided, 422 for an unknown type.
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-4
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-4
 	 */
 	public function confirm(int $fileId, string $userId, array $choices): array {
 		[$record, $node] = $this->open(fileId: $fileId, userId: $userId);
@@ -198,7 +198,7 @@ class ClassificationDecisionService implements ClassificationDecisionServiceInte
 	 *
 	 * @throws ClassificationRefused As for confirm().
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-4
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-4
 	 */
 	public function reject(int $fileId, string $userId): array {
 		[$record] = $this->open(fileId: $fileId, userId: $userId);

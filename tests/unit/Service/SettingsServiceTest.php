@@ -700,7 +700,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-5
 	 */
 	public function testInboundClassificationDefaultsOnAndIsWritable(): void {
 		$this->mockConfig->method('getValueString')->willReturnCallback(
