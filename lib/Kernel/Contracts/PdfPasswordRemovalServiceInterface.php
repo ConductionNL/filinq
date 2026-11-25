@@ -70,7 +70,7 @@ interface PdfPasswordRemovalServiceInterface {
 	 * @return array<string, mixed> `outcome` (one of the constants), with `message` on a refusal, or the
 	 *                              copy's `fileId`, `name`, `validationStatus` and `validationFindings`.
 	 *
-	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
 	 */
 	public function unlock(File $file, string $password): array;
 }//end interface

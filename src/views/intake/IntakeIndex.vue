@@ -631,7 +631,7 @@ export default {
 		 * Ask for the password of a row's locked PDF.
 		 *
 		 * @param {object} row The intake document.
-		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
 		 */
 		openUnlock(row) {
 			this.closeDialogs()

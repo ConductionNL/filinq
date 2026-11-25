@@ -18,7 +18,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+ * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,7 +36,7 @@ use Throwable;
 /**
  * Remove the password of a PDF into a checked copy.
  *
- * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+ * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
  */
 class PdfPasswordRemovalService implements PdfPasswordRemovalServiceInterface {
 
@@ -61,7 +61,7 @@ class PdfPasswordRemovalService implements PdfPasswordRemovalServiceInterface {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
 	 */
 	public function isAvailable(): bool {
 		return $this->qpdf->isAvailable();
@@ -76,7 +76,7 @@ class PdfPasswordRemovalService implements PdfPasswordRemovalServiceInterface {
 	 * @return array<string, mixed> `outcome` (one of the constants), with `message` on a refusal, or the
 	 *                              copy's `fileId`, `name`, `validationStatus` and `validationFindings`.
 	 *
-	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
 	 */
 	public function unlock(File $file, string $password): array {
 		$refusal = $this->finalDocuments->refusalFor(fileId: (int)$file->getId(), action: 'remove the password of this document');
@@ -121,7 +121,7 @@ class PdfPasswordRemovalService implements PdfPasswordRemovalServiceInterface {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
 	 */
 	public static function copyName(string $name): string {
 		$base = (string)preg_replace('/\.pdf$/i', '', $name);

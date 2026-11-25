@@ -145,6 +145,11 @@ An intake document keeps what arrived: its `lockedOriginal` names the file that 
 ### Where the action is
 
 - **My documents**: the `pdf-encrypted` finding in the validation result offers **Remove password**. The copy's findings replace the original's and the list reloads.
+
+  ![The Remove password dialog opened from the pdf-encrypted finding](/screenshots/pdf-password-removal-dialog.png)
+
+  ![The unlocked copy checked again: the encrypted finding is gone](/screenshots/pdf-password-removal-unlocked.png)
+
 - **Intake** (`/intake`): a waiting PDF whose password was not removed yet offers **Remove password** in its row menu. It calls
 
   ```

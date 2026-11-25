@@ -6,7 +6,7 @@ Ask for the password of a locked PDF and unlock it into a copy beside the
 original (intake-pdf-password-removal, task 2.1, REQ-PPR-001). The password
 is held only while the dialog is open and is cleared on every close.
 
-@spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+@spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
 -->
 
 <template>
@@ -63,7 +63,7 @@ export default {
 		 * Unlock the PDF; on success hand the copy to the host and close.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
 		 */
 		async submit() {
 			if (this.busy || this.password === '' || (!this.fileId && !this.intakeUuid)) {
@@ -88,7 +88,7 @@ export default {
 		/**
 		 * Forget the password and close.
 		 *
-		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
 		 */
 		close() {
 			this.password = ''

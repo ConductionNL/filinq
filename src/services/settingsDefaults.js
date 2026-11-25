@@ -86,7 +86,7 @@ export function emptyOcrStatus() {
  *
  * @return {{available: boolean, version: null}} The status.
  *
- * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+ * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
  */
 export function emptyQpdfStatus() {
 	return {
