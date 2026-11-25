@@ -16,5 +16,5 @@
 
 ## 3. Docs
 
-- [ ] 3.1 Add a section to `docs/features/` on the employer statement: what it merges, the `statement` block, editing in place versus duplicating, with a screenshot of a rendered statement (ADR-010) (REQ-TES-003). Verify: the docs page renders with the screenshot.
-  - `docs/features/employer-statement.md` (what it merges, the `statement` block, editing in place versus duplicating). The screenshot of a rendered statement needs a running instance and is not added.
+- [x] 3.1 Add a section to `docs/features/` on the employer statement: what it merges, the `statement` block, editing in place versus duplicating, with a screenshot of a rendered statement (ADR-010) (REQ-TES-003). Verify: the docs page renders with the screenshot.
+  - `docs/features/employer-statement.md` (what it merges, the `statement` block, editing in place versus duplicating), with `docs/static/screenshots/employer-statement-rendered.png`: page 1 of a statement humaniq rendered live (Nextcloud 34 + MariaDB, OpenRegister main, humaniq and filinq development) from an employment contract of its example data. Found live: without an employer city the closing line read "ingevuld te niet opgegeven op"; the place is now left out (register 8.103.1, `EmployerStatementTemplateTest::testAFixedTermContractWithMissingItemsSaysNotStated`).
