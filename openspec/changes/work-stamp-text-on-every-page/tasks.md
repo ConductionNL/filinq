@@ -10,7 +10,8 @@
 ## 2. Command for sibling apps
 
 - [x] 2.1 Add `DocumentStampRequestedEvent` and `DocumentStampRequestedListener`, registered in `lib/AppInfo/Application.php` (REQ-PST-002). Verify: PHPUnit dispatches the real event and reads the stamped PDF from the result slot; a listener failure leaves the event unhandled with code `failed` and no exception.
-- [ ] 2.2 Run decidiq's `GET /api/papers/{fileId}/view` against a local install with both apps (REQ-PST-002). Verify: the served PDF shows the member's name and the date on every page; the result is noted in the PR body.
+- [x] 2.2 Run decidiq's `GET /api/papers/{fileId}/view` against a local install with both apps (REQ-PST-002). Verify: the served PDF shows the member's name and the date on every page; the result is noted in the PR body.
+  - Verified live (25 Nov; Nextcloud 34 + MariaDB, OpenRegister main, decidiq and filinq development). decidiq's route is `GET /api/papers/{schema}/{objectId}/{fileId}/view`: a non-public meeting listing a three-page PDF in `paperRenditions`, opened by `admin`, answered 200 `application/pdf` with 3 pages; every page carries "admin, 2026-11-25 19:50" diagonally and in the footer, and keeps its own text ("Raadsvoorstel vertrouwelijk - pagina 2" on page 2).
 
 ## 3. Docs
 
