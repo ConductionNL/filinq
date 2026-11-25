@@ -335,19 +335,24 @@ class IntakeAcknowledgementServiceTest extends TestCase {
 		$this->documents->expects($this->once())->method('generateDocument')->with(
 			'tpl-ontvangst',
 			[],
-			$this->callback(static function (array $options): bool {
+			$this->callback(callback: static function (array $options): bool {
 				return $options['adHocData']['subject'] === 'Bezwaar parkeervergunning'
 					&& $options['adHocData']['receivedAt'] === '14-10-2026';
 			})
-		)->willReturn(['html' => "<p>Geachte heer, mevrouw,</p>\n<p>Uw stuk &quot;Bezwaar&quot; is ontvangen.<br>Dank u.</p>\n<p>Met vriendelijke groet,</p>", 'content' => 'x']);
+		)->willReturn(
+			[
+				'html' => "<p>Geachte heer, mevrouw,</p>\n<p>Uw stuk &quot;Bezwaar&quot; is ontvangen.<br>Dank u.</p>\n<p>Met vriendelijke groet,</p>",
+				'content' => 'x',
+			]
+		);
 		$expected = "Geachte heer, mevrouw,\n\nUw stuk \"Bezwaar\" is ontvangen.\nDank u.\n\nMet vriendelijke groet,";
 		$this->reach->method('notifySenderParties')->willReturn([]);
 		$this->reach->expects($this->once())->method('mailAddress')
 			->with('j.devries@example.nl', 'Acknowledgement of receipt: Bezwaar parkeervergunning', $expected)
 			->willReturn('dispatched');
 
-		$outcome = $service->acknowledge(self::mailed(['subject' => ['nl' => 'Bezwaar parkeervergunning', 'en' => 'Objection']]), self::rule());
-		$this->assertSame('sent', $outcome['status']);
+		$outcome = $service->acknowledge(self::mailed(extra: ['subject' => ['nl' => 'Bezwaar parkeervergunning', 'en' => 'Objection']]), self::rule());
+		$this->assertSame(expected: 'sent', actual: $outcome['status']);
 	}//end testTheLetterNamesTheSubjectTextAReadableDateAndGoesAsPlainText()
 
 	/**
@@ -359,19 +364,20 @@ class IntakeAcknowledgementServiceTest extends TestCase {
 	public function testASubjectWithoutDutchFallsBackAndAnOddDateIsKept(): void {
 		$seen = [];
 		$service = $this->service();
-		$this->documents->method('generateDocument')->willReturnCallback(static function (string $template, array $ids, array $options) use (&$seen): array {
+		$record = static function (string $template, array $ids, array $options) use (&$seen): array {
 			$seen[] = $options['adHocData'];
 			return ['html' => '<p>x</p>', 'content' => 'x'];
-		});
+		};
+		$this->documents->method('generateDocument')->willReturnCallback($record);
 		$this->reach->method('notifySenderParties')->willReturn([]);
 		$this->reach->method('mailAddress')->willReturn('dispatched');
 
-		$service->acknowledge(self::mailed(['subject' => ['en' => 'Objection', 'de' => 'Einspruch']]), self::rule());
-		$service->acknowledge(self::mailed(['subject' => ['de' => 'Einspruch'], 'receivedAt' => 'gisteren']), self::rule());
-		$service->acknowledge(self::mailed(['subject' => ['nl' => ['nested']], 'receivedAt' => '']), self::rule());
+		$service->acknowledge(self::mailed(extra: ['subject' => ['en' => 'Objection', 'de' => 'Einspruch']]), self::rule());
+		$service->acknowledge(self::mailed(extra: ['subject' => ['de' => 'Einspruch'], 'receivedAt' => 'gisteren']), self::rule());
+		$service->acknowledge(self::mailed(extra: ['subject' => ['nl' => ['nested']], 'receivedAt' => '']), self::rule());
 
-		$this->assertSame(['Objection', 'Einspruch', ''], array_column($seen, 'subject'));
-		$this->assertSame(['14-10-2026', 'gisteren', ''], array_column($seen, 'receivedAt'));
+		$this->assertSame(expected: ['Objection', 'Einspruch', ''], actual: array_column($seen, 'subject'));
+		$this->assertSame(expected: ['14-10-2026', 'gisteren', ''], actual: array_column($seen, 'receivedAt'));
 	}//end testASubjectWithoutDutchFallsBackAndAnOddDateIsKept()
 
 }//end class

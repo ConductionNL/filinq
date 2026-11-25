@@ -96,6 +96,8 @@ class IntakeAcknowledgementService {
 	 *
 	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
 	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-sender-who-refused-contact-is-not-written-to-req-ias-002
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) AcknowledgementLetterText is a stateless helper.
 	 */
 	public function acknowledge(array $document, array $rule, array|null $inbound = null): array|null {
 		$template = trim((string)($rule['acknowledgeWith'] ?? ''));
@@ -108,7 +110,8 @@ class IntakeAcknowledgementService {
 			$rendered = $this->render(template: $template, data: $data, format: 'html');
 			$subject = $this->l10n->t('Acknowledgement of receipt: %s', [$data['subject']]);
 
-			$outcome = $this->reachSender(document: $document, message: ['subject' => $subject, 'body' => self::plainText(html: $rendered['body'])]);
+			$body = AcknowledgementLetterText::plainText(html: $rendered['body']);
+			$outcome = $this->reachSender(document: $document, message: ['subject' => $subject, 'body' => $body]);
 			if ($outcome['status'] === self::STATUS_QUEUED_AS_LETTER) {
 				$letter = $this->render(template: $template, data: $data, format: 'pdf');
 				$outcome['letter'] = $letter['fileId'];
@@ -133,90 +136,18 @@ class IntakeAcknowledgementService {
 	 * @param array<string, mixed>|null $inbound  The inbound registration.
 	 *
 	 * @return array<string, string>
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) AcknowledgementLetterText is a stateless helper.
 	 */
 	private static function letterData(array $document, array|null $inbound): array {
 		return [
-			'subject' => self::text(value: ($document['subject'] ?? '')),
+			'subject' => AcknowledgementLetterText::text(value: ($document['subject'] ?? '')),
 			'sender' => (string)($document['sender'] ?? ''),
-			'receivedAt' => self::letterDate(receivedAt: (string)($document['receivedAt'] ?? '')),
+			'receivedAt' => AcknowledgementLetterText::letterDate(receivedAt: (string)($document['receivedAt'] ?? '')),
 			'channel' => (string)($document['channel'] ?? ''),
 			'registrationNumber' => (string)($inbound['registrationNumber'] ?? ''),
 		];
 	}//end letterData()
-
-	/**
-	 * A field as text. `subject` is translatable, so the saved object holds a
-	 * language map (`{"nl": "..."}`) where the API shows a string: read nl,
-	 * then en, then the first language there is.
-	 *
-	 * @param mixed $value A string or a language map.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
-	 */
-	private static function text(mixed $value): string {
-		if (is_array($value) === false) {
-			return is_scalar($value) === true ? (string)$value : '';
-		}
-
-		foreach (['nl', 'en'] as $language) {
-			if (is_scalar($value[$language] ?? null) === true) {
-				return (string)$value[$language];
-			}
-		}
-
-		foreach ($value as $text) {
-			if (is_scalar($text) === true) {
-				return (string)$text;
-			}
-		}
-
-		return '';
-	}//end text()
-
-	/**
-	 * The received date as the letter names it: day-month-year, as on the
-	 * stamp. A value that is not a date is passed on as it is.
-	 *
-	 * @param string $receivedAt The document's receivedAt.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
-	 */
-	private static function letterDate(string $receivedAt): string {
-		if (trim($receivedAt) === '') {
-			return '';
-		}
-
-		try {
-			return (new \DateTimeImmutable($receivedAt))->format('d-m-Y');
-		} catch (Throwable) {
-			return $receivedAt;
-		}
-	}//end letterDate()
-
-	/**
-	 * The rendered letter as a plain-text mail body. OpenRegister's mail
-	 * content is plain text, so HTML would arrive as visible tags: paragraphs
-	 * and line breaks become line breaks, the tags go and entities are decoded.
-	 *
-	 * @param string $html The rendered template.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
-	 */
-	private static function plainText(string $html): string {
-		$text = preg_replace('~<br\s*/?>~i', "\n", $html) ?? $html;
-		$text = preg_replace('~</(p|div|h[1-6]|li|tr)>~i', "\n\n", $text) ?? $text;
-		$text = html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8');
-		$lines = array_map(static fn (string $line): string => trim($line), explode("\n", $text));
-		$text = preg_replace("~\n{3,}~", "\n\n", implode("\n", $lines)) ?? '';
-
-		return trim($text);
-	}//end plainText()
 
 	/**
 	 * The acknowledgement rendered from the rule's template: as HTML for a
