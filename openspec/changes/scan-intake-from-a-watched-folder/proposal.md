@@ -11,7 +11,7 @@ filinq's scan intake takes the scanned batches integriq's watched folder hands o
 
 - Rows: supporting, supports 1.7 "Records arrive from a watched folder or a file drop" (not statutory). integriq's `sources-sftp-adapter` chain closes the row; this is the scan intake half D4 names.
 - Wave 2.
-- Dependencies: `integriq/sources-sftp-adapter-intake-hand-over` (https://github.com/ConductionNL/integriq/issues/2551), which ships the event; `filinq/scan-intake-with-separator-sheets` (open, no issue; https://github.com/ConductionNL/filinq/tree/development/openspec/changes/scan-intake-with-separator-sheets), whose task 3.2 this change carries out.
+- Dependencies: `integriq/sources-sftp-adapter-intake-hand-over` (https://github.com/ConductionNL/integriq/issues/2551), which ships the event; `filinq/scan-intake-with-separator-sheets` (open, no issue; https://github.com/ConductionNL/filinq/tree/development/openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets), whose task 3.2 this change carries out.
 - Decisions: D4 (integriq owns the folder watcher, filinq's scan intake consumes it).
 - Build rules: openspec/woo-build-rules.md
 

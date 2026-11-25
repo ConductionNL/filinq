@@ -14,7 +14,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -66,11 +66,54 @@ class SeparatorSheetServiceTest extends TestCase {
 	}//end sheets()
 
 	/**
+	 * The payload as Tesseract reads it off a printed sheet still names its
+	 * case: these are the readings of a live run (25 Nov 2026).
+	 *
+	 * @return array<string, array{0: string, 1: string}>
+	 */
+	public static function ocrReadings(): array {
+		return [
+			'filing, a stray F, vl, a space'  => ["Ffiling:sep:vl:postkamer: 2026-0042", '2026-0042'],
+			'v1l'                             => ['filing:sep:v1l:postkamer: 2026-0042', '2026-0042'],
+			'spaces around the colon'         => ['filing:sep:vl:postkamer : 2026-0042', '2026-0042'],
+			'broken after a hyphen'           => ["filing:sep:vl:scanner-2e-verdieping-\ne2e-1795620378057:2026-0043", '2026-0043'],
+			'an original'                     => ['filing:sep:v2:archief:po:po-1', 'po:po-1'],
+			'among the rest of the sheet'     => ["Scheidingsvel voor zaak 2026-0042\nLeg dit vel\nFfiling:sep:vl:postkamer: 2026-0042", '2026-0042'],
+			'a sheet that names no case'      => ['filing:sep:vl:postkamer:', ''],
+		];
+
+	}//end ocrReadings()
+
+	/**
+	 * A separator read by OCR is still a separator, with its case.
+	 *
+	 * @param string $read     The text OCR gave.
+	 * @param string $expected The case (or original) it names.
+	 *
+	 * @return void
+	 */
+	#[\PHPUnit\Framework\Attributes\DataProvider('ocrReadings')]
+	public function testTheOcrReadingOfASheetIsStillItsPayload(string $read, string $expected): void {
+		$this->assertSame($expected, $this->sheets()->readPayload(payload: $read));
+
+	}//end testTheOcrReadingOfASheetIsStillItsPayload()
+
+	/**
+	 * An ordinary page that happens to say "filing" is no separator.
+	 *
+	 * @return void
+	 */
+	public function testAPageAboutFilingIsNotASeparator(): void {
+		$this->assertNull($this->sheets()->readPayload(payload: 'Gewone brief over filing: zie bijlage'));
+
+	}//end testAPageAboutFilingIsNotASeparator()
+
+	/**
 	 * What is printed is what is read back.
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testThePayloadPrintedIsThePayloadRead(): void {
 		$service = $this->sheets();
@@ -94,7 +137,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testThePayloadIsFoundAmongTheRestOfTheSheet(): void {
 		$page = "Scheidingsvel voor zaak 2026-0042\nLeg dit vel tussen twee documenten.\n"
@@ -109,7 +152,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testAnOrdinaryPageIsNotASeparator(): void {
 		$service = $this->sheets();
@@ -128,7 +171,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testThreeCaseNumbersMakeThreeSheets(): void {
 		$html = $this->sheets()->render(
@@ -145,7 +188,11 @@ class SeparatorSheetServiceTest extends TestCase {
 			);
 		}
 
-		$this->assertStringContainsString('type="QR"', $html, 'And a QR code, drawn locally by the renderer.');
+		$this->assertSame(
+			['filinq:sep:v1:postkamer:2026-0001', 'filinq:sep:v1:postkamer:2026-0002', 'filinq:sep:v1:postkamer:2026-0003'],
+			self::qrPayloads(html: $html),
+			'And a QR code per sheet, drawn locally as an image.'
+		);
 
 	}//end testThreeCaseNumbersMakeThreeSheets()
 
@@ -154,7 +201,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testAPrintWithoutCaseNumbersStillProducesOneSheet(): void {
 		$html = $this->sheets()->render(profileId: 'postkamer');
@@ -169,7 +216,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testSheetsWithoutAProfileAreRefused(): void {
 		$this->expectException(RuntimeException::class);
@@ -182,7 +229,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testARendererThatFailsSaysSo(): void {
 		$this->expectException(RuntimeException::class);
@@ -195,7 +242,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testTheDeepestWatchedFolderWins(): void {
 		$config = $this->createMock(IAppConfig::class);
@@ -221,7 +268,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testAProfileMustNameAnIdAFolderAndAKnownMode(): void {
 		$config = $this->createMock(IAppConfig::class);
@@ -251,7 +298,7 @@ class SeparatorSheetServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testUnreadableProfilesWatchNothing(): void {
 		$config = $this->createMock(IAppConfig::class);
@@ -286,9 +333,9 @@ class SeparatorSheetServiceTest extends TestCase {
 			]
 		);
 
-		preg_match_all('/<barcode code="([^"]+)"/', $html, $codes);
-		$this->assertSame(['filinq:sep:v2:archief:po:po-1', 'filinq:sep:v2:archief:po:po-2'], $codes[1]);
-		$this->assertSame(['po:po-1', 'po:po-2'], array_map(static fn (string $code): ?string => $service->readPayload(payload: html_entity_decode($code)), $codes[1]));
+		$codes = self::qrPayloads(html: $html);
+		$this->assertSame(['filinq:sep:v2:archief:po:po-1', 'filinq:sep:v2:archief:po:po-2'], $codes);
+		$this->assertSame(['po:po-1', 'po:po-2'], array_map(static fn (string $code): ?string => $service->readPayload(payload: $code), $codes));
 		$this->assertStringContainsString('Scheidingsvel voor Doos 12 / 3', $html);
 		$this->assertStringContainsString('Bouwvergunning Dorpsstraat 4 &lt;1978&gt;', $html);
 		$this->assertSame(1, substr_count($html, '<pagebreak />'));
@@ -331,4 +378,25 @@ class SeparatorSheetServiceTest extends TestCase {
 			}
 		}
 	}//end testAnOriginalsPrintWithoutOriginalsOrProfileIsRefused()
+
+	/**
+	 * The payloads of the QR images on the sheets: each image is an SVG whose
+	 * description is the encoded text (tc-lib-barcode).
+	 *
+	 * @param string $html The sheets' HTML.
+	 *
+	 * @return array<int, string> The payloads, in page order.
+	 */
+	private static function qrPayloads(string $html): array {
+		preg_match_all('/<img src="data:image\/svg\+xml;base64,([^"]+)"/', $html, $images);
+
+		return array_map(
+			static function (string $image): string {
+				preg_match('/<desc>([^<]*)<\/desc>/', (string) base64_decode($image), $desc);
+				return html_entity_decode($desc[1] ?? '');
+			},
+			$images[1]
+		);
+
+	}//end qrPayloads()
 }//end class

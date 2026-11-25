@@ -1096,16 +1096,16 @@
 			"sourceRef": "dossiq gap register 1.6",
 			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Not built (closing audit 2026-11-12, decision 389): the cut is never triggered: no watched-folder job calls ScanBatchService::receive() (task 3.2 open); the intake page only prints separator sheets. Built so far: lib/Service/ScanBatchService.php (receive/split over FPDI, QR + blank-page detection, dispatches IntakeDocumentReceivedEvent per segment) and lib/Service/SeparatorSheetService.php are implemented and unit-tested, routed at scanIntake#separators/split (routes.php:119,122), route-reach.txt marks both 'none'. openspec/changes/scan-intake-with-separator-sheets/tasks.md: task 3.2 'Point the watched-folder job at ScanBatchService::receive()' is unchecked and lib/BackgroundJob/ has no such job; task 2.2 'print action and dialog on the intake page' is unchecked. grep of src/ for scanIntake/separatorSheet/scanProfile: no match.",
-				"change": "openspec/changes/scan-intake-with-separator-sheets",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): the cut is never triggered: no watched-folder job calls ScanBatchService::receive() (task 3.2 open); the intake page only prints separator sheets. Built so far: lib/Service/ScanBatchService.php (receive/split over FPDI, QR + blank-page detection, dispatches IntakeDocumentReceivedEvent per segment) and lib/Service/SeparatorSheetService.php are implemented and unit-tested, routed at scanIntake#separators/split (routes.php:119,122), route-reach.txt marks both 'none'. openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md: task 3.2 'Point the watched-folder job at ScanBatchService::receive()' is unchecked and lib/BackgroundJob/ has no such job; task 2.2 'print action and dialog on the intake page' is unchecked. grep of src/ for scanIntake/separatorSheet/scanProfile: no match.",
+				"change": "openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets",
 				"requirement": [
-					"openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: Separator sheets are printed by filinq and read by filinq (REQ-SCI-02)",
-					"openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: Every segment reaches the inbox through the intake event (REQ-SCI-03)"
+					"openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake :: Separator sheets are printed by filinq and read by filinq (REQ-SCI-02)",
+					"openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake :: Every segment reaches the inbox through the intake event (REQ-SCI-03)"
 				],
 				"plan": [
-					"openspec/changes/scan-intake-with-separator-sheets",
+					"openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets",
 					"openspec/changes/scan-intake-from-a-watched-folder"
 				]
 			},
@@ -1136,12 +1136,12 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "planned",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): no screen lists or adds a scanner profile; the profile routes have no caller. Planned in openspec/changes/scan-intake-with-separator-sheets (task 4.2). Built so far: lib/Service/ScanProfileService.php reads/writes 'scanProfiles' via IAppConfig; routed at scanIntake#listProfiles/declareProfiles (routes.php:120-121), route-reach.txt marks both 'none'. No admin-settings Vue component references 'scanProfiles' (checked src/views/settings/Settings.vue).",
-				"change": "openspec/changes/scan-intake-with-separator-sheets",
-				"requirement": "openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: A scanner profile is saved per source and reused (REQ-SCI-05)",
-				"plan": "openspec/changes/scan-intake-with-separator-sheets"
+				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): no screen lists or adds a scanner profile; the profile routes have no caller. Planned in openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets (task 4.2). Built so far: lib/Service/ScanProfileService.php reads/writes 'scanProfiles' via IAppConfig; routed at scanIntake#listProfiles/declareProfiles (routes.php:120-121), route-reach.txt marks both 'none'. No admin-settings Vue component references 'scanProfiles' (checked src/views/settings/Settings.vue).",
+				"change": "openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets",
+				"requirement": "openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake :: A scanner profile is saved per source and reused (REQ-SCI-05)",
+				"plan": "openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets"
 			},
 			"reachedOn": "nothing reaches it (no admin UI, no frontend caller)",
 			"provider": "filinq",

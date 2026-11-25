@@ -5,7 +5,7 @@ SPDX-License-Identifier: EUPL-1.2
 Print separator sheets: pick the scan profile, type the case numbers, and get
 one PDF with a sheet per case number to put between the documents of a batch.
 
-@spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+@spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-2.2
 -->
 
 <template>
@@ -93,7 +93,7 @@ export default {
 		/**
 		 * The case numbers typed so far, one sheet each.
 		 *
-		 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+		 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-2.2
 		 */
 		caseNumbers() {
 			return parseCaseNumbers(this.caseNumbersText)
@@ -102,7 +102,7 @@ export default {
 		/**
 		 * Whether a profile is chosen and at least one case number is typed.
 		 *
-		 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+		 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-2.2
 		 */
 		canPrint() {
 			return (
@@ -116,7 +116,7 @@ export default {
 	/**
 	 * Read the scan profiles, and pick the only one when there is one.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-2.2
 	 */
 	async mounted() {
 		try {
@@ -139,7 +139,7 @@ export default {
 		 * Render the sheets and hand the PDF to the browser to save or print.
 		 *
 		 * @return {Promise<void>} Resolves once the download has started.
-		 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+		 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-2.2
 		 */
 		async print() {
 			this.busy = true

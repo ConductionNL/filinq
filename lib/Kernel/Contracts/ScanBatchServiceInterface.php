@@ -94,7 +94,7 @@ interface ScanBatchServiceInterface {
 	 *
 	 * @return array<string, mixed> The stored batch, in `received`.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function receive(File $file, array $profile): array;
 
@@ -131,7 +131,7 @@ interface ScanBatchServiceInterface {
 	 *
 	 * @return array<string, mixed> The batch, `split` or `failed`.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function split(array $batch, array $profile, File $file, Folder $target): array;
 
@@ -148,7 +148,7 @@ interface ScanBatchServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The segments, each with its pages and the case its separator named.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function segmentsOf(array $pages, string $mode, array $profile): array;
 }//end interface

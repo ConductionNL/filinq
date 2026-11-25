@@ -247,7 +247,7 @@ class ScanBatchSegmentationTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
 	 */
 	public function testModeNoneKeepsTheWholeBatchAsOneDocument(): void {
 		$service = $this->service($this->reader(['sep' => $this->separatorText('ZAAK-9'), 'blank' => '']));

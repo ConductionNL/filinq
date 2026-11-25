@@ -3,7 +3,8 @@
 The build order of the proposal as checkboxes. A box is ticked when the
 named change is archived.
 
-- [ ] 1 `scan-intake-with-separator-sheets` (wave 1, register row 1.6)
+- [x] 1 `scan-intake-with-separator-sheets` (wave 1, register row 1.6)
+  Ticked 2026-11-25: verified live and archived as `openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets`.
 - [x] 2 `merge-documents-to-pdf` (wave 1, register row 4.14)
   Ticked (decision 399): archived as `openspec/changes/archive/2026-09-28-merge-documents-to-pdf`.
 - [x] 3 `inbound-documents-and-the-worklist` (cluster 44)
