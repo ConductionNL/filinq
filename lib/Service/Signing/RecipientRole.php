@@ -107,7 +107,7 @@ final class RecipientRole {
 	 *
 	 * @return list<string>
 	 *
-	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-backend
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 */
 	public static function accepterIds(array $signers): array {
 		$ids = [];
@@ -129,7 +129,7 @@ final class RecipientRole {
 	 *
 	 * @return array{signers: list<mixed>, accepted: list<string>}
 	 *
-	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-backend
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 */
 	public static function split(array $request): array {
 		$accepted = array_values(array_map('strval', (array) ($request['accepterIds'] ?? [])));
