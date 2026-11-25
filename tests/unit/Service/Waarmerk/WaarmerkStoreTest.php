@@ -190,6 +190,33 @@ class WaarmerkStoreTest extends TestCase {
 	}//end testLookups()
 
 	/**
+	 * The lookup by code is not scoped to the visitor's organisation; other searches keep the default.
+	 *
+	 * Seen live: scoped to an anonymous visitor's (empty) organisation, a check answered "unknown"
+	 * for a waarmerk that exists.
+	 *
+	 * @return void
+	 */
+	public function testTheLookupByCodeIsNotScopedToTheVisitorsOrganisation(): void {
+		$store = $this->store();
+		$calls = [];
+		$this->objects->method('searchObjectsBySlug')->willReturnCallback(
+			function (string $registerSlug, string $schemaSlug, array $filters=[], bool $_rbac=true, bool $_multitenancy=true) use (&$calls): array {
+				$calls[] = ['rbac' => $_rbac, 'multitenancy' => $_multitenancy];
+				return [$this->seal()];
+			}
+		);
+
+		$this->assertSame(expected: 'w-1', actual: $store->findByCode(code: 'code-1')['uuid']);
+		$store->search(filters: ['status' => 'active']);
+
+		$this->assertSame(
+			expected: [['rbac' => false, 'multitenancy' => false], ['rbac' => false, 'multitenancy' => true]],
+			actual: $calls
+		);
+	}//end testTheLookupByCodeIsNotScopedToTheVisitorsOrganisation()
+
+	/**
 	 * A register failure is a 503, on read and on write.
 	 *
 	 * @return void
