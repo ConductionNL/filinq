@@ -1240,7 +1240,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 *
 		 * @param {string} folderName Folder name under /DocuDesk/.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
+		 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
 		 */
 		async createDossierFolder(folderName) {
 			const url = `${davBaseUrl()}/DocuDesk/${encodePath(folderName)}/`
@@ -1264,7 +1264,7 @@ export const useAnonymizationStore = defineStore('anonymization', {
 		 * @param {string} fileName Original file name.
 		 * @param {string} folderName Target dossier folder.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
+		 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#requirement-auto-dossier-on-multi-upload-req-dddmu-005
 		 */
 		async moveToDossier(fileName, folderName) {
 			const base = davBaseUrl()

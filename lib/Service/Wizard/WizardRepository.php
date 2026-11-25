@@ -130,9 +130,9 @@ class WizardRepository {
 	 */
 	private function search(array $filters): array {
 		// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
-		$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-			registerSlug: IntakeRepository::REGISTER,
-			schemaSlug: self::SCHEMA,
+		$rows = $this->objectResolver->slugSearch()->search(
+			register: IntakeRepository::REGISTER,
+			schema: self::SCHEMA,
 			filters: $filters
 		);
 		if (is_array($rows) === false) {

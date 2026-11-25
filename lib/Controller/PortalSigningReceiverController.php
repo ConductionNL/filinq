@@ -146,7 +146,7 @@ class PortalSigningReceiverController extends Controller {
 	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.3
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -274,7 +274,7 @@ class PortalSigningReceiverController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#3-portal
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#3-portal
 	 */
 	#[PublicPage]
 	#[NoCSRFRequired]
@@ -641,7 +641,7 @@ class PortalSigningReceiverController extends Controller {
 	 *
 	 * @return JSONResponse
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#3-portal
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#3-portal
 	 */
 	private function wrongAct(Throwable $exception): JSONResponse {
 		return new JSONResponse(

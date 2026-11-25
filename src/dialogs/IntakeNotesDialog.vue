@@ -7,7 +7,7 @@ Nextcloud comment on the document's file, so it is the same note the Files
 sidebar shows, and who may read or add one is whoever may open the file.
 Intake has no viewer to sit beside, so the notes open in this dialog.
 
-@spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
+@spec openspec/changes/archive/2026-11-25-work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
 -->
 
 <template>
@@ -54,7 +54,7 @@ export default {
 		 * The file the notes belong to.
 		 *
 		 * @return {string|null} The file id, or null when the document has none.
-		 * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-a-note-is-a-nextcloud-comment-on-the-file-req-wdn-001
+		 * @spec openspec/changes/archive/2026-11-25-work-document-notes/specs/document-notes/spec.md#requirement-a-note-is-a-nextcloud-comment-on-the-file-req-wdn-001
 		 */
 		fileId() {
 			const file = Number(this.document?.file || 0)

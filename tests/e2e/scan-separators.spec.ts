@@ -47,10 +47,10 @@
  * Not run in the change that wrote it (decision 139): the live pass runs it.
  */
 
-// @e2e openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#a-clerk-prints-separators-for-three-cases
-// @e2e openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#an-administrator-adds-a-scanner-profile
+// @e2e openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md#a-clerk-prints-separators-for-three-cases
+// @e2e openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md#an-administrator-adds-a-scanner-profile
 
-import type { APIRequestContext } from '@playwright/test'
+import type { APIRequestContext, Locator, Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
 import { createHash } from 'node:crypto'
@@ -71,6 +71,16 @@ const INTAKE_OBJECTS = '/index.php/apps/openregister/api/objects/filinq/intakeDo
 
 /** The signed-in user the WebDAV seed writes for. */
 const USER = process.env.NC_ADMIN_USER ?? 'admin'
+
+/**
+ * WebDAV with the stored browser session is refused without a request token
+ * (MKCOL answered 401 on a live run, 25 Nov 2026); the OCS header marks the
+ * call as an API call, and basic auth names the admin.
+ */
+const DAV = {
+	'OCS-APIRequest': 'true',
+	Authorization: `Basic ${Buffer.from(`${USER}:${process.env.NC_ADMIN_PASS ?? 'admin'}`).toString('base64')}`,
+}
 
 /** A scanned batch with filinq separator sheets (see the header). */
 const BATCH_PDF = process.env.FILINQ_E2E_SCAN_BATCH_PDF ?? ''
@@ -159,7 +169,7 @@ async function makeFolders(request: APIRequestContext, path: string): Promise<vo
 	let current = ''
 	for (const part of path.split('/')) {
 		current = current === '' ? part : `${current}/${part}`
-		const res = await request.fetch(`/remote.php/dav/files/${USER}/${current}`, { method: 'MKCOL' })
+		const res = await request.fetch(`/remote.php/dav/files/${USER}/${current}`, { method: 'MKCOL', headers: DAV })
 		expect([201, 405], `MKCOL ${current} (201 created / 405 already there)`).toContain(res.status())
 	}
 }
@@ -174,12 +184,12 @@ async function makeFolders(request: APIRequestContext, path: string): Promise<vo
  */
 async function uploadFile(request: APIRequestContext, path: string, bytes: Buffer): Promise<number> {
 	const url = `/remote.php/dav/files/${USER}/${path}`
-	const put = await request.put(url, { data: bytes, headers: { 'Content-Type': 'application/pdf' } })
+	const put = await request.put(url, { data: bytes, headers: { ...DAV, 'Content-Type': 'application/pdf' } })
 	expect([201, 204], `PUT ${path}`).toContain(put.status())
 
 	const find = await request.fetch(url, {
 		method: 'PROPFIND',
-		headers: { Depth: '0', 'Content-Type': 'application/xml' },
+		headers: { ...DAV, Depth: '0', 'Content-Type': 'application/xml' },
 		data: '<?xml version="1.0"?><d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns"><d:prop><oc:fileid/></d:prop></d:propfind>',
 	})
 	expect(find.status()).toBe(207)
@@ -212,6 +222,19 @@ async function deleteIntakeDocuments(request: APIRequestContext, fileIds: number
 	}
 }
 
+/**
+ * An open select's option by its text. NcSelect renders a long label as two
+ * spans (NcEllipsisedOption), so the accessible name reads "Black an d white"
+ * while the text is whole (seen on a live run, 25 Nov 2026).
+ *
+ * @param page The page.
+ * @param text The option text.
+ * @return The option locator.
+ */
+function option(page: Page, text: string | RegExp): Locator {
+	return page.getByRole('option').filter({ hasText: text }).first()
+}
+
 test.describe('scan intake with separator sheets', () => {
 	test.setTimeout(180_000)
 
@@ -241,10 +264,12 @@ test.describe('scan intake with separator sheets', () => {
 		const picker = page.getByTestId('separator-profile')
 		await expect(picker).toBeVisible({ timeout: 15_000 })
 		await picker.locator('.vs__dropdown-toggle').click()
-		await page.getByRole('option', { name: profile.label }).click()
+		await option(page, String(profile.label)).click()
 		await expect(picker).toContainText(String(profile.label))
 
-		await page.getByTestId('separator-case-numbers').locator('textarea').fill(caseNumbers.join('\n'))
+		// NcTextArea hands its data-testid to the textarea itself (Vue 3), so
+		// the box is found by its label (seen on a live run, 25 Nov 2026).
+		await page.getByRole('textbox', { name: /Case numbers, one per line|Zaaknummers, één per regel/ }).fill(caseNumbers.join('\n'))
 
 		const submit = page.getByTestId('cn-dialog-actions-submit')
 		await expect(submit).toHaveText(/Print 3 sheets|3 vellen afdrukken/)
@@ -289,9 +314,9 @@ test.describe('scan intake with separator sheets', () => {
 
 		const selects = form.locator('.v-select')
 		await selects.nth(0).locator('.vs__dropdown-toggle').click()
-		await page.getByRole('option', { name: /^(Black and white|Zwart-wit)$/ }).click()
+		await option(page, /Black and white|Zwart-wit/).click()
 		await selects.nth(1).locator('.vs__dropdown-toggle').click()
-		await page.getByRole('option', { name: /^(Separator sheet with QR code|Scheidingsvel met QR-code)$/ }).click()
+		await option(page, /Separator sheet with QR code|Scheidingsvel met QR-code/).click()
 
 		const declared = page.waitForResponse((res) => res.url().includes('/api/scan/profiles') && res.request().method() === 'POST')
 		await page.getByTestId('scan-profile-add').click()
@@ -359,7 +384,7 @@ test.describe('scan intake with separator sheets', () => {
 			}
 		} finally {
 			await deleteIntakeDocuments(request, segmentIds)
-			await request.fetch(`/remote.php/dav/files/${USER}/${folder}`, { method: 'DELETE' })
+			await request.fetch(`/remote.php/dav/files/${USER}/${folder}`, { method: 'DELETE', headers: DAV })
 		}
 	})
 })

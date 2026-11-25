@@ -218,9 +218,9 @@ class DocumentFinalityRuleService implements DocumentFinalityRuleServiceInterfac
 			// empty list, and no document was ever finalised by a consuming
 			// app's state change. `$documentRole` is matched below rather
 			// than here, so it stays out of the filters.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
 				filters: [
 					'declaringApp' => $declaringApp,
 					'typeReference' => $typeReference,

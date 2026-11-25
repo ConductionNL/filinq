@@ -446,7 +446,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
 	 */
 	public function testTheDefaultWooPublisherIsWritable(): void {
 		$this->mockConfig->expects($this->once())
@@ -491,7 +491,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
 	 */
 	public function testTheUnattendedThresholdIsWritableWithinItsBounds(): void {
 		$this->mockConfig->expects($this->once())
@@ -510,7 +510,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-3.3
 	 */
 	public function testAnUnattendedThresholdOutsideItsBoundsIsRefused(): void {
 		$this->mockConfig->expects($this->never())->method('setValueString');
@@ -534,7 +534,7 @@ class SettingsServiceTest extends TestCase {
 	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
 	 */
 	public function testEmptyOutputSubfolderNameIsRefused(): void {
-		$this->expectException(\RuntimeException::class);
+		$this->expectException(exception: \RuntimeException::class);
 		$this->expectExceptionCode(400);
 		$this->settingsService->updateSettings(['anonymisation.output_subfolder_name' => '']);
 
@@ -700,7 +700,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-5
 	 */
 	public function testInboundClassificationDefaultsOnAndIsWritable(): void {
 		$this->mockConfig->method('getValueString')->willReturnCallback(
@@ -854,5 +854,20 @@ class SettingsServiceTest extends TestCase {
 		$this->settingsService->updateSettings(['signing_provider' => 'docusign']);
 
 	}//end testUpdateSettingsWrapsAWriteFailure()
+
+	/**
+	 * Without an ObjectService the slug search refuses instead of failing on null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/openregister-bridge/spec.md
+	 */
+	public function testSlugSearchRefusesWithoutAnObjectService(): void {
+		$this->mockOpenRegister->method('getObjectService')->willReturn(null);
+
+		$this->expectException(exception: \RuntimeException::class);
+		$this->settingsService->slugSearch();
+
+	}//end testSlugSearchRefusesWithoutAnObjectService()
 
 }//end class

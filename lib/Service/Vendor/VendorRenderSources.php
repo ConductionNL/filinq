@@ -143,11 +143,10 @@ class VendorRenderSources {
 	 */
 	private function rows(): array {
 		try {
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
-				filters: ['type' => self::TYPE],
-				_rbac: false
+			$rows = $this->objectResolver->slugSearch(_rbac: false)->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
+				filters: ['type' => self::TYPE]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning(

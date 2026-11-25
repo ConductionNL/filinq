@@ -1,4 +1,4 @@
-# Signature verification portal (in progress)
+# Signature verification portal
 
 ## Overview
 
@@ -45,8 +45,38 @@ so the endpoint does not reveal whether a token exists.
 A seal named on the record is reported as `unverifiable` with
 `seal-check-unavailable`: seal verification is not part of this app yet.
 
+## The public page
+
+A signed PDF carries a QR code with the caption *Verify this document*. It
+opens `/apps/filinq/verify/{token}`, a public page that needs no account. The
+page reads the verdict from the endpoint above and shows:
+
+- whether the document content is unchanged since it was signed;
+- the file name, when the record was made, and how many signatures were
+  verified;
+- each signature with its status, the signer and the level. A signer that is
+  not bound to the signature is labelled *as stated*.
+
+![The public page for a verified document: content unchanged, one of one signature verified, signed by A. de Vries at level AES](/screenshots/signature-verification-verified.png)
+
+Under **Compare your copy** a visitor can pick their own copy of the document.
+The check runs in the browser against the recorded SHA-256; the file is not
+uploaded.
+
+A link that names nothing gets the same page with a neutral message, so the
+page does not tell a guesser which tokens exist:
+
+![The public page for a token that names nothing: "No signed document matches this link."](/screenshots/signature-verification-unknown.png)
+
+The visitor has no account and so no organisation. The one exact-token lookup
+therefore runs as the system through `SystemContextSeam`, with its reason
+logged. It never lists records and never reads anything but the record the
+token names.
+
+The same `verify/...` address also serves the waarmerk page. A signature token
+(32 hexadecimal characters) opens this page; a waarmerk code (a UUID with a
+check part) opens the waarmerk page. Neither page shadows the other.
+
 ## Not built yet
 
-- The public page itself (`verify/{token}`) and its registration.
-- The QR code on signed PDFs that links to the page.
 - Minting from the seal path and for LibreSign completions.

@@ -122,7 +122,7 @@ SPDX-License-Identifier: EUPL-1.2
 						<td :data-missing="missingOf(row).length">
 							{{
 								missingOf(row).length
-									? missingOf(row).join(', ')
+									? missingOf(row).map(fieldLabel).join(', ')
 									: t('filinq', 'Complete')
 							}}
 						</td>
@@ -265,7 +265,7 @@ SPDX-License-Identifier: EUPL-1.2
 				<p v-if="missing.length" class="publications__muted">
 					{{
 						t('filinq', 'Still missing: {fields}', {
-							fields: missing.join(', '),
+							fields: missing.map(fieldLabel).join(', '),
 						})
 					}}
 				</p>
@@ -363,6 +363,7 @@ import PublicationBulkMetadataDialog from '../../dialogs/PublicationBulkMetadata
 import {
 	canHandOff,
 	canWithdraw,
+	metadataLabel,
 	missingMetadata,
 	publicationStatusLabel,
 	readinessChecks,
@@ -433,7 +434,7 @@ export default {
 		 * Whether every listed record is selected.
 		 *
 		 * @return {boolean} True when there are records and all are selected.
-		 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+		 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 		 */
 		allSelected() {
 			return this.records.length > 0 && this.selected.length === this.records.length
@@ -524,6 +525,17 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The name a person reads for a missing DiWoo field.
+		 *
+		 * @param {string} field The field key.
+		 * @return {string} The label.
+		 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+		 */
+		fieldLabel(field) {
+			return metadataLabel(field, t)
+		},
+
 		t,
 
 		/**
@@ -565,7 +577,7 @@ export default {
 		 * Select every listed record, or none.
 		 *
 		 * @param {boolean} on Whether to select them
-		 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+		 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 		 */
 		toggleAll(on) {
 			this.selected = on ? this.records.map((row) => row.uuid) : []
@@ -576,7 +588,7 @@ export default {
 		 *
 		 * @param {string} uuid The record
 		 * @return {string} Its title, or the uuid when it is not listed.
-		 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+		 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 		 */
 		titleOf(uuid) {
 			const row = this.records.find((r) => r.uuid === uuid)
@@ -589,7 +601,7 @@ export default {
 		 *
 		 * @param {object} values One field and its value
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+		 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 		 */
 		async setMetadata(values) {
 			this.busy = true

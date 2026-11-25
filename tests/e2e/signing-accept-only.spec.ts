@@ -75,10 +75,20 @@ async function contextFor(
 	browser: Browser,
 	user: { userid: string; password: string },
 ): Promise<BrowserContext> {
-	return browser.newContext({
+	// A real session through the login form. With httpCredentials alone the
+	// browser has no Nextcloud session, and the app shell never mounts
+	// `#filinq-app` (seen on a live run, 25 Nov 2026).
+	const context = await browser.newContext({
 		storageState: { cookies: [], origins: [] },
-		httpCredentials: { username: user.userid, password: user.password },
 	})
+	const login = await context.newPage()
+	await login.goto('/index.php/login', { waitUntil: 'domcontentloaded' })
+	await login.locator('#user').fill(user.userid)
+	await login.locator('#password').fill(user.password)
+	await login.locator('button[type="submit"]').click()
+	await login.waitForURL(/\/apps\//, { timeout: 60000 })
+	await login.close()
+	return context
 }
 
 /**

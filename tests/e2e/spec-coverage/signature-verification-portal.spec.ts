@@ -49,11 +49,11 @@
  * Not run in the change that wrote it (decision 139): the live pass runs it.
  */
 
-// @e2e openspec/changes/signature-verification-portal/specs/signature-verification-portal/spec.md#anonymous-visitor-verifies-a-signed-document-via-its-qr
-// @e2e openspec/changes/signature-verification-portal/specs/signature-verification-portal/spec.md#signer-identity-shown-as-asserted-while-the-mac-excludes-it
-// @e2e openspec/changes/signature-verification-portal/specs/signature-verification-portal/spec.md#signing-completion-mints-a-verification-record
-// @e2e openspec/changes/signature-verification-portal/specs/signature-verification-portal/spec.md#public-page-is-reachable-logged-out-and-the-app-is-not-group-restricted
-// @e2e openspec/changes/signature-verification-portal/specs/signature-verification-portal/spec.md#a-downloaded-signed-pdf-is-verifiable-from-its-stamped-qr
+// @e2e openspec/changes/archive/2026-11-25-signature-verification-portal/specs/signature-verification-portal/spec.md#anonymous-visitor-verifies-a-signed-document-via-its-qr
+// @e2e openspec/changes/archive/2026-11-25-signature-verification-portal/specs/signature-verification-portal/spec.md#signer-identity-shown-as-asserted-while-the-mac-excludes-it
+// @e2e openspec/changes/archive/2026-11-25-signature-verification-portal/specs/signature-verification-portal/spec.md#signing-completion-mints-a-verification-record
+// @e2e openspec/changes/archive/2026-11-25-signature-verification-portal/specs/signature-verification-portal/spec.md#public-page-is-reachable-logged-out-and-the-app-is-not-group-restricted
+// @e2e openspec/changes/archive/2026-11-25-signature-verification-portal/specs/signature-verification-portal/spec.md#a-downloaded-signed-pdf-is-verifiable-from-its-stamped-qr
 
 import type { APIRequestContext, Browser, BrowserContext, Page } from '@playwright/test'
 

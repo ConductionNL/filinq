@@ -5,7 +5,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
  */
 
 import axios from '@nextcloud/axios'
@@ -57,7 +57,7 @@ async function outcome(call, fallback) {
  *
  * @param {string} uuid The record.
  * @return {Promise<object>} The outcome.
- * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
  */
 export function fetchMdtoStatus(uuid) {
 	return outcome(
@@ -72,7 +72,7 @@ export function fetchMdtoStatus(uuid) {
  *
  * @param {string} uuid The record.
  * @return {Promise<object>} { ok, data } with data.status blocked, manual, transferred or failed.
- * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
  */
 export async function transferRecord(uuid) {
 	const result = await outcome(
@@ -91,7 +91,7 @@ export async function transferRecord(uuid) {
  * @param {string} uuid The record.
  * @param {string} format xml or json.
  * @return {string} The address.
- * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
  */
 export function sidecarUrl(uuid, format = 'xml') {
 	return `${record(uuid)}/export?format=${format === 'json' ? 'json' : 'xml'}`
@@ -104,7 +104,7 @@ export function sidecarUrl(uuid, format = 'xml') {
  * @param {object} changes The fields to change.
  * @param {{objectRef: string, objectType: string}} subject The record it describes.
  * @return {Promise<object>} The outcome, data the stored supplement.
- * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
  */
 export function saveSupplement(existing, changes, subject) {
 	const { id, ...stored } = existing || {}
@@ -137,7 +137,7 @@ export function saveSupplement(existing, changes, subject) {
  * @param {string} field The proposed field.
  * @param {string} value The proposed value.
  * @return {object} The changes to save.
- * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
  */
 export function acceptProposal(supplement, field, value) {
 	return {
@@ -156,7 +156,7 @@ export function acceptProposal(supplement, field, value) {
  * @param {object} restriction The proposed restriction.
  * @param {boolean} accept Whether the operator accepts it.
  * @return {object} The changes to save.
- * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
  */
 export function decideRestriction(supplement, restriction, accept) {
 	const same = (entry) =>
@@ -174,7 +174,7 @@ export function decideRestriction(supplement, restriction, accept) {
  *
  * @param {object} status The status answer.
  * @return {object[]} The open restriction proposals.
- * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
  */
 export function openRestrictionProposals(status) {
 	const stored = status?.supplement?.beperkingGebruik || []

@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#2-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -25,7 +25,7 @@ namespace OCA\Filinq\Service\MailArchive;
  * The folder name for messages outside any folder, the most messages in one
  * unit, where the previous unit stopped, and whether the message bytes are read.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#2-1
  */
 final class MailArchiveRead {
 
@@ -73,7 +73,7 @@ final class MailArchiveRead {
 	 *
 	 * @return self The read.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#2-1
 	 */
 	public function from(array $cursor): self {
 		$read = clone $this;
@@ -88,7 +88,7 @@ final class MailArchiveRead {
 	 *
 	 * @return self The read.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-2
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#2-2
 	 */
 	public function countingOnly(): self {
 		$read = clone $this;
@@ -103,7 +103,7 @@ final class MailArchiveRead {
 	 *
 	 * @return array<string, int> The cursor; [] to start.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#2-1
 	 */
 	public function cursor(): array {
 		return $this->cursor;
@@ -115,7 +115,7 @@ final class MailArchiveRead {
 	 *
 	 * @return bool True to return them.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#2-2
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#2-2
 	 */
 	public function withContent(): bool {
 		return $this->withContent;

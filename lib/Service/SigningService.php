@@ -273,11 +273,7 @@ class SigningService implements SigningServiceInterface {
 		$this->guards->validator->validateSigners(signers: $signers);
 		// A request of accept-only recipients signs nothing (signing-accept-only-recipient D1).
 		RecipientRole::assertSomeoneSigns(entries: $signers);
-		$prepared = $this->guards->consentGuard->prepareSigners(
-			signers: $signers,
-			age: $request['guardianConsentAge'],
-			now: new DateTimeImmutable()
-		);
+		$prepared = $this->guards->consentGuard->prepareSigners(signers: $signers, age: $request['guardianConsentAge'], now: new DateTimeImmutable());
 
 		$request = $this->withInitiatorDocument(request: $request);
 		// Cross-app delegated-signing contract (filinq-signing-events): when a
@@ -317,6 +313,7 @@ class SigningService implements SigningServiceInterface {
 			initiator: [$initiatorUserId, $initiatorDisplayName],
 			attribution: new SigningAttribution(via: $via)
 		);
+		$this->mailTurn(request: $createdRequest, after: null);
 
 		return $createdRequest;
 	}//end createRequest()
@@ -616,7 +613,7 @@ class SigningService implements SigningServiceInterface {
 	 * @spec openspec/specs/portal-signing-actions/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/archive/2026-11-24-signer-identity-rails/specs/signer-identity-rails/spec.md
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	public function sign(string $requestId, string $signerId, ?array $verifiedActor = null, ?array $signatureData = null, ?array $fields = null): array {
 		return $this->signAct(
@@ -738,17 +735,7 @@ class SigningService implements SigningServiceInterface {
 			throw new RuntimeException('Signer has already responded to this request');
 		}
 
-		// Before any evidence is taken or anything is written: a sequential
-		// signer whose turn has not come is refused outright.
-		if ((string)($request['signingMode'] ?? '') !== SigningTurn::PARALLEL) {
-			SigningTurn::assertTurn(
-				request: $request,
-				signerId: $signerId,
-				signers: $this->signerRecords(request: $request, known: [$signerId => $signer])
-			);
-		}
-		// Typed field values are checked before anything is written (REQ-SFV-003).
-		$typed = $this->fieldValueChecker->valuesForAct(request: $request, signerId: $signerId, fields: $fields);
+		$typed = $this->checkBeforeWrite(request: $request, signer: $signer + ['id' => $signerId], fields: $fields);
 
 		$signer['identityEvidence'] = $this->guards->assuranceGate->evidenceForAct(
 			request: $request + ['id' => $requestId],
@@ -783,6 +770,43 @@ class SigningService implements SigningServiceInterface {
 
 		return $signer;
 	}//end signAct()
+
+	/**
+	 * What a signature checks before any evidence is taken or anything is
+	 * written: a sequential signer whose turn has not come is refused, typed
+	 * field values are checked (REQ-SFV-003), and the request's provider must
+	 * be able to complete it at all. Without the last, a native request on a
+	 * server with no signing secret stored the signature and its SIGNED audit
+	 * entry and then failed at completion, leaving a request no signer could
+	 * finish.
+	 *
+	 * @param array<string, mixed>      $request The signing request.
+	 * @param array<string, mixed>      $signer  The authorised signer record, with its `id`.
+	 * @param array<string, mixed>|null $fields  The typed field values sent with the act.
+	 *
+	 * @return array<string, mixed> The checked typed values to store on the signer.
+	 *
+	 * @throws RuntimeException When it is not the signer's turn, a value is refused or no artifact could be produced.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SigningTurn is a stateless rule.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	private function checkBeforeWrite(array $request, array $signer, ?array $fields): array {
+		$signerId = (string)$signer['id'];
+		if ((string)($request['signingMode'] ?? '') !== SigningTurn::PARALLEL) {
+			SigningTurn::assertTurn(
+				request: $request,
+				signerId: $signerId,
+				signers: $this->signerRecords(request: $request, known: [$signerId => $signer])
+			);
+		}
+
+		$typed = $this->fieldValueChecker->valuesForAct(request: $request, signerId: $signerId, fields: $fields);
+		$this->outputs->artifactProducer->assertCanProduce(request: $request);
+
+		return $typed;
+	}//end checkBeforeWrite()
 
 	/**
 	 * The user whose signing authority a signature exercises.
@@ -876,7 +900,7 @@ class SigningService implements SigningServiceInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
 	 * (sign or accept); an instance would add nothing.
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 */
 	public function accept(string $requestId, string $signerId, ?array $verifiedActor = null): array {
 		[$actorUserId, $actorDisplayName] = $this->actorResolver->resolveActingIdentity(verifiedActor: $verifiedActor);
@@ -946,7 +970,7 @@ class SigningService implements SigningServiceInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
 	 * (sign or accept); an instance would add nothing.
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#2-service-and-routes
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#2-service-and-routes
 	 */
 	private function assertEarlierRecipientsDone(array $request, string $signerId, array $signer): void {
 		if (($request['signingMode'] ?? 'sequential') !== 'sequential') {
@@ -1119,6 +1143,7 @@ class SigningService implements SigningServiceInterface {
 		// Cross-app delegated-signing contract: a declined request is terminal —
 		// emit SigningConcludedEvent (status=declined) for a delegated request.
 		$this->outputs->emitter->emitIfDelegated(request: $request, status: 'declined');
+		$this->mailDeclined(request: $request + ['id' => $requestId], signer: $signer, actorName: $actorDisplayName, reason: $reason);
 
 		$metadata = $this->actorResolver->actorAuditMetadata(verifiedActor: $verifiedActor);
 		$metadata['reason'] = $reason;
@@ -1325,6 +1350,7 @@ class SigningService implements SigningServiceInterface {
 				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema)),
 				_rbac: false
 			);
+			$this->mailTurn(request: $freshRequest + ['id' => $requestId], after: $act->signerId);
 			return;
 		}
 
@@ -1405,6 +1431,78 @@ class SigningService implements SigningServiceInterface {
 		);
 
 	}//end updateRequestStatus()
+
+	/**
+	 * Mail the signers whose turn it now is, bound to the request.
+	 *
+	 * Every signer record is read, because who is next depends on all of them.
+	 * Reading or mailing never stops the act it follows.
+	 *
+	 * @param array<string, mixed> $request The signing request, with its id and signerIds.
+	 * @param string|null          $after   The signer who just acted, or null at creation.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-1-signerinitiator-notifications-via-the-email-leaf-m
+	 */
+	private function mailTurn(array $request, ?string $after): void {
+		if ($this->outputs->mail === null) {
+			return;
+		}
+
+		try {
+			$objectService = $this->settingsService->getObjectService();
+			['register' => $signerRegister, 'schema' => $signerSchema] = $this->requireSignerRecordBinding();
+			['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
+			$signers = [];
+			foreach (($request['signerIds'] ?? []) as $signerId) {
+				$signers[(string)$signerId] = $this->toArray(
+					object: $objectService->find(
+						id: (string)$signerId,
+						options: new ObjectFindOptions(register: $signerRegister, schema: $signerSchema),
+						_rbac: false
+					)
+				);
+			}
+
+			$this->outputs->mail->turnStarted(
+				request: $request,
+				signers: $signers,
+				target: new ObjectBoundMailTarget(uuid: (string)($request['id'] ?? ($request['uuid'] ?? '')), register: $register, schema: $schema),
+				after: $after
+			);
+		} catch (\Throwable $e) {
+			return;
+		}
+	}//end mailTurn()
+
+	/**
+	 * Mail the initiator that a signer declined, bound to the request.
+	 *
+	 * @param array<string, mixed> $request   The signing request, with its id.
+	 * @param array<string, mixed> $signer    The signer record that declined.
+	 * @param string               $actorName The acting user's name, when the record names nobody.
+	 * @param string               $reason    The reason given.
+	 *
+	 * @return void
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SigningTurn is the stateless rule for a signer's name.
+	 *
+	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-1-signerinitiator-notifications-via-the-email-leaf-m
+	 */
+	private function mailDeclined(array $request, array $signer, string $actorName, string $reason): void {
+		if ($this->outputs->mail === null) {
+			return;
+		}
+
+		['register' => $register, 'schema' => $schema] = $this->requireSigningRequestBinding();
+		$this->outputs->mail->declined(
+			request: $request,
+			declinedBy: SigningTurn::nameOf(signerId: $actorName, signer: $signer),
+			reason: $reason,
+			target: new ObjectBoundMailTarget(uuid: (string)$request['id'], register: $register, schema: $schema)
+		);
+	}//end mailDeclined()
 
 	/**
 	 * The signer records listed before one signer on a request, plus that signer, by id.
@@ -1529,7 +1627,7 @@ class SigningService implements SigningServiceInterface {
 	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role
 	 * (sign or accept); an instance would add nothing.
 	 *
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#4-screens
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#4-screens
 	 */
 	public function recipientsOf(array $request): array {
 		$signerIds = (array)($request['signerIds'] ?? []);

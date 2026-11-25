@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/filinq
  *
- * @spec openspec/specs/method-decomposition/spec.md
+ * @spec openspec/specs/case-system-delivery/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -45,7 +45,7 @@ interface CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The destinations.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
 	 */
 	public function listDestinations(): array;
 
@@ -54,7 +54,7 @@ interface CaseSystemDeliveryServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The deliveries, waiting ones first.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 	 */
 	public function openDeliveries(): array;
 
@@ -67,7 +67,7 @@ interface CaseSystemDeliveryServiceInterface {
 	 *
 	 * @throws RuntimeException 404 when there is no such delivery, 409 when it is not in `writeback_failed`.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 	 */
 	public function retry(string $id): array;
 
@@ -81,7 +81,7 @@ interface CaseSystemDeliveryServiceInterface {
 	 * @throws InvalidArgumentException When it names neither a template nor a namespace, has no source,
 	 *                                  or would be a second active destination.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-an-admin-declares-where-generated-documents-go-in-the-case-system-req-gsc-001
 	 */
 	public function saveDestination(array $input): array;
 }//end interface

@@ -5,7 +5,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 
 import axios from '@nextcloud/axios'
@@ -34,7 +34,7 @@ export const STATUSES = [
  *
  * @param {string} status The status.
  * @return {string} The label.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export function statusLabel(status) {
 	return (
@@ -53,7 +53,7 @@ export function statusLabel(status) {
  * The badge colour of each status label.
  *
  * @return {object} Label to colour.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export function statusColorMap() {
 	return {
@@ -71,7 +71,7 @@ export function statusColorMap() {
  *
  * @param {string} format mbox, zip or pst.
  * @return {string} The label.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export function formatLabel(format) {
 	return (
@@ -89,7 +89,7 @@ export function formatLabel(format) {
  *
  * @param {object} counts { found, filed, toInbox, skippedDuplicate, failed }.
  * @return {number} 0 to 100.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export function progressPercent(counts = {}) {
 	const found = Number(counts.found) || 0
@@ -109,7 +109,7 @@ export function progressPercent(counts = {}) {
  *
  * @param {object} counts { found, filed, toInbox, skippedDuplicate, failed }.
  * @return {string} The line.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export function countsText(counts = {}) {
 	return t(
@@ -130,7 +130,7 @@ export function countsText(counts = {}) {
  *
  * @param {string} reason The reason code.
  * @return {string} The sentence.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export function failureText(reason) {
 	switch (reason) {
@@ -158,7 +158,7 @@ export function failureText(reason) {
  *
  * @param {object} row The import.
  * @return {boolean} True before it has ended.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export function canCancel(row) {
 	return ['received', 'mapping', 'importing'].includes(row?.status)
@@ -171,7 +171,7 @@ export function canCancel(row) {
  * @param {Array<object>} folderMap The import's folders, { archiveFolder }.
  * @param {object} picked Folder name to dossier id, or to a { id } option.
  * @return {Array<object>} Rows of { archiveFolder, dossier }.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export function mappingPayload(folderMap = [], picked = {}) {
 	return folderMap.map((row) => {
@@ -189,7 +189,7 @@ export function mappingPayload(folderMap = [], picked = {}) {
  * The user's imports.
  *
  * @return {Promise<object>} { ok, data: { results } }.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export function listImports() {
 	return answer(axios.get(generateUrl(BASE)))
@@ -200,7 +200,7 @@ export function listImports() {
  *
  * @param {number} fileId The archive's file id.
  * @return {Promise<object>} { ok, data: import }.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export function startImport(fileId) {
 	return answer(axios.post(generateUrl(BASE), { fileId: Number(fileId) }))
@@ -212,7 +212,7 @@ export function startImport(fileId) {
  * @param {string} uuid The import.
  * @param {Array<object>} folderMap Rows of { archiveFolder, dossier }.
  * @return {Promise<object>} { ok, data: import } or a 403 for a refused dossier.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export function mapFolders(uuid, folderMap) {
 	return answer(
@@ -227,7 +227,7 @@ export function mapFolders(uuid, folderMap) {
  *
  * @param {string} uuid The import.
  * @return {Promise<object>} { ok, data: import }.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export function cancelImport(uuid) {
 	return answer(
@@ -239,7 +239,7 @@ export function cancelImport(uuid) {
  * The dossiers that can be picked for a folder.
  *
  * @return {Promise<Array<object>>} Options of { id, label }; none when they cannot be read.
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#4-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#4-1
  */
 export async function loadDossierOptions() {
 	const result = await answer(
@@ -264,7 +264,7 @@ export async function loadDossierOptions() {
  * The admin settings: the per-run limit and whether readpst is installed.
  *
  * @return {Promise<object>} { ok, data: { messagesPerRun, readpstInstalled } }.
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-the-container-format-is-detected-and-split-on-the-server-req-mai-002
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-the-container-format-is-detected-and-split-on-the-server-req-mai-002
  */
 export function loadImportSettings() {
 	return answer(axios.get(generateUrl(`${BASE}/settings`)))
@@ -275,7 +275,7 @@ export function loadImportSettings() {
  *
  * @param {number|string} messagesPerRun The limit; the server clamps it to 1..2000.
  * @return {Promise<object>} { ok, data: { messagesPerRun, readpstInstalled } }.
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
  */
 export function saveImportSettings(messagesPerRun) {
 	return answer(

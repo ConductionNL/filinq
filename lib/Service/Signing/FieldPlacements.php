@@ -180,7 +180,7 @@ class FieldPlacements {
 	 *
 	 * @throws InvalidArgumentException When a setting has the wrong shape.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	private function textSettings(array $placement, string $where): array {
 		$settings = [];

@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/share-document-links/specs/document-share-links/spec.md
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links/spec.md
  */
 
 declare(strict_types=1);
@@ -32,7 +32,7 @@ use RuntimeException;
  * service talks to this seam and PHPUnit drives it through a stub, like
  * DomainFolderGateway (design D2).
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.1
  */
 interface LinkShareGateway {
 
@@ -49,7 +49,7 @@ interface LinkShareGateway {
 	 *
 	 * @throws RuntimeException With Nextcloud's reason when it refuses the share.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.1
 	 */
 	public function createLink(int $fileId, string $uid, DateTimeImmutable $expires, ?string $password, string $note): array;
 
@@ -60,7 +60,7 @@ interface LinkShareGateway {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.1
 	 */
 	public function delete(string $shareId): void;
 
@@ -71,7 +71,7 @@ interface LinkShareGateway {
 	 *
 	 * @return bool True while the share exists.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.1
 	 */
 	public function exists(string $shareId): bool;
 
@@ -81,7 +81,7 @@ interface LinkShareGateway {
 	 * @return array{maxDays: int|null, passwordRequired: bool} The enforced maximum expiry in days (null when none) and
 	 *                                                          whether a link needs a password.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.1
 	 */
 	public function linkPolicy(): array;
 
@@ -94,7 +94,7 @@ interface LinkShareGateway {
 	 *
 	 * @return bool True when the user may share the file.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.1
 	 */
 	public function mayShare(int $fileId, string $uid): bool;
 }//end interface

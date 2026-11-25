@@ -355,7 +355,7 @@ class FieldPlacementRenderingTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.4
 	 */
 	public function testATypedValueIsDrawnInItsBlock(): void {
 		$signed = $this->provider()->produceSignedArtifact(documentContent: $this->threePagePdf(), context: $this->contextWithIban(iban: 'NL91ABNA0417164300'));
@@ -372,7 +372,7 @@ class FieldPlacementRenderingTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.4
 	 */
 	public function testAnAlteredValueFailsVerification(): void {
 		$original = $this->threePagePdf();
@@ -393,7 +393,7 @@ class FieldPlacementRenderingTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.4
 	 */
 	public function testATextFieldWithoutAValueShowsTheSignersName(): void {
 		$rendered = (new FieldPlacementRenderer())->render(

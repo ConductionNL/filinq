@@ -16,11 +16,19 @@ Only intake documents are classified. Other records with a file, such as a confo
 
 ## Decide on the suggestions
 
+![Classification suggestions: a letter at 60%, a decision and an invoice at 100%, the sender not known yet, each with Confirm, Correct and Reject](/screenshots/classification-pending.png)
+
 1. Open **Classification** in the menu. You see the suggestions on files you can open yourself.
 2. Check the type, its confidence, the sender and the dossier.
 3. Click **Confirm** to accept it as it is. The type and the sender are written onto the document, and when a dossier was suggested the file moves into the dossier's folder.
 4. Click **Correct** to change the type, the sender or the dossier first, then **Confirm**. The record keeps what was suggested and what you chose.
 5. Click **Reject** when the suggestion is wrong and you do not want to fix it. The document stays as it is.
+
+![Correct and confirm: the suggested type, an empty sender and a dossier picked to file the letter in](/screenshots/classification-correct.png)
+
+After **Confirm**, the letter has moved into the dossier's folder and shows in the dossier's documents:
+
+![The dossier detail with the confirmed letter in its documents](/screenshots/classification-filed-in-dossier.png)
 
 **Confirm all shown** confirms every suggestion on the page as suggested. Use it after you have read the list, not instead of reading it.
 

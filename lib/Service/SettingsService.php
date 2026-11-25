@@ -160,6 +160,26 @@ class SettingsService implements SettingsServiceInterface {
 	}//end getObjectService()
 
 	/**
+	 * A slug search on OpenRegister's ObjectService, in the form the installed OpenRegister declares.
+	 *
+	 * @return SlugSearch The search.
+	 *
+	 * Final, so a test double of this service still runs it over its own getObjectService().
+	 *
+	 * @throws RuntimeException If the ObjectService is not available
+	 *
+	 * @spec openspec/specs/openregister-bridge/spec.md
+	 */
+	final public function slugSearch(): SlugSearch {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			throw new RuntimeException(message: 'OpenRegister ObjectService is not available.');
+		}
+
+		return new SlugSearch(objects: $objectService);
+	}//end slugSearch()
+
+	/**
 	 * Initializes the app with all required components
 	 *
 	 * @return array<string, mixed> The initialization results
@@ -348,7 +368,7 @@ class SettingsService implements SettingsServiceInterface {
 	 *
 	 * @return array{available: bool, version: string|null} The qpdf status.
 	 *
-	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
 	 */
 	public function getQpdfStatus(): array {
 		$version = $this->qpdf?->version();
@@ -482,7 +502,7 @@ class SettingsService implements SettingsServiceInterface {
 	/**
 	 * The TOOI identifier a new publication's publisher is prefilled with.
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
 	 */
 	private const DEFAULT_PUBLISHER_KEY = 'woo.default_publisher';
 

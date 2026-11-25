@@ -109,7 +109,7 @@ class SanitizationRecordRepository {
 	 */
 	private function search(array $filters): array {
 		// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
-		$rows = $this->objectResolver->resolve()->searchObjectsBySlug(registerSlug: 'filinq', schemaSlug: self::SCHEMA, filters: $filters);
+		$rows = $this->objectResolver->slugSearch()->search(register: 'filinq', schema: self::SCHEMA, filters: $filters);
 
 		if (is_array($rows) === false) {
 			return [];

@@ -67,6 +67,8 @@ The checks are run by OpenRegister. When this server's OpenRegister has no IBAN 
 
 In the **Signing folder** a document with fields to fill in says "This document has fields to fill in. Open it to sign." It cannot be signed as part of **Sign selected**. Choose **Fill in and sign**, type the values and choose **Sign**.
 
+![Fill in and sign: a Dutch IBAN with a wrong check digit is named on its field](/screenshots/signing-field-validation-dialog.png)
+
 Filinq checks every value on the server before anything is signed. A wrong value gets a message on its field, such as "Type a valid Dutch IBAN, for example NL91 ABNA 0417 1643 00", and nothing is signed until every value is accepted. An IBAN is stored in capitals without spaces and drawn on the page in groups of four.
 
 The values are stored on the signer's record, which only signing administrators can read, and drawn into the document inside what the signature protects: changing a value in the signed file afterwards makes verification report the document as tampered. Values never appear in a log line or the audit trail.

@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 class IntakeRepository implements IntakeRepositoryInterface {
 
@@ -54,6 +54,16 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 * @var string
 	 */
 	private const REGISTRATION_SCHEMA = 'documentRegistration';
+
+	/**
+	 * The intake document's read-only fields: computed on every read, refused
+	 * by OpenRegister on a save. Kept equal to the `readOnly`/`computed`
+	 * properties of `intakeDocument` in lib/Settings/filinq_register.json
+	 * (IntakeRepositoryTest pins that).
+	 *
+	 * @var array<int, string>
+	 */
+	public const READ_ONLY_FIELDS = ['daysLeft'];
 
 	/**
 	 * Constructor.
@@ -77,7 +87,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 *
 	 * @throws RuntimeException When the register could not be read.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function findWaiting(): array {
 		return $this->search(filters: ['status' => self::STATUS_RECEIVED]);
@@ -152,7 +162,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 *
 	 * @return array<string, mixed>|null The stored document, or null when this is the first delivery.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function findBySourceRef(string $sourceRef): ?array {
 		if ($sourceRef === '') {
@@ -175,7 +185,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 *
 	 * @return array<string, mixed>|null The document, or null when there is none.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	public function findByUuid(string $uuid): ?array {
 		if ($uuid === '') {
@@ -214,7 +224,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 *
 	 * @return array<string, mixed>|null The document, or null when none came before.
 	 *
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-an-arrival-whose-content-came-before-is-marked-never-refused-req-iws-003
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-an-arrival-whose-content-came-before-is-marked-never-refused-req-iws-003
 	 */
 	public function findByContentHash(string $contentHash): ?array {
 		if ($contentHash === '') {
@@ -253,7 +263,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The overdue documents, the longest overdue first.
 	 *
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
 	 */
 	public function findOverdue(string $today, array $handledWhen): array {
 		$overdue = [];
@@ -311,7 +321,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 *
 	 * @return bool True when it was answered.
 	 *
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
 	 */
 	private function isAnswered(string $uuid): bool {
 		if ($uuid === '') {
@@ -345,10 +355,16 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 *
 	 * @throws RuntimeException When the write fails.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * A document as read carries computed fields (`daysLeft`); they are left
+	 * out, as OpenRegister refuses a save that writes a read-only field
+	 * (every assign answered 500 on a live run, 25 Nov 2026).
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-5.2
 	 */
 	public function save(array $document, ?string $uuid = null): array {
 		unset($document['uuid']);
+		$document = array_diff_key($document, array_flip(self::READ_ONLY_FIELDS));
 
 		try {
 			$arguments = [
@@ -404,7 +420,7 @@ class IntakeRepository implements IntakeRepositoryInterface {
 	 *
 	 * @throws RuntimeException When the register could not be read.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	private function search(array $filters, string $schema=self::SCHEMA): array {
 		try {
@@ -415,9 +431,9 @@ class IntakeRepository implements IntakeRepositoryInterface {
 			// inbox read as empty, and worse, findBySourceRef() never found
 			// the row it exists to find, so a channel redelivering a message
 			// wrote a second inbox document every time.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: $schema,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: self::REGISTER,
+				schema: $schema,
 				filters: $filters
 			);
 		} catch (DoesNotExistException $e) {

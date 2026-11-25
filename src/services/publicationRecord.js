@@ -100,3 +100,26 @@ export function canHandOff(record, platformAvailable) {
 export function canWithdraw(record) {
 	return ['handed_off', 'published'].includes(record.status)
 }
+
+/**
+ * The name a person reads for a DiWoo metadata field.
+ *
+ * The server names a missing field by its key (`wooCategory`, `publicatiedatum`);
+ * the worklist shows the label the Set metadata dialog uses for the same field.
+ *
+ * @param {string} field The field key.
+ * @param {(app: string, text: string) => string} t The translate function.
+ * @return {string} The label, or the key for a field without one.
+ * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+ */
+export function metadataLabel(field, t) {
+	const labels = {
+		officieleTitel: t('filinq', 'Official title'),
+		wooCategory: t('filinq', 'Information category'),
+		documentsoort: t('filinq', 'Document type'),
+		publisher: t('filinq', 'Publisher'),
+		creatiedatum: t('filinq', 'Creation date'),
+		publicatiedatum: t('filinq', 'Publication date'),
+	}
+	return labels[field] ?? field
+}

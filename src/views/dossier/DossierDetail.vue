@@ -394,7 +394,7 @@ export default {
 		 *
 		 * @return {Array<string>} The targets to render a button for.
 		 *
-		 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 		 */
 		offeredTransitions() {
 			const targets = this.dossierStore.dossier?.availableTransitions || []
@@ -408,7 +408,7 @@ export default {
 		 * The file whose notes show under the viewer: the selected document.
 		 *
 		 * @return {string|null} The file id, or null when nothing is open.
-		 * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
+		 * @spec openspec/changes/archive/2026-11-25-work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
 		 */
 		/**
 		 * The dossier's home folder, which the AI companion scopes a question to.

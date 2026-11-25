@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -49,7 +49,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) The thirteenth type is
  * OCP\Files\File, named so the batch id is checked to be a file before it
@@ -113,7 +113,7 @@ class ScanIntakeController extends Controller {
 	 *       up from either argument. Verified by reading SeparatorSheetService::
 	 *       render(), which touches the profile store and the PDF writer only.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	#[NoAdminRequired]
 	public function separators(string $profileId = '', array $caseNumbers = []): DataDownloadResponse|JSONResponse {
@@ -139,7 +139,7 @@ class ScanIntakeController extends Controller {
 	 *
 	 * @return JSONResponse The profiles.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	#[NoAdminRequired]
 	public function listProfiles(): JSONResponse {
@@ -172,7 +172,7 @@ class ScanIntakeController extends Controller {
 	 *       gate would hand every authenticated user the setting this method exists to
 	 *       keep administrative.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function declareProfiles(array $profiles = []): JSONResponse {
 		try {
@@ -197,7 +197,7 @@ class ScanIntakeController extends Controller {
 	 *
 	 * @return JSONResponse The batch, split or failed.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md
 	 *
 	 * @no-admin-idor-exempt the batch file is resolved by batchFile() from the session user's own user
@@ -288,7 +288,7 @@ class ScanIntakeController extends Controller {
 	 *                   catches it and answers the refusal, so a store that is down
 	 *                   is reported rather than read as "nobody watches this folder".
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	private function resolveProfile(string $profileId, string $path): ?array {
 		if (trim($profileId) !== '') {
@@ -311,7 +311,7 @@ class ScanIntakeController extends Controller {
 	 *
 	 * @return string The path below the user's Files root, starting with `/`.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	private function userRelativePath(string $userId, string $path): string {
 		$root = '/' . $userId . '/files';

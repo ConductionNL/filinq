@@ -668,7 +668,7 @@ class PortalContributionProvider {
 	 *
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/specs/portal-signing-actions/spec.md
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#3-portal
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#3-portal
 	 */
 	private function signingActs(): array {
 		return [
@@ -728,7 +728,7 @@ class PortalContributionProvider {
 	 * @return array<int, array<string, mixed>> The actions.
 	 *
 	 * @spec openspec/specs/portal-signing-actions/spec.md
-	 * @spec openspec/changes/signing-accept-only-recipient/tasks.md#3-portal
+	 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#3-portal
 	 */
 	private function signerActions(): array {
 		$actions = [];

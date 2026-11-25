@@ -20,7 +20,7 @@ use RuntimeException;
 /**
  * REQ-ERP-003: an earlier extraction of the same invoice is found.
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#3.1
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#3.1
  */
 class ExtractionDuplicateLookupTest extends TestCase {
 

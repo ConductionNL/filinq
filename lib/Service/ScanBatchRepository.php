@@ -13,7 +13,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -40,7 +40,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  */
 class ScanBatchRepository implements ScanBatchRepositoryInterface {
 	use ReadsStoredObjectRows;
@@ -70,7 +70,7 @@ class ScanBatchRepository implements ScanBatchRepositoryInterface {
 	 *
 	 * @throws RuntimeException When the write fails.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function save(array $batch, string $uuid = ''): array {
 		unset($batch['uuid']);
@@ -116,7 +116,7 @@ class ScanBatchRepository implements ScanBatchRepositoryInterface {
 	 *
 	 * @return array<string, mixed>|null The batch, or null when there is none.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function find(string $uuid): ?array {
 		if ($uuid === '') {
@@ -152,7 +152,7 @@ class ScanBatchRepository implements ScanBatchRepositoryInterface {
 	 *
 	 * @return array<string, mixed>|null The batch, or null when the file is not one.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function findByFile(int $fileId): ?array {
 		if ($fileId <= 0) {
@@ -165,9 +165,9 @@ class ScanBatchRepository implements ScanBatchRepositoryInterface {
 			// ScanIntakeController never found the existing batch and
 			// re-splitting the same scanned PDF created a second one every
 			// time instead of resuming.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: ScanBatchService::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: IntakeRepository::REGISTER,
+				schema: ScanBatchService::SCHEMA,
 				filters: ['file' => $fileId]
 			);
 		} catch (Throwable $e) {

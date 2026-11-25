@@ -673,7 +673,7 @@ export default {
 		 * The selected documents that can be shared by link: files, not folders.
 		 *
 		 * @return {number[]} Their file ids.
-		 * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.1
 		 */
 		selectedShareIds() {
 			return myDocumentsStore.documents
@@ -1078,7 +1078,7 @@ export default {
 		 * Open the Share by link dialog for one or several documents.
 		 *
 		 * @param {number[]} fileIds The documents.
-		 * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.1
 		 */
 		openShare(fileIds) {
 			this.shareDocuments = [...fileIds]
@@ -1363,7 +1363,7 @@ export default {
 		 * Open the password dialog for the locked PDF of the validation result.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
 		 */
 		openPasswordDialog() {
 			this.unlock.show = true
@@ -1375,7 +1375,7 @@ export default {
 		 *
 		 * @param {object} copy The copy: fileId, name, validationStatus, validationFindings.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#2-screens
+		 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#2-screens
 		 */
 		async onUnlocked(copy) {
 			this.validation.fileId = copy.fileId
@@ -1503,7 +1503,7 @@ export default {
 		 *
 		 * @param {Array<object>} rows The rows on the page.
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+		 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 		 */
 		async loadCaseSystemFiles(rows) {
 			const ids = (rows || [])

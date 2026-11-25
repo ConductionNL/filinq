@@ -23,6 +23,8 @@ namespace OCA\Filinq\Service\Waarmerk;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\Filinq\Service\SlugSearch;
+use OCA\Filinq\Service\SystemContextSeam;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
@@ -61,11 +63,13 @@ class WaarmerkStore {
 	 * Constructor.
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolves OpenRegister's ObjectService.
+	 * @param SystemContextSeam|null        $seam           Reads a seal by its code across organisations for a visitor with no account.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
+		private readonly ?SystemContextSeam $seam=null,
 	) {
 
 	}//end __construct()
@@ -150,9 +154,49 @@ class WaarmerkStore {
 			return null;
 		}
 
-		return self::firstWith(rows: $this->search(filters: ['verificationCode' => $code]), match: ['verificationCode' => $code]);
+		$search = fn (): array => $this->searchWith(
+			search: $this->objectResolver->slugSearch(_rbac: false),
+			filters: ['verificationCode' => $code]
+		);
+
+		return self::firstWith(rows: $this->acrossOrganisations(search: $search), match: ['verificationCode' => $code]);
 
 	}//end findByCode()
+
+	/**
+	 * Run the lookup by code for a visitor with no account.
+	 *
+	 * Anyone may verify without an account, so the visitor's (empty) organisation
+	 * must not scope this read: scoped, an anonymous check answered "unknown" for a
+	 * waarmerk that exists (seen live). The unguessable, checksummed code is the
+	 * capability and the answer carries only what the verification page shows, so
+	 * this one exact-code lookup runs as the system, through the logged seam.
+	 * Without a seam the search runs as it is.
+	 *
+	 * @param callable(): array<int, array<string, mixed>> $search The exact-code search.
+	 *
+	 * @return array<int, array<string, mixed>> The rows.
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-waarmerk-is-publicly-verifiable-fail-closed-req-ddwmk-004
+	 */
+	private function acrossOrganisations(callable $search): array {
+		if ($this->seam === null) {
+			return $search();
+		}
+
+		$rows = $this->seam->run(
+			objectService: $this->objectResolver->contract(),
+			reason: 'a public waarmerk check names its seal by verification code, whatever the visitor\'s organisation',
+			operation: $search
+		);
+
+		if (is_array($rows) === false) {
+			return [];
+		}
+
+		return $rows;
+
+	}//end acrossOrganisations()
 
 	/**
 	 * The first row whose fields equal every value given, compared in constant time.
@@ -191,12 +235,28 @@ class WaarmerkStore {
 	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
 	 */
 	public function search(array $filters): array {
+		return $this->searchWith(search: $this->objectResolver->slugSearch(_rbac: false), filters: $filters);
+
+	}//end search()
+
+	/**
+	 * The stored seals matching the filters, read through the given slug search.
+	 *
+	 * @param SlugSearch           $search  The slug search, with its access flags.
+	 * @param array<string, mixed> $filters Field equality filters.
+	 *
+	 * @return array<int, array<string, mixed>> The matching seals.
+	 *
+	 * @throws WaarmerkRefusedException 503 when the register cannot be read.
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/tasks.md
+	 */
+	private function searchWith(SlugSearch $search, array $filters): array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
-				filters: $filters,
-				_rbac: false
+			$results = $search->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
+				filters: $filters
 			);
 		} catch (Throwable $e) {
 			throw new WaarmerkRefusedException(message: 'The waarmerk register could not be read', status: 503, previous: $e);
@@ -218,7 +278,7 @@ class WaarmerkStore {
 
 		return $rows;
 
-	}//end search()
+	}//end searchWith()
 
 	/**
 	 * Save a row.

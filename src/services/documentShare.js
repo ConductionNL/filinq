@@ -10,7 +10,7 @@
  * create `{share, url, expiresAt, expiryShortened, manifest?}`, and the
  * revoked record for a take-back. The record never holds the link.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.1
  */
 
 import axios from '@nextcloud/axios'
@@ -27,7 +27,7 @@ const sharesUrl = () => generateUrl('/apps/filinq/api/shares')
  *
  * @return {number[]} The ids.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.1
  */
 export function shareFileIds(fileIds) {
 	const ids = []
@@ -47,7 +47,7 @@ export function shareFileIds(fileIds) {
  *
  * @return {Promise<object>} `{ok, data}` or `{ok: false, status, error}`.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.1
  */
 export function preflightShare(fileIds) {
 	return answer(
@@ -62,7 +62,7 @@ export function preflightShare(fileIds) {
  *
  * @return {Promise<object>} `{ok, data}` or `{ok: false, status, error}`.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.1
  */
 export function createShare(input) {
 	const fileIds = shareFileIds(input.fileIds)
@@ -88,7 +88,7 @@ export function createShare(input) {
  *
  * @return {Promise<object>} `{ok, data}` or `{ok: false, status, error}`.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.3
  */
 export function revokeShare(uuid) {
 	return answer(axios.delete(`${sharesUrl()}/${encodeURIComponent(uuid)}`))
@@ -101,7 +101,7 @@ export function revokeShare(uuid) {
  *
  * @return {object} The query parameters.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.3
  */
 function shareListParams(user) {
 	const params = { _limit: 200, _order: { sharedAt: 'DESC' } }
@@ -118,7 +118,7 @@ function shareListParams(user) {
  *
  * @return {Promise<object>} `{ok, data: {results}}` or `{ok: false, status, error}`.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.3
  */
 export async function listShares(user) {
 	const outcome = await answer(
@@ -138,7 +138,7 @@ export async function listShares(user) {
  *
  * @return {object} The row.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.3
  */
 export function shareRow(record) {
 	const files = Array.isArray(record.files) ? record.files : []
@@ -158,7 +158,7 @@ export function shareRow(record) {
  *
  * @return {string} "Active", "Expired", or "Taken back" with who.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.3
  */
 export function shareStateLabel(row) {
 	if (row.status === 'revoked') {
@@ -180,7 +180,7 @@ export function shareStateLabel(row) {
  *
  * @return {boolean} True while it is active.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.3
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.3
  */
 export function canTakeBack(row) {
 	return row.status === 'active'
@@ -193,7 +193,7 @@ export function canTakeBack(row) {
  *
  * @return {string[]} The labels.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.2
  */
 export function shareLabels(preflight) {
 	const labels = []
@@ -224,7 +224,7 @@ const SHARE_RULES = [
  *
  * @return {boolean} True when every rule the dialog knows of is met.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.2
  */
 export function canShare(state) {
 	return SHARE_RULES.every((rule) => rule(state))
@@ -238,7 +238,7 @@ export function canShare(state) {
  *
  * @return {string} The date.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.1
  */
 export function latestExpiry(maxDays, today = new Date()) {
 	if (!maxDays || maxDays <= 0) {
@@ -255,7 +255,7 @@ export function latestExpiry(maxDays, today = new Date()) {
  *
  * @return {string} For example "1.5".
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.1
  */
 export function shareMegabytes(bytes) {
 	return (Number(bytes || 0) / 1048576).toFixed(1)

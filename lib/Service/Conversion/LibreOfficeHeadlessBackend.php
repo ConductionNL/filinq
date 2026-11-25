@@ -419,7 +419,7 @@ class LibreOfficeHeadlessBackend implements ConversionBackendInterface {
 	 *
 	 * @throws ConversionFailedException When LibreOffice is not available or soffice fails.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function convertDocument(string $bytes, string $fromExtension, string $toExtension): string {
 		if ($this->isAvailable() === false || isset(self::DOCUMENT_EXPORT_FILTERS[$toExtension]) === false) {

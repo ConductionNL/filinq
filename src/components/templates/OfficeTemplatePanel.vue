@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/office-template-authoring/specs/template-management/spec.md
+@spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/template-management/spec.md
 -->
 
 <template>
@@ -99,7 +99,7 @@ export default {
 		/**
 		 * report.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		report() {
 			return this.template.tagReport || {}
@@ -108,7 +108,7 @@ export default {
 		/**
 		 * unknown.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		unknown() {
 			return this.report.unknown || []
@@ -117,7 +117,7 @@ export default {
 		/**
 		 * tags.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		tags() {
 			if (Array.isArray(this.report.tags) && this.report.tags.length > 0) {
@@ -129,7 +129,7 @@ export default {
 		/**
 		 * sourceUrl.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		sourceUrl() {
 			return sourceUrl(this.template.id)
@@ -138,7 +138,7 @@ export default {
 		/**
 		 * previewUrl.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		previewUrl() {
 			return previewUrl(this.template.id)
@@ -151,7 +151,7 @@ export default {
 		/**
 		 * statusLabel.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		statusLabel(status) {
 			return {
@@ -165,7 +165,7 @@ export default {
 		/**
 		 * pick.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		pick(event) {
 			this.file = (event.target.files && event.target.files[0]) || null
@@ -174,7 +174,7 @@ export default {
 		/**
 		 * upload.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		async upload() {
 			this.uploading = true

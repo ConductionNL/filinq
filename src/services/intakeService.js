@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 
 import axios from '@nextcloud/axios'
@@ -31,7 +31,7 @@ export async function fetchWaitingInbox() {
  * Read the documents waiting for a clerk.
  *
  * @return {Promise<object[]>} The waiting documents.
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 export async function listWaitingDocuments() {
 	const url = generateUrl('/apps/filinq/api/intake/documents')
@@ -45,7 +45,7 @@ export async function listWaitingDocuments() {
  * @param {string} uuid The intake document.
  * @param {object} target The record, as register, schema and id.
  * @return {Promise<object>} The assigned document.
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 export async function assignIntakeDocument(uuid, target) {
 	const url = generateUrl('/apps/filinq/api/intake/documents/{uuid}/assign', {
@@ -65,7 +65,7 @@ export async function assignIntakeDocument(uuid, target) {
  * @param {string} uuid The intake document.
  * @param {string} reason Why it does not belong here.
  * @return {Promise<object>} The rejected document.
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 export async function rejectIntakeDocument(uuid, reason) {
 	const url = generateUrl('/apps/filinq/api/intake/documents/{uuid}/reject', {
@@ -119,7 +119,7 @@ export async function decidePartySuggestion(decision) {
  * The documents past their handling deadline that are not handled yet.
  *
  * @return {Promise<Array<object>>} The overdue documents, the longest overdue first.
- * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+ * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
  */
 export async function listOverdueDocuments() {
 	const url = generateUrl('/apps/filinq/api/intake/documents')
@@ -134,7 +134,7 @@ export async function listOverdueDocuments() {
  * @param {string} deadline The new deadline (Y-m-d).
  * @param {string} reason Why it moved.
  * @return {Promise<object>} The document.
- * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+ * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
  */
 export async function changeIntakeDeadline(uuid, deadline, reason) {
 	const url = generateUrl('/apps/filinq/api/intake/documents/{uuid}/deadline', {

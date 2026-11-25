@@ -72,7 +72,7 @@ interface SeparatorSheetServiceInterface {
 	 *
 	 * @return string The payload.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function payload(string $profileId, string $caseNumber = ''): string;
 
@@ -84,7 +84,7 @@ interface SeparatorSheetServiceInterface {
 	 * @return string|null The case number, `po:<originalId>` for a sheet naming a paper original,
 	 *                     an empty string when the sheet named none, or null when this is not a separator.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function readPayload(string $payload): ?string;
 
@@ -96,7 +96,7 @@ interface SeparatorSheetServiceInterface {
 	 *
 	 * @return string The payload.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	public function originalPayload(string $profileId, string $originalId): string;
 
@@ -112,7 +112,7 @@ interface SeparatorSheetServiceInterface {
 	 *
 	 * @throws RuntimeException When there is no original to print or the sheets do not render.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	public function renderOriginals(string $profileId, array $originals): string;
 
@@ -130,7 +130,7 @@ interface SeparatorSheetServiceInterface {
 	 *
 	 * @throws RuntimeException When the sheets do not render.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function render(string $profileId, array $caseNumbers = []): string;
 }//end interface

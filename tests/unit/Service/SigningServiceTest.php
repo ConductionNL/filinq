@@ -1593,6 +1593,43 @@ class SigningServiceTest extends TestCase {
 	}//end testHonestCompletionGateWhenProviderCannotProduce()
 
 	/**
+	 * Live, a native request on a server with no signing secret stored the
+	 * signature and its SIGNED audit entry, then failed at completion: the
+	 * request stayed in progress and the signer could never sign again. The
+	 * signature is now refused before anything is written.
+	 *
+	 * @return void
+	 */
+	public function testASignatureThatCouldNeverCompleteIsRefusedBeforeAnythingIsWritten(): void {
+		$request = [
+			'id' => 'req-001',
+			'status' => 'PENDING',
+			'signatureLevel' => 'SES',
+			'provider' => 'native',
+			'initiatorUserId' => 'bob',
+			'signerIds' => ['signer-001'],
+		];
+		$signer  = ['id' => 'signer-001', 'signingRequestId' => 'req-001', 'userId' => 'alice', 'status' => 'PENDING'];
+		$this->objectService->method('find')->willReturnOnConsecutiveCalls($signer, $request, $request, $signer);
+		$this->objectService->expects($this->never())->method('saveObject');
+		$this->auditService->expects($this->never())->method('logEvent');
+
+		$config = $this->createMock(originalClassName: \OCP\IAppConfig::class);
+		$config->method('getValueString')->willReturn('');
+		$native = new \OCA\Filinq\Service\Signing\NativeSigningProvider(
+			logger: $this->createMock(originalClassName: \Psr\Log\LoggerInterface::class),
+			settingsService: $this->settingsService,
+			config: $config
+		);
+		$this->providerFactory->method('getProvider')->willReturn($native);
+
+		$this->expectException(exception: RuntimeException::class);
+		$this->expectExceptionMessage(message: 'signing_verification_secret is unset');
+		$this->service->sign(requestId: 'req-001', signerId: 'signer-001');
+
+	}//end testASignatureThatCouldNeverCompleteIsRefusedBeforeAnythingIsWritten()
+
+	/**
 	 * sign() throws when signer record belongs to a different request.
 	 *
 	 * @return void
@@ -2875,7 +2912,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	public function testSignStoresTheTypedValuesWithTheSignature(): void {
 		['request' => $request, 'records' => $records] = $this->requestWithFields();
@@ -2895,7 +2932,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	public function testARefusedValueWritesNothing(): void {
 		['request' => $request, 'records' => $records] = $this->requestWithFields();
@@ -2919,7 +2956,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
 	 */
 	public function testSigningWithoutFieldsIsRefusedWhenTheSignerHasSome(): void {
 		['request' => $request, 'records' => $records] = $this->requestWithFields();
@@ -2943,7 +2980,7 @@ class SigningServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.4
 	 */
 	public function testCompletionHandsTheTypedValuesToTheProvider(): void {
 		['request' => $request, 'records' => $records] = $this->requestWithFields(

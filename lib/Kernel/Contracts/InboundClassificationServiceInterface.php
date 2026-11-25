@@ -46,7 +46,7 @@ interface InboundClassificationServiceInterface {
 	 *
 	 * @return bool True unless the setting is "0".
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-5
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-5
 	 */
 	public function isEnabled(): bool;
 
@@ -59,7 +59,7 @@ interface InboundClassificationServiceInterface {
 	 * @return array{outcome: string, reason?: string, record?: array<string, mixed>}
 	 *     `suggested` with the record, or `skipped` with the reason.
 	 *
-	 * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-2
 	 */
 	public function classify(array $objectData, array $objectRef): array;
 }//end interface

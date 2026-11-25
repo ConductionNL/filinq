@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -30,7 +30,7 @@ use OCP\IAppConfig;
 /**
  * The per-run message limit and the readpst status.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-a-large-archive-drains-in-resumable-units-req-mai-004
  */
 class MailArchiveSettings {
 
@@ -62,7 +62,7 @@ class MailArchiveSettings {
 	 *
 	 * @return int Between 1 and MAX_MESSAGES_PER_RUN; 200 when unset or not a number.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function messagesPerRun(): int {
 		$raw = trim($this->appConfig->getValueString(self::APP_ID, self::KEY_MESSAGES_PER_RUN, (string) self::DEFAULT_MESSAGES_PER_RUN));
@@ -79,7 +79,7 @@ class MailArchiveSettings {
 	 *
 	 * @return array{messagesPerRun: int, readpstInstalled: bool} The settings.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	public function toArray(): array {
 		return ['messagesPerRun' => $this->messagesPerRun(), 'readpstInstalled' => $this->readpst->isAvailable()];
@@ -93,7 +93,7 @@ class MailArchiveSettings {
 	 *
 	 * @return array{messagesPerRun: int, readpstInstalled: bool} The stored settings.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	public function update(int $messagesPerRun): array {
 		$this->appConfig->setValueString(self::APP_ID, self::KEY_MESSAGES_PER_RUN, (string) $this->clamp(value: $messagesPerRun));

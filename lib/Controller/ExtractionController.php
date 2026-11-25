@@ -125,7 +125,7 @@ class ExtractionController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.2
 	 */
 	public function capture(): JSONResponse {
 		$user = $this->userSession->getUser();

@@ -155,7 +155,7 @@ class FieldPlacementRenderer {
 	 *
 	 * @return string The text to draw.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.4
 	 */
 	private function typedText(array $placement, string $signer): string {
 		$value = ($placement['value'] ?? null);

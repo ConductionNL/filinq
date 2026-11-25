@@ -242,6 +242,7 @@
                 <referencedClass name="OCA\OpenRegister\Files\Service\FileExtractionOptions"/>
                 <referencedClass name="OCA\OpenRegister\Files\Service\ProvidedTextRequest"/>
                 <referencedClass name="OCA\OpenRegister\Files\Service\TextExtractionService"/>
+                <referencedClass name="OCA\OpenRegister\Contract\RegisterSchemaSlugs"/>
                 <referencedClass name="OCA\OpenRegister\Kernel\Contracts\RegisterSchemaRef"/>
                 <referencedClass name="OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions"/>
                 <referencedClass name="OCA\OpenRegister\Service\Archival\LegalHoldServiceInterface"/>

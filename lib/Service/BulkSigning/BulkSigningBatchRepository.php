@@ -159,9 +159,9 @@ class BulkSigningBatchRepository {
 
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects answers a slug with zero rows and no error.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: $filters
 			);
 		} catch (Throwable $e) {

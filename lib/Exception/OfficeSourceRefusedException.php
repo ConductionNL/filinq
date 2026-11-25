@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,7 +36,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 class OfficeSourceRefusedException extends RuntimeException implements ErrorDetailsInterface {
 
@@ -67,7 +67,7 @@ class OfficeSourceRefusedException extends RuntimeException implements ErrorDeta
 	 * @param string             $reason      One of the REASON_* constants.
 	 * @param array<int, string> $unknownTags The unknown merge tags, for REASON_UNKNOWN_TAGS.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function __construct(
 		string $message,
@@ -82,7 +82,7 @@ class OfficeSourceRefusedException extends RuntimeException implements ErrorDeta
 	 *
 	 * @return string One of the REASON_* constants.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function getReason(): string {
 		return $this->reason;
@@ -93,7 +93,7 @@ class OfficeSourceRefusedException extends RuntimeException implements ErrorDeta
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function getErrorDetails(): array {
 		$details = ['reason' => $this->reason];

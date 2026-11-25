@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -40,7 +40,7 @@ use Throwable;
  * is answered, never thrown: an acknowledgement that cannot be sent never
  * refuses an arrival (D2).
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
  */
 class IntakeAcknowledgementService {
 
@@ -94,8 +94,10 @@ class IntakeAcknowledgementService {
 	 *                                   registration when there are), or null when the rule asks for none or the
 	 *                                   document is no longer waiting.
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-sender-who-refused-contact-is-not-written-to-req-ias-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-sender-who-refused-contact-is-not-written-to-req-ias-002
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) AcknowledgementLetterText is a stateless helper.
 	 */
 	public function acknowledge(array $document, array $rule, array|null $inbound = null): array|null {
 		$template = trim((string)($rule['acknowledgeWith'] ?? ''));
@@ -106,9 +108,10 @@ class IntakeAcknowledgementService {
 		$data = self::letterData(document: $document, inbound: $inbound);
 		try {
 			$rendered = $this->render(template: $template, data: $data, format: 'html');
-			$subject = $this->l10n->t('Acknowledgement of receipt: %s', [(string)($document['subject'] ?? '')]);
+			$subject = $this->l10n->t('Acknowledgement of receipt: %s', [$data['subject']]);
 
-			$outcome = $this->reachSender(document: $document, message: ['subject' => $subject, 'body' => $rendered['body']]);
+			$body = AcknowledgementLetterText::plainText(html: $rendered['body']);
+			$outcome = $this->reachSender(document: $document, message: ['subject' => $subject, 'body' => $body]);
 			if ($outcome['status'] === self::STATUS_QUEUED_AS_LETTER) {
 				$letter = $this->render(template: $template, data: $data, format: 'pdf');
 				$outcome['letter'] = $letter['fileId'];
@@ -133,12 +136,14 @@ class IntakeAcknowledgementService {
 	 * @param array<string, mixed>|null $inbound  The inbound registration.
 	 *
 	 * @return array<string, string>
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) AcknowledgementLetterText is a stateless helper.
 	 */
 	private static function letterData(array $document, array|null $inbound): array {
 		return [
-			'subject' => (string)($document['subject'] ?? ''),
+			'subject' => AcknowledgementLetterText::text(value: ($document['subject'] ?? '')),
 			'sender' => (string)($document['sender'] ?? ''),
-			'receivedAt' => (string)($document['receivedAt'] ?? ''),
+			'receivedAt' => AcknowledgementLetterText::letterDate(receivedAt: (string)($document['receivedAt'] ?? '')),
 			'channel' => (string)($document['channel'] ?? ''),
 			'registrationNumber' => (string)($inbound['registrationNumber'] ?? ''),
 		];

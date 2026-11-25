@@ -105,6 +105,38 @@ class PolicyCrudServiceBasesTest extends TestCase {
 
 	}//end service()
 
+	/**
+	 * Read inside the seam, OpenRegister hands a translatable field back as
+	 * its language map. Live, the rule's edit form then failed on
+	 * `primaryName.trim` and the list showed `{ "nl": ... }`. The rules come
+	 * back with text, Dutch first, on the list, a single read and a save.
+	 *
+	 * @return void
+	 */
+	public function testTranslatableFieldsComeBackAsText(): void {
+		$stored = [
+			'id' => 'p-1',
+			'primaryName' => ['nl' => 'Getuige A', 'en' => 'Witness A'],
+			'reason' => ['en' => 'Court order'],
+			'notes' => 'al tekst',
+			'matchRules' => [['type' => 'exact', 'value' => 'Getuige A']],
+		];
+		$this->objectService->method('searchObjectsBySlug')->willReturn([$stored]);
+		$this->objectService->method('find')->willReturn($stored);
+
+		$listed = $this->service()->listProhibitions();
+		$this->assertSame(expected: 'Getuige A', actual: $listed[0]['primaryName']);
+		$this->assertSame(expected: 'Court order', actual: $listed[0]['reason']);
+		$this->assertSame(expected: 'al tekst', actual: $listed[0]['notes']);
+		$this->assertSame(expected: [['type' => 'exact', 'value' => 'Getuige A']], actual: $listed[0]['matchRules']);
+
+		$this->assertSame(expected: 'Getuige A', actual: $this->service()->getProhibition('p-1')['primaryName']);
+
+		$saved = $this->service()->createProhibition(['primaryName' => ['nl' => 'Getuige B']]);
+		$this->assertSame(expected: 'Getuige B', actual: $saved['primaryName']);
+
+	}//end testTranslatableFieldsComeBackAsText()
+
 	public function testBasesAreStoredAsTrimmedUniqueSlugs(): void {
 		$this->service()->createProhibition(['primaryName' => 'Getuige A', 'bases' => [' woo-art-5-1-2-e ', '', 'woo-art-5-1-2-e', 'woo-art-5-2']]);
 

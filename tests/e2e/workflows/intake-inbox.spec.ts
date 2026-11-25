@@ -95,7 +95,7 @@ test.describe('The intake inbox', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md#the-inbox-shows-waiting-documents
+	// @e2e openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md#the-inbox-shows-waiting-documents
 	// @e2e openspec/specs/document-intake-inbox/spec.md#the-inbox-shows-waiting-documents
 	test('lists what is waiting, with channel, sender, subject and received date', async ({
 		page,
@@ -111,7 +111,7 @@ test.describe('The intake inbox', () => {
 		await expect(row).toContainText(`${TEST_PREFIX}@voorbeeld.nl`)
 	})
 
-	// @e2e openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md#a-clerk-assigns-a-document-to-a-case
+	// @e2e openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md#a-clerk-assigns-a-document-to-a-case
 	// @e2e openspec/specs/document-intake-inbox/spec.md#a-clerk-assigns-a-document-to-a-case
 	test('assigning a document to a record records the record, the clerk and the moment', async ({
 		page,
@@ -157,7 +157,7 @@ test.describe('The intake inbox', () => {
 		).toHaveCount(0)
 	})
 
-	// @e2e openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md#a-clerk-assigns-a-document-to-a-case
+	// @e2e openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md#a-clerk-assigns-a-document-to-a-case
 	// @e2e openspec/specs/document-intake-inbox/spec.md#a-clerk-assigns-a-document-to-a-case
 	test('rejecting asks for a reason, and the reason stays with the document', async ({
 		page,
@@ -186,7 +186,7 @@ test.describe('The intake inbox', () => {
 		expect(fields.rejectedBy).not.toBe('')
 	})
 
-	// @e2e openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md#a-clerk-assigns-a-document-to-a-case
+	// @e2e openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md#a-clerk-assigns-a-document-to-a-case
 	// @e2e openspec/specs/document-intake-inbox/spec.md#a-clerk-assigns-a-document-to-a-case
 	test('a rejection with no reason is refused, and the document stays in the inbox', async ({
 		page,
@@ -209,7 +209,7 @@ test.describe('The intake inbox', () => {
 		expect(fields.status).toBe('received')
 	})
 
-	// @e2e openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md#a-clerk-assigns-a-document-to-a-case
+	// @e2e openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md#a-clerk-assigns-a-document-to-a-case
 	// @e2e openspec/specs/document-intake-inbox/spec.md#a-clerk-assigns-a-document-to-a-case
 	test('a document that has left the inbox cannot be assigned a second time', async ({
 		page,

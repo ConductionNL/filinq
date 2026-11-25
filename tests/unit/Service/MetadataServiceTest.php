@@ -23,6 +23,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\DocumentTextExtractor;
 use OCA\Filinq\Service\MetadataService;
 use OCA\Filinq\Service\TextAnalysisService;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -219,4 +220,121 @@ class MetadataServiceTest extends TestCase {
 		$this->service->saveEnrichedMetadata('obj-1', '1', '2', ['language' => 'nl']);
 
 	}//end testSaveEnrichedMetadataTreatsAMissingObjectAsNotFound()
+	/**
+	 * Wire the container to an object service holding one stored object and a
+	 * schema mapper answering with the given schema (or failing).
+	 *
+	 * @param array<string, mixed>      $stored     The stored object data.
+	 * @param array<string, mixed>|null $properties The schema properties; null makes the mapper fail.
+	 * @param array<string, mixed>      $saved      Receives the data passed to saveObject.
+	 *
+	 * @return void
+	 */
+	private function wireSave(array $stored, ?array $properties, array &$saved): void {
+		$entity = $this->createMock(originalClassName: ObjectEntityInterface::class);
+		$entity->method('getObject')->willReturn($stored);
+		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$objectService->method('find')->willReturn($entity);
+		$objectService->method('saveObject')->willReturnCallback(
+			function (array $object) use (&$saved, $entity): object {
+				$saved = $object;
+				return $entity;
+			}
+		);
+		$mapper = new class($properties) {
+			/**
+			 * Constructor.
+			 *
+			 * @param array<string, mixed>|null $properties The schema properties.
+			 */
+			public function __construct(private ?array $properties) {
+			}
+
+			/**
+			 * The schema, or a failure when there is none.
+			 *
+			 * @param string $id The schema id.
+			 *
+			 * @return object
+			 */
+			public function find(string $id): object {
+				if ($this->properties === null) {
+					throw new \RuntimeException(message: 'schema ' . $id . ' not found');
+				}
+
+				return new class($this->properties) {
+					/**
+					 * Constructor.
+					 *
+					 * @param array<string, mixed> $properties The properties.
+					 */
+					public function __construct(private array $properties) {
+					}
+
+					/**
+					 * The schema properties.
+					 *
+					 * @return array<string, mixed>
+					 */
+					public function getProperties(): array {
+						return $this->properties;
+					}
+				};
+			}
+		};
+		$this->mockAppManager->method('getInstalledApps')->willReturn(['openregister']);
+		$this->mockContainer->method('get')->willReturnCallback(
+			static fn (string $id): object => match (str_contains(haystack: $id, needle: 'SchemaMapper')) {
+				true => $mapper,
+				false => $objectService,
+			}
+		);
+
+	}//end wireSave()
+
+	/**
+	 * A read-only or computed field a read returned is not written back, so
+	 * OpenRegister does not refuse the save (a confirmed classification on an
+	 * intake document carrying `daysLeft`).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-4
+	 */
+	public function testReadOnlyAndComputedFieldsAreNotWrittenBack(): void {
+		$saved = [];
+		$this->wireSave(
+			stored: ['channel' => 'scan', 'status' => 'received', 'daysLeft' => 3, 'age' => 12],
+			properties: [
+				'channel' => ['type' => 'string'],
+				'status' => ['type' => 'string'],
+				'daysLeft' => ['type' => 'number', 'readOnly' => true],
+				'age' => ['type' => 'number', 'computed' => ['expression' => '{{ 1 }}']],
+			],
+			saved: $saved
+		);
+
+		$this->service->saveEnrichedMetadata('obj-1', '26', '65', ['documentType' => 'besluit']);
+
+		$this->assertSame(expected: ['channel' => 'scan', 'status' => 'received', 'documentType' => 'besluit'], actual: $saved);
+
+	}//end testReadOnlyAndComputedFieldsAreNotWrittenBack()
+
+	/**
+	 * When the schema cannot be read, the stored data is written back whole,
+	 * as before.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-4
+	 */
+	public function testWithoutAReadableSchemaNothingIsLeftOut(): void {
+		$saved = [];
+		$this->wireSave(stored: ['channel' => 'scan', 'daysLeft' => 3], properties: null, saved: $saved);
+
+		$this->service->saveEnrichedMetadata('obj-1', '26', '65', ['documentType' => 'brief']);
+
+		$this->assertSame(expected: ['channel' => 'scan', 'daysLeft' => 3, 'documentType' => 'brief'], actual: $saved);
+
+	}//end testWithoutAReadableSchemaNothingIsLeftOut()
 }//end class

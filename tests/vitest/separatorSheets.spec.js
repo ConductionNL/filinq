@@ -5,7 +5,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-2.2
  */
 
 import { readFileSync } from 'node:fs'

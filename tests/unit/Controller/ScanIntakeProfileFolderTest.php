@@ -14,7 +14,7 @@
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -110,7 +110,7 @@ class ScanIntakeProfileFolderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testABatchInTheWatchedFolderIsCutWithItsProfile(): void {
 		$response = $this->controller(nodePath: '/fenna/files/Scans/Post/batch.pdf')->split(fileId: 42);
@@ -124,7 +124,7 @@ class ScanIntakeProfileFolderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testABatchOutsideEveryWatchedFolderIsRefused(): void {
 		$response = $this->controller(nodePath: '/fenna/files/Documents/batch.pdf')->split(fileId: 42);
@@ -138,7 +138,7 @@ class ScanIntakeProfileFolderTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function testOnlyTheCallersOwnFilesRootIsStripped(): void {
 		$response = $this->controller(nodePath: '/daan/files/Scans/Post/batch.pdf')->split(fileId: 42);

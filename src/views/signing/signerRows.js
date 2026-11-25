@@ -14,7 +14,7 @@
  * accept-only recipient (REQ-SAO-001).
  *
  * @return {{displayName: string, email: string, userId: string, role: string}}
- * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
+ * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only/spec.md
  */
 export function emptySignerRow() {
 	return { displayName: '', email: '', userId: '', role: 'sign' }
@@ -25,7 +25,7 @@ export function emptySignerRow() {
  *
  * @param {{role?: string}} row The signer row.
  * @return {boolean}
- * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
+ * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only/spec.md
  */
 export function acceptsOnly(row) {
 	return String(row?.role ?? '').trim().toLowerCase() === 'accept'
@@ -37,7 +37,7 @@ export function acceptsOnly(row) {
  *
  * @param {Array<object>} rows The signer rows.
  * @return {boolean}
- * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
+ * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only/spec.md
  */
 export function someoneSigns(rows) {
 	return Array.isArray(rows) && rows.some((row) => !acceptsOnly(row))
@@ -48,7 +48,7 @@ export function someoneSigns(rows) {
  *
  * @param {{email?: string, userId?: string}} row The signer row.
  * @return {boolean}
- * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
+ * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only/spec.md
  */
 export function isReachable(row) {
 	return (
@@ -63,7 +63,7 @@ export function isReachable(row) {
  *
  * @param {Array<object>} rows The signer rows.
  * @return {boolean}
- * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
+ * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only/spec.md
  */
 export function signersAreComplete(rows) {
 	return (
@@ -81,7 +81,7 @@ export function signersAreComplete(rows) {
  *
  * @param {Array<object>} rows The signer rows.
  * @return {Array<object>}
- * @spec openspec/changes/signing-accept-only-recipient/specs/signing-accept-only/spec.md
+ * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only/spec.md
  */
 export function toSigners(rows) {
 	return rows.map((row, index) => {

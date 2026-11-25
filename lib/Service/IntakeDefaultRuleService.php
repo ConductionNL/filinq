@@ -175,7 +175,7 @@ class IntakeDefaultRuleService {
 	 *
 	 * @return array<string, string> Rule uuid => `assigned` or `answered`.
 	 *
-	 * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
 	 */
 	public function handledWhenByRule(): array {
 		$handledWhen = [];
@@ -206,7 +206,7 @@ class IntakeDefaultRuleService {
 	 *
 	 * @return array<string, mixed>|null The rule, or null when none has that uuid.
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
 	 * @spec openspec/changes/intake-base-registry-enrichment/specs/intake-registry-enrichment/spec.md#requirement-the-brp-is-asked-only-under-a-declared-purpose-req-ibr-002
 	 */
 	public function findRule(string $uuid): ?array {
@@ -238,9 +238,9 @@ class IntakeDefaultRuleService {
 			// `searchObjects` answers a slug with zero rows and no error, so
 			// match() never matched and every inbound document arrived
 			// unstamped, indistinguishable from an instance with no rules.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: []
 			);
 		} catch (Throwable $e) {

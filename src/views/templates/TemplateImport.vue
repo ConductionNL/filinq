@@ -2,7 +2,7 @@
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
+@spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-bulk-import-migrates-existing-template-estates-req-ddota-005
 -->
 
 <template>
@@ -130,7 +130,7 @@ export default {
 		/**
 		 * report.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		report() {
 			return (this.job && this.job.report) || []
@@ -146,7 +146,7 @@ export default {
 		/**
 		 * pick.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		pick(event) {
 			this.file = (event.target.files && event.target.files[0]) || null
@@ -155,7 +155,7 @@ export default {
 		/**
 		 * resultLabel.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		resultLabel(row) {
 			if (row.status === 'failed') {
@@ -170,7 +170,7 @@ export default {
 		/**
 		 * start.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		async start() {
 			this.error = ''
@@ -192,7 +192,7 @@ export default {
 		/**
 		 * poll.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		async poll() {
 			const result = await fetchImport(this.job.id)
@@ -212,7 +212,7 @@ export default {
 		/**
 		 * openMapping.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		openMapping(row) {
 			this.mapping = {
@@ -224,7 +224,7 @@ export default {
 		/**
 		 * mappingSaved.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		mappingSaved(template) {
 			const row = this.report.find((line) => line.id === template.id)
@@ -237,7 +237,7 @@ export default {
 		/**
 		 * created.
 		 *
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		created(result) {
 			this.showUpload = false

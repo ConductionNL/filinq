@@ -1,0 +1,410 @@
+{
+  "info": {
+    "name": "Signing audit immutability",
+    "description": "signing-trust-rebuild REQ-DDSTR-008: an authenticated PUT, DELETE and bulk DELETE on a docudesk.signing.* audit entry through OpenRegister's audit-trail API are refused, the entry reads back unchanged, and the hash chain over it verifies. Self-contained: uploads a PDF, starts a signing request, cleans up.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{username}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{password}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Setup: upload a PDF to sign",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('the document is stored', () => pm.expect(pm.response.code).to.be.oneOf([201, 204]));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/pdf"
+          }
+        ],
+        "url": "{{baseUrl}}/remote.php/dav/files/{{username}}/{{docName}}",
+        "body": {
+          "mode": "raw",
+          "raw": "%PDF-1.4\n1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj\n2 0 obj << /Type /Pages /Kids [3 0 R] /Count 1 >> endobj\n3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] >> endobj\ntrailer << /Root 1 0 R >>\n%%EOF\n"
+        }
+      }
+    },
+    {
+      "name": "Setup: read the document's file id",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('the document has a file id', () => pm.expect(pm.response.code).to.eql(207));",
+              "const id = (pm.response.text().match(/<oc:fileid>(\\d+)<\\/oc:fileid>/) || [])[1];",
+              "pm.expect(id, 'oc:fileid').to.be.a('string');",
+              "pm.collectionVariables.set('fileId', id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PROPFIND",
+        "header": [
+          {
+            "key": "Depth",
+            "value": "0"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/xml"
+          }
+        ],
+        "url": "{{baseUrl}}/remote.php/dav/files/{{username}}/{{docName}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<?xml version=\"1.0\"?><d:propfind xmlns:d=\"DAV:\" xmlns:oc=\"http://owncloud.org/ns\"><d:prop><oc:fileid/></d:prop></d:propfind>"
+        }
+      }
+    },
+    {
+      "name": "Setup: start a signing request (writes docudesk.signing.CREATED)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('the request is created', () => pm.expect(pm.response.code).to.eql(201));",
+              "pm.collectionVariables.set('requestId', pm.response.json().id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/filinq/api/signing/requests",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"documentFileId\": {{fileId}}, \"documentName\": \"{{docName}}\", \"signers\": [{\"userId\": \"{{username}}\", \"name\": \"Newman\", \"email\": \"newman@example.org\"}], \"signatureLevel\": \"SES\", \"signingMode\": \"sequential\", \"provider\": \"native\"}"
+        }
+      }
+    },
+    {
+      "name": "Find the signing audit entry and keep a snapshot",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('the audit trail answers', () => pm.expect(pm.response.code).to.eql(200));",
+              "const rows = (pm.response.json().results || []).filter((r) => String(r.action || '').startsWith('docudesk.signing.'));",
+              "pm.test('a docudesk.signing.* entry exists for the request', () => pm.expect(rows.length).to.be.above(0));",
+              "const entry = rows[rows.length - 1];",
+              "pm.expect(entry.objectUuid, 'object_uuid filter applied').to.eql(pm.collectionVariables.get('requestId'));",
+              "pm.collectionVariables.set('entryId', String(entry.id));",
+              "pm.collectionVariables.set('snapshot', JSON.stringify({ action: entry.action, changed: entry.changed, created: entry.created, user: entry.user, objectUuid: entry.objectUuid }));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/openregister/api/audit-trails?object_uuid={{requestId}}&_limit=100"
+      }
+    },
+    {
+      "name": "PUT on the entry is refused",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('PUT answers 4xx', () => pm.expect(pm.response.code).to.be.within(400, 499));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/openregister/api/audit-trails/{{entryId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"action\": \"docudesk.signing.CANCELLED\", \"changed\": {\"tampered\": true}}"
+        }
+      }
+    },
+    {
+      "name": "DELETE on the entry is refused",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('DELETE answers 4xx', () => pm.expect(pm.response.code).to.be.within(400, 499));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/openregister/api/audit-trails/{{entryId}}"
+      }
+    },
+    {
+      "name": "DELETE of several entries is refused",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('bulk DELETE answers 4xx', () => pm.expect(pm.response.code).to.be.within(400, 499));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/openregister/api/audit-trails",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"ids\": [\"{{entryId}}\"]}"
+        }
+      }
+    },
+    {
+      "name": "The entry reads back unchanged",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('the entry is still there', () => pm.expect(pm.response.code).to.eql(200));",
+              "const e = pm.response.json();",
+              "pm.test('its content is unchanged', () => pm.expect({ action: e.action, changed: e.changed, created: e.created, user: e.user, objectUuid: e.objectUuid }).to.eql(JSON.parse(pm.collectionVariables.get('snapshot'))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/openregister/api/audit-trails/{{entryId}}"
+      }
+    },
+    {
+      "name": "The hash chain over the entry verifies",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('verify answers', () => pm.expect(pm.response.code).to.eql(200));",
+              "const v = pm.response.json();",
+              "// A row is sealed by OpenRegister's AuditSealJob sweep, not on insert: a fresh entry may",
+              "// be skipped as unsealed, which is a smaller claim, never a broken chain.",
+              "pm.test('the chain is valid and unbroken', () => { pm.expect(v.valid).to.eql(true); pm.expect(v.brokenAt).to.eql(null); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/openregister/api/audit-trails/verify?from={{entryId}}&to={{entryId}}"
+      }
+    },
+    {
+      "name": "Teardown: cancel the signing request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('the request is cancelled', () => pm.expect(pm.response.code).to.be.below(300));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/index.php/apps/filinq/api/signing/requests/{{requestId}}"
+      }
+    },
+    {
+      "name": "Teardown: remove the document",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('the document is removed', () => pm.expect(pm.response.code).to.be.oneOf([204, 404]));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/remote.php/dav/files/{{username}}/{{docName}}"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "username",
+      "value": "admin"
+    },
+    {
+      "key": "password",
+      "value": "admin"
+    },
+    {
+      "key": "docName",
+      "value": "newman-signing-audit.pdf"
+    },
+    {
+      "key": "fileId",
+      "value": ""
+    },
+    {
+      "key": "requestId",
+      "value": ""
+    },
+    {
+      "key": "entryId",
+      "value": ""
+    },
+    {
+      "key": "snapshot",
+      "value": ""
+    }
+  ]
+}

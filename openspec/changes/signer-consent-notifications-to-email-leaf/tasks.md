@@ -7,7 +7,7 @@ NO apply in this change — implementation runs through Hydra later.
 
 ### D-1. Signer/initiator notifications via the email leaf (M)
 
-- [ ] D-1.1 Update the signing flow so signer "your turn to sign" and initiator "declined"
+- [x] D-1.1 Update the signing flow so signer "your turn to sign" and initiator "declined"
   notifications, after being sent via NC Mail/notification, are linked to the signing-request
   OR object through the email leaf (`POST /api/objects/{register}/{schema}/{id}/email`). Remove
   any bespoke notifier state table for these notifications. Do NOT change signer ordering
@@ -46,10 +46,23 @@ NO apply in this change — implementation runs through Hydra later.
     leaf's own roadmap builds, and it keeps filinq from holding comms state.
     Until both OpenRegister changes are on `main`, the `IMailer` path stays
     as it is. Signer ordering is untouched.
+  - Built (2026-11-25): both OpenRegister changes are on `main`. The in-process
+    seam is `EmailSenderInterface::sendMailTo()` / `sendMail()` with a
+    `MailContent` carrying a `MailObjectBinding`; `EmailSender::linkSent()`
+    writes the `outbound` link with the minted `Message-ID`.
+    `lib/Service/ObjectBoundMail.php` sends through it (register and schema by
+    id or slug). `lib/Service/Signing/SigningMail.php` mails each signer whose
+    turn starts (`SigningTurn::due()`: every pending signer of a parallel
+    request at creation, the next position of a sequential one after each
+    signature) and the initiator on a decline with the reason, bound to the
+    signing request. Only native requests: an external provider mails its own
+    signers. No comms state is kept in filinq. Tests:
+    `tests/unit/Service/Signing/SigningMailTest.php`,
+    `tests/unit/Service/ObjectBoundMailTest.php`.
 
 ### D-2. Consent notification via the email leaf, drive notificationStatus (M)
 
-- [ ] D-2.1 Update `ConsentService` so the objection-period notification is linked to the
+- [x] D-2.1 Update `ConsentService` so the objection-period notification is linked to the
   consent OR object via the email leaf, and `notificationStatus` (`pending → sent →
   delivered/failed`, plus `skipped`) is driven by the linked message lifecycle rather than a
   private notifier. Preserve the CONS-011 transition contract.
@@ -63,6 +76,13 @@ NO apply in this change — implementation runs through Hydra later.
     `failed` with the cause; `skipped` when the consent names no channel).
     `delivered` waits for a delivery signal the channel does not give yet and
     stays unset until it does.
+  - Built (2026-11-25): `ConsentRequestSender` sends the email through
+    `ObjectBoundMail` bound to the consent object; `dispatched` stores `sent`,
+    OpenRegister's `failed` / `no-address` / `kill-switch` store `failed` with
+    the cause in words, and a record with neither an email nor a postal
+    address is `skipped` (the CONS-011 move `pending -> skipped`). Without
+    OpenRegister's sender the mail goes through Nextcloud's mailer, unlinked.
+    Tests: `tests/unit/Service/ConsentRequestSenderTest.php`.
 
 ### D-3. Render the comms surface on the detail page (S)
 
@@ -86,13 +106,38 @@ NO apply in this change — implementation runs through Hydra later.
 
 ### D-4. i18n + tests (M)
 
-- [ ] D-4.1 Provide nl + en translations for any new UI strings (comms-tab labels, status
+- [x] D-4.1 Provide nl + en translations for any new UI strings (comms-tab labels, status
   labels) per ADR-007 / ADR-025.
   - **Acceptance:** Both `l10n/en.json` and `l10n/nl.json` carry the new keys.
   - DEFERRED with D-3.1: tab/status labels can only be added once the leaf-supplied display strings are finalised.
+  - Done (2026-11-25): the Emails tab and its chips are nextcloud-vue's
+    `CnEmailTab` and carry its own strings, so filinq adds none for them. The
+    strings filinq does add, the signer, initiator and consent mails and the
+    consent outcomes, are in `l10n/en.json` and `l10n/nl.json`.
 - [ ] D-4.2 Integration test: trigger a signer notification and a consent notification; assert
   each produces an email-leaf link on the relevant OR object and appears on the comms surface;
   assert consent `notificationStatus` reflects the linked-message lifecycle.
   - **Acceptance:** Tests pass against a dev instance with filinq + OR + Mail installed;
     `composer check:strict` passes.
   - DEFERRED with D-1.1 / D-2.1: requires a live OR with the email leaf + NC Mail; integration runs against the dev environment after the OR endpoint ships.
+  - Live, link half (2026-11-25, sandbox: Nextcloud 34.0.6 + MariaDB, OpenRegister
+    main 2fc34e45, filinq development f8026d31 + the consent save fix;
+    `mail_smtpmode null`): every mail below left an `outbound` row in
+    `oc_openregister_email_links` on its object, with a minted `Message-ID`
+    and the acting user as `linked_by`.
+    - Consent with an email address: `notificationStatus` `sent`, deadline
+      +42 days, one link on the consent object (schema `publicationConsent`).
+      Consent without any address: `skipped`, no link.
+    - Sequential signing request (Carla, then Bert): at creation one link,
+      "A document is waiting for your signature: Besluit.pdf" to Carla; after
+      Carla signs, one to Bert (linked by carla); Bert declines with a reason,
+      one "Bert declined to sign Besluit.pdf" to the initiator (linked by bert).
+    - Parallel request: both signers at creation, nothing after.
+    - Found and fixed on the way: `ConsentRecordWriter::recordNotification()`
+      still passed `register:`/`schema:` to `saveObject()`, so a sent consent
+      request answered 500 after the mail went (`ConsentRecordNotificationTest`).
+  - Still open: "appears on the comms surface". The Emails tab is
+    nextcloud-vue's `CnEmailTab` with `requiredApp: mail`, and the sandbox
+    cannot fetch the Mail app (GitHub release downloads answer 403 through
+    the proxy). Tick when the tab is seen listing these links on an instance
+    with Mail.

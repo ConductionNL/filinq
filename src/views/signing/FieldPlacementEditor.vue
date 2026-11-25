@@ -132,6 +132,7 @@ import {
 	NcSelect,
 	NcTextField,
 } from '@nextcloud/vue'
+import { markRaw } from 'vue'
 import { fetchUrlAsArrayBuffer } from '../../services/fileViewerService.js'
 import { loadPdfjs } from '../../services/pdfjsLoader.js'
 import {
@@ -208,7 +209,7 @@ export default {
 
 		/**
 		 * @return {Array<object>} No check, and the checks the server runs.
-		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.1
 		 */
 		checkOptions() {
 			const labels = {
@@ -327,7 +328,8 @@ export default {
 						),
 					),
 				])
-				this.pdfDoc = await pdfjsLib.getDocument({ data }).promise
+				// markRaw: pdf.js keeps its state in private class fields, which a reactive proxy cannot reach.
+				this.pdfDoc = markRaw(await pdfjsLib.getDocument({ data }).promise)
 				this.pageCount = this.pdfDoc.numPages
 				await this.showPage(1)
 			} catch {
@@ -491,7 +493,7 @@ export default {
 		 *
 		 * @param {number} index The box.
 		 * @param {object} settings What changes.
-		 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.1
 		 */
 		setting(index, settings) {
 			this.$emit(

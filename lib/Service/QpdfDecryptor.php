@@ -17,7 +17,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+ * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,7 +32,7 @@ use RuntimeException;
 /**
  * Runs qpdf to decrypt a PDF with a password read from standard input.
  *
- * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+ * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
  */
 class QpdfDecryptor {
 
@@ -51,7 +51,7 @@ class QpdfDecryptor {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
 	 */
 	public function isAvailable(): bool {
 		return $this->version() !== null;
@@ -62,7 +62,7 @@ class QpdfDecryptor {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
 	 */
 	public function version(): ?string {
 		$run = $this->run(arguments: ['--version'], input: '');
@@ -88,7 +88,7 @@ class QpdfDecryptor {
 	 *
 	 * @throws RuntimeException When qpdf cannot run or fails otherwise; the message never carries the password.
 	 *
-	 * @spec openspec/changes/intake-pdf-password-removal/tasks.md#1-service-and-route
+	 * @spec openspec/changes/archive/2026-11-25-intake-pdf-password-removal/tasks.md#1-service-and-route
 	 */
 	public function decrypt(string $pdf, string $password): ?string {
 		$in  = tempnam(sys_get_temp_dir(), 'filinq-locked-');

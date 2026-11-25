@@ -7,7 +7,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+ * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
  */
 
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
@@ -46,7 +46,7 @@ export function localToday(now = new Date()) {
  * @param {string} deadline The deadline (Y-m-d).
  * @param {string} today Today (Y-m-d).
  * @return {number|null} The working days, or null when there is no deadline.
- * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
+ * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-every-waiting-document-has-a-handling-deadline-req-iws-001
  */
 export function workingDaysLeft(deadline, today) {
 	const end = utcDay(deadline)
@@ -71,7 +71,7 @@ export function workingDaysLeft(deadline, today) {
  * @param {string} deadline The deadline (Y-m-d).
  * @param {string} today Today (Y-m-d).
  * @return {string} The countdown, or '' without a deadline.
- * @spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
+ * @spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md#requirement-the-worklist-shows-what-is-overdue-req-iws-002
  */
 export function countdownLabel(deadline, today) {
 	const days = workingDaysLeft(deadline, today)

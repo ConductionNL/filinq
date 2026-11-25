@@ -6,7 +6,7 @@
  * document's own file, a document without a file says there is nothing to
  * leave notes on, and closing the dialog tells the worklist.
  *
- * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
+ * @spec openspec/changes/archive/2026-11-25-work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
  */
 
 jest.mock('@nextcloud/l10n', () => ({

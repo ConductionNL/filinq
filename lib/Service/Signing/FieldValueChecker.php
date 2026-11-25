@@ -17,7 +17,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/signing-field-validation/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.1
  */
 
 declare(strict_types=1);
@@ -45,7 +45,7 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signing-field-validation/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.1
  */
 class FieldValueChecker {
 
@@ -109,7 +109,7 @@ class FieldValueChecker {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.1
 	 */
 	public function __construct(?Closure $formatLookup = null) {
 		$this->formatLookup = ($formatLookup ?? static fn (string $name): ?object => self::openRegisterFormat(name: $name));
@@ -123,7 +123,7 @@ class FieldValueChecker {
 	 *
 	 * @return object|null The format, or null.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.1
 	 */
 	public static function openRegisterFormat(string $name): ?object {
 		$class = 'OCA\\OpenRegister\\Formats\\' . str_replace('-', '', ucwords($name, '-')) . 'Format';
@@ -144,7 +144,7 @@ class FieldValueChecker {
 	 *
 	 * @throws SigningFieldsRefusedException With code 400, per placement whose check is unavailable.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.1
 	 */
 	public function assertAvailable(array $placements): void {
 		$errors = [];
@@ -179,8 +179,8 @@ class FieldValueChecker {
 	 * @throws SigningFieldsRefusedException With code 422 and a message per refused field.
 	 * @throws RuntimeException With code 422 when the signer has fields and the act came without any.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-3.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.2
 	 */
 	public function valuesForAct(array $request, string $signerId, ?array $fields): array {
 		$placements = $request['fieldPlacements'] ?? [];
@@ -207,7 +207,7 @@ class FieldValueChecker {
 	 *
 	 * @return bool True when the signer has something to fill in.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	public function hasFieldsFor(array $placements, int $signerIndex): bool {
 		return $this->fieldsFor(placements: $placements, signerIndex: $signerIndex) !== [];
@@ -228,7 +228,7 @@ class FieldValueChecker {
 	 *
 	 * @throws SigningFieldsRefusedException With code 422 and a message per refused field.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	public function check(array $placements, int $signerIndex, array $fields): array {
 		$values = [];
@@ -274,7 +274,7 @@ class FieldValueChecker {
 	 *
 	 * @return array<int, array<string, mixed>> The signer's text fields.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	private function fieldsFor(array $placements, int $signerIndex): array {
 		$fields = [];
@@ -299,7 +299,7 @@ class FieldValueChecker {
 	 *
 	 * @return string The normalised value; '' for nothing or a non-text value.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	private function normalise(mixed $value, ?string $check): string {
 		if (is_string($value) === false) {
@@ -323,7 +323,7 @@ class FieldValueChecker {
 	 *
 	 * @return string|null The refusal, or null.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.2
 	 */
 	private function refusal(string $value, array $placement): ?string {
 		if ($value === '') {
@@ -365,7 +365,7 @@ class FieldValueChecker {
 	 *
 	 * @return object|null A format with a `validate()` method, or null.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.1
 	 */
 	private function format(string $check): ?object {
 		$name = (self::CHECKS[$check]['format'] ?? null);

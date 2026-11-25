@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use OCP\IUserSession;
 /**
  * The batched "In the case system" lookup behind the My Documents badge.
  *
- * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
  */
 class CaseSystemFileStatusController extends Controller {
 	use AnswersNotAuthenticated;
@@ -78,7 +78,7 @@ class CaseSystemFileStatusController extends Controller {
 	 *
 	 * @return JSONResponse `{delivered: [fileId, ...]}`, 400 for too many ids, 401 without a session.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 	 *
 	 * @no-admin-idor-exempt every requested id passes AnonymizeRequestService::verifyFileAccess() (the
 	 * caller's user folder) before it is looked up; ids the caller cannot read are dropped.

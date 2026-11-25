@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -48,7 +48,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.1
  */
 class SignatureVerificationLinkService implements SignatureVerificationLinksInterface {
 	use ReadsStoredObjectRows;
@@ -86,12 +86,14 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolver for OpenRegister's ObjectService.
 	 * @param SigningVerificationService    $verifier       Checks the signatures in the signed bytes.
+	 * @param SystemContextSeam|null        $seam           Reads the record across organisations for a visitor with no account.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
 		private readonly SigningVerificationService $verifier,
+		private readonly ?SystemContextSeam $seam=null,
 	) {
 
 	}//end __construct()
@@ -103,7 +105,7 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @return bool True for a well-formed, non-nil token.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.1
 	 */
 	public static function isWellFormed(string $token): bool {
 		return preg_match('/^[0-9a-f]{32}$/', $token) === 1 && $token !== self::NIL_TOKEN;
@@ -117,7 +119,7 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @return string The token.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function newToken(): string {
 		do {
@@ -140,8 +142,8 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @throws RuntimeException When the token is malformed or the record cannot be stored.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function mint(string $signedBytes, string $fileRef, string $fileName, ?string $waarmerkRef = null, ?string $token = null): array {
 		$record = [
@@ -210,7 +212,7 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @return array<string, mixed> The neutral `unknown` verdict.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
 	 */
 	public static function unknownVerdict(): array {
 		return SigningVerificationService::unknownVerdict();
@@ -226,7 +228,7 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @throws RuntimeException When the records cannot be read.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.3
 	 */
 	public function verdictFor(string $token): array {
 		$record = $this->findByToken(token: $token);
@@ -250,7 +252,7 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 *
 	 * @throws RuntimeException When the records cannot be read, as opposed to finding nothing.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.1
 	 */
 	public function findByToken(string $token): ?array {
 		if (self::isWellFormed(token: $token) === false) {
@@ -268,6 +270,32 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	}//end findByToken()
 
 	/**
+	 * Run the token search for a visitor with no account.
+	 *
+	 * The visitor has no organisation, and OpenRegister's organisation filter
+	 * would hide every record from them. The token is the capability
+	 * (REQ-DDSVP-001), so this one exact-token lookup runs as the system,
+	 * through the logged seam. Without a seam the search runs as it is.
+	 *
+	 * @param callable $search The exact-token search.
+	 *
+	 * @return mixed The rows.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/specs/signature-verification-portal/spec.md#requirement-public-endpoints-are-fail-closed-and-rate-limited-req-ddsvp-004
+	 */
+	private function acrossOrganisations(callable $search): mixed {
+		if ($this->seam === null) {
+			return $search();
+		}
+
+		return $this->seam->run(
+			objectService: $this->objectResolver->contract(),
+			reason: 'a public verification link names its record by token, whatever the visitor\'s organisation',
+			operation: $search
+		);
+	}//end acrossOrganisations()
+
+	/**
 	 * The rows a token search returns; none when the search answers with something other than a list.
 	 *
 	 * @param string $token A well-formed token.
@@ -277,13 +305,14 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 * @throws RuntimeException When the records cannot be read.
 	 */
 	private function rowsFor(string $token): array {
+		$search = fn (): mixed => $this->objectResolver->slugSearch(_rbac: false)->search(
+			register: self::REGISTER,
+			schema: self::SCHEMA,
+			filters: ['token' => $token]
+		);
+
 		try {
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
-				filters: ['token' => $token],
-				_rbac: false
-			);
+			$rows = $this->acrossOrganisations(search: $search);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'Could not read the signature verification records: ' . $e->getMessage(), code: 0, previous: $e);
 		}

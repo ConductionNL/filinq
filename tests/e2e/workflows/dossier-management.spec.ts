@@ -21,7 +21,7 @@
  * rather than anything that names the cause. `harvestToken` + `jsonHeaders`
  * from `./_fixtures.ts` is the pattern the rest of this suite already uses.
  *
- * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+ * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
  */
 
 import type { APIRequestContext, Page } from '@playwright/test'
@@ -93,7 +93,7 @@ test.describe('dossier-management — membership and lifecycle', () => {
 	test('a rename preserves every other field', async ({ page }) => {
 		const token = await tokenFor(page)
 		const req = page.request
-		// @e2e openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#inline-rename-preserves-the-other-fields
+		// @e2e openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#inline-rename-preserves-the-other-fields
 		const id = await createDossier(req, token, `Handhaving ${Date.now()}`, {
 			description: 'Bezwaren handhaving',
 			bases: ['persoonsgegevens'],
@@ -119,7 +119,7 @@ test.describe('dossier-management — membership and lifecycle', () => {
 	test('the lifecycle refuses an out-of-order transition', async ({ page }) => {
 		const token = await tokenFor(page)
 		const req = page.request
-		// @e2e openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#only-legal-transitions-are-offered
+		// @e2e openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#only-legal-transitions-are-offered
 		const id = await createDossier(req, token, `Lifecycle ${Date.now()}`)
 
 		const refused = await req.put(`${DOSSIERS}/${id}/status`, {
@@ -148,8 +148,8 @@ test.describe('dossier-management — membership and lifecycle', () => {
 	}) => {
 		const token = await tokenFor(page)
 		const req = page.request
-		// @e2e openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#one-document-is-a-member-of-two-dossiers
-		// @e2e openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#unlinking-a-referenced-member-keeps-the-file
+		// @e2e openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#one-document-is-a-member-of-two-dossiers
+		// @e2e openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#unlinking-a-referenced-member-keeps-the-file
 		const stamp = Date.now()
 		const dossierA = await createDossier(req, token, `Dossier A ${stamp}`)
 		const dossierB = await createDossier(req, token, `Dossier B ${stamp}`)
@@ -239,7 +239,7 @@ test.describe('dossier-management — membership and lifecycle', () => {
 	test('a dossier created through the API is listed in the UI', async ({
 		page,
 	}) => {
-		// @e2e openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#index-lists-dossiers-with-live-context
+		// @e2e openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#index-lists-dossiers-with-live-context
 		const token = await tokenFor(page)
 		const req = page.request
 		const name = `Persisted ${Date.now()}`

@@ -21,7 +21,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use Throwable;
 /**
  * Finds where an original's scan is filed and records the scan on it.
  *
- * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
+ * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md
  */
 class PaperOriginalFiling {
 
@@ -74,7 +74,7 @@ class PaperOriginalFiling {
 	 *
 	 * @return array{original: array<string, mixed>, project: array<string, mixed>, folder: Folder}|null
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
 	 */
 	public function placeFor(string $originalId): ?array {
 		try {
@@ -107,7 +107,7 @@ class PaperOriginalFiling {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
 	 */
 	public function fileName(array $original): string {
 		$parts = array_filter(
@@ -132,7 +132,7 @@ class PaperOriginalFiling {
 	 *
 	 * @return array<string, mixed> The original as written.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
 	 */
 	public function markScanned(array $place, array $scan): array {
 		$now = (new DateTimeImmutable())->format(DateTimeInterface::ATOM);

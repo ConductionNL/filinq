@@ -18,6 +18,18 @@ A scanner writes one PDF per batch. Filinq cuts that batch into its documents at
 
 On the intake page, **Print separator sheets** prints one sheet per case number for a profile. A sheet carries a QR code and the same text in print. When the batch is cut, the case number on the sheet pre-fills the assign picker of the document that follows it.
 
+![The Print separator sheets dialog on the intake page: the Postkamer profile chosen and three case numbers, one per line](/screenshots/scan-intake-print-separators.png)
+
+![A printed separator sheet for case 2026-0042: a heading, a QR code and the payload in print below it](/screenshots/scan-intake-separator-sheet.png)
+
+The splitter reads the printed text under the QR code. Text recognition misreads it in a few fixed ways ("filing" for "filinq", "vl" for "v1", a space after a colon, a long payload broken over two lines); Filinq puts those back before it reads the case number, so a sheet is still found.
+
+## Scanner profiles
+
+An administrator adds the profiles under **Intake channels**: a name, the folder the scanner writes to, the resolution, the colour mode and how a batch is cut.
+
+![The Intake channels page with the form to add a scanner profile and the Postkamer profile listed](/screenshots/scan-intake-profiles.png)
+
 ## From a watched folder
 
 A scanner that writes to a shared Nextcloud folder needs no clerk to start the cut. Integriq watches the folder and hands every new file to Filinq:

@@ -43,6 +43,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Exception\DocumentFinalException;
 use OCA\Filinq\Service\Signing\LibreSignProvider;
+use OCA\Filinq\Service\Signing\NativeSigningProvider;
 use OCA\Filinq\Service\Signing\RecipientRole;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\Files\File;
@@ -109,7 +110,7 @@ class SignedArtifactProducer {
 	 *
 	 * @return string|null The token, or null when verification records are not available.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function newVerificationToken(): ?string {
 		return $this->verificationLinks?->newToken();
@@ -138,7 +139,7 @@ class SignedArtifactProducer {
 	 * @spec openspec/specs/document-signing/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function produce(array $request, ?array $verifiedActor = null, array $signers = [], ?string $verificationToken = null): string {
 		$fileId = (int)($request['documentFileId'] ?? 0);
@@ -196,6 +197,28 @@ class SignedArtifactProducer {
 	}//end produce()
 
 	/**
+	 * Refuse a signature whose completion could never produce the artifact,
+	 * before the signer is recorded as signed. Without this a native request
+	 * on a server with no signing secret stored the signature and its SIGNED
+	 * audit entry, then failed at completion: the request stayed in progress
+	 * and the signer could not sign again.
+	 *
+	 * @param array<string, mixed> $request The signing request.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the request's provider cannot produce an artifact.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function assertCanProduce(array $request): void {
+		$provider = $this->providerFactory->getProvider(identifier: (string)($request['provider'] ?? 'native'));
+		if ($provider instanceof NativeSigningProvider) {
+			$provider->assertCanProduce(level: (string)($request['signatureLevel'] ?? 'SES'));
+		}
+	}//end assertCanProduce()
+
+	/**
 	 * Mint the public verification record for a request's stored signed artifact.
 	 *
 	 * Reads the signed version back as the initiator, so the record's content
@@ -210,7 +233,7 @@ class SignedArtifactProducer {
 	 *
 	 * @return string|null The verification token, or null when none was minted.
 	 *
-	 * @spec openspec/changes/signature-verification-portal/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
 	public function recordVerification(array $request, string $signedDocumentRef, ?string $token = null): ?string {
 		if ($this->verificationLinks === null) {
@@ -371,7 +394,7 @@ class SignedArtifactProducer {
 	 *
 	 * @return array<int, string> The values.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.4
 	 */
 	private function typedValues(array $record, int $signerIndex, array $placements): array {
 		$values = [];

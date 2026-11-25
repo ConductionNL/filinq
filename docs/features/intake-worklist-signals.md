@@ -14,7 +14,7 @@ keywords:
 SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 SPDX-License-Identifier: EUPL-1.2
 
-@spec openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md
+@spec openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals/spec.md
 -->
 
 # Deadlines and duplicates on the intake worklist
@@ -22,6 +22,9 @@ SPDX-License-Identifier: EUPL-1.2
 The intake worklist at `/intake` tells a registrar what is late and what arrived before.
 
 ## What the registrar sees
+
+![The Overdue view: documents past their handling deadline, the longest overdue first](/screenshots/intake-worklist-overdue.png)
+
 
 - **Deadline.** Every waiting document has a handling deadline. The row shows the date and a countdown in working days: "3 days left", "Due today" or "5 days overdue".
 - **Overdue.** Next to *Waiting* and *Taken off a record*, the *Overdue* mode lists every document past its deadline that is not handled yet, the longest overdue first.

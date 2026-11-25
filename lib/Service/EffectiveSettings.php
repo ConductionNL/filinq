@@ -225,9 +225,9 @@ class EffectiveSettings {
 
 		$this->overrides = [];
 		try {
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$rows = $this->objectResolver->slugSearch()->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: []
 			);
 		} catch (Throwable $e) {

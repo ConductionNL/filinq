@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/woo-metadata-worklist/tasks.md#1-1
+ * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/tasks.md#1-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -29,7 +29,7 @@ namespace OCA\Filinq\Service\Publication;
  * Derives the missing list from the record itself, so a field emptied by a
  * later edit shows up again: nothing is stored.
  *
- * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-every-publication-record-says-which-diwoo-fields-it-misses-req-wmw-001
+ * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-every-publication-record-says-which-diwoo-fields-it-misses-req-wmw-001
  */
 class DiwooMissingFields {
 
@@ -56,7 +56,7 @@ class DiwooMissingFields {
 	 *
 	 * @return array<int, string> The missing field names; [] when complete.
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-every-publication-record-says-which-diwoo-fields-it-misses-req-wmw-001
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-every-publication-record-says-which-diwoo-fields-it-misses-req-wmw-001
 	 */
 	public function of(array $record): array {
 		$missing = [];
@@ -78,7 +78,7 @@ class DiwooMissingFields {
 	 *
 	 * @return array<string, mixed> The record, `diwooMissing` set.
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-every-publication-record-says-which-diwoo-fields-it-misses-req-wmw-001
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-every-publication-record-says-which-diwoo-fields-it-misses-req-wmw-001
 	 */
 	public function annotate(array $record): array {
 		$record[self::FIELD] = $this->of(record: $record);

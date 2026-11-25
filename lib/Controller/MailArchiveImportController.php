@@ -17,7 +17,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -44,7 +44,7 @@ use Throwable;
 /**
  * Start, read, map and cancel mail archive imports.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-an-archivist-starts-an-import-from-a-file-in-nextcloud-req-mai-001
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import/spec.md#requirement-an-archivist-starts-an-import-from-a-file-in-nextcloud-req-mai-001
  */
 class MailArchiveImportController extends Controller {
 
@@ -77,7 +77,7 @@ class MailArchiveImportController extends Controller {
 	 *
 	 * @return JSONResponse {results}.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
@@ -92,7 +92,7 @@ class MailArchiveImportController extends Controller {
 	 *
 	 * @return JSONResponse The import (201), or 400 / 404.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	#[NoAdminRequired]
 	public function create(int $fileId = 0): JSONResponse {
@@ -114,7 +114,7 @@ class MailArchiveImportController extends Controller {
 	 *
 	 * @return JSONResponse The import, or 404.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	#[NoAdminRequired]
 	public function show(string $uuid): JSONResponse {
@@ -130,7 +130,7 @@ class MailArchiveImportController extends Controller {
 	 *
 	 * @return JSONResponse The import, or 400 / 403 / 404 / 409.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	#[NoAdminRequired]
 	public function start(string $uuid, array $folderMap = []): JSONResponse {
@@ -145,7 +145,7 @@ class MailArchiveImportController extends Controller {
 	 *
 	 * @return JSONResponse The import, or 404 / 409.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	#[NoAdminRequired]
 	public function cancel(string $uuid): JSONResponse {
@@ -158,7 +158,7 @@ class MailArchiveImportController extends Controller {
 	 *
 	 * @return JSONResponse {messagesPerRun, readpstInstalled}.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	#[AuthorizedAdminSetting(settings: FilinqAdmin::class)]
 	public function settings(): JSONResponse {
@@ -173,7 +173,7 @@ class MailArchiveImportController extends Controller {
 	 *
 	 * @return JSONResponse The stored settings.
 	 *
-	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-4
+	 * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-4
 	 */
 	#[AuthorizedAdminSetting(settings: FilinqAdmin::class)]
 	public function updateSettings(int $messagesPerRun = MailArchiveSettings::DEFAULT_MESSAGES_PER_RUN): JSONResponse {

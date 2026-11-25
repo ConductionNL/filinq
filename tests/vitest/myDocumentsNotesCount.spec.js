@@ -7,7 +7,7 @@
  * and each row carries its number of notes: the count Nextcloud answered, 0
  * when it answered none.
  *
- * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-my-documents-shows-which-documents-have-notes-req-wdn-004
+ * @spec openspec/changes/archive/2026-11-25-work-document-notes/specs/document-notes/spec.md#requirement-my-documents-shows-which-documents-have-notes-req-wdn-004
  */
 
 import { createPinia, setActivePinia } from 'pinia'

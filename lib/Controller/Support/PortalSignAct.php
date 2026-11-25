@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.3
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -42,7 +42,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.3
  */
 final class PortalSignAct {
 
@@ -68,7 +68,7 @@ final class PortalSignAct {
 	 * @return void
 	 *
 	 * @spec openspec/specs/portal-signing-surface/spec.md
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.3
 	 */
 	public function __construct(IRequest $request) {
 		$signatureData = ['consent' => (bool) $request->getParam('consent', false)];
@@ -92,7 +92,7 @@ final class PortalSignAct {
 	 *
 	 * @return array<string, mixed>|null `{error: fields_refused, fieldErrors}`, or null.
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.3
 	 */
 	public function refusal(Throwable $exception): ?array {
 		if ($exception instanceof SigningFieldsRefusedException === false) {

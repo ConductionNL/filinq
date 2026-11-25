@@ -7,7 +7,7 @@
  * saves a destination and shows the server's refusal of a second active
  * one, and retries a failed delivery in place.
  *
- * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md
  */
 
 import axios from '@nextcloud/axios'

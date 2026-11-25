@@ -6,7 +6,7 @@
  * schema's records, the separator sheet's reference pre-selects one, and
  * Assign sends the register, schema and record id the clerk picked.
  *
- * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+ * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
  */
 
 const { nextTick } = require('vue')

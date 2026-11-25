@@ -1,7 +1,13 @@
 ## 1. Record the open question (D1)
 
-- [ ] 1.1 Confirm both positions in D1 against the code once more at
+- [x] 1.1 Confirm both positions in D1 against the code once more at
       implementation time, because two of the four repos moved this week.
+      Done (2026-11-25, default branches): dossiq still signs through
+      `lib/Service/Beschikking/LibresignSigningAdapter.php` (registered in
+      `BeschikkingAdapterRegistrar`); decidiq's `lib/Service/EIDASSignatureService.php`
+      still holds the `docudesk-signing` Source hop; shillinq dispatches
+      `DocumentSigningRequestedEvent` from `SigningDelegationService`; neither
+      dossiq nor decidiq dispatches the event. D1's facts stand as written.
 - [ ] 1.2 Raise the ownership question with Ruben as a product decision, with
       the design's D1 as the briefing, and record the answer in the fleet ADR
       set rather than in this change.
@@ -58,9 +64,14 @@
 
 ## 7. Sequencing and counterparts
 
-- [ ] 7.1 Do not open the consumer migrations before
+- [x] 7.1 Do not open the consumer migrations before
       `libresign-signing-provider` lands. Until then filinq's only working
       signature is a native HMAC SES marker, which a beschikking cannot carry.
+      Done (2026-11-25): `libresign-signing-provider` landed and is archived
+      (`openspec/changes/archive/2026-09-29-libresign-signing-provider`,
+      `lib/Service/Signing/LibreSignProvider.php`), so this gate is met. 7.2 and
+      7.3 still wait on the answer to 1.2: which app a beschikking's signature
+      goes through decides what the dossiq and decidiq changes dispatch.
 - [ ] 7.2 Raise the dossiq change: retire `LibresignSigningAdapter`,
       `LibresignApiClient`, `LibresignResultAssembler` and
       `LibresignStatusMapper`, dispatch the event, keep mandaat-based signer

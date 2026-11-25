@@ -7,7 +7,7 @@
  * listing the missing fields verbatim, the manual-delivery state and the
  * transfer action.
  *
- * @spec openspec/changes/tmlo-mdto-metadata/tasks.md#3-frontend
+ * @spec openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/tasks.md#3-frontend
  */
 
 const { nextTick } = require('vue')

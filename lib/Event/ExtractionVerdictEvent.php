@@ -18,7 +18,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-the-verdict-is-sent-as-a-sibling-event-req-erp-004
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-the-verdict-is-sent-as-a-sibling-event-req-erp-004
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -50,7 +50,7 @@ class ExtractionVerdictEvent extends Event {
 	 * @param string             $docType      `receipt` or `supplier-invoice`.
 	 * @param UnattendedOutcome  $outcome      The verdict, its reasons and the threshold used.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-the-verdict-is-sent-as-a-sibling-event-req-erp-004
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-the-verdict-is-sent-as-a-sibling-event-req-erp-004
 	 */
 	public function __construct(
 		private readonly string $extractionId,
@@ -67,7 +67,7 @@ class ExtractionVerdictEvent extends Event {
 	 *
 	 * @return array<string, mixed> extractionId, documentUri, sourceApp, docType, verdict, reasons and threshold.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-the-verdict-is-sent-as-a-sibling-event-req-erp-004
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-the-verdict-is-sent-as-a-sibling-event-req-erp-004
 	 */
 	public function toPayload(): array {
 		return [

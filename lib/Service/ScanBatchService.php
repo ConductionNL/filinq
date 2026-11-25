@@ -20,7 +20,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -52,7 +52,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects) Cutting a batch needs the
  * profile, the separator reader, the page reader, the store and the file tree,
@@ -95,7 +95,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @return array<string, mixed> The stored batch, in `received`.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function receive(File $file, array $profile): array {
 		return $this->batches->save(
@@ -160,7 +160,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @return array<string, mixed> The batch, `split` or `failed`.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function split(array $batch, array $profile, File $file, Folder $target): array {
 		$mode = $this->mode(profile: $profile);
@@ -274,7 +274,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The segments, each with its pages and the case its separator named.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function segmentsOf(array $pages, string $mode, array $profile): array {
 		if ($mode === self::MODE_NONE) {
@@ -322,7 +322,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @return array<int, array{pages: array<int, string>, firstPage: int, caseNumber: string}> One segment, or none for an empty batch.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md#requirement-a-scanner-profile-is-saved-per-source-and-reused-req-sci-05
 	 */
 	private function wholeBatch(array $pages): array {
 		if ($pages === []) {
@@ -342,7 +342,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @return string|null The case number the separator named, an empty string when it named none, or null for an ordinary page.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	private function separatorOf(string $page, SeparatorRule $rule): ?string {
 		if ($rule->mode === self::MODE_BLANK) {
@@ -370,7 +370,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @throws RuntimeException When the segment cannot be assembled or written.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	private function deliver(array $segment, ScanDelivery $delivery): array {
 		$place = $this->placeOf(segment: $segment);
@@ -444,7 +444,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @return array{original: array<string, mixed>, project: array<string, mixed>, folder: \OCP\Files\Folder}|null
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
 	 */
 	private function placeOf(array $segment): ?array {
 		$reference = (string)($segment['caseNumber'] ?? '');
@@ -466,7 +466,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @return array<string, mixed> What the batch records about this segment.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-scan-of-an-original-is-filed-on-the-projects-record-req-pad-003
 	 */
 	private function deliverOriginal(array $segment, ScanDelivery $delivery, array $place): array {
 		$name = $place['folder']->getNonExistingName($this->originals->fileName(original: $place['original']));
@@ -501,7 +501,7 @@ class ScanBatchService implements ScanBatchServiceInterface {
 	 *
 	 * @return array<string, mixed> The failed batch.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	private function fail(array $batch, string $reason): array {
 		$uuid = (string)($batch['uuid'] ?? '');

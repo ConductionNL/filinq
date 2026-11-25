@@ -1032,8 +1032,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/views/intake/IntakeIndex.vue (CnIndexPage listing 'documents', mode='waiting') calls src/services/intakeService.js:21 listWaitingDocuments() -> GET api/intake/documents (routes.php:77) -> lib/Controller/IntakeController.php:89 index() -> lib/Service/IntakeService.php:230 listWaiting() -> IntakeRepository::findWaiting().",
-				"change": "openspec/changes/document-intake-inbox",
-				"requirement": "openspec/changes/document-intake-inbox/specs/document-intake-inbox :: The intake inbox page (REQ-DII-04)"
+				"change": "openspec/changes/archive/2026-11-25-document-intake-inbox",
+				"requirement": "openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox :: The intake inbox page (REQ-DII-04)"
 			},
 			"reachedOn": "/intake (IntakeIndex.vue)",
 			"provider": "filinq",
@@ -1066,8 +1066,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "src/views/intake/IntakeIndex.vue:67-72 (Assign action) opens src/dialogs/IntakeAssignDialog.vue -> src/services/intakeService.js:35 assignIntakeDocument() -> POST api/intake/documents/{uuid}/assign (routes.php:78) -> IntakeController.php:131 assign() -> IntakeService.php:254 assign(); reject is symmetric via routes.php:79 -> IntakeController.php:182 reject() -> IntakeService.php:392 reject(), reason required.",
-				"change": "openspec/changes/document-intake-inbox",
-				"requirement": "openspec/changes/document-intake-inbox/specs/document-intake-inbox :: Assign or reject with server-side checks (REQ-DII-03)"
+				"change": "openspec/changes/archive/2026-11-25-document-intake-inbox",
+				"requirement": "openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox :: Assign or reject with server-side checks (REQ-DII-03)"
 			},
 			"reachedOn": "/intake (IntakeIndex.vue, IntakeAssignDialog.vue, FinalDocumentReasonDialog.vue)",
 			"provider": "filinq",
@@ -1096,16 +1096,16 @@
 			"sourceRef": "dossiq gap register 1.6",
 			"filinq": "partial",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Not built (closing audit 2026-11-12, decision 389): the cut is never triggered: no watched-folder job calls ScanBatchService::receive() (task 3.2 open); the intake page only prints separator sheets. Built so far: lib/Service/ScanBatchService.php (receive/split over FPDI, QR + blank-page detection, dispatches IntakeDocumentReceivedEvent per segment) and lib/Service/SeparatorSheetService.php are implemented and unit-tested, routed at scanIntake#separators/split (routes.php:119,122), route-reach.txt marks both 'none'. openspec/changes/scan-intake-with-separator-sheets/tasks.md: task 3.2 'Point the watched-folder job at ScanBatchService::receive()' is unchecked and lib/BackgroundJob/ has no such job; task 2.2 'print action and dialog on the intake page' is unchecked. grep of src/ for scanIntake/separatorSheet/scanProfile: no match.",
-				"change": "openspec/changes/scan-intake-with-separator-sheets",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): the cut is never triggered: no watched-folder job calls ScanBatchService::receive() (task 3.2 open); the intake page only prints separator sheets. Built so far: lib/Service/ScanBatchService.php (receive/split over FPDI, QR + blank-page detection, dispatches IntakeDocumentReceivedEvent per segment) and lib/Service/SeparatorSheetService.php are implemented and unit-tested, routed at scanIntake#separators/split (routes.php:119,122), route-reach.txt marks both 'none'. openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md: task 3.2 'Point the watched-folder job at ScanBatchService::receive()' is unchecked and lib/BackgroundJob/ has no such job; task 2.2 'print action and dialog on the intake page' is unchecked. grep of src/ for scanIntake/separatorSheet/scanProfile: no match.",
+				"change": "openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets",
 				"requirement": [
-					"openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: Separator sheets are printed by filinq and read by filinq (REQ-SCI-02)",
-					"openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: Every segment reaches the inbox through the intake event (REQ-SCI-03)"
+					"openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake :: Separator sheets are printed by filinq and read by filinq (REQ-SCI-02)",
+					"openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake :: Every segment reaches the inbox through the intake event (REQ-SCI-03)"
 				],
 				"plan": [
-					"openspec/changes/scan-intake-with-separator-sheets",
+					"openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets",
 					"openspec/changes/scan-intake-from-a-watched-folder"
 				]
 			},
@@ -1136,12 +1136,12 @@
 			"source": "own-code",
 			"filinq": "partial",
 			"built": {
-				"state": "planned",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): no screen lists or adds a scanner profile; the profile routes have no caller. Planned in openspec/changes/scan-intake-with-separator-sheets (task 4.2). Built so far: lib/Service/ScanProfileService.php reads/writes 'scanProfiles' via IAppConfig; routed at scanIntake#listProfiles/declareProfiles (routes.php:120-121), route-reach.txt marks both 'none'. No admin-settings Vue component references 'scanProfiles' (checked src/views/settings/Settings.vue).",
-				"change": "openspec/changes/scan-intake-with-separator-sheets",
-				"requirement": "openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake :: A scanner profile is saved per source and reused (REQ-SCI-05)",
-				"plan": "openspec/changes/scan-intake-with-separator-sheets"
+				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): no screen lists or adds a scanner profile; the profile routes have no caller. Planned in openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets (task 4.2). Built so far: lib/Service/ScanProfileService.php reads/writes 'scanProfiles' via IAppConfig; routed at scanIntake#listProfiles/declareProfiles (routes.php:120-121), route-reach.txt marks both 'none'. No admin-settings Vue component references 'scanProfiles' (checked src/views/settings/Settings.vue).",
+				"change": "openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets",
+				"requirement": "openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake :: A scanner profile is saved per source and reused (REQ-SCI-05)",
+				"plan": "openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets"
 			},
 			"reachedOn": "nothing reaches it (no admin UI, no frontend caller)",
 			"provider": "filinq",
@@ -1212,9 +1212,9 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "An incoming email in the intake (intakeDocument, channel mail) gets a suggested dossier from a case reference in its subject or text, or from its sender, on an exact match with a dossier name (DossierMatcher via InboundClassificationService::referenceText; InboundClassificationServiceTest::testAnEmailsSubjectReferenceSuggestsItsCase). The person confirms it on the Classification page or the document card, which files the email into the dossier folder. Emails filed by email-ingestion go to their inbox's mapped dossier and are not re-suggested. Shared machinery: see in-classify.",
-				"change": "openspec/changes/inbound-auto-classification",
+				"change": "openspec/changes/archive/2026-11-25-inbound-auto-classification",
 				"readOn": "2026-10-02",
-				"requirement": "openspec/changes/inbound-auto-classification/specs/inbound-auto-classification :: Dossier routing is a suggestion only (REQ-DDIAC-004)"
+				"requirement": "openspec/changes/archive/2026-11-25-inbound-auto-classification/specs/inbound-auto-classification :: Dossier routing is a suggestion only (REQ-DDIAC-004)"
 			},
 			"reachedOn": "Classification in the menu (/classification), for intake documents from the mail channel",
 			"provider": "filinq",
@@ -1246,11 +1246,11 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "classificationResult schema 1.0.0 in register filinq 8.44.0 (suggested type with confidence, method, at most one correspondent name, suggested dossier, status suggested/confirmed/rejected/superseded, confirmed* beside suggested*, filing moved/recorded; P1Y destroy); intakeDocument 1.3.0 gains documentType + correspondent, written only by a confirmation. DocumentTypeClassifier (keyword + structural cues, below threshold -> overig), InboundClassificationService (intake documents only, toggle enable_inbound_classification default on, one active record per file with supersede when entity detection lands, CorrespondentRanker over OR-detected entities with correspondentPending, DossierMatcher exact name/case-reference match incl. the subject). Wired into EnrichmentRunner (before the enrichment toggle; unchanged updates still offered) and POST api/metadata/enrich (only for a file the caller can open). ClassificationDecisionService + ClassificationController: GET api/classification/pending, GET api/classification/{fileId}, POST .../confirm (documentType + correspondent onto the document through MetadataService, file moved into the dossier folder the reviewer can open, else recorded), POST .../reject (no effect); 404 for a file outside the caller's folder. UI: Classification page (/classification: type + confidence, sender, dossier, Confirm / Correct / Reject, Confirm all shown) and a Classification card in the file viewer sidebar; admin switch Inbound classification. Tests: DocumentTypeClassifierTest, InboundClassificationServiceTest, ClassificationDecisionServiceTest (intakeDocument and classificationResult payloads validated with Opis against the real fragments), ClassificationControllerTest, EnrichmentRunnerTest, MetadataControllerClassificationTest, vitest classification.spec.js, e2e tests/e2e/spec-coverage/inbound-classification.spec.ts. Not built: a learned classifier (deferred by design).",
-				"change": "openspec/changes/inbound-auto-classification",
+				"change": "openspec/changes/archive/2026-11-25-inbound-auto-classification",
 				"readOn": "2026-10-02",
 				"requirement": [
-					"openspec/changes/inbound-auto-classification/specs/inbound-auto-classification :: Inbound documents receive a document-type suggestion (REQ-DDIAC-001)",
-					"openspec/changes/inbound-auto-classification/specs/inbound-auto-classification :: Suggestions require human confirmation — never silent auto-file (REQ-DDIAC-003)"
+					"openspec/changes/archive/2026-11-25-inbound-auto-classification/specs/inbound-auto-classification :: Inbound documents receive a document-type suggestion (REQ-DDIAC-001)",
+					"openspec/changes/archive/2026-11-25-inbound-auto-classification/specs/inbound-auto-classification :: Suggestions require human confirmation — never silent auto-file (REQ-DDIAC-003)"
 				]
 			},
 			"reachedOn": "Classification in the menu (/classification); the Classification card in the file viewer sidebar",
@@ -1354,9 +1354,9 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/IntakeService.php:119-127 receive() stores 'sender', 'channel' (direction/way it arrived) and 'receivedAt' on every intake document; src/views/intake/IntakeIndex.vue:174-181 tableColumns render 'sender' and 'receivedAt' (formatted via formatDate()).",
-				"change": "openspec/changes/document-intake-inbox",
+				"change": "openspec/changes/archive/2026-11-25-document-intake-inbox",
 				"requirement": [
-					"openspec/changes/document-intake-inbox/specs/document-intake-inbox :: Intake document schema (REQ-DII-01)",
+					"openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox :: Intake document schema (REQ-DII-01)",
 					"openspec/changes/documents-in-and-out-of-the-building/specs/document-register :: A registered document carries a direction, a unit and a number (REQ-DIO-01)"
 				]
 			},
@@ -1426,8 +1426,8 @@
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/intake-worklist-deadline-and-duplicates on 2026-09-27. Before: lib/Service/IntakeService.php:104-117 receive() de-duplicates silently on sourceRef: it logs an info-level message and returns the existing document unchanged. No field or UI surfaces a 'this looks like a duplicate' warning to a clerk; IntakeIndex.vue has no duplicate indicator.",
 				"readOn": "2026-09-26",
-				"change": "openspec/changes/intake-worklist-deadline-and-duplicates",
-				"requirement": "openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals :: An arrival whose content came before is marked, never refused (REQ-IWS-003)"
+				"change": "openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates",
+				"requirement": "openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals :: An arrival whose content came before is marked, never refused (REQ-IWS-003)"
 			},
 			"reachedOn": "nothing detects content-level duplicates; the sourceRef re-delivery skip is intended",
 			"provider": "filinq",
@@ -1460,10 +1460,10 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/intake-worklist-deadline-and-duplicates on 2026-09-27. Before: Searched lib/Service/Intake*, lib/Service/IntakeService.php, lib/Service/IntakeRepository.php and lib/Settings/filinq_register.json for handlingDeadline/afhandeltermijn/overdue: no match. lib/Service/ObjectionDeadlineChecker.php exists but is unrelated - it checks GDPR publication-objection deadlines on consent records (openspec/specs/consent-management), not intake handling deadlines.",
-				"change": "openspec/changes/intake-worklist-deadline-and-duplicates",
+				"change": "openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates",
 				"requirement": [
-					"openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals :: Every waiting document has a handling deadline (REQ-IWS-001)",
-					"openspec/changes/intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals :: The worklist shows what is overdue (REQ-IWS-002)"
+					"openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals :: Every waiting document has a handling deadline (REQ-IWS-001)",
+					"openspec/changes/archive/2026-11-25-intake-worklist-deadline-and-duplicates/specs/intake-worklist-signals :: The worklist shows what is overdue (REQ-IWS-002)"
 				]
 			},
 			"reachedOn": "nothing reaches it (not built)",
@@ -1491,13 +1491,13 @@
 			"name": "Send the sender an acknowledgement of receipt automatically when a document is registered.",
 			"source": "category-derived",
 			"sourceRef": "journey \"Generate Acknowledgement of Receipt\"",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-acknowledge-and-stamp on 2026-09-27. Before: Grepped lib/ for 'acknowledg*': all hits are print-job acknowledgement (PrintJobController) or anonymisation-override acknowledgement (AnonymizeRequestValidator, ProhibitionGateService) - none is a sender acknowledgement-of-receipt on document registration. No template or auto-send-on-registration found.",
-				"change": "openspec/changes/intake-acknowledge-and-stamp",
-				"requirement": "openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement :: A matching rule acknowledges receipt to the sender (REQ-IAS-001)"
+				"evidence": "Built and verified live (archived 2026-11-25, filinq#2401): lib/Service/IntakeAcknowledgementService.php renders the rule's acknowledgeWith template with subject, day-month-year received date and registration number and sends it after the intake document is saved (IntakeArrivalFollowUpListener); a sender without mail gets a stored letter, a refuse-send party gets refused; the outcome is on intakeDocument.acknowledgement and in the Acknowledged column of /intake. Live 4.2: mail to an SMTP catcher arrived, acknowledgement.status sent. PHPUnit IntakeAcknowledgementServiceTest, IntakeArrivalFollowUpListenerTest.",
+				"change": "openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp",
+				"requirement": "openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement :: A matching rule acknowledges receipt to the sender (REQ-IAS-001)"
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -1673,10 +1673,10 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/intake-paper-archive-digitisation on 2026-09-27. Before: openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/proposal.md:38 lists 'C-intake-13 retro-digitisation of a paper archive, with OCR and metadata' as 'should', status 'partial' in the competitor gap register, with no linked build. Grepped lib/ and src/ for digitis*/paperOriginal/paper.*archive: no implementation found.",
-				"change": "openspec/changes/intake-paper-archive-digitisation",
+				"change": "openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation",
 				"requirement": [
-					"openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation :: An archivist runs a digitisation project (REQ-PAD-001)",
-					"openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation :: A scan of an original is filed on the project's record (REQ-PAD-003)"
+					"openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation :: An archivist runs a digitisation project (REQ-PAD-001)",
+					"openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation :: A scan of an original is filed on the project's record (REQ-PAD-003)"
 				]
 			},
 			"reachedOn": "nothing reaches it (not built)",
@@ -1742,8 +1742,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/intake-mailbox-archive-import on 2026-09-27. Before: openspec/changes/email-ingestion/design.md Non-Goals: 'No native .msg (Outlook CFBF) parsing and no PST/MBOX bulk-archive splitter in v1 (the cluster's bulk import PST/MBOX story needs a container-format decision first - deferred).' email-ingestion itself is entirely unbuilt.",
-				"change": "openspec/changes/intake-mailbox-archive-import",
-				"requirement": "openspec/changes/intake-mailbox-archive-import/specs/mailbox-archive-import :: Mapped folders go to dossiers, the rest to the intake inbox (REQ-MAI-003)"
+				"change": "openspec/changes/archive/2026-11-25-intake-mailbox-archive-import",
+				"requirement": "openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/specs/mailbox-archive-import :: Mapped folders go to dossiers, the rest to the intake inbox (REQ-MAI-003)"
 			},
 			"reachedOn": "nothing reaches it (explicit non-goal, unbuilt)",
 			"provider": "filinq",
@@ -1777,7 +1777,7 @@
 				"change": "openspec/changes/archive/2026-07-12-financial-document-field-extraction",
 				"spec": "openspec/specs/financial-document-field-extraction",
 				"requirement": "openspec/specs/financial-document-field-extraction :: Extracted Field Set and Totals Reconciliation (REQ-FIN-03)",
-				"plan": "openspec/changes/extraction-receipt-photo-and-invoice-agent"
+				"plan": "openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent"
 			},
 			"reachedOn": "machine consumer: shillinq (lib/Service/Extraction/DocudeskExtractionClient.php POSTs api/extraction/financial directly; lib/Listener/ExtractionCompletedListener.php consumes filinq's FinancialExtractionCompletedEvent)",
 			"provider": "filinq",
@@ -2201,7 +2201,7 @@
 				"evidence": "lib/Service/DocumentService.php:734 storeOutputIfRequested() + options.output.mode/caseId (line 258); reached by dossiq: procest/lib/Service/Beschikking/FilinqTemplateEngineAdapter.php:152-169 calls generateDocument(..., ['output'=>['mode'=>'both'], 'caseId'=>$caseId, ...]) for every beschikking, and dossiq's CaseDocumentGenerationController files the returned informatieobject on the case.",
 				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template",
 				"requirement": "openspec/specs/document-creatie-sjablonen :: REQ-DCS-08 Zaaksysteem Integration (Priority: Should)",
-				"plan": "openspec/changes/generate-store-in-case-system"
+				"plan": "openspec/changes/archive/2026-11-25-generate-store-in-case-system"
 			},
 			"reachedOn": "machine consumer: dossiq (procest/dq-flow) CaseDocumentGenerationController -> BeschikkingGenerationService/FilinqTemplateEngineAdapter",
 			"provider": "filinq",
@@ -2746,9 +2746,9 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Controller/TemplatesController.php has only index/show/create/update/destroy/duplicate/lock/unlock (no upload/import endpoint); no docx/odt template upload found in routes.php or src/. openspec/changes/office-template-authoring/tasks.md: 0/17 done.",
-				"change": "openspec/changes/office-template-authoring",
-				"requirement": "openspec/changes/office-template-authoring/specs/office-template-authoring :: Office files are accepted as first-class templates (REQ-DDOTA-001)"
+				"evidence": "lib/Controller/TemplatesController.php has only index/show/create/update/destroy/duplicate/lock/unlock (no upload/import endpoint); no docx/odt template upload found in routes.php or src/. openspec/changes/archive/2026-11-25-office-template-authoring/tasks.md: 0/17 done.",
+				"change": "openspec/changes/archive/2026-11-25-office-template-authoring",
+				"requirement": "openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring :: Office files are accepted as first-class templates (REQ-DDOTA-001)"
 			},
 			"reachedOn": "nothing reaches it; not built",
 			"provider": "filinq",
@@ -3680,11 +3680,11 @@
 			"sourceRef": "Paperless-ngx document notes",
 			"filinq": "no",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/work-document-notes on 2026-09-27. Before: No document-note/annotation feature found. The only 'note' parameter in the codebase is RedactionOutputController::markChecked()'s $note (lib/Controller/RedactionOutputController.php:85-106), which is a per-redaction QA comment, not a general note-to-colleagues on a document. No 'notes'/'annotations' entry exists among openspec/specs/* or openspec/changes/* names.",
-				"change": "openspec/changes/work-document-notes",
-				"requirement": "openspec/changes/work-document-notes/specs/document-notes :: Notes sit beside the document on filinq's screens (REQ-WDN-002)"
+				"evidence": "Specified in openspec/changes/archive/2026-11-25-work-document-notes on 2026-09-27. Before: No document-note/annotation feature found. The only 'note' parameter in the codebase is RedactionOutputController::markChecked()'s $note (lib/Controller/RedactionOutputController.php:85-106), which is a per-redaction QA comment, not a general note-to-colleagues on a document. No 'notes'/'annotations' entry exists among openspec/specs/* or openspec/changes/* names.",
+				"change": "openspec/changes/archive/2026-11-25-work-document-notes",
+				"requirement": "openspec/changes/archive/2026-11-25-work-document-notes/specs/document-notes :: Notes sit beside the document on filinq's screens (REQ-WDN-002)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6094,7 +6094,7 @@
 				"evidence": "GET api/signing/verify/{fileId} (routes.php:247, FE, signing#verify) -> SigningController::verify (line 389) -> SigningVerificationService::verifyDocument (line 73), which checks every embedded signature assertion (verifyAssertion, line 255) and works on any document, not only ones the caller signed themselves.",
 				"change": "openspec/changes/archive/2026-06-14-document-signing",
 				"requirement": "openspec/specs/document-signing :: Signature verification",
-				"plan": "openspec/changes/signature-verification-portal"
+				"plan": "openspec/changes/archive/2026-11-25-signature-verification-portal"
 			},
 			"reachedOn": "/signing/verify/:fileId (SignatureVerification.vue)",
 			"provider": "filinq",
@@ -6702,7 +6702,7 @@
 				"owner": "ConductionNL/openregister",
 				"evidence": "Same source: OpenRegister ships an EdepotTransferService (SIPs over configurable transports/profiles) and MdtoXmlGenerator, but per the proposal these are not populated from filinq's records ('no transfer state'), and the tmlo-mdto-metadata + archiefwet-retention-engine changes that would connect filinq documents to it are both unbuilt (0/15 tasks each).",
 				"change": "openspec/changes/archiefwet-retention-engine",
-				"requirement": "openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata :: e-Depot handoff rides OpenRegister's transfer stack (REQ-DDTMM-006)"
+				"requirement": "openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata :: e-Depot handoff rides OpenRegister's transfer stack (REQ-DDTMM-006)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",
@@ -6876,8 +6876,8 @@
 				"evidence": "src/views/dossier/DossierDetail.vue:61-73 lifecycle transition buttons call dossierStore.transitionDossier() -> PUT /api/dossiers/{id}/status -> lib/Service/DossierManagementService.php:301 transition(), which enforces a declared state machine (open/processed/published/closed). Documents are linked via POST /api/dossiers/{id}/documents.",
 				"spec": "openspec/specs/dossier-register",
 				"requirement": [
-					"openspec/changes/dossier-management-ui/specs/dossier-management-ui :: Add and remove documents in a dossier (REQ-DDDMU-004)",
-					"openspec/changes/dossier-management-ui/specs/dossier-management-ui :: Lifecycle rendering and transitions (REQ-DDDMU-007)"
+					"openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui :: Add and remove documents in a dossier (REQ-DDDMU-004)",
+					"openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui :: Lifecycle rendering and transitions (REQ-DDDMU-007)"
 				]
 			},
 			"reachedOn": "/dossiers and /dossiers/:id (DossierIndex.vue, DossierDetail.vue)",
@@ -6909,7 +6909,7 @@
 			"built": {
 				"state": "decided-no",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No document-ordering or printable-index capability found in lib/Controller/DossierManagementController.php, lib/Service/DossierManagementService.php, or src/views/dossier/DossierDetail.vue. grep for 'printable', 'print.*index', 'inhoudsopgave' across lib/ and src/ found no matches. Not covered by openspec/changes/dossier-management-ui's remaining unchecked tasks (create dialog, auto-dossier modal, docs) either."
+				"evidence": "Decided no on 2026-09-28 in the build-all pass: No competitor rates it yes, no demand row, outside the core area (intake and generate). Reversible: the old rule deferred it, and the row returns to none when demand or a second competitor appears. Before: No document-ordering or printable-index capability found in lib/Controller/DossierManagementController.php, lib/Service/DossierManagementService.php, or src/views/dossier/DossierDetail.vue. grep for 'printable', 'print.*index', 'inhoudsopgave' across lib/ and src/ found no matches. Not covered by openspec/changes/archive/2026-11-25-dossier-management-ui's remaining unchecked tasks (create dialog, auto-dossier modal, docs) either."
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -6936,9 +6936,9 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "lib/Service/DossierManagementService.php:301-324 transition() only checks that the target status is a legal lifecycle transition (TRANSITIONS map), never dossier metadata completeness. openspec/changes/tmlo-mdto-metadata/proposal.md:39,79,90 names 'completeness validation before overbrenging' and an 'MdtoMappingService (prefill + completeness + sidecar assembly)' as still-to-build (0 of 15 tasks done).",
-				"change": "openspec/changes/tmlo-mdto-metadata",
-				"requirement": "openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata :: Completeness validation gates overbrenging (REQ-DDTMM-004)"
+				"evidence": "lib/Service/DossierManagementService.php:301-324 transition() only checks that the target status is a legal lifecycle transition (TRANSITIONS map), never dossier metadata completeness. openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/proposal.md:39,79,90 names 'completeness validation before overbrenging' and an 'MdtoMappingService (prefill + completeness + sidecar assembly)' as still-to-build (0 of 15 tasks done).",
+				"change": "openspec/changes/archive/2026-11-25-tmlo-mdto-metadata",
+				"requirement": "openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/specs/tmlo-mdto-metadata :: Completeness validation gates overbrenging (REQ-DDTMM-004)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -7243,10 +7243,10 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: Grepped lib/ and src/ for shareLink/time-limited/expiringLink/publicShare/'share.*link': no feature-relevant match (only an unrelated docblock hit in DocumentAnonymizeRunner.php about a shared code path, and an unrelated UI-copy string in FolderAnonymizationView.vue).",
-				"change": "openspec/changes/share-document-links",
+				"change": "openspec/changes/archive/2026-11-25-share-document-links",
 				"requirement": [
-					"openspec/changes/share-document-links/specs/document-share-links :: A clerk shares one document through a link (REQ-SDL-001)",
-					"openspec/changes/share-document-links/specs/document-share-links :: Every link runs out (REQ-SDL-003)"
+					"openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links :: A clerk shares one document through a link (REQ-SDL-001)",
+					"openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links :: Every link runs out (REQ-SDL-003)"
 				]
 			},
 			"reachedOn": "nothing reaches it (not built)",
@@ -7279,8 +7279,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: No time-limited external share exists to revoke (see sh-link); no revoke-access endpoint or service found anywhere in lib/Controller or lib/Service.",
-				"change": "openspec/changes/share-document-links",
-				"requirement": "openspec/changes/share-document-links/specs/document-share-links :: A link can be taken back, and closes when it runs out (REQ-SDL-004)"
+				"change": "openspec/changes/archive/2026-11-25-share-document-links",
+				"requirement": "openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links :: A link can be taken back, and closes when it runs out (REQ-SDL-004)"
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -8345,10 +8345,10 @@
 				"change": "openspec/changes/archive/2026-09-29-woo-publicatie-pipeline",
 				"readOn": "2026-09-29",
 				"requirement": [
-					"openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist :: Every publication record says which DiWoo fields it misses (REQ-WMW-001)",
-					"openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist :: A coordinator fills one value on a selection (REQ-WMW-002)"
+					"openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist :: Every publication record says which DiWoo fields it misses (REQ-WMW-001)",
+					"openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist :: A coordinator fills one value on a selection (REQ-WMW-002)"
 				],
-				"plan": "openspec/changes/woo-metadata-worklist"
+				"plan": "openspec/changes/archive/2026-11-25-woo-metadata-worklist"
 			},
 			"reachedOn": "Publications menu entry (/publications), Missing metadata column",
 			"provider": "filinq",
@@ -8455,13 +8455,13 @@
 			"sourceRef": "featureRequest: https://github.com/paperless-ngx/paperless-ngx/discussions/3744",
 			"origin": "featureRequest",
 			"originUrl": "https://github.com/paperless-ngx/paperless-ngx/discussions/3744",
-			"filinq": "no",
+			"filinq": "yes",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/intake-acknowledge-and-stamp on 2026-09-27. Before: no visible stamp on a document: grep -ri 'stamp|stempel|watermark' lib src finds only metadata stamps (lib/Service/IntakeDefaultRuleService.php:135 stamps default metadata onto the record, lib/Service/PageLayoutService.php:208 attaches a layout to a generated document). A visible waarmerk stamp page is designed only: openspec/changes/document-waarmerk-certification/proposal.md:48 (0 tasks done).",
-				"change": "openspec/changes/intake-acknowledge-and-stamp",
-				"requirement": "openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement :: A received stamp goes on a copy, never on what arrived (REQ-IAS-003)",
+				"evidence": "Built and verified live (archived 2026-11-25, filinq#2401): lib/Service/ReceivedStampService.php writes '<name> (ontvangen).pdf' beside the arrived file with 'Ontvangen', the day-month-year date and the registration number on page 1; the arrived file is only read (checksum unchanged). The inbox row opens the stamped copy. Live 4.2: the copy reads 'Ontvangen 25-11-2026'. PHPUnit ReceivedStampServiceTest.",
+				"change": "openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp",
+				"requirement": "openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement :: A received stamp goes on a copy, never on what arrived (REQ-IAS-003)",
 				"plan": "openspec/changes/work-stamp-text-on-every-page"
 			},
 			"reachedOn": "nothing reaches it",
@@ -8604,8 +8604,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: no share code: grep -ri 'IShare|ShareManager|shareLink|share link' lib src finds nothing; the only ZIP handling is office package I/O (lib/Service/Editing/PackagePartIo.php:78). Nearest: lib/Controller/MergeController.php merges several documents into one PDF, which is a file, not a link.",
-				"change": "openspec/changes/share-document-links",
-				"requirement": "openspec/changes/share-document-links/specs/document-share-links :: Several documents leave as one archive with a manifest (REQ-SDL-002)"
+				"change": "openspec/changes/archive/2026-11-25-share-document-links",
+				"requirement": "openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links :: Several documents leave as one archive with a manifest (REQ-SDL-002)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -8640,8 +8640,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/intake-pdf-password-removal on 2026-09-27. Before: filinq detects and refuses, it does not decrypt: lib/Service/DocumentValidationService.php:306 encryptionFindings() reports 'The PDF is encrypted or password-protected and cannot be anonymised.' (:323); grep -ri 'decrypt|qpdf|pikepdf|password' lib finds no removal step.",
-				"change": "openspec/changes/intake-pdf-password-removal",
-				"requirement": "openspec/changes/intake-pdf-password-removal/specs/pdf-password-removal :: A clerk unlocks a locked PDF into a copy (REQ-PPR-001)"
+				"change": "openspec/changes/archive/2026-11-25-intake-pdf-password-removal",
+				"requirement": "openspec/changes/archive/2026-11-25-intake-pdf-password-removal/specs/pdf-password-removal :: A clerk unlocks a locked PDF into a copy (REQ-PPR-001)"
 			},
 			"reachedOn": "nothing reaches it (the encrypted-PDF check is shown at /my-documents via ValidationResultModal.vue)",
 			"provider": "filinq",
@@ -8675,8 +8675,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/signing-field-validation on 2026-09-27. Before: no signer form fields at all: the signingRequest and signerRecord schemas (lib/Settings/filinq_register.json:2353, :2714) carry level, mode, status and provider, no fields; src/views/signing/SigningRequestForm.vue collects signers only (:80). Field placement is designed only: openspec/changes/bulk-signing-field-builder/proposal.md:48 (0 tasks done). Corrections round 8 (2026-09-28), filinq#1209: the create form also offers no signer or field composition (src/views/signing/SigningRequestForm.vue:12-54), which openspec/specs/orphaned-surface-restoration/spec.md:106 requires, at 9fd042f.",
-				"change": "openspec/changes/signing-field-validation",
-				"requirement": "openspec/changes/signing-field-validation/specs/signing-field-validation :: A wrong value stops the signature (REQ-SFV-003)"
+				"change": "openspec/changes/archive/2026-11-25-signing-field-validation",
+				"requirement": "openspec/changes/archive/2026-11-25-signing-field-validation/specs/signing-field-validation :: A wrong value stops the signature (REQ-SFV-003)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -8712,10 +8712,10 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/signing-accept-only-recipient on 2026-09-27. Before: no accept-without-signing role: signerRecord status is PENDING, SIGNED, DECLINED, EXPIRED or CANCELLED (lib/Settings/filinq_register.json:2831) and the schema has no role property; grep -ri 'accept|acknowledg|role' lib/Service/SigningService.php finds nothing. SignerStepApprovedEvent (lib/Event/SignerStepApprovedEvent.php) is the completion of a signing step in an OR task sequence, not an acceptance role.",
-				"change": "openspec/changes/signing-accept-only-recipient",
+				"change": "openspec/changes/archive/2026-11-25-signing-accept-only-recipient",
 				"requirement": [
-					"openspec/changes/signing-accept-only-recipient/specs/signing-accept-only :: A recipient is a signer or accept-only (REQ-SAO-001)",
-					"openspec/changes/signing-accept-only-recipient/specs/signing-accept-only :: An accept-only recipient accepts and never signs (REQ-SAO-002)"
+					"openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only :: A recipient is a signer or accept-only (REQ-SAO-001)",
+					"openspec/changes/archive/2026-11-25-signing-accept-only-recipient/specs/signing-accept-only :: An accept-only recipient accepts and never signs (REQ-SAO-002)"
 				]
 			},
 			"reachedOn": "nothing reaches it",
@@ -8749,8 +8749,8 @@
 				"state": "built",
 				"owner": "nextcloud/server",
 				"evidence": "filinq sends a removed document to the Nextcloud trash: src/views/dossier/DossierDetail.vue:390 tells the user it 'will be moved to the trash, where you can still restore it' -> lib/Controller/DossierManagementController.php:201 removeDocument() -> lib/Service/DossierManagementService.php:401 -> lib/Service/DossierFileService.php:324 $node->delete(), which routes through files_trashbin. Restore and the automatic expiry are Nextcloud Files' trashbin, not filinq code.",
-				"change": "openspec/changes/dossier-management-ui",
-				"requirement": "openspec/changes/dossier-management-ui/specs/dossier-management-ui :: Add and remove documents in a dossier (REQ-DDDMU-004)"
+				"change": "openspec/changes/archive/2026-11-25-dossier-management-ui",
+				"requirement": "openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui :: Add and remove documents in a dossier (REQ-DDDMU-004)"
 			},
 			"reachedOn": "/dossiers/:id (DossierDetail.vue) remove action; restore in Nextcloud Files, Deleted files",
 			"provider": "nextcloud",
@@ -9321,8 +9321,8 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/openregister",
-				"evidence": "openspec/changes/tmlo-mdto-metadata/proposal.md (0 of 15 tasks done) states OpenRegister already ships a real TMLO/MDTO stack (ObjectEntity.tmlo, TmloService, MDTO XML export) but 'Neither emits the full MDTO informatieobject attribute set' and filinq has not wired its document/dossier objects to it: grep for tmlo/Tmlo/TMLO in filinq's lib/ and src/ (excluding the phrase 'MDTO/archival' in comments) found zero hits. The existing lib/Service/Pdfa3MetadataAssembler.php:70-82 'MDTO XMP sidecar' is just a catch-all for arbitrary caller-supplied metadata keys (title/author/creator/subject/keywords), not the standardised MDTO field set.",
-				"change": "openspec/changes/tmlo-mdto-metadata"
+				"evidence": "openspec/changes/archive/2026-11-25-tmlo-mdto-metadata/proposal.md (0 of 15 tasks done) states OpenRegister already ships a real TMLO/MDTO stack (ObjectEntity.tmlo, TmloService, MDTO XML export) but 'Neither emits the full MDTO informatieobject attribute set' and filinq has not wired its document/dossier objects to it: grep for tmlo/Tmlo/TMLO in filinq's lib/ and src/ (excluding the phrase 'MDTO/archival' in comments) found zero hits. The existing lib/Service/Pdfa3MetadataAssembler.php:70-82 'MDTO XMP sidecar' is just a catch-all for arbitrary caller-supplied metadata keys (title/author/creator/subject/keywords), not the standardised MDTO field set.",
+				"change": "openspec/changes/archive/2026-11-25-tmlo-mdto-metadata"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",

@@ -163,11 +163,10 @@ class SigningEnvelopeRepository {
 
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects answers a slug with zero rows and no error.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
-				filters: $filters,
-				_rbac: false
+			$results = $this->objectResolver->slugSearch(_rbac: false)->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
+				filters: $filters
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'The envelopes could not be read: ' . $e->getMessage(), code: 0, previous: $e);

@@ -6,7 +6,7 @@ Sets one Woo metadata value on a selection of publications: the
 information category from the TOOI list, the document type or the
 publisher. Records already handed off are skipped by the server.
 
-@spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+@spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 -->
 
 <template>
@@ -84,7 +84,7 @@ export default {
 		 * The fields a selection can be given one value for (the server's BULK_FIELDS).
 		 *
 		 * @return {Array<{key: string, label: string}>} The fields.
-		 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+		 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 		 */
 		fields() {
 			return [
@@ -98,7 +98,7 @@ export default {
 		 * The label of the chosen field.
 		 *
 		 * @return {string} The label.
-		 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+		 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 		 */
 		fieldLabel() {
 			return (this.fields.find((f) => f.key === this.field) || {}).label || t('filinq', 'Value')
@@ -112,7 +112,7 @@ export default {
 		 * The values to set: the one chosen field.
 		 *
 		 * @return {object} `{ [field]: value }`.
-		 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+		 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 		 */
 		values() {
 			return { [this.field]: this.value.trim() }

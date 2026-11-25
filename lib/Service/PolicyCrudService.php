@@ -53,6 +53,10 @@ use RuntimeException;
  * @link     https://www.filinq.app
  */
 class PolicyCrudService implements PolicyCrudServiceInterface {
+	use PolicyRuleText;
+
+
+
 
 	/**
 	 * Constructor.
@@ -546,12 +550,11 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 	 * @throws Exception On query failure.
 	 */
 	private function listByRegisterSchema(string $register, string $schema): array {
-		$objectService = $this->settingsService->getObjectService();
 		// Use the slug-aware variant — OR's standard searchObjects requires
 		// numeric register/schema IDs and silently returns nothing otherwise.
-		$results = $objectService->searchObjectsBySlug(
-			registerSlug: $register,
-			schemaSlug: $schema
+		$results = $this->settingsService->slugSearch()->search(
+			register: $register,
+			schema: $schema
 		);
 
 		if (is_int($results) === true) {
@@ -561,12 +564,12 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		$rows = [];
 		foreach ($results as $result) {
 			if (is_object($result) === true && method_exists($result, 'jsonSerialize') === true) {
-				$rows[] = $result->jsonSerialize();
+				$rows[] = self::withText(row: $result->jsonSerialize());
 				continue;
 			}
 
 			if (is_array($result) === true) {
-				$rows[] = $result;
+				$rows[] = self::withText(row: $result);
 			}
 		}
 
@@ -596,10 +599,10 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		}
 
 		if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-			return $object->jsonSerialize();
+			return self::withText(row: $object->jsonSerialize());
 		}
 
-		return (array)$object;
+		return self::withText(row: (array)$object);
 	}//end findOne()
 
 	/**
@@ -629,7 +632,7 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 					uuid: $uuid
 				)
 			);
-			return $saved->getObject();
+			return self::withText(row: $saved->getObject());
 		} catch (Exception $e) {
 			$this->logger->error(
 				'PolicyCrudService: save failed',

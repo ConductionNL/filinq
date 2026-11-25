@@ -28,7 +28,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * The per-run limit defaults to 200, stays within bounds, and the admin page sees readpst's status.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  */
 class MailArchiveSettingsTest extends TestCase {
 

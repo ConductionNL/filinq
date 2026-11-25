@@ -29,7 +29,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Imports are stored past the cascade and the job takes the one importing longest.
  *
- * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-intake-mailbox-archive-import/tasks.md#3-1
  */
 class MailArchiveImportRepositoryTest extends TestCase {
 

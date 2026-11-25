@@ -59,7 +59,7 @@ trait AnswersIntakeRefusals {
 	 *
 	 * @return JSONResponse The refusal.
 	 *
-	 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 	 */
 	private function failure(Throwable $error): JSONResponse {
 		$status = Http::STATUS_INTERNAL_SERVER_ERROR;

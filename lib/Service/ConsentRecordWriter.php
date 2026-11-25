@@ -378,8 +378,7 @@ class ConsentRecordWriter {
 
 		$savedObject = $this->getObjectService()->saveObject(
 			object: $updated,
-			register: $register,
-			schema: $schema
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
 		);
 
 		return $savedObject->getObject();

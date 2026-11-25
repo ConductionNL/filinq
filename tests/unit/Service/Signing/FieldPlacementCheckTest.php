@@ -178,7 +178,7 @@ class FieldPlacementCheckTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/signing-field-validation/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.1
 	 */
 	public function testACheckThisServerCannotRunIsRefused(): void {
 		$field = ['type' => 'text', 'label' => 'Account for the payment', 'required' => true, 'validation' => 'iban-nl'] + $this->placement(page: 1);

@@ -12,7 +12,7 @@ shows what the server answered: the write rights on both schemas are the
 server's to judge, and a dialog that hid the button would be a second, weaker
 copy of that judgement.
 
-@spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+@spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 -->
 
 <template>
@@ -348,7 +348,7 @@ export default {
 		 * Fetch the records of the picked schema.
 		 *
 		 * @return {Promise<void>} Resolves once the list has settled.
-		 * @spec openspec/changes/document-intake-inbox/specs/document-intake-inbox/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox/spec.md
 		 */
 		async loadRecords() {
 			if (this.register === '' || this.schema === '') {
@@ -380,7 +380,7 @@ export default {
 		 * document filed on the wrong case.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 		 */
 		preselectFromSourceRef() {
 			const reference = String(this.document?.sourceRef || '').trim()

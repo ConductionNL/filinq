@@ -6,7 +6,7 @@
  * stated while unbound, no link or download anywhere, and an unknown token
  * that shows only the neutral outcome.
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 
 const { nextTick } = require('vue')

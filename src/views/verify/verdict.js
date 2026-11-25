@@ -11,7 +11,7 @@
  * only when the signature is verified AND bound to the signer; otherwise the
  * name is shown as asserted, not cryptographically bound (REQ-DDSVP-002).
  *
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 
 import axios from '@nextcloud/axios'
@@ -34,7 +34,7 @@ export const UNKNOWN_VERDICT = Object.freeze({
  *
  * @param {string} pathname The page's path.
  * @return {string} The token.
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 export function tokenFromPath(pathname) {
 	const match = /\/verify\/([^/?#]+)\/?$/.exec(String(pathname || ''))
@@ -56,7 +56,7 @@ export function tokenFromPath(pathname) {
  * @param {string} token The token.
  * @param {object} [http] The HTTP client (axios shape).
  * @return {Promise<object>} The verdict.
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 export async function fetchVerdict(token, http = axios) {
 	if (!token) {
@@ -78,7 +78,7 @@ export async function fetchVerdict(token, http = axios) {
  *
  * @param {string} status verified|tampered|unverifiable|mixed|unknown.
  * @return {{type: string, text: string}} The headline.
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 export function verdictHeadline(status) {
 	switch (status) {
@@ -100,7 +100,7 @@ export function verdictHeadline(status) {
  *
  * @param {string} status verified|invalid|unverifiable.
  * @return {string} The label.
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 export function signatureStatusLabel(status) {
 	if (status === 'verified') {
@@ -117,7 +117,7 @@ export function signatureStatusLabel(status) {
  *
  * @param {object} signature The public signature (`signerAsserted`, `integrityVerified`, `identityBound`).
  * @return {string} The line.
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 export function signerLine(signature) {
 	const signer = String(signature?.signerAsserted || '')
@@ -135,7 +135,7 @@ export function signerLine(signature) {
  *
  * @param {object} audit `{signatureCount, verifiedCount}`.
  * @return {string} The line.
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 export function auditLine(audit) {
 	const total = Number(audit?.signatureCount || 0)
@@ -148,7 +148,7 @@ export function auditLine(audit) {
  *
  * @param {object|null} seal `{status, reason?}` or null.
  * @return {string} The line.
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 export function sealLine(seal) {
 	if (!seal) {
@@ -170,7 +170,7 @@ export function sealLine(seal) {
  * @param {Blob} file The file.
  * @param {SubtleCrypto} [subtle] The WebCrypto digest provider.
  * @return {Promise<string>} The hex digest.
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 export async function sha256Hex(file, subtle = globalThis.crypto?.subtle) {
 	const digest = await subtle.digest('SHA-256', await file.arrayBuffer())
@@ -183,7 +183,7 @@ export async function sha256Hex(file, subtle = globalThis.crypto?.subtle) {
  * @param {string} localHash The copy's hex sha256.
  * @param {string} recordedHash The record's contentHash.
  * @return {boolean|null} True or false, null when there is nothing to compare.
- * @spec openspec/changes/signature-verification-portal/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-3.1
  */
 export function copyMatches(localHash, recordedHash) {
 	const recorded = String(recordedHash || '').toLowerCase()

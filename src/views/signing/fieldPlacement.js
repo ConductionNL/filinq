@@ -156,7 +156,7 @@ export function toRequestPlacements(list) {
  *
  * @param {object} box The placement.
  * @return {object}
- * @spec openspec/changes/signing-field-validation/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.1
  */
 function textSettingsOf(box) {
 	if (box.type !== 'text') {
@@ -185,7 +185,7 @@ function textSettingsOf(box) {
  * @param {number} index The box.
  * @param {{label?: string, required?: boolean, validation?: string|null}} settings What changes.
  * @return {Array<object>} The new list.
- * @spec openspec/changes/signing-field-validation/tasks.md#task-3.1
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-3.1
  */
 export function updateTextSettings(list, index, settings) {
 	return list.map((box, i) => {

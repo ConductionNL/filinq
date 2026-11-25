@@ -17,7 +17,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -34,7 +34,7 @@ use Throwable;
 /**
  * Uprights JPEG photos and converts HEIC to JPEG.
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
  */
 class PhotoNormaliser {
 
@@ -59,7 +59,7 @@ class PhotoNormaliser {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
 	 */
 	public function readsHeic(): bool {
 		if (class_exists('Imagick') === false) {
@@ -82,7 +82,7 @@ class PhotoNormaliser {
 	 *
 	 * @throws ReceiptCaptureRefusedException (415) When this server cannot read HEIC, or this photo.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
 	 */
 	public function heicToJpeg(string $heic): string {
 		if ($this->readsHeic() === false) {
@@ -110,7 +110,7 @@ class PhotoNormaliser {
 	 *
 	 * @return string The upright JPEG bytes.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/tasks.md#task-2.1
 	 */
 	public function upright(string $jpeg): string {
 		$degrees = (self::ROTATIONS[$this->orientationOf(jpeg: $jpeg)] ?? 0);

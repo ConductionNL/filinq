@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+ * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -77,7 +77,7 @@ class UnattendedVerdict {
 	 *
 	 * @return float The threshold.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
 	 */
 	public function threshold(): float {
 		$raw = trim($this->config->getValueString('filinq', self::SETTING_KEY, ''));
@@ -95,7 +95,7 @@ class UnattendedVerdict {
 	 *
 	 * @return bool True for a number from 0.6 to 1.0.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-an-admin-sets-the-confidence-a-pass-needs-req-erp-005
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-an-admin-sets-the-confidence-a-pass-needs-req-erp-005
 	 */
 	public static function isValidThreshold(mixed $value): bool {
 		if (is_numeric($value) === false) {
@@ -115,7 +115,7 @@ class UnattendedVerdict {
 	 *
 	 * @return UnattendedOutcome The verdict.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
 	 */
 	public function judge(array $result, array $modelFilled): UnattendedOutcome {
 		return self::decide(
@@ -140,7 +140,7 @@ class UnattendedVerdict {
 	 *
 	 * @return UnattendedOutcome The verdict.
 	 *
-	 * @spec openspec/changes/extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
+	 * @spec openspec/changes/archive/2026-11-25-extraction-receipt-photo-and-invoice-agent/specs/financial-document-field-extraction/spec.md#requirement-each-extraction-carries-an-unattended-verdict-with-its-reasons-req-erp-003
 	 */
 	public static function decide(
 		array $fields,

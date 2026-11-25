@@ -27,6 +27,7 @@
 <script>
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon } from '@nextcloud/vue'
+import { markRaw } from 'vue'
 import { documentViewer, entityHighlighting } from '../../mixins/documentViewer.js'
 import {
 	fetchFileAsArrayBuffer,
@@ -136,7 +137,8 @@ export default {
 						: fetchFileAsArrayBuffer(this.path),
 				])
 				const loadingTask = pdfjsLib.getDocument({ data })
-				this.pdfDoc = await loadingTask.promise
+				// markRaw: pdf.js keeps its state in private class fields, which a reactive proxy cannot reach.
+				this.pdfDoc = markRaw(await loadingTask.promise)
 				this.pageCount = this.pdfDoc.numPages
 				this.loading = false
 				await this.$nextTick()

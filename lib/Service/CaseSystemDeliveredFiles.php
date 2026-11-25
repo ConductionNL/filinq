@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
  */
 
 declare(strict_types=1);
@@ -28,7 +28,7 @@ use OCA\Filinq\Kernel\Contracts\CaseSystemDeliveredFilesInterface;
 /**
  * Reads the written-back case-system deliveries of a list of files in one query.
  *
- * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+ * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
  */
 class CaseSystemDeliveredFiles implements CaseSystemDeliveredFilesInterface {
 
@@ -62,7 +62,7 @@ class CaseSystemDeliveredFiles implements CaseSystemDeliveredFilesInterface {
 	 *
 	 * @return array<int, int> The file ids among them with a written-back delivery, in the order asked.
 	 *
-	 * @spec openspec/changes/generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
+	 * @spec openspec/changes/archive/2026-11-25-generate-store-in-case-system/specs/case-system-delivery/spec.md#requirement-a-deliverys-outcome-is-visible-and-a-failure-can-be-retried-req-gsc-003
 	 */
 	public function deliveredFileIds(array $fileIds): array {
 		$asked = array_values(array_unique(array_map('intval', $fileIds)));

@@ -22,7 +22,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use Com\Tecnick\Barcode\Barcode;
 use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
 use RuntimeException;
 use Throwable;
@@ -45,7 +46,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
  */
 class SeparatorSheetService implements SeparatorSheetServiceInterface {
 
@@ -70,7 +71,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string The payload.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function payload(string $profileId, string $caseNumber = ''): string {
 		$payload = self::PAYLOAD_PREFIX . $profileId;
@@ -89,9 +90,11 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string|null The case number, an empty string when the sheet named none, or null when this is not a separator.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-5.2
 	 */
 	public function readPayload(string $payload): ?string {
+		$payload  = $this->asPrinted(text: $payload);
 		$original = $this->readOriginal(payload: $payload);
 		if ($original !== null) {
 			return $original;
@@ -118,6 +121,49 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	}//end readPayload()
 
 	/**
+	 * OCR text put back the way the sheet printed it.
+	 *
+	 * Tesseract reads the printed payload with the same few slips every time
+	 * (measured on a live run, 25 Nov 2026, Tesseract 5.3 at 300 dpi, in every
+	 * font tried): "filinq" as "filing" (a stray "F" in front in monospace),
+	 * "v1" as "vl" or "v1l", a space after a colon, and a long payload broken
+	 * after a hyphen onto the next line. Without this no separator was ever
+	 * seen and a whole batch arrived as one document.
+	 *
+	 * @param string $text The text read off a page.
+	 *
+	 * @return string The text with the payload as printed.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-5.2
+	 */
+	private function asPrinted(string $text): string {
+		// A payload broken after a hyphen continues on the next line.
+		$text = (string) preg_replace('/-[ \t]*\R[ \t]*/u', '-', $text);
+		// The prefix, with the letters OCR mistakes for one another.
+		$text = (string) preg_replace_callback(
+			'/f*il[il1|]n[qg]\s*:\s*sep\s*:\s*v\s*([12lI|])[1lI|]?\s*:/i',
+			static function (array $match): string {
+				$version = '1';
+				if ($match[1] === '2') {
+					$version = '2';
+				}
+
+				return 'filinq:sep:v' . $version . ':';
+			},
+			$text
+		);
+		// No space around a colon inside a payload: one colon per pass.
+		do {
+			$before = $text;
+			$text   = (string) preg_replace('/(filinq:sep:v[12]:\S*?)[ \t]+(?=:)/', '$1', $text);
+			$text   = (string) preg_replace('/(filinq:sep:v[12]:\S*?:)[ \t]+(?=\S)/', '$1', $text);
+		} while ($text !== $before);
+
+		return $text;
+
+	}//end asPrinted()
+
+	/**
 	 * The payload of a sheet naming one paper original.
 	 *
 	 * @param string $profileId  The scan profile the sheet belongs to.
@@ -125,7 +171,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string The payload.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	public function originalPayload(string $profileId, string $originalId): string {
 		return self::PAYLOAD_PREFIX_V2 . trim($profileId) . ':' . self::ORIGINAL_MARKER . trim($originalId);
@@ -142,7 +188,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @throws RuntimeException When there is no original to print or the sheets do not render.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	public function renderOriginals(string $profileId, array $originals): string {
 		if (trim($profileId) === '') {
@@ -172,7 +218,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	private function readOriginal(string $payload): ?string {
 		$position = stripos($payload, self::PAYLOAD_PREFIX_V2);
@@ -210,7 +256,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @throws RuntimeException When the sheets do not render.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function render(string $profileId, array $caseNumbers = []): string {
 		if (trim($profileId) === '') {
@@ -271,7 +317,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string The HTML.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	private function sheetHtml(string $payload, string $caseNumber): string {
 		$heading = 'Scheidingsvel';
@@ -281,13 +327,13 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 
 		$safePayload = htmlspecialchars($payload, ENT_QUOTES);
 
-		// The barcode tag is mPDF's own, rendered locally. The payload is
-		// repeated as text below it because that text is what the splitter
-		// reads: see the class comment.
+		// The QR is drawn locally (qrImage()). The payload is repeated as
+		// text below it because that text is what the splitter reads: see the
+		// class comment.
 		return '<div style="text-align:center;font-family:sans-serif;">'
 			. '<h1 style="font-size:28pt;margin-top:60pt;">' . $heading . '</h1>'
 			. '<p style="font-size:12pt;">Leg dit vel tussen twee documenten. Wat erna komt, hoort bij het volgende document.</p>'
-			. '<barcode code="' . $safePayload . '" type="QR" class="barcode" size="1.6" error="M" disableborder="1" />'
+			. $this->qrImage(payload: $payload)
 			. '<p style="font-size:16pt;letter-spacing:1pt;margin-top:24pt;font-family:monospace;">' . $safePayload . '</p>'
 			. '</div>';
 
@@ -301,7 +347,7 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 *
 	 * @return string The HTML.
 	 *
-	 * @spec openspec/changes/intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
 	 */
 	private function originalSheetHtml(string $payload, array $original): string {
 		$shelfMark = htmlspecialchars(trim((string)($original['shelfMark'] ?? '')), ENT_QUOTES);
@@ -312,9 +358,31 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 			. '<h1 style="font-size:28pt;margin-top:60pt;">Scheidingsvel voor ' . $shelfMark . '</h1>'
 			. '<p style="font-size:14pt;">' . $description . '</p>'
 			. '<p style="font-size:12pt;">Leg dit vel voor het origineel met dit kenmerk. Wat erna komt, is de scan ervan.</p>'
-			. '<barcode code="' . $safePayload . '" type="QR" class="barcode" size="1.6" error="M" disableborder="1" />'
+			. $this->qrImage(payload: $payload)
 			. '<p style="font-size:16pt;letter-spacing:1pt;margin-top:24pt;font-family:monospace;">' . $safePayload . '</p>'
 			. '</div>';
 
 	}//end originalSheetHtml()
+
+	/**
+	 * The QR code of a payload, as an image tag for the sheet.
+	 *
+	 * Drawn by tc-lib-barcode, which filinq already ships (tc-lib-pdf needs
+	 * it; WaarmerkStampComposer draws its QR the same way). mPDF's own
+	 * `<barcode type="QR">` needs mpdf/qrcode, which mPDF only lists as a
+	 * development dependency: every print failed with 'Mpdf\QrCode package
+	 * was not found' on a live run (25 Nov 2026).
+	 *
+	 * @param string $payload The payload the code carries.
+	 *
+	 * @return string The image tag, about 4 cm wide.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/tasks.md#task-5.2
+	 */
+	private function qrImage(string $payload): string {
+		$svg = (new Barcode())->getBarcodeObj('QRCODE,M', $payload, -4, -4, 'black', [0, 0, 0, 0])->getSvgCode();
+
+		return '<img src="data:image/svg+xml;base64,' . base64_encode($svg) . '" style="width:40mm;height:40mm;" alt="" />';
+
+	}//end qrImage()
 }//end class

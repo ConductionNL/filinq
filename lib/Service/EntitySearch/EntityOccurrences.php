@@ -262,7 +262,7 @@ class EntityOccurrences {
 	 */
 	private function dossiers(): array {
 		try {
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(registerSlug: IntakeRepository::REGISTER, schemaSlug: 'dossier', filters: []);
+			$rows = $this->objectResolver->slugSearch()->search(register: IntakeRepository::REGISTER, schema: 'dossier', filters: []);
 		} catch (Throwable) {
 			return [];
 		}

@@ -48,7 +48,7 @@ interface ScanProfileServiceInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The profiles.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function all(): array;
 
@@ -59,7 +59,7 @@ interface ScanProfileServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The profile, or null when nobody declared it.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function find(string $id): ?array;
 
@@ -73,7 +73,7 @@ interface ScanProfileServiceInterface {
 	 *
 	 * @return array<string, mixed>|null The profile, or null when the path is nobody's.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function forPath(string $path): ?array;
 
@@ -86,7 +86,7 @@ interface ScanProfileServiceInterface {
 	 *
 	 * @throws RuntimeException When a profile names no id or no folder.
 	 *
-	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
 	 */
 	public function declare(array $profiles): array;
 }//end interface

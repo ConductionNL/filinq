@@ -5,12 +5,14 @@ such as an advisor or the bezwaarcommissie, through one link that stops
 working on a set day. The clerk can take the link back at any time, and
 filinq records what left, by whom and until when.
 
-Spec: `openspec/changes/share-document-links` (REQ-SDL-001 to REQ-SDL-006).
+Spec: `openspec/changes/archive/2026-11-25-share-document-links` (REQ-SDL-001 to REQ-SDL-006).
 
 ## Sharing one document
 
 On **My documents**, open the row menu of a document and choose
 **Share by link**. The dialog asks:
+
+![The Share by link dialog for one document](/screenshots/share-document-links-dialog.png)
 
 - **Link works until**: 14 days ahead by default. When Nextcloud's sharing
   settings enforce a shorter maximum, that maximum wins and the dialog says so.
@@ -51,6 +53,8 @@ on the record.
 or every link for an admin, with what left (each file and its version), who it
 was for, the sharer, when it was shared, when it stops working and its state.
 The link itself is never shown here.
+
+![The Shared links page with active, taken back and expired links](/screenshots/share-document-links-shared-links.png)
 
 - **Take back** deletes the Nextcloud share at once, deletes a bundle's archive,
   and marks the record "Taken back" with the clerk's name. Only the person who

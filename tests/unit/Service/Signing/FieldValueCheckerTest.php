@@ -12,7 +12,7 @@
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/signing-field-validation/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.1
  */
 
 declare(strict_types=1);

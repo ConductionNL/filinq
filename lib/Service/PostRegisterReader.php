@@ -87,9 +87,9 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 			// every letter read as unanswered: the controller reported
 			// `discharged: false` on every one, and openPostFor() never
 			// skipped a letter somebody had already replied to.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['answers' => $uuid]
 			);
 		} catch (Throwable $e) {
@@ -181,9 +181,9 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 			// reads that wrapper as the EMPTY SET: written that way this
 			// method would report a unit with no post at all, confidently and
 			// with nothing in the log.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
 				filters: [
 					'unit' => $unitId,
 					'direction' => self::DIRECTION_INBOUND,
@@ -249,9 +249,9 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 			// so this method gave every auditor an empty series with a clean
 			// HTTP 200, which is exactly the answer the comment below says
 			// must never be given by accident.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['unit' => $unitId]
 			);
 		} catch (Throwable $e) {

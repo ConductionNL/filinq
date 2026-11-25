@@ -40,10 +40,12 @@
   - End-to-end verify with OpenRegister on Postgres (8080): detection → pre-application → gate → commit.
 - [x] 4.2 Playwright spec `tests/e2e/spec-coverage/review-workbench.spec.ts` covering the `@e2e`-referenced scenarios
   - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
+  - Run live (25 Nov; Nextcloud 34 + MariaDB + Redis, OpenRegister main with regex entity recognition, filinq development, `tests/e2e/ci-seed.sh` run first): the 6 tests that need no prepared fixture pass. Two spec fixes: `confirmUncertain()` iterated `.all()` while each click removed a button (nth(1) then pointed past the end), and the entity-type option was ambiguous with the table filter's hidden list. One app fix: the publish-never rule form failed on `primaryName.trim` because `/api/policy/*` returned translatable fields as language maps (`PolicyCrudService::withText()`). The other 13 tests need `FILINQ_E2E_*_FILE_ID/_PATH` fixtures that nothing in the repo or CI provides, so they are skipped everywhere until they seed their own documents.
 - [x] 4.3 Vitest coverage for the workbench store wiring (shared entity model, selection pre-fill)
 - [x] 4.4 i18n: EN + NL translations for all new UI strings (keys in English) (ADR-005)
   - Test with the nldesign theme enabled for accessibility compliance.
 - [ ] 4.5 Docs: `docs/features/review-workbench.md` with Playwright MCP screenshots of the split view, badges, grondslag pickers and the checked gate (ADR-010)
+  - Live screenshot of the split view with rule badges and the uncertain counter added (`review-workbench.png`). Still open: the grondslag pickers and the checked state. At 1600 px the findings table overflows its pane and the badges and grondslag column are cut off, which needs a layout fix before they can be shown.
 - [ ] 4.6 Validate: `openspec validate anonymization-review-workbench --strict` passes; hydra gates green on the branch
 
 ## 5. Amendment 2026-10-05: Woo rows 4.25 and 14.15

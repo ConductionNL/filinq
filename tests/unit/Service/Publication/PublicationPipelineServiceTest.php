@@ -598,7 +598,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 	 */
 	public function testABulkValueReachesEveryQueuedRecordAndSkipsAHandedOffOne(): void {
 		$pipeline = $this->pipeline();
@@ -632,7 +632,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 	 */
 	public function testABulkChangeIsRefusedWholeBeforeAnyRecordChanges(): void {
 		$pipeline = $this->pipeline();
@@ -666,7 +666,7 @@ class PublicationPipelineServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-new-records-start-with-the-organisations-publisher-req-wmw-003
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-new-records-start-with-the-organisations-publisher-req-wmw-003
 	 */
 	public function testANewRecordStartsWithTheDefaultPublisher(): void {
 		$pipeline = $this->pipeline();
