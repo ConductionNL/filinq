@@ -44,6 +44,9 @@ changed afterwards.
 
 ## Sealing a document
 
+![Add waarmerk on a PDF in My Documents, with the organisation-seal wording and the sanitise-first warning](/screenshots/waarmerk-add-dialog.png)
+
+
 - **My Documents**: on a PDF, choose **Add waarmerk** in the row menu. Files that
   carry an active seal show a **Waarmerk** badge.
 - **Anonymisation result**: after anonymising to PDF, choose **Add waarmerk** to
@@ -75,6 +78,9 @@ yet.
 
 ## Verifying a waarmerk
 
+![The public check page: the waarmerk exists, and the visitor's copy is valid](/screenshots/waarmerk-verify-valid.png)
+
+
 Anyone can verify, without a Nextcloud account:
 
 1. Scan the QR code, or open `/apps/filinq/verify/<code>`.
@@ -104,6 +110,9 @@ The sealer or an administrator can revoke a waarmerk with a reason through
 but the status and the revocation fields.
 
 ## Administration
+
+![The Waarmerk section of the admin settings with a certificate and a locally held key](/screenshots/waarmerk-admin-settings.png)
+
 
 **Administration settings → Filinq → Waarmerk (organisation seal)**:
 

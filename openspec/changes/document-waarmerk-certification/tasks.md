@@ -49,6 +49,7 @@
 - [x] 5.3 i18n EN source + NL translations for all new strings, incl. the public page (citizen-facing Dutch first-class)
 
 - [ ] 5.4 Docs in `docs/features/` (waarmerk, processing certificate, verification; explicit "organisation seal, not qualified seal" wording) with Playwright screenshots (ADR-010); `openspec validate document-waarmerk-certification --strict` passes
+  - 25 Nov 2026 (partly): `docs/features/waarmerk.md` carries live screenshots of Add waarmerk (with the organisation-seal wording), the public check page answering Valid for an anonymous visitor, and the admin section (sandbox: Nextcloud 34, MariaDB, OpenRegister main, a throwaway self-signed sandbox seal in local custody). The live run found anonymous verification answering "unknown" for an existing waarmerk (the lookup was scoped to the visitor's empty organisation); fixed in the same PR. Left: `openspec validate document-waarmerk-certification --strict` fails on 7 warnings (text above the first section; REQ-DDWMK-001/-002/-003/-004/-006 longer than 500 characters, to be split into scenarios). That is spec rewriting, not done here.
 
 ## Quality checklist
 
