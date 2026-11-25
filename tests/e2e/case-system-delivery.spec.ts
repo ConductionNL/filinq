@@ -320,9 +320,8 @@ test.describe('case-system delivery in the admin settings', () => {
 			const title = status === 'ready_for_writeback'
 				? 'Waiting for the case system'
 				: 'Failed to reach the case system'
-			const widget = page.locator('.cn-dashboard-widget, [data-widget-id], section, article')
-				.filter({ hasText: title })
-				.last()
+			// Each report widget is a region named by its title.
+			const widget = page.getByRole('region', { name: title })
 			await expect(widget, `${title} widget`).toBeVisible({ timeout: 20_000 })
 			await expect(widget).toContainText(String(total), { timeout: 20_000 })
 		}
