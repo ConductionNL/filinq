@@ -148,7 +148,9 @@ async function addNote(card: Locator, text: string): Promise<void> {
 	if (await openComposer.isVisible().catch(() => false)) {
 		await openComposer.click()
 	}
-	const box = card.locator('[contenteditable="true"]').first()
+	// The composer is a rich contenteditable whose attribute value is not
+	// always "true" (seen on a live run, 25 Nov 2026): find it by its role.
+	const box = card.getByRole('textbox').first()
 	await expect(box).toBeVisible({ timeout: 15000 })
 	await box.click()
 	await box.fill(text)
@@ -170,8 +172,8 @@ function rowOf(page: Page, stem: string): Locator {
 }
 
 /**
- * A browser context for a colleague, logged in by basic auth on an empty
- * storage state.
+ * A browser context for a colleague on an empty storage state, logged in
+ * through the login form, with basic auth for API calls.
  *
  * @param browser  The browser.
  * @param userId   The colleague.
@@ -183,10 +185,20 @@ async function colleagueContext(
 	userId: string,
 	password: string,
 ): Promise<BrowserContext> {
-	return browser.newContext({
+	const context = await browser.newContext({
 		storageState: { cookies: [], origins: [] },
 		httpCredentials: { username: userId, password },
 	})
+	// Basic auth covers the API calls; the Files page needs a real session
+	// through the login form (seen on a live run, 25 Nov 2026).
+	const login = await context.newPage()
+	await login.goto('/index.php/login', { waitUntil: 'domcontentloaded' })
+	await login.locator('#user').fill(userId)
+	await login.locator('#password').fill(password)
+	await login.locator('button[type="submit"]').click()
+	await login.waitForURL(/\/apps\//, { timeout: 60000 })
+	await login.close()
+	return context
 }
 
 test.describe('Notes on a document are its Nextcloud comments', () => {
@@ -221,7 +233,8 @@ test.describe('Notes on a document are its Nextcloud comments', () => {
 
 		const made = await page.request.post(USERS_API, {
 			headers: OCS,
-			form: colleague,
+			// The provisioning API reads `userid`, not `userId` (400 otherwise).
+			form: { userid: colleague.userId, password: colleague.password },
 		})
 		expect(made.ok(), `create the colleague -> ${made.status()}`).toBeTruthy()
 		colleagueMade = true
@@ -280,7 +293,15 @@ test.describe('Notes on a document are its Nextcloud comments', () => {
 			colleague.password,
 		)
 		try {
-			const stored = await readComments(context.request, '', fileIds[STEMS[0]])
+			// The session cookie from the login form needs its request token.
+			const colleaguePage = await context.newPage()
+			const colleagueToken = await harvestToken(colleaguePage)
+			await colleaguePage.close()
+			const stored = await readComments(
+				context.request,
+				colleagueToken,
+				fileIds[STEMS[0]],
+			)
 			expect(
 				stored.status,
 				'the colleague may read the shared file comments',
@@ -291,7 +312,10 @@ test.describe('Notes on a document are its Nextcloud comments', () => {
 			).toContain(note)
 
 			const files = await context.newPage()
-			await files.goto(`/index.php/f/${fileIds[STEMS[0]]}`, {
+			// `/f/<id>` opens the file in the viewer, not its details. The
+			// shared file sits in the colleague's root folder; `opendetails`
+			// opens the sidebar on it (seen on a live run, 25 Nov 2026).
+			await files.goto(`/index.php/apps/files/files/${fileIds[STEMS[0]]}?dir=/&opendetails=true`, {
 				waitUntil: 'domcontentloaded',
 			})
 			const sidebar = files.locator('#app-sidebar-vue, .app-sidebar').first()
@@ -357,7 +381,14 @@ test.describe('Notes on a document are its Nextcloud comments', () => {
 			colleague.password,
 		)
 		try {
-			const stored = await readComments(context.request, '', fileIds[STEMS[6]])
+			const colleaguePage = await context.newPage()
+			const colleagueToken = await harvestToken(colleaguePage)
+			await colleaguePage.close()
+			const stored = await readComments(
+				context.request,
+				colleagueToken,
+				fileIds[STEMS[6]],
+			)
 			expect(stored.status).toBe(207)
 			expect(stored.body).toContain(note)
 		} finally {
@@ -412,7 +443,7 @@ test.describe('Notes on a document are its Nextcloud comments', () => {
 	test('the anonymised copy carries no notes', async ({ page }) => {
 		test.skip(
 			ANALYSED_FILE_ID === '',
-			'needs FILINQ_E2E_ANALYSED_FILE_ID: a document OpenRegister has analysed',
+			'needs FILINQ_E2E_ANALYSED_FILE_ID: an admin document whose findings are all certain (an e-mail address, no phone number)',
 		)
 		await writeComment(
 			page.request,
@@ -421,11 +452,41 @@ test.describe('Notes on a document are its Nextcloud comments', () => {
 			`${TEST_PREFIX} mentions Jan Jansen`,
 		)
 
+		// Anonymising takes the entities to redact and a checked mark on
+		// exactly those entities (the review gate), as the UI sends them:
+		// read the analysis, mark it checked, then anonymise (an empty body
+		// is 400 'No entities provided', seen on a live run, 25 Nov 2026).
+		const analysed = await page.request.post(
+			`${API}/anonymization/extract/${ANALYSED_FILE_ID}`,
+			{ headers: jsonHeaders(token), data: {} },
+		)
+		expect(analysed.status(), await analysed.text()).toBe(200)
+		const found = ((await analysed.json()).entities ?? []) as Array<{
+			type: string
+			value: string
+			confidence: string | number
+		}>
+		expect(found.length, 'the analysed document has entities').toBeGreaterThan(0)
+		const entities = found
+			.map((e) => ({ type: e.type, value: e.value, confidence: e.confidence }))
+			.sort((a, b) => (b.value || '').length - (a.value || '').length)
+		// The document review mark the anonymise gate reads (needs every
+		// uncertain finding decided: use a document with certain findings).
+		const reviewed = await page.request.post(
+			`${API}/review/${ANALYSED_FILE_ID}/check`,
+			{ headers: jsonHeaders(token), data: {} },
+		)
+		expect(reviewed.status(), await reviewed.text()).toBeLessThan(300)
+		const checked = await page.request.post(
+			`${API}/redaction/documents/${ANALYSED_FILE_ID}/checked`,
+			{ headers: jsonHeaders(token), data: { entities } },
+		)
+		expect(checked.status(), await checked.text()).toBeLessThan(300)
 		const anonymised = await page.request.post(
 			`${API}/anonymization/anonymize/${ANALYSED_FILE_ID}`,
 			{
 				headers: jsonHeaders(token),
-				data: {},
+				data: { entities },
 			},
 		)
 		expect(anonymised.status(), await anonymised.text()).toBe(200)
@@ -439,6 +500,53 @@ test.describe('Notes on a document are its Nextcloud comments', () => {
 		expect(copyNotes.body, 'the copy starts without notes').not.toContain(
 			'<oc:message>',
 		)
+	})
+
+	// D5 for shares: a link serves the file, never its comments (task 3.1).
+	test('a share link of a document with a note does not carry the note', async ({
+		page,
+		browser,
+	}) => {
+		const note = `${TEST_PREFIX} internal: call the supplier first`
+		await writeComment(page.request, token, fileIds[STEMS[0]], note)
+
+		const shared = await page.request.post(SHARES_API, {
+			headers: { ...OCS, Accept: 'application/json' },
+			form: { path: `/${DOCS_FOLDER}/${STEMS[0]}.txt`, shareType: '3', permissions: '1' },
+		})
+		expect(shared.ok(), `share by link -> ${shared.status()}`).toBeTruthy()
+		const shareToken = String((await shared.json()).ocs?.data?.token ?? '')
+		expect(shareToken).not.toBe('')
+
+		// An outsider with the link: no session at all.
+		const outsider = await browser.newContext({
+			storageState: { cookies: [], origins: [] },
+		})
+		try {
+			const download = await outsider.request.get(
+				`/index.php/s/${shareToken}/download`,
+			)
+			expect(download.status()).toBe(200)
+			const body = await download.text()
+			expect(body).toContain(`Contents of ${STEMS[0]}.`)
+			expect(body, 'the shared file carries no note').not.toContain(note)
+
+			const landing = await outsider.newPage()
+			await landing.goto(`/index.php/s/${shareToken}`, {
+				waitUntil: 'domcontentloaded',
+			})
+			await landing.waitForTimeout(2000)
+			await expect(landing.getByText(note)).toHaveCount(0)
+		} finally {
+			await outsider.close()
+			const id = (await shared.json().catch(() => ({}))).ocs?.data?.id
+			if (id) {
+				await page.request.delete(
+					`/ocs/v2.php/apps/files_sharing/api/v1/shares/${id}`,
+					{ headers: OCS },
+				)
+			}
+		}
 	})
 
 	// @e2e document-notes::a-clerk-spots-the-documents-with-notes
