@@ -312,7 +312,7 @@ class SettingsInitializer {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/specs/admin-settings/spec.md#requirement-auto-initialization-on-boot-req-set-03
 	 */
 	private function provisionObjectTypeBindings(string $version): void {
 		if ($this->config->getValueString($this->appName, self::BINDINGS_MARKER, '') === $version) {

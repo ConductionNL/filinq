@@ -16,7 +16,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/admin-settings/spec.md#requirement-auto-initialization-on-boot-req-set-03
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -36,6 +36,8 @@ use Throwable;
  *
  * Only empty keys are written: a binding an administrator chose, or one an
  * earlier run wrote, is never changed.
+ *
+ * @spec openspec/specs/admin-settings/spec.md#requirement-auto-initialization-on-boot-req-set-03
  */
 class ObjectTypeBindingProvisioner {
 
@@ -62,7 +64,7 @@ class ObjectTypeBindingProvisioner {
 	 * @param LoggerInterface    $logger    The logger.
 	 * @param string             $appName   The app id the keys belong to.
 	 *
-	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/specs/admin-settings/spec.md#requirement-auto-initialization-on-boot-req-set-03
 	 */
 	public function __construct(
 		private readonly IAppConfig $config,
@@ -80,7 +82,7 @@ class ObjectTypeBindingProvisioner {
 	 *                  were set already), or null when the register is not there
 	 *                  (yet) or OpenRegister cannot be read, so the caller tries again.
 	 *
-	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/specs/admin-settings/spec.md#requirement-auto-initialization-on-boot-req-set-03
 	 */
 	public function provision(): ?int {
 		try {

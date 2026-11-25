@@ -393,7 +393,7 @@ class SettingsInitializerFlowTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/specs/admin-settings/spec.md#requirement-auto-initialization-on-boot-req-set-03
 	 */
 	public function testBindingsAreProvisionedOncePerVersion(): void {
 		$version = $this->shippedVersion();
@@ -402,7 +402,10 @@ class SettingsInitializerFlowTest extends TestCase {
 		$this->initializer(world: $this->world(changes: ['provisioned' => 82]))->initialize();
 
 		$this->assertSame(expected: $version, actual: $this->values['object_type_bindings_version']);
-		$this->assertSame(expected: ['container ObjectTypeBindingProvisioner', 'provision', 'set object_type_bindings_version=' . $version], actual: array_slice($this->calls, -3));
+		$this->assertSame(
+			expected: ['container ObjectTypeBindingProvisioner', 'provision', 'set object_type_bindings_version=' . $version],
+			actual: array_slice($this->calls, -3)
+		);
 
 		$this->calls = [];
 		$this->initializer(world: $this->world(changes: ['provisioned' => 82]))->initialize();
@@ -416,7 +419,7 @@ class SettingsInitializerFlowTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/specs/admin-settings/spec.md
+	 * @spec openspec/specs/admin-settings/spec.md#requirement-auto-initialization-on-boot-req-set-03
 	 */
 	public function testARegisterNotFoundYetIsTriedAgain(): void {
 		$this->values = ['configuration_version' => $this->shippedVersion(), 'templateVersion_register' => '4', 'templateVersion_schema' => '9'];

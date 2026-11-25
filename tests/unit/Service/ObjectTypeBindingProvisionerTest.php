@@ -28,7 +28,7 @@ use Psr\Log\LoggerInterface;
 /**
  * The provisioner writes the object type bindings nobody has set.
  *
- * @spec openspec/specs/admin-settings/spec.md
+ * @spec openspec/specs/admin-settings/spec.md#requirement-auto-initialization-on-boot-req-set-03
  */
 class ObjectTypeBindingProvisionerTest extends TestCase {
 
@@ -99,6 +99,8 @@ class ObjectTypeBindingProvisionerTest extends TestCase {
 
 			/**
 			 * All registers.
+			 *
+			 * @param mixed ...$arguments The paging and filter arguments, ignored.
 			 *
 			 * @return array<int, JsonSerializable>
 			 */
