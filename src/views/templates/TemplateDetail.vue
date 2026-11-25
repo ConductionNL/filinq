@@ -419,7 +419,7 @@ export default {
 		 * Whether this is an office (Word) template rather than a Twig one.
 		 *
 		 * @return {boolean}
-		 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 		 */
 		isOffice() {
 			return this.templateStore.templateItem?.templateType === 'office'
@@ -532,7 +532,7 @@ export default {
 		 * Reload the template after its Word file or field mapping changed.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/office-template-authoring/specs/template-management/spec.md
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/template-management/spec.md
 		 */
 		async onOfficeUpdated() {
 			await this.templateStore.fetchTemplate(this.templateStore.templateItem.id)

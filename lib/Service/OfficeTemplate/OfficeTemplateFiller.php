@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -48,7 +48,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the sum of small independent
  * steps of one office template (tags, fragments, conditions, tables).
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 class OfficeTemplateFiller {
 
@@ -94,7 +94,7 @@ class OfficeTemplateFiller {
 	 *
 	 * @throws Exception When the DOCX cannot be read (422).
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
 	 * @spec openspec/changes/archive/2026-11-24-office-charts-and-images/specs/template-charts/spec.md#REQ-DDTCH-003
 	 */
 	public function fill(string $docx, array $data, array $fragments=[], array $fieldMap=[]): array {
@@ -166,7 +166,7 @@ class OfficeTemplateFiller {
 	 *
 	 * @return array<int, string> The slugs, once each.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	public function fragmentSlugs(array $tags): array {
 		$slugs = [];
@@ -190,7 +190,7 @@ class OfficeTemplateFiller {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
 	 */
 	public function lookup(array $data, string $path): ?string {
 		$value = $this->raw(data: $data, path: $path);
@@ -273,7 +273,7 @@ class OfficeTemplateFiller {
 	 *
 	 * @return string The filled text; its warnings go to the run.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	private function fillFragmentText(string $text, OfficeFillRun $run): string {
 		return (string) preg_replace_callback(

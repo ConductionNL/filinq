@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -47,7 +47,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+ * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
  */
 class TemplatesRegisterObjects {
 
@@ -62,7 +62,7 @@ class TemplatesRegisterObjects {
 	 * @param OpenRegisterAccess            $openRegister The installed apps and the container.
 	 * @param OpenRegisterResolverInterface $resolver     The templates register.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function __construct(
 		private readonly OpenRegisterAccess $openRegister,
@@ -78,7 +78,7 @@ class TemplatesRegisterObjects {
 	 *
 	 * @return array{results: array<int, array<string, mixed>>, total: int}
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function search(string $schema, array $query=[]): array {
 		$service = $this->objectService();
@@ -108,7 +108,7 @@ class TemplatesRegisterObjects {
 	 *
 	 * @throws Exception With code 404 when there is no such object.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function get(string $schema, string $id): array {
 		try {
@@ -136,7 +136,7 @@ class TemplatesRegisterObjects {
 	 *
 	 * @return array<string, mixed> The saved object.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function save(string $schema, array $data, ?string $id=null): array {
 		return $this->toArray(
@@ -157,7 +157,7 @@ class TemplatesRegisterObjects {
 	 *
 	 * @throws Exception With code 404 when there is no such object.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
 	 */
 	public function delete(string $schema, string $id): void {
 		$this->get(schema: $schema, id: $id);

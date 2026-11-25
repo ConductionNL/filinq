@@ -553,7 +553,7 @@ class DocumentService implements DocumentServiceInterface {
 	 *
 	 * @return array<string, mixed> The rendering, in the shape renderDocument() returns.
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
 	 */
 	private function renderOfficeDocument(array $run, array $resolved): array {
 		$warnings = $resolved['warnings'];
@@ -586,7 +586,7 @@ class DocumentService implements DocumentServiceInterface {
 	 *
 	 * @return array{content: string, warnings: array<int, string>, fragments: array<int, string>}
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-reusable-text-fragments-bouwstenen-resolve-in-templates-req-ddota-004
 	 */
 	private function twigContent(array $template): array {
 		$content = (string) ($template['content'] ?? '');
@@ -671,7 +671,7 @@ class DocumentService implements DocumentServiceInterface {
 	 *
 	 * @return array<string, mixed>
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md#requirement-office-templates-render-through-the-conversion-cascade-req-ddota-003
 	 */
 	private function templateRecord(array $run, array $outcome): array {
 		$record = [];
@@ -847,7 +847,7 @@ class DocumentService implements DocumentServiceInterface {
 	 *
 	 * @throws Exception When no office renderer is wired (501), or the source is missing (404) or unreadable (422).
 	 *
-	 * @spec openspec/changes/office-template-authoring/specs/document-creatie-sjablonen/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/document-creatie-sjablonen/spec.md
 	 */
 	public function fillOfficeTemplate(array $template, array $dataRefs, array $options = []): array {
 		if ($this->officeRenderer === null) {
