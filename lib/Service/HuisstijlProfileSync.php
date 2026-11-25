@@ -15,7 +15,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-1.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -117,7 +117,7 @@ class HuisstijlProfileSync {
 	 *
 	 * @return array<string, mixed>|null The managed house style, or null without thematiq or on a failure.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-filinq-keeps-a-house-style-per-thematiq-token-set-req-hsp-001
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-filinq-keeps-a-house-style-per-thematiq-token-set-req-hsp-001
 	 */
 	public function syncFor(?string $uid): ?array {
 		$profileService = $this->profileService();
@@ -149,7 +149,7 @@ class HuisstijlProfileSync {
 	 *
 	 * @return array<string, mixed>|null The managed house style, or null without a token set.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-1.2
 	 */
 	private function syncProfile(array $profile): ?array {
 		$mapped = $this->mapper->mapProfile(profile: $this->withAbsoluteAssets(profile: $profile));
@@ -178,7 +178,7 @@ class HuisstijlProfileSync {
 	 *
 	 * @return array<string, mixed> The profile.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-document-without-a-named-house-style-uses-the-user-s-own-req-hsp-002
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-document-without-a-named-house-style-uses-the-user-s-own-req-hsp-002
 	 */
 	private function withAbsoluteAssets(array $profile): array {
 		$urls = $this->urlGenerator();
@@ -207,7 +207,7 @@ class HuisstijlProfileSync {
 	 *
 	 * @return IURLGenerator|null
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-document-without-a-named-house-style-uses-the-user-s-own-req-hsp-002
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-document-without-a-named-house-style-uses-the-user-s-own-req-hsp-002
 	 */
 	private function urlGenerator(): ?IURLGenerator {
 		try {

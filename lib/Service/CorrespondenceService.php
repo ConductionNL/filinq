@@ -698,7 +698,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	 * @return array|null The huisstijl configuration or null if not found
 	 *
 	 * @spec openspec/specs/letter-correspondence-generation/spec.md#requirement-huisstijl-default-configuration
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	private function loadHuisstijl(?string $huisstijlId, ?string $uid = null): ?array {
 		if ($huisstijlId === null || $huisstijlId === '') {
@@ -740,7 +740,7 @@ class CorrespondenceService implements CorrespondenceServiceInterface {
 	 *
 	 * @return array|null The managed house style
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.1
 	 */
 	private function managedHuisstijl(?string $uid): ?array {
 		try {

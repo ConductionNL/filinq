@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.2
  */
 
 declare(strict_types=1);

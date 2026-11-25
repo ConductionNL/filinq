@@ -3057,7 +3057,7 @@
 				"evidence": "Built by openspec/changes/archive/2026-09-28-documents-from-a-template (archived 2026-09-28): src/views/settings/PageLayoutSettings.vue on the admin settings page lists active layouts (GET api/page-layouts), creates one (POST api/page-layouts/new -> PageLayoutService::create()), saves an edit as the next version (POST api/page-layouts -> edit()) and lists the versions, with a drawn preview of the first and following pages. Earlier versions stay resolvable for templates that name them. Before: lib/Controller/DocumentProductionController.php:89 layoutVersions(), :105 editLayout() -> lib/Service/PageLayoutService.php (versioned page layouts, per documents-from-a-template's pageLayout schema). Route documentProduction#layoutVersions/editLayout api/page-layouts (routes.php:105-106), tagged 'none' in route-reach.txt; no FE literal '/api/page-layouts' found anywhere in src/.",
 				"change": "openspec/changes/archive/2026-09-28-documents-from-a-template",
 				"requirement": "openspec/specs/document-creatie-sjablonen :: The page layout is administered and versioned (REQ-DFT-01)",
-				"plan": "openspec/changes/templates-house-style-from-thematiq"
+				"plan": "openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq"
 			},
 			"reachedOn": "admin settings, Page layouts section (PageLayoutSettings.vue)",
 			"provider": "filinq",
