@@ -94,6 +94,32 @@ class PolicyRuleScopeTest extends TestCase {
 	}//end testAUsersActiveOrganisationIsTheScope()
 
 	/**
+	 * OpenRegister's Organisation is a Nextcloud Entity: getUuid() is answered
+	 * by __call, so method_exists() says no. Live, every signed-in user had the
+	 * empty scope, so no standing consent was ever applied.
+	 *
+	 * @return void
+	 */
+	public function testAnOrganisationWithAMagicGetterIsTheScope(): void {
+		$organisation = new class {
+			/**
+			 * Answer getters the way a Nextcloud Entity does.
+			 *
+			 * @param string       $name      The method.
+			 * @param array<mixed> $arguments The arguments.
+			 *
+			 * @return mixed
+			 */
+			public function __call(string $name, array $arguments): mixed {
+				return ($name === 'getUuid') ? 'org-magic' : null;
+			}
+		};
+
+		self::assertFalse(method_exists($organisation, 'getUuid'));
+		self::assertSame('org-magic', $this->scope(signedIn: true, answer: $organisation)->organisation());
+	}//end testAnOrganisationWithAMagicGetterIsTheScope()
+
+	/**
 	 * A user whose organisation cannot be resolved has the empty scope: no rules.
 	 *
 	 * @return void

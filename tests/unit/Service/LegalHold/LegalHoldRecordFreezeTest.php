@@ -65,6 +65,37 @@ class LegalHoldRecordFreezeTest extends TestCase {
 	}//end record()
 
 	/**
+	 * OpenRegister's ObjectEntity answers getRetention() through __call, so
+	 * method_exists() says no. Live, load() therefore found no record and a
+	 * legal hold froze nothing.
+	 *
+	 * @return void
+	 */
+	public function testARecordWithAMagicRetentionGetterLoads(): void {
+		$record = new class {
+			/**
+			 * Answer getters the way a Nextcloud Entity does.
+			 *
+			 * @param string       $name      The method.
+			 * @param array<mixed> $arguments The arguments.
+			 *
+			 * @return mixed
+			 */
+			public function __call(string $name, array $arguments): mixed {
+				return ($name === 'getRetention') ? [] : null;
+			}
+		};
+		$objects = $this->createMock(\OCA\OpenRegister\Service\ObjectService::class);
+		$objects->method('find')->willReturn($record);
+		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
+		$resolver->method('resolve')->willReturn($objects);
+		$freeze = new LegalHoldRecordFreeze(objectResolver: $resolver, locator: $this->createMock(OpenRegisterServiceLocator::class));
+
+		self::assertFalse(method_exists($record, 'getRetention'));
+		self::assertSame($record, $freeze->load(ref: 'doc-1'));
+	}//end testARecordWithAMagicRetentionGetterLoads()
+
+	/**
 	 * Placing passes a HoldOrder naming the case and filinq's matter.
 	 *
 	 * @return void
