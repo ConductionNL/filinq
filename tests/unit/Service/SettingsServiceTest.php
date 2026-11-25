@@ -446,7 +446,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
 	 */
 	public function testTheDefaultWooPublisherIsWritable(): void {
 		$this->mockConfig->expects($this->once())

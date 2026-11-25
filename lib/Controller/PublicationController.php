@@ -347,7 +347,7 @@ class PublicationController extends Controller {
 	 *
 	 * @return JSONResponse `{updated, skipped}`
 	 *
-	 * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+	 * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
 	 */
 	#[NoAdminRequired]
 	public function bulkMetadata(): JSONResponse {

@@ -6,7 +6,7 @@
  * missing-fields column reads the server's diwooMissing, and a value set on a
  * selection reports what was updated and skipped and lists again.
  *
- * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+ * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
  */
 
 jest.mock('@nextcloud/axios', () => ({ __esModule: true, default: { get: jest.fn(), put: jest.fn(), post: jest.fn() } }))

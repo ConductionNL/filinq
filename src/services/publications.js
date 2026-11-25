@@ -34,7 +34,7 @@ export async function listPublications(options = {}) {
  * @param {string[]} ids The records
  * @param {object} values One field and its value
  * @return {Promise<{updated: object[], skipped: Array<{uuid: string, reason: string}>}>}
- * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
+ * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md#requirement-a-coordinator-fills-one-value-on-a-selection-req-wmw-002
  */
 export async function setMetadataMany(ids, values) {
 	return (await axios.put(base() + '/metadata', { ids, values })).data

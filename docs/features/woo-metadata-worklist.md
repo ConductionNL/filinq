@@ -17,6 +17,8 @@ Under **Publications**, turn on **Metadata incomplete** to see only the
 publications that miss at least one field. The **Missing metadata** column
 names the fields each one misses.
 
+![Publications with Metadata incomplete on, naming the fields each one misses](/screenshots/woo-metadata-worklist-incomplete.png)
+
 ## Fill one value on a selection
 
 Select the publications and choose **Set metadata**. Pick the field and the
@@ -25,6 +27,8 @@ value:
 - the information category, chosen from OpenCatalogi's TOOI list;
 - the document type;
 - the publisher (TOOI identifier).
+
+![Set metadata on two selected publications](/screenshots/woo-metadata-worklist-set-metadata.png)
 
 Filinq writes the value on every selected publication and records it in the
 log of each one. A publication that was already handed off is skipped and

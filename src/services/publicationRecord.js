@@ -110,7 +110,7 @@ export function canWithdraw(record) {
  * @param {string} field The field key.
  * @param {Function} t The translate function, `(app, text) => string`.
  * @return {string} The label, or the key for a field without one.
- * @spec openspec/changes/woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
+ * @spec openspec/changes/archive/2026-11-25-woo-metadata-worklist/specs/woo-metadata-worklist/spec.md
  */
 export function metadataLabel(field, t) {
 	const labels = {
