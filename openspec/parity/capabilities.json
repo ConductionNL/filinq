@@ -3680,11 +3680,11 @@
 			"sourceRef": "Paperless-ngx document notes",
 			"filinq": "no",
 			"built": {
-				"state": "specified",
+				"state": "built",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Specified in openspec/changes/work-document-notes on 2026-09-27. Before: No document-note/annotation feature found. The only 'note' parameter in the codebase is RedactionOutputController::markChecked()'s $note (lib/Controller/RedactionOutputController.php:85-106), which is a per-redaction QA comment, not a general note-to-colleagues on a document. No 'notes'/'annotations' entry exists among openspec/specs/* or openspec/changes/* names.",
-				"change": "openspec/changes/work-document-notes",
-				"requirement": "openspec/changes/work-document-notes/specs/document-notes :: Notes sit beside the document on filinq's screens (REQ-WDN-002)"
+				"evidence": "Specified in openspec/changes/archive/2026-11-25-work-document-notes on 2026-09-27. Before: No document-note/annotation feature found. The only 'note' parameter in the codebase is RedactionOutputController::markChecked()'s $note (lib/Controller/RedactionOutputController.php:85-106), which is a per-redaction QA comment, not a general note-to-colleagues on a document. No 'notes'/'annotations' entry exists among openspec/specs/* or openspec/changes/* names.",
+				"change": "openspec/changes/archive/2026-11-25-work-document-notes",
+				"requirement": "openspec/changes/archive/2026-11-25-work-document-notes/specs/document-notes :: Notes sit beside the document on filinq's screens (REQ-WDN-002)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",

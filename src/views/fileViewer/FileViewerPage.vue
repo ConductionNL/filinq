@@ -253,7 +253,7 @@ export default {
 		 * (work-document-notes D5).
 		 *
 		 * @return {string|null} The file id, or null when nothing is open.
-		 * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
+		 * @spec openspec/changes/archive/2026-11-25-work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
 		 */
 		notesFileId() {
 			const fileId = fileViewerStore.currentFile?.fileId

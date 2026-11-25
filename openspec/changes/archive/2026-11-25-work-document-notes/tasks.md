@@ -15,5 +15,7 @@
 
 ## 3. Checks, strings and docs
 
-- [ ] 3.1 Prove notes stay on their file: anonymise and share a document with a note and check neither result carries it (D5) (REQ-WDN-003). Verify: Playwright opens the anonymised copy and finds no notes; Newman reads the comments of the copy's file id and gets none.
-- [ ] 3.2 Dutch and English strings (ADR-005), `@spec` tags on the new methods, and a section in `docs/features/` with a screenshot of the panel (ADR-010). Verify: `npm run check:l10n` and `npm run lint` pass, and the docs page renders.
+- [x] 3.1 Prove notes stay on their file: anonymise and share a document with a note and check neither result carries it (D5) (REQ-WDN-003). Verify: Playwright opens the anonymised copy and finds no notes; Newman reads the comments of the copy's file id and gets none.
+  - Verified live 25 Nov 2026 (NC 34 + MariaDB + OpenRegister main): `tests/e2e/document-notes.spec.ts` 6/6 green. 'the anonymised copy carries no notes' writes a note, anonymises (analyse, review mark, checked mark, anonymise) and reads the copy's file id on Nextcloud's comments endpoint: no comment (the request a Newman check would make). 'a share link of a document with a note does not carry the note' (new) downloads and opens the link as an outsider: the file, no note. Needs `FILINQ_E2E_ANALYSED_FILE_ID`, an admin document whose findings are all certain.
+- [x] 3.2 Dutch and English strings (ADR-005), `@spec` tags on the new methods, and a section in `docs/features/` with a screenshot of the panel (ADR-010). Verify: `npm run check:l10n` and `npm run lint` pass, and the docs page renders.
+  - Notes strings are in `l10n/en.json` and `l10n/nl.json` (`npm run check:l10n-js` up to date); `docs/features/document-notes.md` with the live panel screenshot `docs/static/screenshots/document-notes-panel.png`, linked from `docs/features/README.md`.
