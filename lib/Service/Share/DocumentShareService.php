@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/share-document-links/specs/document-share-links/spec.md
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links/spec.md
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use Throwable;
  * shares, the archive and the audit for one share lifecycle; its value objects and exceptions count
  * toward the coupling too.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.2
  */
 class DocumentShareService {
 
@@ -122,7 +122,7 @@ class DocumentShareService {
 	 * @throws RuntimeException         When there is no user (401), no readable file (404), Nextcloud refuses (403),
 	 *                                  or the record cannot be written (500).
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.2
 	 */
 	public function shareDocument(int $fileId, string $expiresOn, ?string $password, string $note, bool $labelConfirmed): array {
 		$uid = $this->uid();
@@ -174,7 +174,7 @@ class DocumentShareService {
 	 * @throws RuntimeException When there is no user (401), the record is unknown (404), the user may not (403), or
 	 *                          the link is no longer active (409).
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.3
 	 */
 	public function revoke(string $recordUuid): array {
 		$uid = $this->uid();
@@ -218,7 +218,7 @@ class DocumentShareService {
 	 * @throws InvalidArgumentException When no document is chosen (400), or as shareDocument() and shareBundle().
 	 * @throws RuntimeException         As shareDocument() and shareBundle().
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.3
 	 */
 	public function share(array $fileIds, string $name, string $expiresOn, ?string $password, string $note, bool $labelConfirmed): array {
 		$ids = $this->fileIds(fileIds: $fileIds);
@@ -262,7 +262,7 @@ class DocumentShareService {
 	 * @throws InvalidArgumentException When no document is chosen (400).
 	 * @throws RuntimeException         Without a user (401), or when a label cannot be read (503).
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.3
 	 */
 	public function preflight(array $fileIds): array {
 		$this->uid();
@@ -318,7 +318,7 @@ class DocumentShareService {
 	 * @throws RuntimeException         When there is no user (401), nothing can go in (400), Nextcloud refuses (403),
 	 *                                  or the archive, its job or the record cannot be written (500).
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.4
 	 */
 	public function shareBundle(array $fileIds, string $name, string $expiresOn, ?string $password, string $note, bool $labelConfirmed): array {
 		$uid = $this->uid();
@@ -386,7 +386,7 @@ class DocumentShareService {
 	 *
 	 * @throws InvalidArgumentException When the date is no future date, or Nextcloud requires a password (400).
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.2
 	 */
 	private function linkTerms(string $expiresOn, ?string $password): array {
 		$policy = $this->links->linkPolicy();
@@ -412,7 +412,7 @@ class DocumentShareService {
 	 *
 	 * @throws RuntimeException When a file may not be shared (403), or a label cannot be read (503).
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.4
 	 */
 	private function bundleLabels(array $fileIds, string $uid): array {
 		$readable = $this->readableIds(fileIds: $fileIds);
@@ -444,7 +444,7 @@ class DocumentShareService {
 	 *
 	 * @return array<int, array{fileId: int, name: string, version: string, label: string}> The files.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.4
 	 */
 	private function bundleFiles(array $included, array $labels): array {
 		$files = [];
@@ -472,7 +472,7 @@ class DocumentShareService {
 	 *
 	 * @return array{expired: int, revoked: int, failed: int} How many records were closed, and how many could not be.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.5
 	 */
 	public function closeLapsed(): array {
 		$today  = $this->now()->format('Y-m-d');
@@ -504,7 +504,7 @@ class DocumentShareService {
 	 *
 	 * @return string|null 'expired' or 'revoked' when it was closed, null when the link still works.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.5
 	 */
 	private function closeIfLapsed(array $record, string $uuid, string $today): ?string {
 		$expiresAt = (string) ($record['expiresAt'] ?? '');
@@ -536,7 +536,7 @@ class DocumentShareService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.5
 	 */
 	private function discardArchive(array $record): void {
 		if (($record['kind'] ?? '') !== 'bundle') {
@@ -557,7 +557,7 @@ class DocumentShareService {
 	 *
 	 * @return array<int, int> The ids.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.3
 	 */
 	private function fileIds(array $fileIds): array {
 		$ids = [];
@@ -579,7 +579,7 @@ class DocumentShareService {
 	 *
 	 * @return int The id, or 0.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.4
 	 */
 	private function idOf(mixed $raw): int {
 		if (is_int($raw) === true || (is_string($raw) === true && ctype_digit($raw) === true)) {
@@ -601,7 +601,7 @@ class DocumentShareService {
 	 *
 	 * @throws InvalidArgumentException When a label needs a confirmation (409).
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.6
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.6
 	 */
 	private function requireConfirmation(array $labels, bool $confirmed, string $what): void {
 		$labelled = $this->labelled(labels: $labels);
@@ -618,7 +618,7 @@ class DocumentShareService {
 	 *
 	 * @return array<int, string> The distinct non-empty labels.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.6
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.6
 	 */
 	private function labelled(array $labels): array {
 		return array_values(array_unique(array_filter($labels, static fn (string $label): bool => $label !== '')));
@@ -635,7 +635,7 @@ class DocumentShareService {
 	 *
 	 * @throws InvalidArgumentException When the date is not a date, or not after today.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.2
 	 */
 	private function expiry(string $expiresOn, ?int $maxDays): array {
 		$today   = $this->now()->setTime(0, 0);
@@ -666,7 +666,7 @@ class DocumentShareService {
 	 * @SuppressWarnings(PHPMD.StaticAccess) createFromFormat()/createFromImmutable() are PHP's named
 	 * constructors for a date; there is no instance form.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.2
 	 */
 	private function askedExpiry(string $expiresOn, DateTimeImmutable $today): DateTimeImmutable {
 		if ($expiresOn === '') {
@@ -690,7 +690,7 @@ class DocumentShareService {
 	 *
 	 * @return DateTimeImmutable|null The latest day, or null.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.2
 	 */
 	private function latestExpiry(DateTimeImmutable $today, ?int $maxDays): ?DateTimeImmutable {
 		if ($maxDays === null || $maxDays <= 0) {
@@ -711,7 +711,7 @@ class DocumentShareService {
 	 *
 	 * @return array<int, int> The readable ones.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.3
 	 */
 	private function readableIds(array $fileIds): array {
 		$readable = [];
@@ -735,7 +735,7 @@ class DocumentShareService {
 	 *
 	 * @throws RuntimeException When the label cannot be read (503).
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.2
 	 */
 	private function labelOf(int $fileId): string {
 		try {
@@ -755,7 +755,7 @@ class DocumentShareService {
 	 *
 	 * @throws RuntimeException Without a user (401).
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.2
 	 */
 	private function uid(): string {
 		$user = $this->session->getUser();
@@ -772,7 +772,7 @@ class DocumentShareService {
 	 *
 	 * @return DateTimeImmutable Now.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.2
 	 */
 	private function now(): DateTimeImmutable {
 		return DateTimeImmutable::createFromInterface($this->clock->getDateTime())->setTimezone(new DateTimeZone('UTC'));

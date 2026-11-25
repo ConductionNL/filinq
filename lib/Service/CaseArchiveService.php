@@ -296,7 +296,7 @@ class CaseArchiveService implements CaseArchiveServiceInterface {
 	 * @return array<string, mixed> The preflight (files, bytes, ceilingBytes, exceedsCeiling), with what would go in
 	 *                              (included) and what would be left out (excluded).
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.4
 	 */
 	public function preflightFiles(array $fileIds, int $ceiling = self::DEFAULT_CEILING): array {
 		$rows  = $this->chosenFiles(fileIds: $fileIds);
@@ -330,7 +330,7 @@ class CaseArchiveService implements CaseArchiveServiceInterface {
 	 *
 	 * @return array{included: array<int, array<string, mixed>>, excluded: array<int, array<string, mixed>>, bytes: int} The manifest.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.4
 	 */
 	public function manifestForFiles(array $fileIds, int $ceiling = self::DEFAULT_CEILING): array {
 		$rows     = $this->chosenFiles(fileIds: $fileIds);
@@ -390,7 +390,7 @@ class CaseArchiveService implements CaseArchiveServiceInterface {
 	 *
 	 * @throws RuntimeException When nothing can go in (400), there is no user (401), or the archive or job cannot be written (500).
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.4
 	 */
 	public function buildFromFiles(array $fileIds, string $folderPath, string $name, int $requestedCeiling = 0): array {
 		$ceiling  = $this->ceiling(requested: $requestedCeiling);

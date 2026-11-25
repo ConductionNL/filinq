@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/share-document-links/specs/document-share-links/spec.md
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links/spec.md
  */
 
 declare(strict_types=1);
@@ -36,7 +36,7 @@ use Throwable;
 /**
  * Makes read-only link shares through `OCP\Share\IManager` (design D1).
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.1
  */
 class NextcloudLinkShareGateway implements LinkShareGateway {
 
@@ -78,7 +78,7 @@ class NextcloudLinkShareGateway implements LinkShareGateway {
 	 * @SuppressWarnings(PHPMD.StaticAccess) createFromFormat()/createFromImmutable() are PHP's named
 	 * constructors for a date; there is no instance form.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.1
 	 */
 	public function createLink(int $fileId, string $uid, DateTimeImmutable $expires, ?string $password, string $note): array {
 		$node = $this->rootFolder->getUserFolder($uid)->getFirstNodeById($fileId);
@@ -118,7 +118,7 @@ class NextcloudLinkShareGateway implements LinkShareGateway {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.1
 	 */
 	public function delete(string $shareId): void {
 		try {
@@ -138,7 +138,7 @@ class NextcloudLinkShareGateway implements LinkShareGateway {
 	 *
 	 * @return bool True while the share exists.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.1
 	 */
 	public function exists(string $shareId): bool {
 		try {
@@ -155,7 +155,7 @@ class NextcloudLinkShareGateway implements LinkShareGateway {
 	 *
 	 * @return array{maxDays: int|null, passwordRequired: bool} The enforced maximum and the password rule.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.1
 	 */
 	public function linkPolicy(): array {
 		$maxDays = null;
@@ -175,7 +175,7 @@ class NextcloudLinkShareGateway implements LinkShareGateway {
 	 *
 	 * @return bool True when the file is in the user's Files and carries the share permission.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.1
 	 */
 	public function mayShare(int $fileId, string $uid): bool {
 		try {

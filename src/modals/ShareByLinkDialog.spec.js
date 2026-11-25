@@ -6,7 +6,7 @@
  * button disabled for a labelled document until the clerk confirms, sends
  * one share, shows the link, and keeps Nextcloud's refusal in the dialog.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.2
  */
 
 const { nextTick } = require('vue')

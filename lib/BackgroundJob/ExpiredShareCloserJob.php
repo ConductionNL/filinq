@@ -42,7 +42,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-2.5
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.5
  */
 class ExpiredShareCloserJob extends TimedJob {
 
@@ -62,7 +62,7 @@ class ExpiredShareCloserJob extends TimedJob {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.5
 	 */
 	public function __construct(
 		ITimeFactory $clock,
@@ -84,7 +84,7 @@ class ExpiredShareCloserJob extends TimedJob {
 	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) `$argument` is Nextcloud's job argument; the base
 	 * class dictates the signature and this job takes none.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.5
 	 */
 	protected function run(mixed $argument): void {
 		try {

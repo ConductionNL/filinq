@@ -6,7 +6,7 @@ Share one document, or several as one archive, by a read-only link that
 runs out. Asks the preflight first: Nextcloud's link rules, the labels,
 and what a bundle would hold, so nothing is built before the clerk knows.
 
-@spec openspec/changes/share-document-links/tasks.md#task-3.1
+@spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.1
 -->
 
 <template>

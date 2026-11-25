@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/share-document-links/specs/document-share-links/spec.md
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links/spec.md
  */
 
 declare(strict_types=1);
@@ -33,7 +33,7 @@ use Throwable;
 /**
  * Saves and reads documentShare objects through OpenRegister.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.2
  */
 class DocumentShareStore {
 
@@ -72,7 +72,7 @@ class DocumentShareStore {
 	 *
 	 * @throws RuntimeException When OpenRegister refuses the write.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.2
 	 */
 	public function save(array $record, ?string $uuid = null): array {
 		unset($record['uuid'], $record['@self']);
@@ -111,7 +111,7 @@ class DocumentShareStore {
 	 *
 	 * @return array<string, mixed>|null The record, or null when it does not exist.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.3
 	 */
 	public function find(string $uuid): ?array {
 		if ($uuid === '') {
@@ -149,7 +149,7 @@ class DocumentShareStore {
 	 *
 	 * @throws RuntimeException When OpenRegister cannot be read.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.5
 	 */
 	public function active(): array {
 		try {
@@ -186,7 +186,7 @@ class DocumentShareStore {
 	 *
 	 * @return array<string, mixed> The record.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.2
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.2
 	 */
 	private function normalise(mixed $row): array {
 		$data = $row;

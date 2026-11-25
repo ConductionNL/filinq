@@ -22,4 +22,4 @@
 
 ## 4. Strings and docs
 
-- [ ] 4.1 (done: Dutch and English strings, `@spec` tags, `docs/features/share-document-links.md`; left: the screenshots, which need a running instance) Dutch and English strings (ADR-005), `@spec` tags on new methods, and a section in `docs/features/` with screenshots of the dialog and the Shared links page (ADR-010). Verify: `npm run check:l10n`, `npm run lint` and `composer check:strict` pass, and the docs page renders.
+- [x] 4.1 (Dutch and English strings, `@spec` tags, `docs/features/share-document-links.md`; screenshots of the dialog and the Shared links page taken on a live Nextcloud 34 sandbox, 25 Nov 2026, which also found and fixed the dialog's missing field labels) Dutch and English strings (ADR-005), `@spec` tags on new methods, and a section in `docs/features/` with screenshots of the dialog and the Shared links page (ADR-010). Verify: `npm run check:l10n`, `npm run lint` and `composer check:strict` pass, and the docs page renders.
