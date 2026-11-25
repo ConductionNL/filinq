@@ -647,6 +647,13 @@ export default {
 				)
 					.setMultiSelect(true)
 					.allowDirectories(false)
+					// Without a button the picker has no way to confirm a choice (seen live, 25 Nov 2026).
+					.setButtonFactory((selected) => [{
+						label: t('filinq', 'Attach files'),
+						variant: 'primary',
+						disabled: selected.length === 0,
+						callback: () => {},
+					}])
 					.build()
 					.pickNodes()
 			} catch {
