@@ -29,6 +29,7 @@ use OCA\Filinq\Service\HuisstijlWriteGate;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\IUser;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -102,10 +103,11 @@ class HuisstijlProfileSyncTest extends TestCase {
 	 * A sync whose thematiq answers with the given profile.
 	 *
 	 * @param array<string, mixed>|null $profile The profile; null when thematiq is not enabled.
+	 * @param IURLGenerator|null        $urls    The server's URL generator; null when the container has none.
 	 *
 	 * @return HuisstijlProfileSync The sync.
 	 */
-	private function sync(?array $profile): HuisstijlProfileSync {
+	private function sync(?array $profile, ?IURLGenerator $urls=null): HuisstijlProfileSync {
 		$this->appManager->method('isEnabledForUser')->with('thematiq')->willReturn($profile !== null);
 
 		$service = new class($profile, $this->asked) {
@@ -126,9 +128,13 @@ class HuisstijlProfileSyncTest extends TestCase {
 			}
 		};
 		$this->container->method('get')->willReturnCallback(
-			static function (string $id) use ($service) {
+			static function (string $id) use ($service, $urls) {
 				if ($id === HuisstijlProfileSync::PROFILE_SERVICE) {
 					return $service;
+				}
+
+				if ($id === IURLGenerator::class && $urls !== null) {
+					return $urls;
 				}
 
 				throw new RuntimeException('unexpected ' . $id);
@@ -207,6 +213,34 @@ class HuisstijlProfileSyncTest extends TestCase {
 		$this->assertSame('hs-1', $result['@self']['id']);
 		$this->assertSame('Gemeente Bergen', $result['name']);
 	}//end testTheFirstUseCreatesOneManagedHouseStyleThroughTheOpenGate()
+
+	public function testTheLogoAndCoverAreStoredAtAnAbsoluteAddress(): void {
+		$urls = $this->createMock(originalClassName: IURLGenerator::class);
+		$urls->method('getAbsoluteURL')->willReturnCallback(
+			static fn (string $url): string => 'https://cloud.example.nl' . $url
+		);
+		$profile = $this->profile();
+		$profile['cover']['url'] = 'https://cdn.example.nl/cover.jpg';
+		$sync = $this->sync(profile: $profile, urls: $urls);
+		$this->objectService->method('searchObjectsBySlug')->willReturn([]);
+		$written = null;
+		$this->objectService->method('saveObject')->willReturnCallback(
+			static function (...$args) use (&$written) {
+				$written = $args[0];
+
+				return $args[0];
+			}
+		);
+
+		$sync->syncFor(uid: 'clerk-bergen');
+
+		$this->assertSame(expected: 'https://cloud.example.nl/apps/thematiq/document-style/logo?v=1', actual: $written['logo']);
+		$this->assertSame(expected: 'https://cdn.example.nl/cover.jpg', actual: $written['coverImage']);
+		$this->assertStringContainsString(
+			needle: '<img src="https://cloud.example.nl/apps/thematiq/document-style/logo?v=1"',
+			haystack: $written['headerHtml']
+		);
+	}//end testTheLogoAndCoverAreStoredAtAnAbsoluteAddress()
 
 	public function testAnUnchangedProfileWritesNothing(): void {
 		$sync = $this->sync($this->profile());

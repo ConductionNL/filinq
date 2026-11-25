@@ -29,6 +29,7 @@ use OCA\Filinq\Kernel\Contracts\ManagedHuisstijlInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -151,7 +152,7 @@ class HuisstijlProfileSync {
 	 * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-1.2
 	 */
 	private function syncProfile(array $profile): ?array {
-		$mapped = $this->mapper->mapProfile(profile: $profile);
+		$mapped = $this->mapper->mapProfile(profile: $this->withAbsoluteAssets(profile: $profile));
 		if ($mapped['tokenSetId'] === '') {
 			return null;
 		}
@@ -164,6 +165,59 @@ class HuisstijlProfileSync {
 		return $this->store(huisstijl: $mapped, uuid: $this->uuidOf(row: ($existing ?? [])));
 
 	}//end syncProfile()
+
+	/**
+	 * The profile with its logo and cover at an absolute address.
+	 *
+	 * Thematiq names them by a path on this server ('/apps/thematiq/...'),
+	 * which the PDF engine cannot fetch and a mail client cannot show. An
+	 * address that is already absolute, or a profile without the URL
+	 * generator, is left as it is.
+	 *
+	 * @param array<string, mixed> $profile The thematiq profile.
+	 *
+	 * @return array<string, mixed> The profile.
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-document-without-a-named-house-style-uses-the-user-s-own-req-hsp-002
+	 */
+	private function withAbsoluteAssets(array $profile): array {
+		$urls = $this->urlGenerator();
+		if ($urls === null) {
+			return $profile;
+		}
+
+		foreach (['logo', 'cover'] as $key) {
+			$url = (is_array($profile[$key] ?? null) === true) ? ($profile[$key]['url'] ?? null) : null;
+			if (is_string($url) === true && str_starts_with($url, '/') === true && str_starts_with($url, '//') === false) {
+				$profile[$key]['url'] = $urls->getAbsoluteURL($url);
+			}
+		}
+
+		return $profile;
+
+	}//end withAbsoluteAssets()
+
+	/**
+	 * The server's URL generator, or null when it cannot be had.
+	 *
+	 * @return IURLGenerator|null
+	 *
+	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-document-without-a-named-house-style-uses-the-user-s-own-req-hsp-002
+	 */
+	private function urlGenerator(): ?IURLGenerator {
+		try {
+			$urls = $this->container->get(IURLGenerator::class);
+		} catch (Throwable) {
+			return null;
+		}
+
+		if (($urls instanceof IURLGenerator) === false) {
+			return null;
+		}
+
+		return $urls;
+
+	}//end urlGenerator()
 
 	/**
 	 * Thematiq's profile service, or null when thematiq is not there.
