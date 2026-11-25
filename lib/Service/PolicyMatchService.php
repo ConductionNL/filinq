@@ -411,7 +411,8 @@ class PolicyMatchService {
 		// It runs inside the seam (loadRules()), so it passes no bypass flag.
 		$result = (new SlugSearch(objects: $this->objectService))->search(
 			register: 'filinq',
-			schema: 'publicationProhibition'
+			schema: 'publicationProhibition',
+			filters: self::organisationFilter(organisation: $organisation)
 		);
 		if (is_int($result) === true) {
 			$result = [];
@@ -453,7 +454,7 @@ class PolicyMatchService {
 		$result = (new SlugSearch(objects: $this->objectService))->search(
 			register: 'filinq',
 			schema: 'publicationConsent',
-			filters: ['scope' => 'entity', 'active' => true]
+			filters: ['scope' => 'entity', 'active' => true] + self::organisationFilter(organisation: $organisation)
 		);
 		if (is_int($result) === true) {
 			$result = [];
@@ -511,8 +512,32 @@ class PolicyMatchService {
 			return false;
 		}
 
-		return (string)($self['organisation'] ?? '') === $organisation;
+		// The query is filtered on the organisation (organisationFilter()), and
+		// a row read inside the seam carries only its id in `@self`: a row
+		// without an organisation was matched by that filter. One that names
+		// another organisation is still refused.
+		$owner = (string)($self['organisation'] ?? '');
+
+		return $owner === '' || $owner === $organisation;
 	}//end inScope()
+
+	/**
+	 * The search filter that keeps the rules to one organisation, pushed down
+	 * to OpenRegister's metadata filter; none when every organisation applies.
+	 *
+	 * @param string|null $organisation The organisation UUID, or null for every organisation.
+	 *
+	 * @return array<string, array<string, string>>
+	 *
+	 * @spec openspec/changes/multi-tenant-hardening/specs/multi-tenant-hardening/spec.md
+	 */
+	private static function organisationFilter(?string $organisation): array {
+		if ($organisation === null) {
+			return [];
+		}
+
+		return ['@self' => ['organisation' => $organisation]];
+	}//end organisationFilter()
 
 	/**
 	 * Match a detected entity against prohibition rules only.

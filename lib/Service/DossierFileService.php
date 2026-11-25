@@ -278,7 +278,7 @@ class DossierFileService {
 	 */
 	private function folderRefOf(object $object, array $payload): mixed {
 		$ref = ($payload['@self']['folder'] ?? null);
-		if ($ref === null && method_exists($object, 'getFolder') === true) {
+		if ($ref === null && is_callable([$object, 'getFolder']) === true) {
 			return $object->getFolder();
 		}
 

@@ -117,7 +117,7 @@ class DetectionCatalogue {
 	 * @return string|null
 	 */
 	private static function uuidOf(mixed $organisation): ?string {
-		if (is_object($organisation) === false || method_exists($organisation, 'getUuid') === false) {
+		if (is_object($organisation) === false || is_callable([$organisation, 'getUuid']) === false) {
 			return null;
 		}
 

@@ -735,17 +735,7 @@ class SigningService implements SigningServiceInterface {
 			throw new RuntimeException('Signer has already responded to this request');
 		}
 
-		// Before any evidence is taken or anything is written: a sequential
-		// signer whose turn has not come is refused outright.
-		if ((string)($request['signingMode'] ?? '') !== SigningTurn::PARALLEL) {
-			SigningTurn::assertTurn(
-				request: $request,
-				signerId: $signerId,
-				signers: $this->signerRecords(request: $request, known: [$signerId => $signer])
-			);
-		}
-		// Typed field values are checked before anything is written (REQ-SFV-003).
-		$typed = $this->fieldValueChecker->valuesForAct(request: $request, signerId: $signerId, fields: $fields);
+		$typed = $this->checkBeforeWrite(request: $request, signer: $signer + ['id' => $signerId], fields: $fields);
 
 		$signer['identityEvidence'] = $this->guards->assuranceGate->evidenceForAct(
 			request: $request + ['id' => $requestId],
@@ -780,6 +770,43 @@ class SigningService implements SigningServiceInterface {
 
 		return $signer;
 	}//end signAct()
+
+	/**
+	 * What a signature checks before any evidence is taken or anything is
+	 * written: a sequential signer whose turn has not come is refused, typed
+	 * field values are checked (REQ-SFV-003), and the request's provider must
+	 * be able to complete it at all. Without the last, a native request on a
+	 * server with no signing secret stored the signature and its SIGNED audit
+	 * entry and then failed at completion, leaving a request no signer could
+	 * finish.
+	 *
+	 * @param array<string, mixed>      $request The signing request.
+	 * @param array<string, mixed>      $signer  The authorised signer record, with its `id`.
+	 * @param array<string, mixed>|null $fields  The typed field values sent with the act.
+	 *
+	 * @return array<string, mixed> The checked typed values to store on the signer.
+	 *
+	 * @throws RuntimeException When it is not the signer's turn, a value is refused or no artifact could be produced.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) SigningTurn is a stateless rule.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	private function checkBeforeWrite(array $request, array $signer, ?array $fields): array {
+		$signerId = (string)$signer['id'];
+		if ((string)($request['signingMode'] ?? '') !== SigningTurn::PARALLEL) {
+			SigningTurn::assertTurn(
+				request: $request,
+				signerId: $signerId,
+				signers: $this->signerRecords(request: $request, known: [$signerId => $signer])
+			);
+		}
+
+		$typed = $this->fieldValueChecker->valuesForAct(request: $request, signerId: $signerId, fields: $fields);
+		$this->outputs->artifactProducer->assertCanProduce(request: $request);
+
+		return $typed;
+	}//end checkBeforeWrite()
 
 	/**
 	 * The user whose signing authority a signature exercises.

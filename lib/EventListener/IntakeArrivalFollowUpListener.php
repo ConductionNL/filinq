@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -39,7 +39,7 @@ use Throwable;
  * here can refuse or undo it (design D2). The outcome is written to the
  * document's `acknowledgement`.
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
  */
 class IntakeArrivalFollowUpListener implements IEventListener {
 
@@ -72,7 +72,7 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
 	 */
 	public function handle(Event $event): void {
 		if (self::isObjectCreated(event: $event) === false) {
@@ -222,7 +222,7 @@ class IntakeArrivalFollowUpListener implements IEventListener {
 	 *
 	 * @return int|null The copy's file id.
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-received-stamp-goes-on-a-copy-never-on-what-arrived-req-ias-003
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-received-stamp-goes-on-a-copy-never-on-what-arrived-req-ias-003
 	 */
 	private function stampedCopy(array $document, array $rule, string $number): int|null {
 		$fileId = $document['file'] ?? null;

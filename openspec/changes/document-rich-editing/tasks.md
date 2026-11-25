@@ -49,8 +49,10 @@ Acceptance criteria:
 ## 5. Verify
 
 - [x] Full unit suite green; `phpcs` clean across `lib/Service/Editing/`
-- [ ] Playwright E2E: style a paragraph and set metadata through the tool surface, asserting the bytes changed on exactly the targeted paragraph
-- [ ] Confirm the two new tools appear in `tools/list` with dotted ids
+- [x] Playwright E2E: style a paragraph and set metadata through the tool surface, asserting the bytes changed on exactly the targeted paragraph
+  - `tests/e2e/workflows/document-rich-editing.spec.ts`, live 3/3 (Nextcloud 34 + MariaDB + Redis, OpenRegister main): the style edit's target paragraph gains `<w:jc w:val="center"/>` and bold runs with its text unchanged, every other `<w:p>` is byte-identical (checked red by styling the next paragraph instead); the metadata write puts the title and keywords in `docProps/core.xml` and leaves `word/document.xml` byte-identical.
+- [x] Confirm the two new tools appear in `tools/list` with dotted ids
+  - Live `tools/list`: `filinq.readDocumentMetadata` and `filinq.setDocumentMetadata` are listed by `id` (the MCP `name` is the short form, `readDocumentMetadata`); asserted in the same spec.
 
 Acceptance criteria:
 - The E2E asserts on document bytes, not on the tool's own reply. A tool reporting success is not evidence the document changed.

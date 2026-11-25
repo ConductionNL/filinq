@@ -94,7 +94,8 @@ async function scopedTemplate(request: APIRequestContext, name: string, schema: 
 async function folderId(request: APIRequestContext, path: string): Promise<number> {
 	const res = await request.fetch(`/remote.php/dav/files/${USER}/${encodeURI(path)}`, {
 		method: 'PROPFIND',
-		headers: { Depth: '0', 'Content-Type': 'application/xml' },
+		// A session cookie alone is refused by WebDAV for anything but GET: the OCS header stands in for the CSRF token.
+		headers: { ...OCS, Depth: '0', 'Content-Type': 'application/xml' },
 		data: '<?xml version="1.0"?><d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns"><d:prop><oc:fileid/></d:prop></d:propfind>',
 	})
 	expect(res.status(), `PROPFIND ${path}`).toBe(207)
@@ -150,7 +151,8 @@ test.describe('the generate-document leaf on a host object', () => {
 					}
 					const el = document.createElement('div')
 					el.id = 'e2e-generate-leaf'
-					el.style.cssText = 'position:fixed;top:60px;right:16px;width:360px;z-index:100000;background:var(--color-main-background);padding:8px;'
+					// Fixed, so it must scroll itself: an instance with example templates lists more than one screen.
+					el.style.cssText = 'position:fixed;top:60px;right:16px;width:360px;max-height:calc(100vh - 80px);overflow-y:auto;z-index:100000;background:var(--color-main-background);padding:8px;'
 					document.body.appendChild(el)
 					entry.mount(el, props)
 					return true
@@ -197,7 +199,7 @@ test.describe('the generate-document leaf on a host object', () => {
 			}
 		} finally {
 			if (storedPath !== '') {
-				await request.delete(`/remote.php/dav/files/${USER}/${encodeURI(storedPath)}`).catch(() => undefined)
+				await request.delete(`/remote.php/dav/files/${USER}/${encodeURI(storedPath)}`, { headers: OCS }).catch(() => undefined)
 			}
 			for (const id of templateIds) {
 				await request.delete(`${API}/templates/${id}`, { headers: OCS }).catch(() => undefined)
