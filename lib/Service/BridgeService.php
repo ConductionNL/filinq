@@ -303,7 +303,7 @@ class BridgeService {
 	 * @spec openspec/changes/zgw-document-bridge
 	 */
 	private function search(string $schema, array $filters): array {
-		$results = $this->objectResolver->resolve()->searchObjectsBySlug(registerSlug: self::REGISTER, schemaSlug: $schema, filters: $filters);
+		$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(register: self::REGISTER, schema: $schema, filters: $filters);
 		if (is_array($results) === false) {
 			return [];
 		}

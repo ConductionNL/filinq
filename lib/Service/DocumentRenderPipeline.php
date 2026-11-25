@@ -169,9 +169,9 @@ class DocumentRenderPipeline {
 	 */
 	private function soleOrganisationHuisstijl(): ?array {
 		try {
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: 'filinq',
-				schemaSlug: 'huisstijl',
+			$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: 'filinq',
+				schema: 'huisstijl',
 				filters: []
 			);
 		} catch (Exception $e) {

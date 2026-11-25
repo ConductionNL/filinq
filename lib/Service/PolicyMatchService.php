@@ -409,9 +409,9 @@ class PolicyMatchService {
 		// silently return nothing for slugs; searchObjectsBySlug resolves the
 		// slugs first (same call PolicyCrudService uses for the admin list).
 		// It runs inside the seam (loadRules()), so it passes no bypass flag.
-		$result = $this->objectService->searchObjectsBySlug(
-			registerSlug: 'filinq',
-			schemaSlug: 'publicationProhibition'
+		$result = (new SlugSearch(objects: $this->objectService))->search(
+			register: 'filinq',
+			schema: 'publicationProhibition'
 		);
 		if (is_int($result) === true) {
 			$result = [];
@@ -450,9 +450,9 @@ class PolicyMatchService {
 		// bounds the result to standing-consent rows and lets ObjectService
 		// index on the column. The defensive PHP scope check is retained as
 		// a belt-and-braces in case the filter is later dropped.
-		$result = $this->objectService->searchObjectsBySlug(
-			registerSlug: 'filinq',
-			schemaSlug: 'publicationConsent',
+		$result = (new SlugSearch(objects: $this->objectService))->search(
+			register: 'filinq',
+			schema: 'publicationConsent',
 			filters: ['scope' => 'entity', 'active' => true]
 		);
 		if (is_int($result) === true) {

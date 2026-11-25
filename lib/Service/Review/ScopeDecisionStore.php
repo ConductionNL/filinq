@@ -24,6 +24,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Service\ObjectResultExtractor;
 use OCA\Filinq\Service\OpenRegisterServiceLocator;
+use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
@@ -220,9 +221,9 @@ class ScopeDecisionStore {
 	 */
 	private function find(string $schema, array $filters): array {
 		try {
-			$results = $this->objects()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: $schema,
+			$results = (new SlugSearch(objects: $this->objects()))->search(
+				register: self::REGISTER,
+				schema: $schema,
 				filters: $filters
 			);
 		} catch (Throwable $e) {

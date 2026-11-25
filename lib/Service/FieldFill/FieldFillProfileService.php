@@ -27,6 +27,7 @@ use OCA\Filinq\Exception\FieldFillRefused;
 use OCA\Filinq\Kernel\Contracts\FieldFillProfileServiceInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
@@ -296,9 +297,9 @@ class FieldFillProfileService implements FieldFillProfileServiceInterface {
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects reads register
 			// and schema as numeric ids and answers a slug with no rows.
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: $filters
 			);
 		} catch (Throwable $e) {

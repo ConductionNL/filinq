@@ -128,9 +128,9 @@ class LegalBasisCatalog {
 		}
 
 		try {
-			$result = $objectService->searchObjectsBySlug(
-				registerSlug: 'filinq',
-				schemaSlug: 'base',
+			$result = (new SlugSearch(objects: $objectService))->search(
+				register: 'filinq',
+				schema: 'base',
 				filters: [],
 				_rbac: false,
 				_multitenancy: false

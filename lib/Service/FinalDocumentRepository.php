@@ -97,9 +97,9 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 			// rather than `null`, so FinalDocumentService::refusalFor() walks
 			// an empty list, returns no refusal, and assertWritable() lets the
 			// write through. Every final document was writable.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['fileId' => $fileId]
 			);
 		} catch (DoesNotExistException $e) {
@@ -185,9 +185,9 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 
 		try {
 			// Slugs, so `searchObjectsBySlug`. See findForFile() above.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['createdByUser' => $userId]
 			);
 		} catch (Throwable $e) {
@@ -238,9 +238,9 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 	 */
 	public function dossierIndex(): DossierFileIndex {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::DOSSIER_SCHEMA,
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: self::REGISTER,
+				schema: self::DOSSIER_SCHEMA,
 				filters: []
 			);
 		} catch (Throwable $e) {
@@ -325,9 +325,9 @@ class FinalDocumentRepository implements FinalDocumentRepositoryInterface {
 		try {
 			// Slugs, so `searchObjectsBySlug`. See findForFile() above. No
 			// filter: the domain match is done in PHP below, deliberately.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
 				filters: []
 			);
 		} catch (Throwable $e) {

@@ -278,9 +278,9 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 */
 	private function rowsFor(string $token): array {
 		try {
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['token' => $token],
 				_rbac: false
 			);

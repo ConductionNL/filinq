@@ -29,6 +29,7 @@ namespace OCA\Filinq\Service\Pseudonymisation;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
@@ -82,9 +83,9 @@ class PseudonymMapRepository {
 		}
 
 		try {
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['anonymizationLink' => $linkId],
 				_rbac: false
 			);
@@ -119,9 +120,9 @@ class PseudonymMapRepository {
 	 */
 	public function findForSource(int $sourceFileId): array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['sourceFileId' => $sourceFileId],
 				_rbac: false
 			);

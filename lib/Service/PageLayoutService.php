@@ -325,9 +325,9 @@ class PageLayoutService implements PageLayoutServiceInterface {
 			// `searchObjects` answers a slug with zero rows and no error, so
 			// resolve() found no version, stamp() stamped no layout, and the
 			// layout list rendered empty.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: $filters
 			);
 		} catch (Throwable $e) {

@@ -28,6 +28,7 @@ namespace OCA\Filinq\Service\Wizard;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
+use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
@@ -130,9 +131,9 @@ class WizardRepository {
 	 */
 	private function search(array $filters): array {
 		// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
-		$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-			registerSlug: IntakeRepository::REGISTER,
-			schemaSlug: self::SCHEMA,
+		$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			register: IntakeRepository::REGISTER,
+			schema: self::SCHEMA,
 			filters: $filters
 		);
 		if (is_array($rows) === false) {

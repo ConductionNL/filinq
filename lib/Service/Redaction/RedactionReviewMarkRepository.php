@@ -23,6 +23,7 @@ namespace OCA\Filinq\Service\Redaction;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\IntakeRepository;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
@@ -85,9 +86,9 @@ class RedactionReviewMarkRepository {
 			// was refused output forever, including the ones somebody had
 			// checked. The sibling `DownloadAgreementRepository` had the same
 			// call and failed the other way, which is how it was found.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['document' => $document]
 			);
 		} catch (Throwable $e) {

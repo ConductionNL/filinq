@@ -194,9 +194,9 @@ class BatchStateRepository {
 			$filters['_limit'] = self::LIST_LIMIT;
 		}
 
-		$rows = $this->openRegister->getObjectService()->searchObjectsBySlug(
-			registerSlug: self::REGISTER,
-			schemaSlug: self::SCHEMA,
+		$rows = (new SlugSearch(objects: $this->openRegister->getObjectService()))->search(
+			register: self::REGISTER,
+			schema: self::SCHEMA,
 			filters: $filters,
 			_rbac: false,
 			_multitenancy: false

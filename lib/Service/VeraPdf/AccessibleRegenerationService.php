@@ -33,6 +33,7 @@ use OCA\Filinq\Exception\VeraPdfException;
 use OCA\Filinq\Kernel\Contracts\DocumentServiceInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\Filinq\Service\SlugSearch;
 use OCP\Files\File;
 use RuntimeException;
 use Throwable;
@@ -111,9 +112,9 @@ class AccessibleRegenerationService {
 	 */
 	private function generationRows(int $fileId): array {
 		try {
-			return (array) $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+			return (array) (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['fileId' => $fileId]
 			);
 		} catch (Throwable) {

@@ -27,6 +27,7 @@ namespace OCA\Filinq\Service\Editing;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\FinalDocumentService;
+use OCA\Filinq\Service\SlugSearch;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\Files\File;
 use Psr\Log\LoggerInterface;
@@ -208,9 +209,9 @@ class DocumentGuard {
 			// list and returned no refusal, so a document under a live signing
 			// request was editable. The docblock above it says FAILS CLOSED;
 			// with the slug call it failed open.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: $schema,
+			$results = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: self::REGISTER,
+				schema: $schema,
 				filters: $filter,
 				_rbac: false
 			);

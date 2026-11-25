@@ -114,9 +114,9 @@ class BatchQaOutcomes {
 		}
 
 		try {
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: BatchStateRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: BatchStateRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['fileId' => $fileId]
 			);
 		} catch (Throwable $e) {

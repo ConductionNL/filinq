@@ -320,9 +320,9 @@ class OrganisationSettingsService {
 	 * @throws RuntimeException When the stored state is ambiguous.
 	 */
 	private function storedObject(string $organisationUuid): ?array {
-		$rows = array_values((array)$this->objectResolver->resolve()->searchObjectsBySlug(
-			registerSlug: self::REGISTER,
-			schemaSlug: EffectiveSettings::SCHEMA,
+		$rows = array_values((array)(new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			register: self::REGISTER,
+			schema: EffectiveSettings::SCHEMA,
 			filters: []
 		));
 

@@ -289,9 +289,9 @@ class IntegrityScanService {
 	 */
 	private function rows(string $schema): array {
 		try {
-			$found = $this->objects->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: $schema,
+			$found = (new SlugSearch(objects: $this->objects->resolve()))->search(
+				register: self::REGISTER,
+				schema: $schema,
 				filters: [],
 				_rbac: false,
 				_multitenancy: false

@@ -30,6 +30,7 @@ namespace OCA\Filinq\Service\MailArchive;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -130,9 +131,9 @@ class MailArchiveImportRepository {
 	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function search(array $filters): array {
-		$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-			registerSlug: self::REGISTER,
-			schemaSlug: self::SCHEMA,
+		$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+			register: self::REGISTER,
+			schema: self::SCHEMA,
 			filters: $filters,
 			_rbac: false,
 			_multitenancy: false

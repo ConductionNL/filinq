@@ -549,9 +549,9 @@ class PolicyCrudService implements PolicyCrudServiceInterface {
 		$objectService = $this->settingsService->getObjectService();
 		// Use the slug-aware variant — OR's standard searchObjects requires
 		// numeric register/schema IDs and silently returns nothing otherwise.
-		$results = $objectService->searchObjectsBySlug(
-			registerSlug: $register,
-			schemaSlug: $schema
+		$results = (new SlugSearch(objects: $objectService))->search(
+			register: $register,
+			schema: $schema
 		);
 
 		if (is_int($results) === true) {

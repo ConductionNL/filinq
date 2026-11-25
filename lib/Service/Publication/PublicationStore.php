@@ -21,6 +21,7 @@ namespace OCA\Filinq\Service\Publication;
 
 use OCA\Filinq\Kernel\Contracts\PublicationStoreInterface;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
@@ -302,7 +303,7 @@ class PublicationStore implements PublicationStoreInterface {
 	 */
 	private function search(string $schema, array $filters): array {
 		// Slugs go through searchObjectsBySlug: searchObjects answers a slug with zero rows.
-		$rows = $this->objects->resolve()->searchObjectsBySlug(registerSlug: self::REGISTER, schemaSlug: $schema, filters: $filters);
+		$rows = (new SlugSearch(objects: $this->objects->resolve()))->search(register: self::REGISTER, schema: $schema, filters: $filters);
 
 		return array_values(array_filter(array_map(fn (mixed $row): array => $this->normalise(row: $row), (array) $rows)));
 

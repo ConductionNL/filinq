@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service\Vendor;
 
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\SlugSearch;
 use OCP\App\IAppManager;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -143,9 +144,9 @@ class VendorRenderSources {
 	 */
 	private function rows(): array {
 		try {
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$rows = (new SlugSearch(objects: $this->objectResolver->resolve()))->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['type' => self::TYPE],
 				_rbac: false
 			);
