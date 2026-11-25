@@ -23,6 +23,7 @@ namespace OCA\Filinq\Service\Waarmerk;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
+use OCA\Filinq\Service\SystemContextSeam;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
@@ -61,11 +62,16 @@ class WaarmerkStore {
 	 * Constructor.
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolves OpenRegister's ObjectService.
+	 * @param SystemContextSeam|null        $seam           The one place Filinq reads across organisations; used for
+	 *                                                      the public lookup by verification code.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/tasks.md
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
+		private readonly ?SystemContextSeam $seam=null,
 	) {
 
 	}//end __construct()
@@ -150,7 +156,20 @@ class WaarmerkStore {
 			return null;
 		}
 
-		return self::firstWith(rows: $this->search(filters: ['verificationCode' => $code]), match: ['verificationCode' => $code]);
+		$find = fn (): array => $this->search(filters: ['verificationCode' => $code]);
+		if ($this->seam === null) {
+			return self::firstWith(rows: $find(), match: ['verificationCode' => $code]);
+		}
+
+		// Anyone may verify without an account, so nobody's organisation scopes this read. The unguessable,
+		// checksummed code is the capability; the answer carries only what the verification page shows.
+		$rows = (array) $this->seam->run(
+			objectService: $this->objectResolver->resolve(),
+			reason: 'Public waarmerk verification: the lookup by verification code spans organisations',
+			operation: $find
+		);
+
+		return self::firstWith(rows: $rows, match: ['verificationCode' => $code]);
 
 	}//end findByCode()
 

@@ -19,6 +19,7 @@ namespace OCA\Filinq\Tests\Unit\Service\Waarmerk;
 
 use OCA\Filinq\Exception\WaarmerkRefusedException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\SystemContextSeam;
 use OCA\Filinq\Service\Waarmerk\WaarmerkStore;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
@@ -188,6 +189,34 @@ class WaarmerkStoreTest extends TestCase {
 		$this->assertNull($store->find(uuid: 'nope'));
 		$this->assertNull($store->find(uuid: ''));
 	}//end testLookups()
+
+	/**
+	 * The lookup by code runs through the system-context seam, with its reason, so anyone can verify.
+	 *
+	 * Seen live: run in the visitor's (empty) organisation scope, an anonymous check answered
+	 * "unknown" for a waarmerk that exists.
+	 *
+	 * @return void
+	 */
+	public function testTheLookupByCodeRunsAcrossOrganisationsThroughTheSeam(): void {
+		$objects = $this->createMock(originalClassName: ObjectService::class);
+		$objects->method('searchObjectsBySlug')->willReturn([$this->seal()]);
+		$resolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
+		$resolver->method('resolve')->willReturn($objects);
+		$reasons = [];
+		$seam    = $this->createMock(originalClassName: SystemContextSeam::class);
+		$seam->expects($this->once())->method('run')->willReturnCallback(
+			function (mixed $objectService, string $reason, callable $operation) use (&$reasons): mixed {
+				$reasons[] = $reason;
+				return $operation();
+			}
+		);
+
+		$found = (new WaarmerkStore(objectResolver: $resolver, seam: $seam))->findByCode(code: 'code-1');
+
+		$this->assertSame(expected: 'w-1', actual: $found['uuid']);
+		$this->assertStringContainsString(needle: 'Public waarmerk verification', haystack: $reasons[0]);
+	}//end testTheLookupByCodeRunsAcrossOrganisationsThroughTheSeam()
 
 	/**
 	 * A register failure is a 503, on read and on write.
