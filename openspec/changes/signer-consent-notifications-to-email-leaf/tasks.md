@@ -120,3 +120,24 @@ NO apply in this change — implementation runs through Hydra later.
   - **Acceptance:** Tests pass against a dev instance with filinq + OR + Mail installed;
     `composer check:strict` passes.
   - DEFERRED with D-1.1 / D-2.1: requires a live OR with the email leaf + NC Mail; integration runs against the dev environment after the OR endpoint ships.
+  - Live, link half (2026-11-25, sandbox: Nextcloud 34.0.6 + MariaDB, OpenRegister
+    main 2fc34e45, filinq development f8026d31 + the consent save fix;
+    `mail_smtpmode null`): every mail below left an `outbound` row in
+    `oc_openregister_email_links` on its object, with a minted `Message-ID`
+    and the acting user as `linked_by`.
+    - Consent with an email address: `notificationStatus` `sent`, deadline
+      +42 days, one link on the consent object (schema `publicationConsent`).
+      Consent without any address: `skipped`, no link.
+    - Sequential signing request (Carla, then Bert): at creation one link,
+      "A document is waiting for your signature: Besluit.pdf" to Carla; after
+      Carla signs, one to Bert (linked by carla); Bert declines with a reason,
+      one "Bert declined to sign Besluit.pdf" to the initiator (linked by bert).
+    - Parallel request: both signers at creation, nothing after.
+    - Found and fixed on the way: `ConsentRecordWriter::recordNotification()`
+      still passed `register:`/`schema:` to `saveObject()`, so a sent consent
+      request answered 500 after the mail went (`ConsentRecordNotificationTest`).
+  - Still open: "appears on the comms surface". The Emails tab is
+    nextcloud-vue's `CnEmailTab` with `requiredApp: mail`, and the sandbox
+    cannot fetch the Mail app (GitHub release downloads answer 403 through
+    the proxy). Tick when the tab is seen listing these links on an instance
+    with Mail.
