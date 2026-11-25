@@ -143,8 +143,8 @@ test.describe('image redaction', () => {
 		await expect(dialog).toContainText('This document has 7 pages.')
 
 		await dialog.getByTestId('scope-page-range').click()
-		await dialog.getByTestId('scope-from-page').locator('input').fill('3')
-		await dialog.getByTestId('scope-to-page').locator('input').fill('5')
+		await dialog.getByTestId('scope-from-page').locator('xpath=descendant-or-self::input').fill('3')
+		await dialog.getByTestId('scope-to-page').locator('xpath=descendant-or-self::input').fill('5')
 		await dialog.getByTestId('scope-bases').click()
 		await page.getByRole('option').first().click()
 		await page.getByTestId('scope-save').click()

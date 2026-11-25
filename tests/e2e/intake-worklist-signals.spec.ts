@@ -253,11 +253,11 @@ test.describe('Deadlines and duplicates on the intake worklist', () => {
 		await rowAction(page, subject, 'Change deadline')
 		await page
 			.getByTestId('intake-deadline-input')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill(isoDay(nextWeek))
 		await page
 			.getByTestId('intake-deadline-reason')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill('waiting for the attachment')
 		const saved = page.waitForResponse(
 			(res) =>

@@ -260,7 +260,7 @@ test.describe('The Woo metadata worklist', () => {
 		await dialog.getByTestId('bulk-metadata-field').selectOption('publisher')
 		await dialog
 			.getByTestId('bulk-metadata-value')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill(PUBLISHER)
 		const bulk = page.waitForResponse(
 			(res) =>
@@ -309,7 +309,7 @@ test.describe('The Woo metadata worklist', () => {
 			})
 			const field = page
 				.getByTestId('settings-woo-default-publisher')
-				.locator('input')
+				.locator('xpath=descendant-or-self::input')
 			await field.scrollIntoViewIfNeeded()
 			await expect(field).toBeVisible({ timeout: 30000 })
 			await field.fill(PUBLISHER)

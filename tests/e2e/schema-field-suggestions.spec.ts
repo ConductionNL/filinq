@@ -173,7 +173,7 @@ test.describe('fields filled from a document by a model', () => {
 
 		const section = await openModelFilling(page)
 		await expect(section.getByTestId('model-filling-no-model')).toContainText(NO_MODEL)
-		await expect(section.getByTestId('model-filling-switch').locator('input')).toBeDisabled()
+		await expect(section.getByTestId('model-filling-switch').locator('xpath=descendant-or-self::input')).toBeDisabled()
 
 		// The worklist offers no fill action without a model, on any row.
 		await page.goto(`${APP}/#/intake`)

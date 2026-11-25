@@ -79,10 +79,10 @@ async function openLoggedOut(browser: Browser, url: string): Promise<number> {
 async function shareFromDialog(page: Page): Promise<string> {
 	const dialog = page.getByTestId('share-by-link')
 	await expect(dialog).toBeVisible({ timeout: 15000 })
-	await dialog.getByTestId('share-by-link-password').locator('input').fill('Pw-share-2026!Strong#e2e')
+	await dialog.getByTestId('share-by-link-password').locator('xpath=descendant-or-self::input').fill('Pw-share-2026!Strong#e2e')
 	await dialog.getByTestId('share-by-link-note').locator('input, textarea').first().fill('For the applicant')
 	await dialog.getByTestId('share-by-link-submit').click()
-	const link = dialog.getByTestId('share-by-link-url').locator('input')
+	const link = dialog.getByTestId('share-by-link-url').locator('xpath=descendant-or-self::input')
 	await expect(link).toHaveValue(/\/s\/[A-Za-z0-9]+/, { timeout: 30000 })
 	return await link.inputValue()
 }
@@ -146,7 +146,7 @@ test.describe('Documents shared by link', () => {
 
 		const dialog = page.getByTestId('share-by-link')
 		await expect(dialog.getByTestId('share-by-link-bundle'), 'the preflight lists what goes in').toBeVisible({ timeout: 30000 })
-		await dialog.getByTestId('share-by-link-name').locator('input').fill(`${TEST_PREFIX} bundle`)
+		await dialog.getByTestId('share-by-link-name').locator('xpath=descendant-or-self::input').fill(`${TEST_PREFIX} bundle`)
 		const link = await shareFromDialog(page)
 		links.push(link)
 
@@ -190,10 +190,10 @@ test.describe('Documents shared by link', () => {
 
 		const dialog = page.getByTestId('share-by-link')
 		await expect(dialog.getByTestId('share-by-link-label')).toContainText('Confidential')
-		await dialog.getByTestId('share-by-link-password').locator('input').fill('Pw-share-2026!Strong#e2e')
+		await dialog.getByTestId('share-by-link-password').locator('xpath=descendant-or-self::input').fill('Pw-share-2026!Strong#e2e')
 		await expect(dialog.getByTestId('share-by-link-submit'), 'no share before the confirmation').toBeDisabled()
 
-		await dialog.getByTestId('share-by-link-confirm').locator('input').check()
+		await dialog.getByTestId('share-by-link-confirm').locator('xpath=descendant-or-self::input').check()
 		await expect(dialog.getByTestId('share-by-link-submit')).toBeEnabled()
 	})
 

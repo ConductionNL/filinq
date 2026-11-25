@@ -26,6 +26,7 @@
 import type { Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
+import { randomUUID } from 'node:crypto'
 import { APP, dismissOverlays, waitForNcContentReady } from './spec-coverage/_helpers.ts'
 import { createDavFile, createDavFolder, deleteDavPath, harvestToken } from './workflows/_fixtures.ts'
 
@@ -154,7 +155,7 @@ test.describe('case-system delivery in the admin settings', () => {
 		const destinationId = created.find((c) => c.schema === 'caseSystemDestination')?.id ?? STAMP
 
 		const failed = await seed(page, 'caseSystemDelivery', {
-			generatedDocumentId: `doc-${STAMP}`,
+			generatedDocumentId: randomUUID(),
 			destinationId,
 			sourceId: `source-${STAMP}`,
 			deliveryStatus: 'writeback_failed',
@@ -163,7 +164,7 @@ test.describe('case-system delivery in the admin settings', () => {
 		})
 		created.push({ schema: 'caseSystemDelivery', id: failed })
 		const waiting = await seed(page, 'caseSystemDelivery', {
-			generatedDocumentId: `doc-waiting-${STAMP}`,
+			generatedDocumentId: randomUUID(),
 			destinationId,
 			sourceId: `source-${STAMP}`,
 			deliveryStatus: 'ready_for_writeback',
@@ -270,7 +271,7 @@ test.describe('case-system delivery in the admin settings', () => {
 
 		// Only integriq's write-back sets written_back, so the delivery is seeded.
 		const delivered = await seed(page, 'caseSystemDelivery', {
-			generatedDocumentId: `doc-delivered-${STAMP}`,
+			generatedDocumentId: randomUUID(),
 			sourceId: `source-${STAMP}`,
 			fileId,
 			deliveryStatus: 'written_back',

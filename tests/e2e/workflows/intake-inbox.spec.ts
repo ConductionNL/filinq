@@ -173,7 +173,7 @@ test.describe('The intake inbox', () => {
 
 		await page
 			.getByTestId('final-reason-input')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill('Hoort bij een andere gemeente')
 		await page.getByTestId('cn-dialog-actions-submit').click()
 

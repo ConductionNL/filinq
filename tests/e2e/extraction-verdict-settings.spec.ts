@@ -67,7 +67,7 @@ async function openSettings(page: Page) {
 	await page.goto(SETTINGS_PAGE, { waitUntil: 'domcontentloaded' })
 	await waitForNcContentReady(page)
 	await dismissOverlays(page)
-	const field = page.getByTestId('settings-unattended-threshold').locator('input')
+	const field = page.getByTestId('settings-unattended-threshold').locator('xpath=descendant-or-self::input')
 	await expect(field).toBeVisible()
 
 	return field

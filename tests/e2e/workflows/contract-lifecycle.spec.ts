@@ -211,7 +211,7 @@ test.describe('contract lifecycle', () => {
 		expect(contracts['c-1'].documents).toEqual(['88'])
 
 		await page.getByTestId('contract-send-for-signature').click()
-		await page.getByTestId('contract-sign-user').locator('input').fill('admin')
+		await page.getByTestId('contract-sign-user').locator('xpath=descendant-or-self::input').fill('admin')
 		await page.getByTestId('cn-dialog-actions-submit').click()
 		await expect(page.getByTestId('contract-signing-status')).toContainText(
 			'DRAFT',

@@ -190,7 +190,7 @@ test.describe('Removing the password of a locked PDF', () => {
 		const dialog = await openPasswordDialog(page)
 		await dialog
 			.getByTestId('pdf-password-input')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill(`${LOCKED_PASSWORD}-wrong`)
 		const answered = page.waitForResponse((res) =>
 			res.url().includes('/remove-password'),
@@ -220,7 +220,7 @@ test.describe('Removing the password of a locked PDF', () => {
 		const dialog = await openPasswordDialog(page)
 		await dialog
 			.getByTestId('pdf-password-input')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill(LOCKED_PASSWORD)
 		const answered = page.waitForResponse((res) =>
 			res.url().includes('/remove-password'),
@@ -318,7 +318,7 @@ test.describe('Removing the password of a locked PDF', () => {
 			const dialog = page.getByTestId('pdf-password-modal')
 			await dialog
 				.getByTestId('pdf-password-input')
-				.locator('input')
+				.locator('xpath=descendant-or-self::input')
 				.fill('any-password')
 			const sent = page.waitForRequest((req) =>
 				req.url().includes(`/documents/${lockedId}/remove-password`),
@@ -455,7 +455,7 @@ test.describe('Removing the password of a locked PDF', () => {
 		const dialog = page.getByTestId('pdf-password-modal')
 		await dialog
 			.getByTestId('pdf-password-input')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill('factuur-2026')
 		const sent = page.waitForRequest((req) =>
 			req.url().includes(`/intake/documents/${uuid}/remove-password`),
