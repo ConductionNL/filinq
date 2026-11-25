@@ -32,6 +32,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use Com\Tecnick\Barcode\Barcode;
 use OCA\Filinq\Kernel\Contracts\SeparatorSheetServiceInterface;
 use RuntimeException;
 use Throwable;
@@ -281,13 +282,13 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 
 		$safePayload = htmlspecialchars($payload, ENT_QUOTES);
 
-		// The barcode tag is mPDF's own, rendered locally. The payload is
-		// repeated as text below it because that text is what the splitter
-		// reads: see the class comment.
+		// The QR is drawn locally (qrImage()). The payload is repeated as
+		// text below it because that text is what the splitter reads: see the
+		// class comment.
 		return '<div style="text-align:center;font-family:sans-serif;">'
 			. '<h1 style="font-size:28pt;margin-top:60pt;">' . $heading . '</h1>'
 			. '<p style="font-size:12pt;">Leg dit vel tussen twee documenten. Wat erna komt, hoort bij het volgende document.</p>'
-			. '<barcode code="' . $safePayload . '" type="QR" class="barcode" size="1.6" error="M" disableborder="1" />'
+			. $this->qrImage(payload: $payload)
 			. '<p style="font-size:16pt;letter-spacing:1pt;margin-top:24pt;font-family:monospace;">' . $safePayload . '</p>'
 			. '</div>';
 
@@ -312,9 +313,31 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 			. '<h1 style="font-size:28pt;margin-top:60pt;">Scheidingsvel voor ' . $shelfMark . '</h1>'
 			. '<p style="font-size:14pt;">' . $description . '</p>'
 			. '<p style="font-size:12pt;">Leg dit vel voor het origineel met dit kenmerk. Wat erna komt, is de scan ervan.</p>'
-			. '<barcode code="' . $safePayload . '" type="QR" class="barcode" size="1.6" error="M" disableborder="1" />'
+			. $this->qrImage(payload: $payload)
 			. '<p style="font-size:16pt;letter-spacing:1pt;margin-top:24pt;font-family:monospace;">' . $safePayload . '</p>'
 			. '</div>';
 
 	}//end originalSheetHtml()
+
+	/**
+	 * The QR code of a payload, as an image tag for the sheet.
+	 *
+	 * Drawn by tc-lib-barcode, which filinq already ships (tc-lib-pdf needs
+	 * it; WaarmerkStampComposer draws its QR the same way). mPDF's own
+	 * `<barcode type="QR">` needs mpdf/qrcode, which mPDF only lists as a
+	 * development dependency: every print failed with 'Mpdf\QrCode package
+	 * was not found' on a live run (25 Nov 2026).
+	 *
+	 * @param string $payload The payload the code carries.
+	 *
+	 * @return string The image tag, about 4 cm wide.
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.2
+	 */
+	private function qrImage(string $payload): string {
+		$svg = (new Barcode())->getBarcodeObj('QRCODE,M', $payload, -4, -4, 'black', [0, 0, 0, 0])->getSvgCode();
+
+		return '<img src="data:image/svg+xml;base64,' . base64_encode($svg) . '" style="width:40mm;height:40mm;" alt="" />';
+
+	}//end qrImage()
 }//end class

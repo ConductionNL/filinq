@@ -145,7 +145,11 @@ class SeparatorSheetServiceTest extends TestCase {
 			);
 		}
 
-		$this->assertStringContainsString('type="QR"', $html, 'And a QR code, drawn locally by the renderer.');
+		$this->assertSame(
+			['filinq:sep:v1:postkamer:2026-0001', 'filinq:sep:v1:postkamer:2026-0002', 'filinq:sep:v1:postkamer:2026-0003'],
+			self::qrPayloads(html: $html),
+			'And a QR code per sheet, drawn locally as an image.'
+		);
 
 	}//end testThreeCaseNumbersMakeThreeSheets()
 
@@ -286,9 +290,9 @@ class SeparatorSheetServiceTest extends TestCase {
 			]
 		);
 
-		preg_match_all('/<barcode code="([^"]+)"/', $html, $codes);
-		$this->assertSame(['filinq:sep:v2:archief:po:po-1', 'filinq:sep:v2:archief:po:po-2'], $codes[1]);
-		$this->assertSame(['po:po-1', 'po:po-2'], array_map(static fn (string $code): ?string => $service->readPayload(payload: html_entity_decode($code)), $codes[1]));
+		$codes = self::qrPayloads(html: $html);
+		$this->assertSame(['filinq:sep:v2:archief:po:po-1', 'filinq:sep:v2:archief:po:po-2'], $codes);
+		$this->assertSame(['po:po-1', 'po:po-2'], array_map(static fn (string $code): ?string => $service->readPayload(payload: $code), $codes));
 		$this->assertStringContainsString('Scheidingsvel voor Doos 12 / 3', $html);
 		$this->assertStringContainsString('Bouwvergunning Dorpsstraat 4 &lt;1978&gt;', $html);
 		$this->assertSame(1, substr_count($html, '<pagebreak />'));
@@ -331,4 +335,25 @@ class SeparatorSheetServiceTest extends TestCase {
 			}
 		}
 	}//end testAnOriginalsPrintWithoutOriginalsOrProfileIsRefused()
+
+	/**
+	 * The payloads of the QR images on the sheets: each image is an SVG whose
+	 * description is the encoded text (tc-lib-barcode).
+	 *
+	 * @param string $html The sheets' HTML.
+	 *
+	 * @return array<int, string> The payloads, in page order.
+	 */
+	private static function qrPayloads(string $html): array {
+		preg_match_all('/<img src="data:image\/svg\+xml;base64,([^"]+)"/', $html, $images);
+
+		return array_map(
+			static function (string $image): string {
+				preg_match('/<desc>([^<]*)<\/desc>/', (string) base64_decode($image), $desc);
+				return html_entity_decode($desc[1] ?? '');
+			},
+			$images[1]
+		);
+
+	}//end qrPayloads()
 }//end class
