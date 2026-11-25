@@ -4785,7 +4785,13 @@ OC.L10N.register(
         "Weergavenaam": "Weergavenaam",
         "Wettelijke grondslag of besluitnummer (e.g. AVG art. 17, Rechtbank Den Haag KG ZA 24/123).": "Wettelijke grondslag of besluitnummer (e.g. AVG art. 17, Rechtbank Den Haag KG ZA 24/123).",
         "Zaaknummer / dossiernummer voor traceability.": "Zaaknummer / dossiernummer voor traceability.",
-        "eIDAS niveau": "eIDAS niveau"
+        "eIDAS niveau": "eIDAS niveau",
+        "Email is switched off in OpenRegister's notification settings, so no consent request was sent.": "E-mail staat uit in de meldingsinstellingen van OpenRegister, dus er is geen toestemmingsverzoek verstuurd.",
+        "The third party's email address is empty, so no consent request was sent.": "Het e-mailadres van de derde is leeg, dus er is geen toestemmingsverzoek verstuurd.",
+        "The consent request could not be sent: %s": "Het toestemmingsverzoek kon niet worden verstuurd: %s",
+        "The third party has no email or postal address, so no consent request was sent.": "De derde heeft geen e-mail- of postadres, dus er is geen toestemmingsverzoek verstuurd.",
+        "Request for consent to publish document %s": "Verzoek om toestemming voor publicatie van document %s",
+        "We intend to publish document %1$s, which names %2$s. You have %3$d days from today to object. To object or consent, reply to this email.": "Wij zijn van plan document %1$s te publiceren, waarin %2$s wordt genoemd. U heeft vanaf vandaag %3$d dagen om bezwaar te maken. Beantwoord deze e-mail om bezwaar te maken of toestemming te geven."
     },
     "nplurals=2; plural=(n != 1);"
 )

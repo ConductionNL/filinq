@@ -20,8 +20,6 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
-require_once __DIR__ . '/../../stubs/OpenRegisterMailStubs.php';
-
 use OCA\Filinq\Service\ObjectBoundMail;
 use OCA\Filinq\Service\ObjectBoundMailTarget;
 use OCA\Filinq\Service\ObjectBoundMessage;
@@ -35,6 +33,7 @@ use OCP\IUser;
 use OCP\IUserSession;
 use OCP\Mail\IMailer;
 use OCP\Mail\IMessage;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -43,8 +42,13 @@ use RuntimeException;
 /**
  * A mail is sent through OpenRegister bound to its object, so OpenRegister links it there.
  *
+ * Each test runs in its own process: the OpenRegister mail stubs it loads would
+ * otherwise exist for every later test, and tests of the path without
+ * OpenRegister rely on those classes being absent.
+ *
  * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-2-consent-notification-via-the-email-leaf-drive-notificationstatus-m
  */
+#[RunTestsInSeparateProcesses]
 class ObjectBoundMailTest extends TestCase {
 
 	/**
@@ -62,11 +66,12 @@ class ObjectBoundMailTest extends TestCase {
 	private IMailer $mailer;
 
 	/**
-	 * Set up the mailer.
+	 * Load the OpenRegister mail stubs in this test's process and set up the mailer.
 	 *
 	 * @return void
 	 */
 	protected function setUp(): void {
+		include_once __DIR__.'/../../stubs/OpenRegisterMailStubs.php';
 		$this->mailer = $this->createMock(originalClassName: IMailer::class);
 
 	}//end setUp()

@@ -130,9 +130,9 @@ class ObjectBoundMail {
 			return self::OUTCOME_DISPATCHED;
 		}
 
-		$addressee = self::MAIL_ADDRESSEE;
+		$addressee = self::build(class: self::MAIL_ADDRESSEE, arguments: [$address, $displayName]);
 
-		return (string)$sender->sendMailTo(new $addressee($address, $displayName), $this->content(message: $message));
+		return (string)$sender->sendMailTo($addressee, $this->content(message: $message));
 	}//end toAddress()
 
 	/**
@@ -188,9 +188,7 @@ class ObjectBoundMail {
 	 * @return object The MailContent.
 	 */
 	private function content(ObjectBoundMessage $message): object {
-		$content = self::MAIL_CONTENT;
-
-		return new $content($message->subject, $message->body, null, $this->binding(object: $message->object));
+		return self::build(class: self::MAIL_CONTENT, arguments: [$message->subject, $message->body, null, $this->binding(object: $message->object)]);
 	}//end content()
 
 	/**
@@ -210,10 +208,23 @@ class ObjectBoundMail {
 			return null;
 		}
 
-		$binding = self::MAIL_OBJECT_BINDING;
-
-		return new $binding($object->uuid, $registerId, $this->idOf(mapper: self::SCHEMA_MAPPER, reference: $object->schema), $this->actor());
+		return self::build(
+			class: self::MAIL_OBJECT_BINDING,
+			arguments: [$object->uuid, $registerId, $this->idOf(mapper: self::SCHEMA_MAPPER, reference: $object->schema), $this->actor()]
+		);
 	}//end binding()
+
+	/**
+	 * Build one of OpenRegister's value objects, named by string because OpenRegister is optional.
+	 *
+	 * @param string            $class     The class name.
+	 * @param array<int, mixed> $arguments Its constructor arguments, in order.
+	 *
+	 * @return object The value object.
+	 */
+	private static function build(string $class, array $arguments): object {
+		return new $class(...$arguments);
+	}//end build()
 
 	/**
 	 * The numeric id of a register or schema named by id or slug.
