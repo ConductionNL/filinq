@@ -187,7 +187,12 @@ class HuisstijlProfileSync {
 		}
 
 		foreach (['logo', 'cover'] as $key) {
-			$url = (is_array($profile[$key] ?? null) === true) ? ($profile[$key]['url'] ?? null) : null;
+			$asset = ($profile[$key] ?? null);
+			if (is_array($asset) === false) {
+				continue;
+			}
+
+			$url = ($asset['url'] ?? null);
 			if (is_string($url) === true && str_starts_with($url, '/') === true && str_starts_with($url, '//') === false) {
 				$profile[$key]['url'] = $urls->getAbsoluteURL($url);
 			}

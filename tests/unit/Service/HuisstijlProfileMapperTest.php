@@ -87,6 +87,11 @@ class HuisstijlProfileMapperTest extends TestCase {
 		$this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $mapped['profileHash']);
 	}//end testTheProfileMapsOntoTheHouseStyleFields()
 
+	/**
+	 * The letterhead is the logo over a rule in the primary colour.
+	 *
+	 * @return void
+	 */
 	public function testTheLetterheadCarriesTheLogoOverARuleInThePrimaryColour(): void {
 		$mapped = $this->mapper->mapProfile(profile: $this->profile());
 
@@ -97,6 +102,11 @@ class HuisstijlProfileMapperTest extends TestCase {
 		);
 	}//end testTheLetterheadCarriesTheLogoOverARuleInThePrimaryColour()
 
+	/**
+	 * Two token sets give two different letterheads.
+	 *
+	 * @return void
+	 */
 	public function testTwoTokenSetsGiveTwoLetterheads(): void {
 		$other = $this->profile();
 		$other['tokenSet'] = ['id' => 'uitgeest', 'name' => 'Gemeente Uitgeest'];
@@ -109,6 +119,11 @@ class HuisstijlProfileMapperTest extends TestCase {
 		);
 	}//end testTwoTokenSetsGiveTwoLetterheads()
 
+	/**
+	 * No profile value in the letterhead can be read as CSS, markup or Twig.
+	 *
+	 * @return void
+	 */
 	public function testALetterheadValueCanNeverBeReadAsCssMarkupOrTwig(): void {
 		$profile = $this->profile();
 		$profile['tokenSet']['name'] = 'Bergen" onload="x {{ 7*7 }}';
@@ -123,6 +138,11 @@ class HuisstijlProfileMapperTest extends TestCase {
 		$this->assertStringNotContainsString(needle: 'border-bottom', haystack: $header);
 	}//end testALetterheadValueCanNeverBeReadAsCssMarkupOrTwig()
 
+	/**
+	 * Without a logo and a colour there is no letterhead.
+	 *
+	 * @return void
+	 */
 	public function testWithoutLogoAndColourThereIsNoLetterhead(): void {
 		$profile = $this->profile();
 		unset($profile['logo'], $profile['colours']);

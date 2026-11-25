@@ -214,6 +214,11 @@ class HuisstijlProfileSyncTest extends TestCase {
 		$this->assertSame('Gemeente Bergen', $result['name']);
 	}//end testTheFirstUseCreatesOneManagedHouseStyleThroughTheOpenGate()
 
+	/**
+	 * A server-relative logo is stored at an absolute address; an absolute cover is left as it is.
+	 *
+	 * @return void
+	 */
 	public function testTheLogoAndCoverAreStoredAtAnAbsoluteAddress(): void {
 		$urls = $this->createMock(originalClassName: IURLGenerator::class);
 		$urls->method('getAbsoluteURL')->willReturnCallback(
