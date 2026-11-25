@@ -31,7 +31,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+ * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use Throwable;
 /**
  * The filesystem half of the dossier surface.
  *
- * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+ * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
  */
 class DossierFileService {
 
@@ -97,7 +97,7 @@ class DossierFileService {
 	 *
 	 * @throws RuntimeException When it cannot be created.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function createHomeFolder(string $name): Folder {
 		$user = $this->userSession->getUser();
@@ -185,7 +185,7 @@ class DossierFileService {
 	 *
 	 * @return string A readable warning, or '' when the folder was renamed.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function renameHomeFolder(object $object, array $payload, string $name): string {
 		$folder = $this->homeFolder(object: $object, payload: $payload);
@@ -228,7 +228,7 @@ class DossierFileService {
 	 *
 	 * @return string The sanitised name.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function safeFolderName(string $name): string {
 		$safe = trim(str_replace(['/', '\\'], '-', $name));
@@ -252,7 +252,7 @@ class DossierFileService {
 	 *
 	 * @return Folder|null The folder, or null when it is gone or unreadable.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function homeFolder(object $object, array $payload): ?Folder {
 		try {
@@ -300,7 +300,7 @@ class DossierFileService {
 	 *
 	 * @return array<int, Node> The files, never folders.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function enumerateFolder(Folder $folder): array {
 		try {
@@ -325,7 +325,7 @@ class DossierFileService {
 	 *
 	 * @return Node|null The node, or null when absent or unreadable.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function nodeFor(int $fileId): ?Node {
 		$user = $this->userSession->getUser();
@@ -353,7 +353,7 @@ class DossierFileService {
 	 *
 	 * @return bool True when the node is inside.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function isInFolder(Node $node, Folder $folder): bool {
 		try {
@@ -371,7 +371,7 @@ class DossierFileService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function trash(int $fileId): void {
 		$node = $this->nodeFor(fileId: $fileId);

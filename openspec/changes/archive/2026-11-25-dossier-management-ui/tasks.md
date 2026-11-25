@@ -67,6 +67,6 @@
 - [x] 4.4 i18n: EN + NL for all new UI strings (chips, sections, dialogs, transition labels, confirmations)
   - Keys in English.
 
-- [ ] 4.5 Documentation `docs/features/dossier-management.md` with Playwright MCP screenshots (ADR-010); run `openspec validate dossier-management-ui --strict`
-  - 2026-11-25 (live sandbox): screenshots of the index and the detail page are in `docs/features/dossier-management.md`. Still open: `openspec validate dossier-management-ui --strict` fails on warnings only (seven ADDED requirements and one MODIFIED requirement over 500 characters, text above the first `##` in both spec deltas); they need rewording without changing an obligation.
+- [x] 4.5 Documentation `docs/features/dossier-management.md` with Playwright MCP screenshots (ADR-010); run `openspec validate dossier-management-ui --strict`
+  - 2026-11-25 (live sandbox): screenshots of the index and the detail page are in `docs/features/dossier-management.md`. Strict validate (same day): the eight long requirements were tightened under 500 characters with no obligation dropped (the detail clauses moved into named scenarios, each naming the PHPUnit test that covers it or saying none does yet) and the `status` front matter moved to `proposal.md`; `openspec validate dossier-management-ui --strict` reports the change valid.
   - Documents the home-folder + `documents[]` union membership model (multi-dossier membership), the rename-folder-sync behaviour, the lifecycle semantics and the GH #47/#48/#50/#51 behaviours.
