@@ -109,7 +109,8 @@ class MdtoTransferService {
 	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-completeness-validation-gates-overbrenging-req-ddtmm-004
 	 */
 	public function status(string $uuid): array {
-		$input   = $this->input(uuid: $uuid);
+		$entity  = $this->reader->entity(uuid: $uuid);
+		$input   = $this->inputFor(entity: $entity);
 		$verdict = $this->verdict(input: $input);
 
 		return [
@@ -119,7 +120,7 @@ class MdtoTransferService {
 			'retention' => $input->retention(),
 			'supplement' => $input->supplement,
 			'proposals' => $this->mapping->prefill(
-				recordType: self::recordType(input: $input),
+				recordType: $this->recordType(entity: $entity, supplement: $input->supplement),
 				record: $input->record,
 				members: $input->members,
 				sources: $this->reader->restrictionSources(uuid: $uuid, files: $input->files)
@@ -296,7 +297,7 @@ class MdtoTransferService {
 		$record     = $this->reader->record(entity: $entity);
 		$supplement = $this->reader->supplement(uuid: (string) $record['uuid']);
 		$members    = [];
-		if (($supplement['objectType'] ?? '') === 'dossier') {
+		if ($this->recordType(entity: $entity, supplement: $supplement) === 'dossier') {
 			$members = $this->reader->members(record: $record);
 		}
 
@@ -312,14 +313,24 @@ class MdtoTransferService {
 	}//end inputFor()
 
 	/**
-	 * `dossier` or `document`, from the supplement.
+	 * `dossier` or `document`: the supplement's `objectType` when it names
+	 * one, otherwise the record's own schema, so a dossier without a
+	 * supplement is still read as a dossier.
 	 *
-	 * @param MdtoSidecarInput $input The input.
+	 * @param object               $entity     The ObjectEntity.
+	 * @param array<string, mixed> $supplement The record's supplement.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
 	 */
-	private static function recordType(MdtoSidecarInput $input): string {
-		if (($input->supplement['objectType'] ?? '') === 'dossier') {
+	private function recordType(object $entity, array $supplement): string {
+		$named = (string) ($supplement['objectType'] ?? '');
+		if ($named === 'dossier' || $named === 'document') {
+			return $named;
+		}
+
+		if ($this->reader->isDossier(entity: $entity) === true) {
 			return 'dossier';
 		}
 

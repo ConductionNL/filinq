@@ -50,8 +50,9 @@
 - [x] 4.3 i18n: EN + NL translations for all new UI strings (ADR-005)
   - Keys in English; MDTO domain vocabulary (waardering, beperkingGebruik, overbrenging, archiefvormer) preserved in both locales.
 
-- [ ] 4.4 Documentation `docs/features/tmlo-mdto-metadata.md` with Playwright MCP screenshots (ADR-010)
+- [x] 4.4 Documentation `docs/features/tmlo-mdto-metadata.md` with Playwright MCP screenshots (ADR-010)
   - Covers the metadata model split (retention core vs supplement), proposal workflow, completeness gate and both delivery paths.
+  - Done 2026-11-25 on a live sandbox (NC 34, MariaDB, OpenRegister main): `docs/features/tmlo-mdto-metadata.md` with three screenshots of the seeded dossier (panel, edit form, completeness banner with manual-delivery notice). Live: status 200 with the missing-field list, transfer 422 `blocked`, JSON export 200. Found live and fixed: a dossier without a supplement was proposed `archiefstuk` and loaded no members, because the record type came from the supplement only; it now falls back to the record's schema (`MdtoRecordReader::isDossier()`), unit-tested.
 
 - [x] 4.5 Gates + validation
   - `composer check:strict` zero new violations; `openspec validate tmlo-mdto-metadata --strict` exits 0; fix pre-existing quality issues encountered on touched files.

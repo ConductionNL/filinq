@@ -10,6 +10,8 @@ Until September 2026 the dossier had a schema, a register spec, a controller and
 five seeded example objects, and **no surface** — a user could not create, list
 or open one anywhere in the app. Everything below is that surface.
 
+![The dossier index: name, lifecycle status, document count, resolved legal bases and last review per dossier](/screenshots/dossier-management-index.png)
+
 ## The dossier's membership: a union, not a folder
 
 A dossier keeps a bound **home folder** (`@self.folder`) as the physical home of
@@ -104,6 +106,8 @@ unreadable dossier answers **404**. Neither collapses into a 500.
 
 The detail header wires capabilities that already exist rather than
 reimplementing them:
+
+![A dossier's detail page: the lifecycle action legal from its status (Close), the legal-bases PDF, Anonymise this dossier, the resolved legal bases and the documents section with Add document](/screenshots/dossier-management-detail.png)
 
 - **Anonymise this dossier** hands off to Folder Analysis for the bound folder.
 - **Generate legal-bases PDF** calls the existing summary endpoint.

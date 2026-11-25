@@ -64,6 +64,16 @@ class MdtoRecordReader {
 	private const FILE_SERVICE = 'OCA\OpenRegister\Service\FileService';
 
 	/**
+	 * OpenRegister's schema mapper.
+	 */
+	private const SCHEMA_MAPPER = 'OCA\OpenRegister\Db\SchemaMapper';
+
+	/**
+	 * The slug of the dossier schema.
+	 */
+	private const DOSSIER_SCHEMA = 'dossier';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param OpenRegisterServiceLocator $locator   Resolves OpenRegister's services.
@@ -130,6 +140,41 @@ class MdtoRecordReader {
 		);
 
 	}//end record()
+
+	/**
+	 * Whether the record is a dossier, by the slug of its OpenRegister schema.
+	 *
+	 * A dossier that has no supplement yet names its type nowhere else, so
+	 * the record type cannot be read from the supplement alone.
+	 *
+	 * @param object $entity The ObjectEntity.
+	 *
+	 * @return bool True when the record's schema is the dossier schema.
+	 *
+	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 */
+	public function isDossier(object $entity): bool {
+		if (method_exists($entity, 'getSchema') === false) {
+			return false;
+		}
+
+		$schema = trim((string) $entity->getSchema());
+		if ($schema === self::DOSSIER_SCHEMA) {
+			return true;
+		}
+
+		if ($schema === '') {
+			return false;
+		}
+
+		// The schema entity's getters are magic (__call), so they are called, not probed.
+		try {
+			return $this->locator->get(className: self::SCHEMA_MAPPER)->find($schema)->getSlug() === self::DOSSIER_SCHEMA;
+		} catch (Throwable) {
+			return false;
+		}
+
+	}//end isDossier()
 
 	/**
 	 * The record's supplement; empty when it has none.

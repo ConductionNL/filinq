@@ -149,12 +149,21 @@ class MdtoTransferServiceTest extends TestCase {
 	 * @param string               $uuid      The UUID.
 	 * @param array<string, mixed> $data      The object data.
 	 * @param array<string, mixed> $retention The retention block.
+	 * @param string               $schema    The schema id the object is in.
 	 *
 	 * @return object
 	 */
-	private static function entity(string $uuid, array $data, array $retention=[]): object {
-		return new class($uuid, $data, $retention) {
-			public function __construct(private string $uuid, private array $data, private array $retention) {
+	private static function entity(string $uuid, array $data, array $retention=[], string $schema=''): object {
+		return new class($uuid, $data, $retention, $schema) {
+			public function __construct(private string $uuid, private array $data, private array $retention, private string $schema) {
+			}
+
+			public function getSchema(): string {
+				return $this->schema;
+			}
+
+			public function getSlug(): string {
+				return (string) ($this->data['slug'] ?? '');
 			}
 
 			public function getUuid(): string {
@@ -358,4 +367,62 @@ class MdtoTransferServiceTest extends TestCase {
 		$this->assertSame(['Verzoek', 'Besluit'], array_column($io['bevatOnderdeel'], 'verwijzingNaam'), 'members in uuid order');
 
 	}//end testADossierSidecarAggregatesTheMembersItLists()
+	/**
+	 * A dossier with no supplement yet is read as a dossier from its schema:
+	 * the panel proposes aggregation level `dossier` and the members are loaded.
+	 *
+	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 */
+	public function testADossierWithoutASupplementIsProposedAsADossier(): void {
+		$dossier = 'd0551e00-0000-4000-8000-000000000009';
+		$this->openRegister->objects['43'] = self::entity(uuid: 'schema-43', data: ['slug' => 'dossier']);
+		$this->openRegister->objects[$dossier] = self::entity(
+			uuid: $dossier,
+			data: ['name' => 'Woo-verzoek 2025-017', 'documents' => ['a0000000-0000-4000-8000-000000000001']],
+			schema: '43'
+		);
+		$this->openRegister->objects['a0000000-0000-4000-8000-000000000001'] = self::entity(uuid: 'a0000000-0000-4000-8000-000000000001', data: ['title' => 'Verzoek']);
+		$this->openRegister->files = [];
+
+		$status = $this->service()->status($dossier);
+
+		$this->assertSame(['value' => 'dossier', 'proposed' => true], $status['proposals']['aggregatieniveau']);
+
+	}//end testADossierWithoutASupplementIsProposedAsADossier()
+
+	/**
+	 * A record in another schema, or whose schema cannot be resolved, stays a
+	 * document when its supplement names no type.
+	 *
+	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 */
+	public function testARecordInAnotherSchemaWithoutASupplementIsADocument(): void {
+		$other   = 'b0000000-0000-4000-8000-000000000001';
+		$unknown = 'b0000000-0000-4000-8000-000000000002';
+		$this->openRegister->objects['12'] = self::entity(uuid: 'schema-12', data: ['slug' => 'document']);
+		$this->openRegister->objects[$other]   = self::entity(uuid: $other, data: ['title' => 'Brief'], schema: '12');
+		$this->openRegister->objects[$unknown] = self::entity(uuid: $unknown, data: ['title' => 'Notitie'], schema: '999');
+
+		$this->assertSame('archiefstuk', $this->service()->status($other)['proposals']['aggregatieniveau']['value']);
+		$this->assertSame('archiefstuk', $this->service()->status($unknown)['proposals']['aggregatieniveau']['value']);
+
+	}//end testARecordInAnotherSchemaWithoutASupplementIsADocument()
+
+	/**
+	 * The supplement's own `objectType` wins over the schema.
+	 *
+	 * @spec openspec/changes/tmlo-mdto-metadata/specs/tmlo-mdto-metadata/spec.md#requirement-filinq-context-prefills-the-supplement-as-confirmable-proposals-req-ddtmm-003
+	 */
+	public function testTheSupplementTypeWinsOverTheSchema(): void {
+		$this->openRegister->objects['43'] = self::entity(uuid: 'schema-43', data: ['slug' => 'dossier']);
+		$this->openRegister->objects[self::UUID] = self::entity(
+			uuid: self::UUID,
+			data: ['title' => 'Besluit subsidietoekenning cultuur'],
+			retention: ['archiefnominatie' => 'bewaren', 'classificatie' => '1.1', 'bewaartermijn' => 'P20Y'],
+			schema: '43'
+		);
+
+		$this->assertSame('archiefstuk', $this->service()->status(self::UUID)['proposals']['aggregatieniveau']['value']);
+
+	}//end testTheSupplementTypeWinsOverTheSchema()
 }//end class
