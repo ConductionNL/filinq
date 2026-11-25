@@ -1,9 +1,5 @@
 # inbound-auto-classification Specification (delta)
 
----
-status: proposed
----
-
 ## Purpose
 
 Classification suggestions for inbound documents: a rule/keyword
@@ -20,19 +16,13 @@ explicitly deferred learned classifier. All processing is local.
 
 ### Requirement: Inbound documents receive a document-type suggestion (REQ-DDIAC-001)
 
-The system MUST classify inbound documents with extractable text into
-exactly one of the Dutch intake types `brief`, `besluit`, `factuur`,
-`rapport`, `contract`, `formulier`, `overig`, using rule/keyword
-vocabularies owned by a dedicated stateless `DocumentTypeClassifier`
-class consumed via dependency injection (the REQ-META-11 class-boundary
-discipline; vocabularies MUST NOT be redefined in consuming services).
-Each classification MUST produce a normalised confidence (0–1) and record
-the `method`; a below-threshold score MUST yield `overig` with its low
-confidence — never a fabricated confident type. Classification MUST run
-where enrichment runs (object events and the on-demand enrichment API),
-MUST be governed by the `enable_inbound_classification` admin toggle, and
-a document without extractable text MUST be skipped with the reason
-flagged, never silently ignored.
+The system MUST classify each inbound document with extractable text into
+exactly one Dutch intake type, with a normalised confidence (0–1) and the
+`method`; a below-threshold score MUST yield `overig` with its low
+confidence, never a fabricated confident type. Classification MUST run
+where enrichment runs, behind the `enable_inbound_classification` toggle,
+and a document without extractable text MUST be skipped with the reason
+flagged. The classifier boundary is set out in the scenarios below.
 
 #### Scenario: An inbound invoice is typed with confidence
 
@@ -56,17 +46,28 @@ flagged, never silently ignored.
 - THEN no `classificationResult` is created
 - @e2e exclude admin-toggle pass-through; covered by PHPUnit (tests/unit/Service/InboundClassificationServiceTest.php)
 
+#### Scenario: The types and the classifier boundary
+- GIVEN the classifier
+- WHEN its output is read
+- THEN the type is one of `brief`, `besluit`, `factuur`, `rapport`, `contract`, `formulier` or `overig`
+- AND the rule/keyword vocabularies live in a dedicated stateless `DocumentTypeClassifier` consumed through dependency injection (the REQ-META-11 class-boundary discipline), and no consuming service redefines them
+- @e2e exclude classifier boundary; covered by PHPUnit (tests/unit/Service/DocumentTypeClassifierTest.php::testEveryTypeIsInTheSchemaEnum, ::testLanguageClassifierIsUntouched)
+
+#### Scenario: Where classification runs and what it skips
+- GIVEN classification enabled
+- WHEN an object event or the on-demand enrichment API offers a document
+- THEN it is classified when it is inbound and has text
+- AND a document without extractable text is skipped with its reason flagged, never silently ignored
+- @e2e exclude trigger and skip paths; covered by PHPUnit (tests/unit/Service/InboundClassificationServiceTest.php::testADocumentWithoutTextIsSkippedWithItsReason, ::testOnlyInboundDocumentsAreClassified)
+
 ### Requirement: A correspondent suggestion is derived from detected entities (REQ-DDIAC-002)
 
-The system MUST derive a suggested correspondent (`name` plus entity
-taxonomy `PERSON` | `ORGANIZATION`) from the document's already-detected
-OpenRegister NER entities, ranked by document position
-(letterhead/first-page zone first), frequency, and organisation-suffix
-heuristics. The system MUST NOT run a second entity-detection engine and
-MUST NOT fabricate a correspondent when no candidate exists. When entity
-detection has not yet run for the document, the suggestion MUST carry a
-`correspondentPending` flag and MUST be superseded by an updated
-suggestion once detection completes.
+The system MUST derive a suggested correspondent (`name` plus `PERSON` or
+`ORGANIZATION`) from the document's already-detected OpenRegister NER
+entities, ranked as the scenarios below state. It MUST NOT run a second
+entity-detection engine and MUST NOT fabricate a correspondent when no
+candidate exists. Before detection has run, the suggestion MUST carry
+`correspondentPending` and MUST be superseded once detection completes.
 
 #### Scenario: Letterhead organisation becomes the correspondent
 
@@ -83,20 +84,21 @@ suggestion once detection completes.
 - AND no correspondent name is invented
 - @e2e exclude pending-flag degradation; covered by PHPUnit (tests/unit/Service/InboundClassificationServiceTest.php)
 
+#### Scenario: Candidates are ranked by position, frequency and suffix
+- GIVEN several detected entities
+- WHEN the correspondent is ranked
+- THEN document position counts first (letterhead or first-page zone), then frequency, then organisation-suffix heuristics
+- @e2e exclude ranking rule; covered by PHPUnit (tests/unit/Service/Classification/CorrespondentRankerTest.php)
+
 ### Requirement: Suggestions require human confirmation — never silent auto-file (REQ-DDIAC-003)
 
-Classification output MUST land exclusively as a `classificationResult`
-object in status `suggested`; the system MUST NOT write the canonical
-`documentType`, correspondent metadata, tags, or file location from a
-suggestion. A human MUST be able to confirm, correct (confirm with a
-different value — both the suggested and the confirmed values MUST be
-retained on the record) or reject each suggestion; only a confirm action
-MAY apply canonical effects, and every confirm/reject MUST record
-`confirmedBy`/`confirmedAt` and be auditable. The system MUST NOT offer
-an auto-confirm-above-confidence option in this wave. The confirmation
-surface MUST show pending suggestions (type, confidence, correspondent,
-dossier) and support acting on them individually and in bulk over
-visible rows.
+Classification output MUST land only as a `classificationResult` in status
+`suggested`; the system MUST NOT write canonical `documentType`,
+correspondent metadata, tags or file location from a suggestion. A human
+MUST be able to confirm, correct or reject each suggestion; only a confirm
+MAY apply canonical effects. The system MUST NOT offer an
+auto-confirm-above-confidence option in this wave. Recording and the
+confirmation surface are set out in the scenarios below.
 
 #### Scenario: Confirming applies canonical metadata
 
@@ -126,16 +128,28 @@ visible rows.
 - THEN the document's canonical metadata and location remain unchanged
 - @e2e exclude absence-of-behaviour guard; covered by PHPUnit (tests/unit/Service/InboundClassificationServiceTest.php)
 
+#### Scenario: Every decision is recorded
+- GIVEN a suggestion
+- WHEN a person confirms, corrects or rejects it
+- THEN `confirmedBy` and `confirmedAt` are recorded and the decision is auditable
+- AND a correction keeps both the suggested and the confirmed values on the record
+- @e2e exclude decision recording; covered by PHPUnit (tests/unit/Service/Classification/ClassificationDecisionServiceTest.php)
+
+#### Scenario: The confirmation surface lists and acts in bulk
+- GIVEN pending suggestions
+- WHEN the confirmation surface renders
+- THEN it shows each suggestion's type, confidence, correspondent and dossier
+- AND it supports acting on them one at a time and in bulk over the visible rows
+- @e2e tests/e2e/spec-coverage/inbound-classification.spec.ts
+
 ### Requirement: Dossier routing is a suggestion only (REQ-DDIAC-004)
 
-The system MUST set `suggestedDossier` only on a high-precision match
-(suggested correspondent name or an explicit case reference matching a
+The system MUST set `suggestedDossier` only on a high-precision match (the
+suggested correspondent name or an explicit case reference matching a
 dossier name); fuzzy matching MUST NOT be used in this wave. Filing MUST
-happen only on human confirmation: confirming a suggestion with a dossier
-MUST attach the document via the dossier's existing folder binding
-(moving the file into the dossier's bound folder when resolvable, and
-recording the association with a visible degradation notice when not).
-The system MUST NOT move, tag, or re-file any document automatically.
+happen only on human confirmation, through the dossier's existing folder
+binding. The system MUST NOT move, tag or re-file any document
+automatically.
 
 #### Scenario: Matching dossier is suggested, not applied
 
@@ -151,19 +165,20 @@ The system MUST NOT move, tag, or re-file any document automatically.
 - THEN the file moves into the dossier's bound folder and `confirmedDossier` is recorded
 - @e2e tests/e2e/spec-coverage/inbound-classification.spec.ts
 
+#### Scenario: A dossier without a reachable folder is recorded with a notice
+- GIVEN a confirmation with a dossier whose bound folder cannot be resolved for the caller
+- WHEN the confirmation is applied
+- THEN the association is recorded and a visible degradation notice says the file was not moved
+- @e2e exclude degradation path; covered by PHPUnit (tests/unit/Service/Classification/ClassificationDecisionServiceTest.php)
+
 ### Requirement: Classification results are persisted minimally with declared retention (REQ-DDIAC-005)
 
-Every classification MUST persist exactly one active
-`classificationResult` OpenRegister object keyed by `fileId`
-(re-classification MUST supersede the previous record, status
-`superseded`), carrying the suggestion fields, the confirmation fields
-and the method — and MUST NOT store the document text or any detected
-entity values other than the single suggested/confirmed correspondent
-name. The schema MUST declare `x-openregister-archival` retention (`P1Y`,
-explicit placeholder pending selectielijst sign-off, correspondent name
-being personal data held for the intake purpose). The confirmation API
-MUST declare its auth posture on every method and MUST resolve documents
-through the requesting user's access only.
+Every classification MUST persist exactly one active `classificationResult`
+per `fileId`; re-classification MUST supersede the previous record (status
+`superseded`). The record carries the suggestion fields, the confirmation
+fields and the method, and MUST NOT store the document text or any
+detected entity value other than the single correspondent name. Retention
+and the API's access posture are set out in the scenarios below.
 
 #### Scenario: One active record per file
 
@@ -178,3 +193,17 @@ through the requesting user's access only.
 - WHEN the `classificationResult` object is read
 - THEN it contains the correspondent name at most and no document text and no other entity values
 - @e2e exclude data-minimisation shape contract; covered by PHPUnit (tests/unit/Service/InboundClassificationServiceTest.php)
+
+#### Scenario: The schema declares its retention
+- GIVEN the shipped `classificationResult` schema
+- WHEN its archival annotation is read
+- THEN it declares `x-openregister-archival` retention `P1Y`, an explicit placeholder pending selectielijst sign-off, because the correspondent name is personal data held for the intake purpose
+- @e2e exclude schema annotation; no dedicated test yet
+
+#### Scenario: The confirmation API reaches files through the caller's access
+- GIVEN the confirmation API
+- WHEN any of its methods is called
+- THEN the method declares its auth posture
+- AND documents are resolved through the requesting user's own access only
+- @e2e exclude access path; covered by PHPUnit (tests/unit/Controller/ClassificationControllerTest.php::testPendingListsTheCallersSuggestions, ::testWithoutASessionNothingIsReachable)
+

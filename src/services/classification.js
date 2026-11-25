@@ -8,7 +8,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-1
  */
 
 import axios from '@nextcloud/axios'
@@ -38,7 +38,7 @@ export const TYPES = [
  *
  * @param {string} type One of TYPES.
  * @return {string} The label.
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-1
  */
 export function typeLabel(type) {
 	return (
@@ -60,7 +60,7 @@ export function typeLabel(type) {
  * The type options for a picker.
  *
  * @return {Array<object>} Rows of { id, label }.
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-1
  */
 export function typeOptions() {
 	return TYPES.map((id) => ({ id, label: typeLabel(id) }))
@@ -71,7 +71,7 @@ export function typeOptions() {
  *
  * @param {number} confidence Between 0 and 1.
  * @return {string} For example "82%".
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-1
  */
 export function confidenceText(confidence) {
 	const value = Number(confidence)
@@ -86,7 +86,7 @@ export function confidenceText(confidence) {
  *
  * @param {object} record A classificationResult record.
  * @return {string} The name, or why there is none.
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-1
  */
 export function correspondentText(record) {
 	const name = record?.suggestedCorrespondent?.name
@@ -104,7 +104,7 @@ export function correspondentText(record) {
  *
  * @param {string} status suggested, confirmed, rejected or superseded.
  * @return {string} The label.
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-2
  */
 export function statusLabel(status) {
 	return (
@@ -128,7 +128,7 @@ export function statusLabel(status) {
  * @param {object} record The suggestion.
  * @param {object} choices { documentType, correspondentName, dossier }.
  * @return {object} The request body.
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-1
  */
 export function confirmBody(record, choices = {}) {
 	return {
@@ -202,7 +202,7 @@ function dossierChange(record, choices) {
  * The suggestions waiting on files the caller can open.
  *
  * @return {Promise<object>} { ok, data: { results } }.
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-1
  */
 export function listPending() {
 	return answer(axios.get(generateUrl(`${BASE}/pending`)))
@@ -213,7 +213,7 @@ export function listPending() {
  *
  * @param {number} fileId The file.
  * @return {Promise<object>} { ok, data: record } or { ok: false, status: 404 }.
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-2
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-2
  */
 export function loadForFile(fileId) {
 	return answer(axios.get(generateUrl(`${BASE}/${Number(fileId)}`)))
@@ -225,7 +225,7 @@ export function loadForFile(fileId) {
  * @param {number} fileId The file.
  * @param {object} body From confirmBody().
  * @return {Promise<object>} { ok, data: record } or { ok: false, status }.
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-1
  */
 export function confirm(fileId, body = {}) {
 	return answer(axios.post(generateUrl(`${BASE}/${Number(fileId)}/confirm`), body))
@@ -236,7 +236,7 @@ export function confirm(fileId, body = {}) {
  *
  * @param {number} fileId The file.
  * @return {Promise<object>} { ok, data: record } or { ok: false, status }.
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-1
  */
 export function reject(fileId) {
 	return answer(axios.post(generateUrl(`${BASE}/${Number(fileId)}/reject`)))
@@ -247,7 +247,7 @@ export function reject(fileId) {
  *
  * @param {Array<object>} records The suggestions.
  * @return {Promise<object>} { confirmed, failed } counts.
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-1
  */
 export async function confirmAll(records) {
 	let confirmed = 0
@@ -267,7 +267,7 @@ export async function confirmAll(records) {
  * The dossiers a document can be filed in.
  *
  * @return {Promise<Array<object>>} Rows of { id, label }; empty when they cannot be read.
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-1
  */
 export async function dossierOptions() {
 	const result = await answer(axios.get(generateUrl('/apps/filinq/api/dossiers')))

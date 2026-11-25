@@ -320,7 +320,8 @@ class MetadataService implements MetadataServiceInterface {
 			throw new DoesNotExistException('Object not found: ' . $objectId);
 		}
 
-		$objectData = array_merge($object->getObject(), $metadata);
+		$stored     = array_diff_key($object->getObject(), array_flip($this->readOnlyFields(schema: $schema)));
+		$objectData = array_merge($stored, $metadata);
 
 		return $objectService->saveObject(
 			object: $objectData,
@@ -328,6 +329,46 @@ class MetadataService implements MetadataServiceInterface {
 		);
 
 	}//end persistEnrichedMetadata()
+
+	/**
+	 * The schema's read-only fields: those marked `readOnly` or `computed`.
+	 *
+	 * A read returns computed values (an intake document's `daysLeft`), and
+	 * OpenRegister refuses a save that carries a read-only field, so they are
+	 * left out of the stored data that is written back. When the schema cannot
+	 * be read, nothing is left out and the save behaves as before.
+	 *
+	 * @param string $schema The schema id or slug.
+	 *
+	 * @return array<int, string> The field names.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-4
+	 */
+	private function readOnlyFields(string $schema): array {
+		try {
+			$properties = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')->find($schema)->getProperties();
+		} catch (\Throwable) {
+			return [];
+		}
+
+		if (is_array($properties) === false) {
+			return [];
+		}
+
+		$fields = [];
+		foreach ($properties as $name => $property) {
+			if (is_array($property) === false) {
+				continue;
+			}
+
+			if (($property['readOnly'] ?? false) === true || isset($property['computed']) === true) {
+				$fields[] = (string) $name;
+			}
+		}
+
+		return $fields;
+
+	}//end readOnlyFields()
 
 	/**
 	 * Execute a metadata persist closure with uniform logging and error wrapping.

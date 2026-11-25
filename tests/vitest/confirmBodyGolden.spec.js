@@ -6,7 +6,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/inbound-auto-classification/tasks.md#3-1
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#3-1
  */
 
 import { describe, it } from 'vitest'

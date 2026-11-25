@@ -36,7 +36,7 @@ use Psr\Log\LoggerInterface;
  * @covers \OCA\Filinq\Service\InboundClassificationService
  * @uses   \OCA\Filinq\Service\Support\ClassificationMatchers
  *
- * @spec openspec/changes/inbound-auto-classification/tasks.md#2-2
+ * @spec openspec/changes/archive/2026-11-25-inbound-auto-classification/tasks.md#2-2
  */
 class InboundClassificationGoldenTest extends TestCase {
 	use RecordsCalls;

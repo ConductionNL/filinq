@@ -1,5 +1,6 @@
 ---
 kind: code
+status: proposed
 ---
 
 # Proposal: inbound-auto-classification
