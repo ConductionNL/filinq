@@ -137,7 +137,7 @@ function davEntry(resp) {
  * @param {Element} resp PROPFIND response element.
  * @param {Set<number>} anonymizedIds File ids that are anonymized outputs.
  * @return {object|null} The document; `notesCount` is the number of file comments on it.
- * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-my-documents-shows-which-documents-have-notes-req-wdn-004
+ * @spec openspec/changes/archive/2026-11-25-work-document-notes/specs/document-notes/spec.md#requirement-my-documents-shows-which-documents-have-notes-req-wdn-004
  */
 function listingDocument(resp, anonymizedIds) {
 	const fileName = decodeURIComponent(davHref(resp).split('/').pop() || '')

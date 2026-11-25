@@ -643,7 +643,7 @@ export default {
 		 *
 		 * @param {object} row The intake document.
 		 * @return {void}
-		 * @spec openspec/changes/work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
+		 * @spec openspec/changes/archive/2026-11-25-work-document-notes/specs/document-notes/spec.md#requirement-notes-sit-beside-the-document-on-filinqs-screens-req-wdn-002
 		 */
 		openNotes(row) {
 			this.assignTarget = null
