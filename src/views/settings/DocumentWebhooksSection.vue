@@ -142,7 +142,7 @@ export default {
 		 *
 		 * @return {Array<object>} Class name and label per event.
 		 *
-		 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
+		 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
 		 */
 		eventOptions() {
 			return [
@@ -167,7 +167,7 @@ export default {
 		 * @param {string} path The path below `/api/webhooks`.
 		 * @return {string} The URL.
 		 *
-		 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-delivery-is-openregister-s-req-cdw-004
+		 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-delivery-is-openregister-s-req-cdw-004
 		 */
 		url(path = '') {
 			return generateUrl('/apps/openregister/api/webhooks' + path)
@@ -179,7 +179,7 @@ export default {
 		 * @param {object} webhook The OpenRegister webhook.
 		 * @return {boolean} True for a document receiver.
 		 *
-		 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
+		 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
 		 */
 		isReceiver(webhook) {
 			return (webhook.events || []).some(
@@ -193,7 +193,7 @@ export default {
 		 * @param {Array<string>} events The webhook's event names.
 		 * @return {string} The labels, comma separated.
 		 *
-		 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
+		 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
 		 */
 		eventLabels(events) {
 			return this.eventOptions
@@ -208,7 +208,7 @@ export default {
 		 * @param {object} receiver The webhook.
 		 * @return {string} The result.
 		 *
-		 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
+		 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
 		 */
 		lastDelivery(receiver) {
 			const success = receiver.lastSuccessAt || ''
@@ -227,7 +227,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-delivery-is-openregister-s-req-cdw-004
+		 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-delivery-is-openregister-s-req-cdw-004
 		 */
 		async load() {
 			try {
@@ -255,7 +255,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
+		 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
 		 */
 		async save() {
 			this.secretError = ''
@@ -305,7 +305,7 @@ export default {
 		 * @param {object} receiver The webhook.
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
+		 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
 		 */
 		async sendTest(receiver) {
 			this.busy = true
@@ -330,7 +330,7 @@ export default {
 		 * @param {object} receiver The webhook.
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
+		 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
 		 */
 		async refresh(receiver) {
 			try {
@@ -350,7 +350,7 @@ export default {
 		 * @param {object} receiver The webhook.
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
+		 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-an-admin-sets-up-a-receiver-from-filinq-s-settings-req-cdw-003
 		 */
 		async remove(receiver) {
 			this.busy = true

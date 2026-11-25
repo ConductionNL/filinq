@@ -10,7 +10,7 @@ import {
 	isValidSubfolderName,
 } from './outputSubfolder.js'
 
-// @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+// @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-2
 describe('disallowedSubfolderCharacters', () => {
 	it('accepts one lowercase segment with digits, hyphens and underscores', () => {
 		expect(disallowedSubfolderCharacters('anonymised')).toEqual([])

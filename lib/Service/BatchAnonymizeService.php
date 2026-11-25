@@ -558,8 +558,8 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 *
 	 * @return array<string, mixed> The entry with its final output path.
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-3
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-5
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-5
 	 */
 	private function applyOutputLayout(array $entry, string $userId): array {
 		$fileId = ($entry['anonymizedFileId'] ?? null);
