@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -27,7 +27,7 @@ use Throwable;
 /**
  * Text, a date and a mail body for the acknowledgement of an arriving document.
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
  */
 final class AcknowledgementLetterText
 {
@@ -40,7 +40,7 @@ final class AcknowledgementLetterText
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
 	 */
 	public static function text(mixed $value): string {
 		if (is_array($value) === false) {
@@ -74,7 +74,7 @@ final class AcknowledgementLetterText
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
 	 */
 	public static function letterDate(string $receivedAt): string {
 		if (trim($receivedAt) === '') {
@@ -97,7 +97,7 @@ final class AcknowledgementLetterText
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
 	 */
 	public static function plainText(string $html): string {
 		$text = preg_replace('~<br\s*/?>~i', "\n", $html) ?? $html;

@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use Throwable;
  * Both answer, never throw: a post register that cannot be read or written
  * never refuses an arrival or its acknowledgement (design D2).
  *
- * @spec openspec/changes/intake-acknowledge-and-stamp
+ * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp
  */
 class AnsweringRegistration {
 
@@ -74,7 +74,7 @@ class AnsweringRegistration {
 	 * @return array<string, mixed>|null The registration with its `uuid`, or null when none names the
 	 *                                   document or the register could not be read.
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
 	 */
 	public function inboundFor(string $documentUuid): array|null {
 		$uuid = trim($documentUuid);
@@ -152,7 +152,7 @@ class AnsweringRegistration {
 	 * @return array<string, mixed>|null The saved outbound registration with its `uuid`, or null when it
 	 *                                   could not be written.
 	 *
-	 * @spec openspec/changes/intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
+	 * @spec openspec/changes/archive/2026-11-25-intake-acknowledge-and-stamp/specs/intake-acknowledgement/spec.md#requirement-a-matching-rule-acknowledges-receipt-to-the-sender-req-ias-001
 	 */
 	public function registerAnswer(array $inbound, string $letterUuid): array|null {
 		$entry = $this->answerEntry(inbound: $inbound, letterUuid: $letterUuid);
