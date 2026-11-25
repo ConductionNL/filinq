@@ -25,6 +25,8 @@ use OCA\Filinq\EventListener\ValidationRunner;
 use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
 use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Schema;
+use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
@@ -69,7 +71,8 @@ class ValidationRunnerTest extends TestCase {
 	 * Run the fallback for one event.
 	 *
 	 * @param Event                $event   The event.
-	 * @param array<string, mixed> $options nodes (what getById answers), lookupFails, saveFails, containerFails.
+	 * @param array<string, mixed> $options nodes (what getById answers), lookupFails, saveFails, containerFails,
+	 *                                      schemaProperties (what the object's schema declares; absent: no mapper).
 	 *
 	 * @return void
 	 */
@@ -94,10 +97,25 @@ class ValidationRunnerTest extends TestCase {
 			return $folder;
 		});
 
+		$mapper = null;
+		if (array_key_exists('schemaProperties', $options) === true) {
+			$schema = $this->createMock(originalClassName: Schema::class);
+			$schema->method('getProperties')->willReturn($options['schemaProperties']);
+			$mapper = $this->createMock(originalClassName: SchemaMapper::class);
+			$mapper->method('find')->willReturnCallback(function (string|int $id) use ($schema): Schema {
+				$this->lines[] = ['schema', (string) $id, []];
+				return $schema;
+			});
+		}
+
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->willReturnCallback(function (string $id) use ($validation, $root, $options): object {
+		$container->method('get')->willReturnCallback(function (string $id) use ($validation, $root, $options, $mapper): object {
 			if (($options['containerFails'] ?? false) === true) {
 				throw new RuntimeException('no such service');
+			}
+
+			if ($id === SchemaMapper::class && $mapper !== null) {
+				return $mapper;
 			}
 
 			return $id === IRootFolder::class ? $root : $validation;
@@ -175,6 +193,43 @@ class ValidationRunnerTest extends TestCase {
 		);
 
 	}//end testAVerdictIsStoredAndLogged()
+
+	/**
+	 * An object whose schema declares no verdict (a Flow operation run) is not validated and gets nothing written.
+	 *
+	 * Seen live: OpenRegister dropped validationStatus and validationFindings on every Flow run with a warning.
+	 *
+	 * @return void
+	 */
+	public function testASchemaWithoutAVerdictIsNotValidated(): void {
+		$object = $this->object(data: ['fileId' => 42, 'operation' => 'ocr', 'status' => 'failed']);
+
+		$this->fallback(event: new ObjectCreatedEvent($object), options: ['schemaProperties' => ['operation' => [], 'fileId' => [], 'status' => []]]);
+
+		$this->assertSame(expected: [], actual: $this->validations);
+		$this->assertSame(expected: [], actual: $this->saves);
+		$this->assertSame(expected: [['schema', '9', []]], actual: $this->lines);
+
+	}//end testASchemaWithoutAVerdictIsNotValidated()
+
+	/**
+	 * An object whose schema declares the verdict is validated and the verdict written.
+	 *
+	 * @return void
+	 */
+	public function testASchemaWithAVerdictIsValidated(): void {
+		$object = $this->object();
+
+		$declared = ['fileId' => [], 'validationStatus' => [], 'validationFindings' => []];
+		$this->fallback(event: new ObjectCreatedEvent($object), options: ['schemaProperties' => $declared]);
+
+		$this->assertCount(expectedCount: 1, haystack: $this->validations);
+		$this->assertSame(
+			expected: [['obj-1', '7', '9', ['validationStatus' => 'warning', 'validationFindings' => [['rule' => 'r1']]]]],
+			actual: $this->saves
+		);
+
+	}//end testASchemaWithAVerdictIsValidated()
 
 	/**
 	 * An updated object is validated in its new state; no document type passes null.
