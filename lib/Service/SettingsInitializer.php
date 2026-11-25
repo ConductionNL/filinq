@@ -67,6 +67,14 @@ class SettingsInitializer {
 	private const MIN_OPENREGISTER_VERSION = '0.2.10';
 
 	/**
+	 * The app-config key recording the settings version whose object type
+	 * bindings were provisioned.
+	 *
+	 * @var string
+	 */
+	private const BINDINGS_MARKER = 'object_type_bindings_version';
+
+	/**
 	 * Constructor for SettingsInitializer
 	 *
 	 * @param IAppConfig $config App configuration interface
@@ -255,6 +263,7 @@ class SettingsInitializer {
 
 		$settingsVersion = $settings['info']['version'];
 		if (version_compare($settingsVersion, $currentVersion, '<=') === true) {
+			$this->provisionObjectTypeBindings(version: (string) $settingsVersion);
 			return [
 				'imported' => false,
 				'message'  => 'Configuration version ' . $currentVersion . ' is up to date or newer than ' . $settingsVersion,
@@ -283,8 +292,52 @@ class SettingsInitializer {
 			(string)$settingsVersion
 		);
 
+		$this->provisionObjectTypeBindings(version: (string) $settingsVersion);
+
 		return ['imported' => true, 'message' => 'Configuration updated to version ' . $settingsVersion];
 	}//end importSettings()
+
+	/**
+	 * Write the object type bindings an administrator has not set, once per
+	 * settings version.
+	 *
+	 * A fresh install had no `<type>_register`/`<type>_schema` keys, so every
+	 * feature that resolves its object type through them (template upload and
+	 * import among them) refused until an administrator chose each register
+	 * and schema. The provisioner fills the empty keys from the app's own
+	 * register. The marker keeps this to one run per settings version, so an
+	 * ordinary request costs one cached config read.
+	 *
+	 * @param string $version The settings version just checked or imported.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	private function provisionObjectTypeBindings(string $version): void {
+		if ($this->config->getValueString($this->appName, self::BINDINGS_MARKER, '') === $version) {
+			return;
+		}
+
+		try {
+			$written = $this->container->get(ObjectTypeBindingProvisioner::class)->provision();
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Object type bindings not provisioned: ' . $e->getMessage(),
+				['app' => $this->appName]
+			);
+			return;
+		}
+
+		// Not found yet (the register is imported later, or OpenRegister could
+		// not be read): no marker, so the next request tries again.
+		if ($written === null) {
+			return;
+		}
+
+		$this->config->setValueString($this->appName, self::BINDINGS_MARKER, $version);
+
+	}//end provisionObjectTypeBindings()
 
 	/**
 	 * Provision the templateVersion register/schema app-config keys

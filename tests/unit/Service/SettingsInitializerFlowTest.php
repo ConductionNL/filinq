@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
+use OCA\Filinq\Service\ObjectTypeBindingProvisioner;
 use OCA\Filinq\Service\SettingsInitializer;
 use OCA\OpenRegister\Service\ConfigurationService;
 use OCP\App\IAppManager;
@@ -138,6 +139,16 @@ class SettingsInitializerFlowTest extends TestCase {
 				$this->calls[] = 'container ' . substr($id, (int)strrpos($id, '\\') + 1);
 				if ($id === 'OCA\OpenRegister\Service\ConfigurationService' && $world['containerFails'] === false) {
 					return $configurationService;
+				}
+				if ($id === ObjectTypeBindingProvisioner::class && array_key_exists('provisioned', $world) === true) {
+					$provisioner = $this->createMock(originalClassName: ObjectTypeBindingProvisioner::class);
+					$provisioner->method('provision')->willReturnCallback(
+						function () use ($world): ?int {
+							$this->calls[] = 'provision';
+							return $world['provisioned'];
+						}
+					);
+					return $provisioner;
 				}
 
 				throw new Exception(message: 'no ' . $id);
@@ -292,6 +303,9 @@ class SettingsInitializerFlowTest extends TestCase {
 				'get configuration_version',
 				'get templateVersion_register',
 				'get templateVersion_schema',
+				'get object_type_bindings_version',
+				'container ObjectTypeBindingProvisioner',
+				'log warning Object type bindings not provisioned: no OCA\Filinq\Service\ObjectTypeBindingProvisioner',
 			],
 			actual: $this->calls
 		);
@@ -344,6 +358,9 @@ class SettingsInitializerFlowTest extends TestCase {
 				'log error Failed to provision templateVersion config: no OCA\OpenRegister\Service\RegisterService',
 				'importFromApp filinq ' . $version . ' settings',
 				'set configuration_version=' . $version,
+				'get object_type_bindings_version',
+				'container ObjectTypeBindingProvisioner',
+				'log warning Object type bindings not provisioned: no OCA\Filinq\Service\ObjectTypeBindingProvisioner',
 			],
 			actual: $this->calls
 		);
@@ -369,4 +386,45 @@ class SettingsInitializerFlowTest extends TestCase {
 		);
 		$this->assertArrayNotHasKey(key: 'configuration_version', array: $this->values);
 	}//end testImportFails()
+
+	/**
+	 * Bindings are provisioned once per settings version: a found register
+	 * records the marker, so the next request reads it and goes no further.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testBindingsAreProvisionedOncePerVersion(): void {
+		$version = $this->shippedVersion();
+		$this->values = ['configuration_version' => $version, 'templateVersion_register' => '4', 'templateVersion_schema' => '9'];
+
+		$this->initializer(world: $this->world(changes: ['provisioned' => 82]))->initialize();
+
+		$this->assertSame(expected: $version, actual: $this->values['object_type_bindings_version']);
+		$this->assertSame(expected: ['container ObjectTypeBindingProvisioner', 'provision', 'set object_type_bindings_version=' . $version], actual: array_slice($this->calls, -3));
+
+		$this->calls = [];
+		$this->initializer(world: $this->world(changes: ['provisioned' => 82]))->initialize();
+
+		$this->assertSame(expected: 'get object_type_bindings_version', actual: end($this->calls));
+
+	}//end testBindingsAreProvisionedOncePerVersion()
+
+	/**
+	 * A register that is not found yet records no marker, so the next request tries again.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	public function testARegisterNotFoundYetIsTriedAgain(): void {
+		$this->values = ['configuration_version' => $this->shippedVersion(), 'templateVersion_register' => '4', 'templateVersion_schema' => '9'];
+
+		$this->initializer(world: $this->world(changes: ['provisioned' => null]))->initialize();
+
+		$this->assertArrayNotHasKey(key: 'object_type_bindings_version', array: $this->values);
+		$this->assertSame(expected: 'provision', actual: end($this->calls));
+
+	}//end testARegisterNotFoundYetIsTriedAgain()
 }//end class
