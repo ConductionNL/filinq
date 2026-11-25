@@ -23,7 +23,7 @@ namespace OCA\Filinq\Service\Waarmerk;
 use OCA\Filinq\Exception\WaarmerkRefusedException;
 use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\ReadsStoredObjectRows;
-use OCA\Filinq\Service\SystemContextSeam;
+use OCA\Filinq\Service\SlugSearch;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
@@ -62,16 +62,11 @@ class WaarmerkStore {
 	 * Constructor.
 	 *
 	 * @param DocumentObjectServiceResolver $objectResolver Resolves OpenRegister's ObjectService.
-	 * @param SystemContextSeam|null        $seam           The one place Filinq reads across organisations; used for
-	 *                                                      the public lookup by verification code.
 	 *
 	 * @return void
-	 *
-	 * @spec openspec/changes/document-waarmerk-certification/tasks.md
 	 */
 	public function __construct(
 		private readonly DocumentObjectServiceResolver $objectResolver,
-		private readonly ?SystemContextSeam $seam=null,
 	) {
 
 	}//end __construct()
@@ -156,17 +151,12 @@ class WaarmerkStore {
 			return null;
 		}
 
-		$find = fn (): array => $this->search(filters: ['verificationCode' => $code]);
-		if ($this->seam === null) {
-			return self::firstWith(rows: $find(), match: ['verificationCode' => $code]);
-		}
-
-		// Anyone may verify without an account, so nobody's organisation scopes this read. The unguessable,
+		// Anyone may verify without an account, so the visitor's (empty) organisation must not scope this read:
+		// an anonymous check answered "unknown" for a waarmerk that exists (seen live). The unguessable,
 		// checksummed code is the capability; the answer carries only what the verification page shows.
-		$rows = (array) $this->seam->run(
-			objectService: $this->objectResolver->resolve(),
-			reason: 'Public waarmerk verification: the lookup by verification code spans organisations',
-			operation: $find
+		$rows = $this->searchWith(
+			search: $this->objectResolver->slugSearch(_rbac: false, _multitenancy: false),
+			filters: ['verificationCode' => $code]
 		);
 
 		return self::firstWith(rows: $rows, match: ['verificationCode' => $code]);
@@ -210,8 +200,25 @@ class WaarmerkStore {
 	 * @spec openspec/changes/document-waarmerk-certification/specs/document-waarmerk-certification/spec.md#requirement-a-processed-pdf-can-be-sealed-with-a-waarmerk-req-ddwmk-002
 	 */
 	public function search(array $filters): array {
+		return $this->searchWith(search: $this->objectResolver->slugSearch(_rbac: false), filters: $filters);
+
+	}//end search()
+
+	/**
+	 * The stored seals matching the filters, read through the given slug search.
+	 *
+	 * @param SlugSearch           $search  The slug search, with its access flags.
+	 * @param array<string, mixed> $filters Field equality filters.
+	 *
+	 * @return array<int, array<string, mixed>> The matching seals.
+	 *
+	 * @throws WaarmerkRefusedException 503 when the register cannot be read.
+	 *
+	 * @spec openspec/changes/document-waarmerk-certification/tasks.md
+	 */
+	private function searchWith(SlugSearch $search, array $filters): array {
 		try {
-			$results = $this->objectResolver->slugSearch(_rbac: false)->search(
+			$results = $search->search(
 				register: self::REGISTER,
 				schema: self::SCHEMA,
 				filters: $filters
@@ -236,7 +243,7 @@ class WaarmerkStore {
 
 		return $rows;
 
-	}//end search()
+	}//end searchWith()
 
 	/**
 	 * Save a row.
