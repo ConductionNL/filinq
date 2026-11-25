@@ -21,7 +21,7 @@
 
 const fs = require('fs')
 const path = require('path')
-const { loadJsTranslations, walk } = require('./lib/l10n.js')
+const { loadSourceCatalogue, walk } = require('./lib/l10n.js')
 
 const ROOT = path.resolve(__dirname, '..')
 const SRC_DIR = path.join(ROOT, 'src')
@@ -255,7 +255,7 @@ function printSection(title, color, body) {
  *
  */
 function main() {
-	const { app, translations } = loadJsTranslations(L10N_FILE)
+	const { app, translations } = loadSourceCatalogue(path.dirname(L10N_FILE))
 	const keys = new Set(Object.keys(translations))
 	const files = walk(SRC_DIR, ['.vue', '.js', '.ts'])
 	const vueFiles = files.filter((f) => f.endsWith('.vue'))

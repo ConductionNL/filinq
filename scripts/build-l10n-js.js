@@ -102,6 +102,34 @@ function renderJs(id, translations, pluralForm) {
 }
 
 /**
+ * The entries a locale's browser catalogue carries.
+ *
+ * For English (`en` and `en_*`) an entry whose translation equals its key is
+ * dropped: `t()` already falls back to the key, so those entries only cost
+ * bytes on every page load (en.js was 469 KB, almost all of it key -> key).
+ * Every other locale keeps every entry, identical or not, because there an
+ * identical value is a real translation choice. The .json stays complete; it
+ * is what the server and the parity checks read.
+ *
+ * @spec ADR-124 (speed budget: page usable <= 300 ms warm)
+ * @param {string} locale - the catalogue's locale, e.g. `en`, `en_GB`, `nl`
+ * @param {object} translations - key -> translation, as in the .json
+ * @return {object} the entries to register in the browser
+ */
+function browserEntries(locale, translations) {
+	if (locale !== 'en' && !locale.startsWith('en_')) {
+		return translations
+	}
+	const kept = {}
+	for (const key of Object.keys(translations)) {
+		if (translations[key] !== key) {
+			kept[key] = translations[key]
+		}
+	}
+	return kept
+}
+
+/**
  *
  */
 function main() {
@@ -139,18 +167,15 @@ function main() {
 			process.exit(1)
 		}
 
-		const rendered = renderJs(
-			id,
-			doc.translations,
-			doc.pluralForm || DEFAULT_PLURAL_FORM,
-		)
+		const entries = browserEntries(locale, doc.translations)
+		const rendered = renderJs(id, entries, doc.pluralForm || DEFAULT_PLURAL_FORM)
 		const current = fs.existsSync(jsFile)
 			? fs.readFileSync(jsFile, 'utf8')
 			: null
 
 		if (current === rendered) {
 			console.log(
-				`  ✓ l10n/${locale}.js up to date (${Object.keys(doc.translations).length} keys)`,
+				`  ✓ l10n/${locale}.js up to date (${Object.keys(entries).length} keys)`,
 			)
 			continue
 		}
@@ -160,7 +185,7 @@ function main() {
 		}
 		fs.writeFileSync(jsFile, rendered)
 		console.log(
-			`  ✎ l10n/${locale}.js written (${Object.keys(doc.translations).length} keys)`,
+			`  ✎ l10n/${locale}.js written (${Object.keys(entries).length} keys)`,
 		)
 	}
 
@@ -172,4 +197,8 @@ function main() {
 	}
 }
 
-main()
+if (require.main === module) {
+	main()
+}
+
+module.exports = { browserEntries, renderJs }
