@@ -23,6 +23,7 @@ use OCA\Filinq\Service\DocumentObjectServiceResolver;
 use OCA\Filinq\Service\SignatureVerificationLinkService;
 use OCA\Filinq\Service\SigningVerificationService;
 use OCA\Filinq\Service\SystemContextSeam;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -365,6 +366,7 @@ class SignatureVerificationLinkServiceTest extends TestCase {
 		};
 		$resolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($this->objects);
+		$resolver->method('contract')->willReturn($this->createMock(originalClassName: ObjectServiceInterface::class));
 		$service = new SignatureVerificationLinkService(objectResolver: $resolver, verifier: $this->verifier, seam: $seam);
 		$token = str_repeat('ab', 16);
 		$this->objects->method('searchObjectsBySlug')->willReturn([['token' => $token, 'fileName' => 'mine.pdf']]);

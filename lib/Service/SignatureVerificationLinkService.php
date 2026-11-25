@@ -270,6 +270,32 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	}//end findByToken()
 
 	/**
+	 * Run the token search for a visitor with no account.
+	 *
+	 * The visitor has no organisation, and OpenRegister's organisation filter
+	 * would hide every record from them. The token is the capability
+	 * (REQ-DDSVP-001), so this one exact-token lookup runs as the system,
+	 * through the logged seam. Without a seam the search runs as it is.
+	 *
+	 * @param callable $search The exact-token search.
+	 *
+	 * @return mixed The rows.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/specs/signature-verification-portal/spec.md#requirement-public-endpoints-are-fail-closed-and-rate-limited-req-ddsvp-004
+	 */
+	private function acrossOrganisations(callable $search): mixed {
+		if ($this->seam === null) {
+			return $search();
+		}
+
+		return $this->seam->run(
+			objectService: $this->objectResolver->contract(),
+			reason: 'a public verification link names its record by token, whatever the visitor\'s organisation',
+			operation: $search
+		);
+	}//end acrossOrganisations()
+
+	/**
 	 * The rows a token search returns; none when the search answers with something other than a list.
 	 *
 	 * @param string $token A well-formed token.
@@ -286,19 +312,7 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 		);
 
 		try {
-			// The visitor has no account and so no organisation, and OpenRegister's
-			// organisation filter would hide every record from them. The token is
-			// the capability (REQ-DDSVP-001), so this one exact-token lookup runs as
-			// the system, through the logged seam.
-			if ($this->seam !== null) {
-				$rows = $this->seam->run(
-					objectService: $this->objectResolver->resolve(),
-					reason: 'a public verification link names its record by token, whatever the visitor\'s organisation',
-					operation: $search
-				);
-			} else {
-				$rows = $search();
-			}
+			$rows = $this->acrossOrganisations(search: $search);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'Could not read the signature verification records: ' . $e->getMessage(), code: 0, previous: $e);
 		}

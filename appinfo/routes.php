@@ -425,7 +425,7 @@ $extra = [
         ['name' => 'waarmerkSettings#update', 'url' => 'api/waarmerk/settings', 'verb' => 'PUT'],
         ['name' => 'waarmerkSettings#testSeal', 'url' => 'api/waarmerk/settings/test', 'verb' => 'POST'],
         ['name' => 'waarmerkVerify#verify', 'url' => 'api/waarmerk/verify', 'verb' => 'POST'],
-        // verify/{...} serves two pages. A signature verification token (32 hex,
+        // The verify/{...} address serves two pages. A signature token (32 hex,
         // no dashes) opens the signature page a signed PDF's QR stamp points at
         // (signature-verification-portal REQ-DDSVP-001); everything else, a
         // waarmerk code (UUIDv4 plus a check part) above all, opens the waarmerk
