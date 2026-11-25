@@ -601,7 +601,7 @@ class DocumentShareService {
 	 *
 	 * @throws InvalidArgumentException When a label needs a confirmation (409).
 	 *
-	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.6
+	 * @spec openspec/specs/document-share-links/spec.md#requirement-a-labelled-document-is-shared-only-after-a-confirmation-req-sdl-006
 	 */
 	private function requireConfirmation(array $labels, bool $confirmed, string $what): void {
 		$labelled = $this->labelled(labels: $labels);
@@ -618,7 +618,7 @@ class DocumentShareService {
 	 *
 	 * @return array<int, string> The distinct non-empty labels.
 	 *
-	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.6
+	 * @spec openspec/specs/document-share-links/spec.md#requirement-a-labelled-document-is-shared-only-after-a-confirmation-req-sdl-006
 	 */
 	private function labelled(array $labels): array {
 		return array_values(array_unique(array_filter($labels, static fn (string $label): bool => $label !== '')));
