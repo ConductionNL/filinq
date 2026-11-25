@@ -7243,10 +7243,10 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: Grepped lib/ and src/ for shareLink/time-limited/expiringLink/publicShare/'share.*link': no feature-relevant match (only an unrelated docblock hit in DocumentAnonymizeRunner.php about a shared code path, and an unrelated UI-copy string in FolderAnonymizationView.vue).",
-				"change": "openspec/changes/share-document-links",
+				"change": "openspec/changes/archive/2026-11-25-share-document-links",
 				"requirement": [
-					"openspec/changes/share-document-links/specs/document-share-links :: A clerk shares one document through a link (REQ-SDL-001)",
-					"openspec/changes/share-document-links/specs/document-share-links :: Every link runs out (REQ-SDL-003)"
+					"openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links :: A clerk shares one document through a link (REQ-SDL-001)",
+					"openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links :: Every link runs out (REQ-SDL-003)"
 				]
 			},
 			"reachedOn": "nothing reaches it (not built)",
@@ -7279,8 +7279,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: No time-limited external share exists to revoke (see sh-link); no revoke-access endpoint or service found anywhere in lib/Controller or lib/Service.",
-				"change": "openspec/changes/share-document-links",
-				"requirement": "openspec/changes/share-document-links/specs/document-share-links :: A link can be taken back, and closes when it runs out (REQ-SDL-004)"
+				"change": "openspec/changes/archive/2026-11-25-share-document-links",
+				"requirement": "openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links :: A link can be taken back, and closes when it runs out (REQ-SDL-004)"
 			},
 			"reachedOn": "nothing reaches it (not built)",
 			"provider": "filinq",
@@ -8604,8 +8604,8 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Specified in openspec/changes/share-document-links on 2026-09-27. Before: no share code: grep -ri 'IShare|ShareManager|shareLink|share link' lib src finds nothing; the only ZIP handling is office package I/O (lib/Service/Editing/PackagePartIo.php:78). Nearest: lib/Controller/MergeController.php merges several documents into one PDF, which is a file, not a link.",
-				"change": "openspec/changes/share-document-links",
-				"requirement": "openspec/changes/share-document-links/specs/document-share-links :: Several documents leave as one archive with a manifest (REQ-SDL-002)"
+				"change": "openspec/changes/archive/2026-11-25-share-document-links",
+				"requirement": "openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links :: Several documents leave as one archive with a manifest (REQ-SDL-002)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",

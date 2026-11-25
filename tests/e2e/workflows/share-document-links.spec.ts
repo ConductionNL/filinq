@@ -118,7 +118,7 @@ test.describe('Documents shared by link', () => {
 		await page.close()
 	})
 
-	// @e2e openspec/changes/share-document-links/tasks.md#3.1
+	// @e2e openspec/changes/archive/2026-11-25-share-document-links/tasks.md#3.1
 	test('one document is shared from its row, and the link opens logged out', async ({ page, browser }) => {
 		await go(page, 'my-documents')
 		const row = rowOf(page, STEMS[0])
@@ -132,7 +132,7 @@ test.describe('Documents shared by link', () => {
 		expect(await openLoggedOut(browser, link), 'the public link opens').toBe(200)
 	})
 
-	// @e2e openspec/changes/share-document-links/tasks.md#3.1
+	// @e2e openspec/changes/archive/2026-11-25-share-document-links/tasks.md#3.1
 	test('three documents are shared as one bundle, and that link opens logged out', async ({ page, browser }) => {
 		await go(page, 'my-documents')
 		await page.getByRole('button', { name: 'Filter' }).first().click()
@@ -153,7 +153,7 @@ test.describe('Documents shared by link', () => {
 		expect(await openLoggedOut(browser, link), 'the bundle link opens').toBe(200)
 	})
 
-	// @e2e openspec/changes/share-document-links/tasks.md#3.2
+	// @e2e openspec/changes/archive/2026-11-25-share-document-links/tasks.md#3.2
 	test('a labelled document cannot be shared without the confirmation', async ({ page }) => {
 		const stem = STEMS[3]
 		const tag = await page.request.post('/remote.php/dav/systemtags', {
@@ -197,7 +197,7 @@ test.describe('Documents shared by link', () => {
 		await expect(dialog.getByTestId('share-by-link-submit')).toBeEnabled()
 	})
 
-	// @e2e openspec/changes/share-document-links/tasks.md#3.3
+	// @e2e openspec/changes/archive/2026-11-25-share-document-links/tasks.md#3.3
 	test('a link taken back on Shared links stops opening', async ({ page, browser }) => {
 		expect(links.length, 'the first test shared a document').toBeGreaterThan(0)
 		await go(page, 'my-documents')

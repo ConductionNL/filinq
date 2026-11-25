@@ -6,7 +6,7 @@
  * button disabled for a labelled document until the clerk confirms, sends
  * one share, shows the link, and keeps Nextcloud's refusal in the dialog.
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-3.2
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.2
  */
 
 const { nextTick } = require('vue')
@@ -86,6 +86,16 @@ afterEach(() => {
 })
 
 describe('ShareByLinkDialog', () => {
+	it('gives every field its own visible label (no outside label it never renders)', async () => {
+		await open([7], { maxDays: null, passwordRequired: false, labels: [] })
+
+		const html = rendered.html()
+		expect(html).not.toMatch(/label-?outside/i)
+		for (const label of ['Link works until', 'Password (optional)', 'Who is the link for?']) {
+			expect(html).toContain(`label="${label}"`)
+		}
+	})
+
 	it('asks the preflight on open and takes its default expiry', async () => {
 		await open([42], preflight)
 

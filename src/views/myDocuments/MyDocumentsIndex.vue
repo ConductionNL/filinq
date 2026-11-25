@@ -673,7 +673,7 @@ export default {
 		 * The selected documents that can be shared by link: files, not folders.
 		 *
 		 * @return {number[]} Their file ids.
-		 * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.1
 		 */
 		selectedShareIds() {
 			return myDocumentsStore.documents
@@ -1078,7 +1078,7 @@ export default {
 		 * Open the Share by link dialog for one or several documents.
 		 *
 		 * @param {number[]} fileIds The documents.
-		 * @spec openspec/changes/share-document-links/tasks.md#task-3.1
+		 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.1
 		 */
 		openShare(fileIds) {
 			this.shareDocuments = [...fileIds]

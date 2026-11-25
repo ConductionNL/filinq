@@ -122,7 +122,7 @@ class CaseArchiveWriter {
 	 *
 	 * @throws RuntimeException When the archive cannot be written.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.4
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.4
 	 */
 	public function writeTo(
 		string $userId,
@@ -154,7 +154,7 @@ class CaseArchiveWriter {
 	 *
 	 * @return bool True when an archive was found and deleted.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.5
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.5
 	 */
 	public function discardById(string $userId, int $fileId): bool {
 		if ($userId === '' || $fileId <= 0) {

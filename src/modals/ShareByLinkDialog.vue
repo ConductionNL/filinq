@@ -6,7 +6,7 @@ Share one document, or several as one archive, by a read-only link that
 runs out. Asks the preflight first: Nextcloud's link rules, the labels,
 and what a bundle would hold, so nothing is built before the clerk knows.
 
-@spec openspec/changes/share-document-links/tasks.md#task-3.1
+@spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-3.1
 -->
 
 <template>
@@ -43,7 +43,6 @@ and what a bundle would hold, so nothing is built before the clerk knows.
 				<NcTextField
 					:modelValue="result.url"
 					:label="t('filinq', 'Link')"
-					:labelOutside="true"
 					readonly
 					data-testid="share-by-link-url" />
 				<p v-if="excludedNames.length > 0" class="share-by-link__hint">
@@ -82,7 +81,6 @@ and what a bundle would hold, so nothing is built before the clerk knows.
 						v-if="isBundle"
 						v-model="name"
 						:label="t('filinq', 'Name of the bundle')"
-						:labelOutside="true"
 						maxlength="120"
 						data-testid="share-by-link-name" />
 
@@ -117,7 +115,6 @@ and what a bundle would hold, so nothing is built before the clerk knows.
 						v-model="expiresOn"
 						type="date"
 						:label="t('filinq', 'Link works until')"
-						:labelOutside="true"
 						:min="tomorrow"
 						:max="latest || undefined"
 						data-testid="share-by-link-expiry" />
@@ -139,14 +136,12 @@ and what a bundle would hold, so nothing is built before the clerk knows.
 								? t('filinq', 'Password (required by Nextcloud)')
 								: t('filinq', 'Password (optional)')
 						"
-						:labelOutside="true"
 						autocomplete="new-password"
 						data-testid="share-by-link-password" />
 
 					<NcTextField
 						v-model="note"
 						:label="t('filinq', 'Who is the link for?')"
-						:labelOutside="true"
 						maxlength="500"
 						data-testid="share-by-link-note" />
 

@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/share-document-links/specs/document-share-links/spec.md
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/specs/document-share-links/spec.md
  */
 
 declare(strict_types=1);
@@ -38,7 +38,7 @@ use Throwable;
  * sharer; whether a user may take a link back is decided by the service
  * (the sharer or an admin).
  *
- * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+ * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.3
  */
 class DocumentShareController extends Controller {
 
@@ -72,7 +72,7 @@ class DocumentShareController extends Controller {
 	 *
 	 * @return JSONResponse The record, the link and the expiry used; or the refusal with its reason.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.3
 	 */
 	#[NoAdminRequired]
 	public function create(): JSONResponse {
@@ -103,7 +103,7 @@ class DocumentShareController extends Controller {
 	 *
 	 * @return JSONResponse The preflight, or the refusal with its reason.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.3
 	 */
 	#[NoAdminRequired]
 	public function preflight(): JSONResponse {
@@ -122,7 +122,7 @@ class DocumentShareController extends Controller {
 	 *
 	 * @return JSONResponse The revoked record, or the refusal with its reason.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.3
 	 */
 	#[NoAdminRequired]
 	public function revoke(string $id): JSONResponse {
@@ -139,7 +139,7 @@ class DocumentShareController extends Controller {
 	 *
 	 * @return array<int, mixed> The ids as sent; the service checks them.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.3
 	 */
 	private function fileIds(): array {
 		$fileIds = $this->request->getParam('fileIds');
@@ -163,7 +163,7 @@ class DocumentShareController extends Controller {
 	 *
 	 * @return JSONResponse The response.
 	 *
-	 * @spec openspec/changes/share-document-links/tasks.md#task-2.3
+	 * @spec openspec/changes/archive/2026-11-25-share-document-links/tasks.md#task-2.3
 	 */
 	private function refusal(Throwable $exception): JSONResponse {
 		$known = ($exception instanceof InvalidArgumentException || $exception instanceof RuntimeException);
