@@ -95,7 +95,11 @@ final class DisclosureDecisionTemplatesTest extends TestCase {
 		$apps->method('isEnabledForAnyone')->willReturn(false);
 		$apps->method('getInstalledApps')->willReturn([]);
 		$builder  = new DisclosureDecisionContextBuilder(
-			new RefusalGroundsResolver($apps, $this->createMock(ContainerInterface::class), new NullLogger())
+			grounds: new RefusalGroundsResolver(
+				appManager: $apps,
+				container: $this->createMock(originalClassName: ContainerInterface::class),
+				logger: new NullLogger()
+			)
 		);
 		$decision = $builder->build(json_decode((string) file_get_contents(__DIR__.'/../../../fixtures/woo-decision.json'), true));
 
