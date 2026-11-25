@@ -66,6 +66,49 @@ class SeparatorSheetServiceTest extends TestCase {
 	}//end sheets()
 
 	/**
+	 * The payload as Tesseract reads it off a printed sheet still names its
+	 * case: these are the readings of a live run (25 Nov 2026).
+	 *
+	 * @return array<string, array{0: string, 1: string}>
+	 */
+	public static function ocrReadings(): array {
+		return [
+			'filing, a stray F, vl, a space'  => ["Ffiling:sep:vl:postkamer: 2026-0042", '2026-0042'],
+			'v1l'                             => ['filing:sep:v1l:postkamer: 2026-0042', '2026-0042'],
+			'spaces around the colon'         => ['filing:sep:vl:postkamer : 2026-0042', '2026-0042'],
+			'broken after a hyphen'           => ["filing:sep:vl:scanner-2e-verdieping-\ne2e-1795620378057:2026-0043", '2026-0043'],
+			'an original'                     => ['filing:sep:v2:archief:po:po-1', 'po:po-1'],
+			'among the rest of the sheet'     => ["Scheidingsvel voor zaak 2026-0042\nLeg dit vel\nFfiling:sep:vl:postkamer: 2026-0042", '2026-0042'],
+			'a sheet that names no case'      => ['filing:sep:vl:postkamer:', ''],
+		];
+
+	}//end ocrReadings()
+
+	/**
+	 * A separator read by OCR is still a separator, with its case.
+	 *
+	 * @param string $read     The text OCR gave.
+	 * @param string $expected The case (or original) it names.
+	 *
+	 * @return void
+	 */
+	#[\PHPUnit\Framework\Attributes\DataProvider('ocrReadings')]
+	public function testTheOcrReadingOfASheetIsStillItsPayload(string $read, string $expected): void {
+		$this->assertSame($expected, $this->sheets()->readPayload(payload: $read));
+
+	}//end testTheOcrReadingOfASheetIsStillItsPayload()
+
+	/**
+	 * An ordinary page that happens to say "filing" is no separator.
+	 *
+	 * @return void
+	 */
+	public function testAPageAboutFilingIsNotASeparator(): void {
+		$this->assertNull($this->sheets()->readPayload(payload: 'Gewone brief over filing: zie bijlage'));
+
+	}//end testAPageAboutFilingIsNotASeparator()
+
+	/**
 	 * What is printed is what is read back.
 	 *
 	 * @return void

@@ -91,8 +91,10 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 	 * @return string|null The case number, an empty string when the sheet named none, or null when this is not a separator.
 	 *
 	 * @spec openspec/changes/scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.2
 	 */
 	public function readPayload(string $payload): ?string {
+		$payload  = $this->asPrinted(text: $payload);
 		$original = $this->readOriginal(payload: $payload);
 		if ($original !== null) {
 			return $original;
@@ -117,6 +119,42 @@ class SeparatorSheetService implements SeparatorSheetServiceInterface {
 		return trim($parts[1]);
 
 	}//end readPayload()
+
+	/**
+	 * OCR text put back the way the sheet printed it.
+	 *
+	 * Tesseract reads the printed payload with the same few slips every time
+	 * (measured on a live run, 25 Nov 2026, Tesseract 5.3 at 300 dpi, in every
+	 * font tried): "filinq" as "filing" (a stray "F" in front in monospace),
+	 * "v1" as "vl" or "v1l", a space after a colon, and a long payload broken
+	 * after a hyphen onto the next line. Without this no separator was ever
+	 * seen and a whole batch arrived as one document.
+	 *
+	 * @param string $text The text read off a page.
+	 *
+	 * @return string The text with the payload as printed.
+	 *
+	 * @spec openspec/changes/scan-intake-with-separator-sheets/tasks.md#task-5.2
+	 */
+	private function asPrinted(string $text): string {
+		// A payload broken after a hyphen continues on the next line.
+		$text = (string) preg_replace('/-[ \t]*\R[ \t]*/u', '-', $text);
+		// The prefix, with the letters OCR mistakes for one another.
+		$text = (string) preg_replace_callback(
+			'/f*il[il1|]n[qg]\s*:\s*sep\s*:\s*v\s*([12lI|])[1lI|]?\s*:/i',
+			static fn (array $match): string => 'filinq:sep:v' . ($match[1] === '2' ? '2' : '1') . ':',
+			$text
+		);
+		// No space around a colon inside a payload: one colon per pass.
+		do {
+			$before = $text;
+			$text   = (string) preg_replace('/(filinq:sep:v[12]:\S*?)[ \t]+(?=:)/', '$1', $text);
+			$text   = (string) preg_replace('/(filinq:sep:v[12]:\S*?:)[ \t]+(?=\S)/', '$1', $text);
+		} while ($text !== $before);
+
+		return $text;
+
+	}//end asPrinted()
 
 	/**
 	 * The payload of a sheet naming one paper original.

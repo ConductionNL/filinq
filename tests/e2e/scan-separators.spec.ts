@@ -72,6 +72,16 @@ const INTAKE_OBJECTS = '/index.php/apps/openregister/api/objects/filinq/intakeDo
 /** The signed-in user the WebDAV seed writes for. */
 const USER = process.env.NC_ADMIN_USER ?? 'admin'
 
+/**
+ * WebDAV with the stored browser session is refused without a request token
+ * (MKCOL answered 401 on a live run, 25 Nov 2026); the OCS header marks the
+ * call as an API call, and basic auth names the admin.
+ */
+const DAV = {
+	'OCS-APIRequest': 'true',
+	Authorization: `Basic ${Buffer.from(`${USER}:${process.env.NC_ADMIN_PASS ?? 'admin'}`).toString('base64')}`,
+}
+
 /** A scanned batch with filinq separator sheets (see the header). */
 const BATCH_PDF = process.env.FILINQ_E2E_SCAN_BATCH_PDF ?? ''
 const BATCH_SEGMENTS = Number(process.env.FILINQ_E2E_SCAN_BATCH_SEGMENTS ?? '0')
@@ -159,7 +169,7 @@ async function makeFolders(request: APIRequestContext, path: string): Promise<vo
 	let current = ''
 	for (const part of path.split('/')) {
 		current = current === '' ? part : `${current}/${part}`
-		const res = await request.fetch(`/remote.php/dav/files/${USER}/${current}`, { method: 'MKCOL' })
+		const res = await request.fetch(`/remote.php/dav/files/${USER}/${current}`, { method: 'MKCOL', headers: DAV })
 		expect([201, 405], `MKCOL ${current} (201 created / 405 already there)`).toContain(res.status())
 	}
 }
@@ -174,12 +184,12 @@ async function makeFolders(request: APIRequestContext, path: string): Promise<vo
  */
 async function uploadFile(request: APIRequestContext, path: string, bytes: Buffer): Promise<number> {
 	const url = `/remote.php/dav/files/${USER}/${path}`
-	const put = await request.put(url, { data: bytes, headers: { 'Content-Type': 'application/pdf' } })
+	const put = await request.put(url, { data: bytes, headers: { ...DAV, 'Content-Type': 'application/pdf' } })
 	expect([201, 204], `PUT ${path}`).toContain(put.status())
 
 	const find = await request.fetch(url, {
 		method: 'PROPFIND',
-		headers: { Depth: '0', 'Content-Type': 'application/xml' },
+		headers: { ...DAV, Depth: '0', 'Content-Type': 'application/xml' },
 		data: '<?xml version="1.0"?><d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns"><d:prop><oc:fileid/></d:prop></d:propfind>',
 	})
 	expect(find.status()).toBe(207)
@@ -374,7 +384,7 @@ test.describe('scan intake with separator sheets', () => {
 			}
 		} finally {
 			await deleteIntakeDocuments(request, segmentIds)
-			await request.fetch(`/remote.php/dav/files/${USER}/${folder}`, { method: 'DELETE' })
+			await request.fetch(`/remote.php/dav/files/${USER}/${folder}`, { method: 'DELETE', headers: DAV })
 		}
 	})
 })
