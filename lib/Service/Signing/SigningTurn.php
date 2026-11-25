@@ -106,8 +106,6 @@ final class SigningTurn {
 	 *
 	 * @return list<string> The signer ids to tell.
 	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role.
-	 *
 	 * @spec openspec/changes/signer-consent-notifications-to-email-leaf/tasks.md#d-1-signerinitiator-notifications-via-the-email-leaf-m
 	 */
 	public static function due(array $request, array $signers, ?string $after = null): array {
@@ -138,6 +136,8 @@ final class SigningTurn {
 	 * @param array<string, array<string, mixed>> $signers   The signer records, by id.
 	 *
 	 * @return integer|null The position, or null when everyone is done.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) RecipientRole is the stateless rule for a recipient's role.
 	 */
 	private static function firstOpenPosition(array $positions, array $signers): ?int {
 		$first = null;
