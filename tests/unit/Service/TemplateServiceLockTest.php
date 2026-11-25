@@ -237,10 +237,10 @@ class TemplateServiceLockTest extends TestCase {
 	 */
 	public function testReleasingAnUnlockedTemplateWritesNothing(): void {
 		$template = ['id' => 'tpl-3', 'status' => 'published', 'publishedVersion' => 4, 'lockedBy' => null, 'lockedAt' => null];
-		$result = $this->service($template)->releaseLock('tpl-3', 'alice');
+		$result = $this->service(template: $template)->releaseLock(id: 'tpl-3', userId: 'alice');
 
-		$this->assertSame($template, $result);
-		$this->assertCount(0, $this->saved);
+		$this->assertSame(expected: $template, actual: $result);
+		$this->assertCount(expectedCount: 0, haystack: $this->saved);
 
 	}//end testReleasingAnUnlockedTemplateWritesNothing()
 
