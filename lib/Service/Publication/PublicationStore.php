@@ -302,7 +302,7 @@ class PublicationStore implements PublicationStoreInterface {
 	 */
 	private function search(string $schema, array $filters): array {
 		// Slugs go through searchObjectsBySlug: searchObjects answers a slug with zero rows.
-		$rows = $this->objects->resolve()->searchObjectsBySlug(registerSlug: self::REGISTER, schemaSlug: $schema, filters: $filters);
+		$rows = $this->objects->slugSearch()->search(register: self::REGISTER, schema: $schema, filters: $filters);
 
 		return array_values(array_filter(array_map(fn (mixed $row): array => $this->normalise(row: $row), (array) $rows)));
 

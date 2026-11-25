@@ -81,9 +81,9 @@ class AnonymizationLinkReader {
 			// PublicationListComposer refused the whole list with
 			// "N of N records have no redacted copy yet" even when every one
 			// had been redacted.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['sourceFileId' => $sourceFileId]
 			);
 		} catch (Throwable $e) {
@@ -123,9 +123,9 @@ class AnonymizationLinkReader {
 		}
 
 		try {
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['anonymizedFileId' => $anonymizedFileId]
 			);
 		} catch (Throwable $e) {

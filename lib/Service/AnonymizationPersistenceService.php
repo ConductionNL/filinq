@@ -374,9 +374,9 @@ class AnonymizationPersistenceService {
 		//
 		// The `@self` literal in linkForRun() belongs to the SAVED OBJECT,
 		// not to a query, and must stay.
-		$results = $objectService->searchObjectsBySlug(
-			registerSlug: 'filinq',
-			schemaSlug: 'anonymizationLink',
+		$results = (new SlugSearch(objects: $objectService))->search(
+			register: 'filinq',
+			schema: 'anonymizationLink',
 			filters: ['sourceFileId' => $fileId]
 		);
 

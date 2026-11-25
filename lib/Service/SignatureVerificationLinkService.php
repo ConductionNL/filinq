@@ -278,11 +278,10 @@ class SignatureVerificationLinkService implements SignatureVerificationLinksInte
 	 */
 	private function rowsFor(string $token): array {
 		try {
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
-				filters: ['token' => $token],
-				_rbac: false
+			$rows = $this->objectResolver->slugSearch(_rbac: false)->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
+				filters: ['token' => $token]
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException(message: 'Could not read the signature verification records: ' . $e->getMessage(), code: 0, previous: $e);

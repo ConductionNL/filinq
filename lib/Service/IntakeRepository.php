@@ -415,9 +415,9 @@ class IntakeRepository implements IntakeRepositoryInterface {
 			// inbox read as empty, and worse, findBySourceRef() never found
 			// the row it exists to find, so a channel redelivering a message
 			// wrote a second inbox document every time.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: $schema,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: self::REGISTER,
+				schema: $schema,
 				filters: $filters
 			);
 		} catch (DoesNotExistException $e) {

@@ -254,9 +254,9 @@ class DownloadAgreementRepository {
 			// tell a gated document from one nobody had ever declared anything
 			// about. The document filter stays a BARE key beside the `@self`
 			// block, which is the spelling the objects path reads.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['document' => $document]
 			);
 		} catch (DoesNotExistException $e) {

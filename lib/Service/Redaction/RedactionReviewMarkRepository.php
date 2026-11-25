@@ -85,9 +85,9 @@ class RedactionReviewMarkRepository {
 			// was refused output forever, including the ones somebody had
 			// checked. The sibling `DownloadAgreementRepository` had the same
 			// call and failed the other way, which is how it was found.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['document' => $document]
 			);
 		} catch (Throwable $e) {

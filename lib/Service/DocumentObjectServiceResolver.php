@@ -73,4 +73,25 @@ class DocumentObjectServiceResolver {
 
 		throw new RuntimeException(message: 'OpenRegister service is not available.');
 	}//end resolve()
+
+	/**
+	 * A slug search on the resolved ObjectService, in the form the installed OpenRegister declares.
+	 *
+	 * Final, so a test double of this resolver still runs it over its own resolve().
+	 *
+	 * @param bool|null $_rbac         Whether OpenRegister applies role-based access; its default when null.
+	 * @param bool|null $_multitenancy Whether OpenRegister scopes to the active organisation; its default when null.
+	 *
+	 * @return SlugSearch The search.
+	 *
+	 * @throws RuntimeException If OpenRegister is not available
+	 *
+	 * @SuppressWarnings(PHPMD.CamelCaseParameterName) The names mirror OpenRegister's own parameters.
+	 * @SuppressWarnings(PHPMD.CamelCaseVariableName)  The names mirror OpenRegister's own parameters.
+	 *
+	 * @spec openspec/specs/openregister-bridge/spec.md
+	 */
+	final public function slugSearch(?bool $_rbac=null, ?bool $_multitenancy=null): SlugSearch {
+		return new SlugSearch(objects: $this->resolve(), _rbac: $_rbac, _multitenancy: $_multitenancy);
+	}//end slugSearch()
 }//end class

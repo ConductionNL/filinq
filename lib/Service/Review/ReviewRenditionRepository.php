@@ -85,9 +85,9 @@ class ReviewRenditionRepository {
 	 */
 	public function findFor(int $sourceFileId): ?array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['sourceFileId' => $sourceFileId]
 			);
 		} catch (Throwable $e) {

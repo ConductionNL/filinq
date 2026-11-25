@@ -85,9 +85,9 @@ class AnsweringRegistration {
 		try {
 			// Bare keys through searchObjectsBySlug: a `filter[...]` wrapper or
 			// searchObjects with slugs answers zero rows and no error.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['document' => $uuid, 'direction' => 'inbound']
 			);
 		} catch (Throwable $e) {

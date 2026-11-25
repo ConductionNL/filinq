@@ -69,9 +69,9 @@ class SealLookup {
 
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects answers slugs with zero rows.
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: 'filinq',
-				schemaSlug: self::SCHEMA,
+			$rows = $this->objectResolver->slugSearch()->search(
+				register: 'filinq',
+				schema: self::SCHEMA,
 				filters: ['documentFileId' => $fileId]
 			);
 		} catch (Throwable $e) {

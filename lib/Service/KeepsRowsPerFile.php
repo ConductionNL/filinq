@@ -53,9 +53,9 @@ trait KeepsRowsPerFile {
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects answers a
 			// slug with zero rows and no error.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: $schema,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: IntakeRepository::REGISTER,
+				schema: $schema,
 				filters: ['fileId' => $fileId]
 			);
 		} catch (Throwable $e) {

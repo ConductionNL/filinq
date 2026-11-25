@@ -253,12 +253,10 @@ class BaseLabelResolver {
 		];
 
 		try {
-			$result = $objectService->searchObjectsBySlug(
-				registerSlug: 'filinq',
-				schemaSlug: 'base',
-				filters: [],
-				_rbac: false,
-				_multitenancy: false
+			$result = (new SlugSearch(objects: $objectService, _rbac: false, _multitenancy: false))->search(
+				register: 'filinq',
+				schema: 'base',
+				filters: []
 			);
 
 			foreach ($this->extractObjects(result: $result) as $base) {

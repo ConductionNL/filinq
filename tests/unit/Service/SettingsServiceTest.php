@@ -534,7 +534,7 @@ class SettingsServiceTest extends TestCase {
 	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
 	 */
 	public function testEmptyOutputSubfolderNameIsRefused(): void {
-		$this->expectException(\RuntimeException::class);
+		$this->expectException(exception: \RuntimeException::class);
 		$this->expectExceptionCode(400);
 		$this->settingsService->updateSettings(['anonymisation.output_subfolder_name' => '']);
 
@@ -854,5 +854,20 @@ class SettingsServiceTest extends TestCase {
 		$this->settingsService->updateSettings(['signing_provider' => 'docusign']);
 
 	}//end testUpdateSettingsWrapsAWriteFailure()
+
+	/**
+	 * Without an ObjectService the slug search refuses instead of failing on null.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/openregister-bridge/spec.md
+	 */
+	public function testSlugSearchRefusesWithoutAnObjectService(): void {
+		$this->mockOpenRegister->method('getObjectService')->willReturn(null);
+
+		$this->expectException(exception: \RuntimeException::class);
+		$this->settingsService->slugSearch();
+
+	}//end testSlugSearchRefusesWithoutAnObjectService()
 
 }//end class

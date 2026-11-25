@@ -111,9 +111,9 @@ class AccessibleRegenerationService {
 	 */
 	private function generationRows(int $fileId): array {
 		try {
-			return (array) $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
+			return (array) $this->objectResolver->slugSearch()->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['fileId' => $fileId]
 			);
 		} catch (Throwable) {

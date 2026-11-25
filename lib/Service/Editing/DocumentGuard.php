@@ -208,11 +208,10 @@ class DocumentGuard {
 			// list and returned no refusal, so a document under a live signing
 			// request was editable. The docblock above it says FAILS CLOSED;
 			// with the slug call it failed open.
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: $schema,
-				filters: $filter,
-				_rbac: false
+			$results = $this->objectResolver->slugSearch(_rbac: false)->search(
+				register: self::REGISTER,
+				schema: $schema,
+				filters: $filter
 			);
 
 			if (is_array($results) === false) {

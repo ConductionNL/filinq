@@ -80,9 +80,9 @@ class DocumentReviewRepository {
 	 */
 	public function findFor(int $fileId): ?array {
 		try {
-			$results = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$results = $this->objectResolver->slugSearch()->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: ['fileId' => $fileId]
 			);
 		} catch (Throwable $e) {

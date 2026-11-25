@@ -296,9 +296,9 @@ class FieldFillProfileService implements FieldFillProfileServiceInterface {
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects reads register
 			// and schema as numeric ids and answers a slug with no rows.
-			$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-				registerSlug: IntakeRepository::REGISTER,
-				schemaSlug: self::SCHEMA,
+			$rows = $this->objectResolver->slugSearch()->search(
+				register: IntakeRepository::REGISTER,
+				schema: self::SCHEMA,
 				filters: $filters
 			);
 		} catch (Throwable $e) {

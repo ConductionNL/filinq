@@ -130,12 +130,10 @@ class MailArchiveImportRepository {
 	 * @spec openspec/changes/intake-mailbox-archive-import/tasks.md#3-1
 	 */
 	public function search(array $filters): array {
-		$rows = $this->objectResolver->resolve()->searchObjectsBySlug(
-			registerSlug: self::REGISTER,
-			schemaSlug: self::SCHEMA,
-			filters: $filters,
-			_rbac: false,
-			_multitenancy: false
+		$rows = $this->objectResolver->slugSearch(_rbac: false, _multitenancy: false)->search(
+			register: self::REGISTER,
+			schema: self::SCHEMA,
+			filters: $filters
 		);
 
 		if (is_array($rows) === false) {

@@ -95,7 +95,7 @@ class DigitisationWorklist implements DigitisationWorklistInterface {
 	 */
 	public function originals(string $projectId, ?string $box = null): array {
 		$filters = ['project' => $projectId, '_limit' => self::LIMIT];
-		$results = $this->objectService->searchObjectsBySlug(registerSlug: self::REGISTER, schemaSlug: self::ORIGINAL, filters: $filters);
+		$results = (new SlugSearch(objects: $this->objectService))->search(register: self::REGISTER, schema: self::ORIGINAL, filters: $filters);
 		if (is_array($results) === false) {
 			return [];
 		}

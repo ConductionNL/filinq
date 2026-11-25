@@ -154,12 +154,10 @@ class DocumentShareStore {
 	public function active(): array {
 		try {
 			// Slugs go through searchObjectsBySlug: searchObjects reads them as ids.
-			$rows = $this->objects->resolve()->searchObjectsBySlug(
-				registerSlug: self::REGISTER,
-				schemaSlug: self::SCHEMA,
-				filters: ['status' => 'active'],
-				_rbac: false,
-				_multitenancy: false
+			$rows = $this->objects->slugSearch(_rbac: false, _multitenancy: false)->search(
+				register: self::REGISTER,
+				schema: self::SCHEMA,
+				filters: ['status' => 'active']
 			);
 		} catch (Throwable $e) {
 			throw new RuntimeException('The share records could not be read: ' . $e->getMessage(), 500, $e);

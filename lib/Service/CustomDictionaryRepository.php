@@ -87,11 +87,9 @@ class CustomDictionaryRepository {
 		$objectService = $this->settingsService->getObjectService();
 		// Slug-aware variant — OR's standard searchObjects requires numeric
 		// register/schema ids and silently returns nothing otherwise.
-		$results = $objectService->searchObjectsBySlug(
-			registerSlug: self::REGISTER,
-			schemaSlug: $schema,
-			_rbac: false,
-			_multitenancy: false
+		$results = (new SlugSearch(objects: $objectService, _rbac: false, _multitenancy: false))->search(
+			register: self::REGISTER,
+			schema: $schema
 		);
 
 		if (is_int($results) === true) {
