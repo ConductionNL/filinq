@@ -3484,7 +3484,7 @@
 				],
 				"plan": [
 					"openspec/changes/document-chart-embedding",
-					"openspec/changes/document-rich-editing"
+					"openspec/changes/archive/2026-11-26-document-rich-editing"
 				]
 			},
 			"reachedOn": "machine consumer: an MCP client (e.g. an AI assistant) calling lib/Mcp/FilinqScannableServices.php -> Service/Editing/DocumentAgentService; not reached from any filinq page",

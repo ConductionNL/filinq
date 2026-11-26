@@ -629,7 +629,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-rich-editing/tasks.md
+	 * @spec openspec/changes/archive/2026-11-26-document-rich-editing/tasks.md
 	 */
 	public function testAMetadataWriteOnAStaleVersionIsRefused(): void {
 		$this->attach('letter.docx', $this->docx());
@@ -652,7 +652,7 @@ class EditSessionAgentSurfacesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/document-rich-editing/tasks.md
+	 * @spec openspec/changes/archive/2026-11-26-document-rich-editing/tasks.md
 	 */
 	public function testAMetadataWriteTagsTheFileAgentAuthored(): void {
 		$this->attach('letter.docx', $this->docx());
