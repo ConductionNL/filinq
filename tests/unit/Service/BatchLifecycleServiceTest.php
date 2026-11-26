@@ -237,11 +237,17 @@ class BatchLifecycleServiceTest extends TestCase {
 
 		$result = $this->service->resume(batchId: 'b-1');
 
-		self::assertSame(['status' => 202, 'batchId' => 'b-1', 'batchStatus' => 'extracting', 'requeued' => 1], $result);
-		self::assertSame(['fileId' => 1, 'status' => 'anonymized', 'anonymizedFileId' => 'a1'], $written['files'][0]);
-		self::assertSame(['fileId' => 2, 'status' => 'uploaded', 'retryCount' => 1], $written['files'][1]);
-		self::assertSame(['fileId' => 3, 'status' => 'prohibitionViolation'], $written['files'][2]);
-		self::assertIsInt($written['resumedAt']);
+		self::assertSame(
+			expected: ['status' => 202, 'batchId' => 'b-1', 'batchStatus' => 'extracting', 'requeued' => 1],
+			actual: $result
+		);
+		self::assertSame(
+			expected: ['fileId' => 1, 'status' => 'anonymized', 'anonymizedFileId' => 'a1'],
+			actual: $written['files'][0]
+		);
+		self::assertSame(expected: ['fileId' => 2, 'status' => 'uploaded', 'retryCount' => 1], actual: $written['files'][1]);
+		self::assertSame(expected: ['fileId' => 3, 'status' => 'prohibitionViolation'], actual: $written['files'][2]);
+		self::assertIsInt(actual: $written['resumedAt']);
 
 	}//end testACompletedBatchWithFailedFilesRequeuesOnlyThoseFiles()
 
@@ -259,8 +265,8 @@ class BatchLifecycleServiceTest extends TestCase {
 		$this->state->expects(self::never())->method('updateBatch');
 
 		self::assertSame(
-			['status' => 409, 'reason' => 'not-resumable', 'batchStatus' => 'completed'],
-			$this->service->resume(batchId: 'b-1')
+			expected: ['status' => 409, 'reason' => 'not-resumable', 'batchStatus' => 'completed'],
+			actual: $this->service->resume(batchId: 'b-1')
 		);
 
 	}//end testACompletedBatchWithoutFailedFilesIsRefused()

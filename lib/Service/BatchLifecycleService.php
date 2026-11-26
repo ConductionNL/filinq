@@ -181,7 +181,12 @@ class BatchLifecycleService {
 			return ['status' => 409, 'reason' => 'not-resumable', 'batchStatus' => $current];
 		}
 
-		$requeue = $this->requeueUnfinished(batch: $batch, onlyFailed: $onlyFailed);
+		$only = null;
+		if ($onlyFailed === true) {
+			$only = [self::FILE_FAILED];
+		}
+
+		$requeue = $this->requeueUnfinished(batch: $batch, only: $only);
 		$batch = $requeue['batch'];
 		// Marks the run as resumed: a file whose redacted copy was made after
 		// the batch started is then taken from its anonymizationLink instead
@@ -238,23 +243,24 @@ class BatchLifecycleService {
 	 * The batch with every unfinished file queued again: a file that failed
 	 * before extraction goes back to `uploaded` with one more retry, an
 	 * extracted one waits for review as it is. The batch extracts again when
-	 * any file went back, else it returns to review. With `$onlyFailed` only
-	 * the files in `error` are queued again (a completed batch).
+	 * any file went back, else it returns to review. With `$only` only the
+	 * files in one of those statuses are queued again (a completed batch
+	 * queues only its files in `error`).
 	 *
-	 * @param array<string, mixed> $batch      The stored batch.
-	 * @param bool                 $onlyFailed Whether to queue only the failed files.
+	 * @param array<string, mixed>    $batch The stored batch.
+	 * @param array<int, string>|null $only  The file statuses to queue again, or null for every unfinished file.
 	 *
 	 * @return array{batch: array<string, mixed>, requeued: int}
 	 *
 	 * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
 	 */
-	private function requeueUnfinished(array $batch, bool $onlyFailed=false): array {
+	private function requeueUnfinished(array $batch, ?array $only=null): array {
 		$requeued = 0;
 		$batch['status'] = 'review';
 		foreach ((array)($batch['files'] ?? []) as $index => $file) {
 			$status = (string)($file['status'] ?? '');
-			if ($status === self::FILE_SUCCEEDED || ($onlyFailed === true && $status !== self::FILE_FAILED)) {
+			if ($status === self::FILE_SUCCEEDED || ($only !== null && in_array($status, $only, true) === false)) {
 				continue;
 			}
 
