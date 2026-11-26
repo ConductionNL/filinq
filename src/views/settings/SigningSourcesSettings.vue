@@ -55,7 +55,7 @@ import { NcLoadingIcon, NcSettingsSection } from '@nextcloud/vue'
  * counts (one-signing-rail-for-the-fleet REQ-DDSRC-004). No request is an
  * empty case, said as such; only a failed load is shown as an error.
  *
- * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
+ * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
  */
 export default {
 	name: 'SigningSourcesSettings',
@@ -75,7 +75,7 @@ export default {
 		 *
 		 * @return {Promise<void>}
 		 *
-		 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
+		 * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
 		 */
 		async load() {
 			this.loading = true

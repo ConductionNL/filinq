@@ -7674,7 +7674,7 @@
 					"openspec/specs/filinq-signing-events :: Listener maps a requested event to SigningService::createRequest",
 					"openspec/specs/filinq-signing-events :: Emit SigningConcludedEvent on a delegated terminal outcome"
 				],
-				"plan": "openspec/changes/one-signing-rail-for-the-fleet"
+				"plan": "openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet"
 			},
 			"reachedOn": "machine consumer: shillinq (SigningDelegationService dispatches DocumentSigningRequestedEvent; SigningConcludedListener consumes the outcome)",
 			"provider": "filinq",

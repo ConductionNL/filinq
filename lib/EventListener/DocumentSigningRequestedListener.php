@@ -141,7 +141,7 @@ class DocumentSigningRequestedListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
+	 * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
 	 */
 	private function refuse(DocumentSigningRequestedEvent $event, array $missing): void {
 		$refusal = sprintf(

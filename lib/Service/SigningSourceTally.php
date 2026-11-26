@@ -15,7 +15,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
+ * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
  */
 
 declare(strict_types=1);
@@ -31,7 +31,7 @@ use OCA\Filinq\Kernel\Contracts\SettingsServiceInterface;
  * the rail. An instance where nothing has been raised, or where the signing
  * register is not configured, answers an empty list, never an error.
  *
- * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
+ * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
  */
 class SigningSourceTally {
 
@@ -54,7 +54,7 @@ class SigningSourceTally {
 	 *
 	 * @param SettingsServiceInterface $settingsService Resolves the object service and the signingRequest binding.
 	 *
-	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
+	 * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
 	 */
 	public function __construct(
 		private readonly SettingsServiceInterface $settingsService,
@@ -67,7 +67,7 @@ class SigningSourceTally {
 	 *
 	 * @return array{sources: list<array{app: string, count: int}>, total: int, truncated: bool}
 	 *
-	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
+	 * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
 	 */
 	public function bySourceApp(): array {
 		$objectService = $this->settingsService->getObjectService();
