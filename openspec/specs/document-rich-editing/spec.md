@@ -1,7 +1,3 @@
----
-status: in-progress
----
-
 # document-rich-editing Specification
 
 **OpenSpec changes**
@@ -80,15 +76,24 @@ A heading level of `0` MUST remove the heading style — a removal, not an absen
 
 ### Requirement: Style MUST be refused by name where it is not implemented
 
-Style is implemented for OOXML only. An ODF style request MUST throw, naming the
-limitation and naming what still works on `.odt`. Returning the markup unchanged is
+Style is applied to OOXML inside the paragraph and to ODF through an automatic style
+in `content.xml` that the block points at. A property that has no expression in a
+format MUST be refused by name, saying why and what still works; today that is
+`list: true` on `.odt`, because an ODF list is a `<text:list>` element wrapping the
+paragraph rather than a property of it. Returning the markup unchanged is
 prohibited — it reports success and changes nothing.
 
-#### Scenario: An ODF style request is refused, not ignored
+#### Scenario: An ODF style request is applied through an automatic style
 
 - **GIVEN** an `.odt` document
-- **WHEN** a style edit is requested
-- **THEN** the system MUST refuse, and the message MUST state that text edits and metadata do work on `.odt`
+- **WHEN** a style edit with `{"bold": true}` is requested
+- **THEN** the block MUST point at a new automatic style carrying bold
+
+#### Scenario: A list on ODF is refused, not ignored
+
+- **GIVEN** an `.odt` document
+- **WHEN** a style edit with `{"list": true}` is requested
+- **THEN** the system MUST refuse, naming `text:list`, and the message MUST state that every other style key works on `.odt`
 
 ### Requirement: A metadata write MUST be as accountable as a text edit
 
