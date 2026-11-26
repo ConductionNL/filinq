@@ -169,6 +169,17 @@ describe('ReviewWorkbench', () => {
 		expect(vm.selectedText).toBe('')
 	})
 
+	it('shows when the mark was set as a local date, not the stored ISO moment', () => {
+		const vm = instance()
+		vm.review = { review: { checkedBy: 'admin', checkedOn: '2026-11-26T00:59:20+00:00' } }
+		const shown = ReviewWorkbench.computed.checkedOnText.call(vm)
+		expect(shown).not.toContain('T00:59:20')
+		expect(shown).toBe(new Date('2026-11-26T00:59:20+00:00').toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }))
+
+		vm.review = { review: { checkedBy: 'admin', checkedOn: 'not a date' } }
+		expect(ReviewWorkbench.computed.checkedOnText.call(vm)).toBe('not a date')
+	})
+
 	it('shows the converted rendition as the original and says how it was made', () => {
 		const vm = instance()
 		vm.review = { checked: false, rendition: { kind: 'converted', fileId: 8, fileName: 'a.pdf', backend: 'libreoffice', textLayer: 'native' } }
