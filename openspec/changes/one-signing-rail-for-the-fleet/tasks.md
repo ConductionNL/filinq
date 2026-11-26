@@ -71,8 +71,18 @@
       Done (2026-11-23): the `status` front matter moved from the spec delta to `proposal.md`, the
       only warning; the command now reports the change valid.
 - [ ] 6.3 Run `composer check:strict`.
-- [ ] 6.4 Raise a delegated request from shillinq on the dev instance and
+- [x] 6.4 Raise a delegated request from shillinq on the dev instance and
       confirm the noun is on the persisted record.
+      Done live (26 Nov 2026, sandbox: Nextcloud 34.0.6 + MariaDB + Redis, OpenRegister main, filinq
+      development 8433ba3f, shillinq development 75649e7 installed beside it). shillinq's own
+      `SigningDelegationService::requestSignature()` was called inside Nextcloud for an ACM report:
+      request created, and the persisted signing request reads `sourceApp: shillinq`,
+      `subjectSchema: ACMReport`, `subjectNoun: ACMReport`, `signatureLevel: SES`.
+      Found on the way: shillinq's default level `advanced` was refused by filinq ("Invalid signature
+      level"; the event takes SES|AdES|QES), so every default request from shillinq, including the
+      ACM sign transition, failed closed. Fixed on the consumer side in ConductionNL/shillinq#3383
+      (the eIDAS words map to filinq's codes). With it, `advanced` reaches filinq as AdES, and the sandbox's
+      native provider answers correctly that it signs SES only.
 
 ## 7. Sequencing and counterparts
 
