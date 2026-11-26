@@ -35,7 +35,10 @@ Open a document in the review sidebar and choose **Redact pages or document**.
 - **The whole document** is withheld. No redacted copy is written, because a
   black PDF could be mistaken for a document. The anonymisation link records
   `withheld: true` with the grounds, and publication readiness lists the
-  document as not for publication.
+  document as not for publication. The withhold also holds when the document
+  is anonymised the usual way, alone or in a batch: the commit finds the
+  stored decision, records the withhold and writes nothing, and the batch
+  entry carries `withheld` and the grounds.
 
 Every decision needs at least one ground. A page outside the document, or a
 range that runs backwards, is refused before anything is stored, with the
@@ -84,9 +87,13 @@ No stored field holds region pixels or entity values.
   file listings.
 - A visible notice on a burned page naming its ground: OpenRegister's seam has
   no notice yet.
-- Burning PDF pages: OpenRegister's seam burns standalone images and office
-  media today; until it burns PDF pages, a page scope on a PDF is refused with
-  nothing written, and an anonymised scan is reported as `imageRedactionPending`.
+- Burning born-digital PDF pages: OpenRegister's seam burns standalone images,
+  office media and the page image of a scanned PDF page. A PDF page drawn as
+  text and vector graphics has no single image to burn, so a page scope on it
+  is refused with OpenRegister's reason and nothing is written. Filinq does not
+  rasterise the page itself; that waits for OpenRegister.
+- Burning the page scopes during the usual anonymise run: today they are
+  committed on their own (`POST /api/anonymization/scope/{fileId}/commit`).
 - Screenshots for this page (captured by the Playwright journey on a running
   instance).
 

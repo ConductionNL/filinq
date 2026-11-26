@@ -841,10 +841,19 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 * @spec openspec/changes/redaction-and-what-leaves-the-building/specs/redaction-output-guarantee/spec.md
 	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
 	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-2
+	 * @spec openspec/changes/image-redaction/tasks.md#task-6.2
 	 */
 	private function runAnonymize(AnonymizeRun $run): array {
 		$fileId = $run->fileId;
 		$entities = $run->entities;
+
+		// A document the reviewer withheld in full leaves no copy at all, not
+		// a blacked-out one (image-redaction REQ-DDIMR-009). The batch path
+		// and the folder job come through here too, so they honour it as well.
+		$withheld = $this->images?->withheldOutcome(fileId: $fileId, userId: $run->userId());
+		if ($withheld !== null) {
+			return $withheld;
+		}
 
 		// Prohibition gate — runs BEFORE any OR interaction.
 		// Throws ProhibitionGateException when gate fires; passes through otherwise.
