@@ -90,9 +90,9 @@ class FolderFileEnumeratorRenditionTest extends TestCase {
 	public function testWithoutTheRepositoryNothingIsLeftOut(): void {
 		$folder = $this->folder(files: [$this->file(id: 10, name: 'brief.txt'), $this->file(id: 11, name: 'brief.pdf')]);
 		$enumerator = new FolderFileEnumerator(
-			layout: $this->createMock(OutputLayoutResolver::class),
-			confidentialityLabel: $this->createMock(ConfidentialityLabelService::class),
-			appConfig: $this->createMock(IAppConfig::class)
+			layout: $this->createMock(originalClassName: OutputLayoutResolver::class),
+			confidentialityLabel: $this->createMock(originalClassName: ConfidentialityLabelService::class),
+			appConfig: $this->createMock(originalClassName: IAppConfig::class)
 		);
 
 		$this->assertSame(expected: [10, 11], actual: $this->ids(files: $enumerator->enumerate(folder: $folder)));
@@ -108,15 +108,15 @@ class FolderFileEnumeratorRenditionTest extends TestCase {
 	 * @return FolderFileEnumerator
 	 */
 	private function enumerator(array $renditions): FolderFileEnumerator {
-		$repository = $this->createMock(ReviewRenditionRepository::class);
+		$repository = $this->createMock(originalClassName: ReviewRenditionRepository::class);
 		$repository->method('findFor')->willReturnCallback(
 			static fn (int $sourceFileId): ?array => ($renditions[$sourceFileId] ?? null)
 		);
 
 		return new FolderFileEnumerator(
-			layout: $this->createMock(OutputLayoutResolver::class),
-			confidentialityLabel: $this->createMock(ConfidentialityLabelService::class),
-			appConfig: $this->createMock(IAppConfig::class),
+			layout: $this->createMock(originalClassName: OutputLayoutResolver::class),
+			confidentialityLabel: $this->createMock(originalClassName: ConfidentialityLabelService::class),
+			appConfig: $this->createMock(originalClassName: IAppConfig::class),
 			renditions: $repository
 		);
 
@@ -131,7 +131,7 @@ class FolderFileEnumeratorRenditionTest extends TestCase {
 	 * @return Folder
 	 */
 	private function folder(array $files): Folder {
-		$folder = $this->createMock(Folder::class);
+		$folder = $this->createMock(originalClassName: Folder::class);
 		$folder->method('getDirectoryListing')->willReturn($files);
 		return $folder;
 
@@ -147,7 +147,7 @@ class FolderFileEnumeratorRenditionTest extends TestCase {
 	 * @return File
 	 */
 	private function file(int $id, string $name): File {
-		$file = $this->createMock(File::class);
+		$file = $this->createMock(originalClassName: File::class);
 		$file->method('getId')->willReturn($id);
 		$file->method('getName')->willReturn($name);
 		return $file;
