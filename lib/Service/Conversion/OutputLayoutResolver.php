@@ -34,7 +34,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md
+ * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md
  * @spec openspec/changes/anonymisation-folder-output-folder-layout/tasks.md
  */
 

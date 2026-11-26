@@ -1222,7 +1222,7 @@ export default {
 		 * Why the output subfolder name cannot be saved, or '' when it can.
 		 *
 		 * @return {string} Localised reason.
-		 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+		 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-2
 		 */
 		outputSubfolderError() {
 			const name = this.settings['anonymisation.output_subfolder_name'] || ''

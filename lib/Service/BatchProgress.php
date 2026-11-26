@@ -42,7 +42,8 @@ final class BatchProgress {
 	 * @param array<string, mixed> $batch The batch.
 	 * @param int                  $now   The current time (unix seconds).
 	 *
-	 * @return array{filesSucceeded: int, filesFailed: int, filesPending: int, progressPercent: float, documentsPerHour: float|null}
+	 * @return array{filesSucceeded: int, filesFailed: int, filesPending: int, progressPercent: float,
+	 *     documentsPerHour: float|null, startedOn: string|null}
 	 *
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
 	 */
@@ -75,6 +76,7 @@ final class BatchProgress {
 			'filesPending' => ($total - $succeeded - $failed),
 			'progressPercent' => $percent,
 			'documentsPerHour' => $this->perHour(batch: $batch, succeeded: $succeeded, now: $now),
+			'startedOn' => $this->startedOn(batch: $batch),
 		];
 
 	}//end figuresFor()
@@ -102,4 +104,26 @@ final class BatchProgress {
 		return round(($succeeded * 3600) / $seconds, 1);
 
 	}//end perHour()
+
+	/**
+	 * When the batch started, as an ISO 8601 date and time, or null before it started.
+	 *
+	 * The stored startedAt is unix seconds, which a list shows as a bare number;
+	 * this is the same moment in the form a list shows as a date.
+	 *
+	 * @param array<string, mixed> $batch The batch.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
+	 */
+	private function startedOn(array $batch): ?string {
+		$started = ($batch['startedAt'] ?? null);
+		if (is_int($started) === false || $started <= 0) {
+			return null;
+		}
+
+		return gmdate(DATE_ATOM, $started);
+
+	}//end startedOn()
 }//end class

@@ -123,18 +123,18 @@ class ObjectEventRegistrarTest extends TestCase {
 			->willReturnCallback(static function (string $event, string $listener) use (&$added): void {
 				$added[] = [$event, $listener];
 			});
-		$container = $this->createMock(ContainerInterface::class);
-		$container->expects(self::once())->method('get')->with(IEventDispatcher::class)->willReturn($dispatcher);
-
 		$warnings = [];
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->expects(self::exactly(3))->method('warning')
 			->willReturnCallback(static function (string $message, array $context) use (&$warnings): void {
 				$warnings[] = [$message, $context];
 			});
-		$server = $this->createMock(ContainerInterface::class);
-		$server->method('get')->with(LoggerInterface::class)->willReturn($logger);
-		\OC::$server = $server;
+		$container = $this->createMock(originalClassName: ContainerInterface::class);
+		$container->expects(self::exactly(count: 2))->method('get')->willReturnMap(
+			[[IEventDispatcher::class, $dispatcher], [LoggerInterface::class, $logger]]
+		);
+		// The logger comes from the container handed to boot(), never from a global lookup.
+		\OC::$server = null;
 
 		(new ObjectEventRegistrar())->boot($container, 'filinq');
 
@@ -166,7 +166,9 @@ class ObjectEventRegistrarTest extends TestCase {
 		$dispatcher = $this->createMock(IEventDispatcher::class);
 		$dispatcher->expects(self::never())->method('addServiceListener');
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->with(IEventDispatcher::class)->willReturn($dispatcher);
+		$container->method('get')->willReturnMap(
+			[[IEventDispatcher::class, $dispatcher], [LoggerInterface::class, $this->createMock(originalClassName: LoggerInterface::class)]]
+		);
 		\OC::$server = null;
 
 		(new ObjectEventRegistrar())->boot($container, 'filinq');
@@ -197,7 +199,9 @@ class ObjectEventRegistrarTest extends TestCase {
 
 		$dispatcher = $this->createMock(IEventDispatcher::class);
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->with(IEventDispatcher::class)->willReturn($dispatcher);
+		$container->method('get')->willReturnMap(
+			[[IEventDispatcher::class, $dispatcher], [LoggerInterface::class, $this->createMock(originalClassName: LoggerInterface::class)]]
+		);
 		\OC::$server = null;
 
 		(new ObjectEventRegistrar())->boot($container, 'filinq');

@@ -12,7 +12,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -32,7 +32,7 @@ use OCP\EventDispatcher\Event;
  * filinq is not installed nobody handles the event, and `isHandled()` stays
  * false with no refusal code.
  *
- * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
  */
 class DocumentStampRequestedEvent extends Event {
 
@@ -73,7 +73,7 @@ class DocumentStampRequestedEvent extends Event {
 	 * @param string $placement     diagonal, footer or both.
 	 * @param string $correlationId The caller's own reference, for its logs.
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function __construct(
 		private readonly string $sourceApp,
@@ -90,7 +90,7 @@ class DocumentStampRequestedEvent extends Event {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function getSourceApp(): string {
 		return $this->sourceApp;
@@ -101,7 +101,7 @@ class DocumentStampRequestedEvent extends Event {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function getPdfContent(): string {
 		return $this->pdfContent;
@@ -112,7 +112,7 @@ class DocumentStampRequestedEvent extends Event {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function getText(): string {
 		return $this->text;
@@ -123,7 +123,7 @@ class DocumentStampRequestedEvent extends Event {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function getPlacement(): string {
 		return $this->placement;
@@ -134,7 +134,7 @@ class DocumentStampRequestedEvent extends Event {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function getCorrelationId(): string {
 		return $this->correlationId;
@@ -145,7 +145,7 @@ class DocumentStampRequestedEvent extends Event {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function getStampedPdf(): ?string {
 		return $this->stampedPdf;
@@ -158,7 +158,7 @@ class DocumentStampRequestedEvent extends Event {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function setStampedPdf(string $stampedPdf): void {
 		$this->stampedPdf = $stampedPdf;
@@ -169,7 +169,7 @@ class DocumentStampRequestedEvent extends Event {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function isHandled(): bool {
 		return $this->handled;
@@ -182,7 +182,7 @@ class DocumentStampRequestedEvent extends Event {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function setHandled(bool $handled): void {
 		$this->handled = $handled;
@@ -196,7 +196,7 @@ class DocumentStampRequestedEvent extends Event {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function setRefusal(string $code, string $reason): void {
 		$this->refusalCode   = $code;
@@ -208,7 +208,7 @@ class DocumentStampRequestedEvent extends Event {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function getRefusalCode(): ?string {
 		return $this->refusalCode;
@@ -219,7 +219,7 @@ class DocumentStampRequestedEvent extends Event {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function getRefusalReason(): ?string {
 		return $this->refusalReason;

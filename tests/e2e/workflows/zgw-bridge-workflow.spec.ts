@@ -149,11 +149,11 @@ async function readDocument(request: APIRequestContext, id: string): Promise<Rec
  */
 async function uploadFile(request: APIRequestContext, path: string, bytes: Buffer): Promise<number> {
 	const url = `/remote.php/dav/files/${USER}/${path}`
-	const put = await request.put(url, { data: bytes })
+	const put = await request.put(url, { headers: OCS, data: bytes })
 	expect([201, 204], `PUT ${path}`).toContain(put.status())
 	const find = await request.fetch(url, {
 		method: 'PROPFIND',
-		headers: { Depth: '0', 'Content-Type': 'application/xml' },
+		headers: { ...OCS, Depth: '0', 'Content-Type': 'application/xml' },
 		data: '<?xml version="1.0"?><d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns"><d:prop><oc:fileid/></d:prop></d:propfind>',
 	})
 	expect(find.status()).toBe(207)
@@ -173,7 +173,7 @@ async function uploadFile(request: APIRequestContext, path: string, bytes: Buffe
 async function hrefOf(request: APIRequestContext, fileId: number): Promise<string> {
 	const res = await request.fetch('/remote.php/dav/', {
 		method: 'SEARCH',
-		headers: { 'Content-Type': 'text/xml' },
+		headers: { ...OCS, 'Content-Type': 'text/xml' },
 		data: `<?xml version="1.0" encoding="UTF-8"?>
 <d:searchrequest xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns">
 	<d:basicsearch>
@@ -197,7 +197,7 @@ async function hrefOf(request: APIRequestContext, fileId: number): Promise<strin
  * @return The hex digest.
  */
 async function hashAt(request: APIRequestContext, href: string): Promise<string> {
-	const res = await request.get(href)
+	const res = await request.get(href, { headers: OCS })
 	expect(res.status(), `GET ${href}`).toBe(200)
 
 	return sha256(await res.body())
@@ -208,9 +208,9 @@ test.afterAll(async ({ request }) => {
 		await request.delete(`${OBJECTS}/${schema}/${id}`, { headers: OCS })
 	}
 	for (const href of state.createdHrefs) {
-		await request.fetch(href, { method: 'DELETE' })
+		await request.fetch(href, { method: 'DELETE', headers: OCS })
 	}
-	await request.fetch(`/remote.php/dav/files/${USER}/${STAGING}`, { method: 'DELETE' })
+	await request.fetch(`/remote.php/dav/files/${USER}/${STAGING}`, { method: 'DELETE', headers: OCS })
 })
 
 test('the administrator sees the new case-system source in the bridge panel', async ({ page, request }) => {
@@ -234,7 +234,7 @@ test('the administrator sees the new case-system source in the bridge panel', as
 
 test('two documents of one zaak are staged from the source and listed as staged', async ({ request }) => {
 	expect(state.sourceId, 'the source step ran').not.toBe('')
-	const mkcol = await request.fetch(`/remote.php/dav/files/${USER}/${STAGING}`, { method: 'MKCOL' })
+	const mkcol = await request.fetch(`/remote.php/dav/files/${USER}/${STAGING}`, { method: 'MKCOL', headers: OCS })
 	expect([201, 405]).toContain(mkcol.status())
 
 	const extension = DOCUMENT !== '' ? extname(DOCUMENT) : '.txt'

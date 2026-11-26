@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-the-event-names-the-document-and-never-carries-its-content-req-cdw-002
+ * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-the-event-names-the-document-and-never-carries-its-content-req-cdw-002
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -33,7 +33,7 @@ namespace OCA\Filinq\Event\Webhook;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-the-event-names-the-document-and-never-carries-its-content-req-cdw-002
+ * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-the-event-names-the-document-and-never-carries-its-content-req-cdw-002
  */
 final class DocumentWebhookSubject {
 
@@ -49,7 +49,7 @@ final class DocumentWebhookSubject {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-the-event-names-the-document-and-never-carries-its-content-req-cdw-002
+	 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-the-event-names-the-document-and-never-carries-its-content-req-cdw-002
 	 */
 	public function __construct(
 		public readonly int|string|null $fileId,

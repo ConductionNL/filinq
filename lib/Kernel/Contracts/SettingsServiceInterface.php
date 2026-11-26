@@ -119,7 +119,7 @@ interface SettingsServiceInterface {
 	 * @throws RuntimeException With code 400 when a value is refused; nothing is written then.
 	 *
 	 * @spec openspec/specs/admin-settings/spec.md
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-2
 	 */
 	public function updateSettings(array $data): array;
 

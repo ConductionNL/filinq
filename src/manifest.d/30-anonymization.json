@@ -100,7 +100,7 @@
 					"documentsPerHour",
 					"throttled",
 					"totalFiles",
-					"startedAt"
+					"startedOn"
 				],
 				"rowRoute": "BatchOperationDetail",
 				"sidebar": {

@@ -29,6 +29,8 @@
   - Done (2026-11-14): `sources` needs the filinq admin setting; the others are `NoAdminRequired` and act with the caller's own OpenRegister access (RBAC-scoped listing, 404 for an unreadable document, the save checked by OpenRegister, the dossier folder and staged files under the caller's view). Refusals 400, missing 404, other failures 500 without details. Routes in `appinfo/routes.php` before the catch-all and in `openapi.json`. `BridgeControllerTest` (7).
   - Every method carries an explicit auth attribute and a per-object/admin guard; listing scoped by OR RBAC; routes registered in `appinfo/routes.php` before the catch-all.
 
+- [ ] 2.6 Record the result of anonymising a dossier copy on its external document: `in_processing` → `processed` with `resultFileRef` naming the new file (REQ-DDZGW-003 scenario 'Anonymisation of a bridge document leaves the staged original intact'). Found live 25 Nov 2026: nothing in filinq makes this move, so `zgw-bridge-workflow.spec.ts`'s anonymisation step cannot pass; it needs the copy's file id on the external document (pick-up returns `copiedFileId` but does not store it).
+
 - [ ] 2.5 File an OpenConnector issue if the push mapping cannot express "create new informatieobject + relate to zaak" during verification (design.md D2 uncertainty)
   - Outbound leg degrades to visibly-waiting `ready_for_writeback` objects; never Filinq-side HTTP.
 
@@ -53,5 +55,6 @@
 - [x] 4.3 i18n: EN + NL translations for all new UI strings (badge, panel, statuses, empty state)
   - Keys in English; `l10n/` updated for both languages.
 
-- [ ] 4.4 Documentation `docs/features/zgw-document-bridge.md` with Playwright MCP screenshots (ADR-010) of the admin panel and source badge; run `openspec validate zgw-document-bridge --strict`
+- [x] 4.4 Documentation `docs/features/zgw-document-bridge.md` with Playwright MCP screenshots (ADR-010) of the admin panel and source badge; run `openspec validate zgw-document-bridge --strict`
   - Explains the master-record boundary and the OpenConnector configuration hand-off.
+  - 25 Nov 2026, live (Nextcloud 34.0.6, MariaDB, Redis, OpenRegister main): `docs/features/zgw-document-bridge.md` with screenshots of the admin panel (fresh, failing with its error, inactive) and the My Documents source badge, from synthetic sources. Both bridge specs run live: `spec-coverage/zgw-bridge.spec.ts` 4/4 and `workflows/zgw-bridge-workflow.spec.ts` 4/6 after giving every WebDAV call the OCS header (without it every upload answered 401); the two skipped steps need a document the anonymiser detects plus the missing `processed` step (see 2.6) and an OpenConnector push leg against a DRC. `openspec validate --strict` reports 5 warnings (text above the first section, 4 requirements over 500 characters): spec rewriting, not done here.

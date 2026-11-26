@@ -705,6 +705,10 @@ class TemplateService implements TemplateServiceInterface {
 	 * Release an edit lock on a template
 	 *
 	 * Clears the lockedBy and lockedAt fields if the lock is held by the given user.
+	 * A template without a lock is answered as it is, without a write: a save
+	 * already releases the lock, and the editor's release after it must not
+	 * write the template back from its own read, which would undo a publish
+	 * that landed in between (status and publishedVersion reverted).
 	 *
 	 * @param string $id The template UUID
 	 * @param string $userId The Nextcloud user ID releasing the lock
@@ -714,9 +718,14 @@ class TemplateService implements TemplateServiceInterface {
 	 * @throws Exception If the template is not locked by this user
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 * @spec openspec/changes/woo-request-workflow/tasks.md
 	 */
 	public function releaseLock(string $id, string $userId): array {
 		$template = $this->getTemplate(id: $id);
+
+		if (empty($template['lockedBy']) === true && empty($template['lockedAt']) === true) {
+			return $template;
+		}
 
 		// Only the lock holder can release (or if lock is expired).
 		if ($this->heldByAnother(template: $template, userId: $userId) === true) {

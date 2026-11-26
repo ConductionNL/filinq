@@ -106,6 +106,8 @@ class SigningRetentionCheckCommand extends Command {
 	 *
 	 * @return int Command::SUCCESS when every schema meets the minimum, else Command::FAILURE.
 	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) Command::execute() passes the input; this check takes no options.
+	 *
 	 * @spec openspec/changes/signing-trust-rebuild/specs/signing-audit-via-or/spec.md
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
