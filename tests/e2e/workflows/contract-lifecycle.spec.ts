@@ -157,7 +157,7 @@ test.describe('contract lifecycle', () => {
 		await expect(confirm).toBeDisabled()
 		await page
 			.getByTestId('contract-terminate-reason')
-			.locator('textarea')
+			.locator('xpath=descendant-or-self::textarea')
 			.fill('Opgezegd per brief')
 		await confirm.click()
 		await expect(page.getByTestId('contract-status')).toHaveText('Terminated')

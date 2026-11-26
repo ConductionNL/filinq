@@ -80,7 +80,7 @@ async function shareFromDialog(page: Page): Promise<string> {
 	const dialog = page.getByTestId('share-by-link')
 	await expect(dialog).toBeVisible({ timeout: 15000 })
 	await dialog.getByTestId('share-by-link-password').locator('xpath=descendant-or-self::input').fill('Pw-share-2026!Strong#e2e')
-	await dialog.getByTestId('share-by-link-note').locator('input, textarea').first().fill('For the applicant')
+	await dialog.getByTestId('share-by-link-note').locator('xpath=descendant-or-self::input | descendant-or-self::textarea').first().fill('For the applicant')
 	await dialog.getByTestId('share-by-link-submit').click()
 	const link = dialog.getByTestId('share-by-link-url').locator('xpath=descendant-or-self::input')
 	await expect(link).toHaveValue(/\/s\/[A-Za-z0-9]+/, { timeout: 30000 })
