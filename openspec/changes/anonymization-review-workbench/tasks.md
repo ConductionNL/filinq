@@ -38,14 +38,21 @@
 - [ ] 4.1 PHPUnit unit tests for gate logic, `standingConsentMatch` attachment, policy `bases` CRUD and check-invalidation — minimum 75% coverage on new code (ADR-009)
   - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - End-to-end verify with OpenRegister on Postgres (8080): detection → pre-application → gate → commit.
+  - Live half done 26 Nov 2026 (sandbox: Nextcloud 34.0.6 + MariaDB + Redis, OpenRegister main 99ea152d with openregister#11261 applied locally, filinq development 8433ba3f, regex detection):
+    - Setup: a publish-never rule on one e-mail address (type OTHER) and a standing consent on another.
+    - Detection: the prohibited address arrived `included` with its prohibition match, and the consented one arrived excluded with its consent match.
+    - Gate: anonymise before any mark was refused with `409 document_not_reviewed`, and nothing was written.
+    - After both marks, commit: 200, `<name>_anonymized.pdf`, 3 replacements. The prohibited address and the phone number are redacted; the consented address keeps its text.
+    - Found on the way: creating a rule with an entity type outside the schema's list answered 500. It now answers 400 with OpenRegister's reason (ServerErrorAnswer). Left open: the 75% coverage measurement, since there is no coverage driver in this sandbox.
 - [x] 4.2 Playwright spec `tests/e2e/spec-coverage/review-workbench.spec.ts` covering the `@e2e`-referenced scenarios
   - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
   - Run live (25 Nov; Nextcloud 34 + MariaDB + Redis, OpenRegister main with regex entity recognition, filinq development, `tests/e2e/ci-seed.sh` run first): the 6 tests that need no prepared fixture pass. Two spec fixes: `confirmUncertain()` iterated `.all()` while each click removed a button (nth(1) then pointed past the end), and the entity-type option was ambiguous with the table filter's hidden list. One app fix: the publish-never rule form failed on `primaryName.trim` because `/api/policy/*` returned translatable fields as language maps (`PolicyCrudService::withText()`). The other 13 tests need `FILINQ_E2E_*_FILE_ID/_PATH` fixtures that nothing in the repo or CI provides, so they are skipped everywhere until they seed their own documents.
 - [x] 4.3 Vitest coverage for the workbench store wiring (shared entity model, selection pre-fill)
 - [x] 4.4 i18n: EN + NL translations for all new UI strings (keys in English) (ADR-005)
   - Test with the nldesign theme enabled for accessibility compliance.
-- [ ] 4.5 Docs: `docs/features/review-workbench.md` with Playwright MCP screenshots of the split view, badges, grondslag pickers and the checked gate (ADR-010)
+- [x] 4.5 Docs: `docs/features/review-workbench.md` with Playwright MCP screenshots of the split view, badges, grondslag pickers and the checked gate (ADR-010)
   - Live screenshot of the split view with rule badges and the uncertain counter added (`review-workbench.png`). Still open: the grondslag pickers and the checked state. At 1600 px the findings table overflows its pane and the badges and grondslag column are cut off, which needs a layout fix before they can be shown.
+  - Done live 26 Nov 2026 (sandbox: Nextcloud 34.0.6 + MariaDB + Redis, OpenRegister main 99ea152d with openregister#11261 applied locally, filinq development 802b0196, OR regex entity recognition): three more screenshots, of the grondslag pickers with their proposals, an opened picker, and the checked state. Three app reds were found and fixed on the way: a grondslag proposed by the admin mapping never showed as Proposed (REQ-DDARW-006); the reviewed mark's time was printed as a raw ISO moment; the app-navigation toggle covered the first letters of the title. The layout overflow noted above was fixed in #2416. Spec run live: review-workbench.spec.ts 6 passed, 13 skipped (they need the FILINQ_E2E_* prepared documents from a real detection backend).
 - [ ] 4.6 Validate: `openspec validate anonymization-review-workbench --strict` passes; hydra gates green on the branch
 
 ## 5. Amendment 2026-10-05: Woo rows 4.25 and 14.15

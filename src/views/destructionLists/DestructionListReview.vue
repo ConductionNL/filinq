@@ -121,6 +121,7 @@ import {
 	listStatus,
 	loadDestructionList,
 	loadHolds,
+	loadTitles,
 	rejectDestructionList,
 } from '../../services/destructionLists.js'
 
@@ -175,6 +176,8 @@ export default {
 		return {
 			list: null,
 			holds: {},
+			schemaTitles: {},
+			registerTitles: {},
 			exclusions: {},
 			excluding: null,
 			rejecting: false,
@@ -220,6 +223,8 @@ export default {
 		entries() {
 			return entryRows(this.list).map((row) => ({
 				...row,
+				schema: this.schemaTitles[row.schema] || row.schema,
+				register: this.registerTitles[row.register] || row.register,
 				actionDate: localDate(row.archiefactiedatum),
 			}))
 		},
@@ -285,13 +290,35 @@ export default {
 			this.loading = false
 			this.exclusions = {}
 			this.holds = {}
+			this.schemaTitles = {}
+			this.registerTitles = {}
 			if (!result.ok) {
 				this.list = null
 				this.error = result.error
 				return
 			}
 			this.list = result.data
-			await this.loadHolds()
+			await Promise.all([this.loadHolds(), this.loadTitles()])
+		},
+
+		/**
+		 * Read the titles of the schemas and registers the proposed records
+		 * name by id, for the list that was read.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
+		 */
+		async loadTitles() {
+			const list = this.list
+			const rows = entryRows(list)
+			const [schemas, registers] = await Promise.all([
+				loadTitles('schemas', rows.map((row) => row.schema)),
+				loadTitles('registers', rows.map((row) => row.register)),
+			])
+			if (this.list === list) {
+				this.schemaTitles = schemas
+				this.registerTitles = registers
+			}
 		},
 
 		/**

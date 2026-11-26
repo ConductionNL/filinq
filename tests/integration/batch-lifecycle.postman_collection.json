@@ -666,16 +666,6 @@
 					"name": "cancel NO AUTH (401)",
 					"event": [
 						{
-							"listen": "prerequest",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"const jar = pm.cookies.jar();",
-									"jar.clear(pm.request.url.toString(), function () {});"
-								]
-							}
-						},
-						{
 							"listen": "test",
 							"script": {
 								"type": "text/javascript",
@@ -691,6 +681,11 @@
 							{
 								"key": "Accept",
 								"value": "application/json"
+							},
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"description": "With no session cookie (disableCookies: the jar holds the admin session from the earlier requests) and this header, Nextcloud's auth check is what refuses: 401. Without the header its CSRF check answers 412 first."
 							}
 						],
 						"url": {
@@ -712,21 +707,14 @@
 						"auth": {
 							"type": "noauth"
 						}
+					},
+					"protocolProfileBehavior": {
+						"disableCookies": true
 					}
 				},
 				{
 					"name": "resume NO AUTH (401)",
 					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"type": "text/javascript",
-								"exec": [
-									"const jar = pm.cookies.jar();",
-									"jar.clear(pm.request.url.toString(), function () {});"
-								]
-							}
-						},
 						{
 							"listen": "test",
 							"script": {
@@ -743,6 +731,11 @@
 							{
 								"key": "Accept",
 								"value": "application/json"
+							},
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"description": "With no session cookie (disableCookies: the jar holds the admin session from the earlier requests) and this header, Nextcloud's auth check is what refuses: 401. Without the header its CSRF check answers 412 first."
 							}
 						],
 						"url": {
@@ -764,6 +757,9 @@
 						"auth": {
 							"type": "noauth"
 						}
+					},
+					"protocolProfileBehavior": {
+						"disableCookies": true
 					}
 				}
 			]

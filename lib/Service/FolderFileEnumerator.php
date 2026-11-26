@@ -30,6 +30,7 @@ namespace OCA\Filinq\Service;
 use OCA\Filinq\Service\Support\AppConfigFlag;
 use Exception;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\Service\Review\ReviewRenditionRepository;
 use OCP\Constants;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -71,6 +72,9 @@ class FolderFileEnumerator {
 	 *                                                          files are analysed sooner
 	 *                                                          (files-confidential-labels).
 	 * @param IAppConfig $appConfig App configuration for the priority-hint flag
+	 * @param ReviewRenditionRepository|null $renditions The review renditions filinq wrote next to
+	 *                                                their sources: a folder batch leaves them out,
+	 *                                                since they are copies of a source it already has.
 	 *
 	 * @return void
 	 */
@@ -78,6 +82,7 @@ class FolderFileEnumerator {
 		private readonly OutputLayoutResolver $layout,
 		private readonly ConfidentialityLabelService $confidentialityLabel,
 		private readonly IAppConfig $appConfig,
+		private readonly ?ReviewRenditionRepository $renditions = null,
 	) {
 
 	}//end __construct()
@@ -228,7 +233,7 @@ class FolderFileEnumerator {
 	 */
 	public function enumerate(Folder $folder): array {
 		$files = [];
-		foreach ($folder->getDirectoryListing() as $node) {
+		foreach ($this->withoutRenditions(nodes: $folder->getDirectoryListing()) as $node) {
 			if ($node instanceof File === false) {
 				continue;
 			}
@@ -273,7 +278,7 @@ class FolderFileEnumerator {
 	private function collectRecursive(Folder $folder): array {
 		$outputFolder = $this->layout->getSubfolderName();
 		$files = [];
-		foreach ($folder->getDirectoryListing() as $node) {
+		foreach ($this->withoutRenditions(nodes: $folder->getDirectoryListing()) as $node) {
 			if ($node instanceof Folder) {
 				if ($node->getName() !== $outputFolder) {
 					array_push($files, ...$this->collectRecursive(folder: $node));
@@ -294,6 +299,65 @@ class FolderFileEnumerator {
 
 		return $files;
 	}//end collectRecursive()
+
+	/**
+	 * One folder's listing without the review renditions filinq wrote into it.
+	 *
+	 * Detection writes a converted source's review rendition next to it, as
+	 * `<name>.pdf` (anonymization-review-workbench 5.1). A later folder batch
+	 * over the same folder took those renditions as documents of their own:
+	 * live, a second batch over 160 letters held 320 files. A PDF is left out
+	 * only when a sibling of the same name has a rendition record naming that
+	 * very file, so a person's own PDF beside a same-named source stays in.
+	 *
+	 * @param array<int, Node> $nodes The folder's listing.
+	 *
+	 * @return array<int, Node> The listing without the renditions.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/folder-batch-analysis/spec.md#requirement-optional-recursive-folder-enumeration-req-ddras-011
+	 */
+	private function withoutRenditions(array $nodes): array {
+		if ($this->renditions === null) {
+			return $nodes;
+		}
+
+		$pdfs = [];
+		$sources = [];
+		foreach ($nodes as $node) {
+			if ($node instanceof File === false) {
+				continue;
+			}
+
+			$name = pathinfo($node->getName(), PATHINFO_FILENAME);
+			if (strtolower(pathinfo($node->getName(), PATHINFO_EXTENSION)) === 'pdf') {
+				$pdfs[$name] = (int) $node->getId();
+				continue;
+			}
+
+			$sources[$name][] = (int) $node->getId();
+		}
+
+		$renditionIds = [];
+		foreach (array_intersect_key($sources, $pdfs) as $name => $sourceIds) {
+			foreach ($sourceIds as $sourceId) {
+				$rendition = $this->renditions->findFor(sourceFileId: $sourceId);
+				if ((int) ($rendition['fileId'] ?? 0) === $pdfs[$name]) {
+					$renditionIds[$pdfs[$name]] = true;
+				}
+			}
+		}
+
+		if ($renditionIds === []) {
+			return $nodes;
+		}
+
+		return array_values(
+			array_filter(
+				$nodes,
+				static fn (Node $node): bool => isset($renditionIds[(int) $node->getId()]) === false
+			)
+		);
+	}//end withoutRenditions()
 
 	/**
 	 * Optionally reorder enumerated files by confidentiality level.

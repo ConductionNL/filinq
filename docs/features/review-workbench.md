@@ -7,10 +7,27 @@ document, what is anonymised before anything is committed. It shows the
 original beside the anonymised result, the findings as one decision panel, and
 a per-document "reviewed" mark that the anonymise commit checks.
 
-Screenshots of the split view, the badges, the grondslag pickers and the
-checked gate follow with the Playwright capture run (task 4.5).
-
 ![The review workbench on an objection letter: the original as its reviewed PDF beside the not-yet-anonymised pane, and the findings with their rule badges, an always-anonymise rule pre-selecting the e-mail address and phone number, a never-anonymise rule pre-excluding the representative's address, and the count of uncertain findings](/screenshots/review-workbench.png)
+
+### The grondslag pickers
+
+Each finding carries a grondslag picker. When the admin mapping
+(`filinq.grondslagen.entity_type_bases`, in the admin settings) proposes a
+ground for the finding's type, the picker arrives filled with it and says
+**Proposed** until the reviewer picks; a rule's grounds are shown the same way.
+The reviewer's own pick replaces the proposal and is what the anonymisation
+writes.
+
+![The findings of a letter with the e-mail address and phone number each pre-filled with ground 5.1.2.e, Eerbiediging van de persoonlijke levenssfeer, marked Proposed](/screenshots/review-workbench-grondslagen.png)
+
+![A grondslag picker opened on a finding: the proposed 5.1.2.e selected, the other Woo grounds listed to add or replace it](/screenshots/review-workbench-grondslag-picker.png)
+
+### The checked gate
+
+"Mark as reviewed" stores who checked the document and when; the status line
+says so, and the anonymise commit is refused until the mark is there.
+
+![The same document marked as reviewed: the status line names the reviewer and the local date and time, with Remove reviewed mark beside it](/screenshots/review-workbench-checked.png)
 
 ## The review rendition
 

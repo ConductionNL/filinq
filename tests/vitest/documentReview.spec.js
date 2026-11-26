@@ -86,6 +86,17 @@ describe('the proposed grondslag', () => {
 		expect(basesAreProposed({ _decisionBases: ['a'] })).toBe(false)
 	})
 
+	it('is proposed when the bases are exactly what the mapping proposes for the type', () => {
+		const mapping = { EMAIL: ['5.1.2.e'], BSN: '5.1.1.e' }
+		expect(basesAreProposed({ type: 'EMAIL', bases: ['5.1.2.e'] }, mapping)).toBe(true)
+		expect(basesAreProposed({ type: 'BSN', bases: ['5.1.1.e'] }, mapping)).toBe(true)
+		expect(basesAreProposed({ type: 'EMAIL', bases: ['5.1.2.e'], _basesConfirmed: true }, mapping)).toBe(false)
+		expect(basesAreProposed({ type: 'EMAIL', bases: ['5.1.2.e', '5.1.1.d'] }, mapping)).toBe(false)
+		expect(basesAreProposed({ type: 'EMAIL', _decisionBases: ['5.1.1.d'], bases: ['5.1.2.e'] }, mapping)).toBe(false)
+		expect(basesAreProposed({ type: 'PHONE', bases: ['5.1.2.e'] }, mapping)).toBe(false)
+		expect(basesAreProposed({ type: 'EMAIL', bases: ['5.1.2.e'] }, null)).toBe(false)
+	})
+
 	it('reads the per-type mapping as a list', () => {
 		const mapping = { BSN: 'woo-art-5-1-2-e', PERSON: ['woo-art-5-1-2-e', '', 3], EMAIL: '' }
 		expect(proposedBasesFor(mapping, 'BSN')).toEqual(['woo-art-5-1-2-e'])

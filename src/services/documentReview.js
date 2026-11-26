@@ -218,11 +218,17 @@ export function policyBadges(entity) {
  * Whether an entity's grondslagen are a proposal the reviewer has not touched:
  * filled from a matched rule, or from the per-type proposal mapping.
  *
+ * The mapping's proposal is written onto the relations at extraction time
+ * without a marker, so a row whose bases are exactly what the mapping proposes
+ * for its type counts as proposed until the reviewer picks.
+ *
  * @param {object} entity A review row.
+ * @param {object|null} mapping `filinq.grondslagen.entity_type_bases`, when known.
  * @return {boolean} True while the bases are proposed.
  * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-3.3
+ * @spec openspec/changes/anonymization-review-workbench/specs/anonymization-review-workbench/spec.md#requirement-grondslag-auto-proposal-surfaced-and-overridable-req-ddarw-006
  */
-export function basesAreProposed(entity) {
+export function basesAreProposed(entity, mapping = null) {
 	if (!entity || entity._basesConfirmed === true) {
 		return false
 	}
@@ -230,7 +236,11 @@ export function basesAreProposed(entity) {
 	if (!Array.isArray(bases) || bases.length === 0) {
 		return false
 	}
-	return entity.basesSource === 'rule' || entity.basesProposed === true
+	if (entity.basesSource === 'rule' || entity.basesProposed === true) {
+		return true
+	}
+	const proposed = proposedBasesFor(mapping, entity.type)
+	return proposed.length === bases.length && proposed.every((slug) => bases.includes(slug))
 }
 
 /**

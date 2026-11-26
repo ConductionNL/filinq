@@ -119,7 +119,8 @@ class FolderBatchService implements FolderBatchServiceInterface {
 		$this->enumerator = new FolderFileEnumerator(
 			layout: $enumeration->layout,
 			confidentialityLabel: $enumeration->confidentialityLabel,
-			appConfig: $enumeration->appConfig
+			appConfig: $enumeration->appConfig,
+			renditions: $enumeration->renditions
 		);
 
 	}//end __construct()
