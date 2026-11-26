@@ -109,7 +109,7 @@ class McpSurfaceTest extends TestCase
 
 		$this->assertCount(16, $derived, 'the register declares 16 derived read tools');
 		foreach (array_keys(self::CURATED) as $id) {
-			$this->assertContains($id, $curated, $id.' is declared with #[McpTool]');
+			$this->assertContains(needle: $id, haystack: $curated, message: $id.' is declared with #[McpTool]');
 		}
 
 		$this->assertSame($expected, $actual);
@@ -259,7 +259,7 @@ class McpSurfaceTest extends TestCase
 		}
 
 		sort($ids);
-		$this->assertSame(array_values(array_unique($ids)), $ids, 'no curated tool name is declared twice');
+		$this->assertSame(expected: array_values(array_unique($ids)), actual: $ids, message: 'no curated tool name is declared twice');
 
 		return $ids;
 
