@@ -38,6 +38,12 @@
 - [ ] 4.1 PHPUnit unit tests for gate logic, `standingConsentMatch` attachment, policy `bases` CRUD and check-invalidation — minimum 75% coverage on new code (ADR-009)
   - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - End-to-end verify with OpenRegister on Postgres (8080): detection → pre-application → gate → commit.
+  - Live half done 26 Nov 2026 (sandbox: Nextcloud 34.0.6 + MariaDB + Redis, OpenRegister main 99ea152d with openregister#11261 applied locally, filinq development 8433ba3f, regex detection):
+    - Setup: a publish-never rule on one e-mail address (type OTHER) and a standing consent on another.
+    - Detection: the prohibited address arrived `included` with its prohibition match, and the consented one arrived excluded with its consent match.
+    - Gate: anonymise before any mark was refused with `409 document_not_reviewed`, and nothing was written.
+    - After both marks, commit: 200, `<name>_anonymized.pdf`, 3 replacements. The prohibited address and the phone number are redacted; the consented address keeps its text.
+    - Found on the way: creating a rule with an entity type outside the schema's list answered 500. It now answers 400 with OpenRegister's reason (ServerErrorAnswer). Left open: the 75% coverage measurement, since there is no coverage driver in this sandbox.
 - [x] 4.2 Playwright spec `tests/e2e/spec-coverage/review-workbench.spec.ts` covering the `@e2e`-referenced scenarios
   - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
   - Run live (25 Nov; Nextcloud 34 + MariaDB + Redis, OpenRegister main with regex entity recognition, filinq development, `tests/e2e/ci-seed.sh` run first): the 6 tests that need no prepared fixture pass. Two spec fixes: `confirmUncertain()` iterated `.all()` while each click removed a button (nth(1) then pointed past the end), and the entity-type option was ambiguous with the table filter's hidden list. One app fix: the publish-never rule form failed on `primaryName.trim` because `/api/policy/*` returned translatable fields as language maps (`PolicyCrudService::withText()`). The other 13 tests need `FILINQ_E2E_*_FILE_ID/_PATH` fixtures that nothing in the repo or CI provides, so they are skipped everywhere until they seed their own documents.

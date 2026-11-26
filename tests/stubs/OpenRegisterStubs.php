@@ -2543,6 +2543,14 @@ class HookStoppedException extends \Exception {
 	}//end getErrors()
 }//end class
 
+
+// Stub for ValidationException: OpenRegister refuses a record against its
+// schema (an enum value outside the list, a missing required field).
+if (class_exists(\OCA\OpenRegister\Exception\ValidationException::class, false) === false) {
+	class ValidationException extends \Exception {
+	}
+}
+
 namespace OCA\OpenRegister\Event;
 
 use OCA\OpenRegister\Db\ObjectEntity;
