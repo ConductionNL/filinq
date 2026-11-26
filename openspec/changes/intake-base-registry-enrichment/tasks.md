@@ -23,3 +23,4 @@
 ## 4. Quality
 
 - [ ] 4.1 Dutch and English strings (ADR-005), `@spec` tags, `docs/features/` with screenshots (ADR-010), PHPUnit at 75% on new code (ADR-009). Verify: `npm run check:l10n`, `npm run lint`, `composer check:strict`.
+  - Coverage measured (26 Nov 2026, pcov over the full unit suite on development 6f987cc): 821 of 869 statements, 94.5%, across the 9 lib files that carry this change's `@spec` tag; lowest `IntakeController` at 82.9%. The 75% figure is met; the `docs/features/` screenshots (need a live instance) keep this open.

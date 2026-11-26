@@ -34,6 +34,7 @@
 - [ ] 5.1 PHPUnit for submission plumbing, degradation flags, burn verification, count derivation and additive response shape — 75% coverage on new code (ADR-009)
   - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Live-verify on Postgres (8080) with OpenRegister + an image-capable backend: upload scan → regions in workbench → burn → output has opaque region and no recoverable value.
+  - Coverage measured (26 Nov 2026, pcov over the full unit suite on development 6f987cc): 1108 of 1167 statements, 94.9%, across the 13 lib files that carry this change's `@spec` tag; lowest `DocumentAnonymizeRunner` at 82.6%. The 75% figure is met; the burn-verification tests wait on task 3.1 and the born-digital page burn on openregister#11367.
 - [x] 5.2 Playwright spec `tests/e2e/spec-coverage/image-redaction.spec.ts` for the `@e2e`-referenced scenarios
 - [ ] 5.3 i18n EN + NL for all new UI strings (keys in English); nldesign theme check (ADR-005, ADR-003)
 - [ ] 5.4 Docs: `docs/features/image-redaction.md` with Playwright screenshots (overlays, SIGNATURE badge, degradation warnings, burned output) and the Filinq↔OpenRegister image division of labour (ADR-010)
