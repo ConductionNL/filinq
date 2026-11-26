@@ -161,7 +161,7 @@ final class BridgeDossierPickUpTest extends TestCase {
 		$this->assertSame(['doc-1' => 'dossier-21', 'doc-2' => 'dossier-21'], $this->pickedUp);
 		$this->assertSame(['in_processing', 'in_processing'], array_column($attached, 'processingStatus'));
 		$this->assertSame([1101, 1102], array_column($attached, 'copiedFileId'));
-		$this->assertSame(['doc-1' => 1101, 'doc-2' => 1102], $this->pickedUpCopies);
+		$this->assertSame(expected: ['doc-1' => 1101, 'doc-2' => 1102], actual: $this->pickedUpCopies);
 	}//end testBothStagedDocumentsAreCopiedIntoTheDossierFolderAndRecorded()
 
 	public function testADocumentThatIsNotStagedRefusesThePickUpBeforeAnythingIsCopied(): void {

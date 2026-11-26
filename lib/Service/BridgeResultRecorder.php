@@ -23,11 +23,15 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent;
+use OCP\EventDispatcher\Event;
+use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * After an anonymisation run wrote its output, moves the external document
+ * Listens to `document.anonymised` (raised when an anonymisation run stored its
+ * output and its link). Moves the external document
  * whose dossier copy was anonymised from `in_processing` to `processed` with
  * `resultFileRef` naming the output. The staged original is never read or
  * written here.
@@ -35,9 +39,11 @@ use Throwable;
  * Best-effort, like the anonymisation link: the output already exists, so a
  * failure is logged and never changes the run's answer.
  *
+ * @template-implements IEventListener<Event>
+ *
  * @spec openspec/changes/zgw-document-bridge/tasks.md#task-2.6
  */
-class BridgeResultRecorder {
+class BridgeResultRecorder implements IEventListener {
 
 	/**
 	 * Constructor.
@@ -52,6 +58,27 @@ class BridgeResultRecorder {
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
+
+	/**
+	 * Record the output of an anonymisation that raised `document.anonymised`; any other event is ignored.
+	 *
+	 * @param Event $event The event.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/zgw-document-bridge/tasks.md#task-2.6
+	 */
+	public function handle(Event $event): void {
+		if ($event instanceof DocumentAnonymisedEvent === false) {
+			return;
+		}
+
+		$payload = $event->getPayload();
+		$this->record(
+			sourceFileId: (int)($payload['sourceFileId'] ?? 0),
+			resultFileId: (int)($payload['anonymisedFileId'] ?? 0)
+		);
+	}//end handle()
 
 	/**
 	 * Record one run's output on the bridge documents of its source file.

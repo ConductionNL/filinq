@@ -209,7 +209,7 @@ class BridgeServiceTest extends TestCase {
 			$this->anything()
 		)->willReturn(['uuid' => 'd-1', 'processingStatus' => 'in_processing', 'dossierFileRef' => 1101]);
 
-		$this->assertSame(1101, $service->pickedUp(['uuid' => 'd-1', 'processingStatus' => 'staged'], 'dossier-21', 1101)['dossierFileRef']);
+		$this->assertSame(expected: 1101, actual: $service->pickedUp(['uuid' => 'd-1', 'processingStatus' => 'staged'], 'dossier-21', 1101)['dossierFileRef']);
 	}//end testPickedUpRecordsTheDossierCopy()
 
 	/**
@@ -230,12 +230,12 @@ class BridgeServiceTest extends TestCase {
 			);
 		$this->objects->expects($this->once())->method('saveObject')->with(
 			['processingStatus' => 'processed', 'dossierFileRef' => 1101, 'contentHash' => 'sha256:aa', 'resultFileRef' => 2201],
-			$this->equalTo(new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'externalDocument'), uuid: 'd-1'))
+			$this->equalTo(value: new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'externalDocument'), uuid: 'd-1'))
 		)->willReturn(['uuid' => 'd-1', 'processingStatus' => 'processed', 'resultFileRef' => 2201]);
 
 		$saved = $service->processed(1101, 2201);
 
-		$this->assertSame([['uuid' => 'd-1', 'processingStatus' => 'processed', 'resultFileRef' => 2201]], $saved);
+		$this->assertSame(expected: [['uuid' => 'd-1', 'processingStatus' => 'processed', 'resultFileRef' => 2201]], actual: $saved);
 	}//end testProcessedRecordsTheOutputOnTheDocumentOfTheCopy()
 
 	/**
@@ -248,8 +248,8 @@ class BridgeServiceTest extends TestCase {
 		$this->objects->expects($this->never())->method('searchObjectsBySlug');
 		$this->objects->expects($this->never())->method('saveObject');
 
-		$this->assertSame([], $service->processed(0, 2201));
-		$this->assertSame([], $service->processed(1101, 0));
+		$this->assertSame(expected: [], actual: $service->processed(0, 2201));
+		$this->assertSame(expected: [], actual: $service->processed(1101, 0));
 	}//end testProcessedWithoutFilesChangesNothing()
 
 	/**

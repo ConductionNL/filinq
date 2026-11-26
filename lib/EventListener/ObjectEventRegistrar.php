@@ -94,6 +94,7 @@ class ObjectEventRegistrar {
 	 * @return void
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
+	 * @spec openspec/changes/zgw-document-bridge/tasks.md#task-2.6
 	 */
 	public function register(IRegistrationContext $context): void {
 		// The intake inbox listens to its own event. A channel says a document
@@ -146,6 +147,13 @@ class ObjectEventRegistrar {
 		$context->registerEventListener(
 			ObjectCreatedEvent::class,
 			'OCA\Filinq\EventListener\IntakeArrivalFollowUpListener'
+		);
+
+		// An anonymised dossier copy of a bridge document records its output on
+		// the external document (zgw-document-bridge REQ-DDZGW-003).
+		$context->registerEventListener(
+			'OCA\\Filinq\\Event\\Webhook\\DocumentAnonymisedEvent',
+			'OCA\\Filinq\\Service\\BridgeResultRecorder'
 		);
 
 		$context->registerEventListener(ObjectDeletedEvent::class, FilinqEventListener::class);

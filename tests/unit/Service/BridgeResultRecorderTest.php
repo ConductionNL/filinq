@@ -22,7 +22,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent;
+use OCA\Filinq\Event\Webhook\DocumentWebhookSubject;
 use OCA\Filinq\Service\BridgeResultRecorder;
+use OCP\EventDispatcher\Event;
 use OCA\Filinq\Service\BridgeService;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -33,6 +36,9 @@ use RuntimeException;
  * reach the anonymisation run.
  *
  * @covers \OCA\Filinq\Service\BridgeResultRecorder
+ * @uses   \OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent
+ * @uses   \OCA\Filinq\Event\Webhook\DocumentWebhookEvent
+ * @uses   \OCA\Filinq\Event\Webhook\DocumentWebhookSubject
  */
 class BridgeResultRecorderTest extends TestCase {
 
@@ -42,12 +48,12 @@ class BridgeResultRecorderTest extends TestCase {
 	 * @return void
 	 */
 	public function testItCountsTheProcessedDocuments(): void {
-		$bridge = $this->createMock(BridgeService::class);
+		$bridge = $this->createMock(originalClassName: BridgeService::class);
 		$bridge->expects($this->once())->method('processed')->with(1101, 2201)->willReturn([['uuid' => 'd-1']]);
 
-		$recorder = new BridgeResultRecorder(bridge: $bridge, logger: $this->createMock(LoggerInterface::class));
+		$recorder = new BridgeResultRecorder(bridge: $bridge, logger: $this->createMock(originalClassName: LoggerInterface::class));
 
-		$this->assertSame(1, $recorder->record(sourceFileId: 1101, resultFileId: 2201));
+		$this->assertSame(expected: 1, actual: $recorder->record(sourceFileId: 1101, resultFileId: 2201));
 	}//end testItCountsTheProcessedDocuments()
 
 	/**
@@ -56,16 +62,52 @@ class BridgeResultRecorderTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFailureIsLoggedAndSwallowed(): void {
-		$bridge = $this->createMock(BridgeService::class);
+		$bridge = $this->createMock(originalClassName: BridgeService::class);
 		$bridge->method('processed')->willThrowException(new RuntimeException('lifecycle refused'));
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->once())->method('warning')->with(
-			$this->stringContains('not recorded'),
-			$this->callback(static fn (array $context): bool => $context['sourceFileId'] === 1101 && $context['resultFileId'] === 2201 && $context['exception'] === 'lifecycle refused')
+			$this->stringContains(string: 'not recorded'),
+			$this->callback(
+				callback: static fn (array $context): bool => $context['sourceFileId'] === 1101
+					&& $context['resultFileId'] === 2201
+					&& $context['exception'] === 'lifecycle refused'
+			)
 		);
 
 		$recorder = new BridgeResultRecorder(bridge: $bridge, logger: $logger);
 
-		$this->assertSame(0, $recorder->record(sourceFileId: 1101, resultFileId: 2201));
+		$this->assertSame(expected: 0, actual: $recorder->record(sourceFileId: 1101, resultFileId: 2201));
 	}//end testAFailureIsLoggedAndSwallowed()
+
+	/**
+	 * `document.anonymised` hands its source and output file to the bridge.
+	 *
+	 * @return void
+	 */
+	public function testTheAnonymisedEventReachesTheBridge(): void {
+		$bridge = $this->createMock(originalClassName: BridgeService::class);
+		$bridge->expects($this->once())->method('processed')->with(1101, 2201)->willReturn([]);
+		$recorder = new BridgeResultRecorder(bridge: $bridge, logger: $this->createMock(originalClassName: LoggerInterface::class));
+
+		$recorder->handle(
+			event: new DocumentAnonymisedEvent(
+				subject: new DocumentWebhookSubject(fileId: 1101, name: 'besluit.pdf', register: 'filinq', schema: 'anonymizationLink', id: 'link-1'),
+				actor: 'operator',
+				details: ['sourceFileId' => 1101, 'anonymisedFileId' => 2201, 'verificationVerdict' => 'verified'],
+				occurredAt: '2026-11-26T09:00:00+00:00'
+			)
+		);
+	}//end testTheAnonymisedEventReachesTheBridge()
+
+	/**
+	 * Any other event is ignored.
+	 *
+	 * @return void
+	 */
+	public function testOtherEventsAreIgnored(): void {
+		$bridge = $this->createMock(originalClassName: BridgeService::class);
+		$bridge->expects($this->never())->method('processed');
+
+		(new BridgeResultRecorder(bridge: $bridge, logger: $this->createMock(originalClassName: LoggerInterface::class)))->handle(event: new Event());
+	}//end testOtherEventsAreIgnored()
 }//end class
