@@ -136,7 +136,7 @@ class ListenerRegistrarTest extends TestCase {
 				['OCP\Share\Events\ShareCreatedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
 				['OCA\Filinq\Event\Webhook\DocumentSignedEvent', 'OCA\Filinq\EventListener\DocumentFileActionListener'],
 				['OCP\Files\Events\BeforeDirectFileDownloadEvent', 'OCA\Filinq\EventListener\DocumentDownloadedListener'],
-				['OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent', 'OCA\Filinq\Service\BridgeResultRecorder'],
+				['OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent', 'OCA\Filinq\EventListener\BridgeResultListener'],
 			],
 			array_slice($registered, 33)
 		);

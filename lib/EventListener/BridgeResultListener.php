@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Bridge Result Recorder
+ * Bridge Result Listener
  *
  * Records the redacted output of a bridge document's dossier copy on its
  * external document (zgw-document-bridge REQ-DDZGW-003).
  *
- * @category  Service
- * @package   OCA\Filinq\Service
+ * @category  EventListener
+ * @package   OCA\Filinq\EventListener
  * @author    Conduction B.V. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -21,9 +21,10 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Service;
+namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent;
+use OCA\Filinq\Service\BridgeService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -43,7 +44,7 @@ use Throwable;
  *
  * @spec openspec/changes/zgw-document-bridge/tasks.md#task-2.6
  */
-class BridgeResultRecorder implements IEventListener {
+class BridgeResultListener implements IEventListener {
 
 	/**
 	 * Constructor.
@@ -95,7 +96,7 @@ class BridgeResultRecorder implements IEventListener {
 			return count($this->bridge->processed(sourceFileId: $sourceFileId, resultFileId: $resultFileId));
 		} catch (Throwable $e) {
 			$this->logger->warning(
-				'[BridgeResultRecorder] the anonymisation output was not recorded on the external document',
+				'[BridgeResultListener] the anonymisation output was not recorded on the external document',
 				['sourceFileId' => $sourceFileId, 'resultFileId' => $resultFileId, 'exception' => $e->getMessage()]
 			);
 			return 0;

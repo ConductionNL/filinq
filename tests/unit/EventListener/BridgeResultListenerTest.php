@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Unit tests for BridgeResultRecorder (zgw-document-bridge REQ-DDZGW-003).
+ * Unit tests for BridgeResultListener (zgw-document-bridge REQ-DDZGW-003).
  *
  * @category Tests
- * @package  OCA\Filinq\Tests\Unit\Service
+ * @package  OCA\Filinq\Tests\Unit\EventListener
  *
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -20,13 +20,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\Filinq\Tests\Unit\Service;
+namespace OCA\Filinq\Tests\Unit\EventListener;
 
 use OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent;
 use OCA\Filinq\Event\Webhook\DocumentWebhookSubject;
-use OCA\Filinq\Service\BridgeResultRecorder;
-use OCP\EventDispatcher\Event;
+use OCA\Filinq\EventListener\BridgeResultListener;
 use OCA\Filinq\Service\BridgeService;
+use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -35,12 +35,12 @@ use RuntimeException;
  * The recorder hands the run's files to the bridge and never lets a failure
  * reach the anonymisation run.
  *
- * @covers \OCA\Filinq\Service\BridgeResultRecorder
+ * @covers \OCA\Filinq\EventListener\BridgeResultListener
  * @uses   \OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent
  * @uses   \OCA\Filinq\Event\Webhook\DocumentWebhookEvent
  * @uses   \OCA\Filinq\Event\Webhook\DocumentWebhookSubject
  */
-class BridgeResultRecorderTest extends TestCase {
+class BridgeResultListenerTest extends TestCase {
 
 	/**
 	 * It says how many external documents became processed.
@@ -51,7 +51,7 @@ class BridgeResultRecorderTest extends TestCase {
 		$bridge = $this->createMock(originalClassName: BridgeService::class);
 		$bridge->expects($this->once())->method('processed')->with(1101, 2201)->willReturn([['uuid' => 'd-1']]);
 
-		$recorder = new BridgeResultRecorder(bridge: $bridge, logger: $this->createMock(originalClassName: LoggerInterface::class));
+		$recorder = new BridgeResultListener(bridge: $bridge, logger: $this->createMock(originalClassName: LoggerInterface::class));
 
 		$this->assertSame(expected: 1, actual: $recorder->record(sourceFileId: 1101, resultFileId: 2201));
 	}//end testItCountsTheProcessedDocuments()
@@ -74,7 +74,7 @@ class BridgeResultRecorderTest extends TestCase {
 			)
 		);
 
-		$recorder = new BridgeResultRecorder(bridge: $bridge, logger: $logger);
+		$recorder = new BridgeResultListener(bridge: $bridge, logger: $logger);
 
 		$this->assertSame(expected: 0, actual: $recorder->record(sourceFileId: 1101, resultFileId: 2201));
 	}//end testAFailureIsLoggedAndSwallowed()
@@ -87,7 +87,7 @@ class BridgeResultRecorderTest extends TestCase {
 	public function testTheAnonymisedEventReachesTheBridge(): void {
 		$bridge = $this->createMock(originalClassName: BridgeService::class);
 		$bridge->expects($this->once())->method('processed')->with(1101, 2201)->willReturn([]);
-		$recorder = new BridgeResultRecorder(bridge: $bridge, logger: $this->createMock(originalClassName: LoggerInterface::class));
+		$recorder = new BridgeResultListener(bridge: $bridge, logger: $this->createMock(originalClassName: LoggerInterface::class));
 
 		$recorder->handle(
 			event: new DocumentAnonymisedEvent(
@@ -108,6 +108,6 @@ class BridgeResultRecorderTest extends TestCase {
 		$bridge = $this->createMock(originalClassName: BridgeService::class);
 		$bridge->expects($this->never())->method('processed');
 
-		(new BridgeResultRecorder(bridge: $bridge, logger: $this->createMock(originalClassName: LoggerInterface::class)))->handle(event: new Event());
+		(new BridgeResultListener(bridge: $bridge, logger: $this->createMock(originalClassName: LoggerInterface::class)))->handle(event: new Event());
 	}//end testOtherEventsAreIgnored()
 }//end class
