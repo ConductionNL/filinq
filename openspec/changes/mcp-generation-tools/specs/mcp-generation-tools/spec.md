@@ -160,7 +160,7 @@ a derived `create`/`update`/`delete` verb. Every adoption refusal MUST hold.
 
 - GIVEN the full Filinq tool surface after this change
 - WHEN it is enumerated
-- THEN it is exactly the 16 derived read tools plus the 3 curated tools (generateCorrespondence, getDocumentStatus, anonymizeDocument)
+- THEN it is exactly the 16 derived read tools plus the curated tools the app's source declares with `#[McpTool]`: this change's generateCorrespondence, getDocumentStatus and anonymizeDocument, and those later changes add under their own requirements (document editing, document charts, document metadata, the approval-gated signing-request initiation of REQ-DDHAT-001, the consent decision); no tool appears that the source does not declare
 - AND no tool name ends in `.create`, `.update` or `.delete`
 - AND no tool touches signing acts, batches, or the excluded schemas
 - @e2e exclude registry-shape contract; covered by the MCP surface probe (tests/integration/Mcp/McpSurfaceTest.php)
