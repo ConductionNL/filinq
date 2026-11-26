@@ -49,14 +49,21 @@ export function canCancel(status) {
 }
 
 /**
- * Whether a batch in this status can be resumed.
+ * Whether a batch in this status can be resumed: an errored or cancelled
+ * batch, or a completed batch that has files in `error` (only those are
+ * queued again).
  *
- * @param {string} status The batch status.
+ * @param {string}        status The batch status.
+ * @param {Array<object>} files  The batch's files.
  * @return {boolean}
+ * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
  * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
  */
-export function canResume(status) {
-	return RESUMABLE.includes(status)
+export function canResume(status, files = []) {
+	if (RESUMABLE.includes(status)) {
+		return true
+	}
+	return status === 'completed' && (files || []).some((file) => file?.status === 'error')
 }
 
 /**

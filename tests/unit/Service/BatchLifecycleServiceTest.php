@@ -212,6 +212,66 @@ class BatchLifecycleServiceTest extends TestCase {
 	}//end testResumeWithNothingToExtractGoesBackToReview()
 
 	/**
+	 * A completed batch whose files failed re-queues only those files; the rest keep their outcome.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
+	 *
+	 * @return void
+	 */
+	public function testACompletedBatchWithFailedFilesRequeuesOnlyThoseFiles(): void {
+		$this->state->method('getBatch')->willReturn(
+			self::batch(
+				status: 'completed',
+				files: [
+					['fileId' => 1, 'status' => 'anonymized', 'anonymizedFileId' => 'a1'],
+					['fileId' => 2, 'status' => 'error', 'error' => 'Refused by the review gate'],
+					['fileId' => 3, 'status' => 'prohibitionViolation'],
+				]
+			)
+		);
+		$written = null;
+		$this->state->expects(self::once())->method('updateBatch')
+			->willReturnCallback(static function (string $id, array $batch) use (&$written): void {
+				$written = $batch;
+			});
+
+		$result = $this->service->resume(batchId: 'b-1');
+
+		self::assertSame(
+			expected: ['status' => 202, 'batchId' => 'b-1', 'batchStatus' => 'extracting', 'requeued' => 1],
+			actual: $result
+		);
+		self::assertSame(
+			expected: ['fileId' => 1, 'status' => 'anonymized', 'anonymizedFileId' => 'a1'],
+			actual: $written['files'][0]
+		);
+		self::assertSame(expected: ['fileId' => 2, 'status' => 'uploaded', 'retryCount' => 1], actual: $written['files'][1]);
+		self::assertSame(expected: ['fileId' => 3, 'status' => 'prohibitionViolation'], actual: $written['files'][2]);
+		self::assertIsInt(actual: $written['resumedAt']);
+
+	}//end testACompletedBatchWithFailedFilesRequeuesOnlyThoseFiles()
+
+	/**
+	 * A completed batch without failed files still answers 409.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
+	 *
+	 * @return void
+	 */
+	public function testACompletedBatchWithoutFailedFilesIsRefused(): void {
+		$this->state->method('getBatch')->willReturn(
+			self::batch(status: 'completed', files: [['fileId' => 1, 'status' => 'anonymized'], ['fileId' => 2, 'status' => 'prohibitionViolation']])
+		);
+		$this->state->expects(self::never())->method('updateBatch');
+
+		self::assertSame(
+			expected: ['status' => 409, 'reason' => 'not-resumable', 'batchStatus' => 'completed'],
+			actual: $this->service->resume(batchId: 'b-1')
+		);
+
+	}//end testACompletedBatchWithoutFailedFilesIsRefused()
+
+	/**
 	 * Running and completed batches cannot be resumed.
 	 *
 	 * @return array<string, array{0: string}>

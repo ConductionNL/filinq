@@ -48,6 +48,13 @@ describe('batch operations', () => {
 		expect(canResume('completed')).toBe(false)
 	})
 
+	it('resumes a completed batch only while it has files in error', () => {
+		expect(canResume('completed', [{ status: 'anonymized' }, { status: 'error' }])).toBe(true)
+		expect(canResume('completed', [{ status: 'anonymized' }, { status: 'prohibitionViolation' }])).toBe(false)
+		expect(canResume('completed', null)).toBe(false)
+		expect(canResume('review', [{ status: 'error' }])).toBe(false)
+	})
+
 	it('lists the QA-sampled files with their outcome, pending when none is recorded', () => {
 		const samples = qaSamples([
 			{ fileId: 1, fileName: 'a.pdf', status: 'anonymized' },

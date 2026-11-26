@@ -77,21 +77,16 @@ class BatchLifecycleService {
 	private const NOT_CANCELLABLE = ['completed', 'error', self::CANCELLED];
 
 	/**
-	 * Batch statuses that can be resumed.
-	 *
-	 * @var array<int, string>
-	 */
-	private const RESUMABLE = ['error', self::CANCELLED];
-
-	/**
 	 * Constructor.
 	 *
-	 * @param BatchStateServiceInterface $stateService Batch state, ownership-checked on read.
+	 * @param BatchStateServiceInterface $stateService    Batch state, ownership-checked on read.
+	 * @param BatchResumeSelection       $resumeSelection Which batches resume, and which of their files.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly BatchStateServiceInterface $stateService,
+		private readonly BatchResumeSelection $resumeSelection=new BatchResumeSelection(),
 	) {
 
 	}//end __construct()
@@ -136,18 +131,20 @@ class BatchLifecycleService {
 	}//end cancel()
 
 	/**
-	 * Re-queue the files of an errored or cancelled batch that did not succeed.
+	 * Re-queue the files of an errored or cancelled batch that did not succeed,
+	 * or the failed files of a completed batch ({@see BatchResumeSelection}).
 	 *
 	 * A failed file goes back to `uploaded` (extracted again) with its retry
 	 * count raised; an extracted file waits for anonymization again; a file
 	 * that already produced its output is left alone, so a resumed run never
-	 * produces it twice.
+	 * produces it twice. A completed batch without failed files answers 409.
 	 *
 	 * @param string $batchId The batch id.
 	 *
 	 * @return array{status: int, batchId?: string, batchStatus?: string, requeued?: int, reason?: string}
-	 *         404 for an unknown or foreign batch, 409 for one not errored or cancelled, else 202.
+	 *         404 for an unknown or foreign batch, 409 for one that cannot be resumed, else 202.
 	 *
+	 * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
 	 */
 	public function resume(string $batchId): array {
@@ -156,12 +153,12 @@ class BatchLifecycleService {
 			return ['status' => 404, 'reason' => 'not-found'];
 		}
 
-		$current = (string)($batch['status'] ?? '');
-		if (in_array($current, self::RESUMABLE, true) === false) {
-			return ['status' => 409, 'reason' => 'not-resumable', 'batchStatus' => $current];
+		$selection = $this->resumeSelection->forBatch(batch: $batch);
+		if ($selection['resumable'] === false) {
+			return ['status' => 409, 'reason' => 'not-resumable', 'batchStatus' => (string)($batch['status'] ?? '')];
 		}
 
-		$requeue = $this->requeueUnfinished(batch: $batch);
+		$requeue = $this->requeueUnfinished(batch: $batch, only: $selection['only']);
 		$batch = $requeue['batch'];
 		// Marks the run as resumed: a file whose redacted copy was made after
 		// the batch started is then taken from its anonymizationLink instead
@@ -198,20 +195,23 @@ class BatchLifecycleService {
 	 * The batch with every unfinished file queued again: a file that failed
 	 * before extraction goes back to `uploaded` with one more retry, an
 	 * extracted one waits for review as it is. The batch extracts again when
-	 * any file went back, else it returns to review.
+	 * any file went back, else it returns to review. With `$only` only the
+	 * files in one of those statuses are queued again.
 	 *
-	 * @param array<string, mixed> $batch The stored batch.
+	 * @param array<string, mixed>    $batch The stored batch.
+	 * @param array<int, string>|null $only  The file statuses to queue again, or null for every unfinished file.
 	 *
 	 * @return array{batch: array<string, mixed>, requeued: int}
 	 *
+	 * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
 	 */
-	private function requeueUnfinished(array $batch): array {
+	private function requeueUnfinished(array $batch, ?array $only): array {
 		$requeued = 0;
 		$batch['status'] = 'review';
 		foreach ((array)($batch['files'] ?? []) as $index => $file) {
 			$status = (string)($file['status'] ?? '');
-			if ($status === self::FILE_SUCCEEDED) {
+			if ($status === self::FILE_SUCCEEDED || ($only !== null && in_array($status, $only, true) === false)) {
 				continue;
 			}
 

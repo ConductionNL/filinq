@@ -124,19 +124,30 @@ batch owner or an admin MAY cancel.
 
 The system MUST provide `POST /api/anonymization/batch/{batchId}/resume`
 for batches in status `error` or `cancelled`: only files not in `success`
-are re-queued. Per-file processing MUST be idempotent — the anonymize step
+are re-queued. A `completed` batch that has files in `error` MUST be
+resumable too, because per-file failures do not set the batch to `error`:
+only its files in `error` are re-queued, and every other file keeps its
+outcome. Per-file processing MUST be idempotent — the anonymize step
 MUST key on the existing `anonymizationLink.sourceFileId` linkage so a
 file that already produced its output is skipped rather than re-processed,
 and a resumed run MUST NOT duplicate anonymized output files. Resume of a
-running or completed batch MUST return HTTP 409.
+running batch, or of a completed batch without failed files, MUST return
+HTTP 409.
 
 #### Scenario: Resume after a mid-batch failure
 
-- GIVEN a batch that errored with 40 of 60 files succeeded
+- GIVEN a batch that errored, or completed, with 40 of 60 files succeeded and 20 in `error`
 - WHEN the owner calls the resume endpoint
 - THEN only the 20 non-succeeded files are re-queued
 - AND the batch completes with 60 succeeded files and no duplicate output files
 - @e2e tests/e2e/spec-coverage/redaction-at-scale.spec.ts
+
+#### Scenario: A completed batch without failed files is not resumable
+
+- GIVEN a completed batch whose files all succeeded
+- WHEN the owner calls the resume endpoint
+- THEN the response is HTTP 409 and the batch is unchanged
+- @e2e exclude status guard; covered by PHPUnit (tests/unit/Service/BatchLifecycleServiceTest.php)
 
 #### Scenario: File that succeeded out-of-band is skipped
 
