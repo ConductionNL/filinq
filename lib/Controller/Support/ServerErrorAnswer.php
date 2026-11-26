@@ -43,6 +43,13 @@ use Psr\Log\LoggerInterface;
 final class ServerErrorAnswer {
 
 	/**
+	 * OpenRegister's schema-validation refusal.
+	 *
+	 * @var string
+	 */
+	private const VALIDATION_EXCEPTION = 'OCA\\OpenRegister\\Exception\\ValidationException';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger Records the failure
@@ -58,7 +65,7 @@ final class ServerErrorAnswer {
 	}//end __construct()
 
 	/**
-	 * Log the exception after the prefix and answer it as a 500.
+	 * Log the exception after the prefix and answer it as a 500, or as a 400 when OpenRegister refused the record's values.
 	 *
 	 * @param string    $message   Log prefix and user-facing prefix.
 	 * @param Exception $exception The caught exception.
@@ -66,8 +73,24 @@ final class ServerErrorAnswer {
 	 * @return JSONResponse
 	 *
 	 * @spec openspec/specs/entity-publication-policies/spec.md
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-4.1
 	 */
 	public function answer(string $message, Exception $exception): JSONResponse {
+		// A record OpenRegister refuses against its schema (a value outside an
+		// enum, a missing required field) is the caller's mistake, not a server
+		// failure: answer it as 400 with the reason. Matched by name so this
+		// app keeps no hard dependency on OpenRegister's classes.
+		if (is_a($exception, self::VALIDATION_EXCEPTION) === true) {
+			$this->logger->info(
+				$message . $exception->getMessage(),
+				['exception' => $exception]
+			);
+			return new JSONResponse(
+				['error' => $this->l10n->t($message . '%s', [$exception->getMessage()])],
+				400
+			);
+		}
+
 		$this->logger->error(
 			$message . $exception->getMessage(),
 			['exception' => $exception]
