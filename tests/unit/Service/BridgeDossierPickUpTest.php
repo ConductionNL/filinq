@@ -71,6 +71,13 @@ final class BridgeDossierPickUpTest extends TestCase {
 	 */
 	private array $pickedUp = [];
 
+	/**
+	 * Dossier copy file id recorded per document uuid.
+	 *
+	 * @var array<string, int>
+	 */
+	private array $pickedUpCopies = [];
+
 	private BridgeService&MockObject $bridge;
 
 	private DossierFileService&MockObject $dossiers;
@@ -102,8 +109,9 @@ final class BridgeDossierPickUpTest extends TestCase {
 
 			return $this->documents[$id];
 		});
-		$this->bridge->method('pickedUp')->willReturnCallback(function (array $document, string $dossierRef): array {
+		$this->bridge->method('pickedUp')->willReturnCallback(function (array $document, string $dossierRef, int $dossierFileRef = 0): array {
 			$this->pickedUp[(string)$document['uuid']] = $dossierRef;
+			$this->pickedUpCopies[(string)$document['uuid']] = $dossierFileRef;
 			return array_merge($document, ['processingStatus' => 'in_processing', 'dossierRef' => $dossierRef]);
 		});
 
@@ -153,6 +161,7 @@ final class BridgeDossierPickUpTest extends TestCase {
 		$this->assertSame(['doc-1' => 'dossier-21', 'doc-2' => 'dossier-21'], $this->pickedUp);
 		$this->assertSame(['in_processing', 'in_processing'], array_column($attached, 'processingStatus'));
 		$this->assertSame([1101, 1102], array_column($attached, 'copiedFileId'));
+		$this->assertSame(['doc-1' => 1101, 'doc-2' => 1102], $this->pickedUpCopies);
 	}//end testBothStagedDocumentsAreCopiedIntoTheDossierFolderAndRecorded()
 
 	public function testADocumentThatIsNotStagedRefusesThePickUpBeforeAnythingIsCopied(): void {

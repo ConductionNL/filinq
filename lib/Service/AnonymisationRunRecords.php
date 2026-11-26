@@ -46,6 +46,7 @@ class AnonymisationRunRecords {
 	 * @param AnonymisationSanitizationRecorder|null $sanitization Keeps what OpenRegister's office
 	 *                                                     sanitiser removed during the run.
 	 * @param ReviewRenditionRepository|null $renditions The source's review rendition, copied onto the link.
+	 * @param BridgeResultRecorder|null $bridge The bridge document whose dossier copy this run anonymised.
 	 *
 	 * @return void
 	 */
@@ -56,6 +57,7 @@ class AnonymisationRunRecords {
 		private readonly ?RedactionAccessibilityService $accessibility = null,
 		private readonly ?AnonymisationSanitizationRecorder $sanitization = null,
 		private readonly ?ReviewRenditionRepository $renditions = null,
+		private readonly ?BridgeResultRecorder $bridge = null,
 	) {
 
 	}//end __construct()
@@ -71,6 +73,7 @@ class AnonymisationRunRecords {
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-2.2
 	 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-2.2
+	 * @spec openspec/changes/zgw-document-bridge/tasks.md#task-2.6
 	 */
 	public function record(array $resultInfo, array $context): array {
 		// On the bytes actually written, like the verdict: the summary page is already on.
@@ -104,6 +107,9 @@ class AnonymisationRunRecords {
 			sourceNode: $context['sourceNode'],
 			resultInfo: $resultInfo
 		);
+
+		// A bridge document's dossier copy: its external document is now processed (REQ-DDZGW-003).
+		$this->bridge?->record(sourceFileId: (int) $context['fileId'], resultFileId: (int) $resultInfo['anonymizedFileId']);
 
 		// What OpenRegister's sanitiser removed from an office document on the way.
 		if ($this->sanitization !== null) {
