@@ -81,6 +81,10 @@ class ListenerRegistrar {
 			'OCA\Filinq\EventListener\DocumentDownloadedListener'
 		);
 
+		// An anonymised dossier copy of a bridge document records its output on the
+		// external document (zgw-document-bridge REQ-DDZGW-003, task 2.6).
+		$context->registerEventListener('OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent', 'OCA\Filinq\Service\BridgeResultRecorder');
+
 	}//end register()
 
 	/**

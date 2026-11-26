@@ -209,7 +209,8 @@ class BridgeServiceTest extends TestCase {
 			$this->anything()
 		)->willReturn(['uuid' => 'd-1', 'processingStatus' => 'in_processing', 'dossierFileRef' => 1101]);
 
-		$this->assertSame(expected: 1101, actual: $service->pickedUp(['uuid' => 'd-1', 'processingStatus' => 'staged'], 'dossier-21', 1101)['dossierFileRef']);
+		$saved = $service->pickedUp(['uuid' => 'd-1', 'processingStatus' => 'staged'], 'dossier-21', 1101);
+		$this->assertSame(expected: 1101, actual: $saved['dossierFileRef']);
 	}//end testPickedUpRecordsTheDossierCopy()
 
 	/**
