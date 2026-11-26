@@ -194,8 +194,10 @@ test.describe('The intake inbox shows who was told a document arrived', () => {
 				.first()
 				.click()
 			const popup = await opened
-			expect(popup.url()).toContain(`/f/${stamped.fileId}`)
-			expect(popup.url()).not.toContain(`/f/${arrived.fileId}`)
+			// Nextcloud answers /f/{id} with a redirect to /apps/files/files/{id}.
+			const opens = (id: unknown): RegExp => new RegExp(`/(f|files)/${String(id)}(?:[/?#]|$)`)
+			expect(popup.url()).toMatch(opens(stamped.fileId))
+			expect(popup.url()).not.toMatch(opens(arrived.fileId))
 			await popup.close()
 		} finally {
 			await deleteDavPath(page.request, token, FOLDER)

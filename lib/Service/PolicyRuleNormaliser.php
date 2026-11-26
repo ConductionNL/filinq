@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Support\LanguageMapText;
 use DateTimeImmutable;
 use Exception;
 
@@ -156,23 +157,7 @@ class PolicyRuleNormaliser {
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	private function flattenTranslatable(mixed $value): string {
-		if (is_array($value) === false) {
-			return (string)$value;
-		}
-
-		foreach (['nl', 'en'] as $language) {
-			if (isset($value[$language]) === true && is_scalar($value[$language]) === true) {
-				return (string)$value[$language];
-			}
-		}
-
-		foreach ($value as $candidate) {
-			if (is_scalar($candidate) === true && (string)$candidate !== '') {
-				return (string)$candidate;
-			}
-		}
-
-		return '';
+		return (new LanguageMapText())->text(value: $value);
 	}//end flattenTranslatable()
 
 	/**

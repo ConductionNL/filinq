@@ -114,6 +114,9 @@ class IntakeDetachmentService implements IntakeDetachmentServiceInterface {
 
 		$document = ($existing ?? $this->recordFor(fileId: $fileId, documentName: $documentName));
 		$uuid = $this->uuidOf(document: $existing);
+		if ($uuid === null) {
+			[$document, $uuid] = $this->recordAsAssigned(document: $document);
+		}
 
 		$document['status'] = IntakeRepository::STATUS_DETACHED;
 		$document['detachReason'] = $reason;
@@ -123,6 +126,34 @@ class IntakeDetachmentService implements IntakeDetachmentServiceInterface {
 		return $this->repository->save(document: $document, uuid: $uuid);
 
 	}//end detach()
+
+	/**
+	 * Store a new intake record the way the lifecycle lets it reach `detached`.
+	 *
+	 * OpenRegister starts a new intake document in `received` and refuses any
+	 * other state on create, and `detach` leaves only from `assigned`. A
+	 * document taken off a record was on that record, so its new intake
+	 * record is created `received` and then recorded `assigned`; the caller
+	 * then detaches it. Writing `detached` straight away answered 500 on a
+	 * live run (25 Nov 2026).
+	 *
+	 * @param array<string, mixed> $document The record to create.
+	 *
+	 * @return array{0: array<string, mixed>, 1: string|null} The stored record and its uuid.
+	 *
+	 * @spec openspec/changes/archive/2026-10-09-inbound-documents-and-the-worklist/specs/inbound-auto-classification/spec.md
+	 */
+	private function recordAsAssigned(array $document): array {
+		$document['status'] = IntakeRepository::STATUS_RECEIVED;
+		$created = $this->repository->save(document: $document, uuid: null);
+		$uuid = $this->uuidOf(document: $created);
+
+		$created['status'] = IntakeRepository::STATUS_ASSIGNED;
+		$assigned = $this->repository->save(document: $created, uuid: $uuid);
+
+		return [$assigned, $uuid];
+
+	}//end recordAsAssigned()
 
 	/**
 	 * The intake record for a document that never passed through the inbox.

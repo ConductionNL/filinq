@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Support\AppConfigFlag;
 use Exception;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
 use OCP\Constants;
@@ -313,7 +314,7 @@ class FolderFileEnumerator {
 	 * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
 	 */
 	private function applyConfidentialityPriorityOrdering(array $files): array {
-		if ($this->appConfig->getValueBool('filinq', self::PRIORITISE_ANALYSIS_KEY, false) === false) {
+		if ((new AppConfigFlag(config: $this->appConfig))->isOn(app: 'filinq', key: self::PRIORITISE_ANALYSIS_KEY) === false) {
 			return $files;
 		}
 

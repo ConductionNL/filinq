@@ -121,7 +121,7 @@ test.describe('Final documents are frozen against change', () => {
 		await page.getByTestId('document-finalise').click()
 		await page
 			.getByTestId('final-reason-input')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill('Het besluit is genomen')
 		await page.getByTestId('cn-dialog-actions-submit').click()
 
@@ -238,7 +238,7 @@ test.describe('Final documents are frozen against change', () => {
 		await page.getByTestId('document-correct').click()
 		await page
 			.getByTestId('final-reason-input')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill('De straatnaam klopte niet')
 		await page.getByTestId('cn-dialog-actions-submit').click()
 		await expect(page.getByTestId('document-final')).toBeVisible({

@@ -67,7 +67,7 @@ async function openSettings(page: Page) {
 	await page.goto(SETTINGS_PAGE, { waitUntil: 'domcontentloaded' })
 	await waitForNcContentReady(page)
 	await dismissOverlays(page)
-	const field = page.getByTestId('settings-unattended-threshold').locator('input')
+	const field = page.getByTestId('settings-unattended-threshold').locator('xpath=descendant-or-self::input')
 	await expect(field).toBeVisible()
 
 	return field
@@ -123,9 +123,8 @@ test.describe('extraction verdict: the unattended threshold', () => {
 		})
 
 		await field.fill('0.5')
-		await expect(
-			page.getByTestId('settings-unattended-threshold'),
-		).toContainText(REFUSAL)
+		// The test id sits on the <input>; the refusal is its helper text.
+		await expect(page.getByText(REFUSAL).first()).toBeVisible()
 		await page.getByRole('button', { name: SAVE_ALL }).click()
 
 		await expect(page.getByText(REFUSAL).first()).toBeVisible()

@@ -92,8 +92,8 @@ async function seed(
 			sender: `${TEST_PREFIX}@voorbeeld.nl`,
 			receivedAt: new Date().toISOString(),
 			sourceRef: `${TEST_PREFIX}-${subject}`,
-			status: 'received',
 			...extra,
+			status: 'received',
 		},
 	})
 	expect(
@@ -103,6 +103,17 @@ async function seed(
 	const body = await created.json()
 	const uuid = String(body?.['@self']?.id || body?.id || body?.uuid || '')
 	expect(uuid).not.toBe('')
+	// OpenRegister starts an intake document in received and refuses any
+	// other state on create; assigned is reached by its transition.
+	if (extra.status !== undefined && extra.status !== 'received') {
+		const stored = await (await req.get(`${OR_INTAKE}/${uuid}`, { headers: jsonHeaders(token) })).json()
+		const own = Object.fromEntries(Object.entries(stored).filter(([key, value]) => !key.startsWith('@') && key !== 'daysLeft' && value !== null))
+		const moved = await req.put(`${OR_INTAKE}/${uuid}`, {
+			headers: jsonHeaders(token),
+			data: { ...own, ...extra },
+		})
+		expect(moved.status(), `moving the seed to ${String(extra.status)}: ${await moved.text()}`).toBeLessThan(300)
+	}
 	return uuid
 }
 
@@ -253,11 +264,11 @@ test.describe('Deadlines and duplicates on the intake worklist', () => {
 		await rowAction(page, subject, 'Change deadline')
 		await page
 			.getByTestId('intake-deadline-input')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill(isoDay(nextWeek))
 		await page
 			.getByTestId('intake-deadline-reason')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill('waiting for the attachment')
 		const saved = page.waitForResponse(
 			(res) =>

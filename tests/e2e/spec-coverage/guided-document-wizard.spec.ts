@@ -136,7 +136,7 @@ test.describe('guided document wizard: runner', () => {
 		await open(page, WizardRunner)
 
 		await expect(page.getByTestId('wizard-progress')).toContainText('1 of 1')
-		await page.getByTestId('wizard-choice-afgewezen').click()
+		await page.getByTestId('wizard-choice-afgewezen').check({ force: true })
 		await expect(page.getByTestId('wizard-progress')).toContainText('1 of 2')
 		await page.getByTestId('wizard-next').click()
 		await expect(page.getByTestId('wizard-step')).toContainText(
@@ -144,7 +144,7 @@ test.describe('guided document wizard: runner', () => {
 		)
 
 		await page.getByRole('button', { name: 'Previous' }).click()
-		await page.getByTestId('wizard-choice-toegewezen').click()
+		await page.getByTestId('wizard-choice-toegewezen').check({ force: true })
 		await page.getByTestId('wizard-next').click()
 		await expect(page.getByTestId('wizard-step')).toContainText('Effective date')
 		await expect(page.getByTestId('wizard-step')).not.toContainText(
@@ -161,11 +161,11 @@ test.describe('guided document wizard: runner', () => {
 		const sent = await captureGenerate(page)
 		await open(page, WizardRunner)
 
-		await page.getByTestId('wizard-choice-afgewezen').click()
+		await page.getByTestId('wizard-choice-afgewezen').check({ force: true })
 		await page.getByTestId('wizard-next').click()
 		await page
 			.getByTestId('wizard-answer-text')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill('Geen parkeerplaats beschikbaar')
 		await page.getByTestId('wizard-next').click()
 
@@ -206,14 +206,14 @@ test.describe('guided document wizard: runner', () => {
 		const sent = await captureGenerate(page)
 		await open(page, WizardRunner)
 
-		const rejected = page.getByTestId('wizard-choice-afgewezen').locator('input')
+		const rejected = page.getByTestId('wizard-choice-afgewezen').locator('xpath=descendant-or-self::input')
 		await rejected.focus()
 		await page.keyboard.press('Space')
 		await expect(rejected).toBeChecked()
 		await page.getByTestId('wizard-next').focus()
 		await page.keyboard.press('Enter')
 
-		const reason = page.getByTestId('wizard-answer-text').locator('input')
+		const reason = page.getByTestId('wizard-answer-text').locator('xpath=descendant-or-self::input')
 		await reason.focus()
 		await page.keyboard.type('Geen vergunning nodig')
 		await page.keyboard.press('Enter')
@@ -240,9 +240,9 @@ test.describe('guided document wizard: runner', () => {
 		)
 		await open(page, WizardRunner)
 
-		await page.getByTestId('wizard-choice-afgewezen').click()
+		await page.getByTestId('wizard-choice-afgewezen').check({ force: true })
 		await page.getByTestId('wizard-next').click()
-		await page.getByTestId('wizard-answer-text').locator('input').fill('x')
+		await page.getByTestId('wizard-answer-text').locator('xpath=descendant-or-self::input').fill('x')
 		await page.getByTestId('wizard-next').click()
 		await page.getByTestId('wizard-generate').click()
 
@@ -299,11 +299,11 @@ test.describe('guided document wizard: runner', () => {
 			await serveWizard(page, { ...WIZARD, templateType })
 			const sent = await captureGenerate(page)
 			await open(page, WizardRunner)
-			await page.getByTestId('wizard-choice-toegewezen').click()
+			await page.getByTestId('wizard-choice-toegewezen').check({ force: true })
 			await page.getByTestId('wizard-next').click()
 			await page
 				.getByTestId('wizard-answer-date')
-				.locator('input')
+				.locator('xpath=descendant-or-self::input')
 				.fill('2026-11-01')
 			await page.getByTestId('wizard-next').click()
 			await page.getByTestId('wizard-generate').click()
@@ -351,17 +351,17 @@ test.describe('guided document wizard: authoring', () => {
 		await page.getByTestId('template-tab-wizard').click()
 		await page
 			.getByTestId('wizard-name')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill('Parking permit decision')
 		await page.getByTestId('wizard-add-question').click()
 		await page
 			.getByTestId('wizard-question-label')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill('Name of the applicant')
-		await page.getByTestId('wizard-question-key').locator('input').fill('naam')
+		await page.getByTestId('wizard-question-key').locator('xpath=descendant-or-self::input').fill('naam')
 		await page
 			.getByTestId('wizard-question-maps-to')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.fill('aanvrager.naam')
 		await page.getByTestId('cn-dialog-actions-submit').click()
 		await page.getByTestId('wizard-save').click()

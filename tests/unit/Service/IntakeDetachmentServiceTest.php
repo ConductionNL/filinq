@@ -170,7 +170,16 @@ class IntakeDetachmentServiceTest extends TestCase {
 		$this->assertSame('detached', $detached['status']);
 		$this->assertSame(9001, $detached['file']);
 		$this->assertSame('brief.pdf', $detached['fileName']);
-		$this->assertSame([null], $this->writtenTo, 'A record that did not exist is created, not updated.');
+		$this->assertSame(
+			expected: [null, 'intake-new', 'intake-new'],
+			actual: $this->writtenTo,
+			message: 'A record that did not exist is created, then updated.'
+		);
+		$this->assertSame(
+			expected: ['received', 'assigned', 'detached'],
+			actual: array_column($this->written, 'status'),
+			message: 'OpenRegister starts a new intake document in received, and detach leaves only from assigned.'
+		);
 
 	}//end testADocumentThatNeverHadAnIntakeRecordGetsOne()
 

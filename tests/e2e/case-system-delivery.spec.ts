@@ -26,6 +26,7 @@
 import type { Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
+import { randomUUID } from 'node:crypto'
 import { APP, dismissOverlays, waitForNcContentReady } from './spec-coverage/_helpers.ts'
 import { createDavFile, createDavFolder, deleteDavPath, harvestToken } from './workflows/_fixtures.ts'
 
@@ -86,10 +87,21 @@ async function api(
  * @return The new id.
  */
 async function seed(page: Page, schema: string, object: Record<string, unknown>): Promise<string> {
-	const res = await api(page, 'POST', `${OBJECTS}/${schema}`, object)
+	// OpenRegister starts a delivery in ready_for_writeback and refuses any
+	// other state on create; a later state is reached by its transition.
+	const target = object.deliveryStatus
+	const initial = schema === 'caseSystemDelivery' && target !== undefined && target !== 'ready_for_writeback'
+		? { ...object, deliveryStatus: 'ready_for_writeback' }
+		: object
+	const res = await api(page, 'POST', `${OBJECTS}/${schema}`, initial)
 	expect(res.status, `could not seed a ${schema} — ${JSON.stringify(res.body).slice(0, 300)}`).toBeLessThan(400)
 	const created = res.body as Record<string, never>
-	return (created?.id ?? created?.['@self']?.id) as string
+	const id = (created?.id ?? created?.['@self']?.id) as string
+	if (initial !== object) {
+		const moved = await api(page, 'PUT', `${OBJECTS}/${schema}/${id}`, object)
+		expect(moved.status, `could not move the ${schema} to ${String(target)} — ${JSON.stringify(moved.body).slice(0, 300)}`).toBeLessThan(400)
+	}
+	return id
 }
 
 /**
@@ -154,7 +166,7 @@ test.describe('case-system delivery in the admin settings', () => {
 		const destinationId = created.find((c) => c.schema === 'caseSystemDestination')?.id ?? STAMP
 
 		const failed = await seed(page, 'caseSystemDelivery', {
-			generatedDocumentId: `doc-${STAMP}`,
+			generatedDocumentId: randomUUID(),
 			destinationId,
 			sourceId: `source-${STAMP}`,
 			deliveryStatus: 'writeback_failed',
@@ -163,7 +175,7 @@ test.describe('case-system delivery in the admin settings', () => {
 		})
 		created.push({ schema: 'caseSystemDelivery', id: failed })
 		const waiting = await seed(page, 'caseSystemDelivery', {
-			generatedDocumentId: `doc-waiting-${STAMP}`,
+			generatedDocumentId: randomUUID(),
 			destinationId,
 			sourceId: `source-${STAMP}`,
 			deliveryStatus: 'ready_for_writeback',
@@ -221,6 +233,9 @@ test.describe('case-system delivery in the admin settings', () => {
 		expect(template.status, JSON.stringify(template.body).slice(0, 300)).toBe(200)
 		const templateId = String(template.body.id)
 		created.push({ schema: 'template', id: templateId })
+		// A new template is a draft; users generate only from a published one.
+		const published = await api(page, 'POST', `/index.php/apps/filinq/api/templates/${templateId}/publish`)
+		expect(published.status, JSON.stringify(published.body).slice(0, 300)).toBe(200)
 
 		const generated = await page.evaluate(
 			async ({ templateId, destination, stamp }) => {
@@ -234,8 +249,9 @@ test.describe('case-system delivery in the admin settings', () => {
 					body: JSON.stringify({
 						templateId,
 						filename: `${stamp}-contract`,
-						dataRefs: { name: 'A. Employee' },
-						options: { format: 'pdf', output: { mode: 'both', caseSystem: destination } },
+						// dataRefs lists OpenRegister references; literal values go as adHocData.
+						dataRefs: [],
+						options: { format: 'pdf', adHocData: { name: 'A. Employee' }, output: { mode: 'both', caseSystem: destination } },
 					}),
 				})
 				return { status: res.status, fileId: res.headers.get('X-Docudesk-File-Id') ?? '' }
@@ -270,7 +286,8 @@ test.describe('case-system delivery in the admin settings', () => {
 
 		// Only integriq's write-back sets written_back, so the delivery is seeded.
 		const delivered = await seed(page, 'caseSystemDelivery', {
-			generatedDocumentId: `doc-delivered-${STAMP}`,
+			generatedDocumentId: randomUUID(),
+			destinationId: randomUUID(),
 			sourceId: `source-${STAMP}`,
 			fileId,
 			deliveryStatus: 'written_back',
@@ -303,9 +320,8 @@ test.describe('case-system delivery in the admin settings', () => {
 			const title = status === 'ready_for_writeback'
 				? 'Waiting for the case system'
 				: 'Failed to reach the case system'
-			const widget = page.locator('.cn-dashboard-widget, [data-widget-id], section, article')
-				.filter({ hasText: title })
-				.last()
+			// Each report widget is a region named by its title.
+			const widget = page.getByRole('region', { name: title })
 			await expect(widget, `${title} widget`).toBeVisible({ timeout: 20_000 })
 			await expect(widget).toContainText(String(total), { timeout: 20_000 })
 		}

@@ -157,7 +157,7 @@ test.describe('contract lifecycle', () => {
 		await expect(confirm).toBeDisabled()
 		await page
 			.getByTestId('contract-terminate-reason')
-			.locator('textarea')
+			.locator('xpath=descendant-or-self::textarea')
 			.fill('Opgezegd per brief')
 		await confirm.click()
 		await expect(page.getByTestId('contract-status')).toHaveText('Terminated')
@@ -211,7 +211,7 @@ test.describe('contract lifecycle', () => {
 		expect(contracts['c-1'].documents).toEqual(['88'])
 
 		await page.getByTestId('contract-send-for-signature').click()
-		await page.getByTestId('contract-sign-user').locator('input').fill('admin')
+		await page.getByTestId('contract-sign-user').locator('xpath=descendant-or-self::input').fill('admin')
 		await page.getByTestId('cn-dialog-actions-submit').click()
 		await expect(page.getByTestId('contract-signing-status')).toContainText(
 			'DRAFT',

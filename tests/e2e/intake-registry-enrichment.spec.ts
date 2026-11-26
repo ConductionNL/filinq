@@ -223,7 +223,7 @@ test.describe('Registry suggestions on an arriving document', () => {
 		await card.getByTestId('intake-suggestion-correct').click()
 		const address = card
 			.getByTestId('intake-suggestion-input-address')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 		await address.fill(corrected)
 
 		const decided = page.waitForResponse(
@@ -279,7 +279,7 @@ test.describe('Registry suggestions on an arriving document', () => {
 		await dismissOverlays(page)
 		const toggle = page
 			.getByTestId('settings-brp-lookup')
-			.locator('input')
+			.locator('xpath=descendant-or-self::input')
 			.first()
 		await toggle.scrollIntoViewIfNeeded()
 		await expect(toggle).not.toBeChecked()
