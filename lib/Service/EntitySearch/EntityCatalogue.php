@@ -115,7 +115,7 @@ class EntityCatalogue {
 
 		$uuids = [];
 		foreach ((array) $organisations as $organisation) {
-			if (is_object($organisation) === false || method_exists($organisation, 'getUuid') === false) {
+			if (is_object($organisation) === false || is_callable([$organisation, 'getUuid']) === false) {
 				continue;
 			}
 

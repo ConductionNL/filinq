@@ -24,6 +24,8 @@ use OCA\Filinq\Kernel\ConsentUpdate;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\SettingsService;
+use OCA\OpenRegister\Service\ObjectService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IUser;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -85,6 +87,21 @@ class ConsentCrudServiceTest extends TestCase {
 		);
 
 	}//end setUp()
+
+	/**
+	 * A consent OpenRegister cannot find for the caller (another
+	 * organisation's, or none) is not found, not a failure.
+	 *
+	 * @return void
+	 */
+	public function testGetConsentAnswersNullWhenOpenRegisterFindsNothing(): void {
+		$objectService = $this->createMock(originalClassName: ObjectService::class);
+		$objectService->method('find')->willThrowException(new DoesNotExistException('not found in any magic table'));
+		$this->mockSettingsService->method('getObjectService')->willReturn($objectService);
+
+		$this->assertNull(actual: $this->service->getConsent(consentId: 'c-of-b', register: 'reg-1', schema: 'schema-1'));
+
+	}//end testGetConsentAnswersNullWhenOpenRegisterFindsNothing()
 
 	/**
 	 * Test getConsentConfig returns null when not configured

@@ -48,6 +48,8 @@ Some settings are policy per organisation. An organisation can override them on 
 Every member of the organisation can read the page. Only an admin of the organisation, or an
 instance admin, can save it.
 
+![The Organisation settings page of an organisation that set a 42-day objection period and a note; the other fields are empty and use the instance settings](/screenshots/multi-tenant-organisation-settings.png)
+
 Filinq resolves each of these settings in one order: the active organisation's value, then the
 instance setting, then the built-in default. New consent records take their objection deadline from
 the result, the anonymisation entity review pre-selects from the resulting profile, and document
