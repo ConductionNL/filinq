@@ -193,6 +193,45 @@ class BatchAnonymizeServiceTest extends TestCase {
 	}//end testEachEntryCarriesTheDetectionOutcome()
 
 	/**
+	 * A document withheld in full is a finished entry with no output and its grounds.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-6.2
+	 */
+	public function testAWithheldDocumentIsAFinishedEntryWithoutOutput(): void {
+		$this->mockStateService->method('getBatch')->willReturn(
+			['batchId' => 'batch-w', 'status' => 'review', 'files' => [['fileId' => 22, 'status' => 'extracted']]]
+		);
+		$this->mockAnonService->method('anonymizeDocument')->willReturn(
+			[
+				'withheld' => true,
+				'withheldBases' => ['5.1.1.c'],
+				'anonymizedFileId' => null,
+				'anonymizedFilePath' => null,
+				'replacementCount' => 0,
+				'detection' => ['ran' => false, 'outcome' => 'withheld'],
+			]
+		);
+
+		$saved = null;
+		$this->mockStateService->method('updateBatch')->willReturnCallback(
+			function (string $id, array $batch) use (&$saved): void {
+				$saved = $batch;
+			}
+		);
+
+		$this->service->anonymizeBatch(batchId: 'batch-w', entities: []);
+
+		$entry = $saved['files'][0];
+		$this->assertSame('anonymized', $entry['status']);
+		$this->assertTrue($entry['withheld']);
+		$this->assertSame(['5.1.1.c'], $entry['withheldBases']);
+		$this->assertNull($entry['anonymizedFileId']);
+
+	}//end testAWithheldDocumentIsAFinishedEntryWithoutOutput()
+
+	/**
 	 * Test anonymizeBatch records error when anonymization throws
 	 *
 	 * @return void

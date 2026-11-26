@@ -70,6 +70,8 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 		'sanitization',
 		'sanitizationWarning',
 		'detection',
+		'withheld',
+		'withheldBases',
 	];
 
 	/**
@@ -621,6 +623,7 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
+	 * @spec openspec/changes/image-redaction/tasks.md#task-6.2
 	 */
 	private function applyAnonymizedResult(array $entry, array $result): array {
 		$entry['status'] = 'anonymized';
@@ -630,9 +633,9 @@ class BatchAnonymizeService implements BatchAnonymizeServiceInterface {
 
 		// Optional result fields, copied in this order when present: the warning,
 		// the basis summary, created consents, the opt-in final-artifact pass (the
-		// derivative, or why the kept file is unsanitized), and which backend looked
+		// derivative, or why the kept file is unsanitized), which backend looked
 		// and what it found, so a batch reader can tell "nothing to redact" from
-		// "nothing looked".
+		// "nothing looked", and whether the document was withheld in full.
 		foreach (self::OPTIONAL_RESULT_KEYS as $key) {
 			if (isset($result[$key]) === false) {
 				continue;

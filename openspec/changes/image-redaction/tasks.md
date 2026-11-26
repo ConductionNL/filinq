@@ -62,11 +62,14 @@ of 20 holds.
   - GIVEN no seam WHEN a page scope is committed THEN refused, nothing written.
   - Precondition, stop if unmet: read OpenRegister's seam on `development` and name in the PR body the method that persists a region and the one that burns it. If a full-page region on a page with no image cannot be burned as a raster there, open an OpenRegister issue and stop; do not write a burner in filinq.
   - Test: PHPUnit `ScopeRedactionServiceTest::testPagesBecomeFullPageRegions`, `::testAWholeDocumentIsWithheldWithoutOutput`, `::testPageScopesNeedTheSeam`; `PublicationReadinessTest::testAWithheldDocumentIsNotForPublication`. Double OpenRegister's seam with `environmentAwareDouble` from its real signature.
+  - Built (26 Nov 2026): the scope commit (`ScopeRedactionService::commit()` through `ImageSeamGateway::burn()` onto OpenRegister's `ImageRedactionService::redactImage()`, which persists nothing itself: the regions are passed as `ImageRegion` values), the four tests above, and the withhold on the usual commit: `AnonymizationService::runAnonymize()` finds a stored `document` decision, records the withhold and writes nothing, so the single anonymise, the batch and the folder job all honour it (`AnonymizationServiceWithholdTest`, `BatchAnonymizeServiceTest::testAWithheldDocumentIsAFinishedEntryWithoutOutput`).
+  - STOPPED on the precondition for the page half: OpenRegister's seam burns a PDF page only through its one page image (`ImageBurner::burnPdfPages()`), so a full-page region on a born-digital page cannot be burned as a raster there. Filed ConductionNL/openregister#11367; no burner written in filinq. Open until it lands: born-digital page scopes, and burning page scopes inside the usual anonymise run.
 - [ ] 6.3 One action in the workbench (REQ-DDIMR-009). Files: the review workbench toolbar, a dialog in its own file under `src/dialogs/` (scope, pages, grounds through the grounds picker), `l10n/en.json`, `l10n/nl.json`.
   - GIVEN a 7-page PDF WHEN the reviewer redacts pages 3 to 5 THEN one row appears in the decision table and the preview marks the three pages.
   - Test: Playwright `tests/e2e/spec-coverage/image-redaction.spec.ts` (redact pages 3 to 5, commit, open the output and check pages 3 to 5 are fill and carry the notice).
-- [ ] 6.4 Docs. Files: `docs/features/image-redaction.md` (the three scopes, why a withheld document has no output, and that OpenRegister does the pixel work).
+- [x] 6.4 Docs. Files: `docs/features/image-redaction.md` (the three scopes, why a withheld document has no output, and that OpenRegister does the pixel work).
   - Test: the docs build.
+  - Done (26 Nov 2026): the page covers the three scopes, why a withheld document has no output (also on the usual and batch commit), and the division of labour with OpenRegister, including what its seam cannot burn yet (openregister#11367). `npm run build` in `docs/` passes; it needed two pre-existing `{vendor}` MDX expressions escaped in `authorization-decisions.md` and `features/zgw-document-bridge.md`.
 
 Verification for section 6 (plain bullets on purpose). The building agent follows `openspec/woo-build-rules.md`:
 

@@ -70,7 +70,7 @@ configured in OpenConnector.
 
 ## The source badge
 
-A file that came from a case system carries a badge **Zaaksysteem: {vendor}** in My Documents and in
+A file that came from a case system carries a badge **Zaaksysteem: \{vendor\}** in My Documents and in
 the file viewer's header. A file made in Nextcloud has none. My Documents looks the badges up once per
 page, not once per row.
 
