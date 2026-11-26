@@ -50,8 +50,6 @@ use OCA\Filinq\Service\Detection\DetectionRequest;
 use OCA\Filinq\Service\Ocr\OcrExtractionFallback;
 use OCA\Filinq\Service\Redaction\RedactionOutputGuard;
 use OCA\Filinq\Service\Review\ReviewRenditionService;
-use OCA\Filinq\Service\Review\ScopeDecisionStore;
-use OCA\Filinq\Service\Review\ScopeRedactionService;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -139,13 +137,10 @@ class AnonymizationService implements AnonymizationServiceInterface {
 	 *                                           and attaches found regions to the entity rows.
 	 * @param ReviewRenditionService|null $renditions The review rendition detection runs on;
 	 *                                                null leaves detection on the source only.
-	 * @param ScopeDecisionStore|null $scopes The reviewer's scope decisions: a document withheld
-	 *                                        in full is committed without output; null reads none.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-2
-	 * @spec openspec/changes/image-redaction/tasks.md#task-6.2
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
@@ -163,7 +158,6 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		private readonly ?DetectionProviderResolver $detectionResolver=null,
 		private readonly ?ImageRedactionService $images=null,
 		private readonly ?ReviewRenditionService $renditions=null,
-		private readonly ?ScopeDecisionStore $scopes=null,
 	) {
 
 	}//end __construct()
@@ -856,7 +850,7 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		// A document the reviewer withheld in full leaves no copy at all, not
 		// a blacked-out one (image-redaction REQ-DDIMR-009). The batch path
 		// and the folder job come through here too, so they honour it as well.
-		$withheld = $this->withholdInFull(fileId: $fileId, userId: $run->userId());
+		$withheld = $this->images?->withheldOutcome(fileId: $fileId, userId: $run->userId());
 		if ($withheld !== null) {
 			return $withheld;
 		}
@@ -916,50 +910,6 @@ class AnonymizationService implements AnonymizationServiceInterface {
 		return array_merge($result, $this->imageRedactionFields(fileId: $fileId));
 
 	}//end runAnonymize()
-
-	/**
-	 * Commit a whole-document scope decision: record the withhold and write nothing.
-	 *
-	 * The latest `document` decision on the file wins. Without the store, or
-	 * without such a decision, the run goes on as usual.
-	 *
-	 * @param int    $fileId The source file.
-	 * @param string $userId Who commits.
-	 *
-	 * @return array<string, mixed>|null The withheld outcome, or null when the document is not withheld.
-	 *
-	 * @spec openspec/changes/image-redaction/tasks.md#task-6.2
-	 */
-	private function withholdInFull(int $fileId, string $userId): ?array {
-		if ($this->scopes === null) {
-			return null;
-		}
-
-		$document = null;
-		foreach ($this->scopes->decisionsFor(fileId: $fileId) as $decision) {
-			if (($decision['scope'] ?? '') === ScopeRedactionService::SCOPE_DOCUMENT) {
-				$document = $decision;
-			}
-		}
-
-		if ($document === null) {
-			return null;
-		}
-
-		$bases = array_values(array_map('strval', array_filter((array) ($document['bases'] ?? []), 'is_scalar')));
-		$this->scopes->withhold(fileId: $fileId, bases: $bases, userId: $userId);
-
-		return [
-			'fileId' => $fileId,
-			'withheld' => true,
-			'withheldBases' => $bases,
-			'anonymizedFileId' => null,
-			'anonymizedFilePath' => null,
-			'replacementCount' => 0,
-			'detection' => ['ran' => false, 'outcome' => 'withheld'],
-		];
-
-	}//end withholdInFull()
 
 	/**
 	 * The image fields of an anonymise run, recorded on its link.

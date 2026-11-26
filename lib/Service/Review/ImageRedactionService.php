@@ -60,12 +60,16 @@ class ImageRedactionService {
 	/**
 	 * Constructor.
 	 *
-	 * @param ImageSeamGateway $seam OpenRegister's image seam.
+	 * @param ImageSeamGateway        $seam   OpenRegister's image seam.
+	 * @param ScopeDecisionStore|null $scopes The reviewer's scope decisions; null reads none.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-6.2
 	 */
 	public function __construct(
 		private readonly ImageSeamGateway $seam,
+		private readonly ?ScopeDecisionStore $scopes = null,
 	) {
 
 	}//end __construct()
@@ -295,6 +299,50 @@ class ImageRedactionService {
 		return ['imageRedactionPending' => true, 'burnedRegionCount' => 0];
 
 	}//end anonymizeFields()
+
+	/**
+	 * Commit a whole-document scope decision: record the withhold and write nothing.
+	 *
+	 * The latest `document` decision on the file gives the grounds. Without the
+	 * store, or without such a decision, the anonymise run goes on as usual.
+	 *
+	 * @param int    $fileId The source file.
+	 * @param string $userId Who commits.
+	 *
+	 * @return array<string, mixed>|null The withheld outcome, or null when the document is not withheld.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-6.2
+	 */
+	public function withheldOutcome(int $fileId, string $userId): ?array {
+		if ($this->scopes === null) {
+			return null;
+		}
+
+		$document = null;
+		foreach ($this->scopes->decisionsFor(fileId: $fileId) as $decision) {
+			if (($decision['scope'] ?? '') === ScopeRedactionService::SCOPE_DOCUMENT) {
+				$document = $decision;
+			}
+		}
+
+		if ($document === null) {
+			return null;
+		}
+
+		$bases = array_values(array_map('strval', array_filter((array) ($document['bases'] ?? []), 'is_scalar')));
+		$this->scopes->withhold(fileId: $fileId, bases: $bases, userId: $userId);
+
+		return [
+			'fileId' => $fileId,
+			'withheld' => true,
+			'withheldBases' => $bases,
+			'anonymizedFileId' => null,
+			'anonymizedFilePath' => null,
+			'replacementCount' => 0,
+			'detection' => ['ran' => false, 'outcome' => 'withheld'],
+		];
+
+	}//end withheldOutcome()
 
 	/**
 	 * Whether a file carries image content an anonymise run must account for.

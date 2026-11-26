@@ -175,8 +175,7 @@ trait BuildsAnonymizationService {
 				DetectionStates::orState(enabled: true, active: 'regex', effective: 'regex')
 			)),
 			images: ($deps['images'] ?? null),
-			renditions: ($deps['renditions'] ?? null),
-			scopes: ($deps['scopes'] ?? null)
+			renditions: ($deps['renditions'] ?? null)
 		);
 
 	}//end makeAnonymizationServiceFrom()

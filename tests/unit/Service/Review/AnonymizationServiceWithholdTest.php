@@ -2,7 +2,7 @@
 
 /**
  * The anonymise commit honours a whole-document scope decision: the document
- * is withheld, no output is written, and the batch entry says so.
+ * is withheld, no output is written, and the run says so.
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -22,6 +22,8 @@ namespace OCA\Filinq\Tests\Unit\Service\Review;
 
 use OCA\Filinq\Service\AnonymizationService;
 use OCA\Filinq\Service\DocumentAnonymizeRunner;
+use OCA\Filinq\Service\Review\ImageRedactionService;
+use OCA\Filinq\Service\Review\ImageSeamGateway;
 use OCA\Filinq\Service\Review\ScopeDecisionStore;
 use OCA\Filinq\Tests\Unit\Service\BuildsAnonymizationService;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -37,6 +39,7 @@ use PHPUnit\Framework\TestCase;
  * @link     https://www.filinq.app
  *
  * @covers \OCA\Filinq\Service\AnonymizationService
+ * @covers \OCA\Filinq\Service\Review\ImageRedactionService
  */
 class AnonymizationServiceWithholdTest extends TestCase {
 
@@ -49,22 +52,32 @@ class AnonymizationServiceWithholdTest extends TestCase {
 	 */
 	private const PAGES = ['scope' => 'pageRange', 'fromPage' => 3, 'toPage' => 5, 'bases' => ['5.1.2.e']];
 
+	/**
+	 * A document withheld in full is committed with its grounds and no output; the runner never runs.
+	 *
+	 * @return void
+	 */
 	public function testAWithheldDocumentIsCommittedWithoutOutput(): void {
 		$scopes = $this->scopesWith(decisions: [self::PAGES, ['scope' => 'document', 'bases' => ['5.1.1.c']]]);
 		$scopes->expects($this->once())->method('withhold')->with(812004, ['5.1.1.c'], 'alice');
-		$runner = $this->createMock(DocumentAnonymizeRunner::class);
+		$runner = $this->createMock(originalClassName: DocumentAnonymizeRunner::class);
 		$runner->expects($this->never())->method('run');
 
 		$result = $this->service(scopes: $scopes, runner: $runner)->anonymizeDocumentAs(fileId: 812004, entities: [], userId: 'alice');
 
-		$this->assertTrue($result['withheld']);
-		$this->assertSame(['5.1.1.c'], $result['withheldBases']);
-		$this->assertNull($result['anonymizedFileId'], 'A withheld document has no output.');
-		$this->assertSame(0, $result['replacementCount']);
-		$this->assertSame('withheld', $result['detection']['outcome']);
+		$this->assertTrue(condition: $result['withheld']);
+		$this->assertSame(expected: ['5.1.1.c'], actual: $result['withheldBases']);
+		$this->assertNull(actual: $result['anonymizedFileId'], message: 'A withheld document has no output.');
+		$this->assertSame(expected: 0, actual: $result['replacementCount']);
+		$this->assertSame(expected: 'withheld', actual: $result['detection']['outcome']);
 
 	}//end testAWithheldDocumentIsCommittedWithoutOutput()
 
+	/**
+	 * The latest document decision gives the grounds, scalars only, as text.
+	 *
+	 * @return void
+	 */
 	public function testTheLatestDocumentDecisionGivesTheGrounds(): void {
 		$scopes = $this->scopesWith(
 			decisions: [
@@ -74,34 +87,40 @@ class AnonymizationServiceWithholdTest extends TestCase {
 		);
 		$scopes->expects($this->once())->method('withhold')->with(812004, ['5.1.2.e', '7'], '');
 
-		$result = $this->service(scopes: $scopes, runner: $this->createMock(DocumentAnonymizeRunner::class))
+		$result = $this->service(scopes: $scopes, runner: $this->createMock(originalClassName: DocumentAnonymizeRunner::class))
 			->anonymizeDocument(fileId: 812004, entities: []);
 
-		$this->assertSame(['5.1.2.e', '7'], $result['withheldBases']);
+		$this->assertSame(expected: ['5.1.2.e', '7'], actual: $result['withheldBases']);
 
 	}//end testTheLatestDocumentDecisionGivesTheGrounds()
 
+	/**
+	 * Page decisions do not withhold: the run goes on and writes its output.
+	 *
+	 * @return void
+	 */
 	public function testPageDecisionsLeaveTheRunAsItWas(): void {
 		$scopes = $this->scopesWith(decisions: [self::PAGES]);
 		$scopes->expects($this->never())->method('withhold');
-		$runner = $this->createMock(DocumentAnonymizeRunner::class);
+		$runner = $this->createMock(originalClassName: DocumentAnonymizeRunner::class);
 		$runner->expects($this->once())->method('run')->willReturn(['anonymizedFileId' => 812441, 'replacementCount' => 2]);
 
 		$result = $this->service(scopes: $scopes, runner: $runner)->anonymizeDocument(fileId: 812004, entities: []);
 
-		$this->assertArrayNotHasKey('withheld', $result);
-		$this->assertSame(812441, $result['anonymizedFileId']);
+		$this->assertArrayNotHasKey(key: 'withheld', array: $result);
+		$this->assertSame(expected: 812441, actual: $result['anonymizedFileId']);
 
 	}//end testPageDecisionsLeaveTheRunAsItWas()
 
+	/**
+	 * Without the store nothing is read and nothing is withheld.
+	 *
+	 * @return void
+	 */
 	public function testWithoutTheStoreNothingIsWithheld(): void {
-		$runner = $this->createMock(DocumentAnonymizeRunner::class);
-		$runner->expects($this->once())->method('run')->willReturn(['anonymizedFileId' => 812441, 'replacementCount' => 0]);
+		$images = new ImageRedactionService(seam: $this->createMock(originalClassName: ImageSeamGateway::class));
 
-		$result = $this->makeAnonymizationServiceFrom(deps: ['anonymizeRunner' => $runner])
-			->anonymizeDocument(fileId: 812004, entities: []);
-
-		$this->assertArrayNotHasKey('withheld', $result);
+		$this->assertNull(actual: $images->withheldOutcome(fileId: 812004, userId: 'alice'));
 
 	}//end testWithoutTheStoreNothingIsWithheld()
 
@@ -113,7 +132,7 @@ class AnonymizationServiceWithholdTest extends TestCase {
 	 * @return ScopeDecisionStore&MockObject The store.
 	 */
 	private function scopesWith(array $decisions): ScopeDecisionStore&MockObject {
-		$scopes = $this->createMock(ScopeDecisionStore::class);
+		$scopes = $this->createMock(originalClassName: ScopeDecisionStore::class);
 		$scopes->method('decisionsFor')->with(812004)->willReturn($decisions);
 
 		return $scopes;
@@ -121,7 +140,7 @@ class AnonymizationServiceWithholdTest extends TestCase {
 	}//end scopesWith()
 
 	/**
-	 * The service over the store and the runner.
+	 * The service over the store and the runner, with the image leg carrying the store.
 	 *
 	 * @param ScopeDecisionStore      $scopes The scope decisions.
 	 * @param DocumentAnonymizeRunner $runner The anonymise runner.
@@ -129,7 +148,9 @@ class AnonymizationServiceWithholdTest extends TestCase {
 	 * @return AnonymizationService The service.
 	 */
 	private function service(ScopeDecisionStore $scopes, DocumentAnonymizeRunner $runner): AnonymizationService {
-		return $this->makeAnonymizationServiceFrom(deps: ['scopes' => $scopes, 'anonymizeRunner' => $runner]);
+		$images = new ImageRedactionService(seam: $this->createMock(originalClassName: ImageSeamGateway::class), scopes: $scopes);
+
+		return $this->makeAnonymizationServiceFrom(deps: ['images' => $images, 'anonymizeRunner' => $runner]);
 
 	}//end service()
 }//end class

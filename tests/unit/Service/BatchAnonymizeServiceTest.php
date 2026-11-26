@@ -224,10 +224,10 @@ class BatchAnonymizeServiceTest extends TestCase {
 		$this->service->anonymizeBatch(batchId: 'batch-w', entities: []);
 
 		$entry = $saved['files'][0];
-		$this->assertSame('anonymized', $entry['status']);
-		$this->assertTrue($entry['withheld']);
-		$this->assertSame(['5.1.1.c'], $entry['withheldBases']);
-		$this->assertNull($entry['anonymizedFileId']);
+		$this->assertSame(expected: 'anonymized', actual: $entry['status']);
+		$this->assertTrue(condition: $entry['withheld']);
+		$this->assertSame(expected: ['5.1.1.c'], actual: $entry['withheldBases']);
+		$this->assertNull(actual: $entry['anonymizedFileId']);
 
 	}//end testAWithheldDocumentIsAFinishedEntryWithoutOutput()
 
