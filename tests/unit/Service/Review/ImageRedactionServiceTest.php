@@ -186,8 +186,8 @@ class ImageRedactionServiceTest extends TestCase {
 		$this->seam->method('burnsInsideAnonymise')->willReturn(true);
 
 		$this->assertSame(
-			['imageRedactionPending' => false, 'burnedRegionCount' => 2],
-			$this->images()->anonymizeFields(file: $this->file(mime: 'application/pdf'))
+			expected: ['imageRedactionPending' => false, 'burnedRegionCount' => 2],
+			actual: $this->images()->anonymizeFields(file: $this->file(mime: 'application/pdf'))
 		);
 
 	}//end testAPdfBurnedByTheAnonymiseCallReportsItsRegions()
@@ -205,8 +205,8 @@ class ImageRedactionServiceTest extends TestCase {
 		$this->seam->method('burnsInsideAnonymise')->willReturn(true);
 
 		$this->assertSame(
-			['imageRedactionPending' => true, 'burnedRegionCount' => 0],
-			$this->images()->anonymizeFields(file: $this->file(mime: 'application/pdf'), ocrFields: ['ocr' => ['ran' => true]])
+			expected: ['imageRedactionPending' => true, 'burnedRegionCount' => 0],
+			actual: $this->images()->anonymizeFields(file: $this->file(mime: 'application/pdf'), ocrFields: ['ocr' => ['ran' => true]])
 		);
 
 	}//end testAnImageBearingPdfWithoutDecidedRegionsStaysPending()

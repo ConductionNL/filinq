@@ -196,9 +196,9 @@ class ImageSeamGatewayTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheAnonymiseCallBurnsTheImagesInsideAPdf(): void {
-		$this->assertTrue($this->gateway()->burnsInsideAnonymise(file: $this->file(mime: 'application/pdf')));
-		$this->assertFalse($this->gateway()->burnsInsideAnonymise(file: $this->file(mime: 'text/plain')));
-		$this->assertFalse($this->gateway(installed: false)->burnsInsideAnonymise(file: $this->file(mime: 'application/pdf')));
+		$this->assertTrue(condition: $this->gateway()->burnsInsideAnonymise(file: $this->file(mime: 'application/pdf')));
+		$this->assertFalse(condition: $this->gateway()->burnsInsideAnonymise(file: $this->file(mime: 'text/plain')));
+		$this->assertFalse(condition: $this->gateway(installed: false)->burnsInsideAnonymise(file: $this->file(mime: 'application/pdf')));
 
 	}//end testTheAnonymiseCallBurnsTheImagesInsideAPdf()
 
@@ -225,11 +225,11 @@ class ImageSeamGatewayTest extends TestCase {
 			}
 		};
 		foreach ([$older, $failing] as $seam) {
-			$locator = $this->createMock(OpenRegisterServiceLocator::class);
+			$locator = $this->createMock(originalClassName: OpenRegisterServiceLocator::class);
 			$locator->method('get')->willReturn($seam);
 			$gateway = new ImageSeamGateway(locator: $locator);
 
-			$this->assertFalse($gateway->burnsInsideAnonymise(file: $this->file(mime: 'application/pdf')));
+			$this->assertFalse(condition: $gateway->burnsInsideAnonymise(file: $this->file(mime: 'application/pdf')));
 		}
 
 	}//end testAnOlderOrFailingSeamDoesNotBurnInsideTheAnonymise()

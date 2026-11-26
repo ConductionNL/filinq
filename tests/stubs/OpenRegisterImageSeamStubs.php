@@ -172,7 +172,13 @@ if (class_exists(ImageRedactionService::class) === false) {
 		 * @return bool True for DOCX, ODT and PDF.
 		 */
 		public function burnsEmbeddedImages(string $mimeType): bool {
-			return in_array($mimeType, ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text'], true);
+			$types = [
+				'application/pdf',
+				'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+				'application/vnd.oasis.opendocument.text',
+			];
+
+			return in_array(needle: $mimeType, haystack: $types, strict: true);
 		}
 	}
 }
