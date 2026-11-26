@@ -305,6 +305,48 @@ class SettingsServiceTest extends TestCase {
 	}//end testUpdateSettingsPersistsValues()
 
 	/**
+	 * The admin page's anonymisation section is stored: the grondslag mapping
+	 * and the enabled entity types arrive as an object and a list and are kept
+	 * as JSON, the default output format as its value.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-grondslag-selector-in-admin-settings
+	 * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-selectable-entity-types-from-a-curated-list
+	 */
+	public function testTheAnonymisationSectionIsStored(): void {
+		$written = [];
+		$this->mockConfig->method('setValueString')
+			->willReturnCallback(
+				static function (string $app, string $key, string $value) use (&$written): bool {
+					$written[$key] = $value;
+					return true;
+				}
+			);
+		$this->mockConfig->method('getValueString')
+			->willReturnCallback(
+				static function (string $app, string $key, string $default='') use (&$written): string {
+					return ($written[$key] ?? $default);
+				}
+			);
+		$this->mockLogger->expects($this->never())->method('warning');
+
+		$result = $this->settingsService->updateSettings(
+			[
+				'filinq.grondslagen.entity_type_bases'       => ['BSN' => ['5.1.1.e'], 'PERSON' => ['5.1.2.e']],
+				'filinq.anonymisation.enabled_entity_types'  => ['PERSON', 'BSN'],
+				'filinq.anonymisation.default_output_format' => 'preserve',
+			]
+		);
+
+		$this->assertSame(expected: '{"BSN":["5.1.1.e"],"PERSON":["5.1.2.e"]}', actual: $written['filinq.grondslagen.entity_type_bases']);
+		$this->assertSame(expected: '["PERSON","BSN"]', actual: $written['filinq.anonymisation.enabled_entity_types']);
+		$this->assertSame(expected: 'preserve', actual: $written['filinq.anonymisation.default_output_format']);
+		$this->assertSame(expected: 'preserve', actual: $result['filinq.anonymisation.default_output_format']);
+
+	}//end testTheAnonymisationSectionIsStored()
+
+	/**
 	 * The output subfolder name is writable when it is one safe path segment.
 	 *
 	 * @return void
