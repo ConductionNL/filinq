@@ -62,7 +62,7 @@ final class BatchResumeSelection {
 	 * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
 	 */
-	public static function forBatch(array $batch): array {
+	public function forBatch(array $batch): array {
 		$status = (string)($batch['status'] ?? '');
 		if (in_array($status, self::RESUMABLE, true) === true) {
 			return ['resumable' => true, 'only' => null];

@@ -79,12 +79,14 @@ class BatchLifecycleService {
 	/**
 	 * Constructor.
 	 *
-	 * @param BatchStateServiceInterface $stateService Batch state, ownership-checked on read.
+	 * @param BatchStateServiceInterface $stateService    Batch state, ownership-checked on read.
+	 * @param BatchResumeSelection       $resumeSelection Which batches resume, and which of their files.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly BatchStateServiceInterface $stateService,
+		private readonly BatchResumeSelection $resumeSelection=new BatchResumeSelection(),
 	) {
 
 	}//end __construct()
@@ -151,7 +153,7 @@ class BatchLifecycleService {
 			return ['status' => 404, 'reason' => 'not-found'];
 		}
 
-		$selection = BatchResumeSelection::forBatch(batch: $batch);
+		$selection = $this->resumeSelection->forBatch(batch: $batch);
 		if ($selection['resumable'] === false) {
 			return ['status' => 409, 'reason' => 'not-resumable', 'batchStatus' => (string)($batch['status'] ?? '')];
 		}

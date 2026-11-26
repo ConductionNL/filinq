@@ -41,7 +41,7 @@ class BatchResumeSelectionTest extends TestCase {
 		foreach (['error', 'cancelled'] as $status) {
 			self::assertSame(
 				expected: ['resumable' => true, 'only' => null],
-				actual: BatchResumeSelection::forBatch(batch: ['status' => $status, 'files' => []])
+				actual: (new BatchResumeSelection())->forBatch(batch: ['status' => $status, 'files' => []])
 			);
 		}
 
@@ -57,7 +57,7 @@ class BatchResumeSelectionTest extends TestCase {
 
 		self::assertSame(
 			expected: ['resumable' => true, 'only' => ['error']],
-			actual: BatchResumeSelection::forBatch(batch: $batch)
+			actual: (new BatchResumeSelection())->forBatch(batch: $batch)
 		);
 
 	}//end testACompletedBatchWithAFailedFileResumesOnlyFailedFiles()
@@ -75,7 +75,7 @@ class BatchResumeSelectionTest extends TestCase {
 			[],
 		];
 		foreach ($cases as $batch) {
-			self::assertFalse(condition: BatchResumeSelection::forBatch(batch: $batch)['resumable']);
+			self::assertFalse(condition: (new BatchResumeSelection())->forBatch(batch: $batch)['resumable']);
 		}
 
 	}//end testOtherBatchesAreNotResumable()
