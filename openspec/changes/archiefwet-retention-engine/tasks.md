@@ -52,6 +52,7 @@
 - [ ] 4.1 PHPUnit unit tests — minimum 75% coverage on new code (ADR-009)
   - Run inside the container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Includes: register/seed import pins, selectielijst drift-pin, archive-key import pin, propagation precedence matrix, register-lint for REQ-DDARE-008 (no annotation on record classes, object shape elsewhere), architecture test for "no retention arithmetic", and the REQ-DDARE-009 seed-lint that fails on any `TODO-` categorie.
+  - Coverage measured (26 Nov 2026, pcov over the full unit suite on development 6f987cc, 8725 tests, 0 failures): 236 of 245 statements, 96.3%, across the four lib files that carry this change's `@spec` tag; `BridgeRecordReader` was at 0% and now has `BridgeRecordReaderTest`. The 75% figure is met. Still open: the REQ-DDARE-009 seed-lint, which fails while any `TODO-` categorie remains and so waits on task 1.4.
 
 - [x] 4.2 Playwright e2e `tests/e2e/workflows/archiefwet-retention.spec.ts` covering the `@e2e`-referenced scenarios
   - Wire settings, review/partial-approve/reject a vernietigingslijst, certificates list, overbrenging list; verify on the Postgres dev instance (port 8080); test through the UI.
