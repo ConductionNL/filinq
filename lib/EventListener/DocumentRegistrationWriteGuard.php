@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
  */
 
 declare(strict_types=1);

@@ -165,7 +165,7 @@ class DocumentProductionSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
 	public function testATemplateCanDeclareItsPlainLanguageCounterpart(): void {
 		$schemas = $this->descriptor()['components']['schemas'];

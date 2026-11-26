@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md
+ * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use Throwable;
  * fails the download: the document has already left, so the failure is logged
  * and the answer is false.
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md
+ * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md
  */
 class DocumentDownloadLog {
 
@@ -80,7 +80,7 @@ class DocumentDownloadLog {
 	 *
 	 * @return bool True when the download is in the trail.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md#requirement-a-download-is-recorded-with-its-route-and-its-identity-req-dio-06
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md#requirement-a-download-is-recorded-with-its-route-and-its-identity-req-dio-06
 	 */
 	public function downloaded(int $fileId, string $version, string $route, ?string $linkId = null): bool {
 		if ($fileId <= 0) {

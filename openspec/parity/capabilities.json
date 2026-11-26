@@ -1319,9 +1319,9 @@
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
 				"evidence": "Not built (closing audit 2026-11-12, decision 389): one instance-wide series only; no registration number per unit (task 1.5). Built so far: lib/Settings/filinq_register.json:127 postRegisterEntry.registrationNumber declares x-openregister-generated {sequence: 'filinq-post', format: '{year}-{seq:5}', resetOn: 'year'} (schema comment: 'Filinq keeps no counter... drawn from a platform sequence and reset each year'), enforced immutable by lib/EventListener/DocumentRegistrationWriteGuard.php (stops ObjectUpdatingEvent on a changed number). lib/Controller/PostRegisterController.php only exposes three READ endpoints (openPost/answers/series, all 'none' in route-reach.txt) and its docblock states 'THE LEAF IS NOT THIS. ADR-066's leaf... is blocked on filinq shipping no leaves webpack entry' - note webpack.config.js:74 DOES now declare a leaves entry, but src/leaves.js only registers the documents leaf (registerDocumentsLeaf), not a post-register leaf.",
-				"change": "openspec/changes/documents-in-and-out-of-the-building",
-				"requirement": "openspec/changes/documents-in-and-out-of-the-building/specs/document-register :: A registered document carries a direction, a unit and a number (REQ-DIO-01)",
-				"plan": "openspec/changes/documents-in-and-out-of-the-building"
+				"change": "openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building",
+				"requirement": "openspec/specs/document-register :: A registered document carries a direction, a unit and a number (REQ-DIO-01)",
+				"plan": "openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building"
 			},
 			"reachedOn": "nothing reaches it (no manifest page, no leaf, no frontend caller; number issuance happens only via direct OpenRegister object-create calls, and the series is instance-wide not per-unit as the row describes)",
 			"provider": "filinq",
@@ -1357,7 +1357,7 @@
 				"change": "openspec/changes/archive/2026-11-25-document-intake-inbox",
 				"requirement": [
 					"openspec/changes/archive/2026-11-25-document-intake-inbox/specs/document-intake-inbox :: Intake document schema (REQ-DII-01)",
-					"openspec/changes/documents-in-and-out-of-the-building/specs/document-register :: A registered document carries a direction, a unit and a number (REQ-DIO-01)"
+					"openspec/specs/document-register :: A registered document carries a direction, a unit and a number (REQ-DIO-01)"
 				]
 			},
 			"reachedOn": "/intake (IntakeIndex.vue)",
@@ -2441,8 +2441,8 @@
 				"state": "built",
 				"owner": "ConductionNL/filinq",
 				"evidence": "lib/Service/PlainLanguageRenditionService.php:186 plan() + lib/Service/DocumentService.php producePlainRendition() (~line 655) run unconditionally inside generateDocument() whenever a template declares a 'plainLanguage' counterpart (lib/Settings/filinq_register.json:673, template.plainLanguage.templateId/requiredStatements/source). Reached by dossiq's beschikking flow (FilinqTemplateEngineAdapter.php:152 calls generateDocument() for every beschikking; the plan step runs regardless of caller-supplied options since it only depends on the template's own declaration).",
-				"change": "openspec/changes/documents-in-and-out-of-the-building",
-				"requirement": "openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation :: A template may declare a plain-language counterpart (REQ-DIO-04)"
+				"change": "openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building",
+				"requirement": "openspec/specs/letter-correspondence-generation :: A template may declare a plain-language counterpart (REQ-DIO-04)"
 			},
 			"reachedOn": "machine consumer: dossiq via DocumentService::generateDocument() for any template with a plainLanguage counterpart declared",
 			"provider": "filinq",
@@ -7099,13 +7099,13 @@
 			"built": {
 				"state": "specified",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Not built (closing audit 2026-11-12, decision 389): DocumentDownloadRecorder has no caller in lib/ (task 4.3). Built so far: lib/Service/DocumentDownloadRecorder.php:82 record() and :125 shouldNotify() are a complete, well-documented implementation (per its own docblock and openspec/changes/documents-in-and-out-of-the-building/tasks.md: 6 tasks done and 7 in progress), but grep for 'DocumentDownloadRecorder', 'recordDownload' across all of lib/ found ZERO references outside the class's own file: no controller, route, event listener or background job calls it. Corrections round 8 (2026-09-28), filinq#1185: the recorder still has no caller at 9fd042f; task 4.1 is in progress (openspec/changes/documents-in-and-out-of-the-building/tasks.md:213) and names what waits, wiring it into four filinq controllers (:235-236), and downloads served by Nextcloud itself stay unrecorded because the only platform download event fires for DAV direct links alone (:215-226).",
-				"change": "openspec/changes/documents-in-and-out-of-the-building",
+				"evidence": "Not built (closing audit 2026-11-12, decision 389): DocumentDownloadRecorder has no caller in lib/ (task 4.3). Built so far: lib/Service/DocumentDownloadRecorder.php:82 record() and :125 shouldNotify() are a complete, well-documented implementation (per its own docblock and openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/tasks.md: 6 tasks done and 7 in progress), but grep for 'DocumentDownloadRecorder', 'recordDownload' across all of lib/ found ZERO references outside the class's own file: no controller, route, event listener or background job calls it. Corrections round 8 (2026-09-28), filinq#1185: the recorder still has no caller at 9fd042f; task 4.1 is in progress (openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/tasks.md:213) and names what waits, wiring it into four filinq controllers (:235-236), and downloads served by Nextcloud itself stay unrecorded because the only platform download event fires for DAV direct links alone (:215-226).",
+				"change": "openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building",
 				"requirement": [
-					"openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications :: A download is recorded with its route and its identity (REQ-DIO-06)",
-					"openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications :: Who is told is declared on the schema, and is staff (REQ-DIO-07)"
+					"openspec/specs/filinq-notifications :: A download is recorded with its route and its identity (REQ-DIO-06)",
+					"openspec/specs/filinq-notifications :: Who is told is declared on the schema, and is staff (REQ-DIO-07)"
 				],
-				"plan": "openspec/changes/documents-in-and-out-of-the-building"
+				"plan": "openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "filinq",
@@ -7180,10 +7180,10 @@
 			"built": {
 				"state": "planned",
 				"owner": "ConductionNL/filinq",
-				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): no screen or leaf shows the open post list or the answering letters; the three postRegister routes have no caller. Planned in openspec/changes/documents-in-and-out-of-the-building (task 2.2). Built so far: lib/Controller/PostRegisterController.php (openPost/answers/series, routes.php:99-101, all 'none' in route-reach.txt) -> lib/Service/PostRegisterReader.php implements the three derived reads over the postRegisterEntry schema. Controller docblock: 'THE LEAF IS NOT THIS. ADR-066's leaf for the open post list is blocked on filinq shipping no leaves webpack entry.' webpack.config.js:74 now DOES declare a leaves entry, but src/leaves.js only registers the documents leaf (registerDocumentsLeaf), not a post-register leaf - grep of src/ found no consumer of these three routes.",
-				"change": "openspec/changes/documents-in-and-out-of-the-building",
-				"requirement": "openspec/changes/documents-in-and-out-of-the-building/specs/document-register :: An outbound registration discharges the inbound one it answers (REQ-DIO-02)",
-				"plan": "openspec/changes/documents-in-and-out-of-the-building"
+				"evidence": "Not built as the row says (verify pass 2026-11-12, decision 389): no screen or leaf shows the open post list or the answering letters; the three postRegister routes have no caller. Planned in openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building (task 2.2). Built so far: lib/Controller/PostRegisterController.php (openPost/answers/series, routes.php:99-101, all 'none' in route-reach.txt) -> lib/Service/PostRegisterReader.php implements the three derived reads over the postRegisterEntry schema. Controller docblock: 'THE LEAF IS NOT THIS. ADR-066's leaf for the open post list is blocked on filinq shipping no leaves webpack entry.' webpack.config.js:74 now DOES declare a leaves entry, but src/leaves.js only registers the documents leaf (registerDocumentsLeaf), not a post-register leaf - grep of src/ found no consumer of these three routes.",
+				"change": "openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building",
+				"requirement": "openspec/specs/document-register :: An outbound registration discharges the inbound one it answers (REQ-DIO-02)",
+				"plan": "openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building"
 			},
 			"reachedOn": "nothing reaches it (no leaf, no manifest page, no frontend caller)",
 			"provider": "filinq",

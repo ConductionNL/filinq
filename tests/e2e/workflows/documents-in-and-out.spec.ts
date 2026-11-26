@@ -33,7 +33,7 @@ import { harvestToken, jsonHeaders, TEST_PREFIX } from './_fixtures.ts'
 const OR = '/index.php/apps/openregister/api/objects/filinq'
 
 test.describe('the post register', () => {
-	// @e2e openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md#the-first-outgoing-letter-of-the-year
+	// @e2e openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md#the-first-outgoing-letter-of-the-year
 	// @e2e openspec/specs/document-register/spec.md#the-first-outgoing-letter-of-the-year
 	test('a registration entry carries its direction, unit and moment, and is given a number', async ({
 		page,
@@ -76,7 +76,7 @@ test.describe('the post register', () => {
 		expect(String(entry.registrationNumber ?? '')).toMatch(/^\d{4}-\d+$/)
 	})
 
-	// @e2e openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md#a-reply-discharges-the-request
+	// @e2e openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md#a-reply-discharges-the-request
 	// @e2e openspec/specs/document-register/spec.md#a-reply-discharges-the-request
 	test('the discharge is a link on the outbound entry and never a flag on the inbound one', async ({
 		page,
@@ -151,7 +151,7 @@ test.describe('the post register', () => {
 })
 
 test.describe('the plain-language counterpart', () => {
-	// @e2e openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md#a-besluit-leaves-with-both-renditions
+	// @e2e openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md#a-besluit-leaves-with-both-renditions
 	// @e2e openspec/specs/letter-correspondence-generation/spec.md#a-besluit-leaves-with-both-renditions
 	test('a template can declare a counterpart, and a generation record can carry both renditions', async ({
 		page,

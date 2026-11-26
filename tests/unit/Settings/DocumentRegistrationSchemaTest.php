@@ -137,7 +137,7 @@ class DocumentRegistrationSchemaTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/tasks.md#task-1.5
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/tasks.md#task-1.5
 	 */
 	public function testEachUnitHasItsOwnSeriesPerYear(): void {
 		$schema = $this->schema();

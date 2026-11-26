@@ -35,7 +35,7 @@ use RuntimeException;
  * @covers \OCA\Filinq\Service\Audit\DocumentDownloadLog
  * @uses   \OCA\Filinq\Service\DocumentDownloadRecorder
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md#requirement-a-download-is-recorded-with-its-route-and-its-identity-req-dio-06
+ * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md#requirement-a-download-is-recorded-with-its-route-and-its-identity-req-dio-06
  */
 class DocumentDownloadLogTest extends TestCase {
 

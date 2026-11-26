@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+ * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
  */
 
 declare(strict_types=1);
@@ -58,7 +58,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+ * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
  */
 class PlainLanguageRenditionService {
 
@@ -93,7 +93,7 @@ class PlainLanguageRenditionService {
 	 *
 	 * @return array{templateId: string, requiredStatements: array<int, string>, source: string}|null The declaration.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
 	public function counterpartOf(array $template): ?array {
 		$declared = ($template[self::DECLARATION_KEY] ?? null);
@@ -125,7 +125,7 @@ class PlainLanguageRenditionService {
 	 *
 	 * @return array<int, string> The unresolved statements, in declaration order.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
 	public function unresolved(array $required, array $data): array {
 		$missing = [];
@@ -157,7 +157,7 @@ class PlainLanguageRenditionService {
 	 * @throws PlainRenditionRefusedException When a statement is unresolved, the acceptance is missing,
 	 *                                        or the counterpart template cannot be read.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
 	public function plan(array $template, array $data, array $acceptance = []): ?array {
 		$counterpart = $this->counterpartOf(template: $template);
@@ -340,7 +340,7 @@ class PlainLanguageRenditionService {
 	 *
 	 * @return array<string, mixed> The fields.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
 	public function recordFields(array $plan, array $formal, array $plainFile, string $moment): array {
 		// 🔴 THE PLAIN RENDITION NAMES THE FORMAL DOCUMENT, ON THE RECORD AND ON
@@ -372,7 +372,7 @@ class PlainLanguageRenditionService {
 	 *
 	 * @return bool True when the plain rendition is stale.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
 	public function stale(array $record): bool {
 		$plain = trim((string)($record['plainRenditionGeneratedAt'] ?? ''));

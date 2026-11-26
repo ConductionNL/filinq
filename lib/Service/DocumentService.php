@@ -1134,7 +1134,7 @@ class DocumentService implements DocumentServiceInterface {
 	 * @return array{rendition: array<string, mixed>|null, record: array<string, mixed>,
 	 *               warnings: array<int, string>} The rendition, its record fields and any warnings.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
 	private function producePlainRendition(array $run, array $formal): array {
 		$plan = $formal['plan'];
