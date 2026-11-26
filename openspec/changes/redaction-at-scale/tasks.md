@@ -38,9 +38,16 @@
 
 ## 5. Quality
 
-- [ ] 5.1 PHPUnit for coordinator budgets, cancellation, resume idempotency, sampler determinism, report aggregation, cap routing — 75% coverage on new code (ADR-009)
+- [x] 5.1 PHPUnit for coordinator budgets, cancellation, resume idempotency, sampler determinism, report aggregation, cap routing — 75% coverage on new code (ADR-009)
   - Run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`.
   - Live-verify a 150+ file folder batch end-to-end on Postgres (8080) with OpenRegister: enqueue → ticks → cancel → resume → report.
+  - Done live 26 Nov 2026 (sandbox: Nextcloud 34.0.6 + MariaDB + Redis, OpenRegister main 99ea152d with openregister#11261 applied locally, filinq development 8433ba3f; MariaDB stands in for Postgres). Batch over 160 letters in one folder, run in the background (`background: true`), ticks driven with `occ background-job:execute --force-execute` on BatchJobCoordinator, 25 files a tick:
+    - Extract: about 30 s over 7 ticks. Cancel mid-run: `cancelling`, then `cancelled` at the next tick, and nothing more extracted (stopped at 51/160). Resume: continued from there to 160/160, then `review`.
+    - Each file was marked the way the folder screen marks it (the redaction mark with the batch-wide selection, the review mark with uncertain findings decided). Anonymise: background. Cancel after the first tick (25 done), then resume: `requeued: 135`, only the unfinished files. 160/160 `anonymized`, 160 outputs in `anonymised/`, no duplicate.
+    - Report: CSV with 160 rows; summary: 160 succeeded, 0 failed, 1195 documents/hour, extractMs 6548, anonymizeMs 168910. Four-eyes was switched off for the run, because one sandbox account both checked and anonymised (a batch runs with dossier scope, so it counts as a Woo run), and switched back to `woo` afterwards.
+    - Found and fixed in the same PR: a second folder batch over the same folder took the 160 review renditions (`<name>.pdf`) as documents (320 files); FolderFileEnumerator now leaves out a PDF that a sibling's rendition record names. Newman batch-lifecycle 29/29 after fixing its no-auth requests (cookie jar + CSRF).
+    - The PHPUnit half was already met (92-98% on the new classes, b-filinq 25 Nov).
+- [ ] 5.6 A batch whose files failed ends `completed` and cannot be resumed (`409 Only an errored or cancelled batch can be resumed`), so its failed files can only be redone by starting a new batch. Seen live: 160 files refused by the review gate. REQ-DDRAS-005's scenario "a batch that errored with 40 of 60 files succeeded" assumes otherwise, but nothing sets a batch to `error` for per-file failures. Recommendation: let resume accept a `completed` batch that has files in `error`. It re-queues only those files, and the report of the finished files stays readable. A completed batch with no failed files still answers 409. Adjust the scenario wording to match.
 - [x] 5.2 Playwright spec `tests/e2e/spec-coverage/redaction-at-scale.spec.ts` for the `@e2e`-referenced scenarios; Newman contracts for cancel/resume/report
   - Written: the Playwright spec (#2218) and the Newman contracts `tests/integration/batch-lifecycle.postman_collection.json` (a folder batch over WebDAV, then cancel, cancel again, report, resume, unknown batches 404, no auth 401, teardown), which CI's `tests/integration/*.postman_collection.json` glob picks up.
   - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): not run here, no live instance.

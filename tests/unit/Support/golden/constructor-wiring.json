@@ -399,7 +399,8 @@
             "built OCA\\Filinq\\Service\\FolderFileEnumerator": [
                 "double ConfidentialityLabelService",
                 "double IAppConfig",
-                "double OutputLayoutResolver"
+                "double OutputLayoutResolver",
+                null
             ]
         },
         {
@@ -418,7 +419,8 @@
             "built OCA\\Filinq\\Service\\FolderFileEnumerator": [
                 "double ConfidentialityLabelService",
                 "double IAppConfig",
-                "double OutputLayoutResolver"
+                "double OutputLayoutResolver",
+                "double ReviewRenditionRepository"
             ]
         },
         {

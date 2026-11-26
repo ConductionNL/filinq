@@ -25,6 +25,7 @@ namespace OCA\Filinq\Service\Support;
 
 use OCA\Filinq\Service\ConfidentialityLabelService;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\Service\Review\ReviewRenditionRepository;
 use OCP\IAppConfig;
 
 /**
@@ -46,15 +47,18 @@ final class FolderEnumerationSources {
 	 * @param OutputLayoutResolver        $layout               Recognises legacy anonymised outputs
 	 * @param ConfidentialityLabelService $confidentialityLabel Reads the confidentiality labels
 	 * @param IAppConfig                  $appConfig            Holds the prioritised analysis flag
+	 * @param ReviewRenditionRepository|null $renditions        Recognises the review renditions filinq wrote next to their sources
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/batch-anonymization/spec.md
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md
 	 */
 	public function __construct(
 		public readonly OutputLayoutResolver $layout,
 		public readonly ConfidentialityLabelService $confidentialityLabel,
 		public readonly IAppConfig $appConfig,
+		public readonly ?ReviewRenditionRepository $renditions = null,
 	) {
 
 	}//end __construct()
