@@ -101,7 +101,7 @@ class RefusalGroundsResolver implements RefusalGroundsResolverInterface {
 	 *
 	 * @throws RuntimeException When the snapshot is needed and cannot be read; an empty list is never answered.
 	 *
-	 * @spec openspec/changes/woo-request-workflow
+	 * @spec openspec/changes/archive/2026-11-26-woo-request-workflow
 	 */
 	public function listWithRetired(): array {
 		$fromDossiq = $this->fromDossiq(withRetired: true);
@@ -121,7 +121,7 @@ class RefusalGroundsResolver implements RefusalGroundsResolverInterface {
 	 *
 	 * @throws RuntimeException When the snapshot is needed and cannot be read.
 	 *
-	 * @spec openspec/changes/woo-request-workflow
+	 * @spec openspec/changes/archive/2026-11-26-woo-request-workflow
 	 */
 	public function byCode(string $code): ?array {
 		$code = trim($code);
