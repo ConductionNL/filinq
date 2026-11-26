@@ -12,7 +12,7 @@
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * @link https://conduction.nl
- * @spec openspec/changes/woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-filinq-seeds-two-organisation-editable-woo-templates-req-ddwrw-006
+ * @spec openspec/changes/archive/2026-11-26-woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-filinq-seeds-two-organisation-editable-woo-templates-req-ddwrw-006
  */
 
 declare(strict_types=1);

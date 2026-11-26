@@ -6,7 +6,7 @@ checks the decision data, renders the organisation's own templates and files
 the documents. filinq does not assess documents and does not assemble the
 disclosure package: dossiq holds the documents and does both.
 
-Spec: `openspec/changes/woo-request-workflow` (REQ-DDWRW-006, -007, -010, -011).
+Spec: `openspec/changes/archive/2026-11-26-woo-request-workflow` (REQ-DDWRW-006, -007, -010, -011).
 
 ## The templates
 
