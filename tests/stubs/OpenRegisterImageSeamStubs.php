@@ -163,5 +163,16 @@ if (class_exists(ImageRedactionService::class) === false) {
 
 			return $this->answer;
 		}
+
+		/**
+		 * Whether the anonymise call burns the images inside this type, as on openregister main.
+		 *
+		 * @param string $mimeType The type.
+		 *
+		 * @return bool True for DOCX, ODT and PDF.
+		 */
+		public function burnsEmbeddedImages(string $mimeType): bool {
+			return in_array($mimeType, ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.oasis.opendocument.text'], true);
+		}
 	}
 }

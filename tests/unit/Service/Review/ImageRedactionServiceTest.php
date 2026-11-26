@@ -173,6 +173,44 @@ class ImageRedactionServiceTest extends TestCase {
 
 	}//end testAPdfWithDecidedRegionsIsPending()
 
+	/**
+	 * A PDF whose anonymise burns its decided regions reports them burned, not pending.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.4
+	 *
+	 * @return void
+	 */
+	public function testAPdfBurnedByTheAnonymiseCallReportsItsRegions(): void {
+		$this->seam->method('available')->willReturn(true);
+		$this->seam->method('decidedRegionCount')->willReturn(2);
+		$this->seam->method('burnsInsideAnonymise')->willReturn(true);
+
+		$this->assertSame(
+			['imageRedactionPending' => false, 'burnedRegionCount' => 2],
+			$this->images()->anonymizeFields(file: $this->file(mime: 'application/pdf'))
+		);
+
+	}//end testAPdfBurnedByTheAnonymiseCallReportsItsRegions()
+
+	/**
+	 * An image-bearing PDF without decided regions stays pending, even where the anonymise burns.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.4
+	 *
+	 * @return void
+	 */
+	public function testAnImageBearingPdfWithoutDecidedRegionsStaysPending(): void {
+		$this->seam->method('available')->willReturn(true);
+		$this->seam->method('decidedRegionCount')->willReturn(0);
+		$this->seam->method('burnsInsideAnonymise')->willReturn(true);
+
+		$this->assertSame(
+			['imageRedactionPending' => true, 'burnedRegionCount' => 0],
+			$this->images()->anonymizeFields(file: $this->file(mime: 'application/pdf'), ocrFields: ['ocr' => ['ran' => true]])
+		);
+
+	}//end testAnImageBearingPdfWithoutDecidedRegionsStaysPending()
+
 	public function testAnImageWithoutTheSeamIsPending(): void {
 		$this->seam->method('available')->willReturn(false);
 

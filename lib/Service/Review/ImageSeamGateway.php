@@ -143,6 +143,38 @@ class ImageSeamGateway {
 	}//end decidedRegionCount()
 
 	/**
+	 * Whether OpenRegister's anonymise call burns a file's decided regions itself.
+	 *
+	 * An OpenRegister whose text path sends a DOCX, ODT or PDF through the
+	 * seam (`burnsEmbeddedImages()`) burns every decided region into the
+	 * output of the same call, or refuses the whole run. An older one has no
+	 * such method, and its anonymise leaves the pixels as they were.
+	 *
+	 * @param File $file The source file.
+	 *
+	 * @return bool True when a successful anonymise of this file burned its decided regions.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.4
+	 */
+	public function burnsInsideAnonymise(File $file): bool {
+		if ($this->available() === false) {
+			return false;
+		}
+
+		$seam = $this->locator->get(className: self::SEAM_CLASS);
+		if (method_exists($seam, 'burnsEmbeddedImages') === false) {
+			return false;
+		}
+
+		try {
+			return $seam->burnsEmbeddedImages(mimeType: (string) $file->getMimeType()) === true;
+		} catch (Throwable) {
+			return false;
+		}
+
+	}//end burnsInsideAnonymise()
+
+	/**
 	 * Burn the regions through the seam.
 	 *
 	 * For a standalone image the seam's regions carry no page, so page 1 of
