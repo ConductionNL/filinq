@@ -125,4 +125,18 @@ class BridgeApi implements BridgeApiInterface {
 	public function badges(array $fileIds): array {
 		return $this->badges?->forFiles(fileIds: $fileIds) ?? [];
 	}//end badges()
+
+	/**
+	 * Record an anonymisation's output on the external documents whose dossier copy was anonymised.
+	 *
+	 * @param int $sourceFileId The anonymised file.
+	 * @param int $resultFileId The redacted output.
+	 *
+	 * @return array<int, array<string, mixed>> The documents saved as processed.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge/tasks.md#task-2.6
+	 */
+	public function processed(int $sourceFileId, int $resultFileId): array {
+		return $this->bridge->processed(sourceFileId: $sourceFileId, resultFileId: $resultFileId);
+	}//end processed()
 }//end class

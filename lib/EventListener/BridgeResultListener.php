@@ -24,7 +24,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent;
-use OCA\Filinq\Service\BridgeService;
+use OCA\Filinq\Kernel\Contracts\BridgeApiInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -49,13 +49,13 @@ class BridgeResultListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param BridgeService   $bridge Moves the external documents.
-	 * @param LoggerInterface $logger Logs a failed record.
+	 * @param BridgeApiInterface $bridge Moves the external documents.
+	 * @param LoggerInterface    $logger Logs a failed record.
 	 *
 	 * @spec openspec/changes/zgw-document-bridge/tasks.md#task-2.6
 	 */
 	public function __construct(
-		private readonly BridgeService $bridge,
+		private readonly BridgeApiInterface $bridge,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

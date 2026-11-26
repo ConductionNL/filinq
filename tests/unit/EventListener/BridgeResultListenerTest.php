@@ -25,7 +25,7 @@ namespace OCA\Filinq\Tests\Unit\EventListener;
 use OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent;
 use OCA\Filinq\Event\Webhook\DocumentWebhookSubject;
 use OCA\Filinq\EventListener\BridgeResultListener;
-use OCA\Filinq\Service\BridgeService;
+use OCA\Filinq\Kernel\Contracts\BridgeApiInterface;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -48,7 +48,7 @@ class BridgeResultListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testItCountsTheProcessedDocuments(): void {
-		$bridge = $this->createMock(originalClassName: BridgeService::class);
+		$bridge = $this->createMock(originalClassName: BridgeApiInterface::class);
 		$bridge->expects($this->once())->method('processed')->with(1101, 2201)->willReturn([['uuid' => 'd-1']]);
 
 		$recorder = new BridgeResultListener(bridge: $bridge, logger: $this->createMock(originalClassName: LoggerInterface::class));
@@ -62,7 +62,7 @@ class BridgeResultListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testAFailureIsLoggedAndSwallowed(): void {
-		$bridge = $this->createMock(originalClassName: BridgeService::class);
+		$bridge = $this->createMock(originalClassName: BridgeApiInterface::class);
 		$bridge->method('processed')->willThrowException(new RuntimeException('lifecycle refused'));
 		$logger = $this->createMock(originalClassName: LoggerInterface::class);
 		$logger->expects($this->once())->method('warning')->with(
@@ -85,7 +85,7 @@ class BridgeResultListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheAnonymisedEventReachesTheBridge(): void {
-		$bridge = $this->createMock(originalClassName: BridgeService::class);
+		$bridge = $this->createMock(originalClassName: BridgeApiInterface::class);
 		$bridge->expects($this->once())->method('processed')->with(1101, 2201)->willReturn([]);
 		$recorder = new BridgeResultListener(bridge: $bridge, logger: $this->createMock(originalClassName: LoggerInterface::class));
 
@@ -105,7 +105,7 @@ class BridgeResultListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testOtherEventsAreIgnored(): void {
-		$bridge = $this->createMock(originalClassName: BridgeService::class);
+		$bridge = $this->createMock(originalClassName: BridgeApiInterface::class);
 		$bridge->expects($this->never())->method('processed');
 
 		(new BridgeResultListener(bridge: $bridge, logger: $this->createMock(originalClassName: LoggerInterface::class)))->handle(event: new Event());
