@@ -32,7 +32,10 @@ use PHPUnit\Framework\TestCase;
  * (every schema whose `configuration.x-openregister-mcp` is enabled, one tool
  * per declared verb), so the probe follows the register rather than a number
  * written down here; it also pins today's count, 16, so a schema that is
- * switched on silently still breaks it.
+ * switched on silently still breaks it. The curated tools are read the same
+ * way, from the `#[McpTool]` attributes in lib/: the live surface must be
+ * exactly what the source declares, so a tool registered from anywhere else
+ * still breaks it, while a change that adds a curated tool on purpose does not.
  *
  * Needs a Nextcloud with OpenRegister and Filinq installed. The target comes
  * from the environment, never a default:
@@ -45,6 +48,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @spec openspec/changes/mcp-generation-tools/specs/mcp-generation-tools/spec.md#requirement-assistant-document-operations-map-onto-the-existing-surface-without-duplication-req-ddmgt-001
  * @spec openspec/changes/mcp-generation-tools/specs/mcp-generation-tools/spec.md#requirement-the-adoption-baselines-refusals-remain-binding-req-ddmgt-006
+ * @spec openspec/changes/mcp-generation-tools/tasks.md#task-2.2
  *
  * @coversNothing
  */
@@ -88,24 +92,29 @@ class McpSurfaceTest extends TestCase
 
 
 	/**
-	 * The live surface is the expected derived read tools plus the three curated tools, nothing more.
+	 * The live surface is the expected derived read tools plus the curated tools the source declares, nothing more.
 	 *
 	 * @return void
 	 */
-	public function testTheSurfaceIsTheDerivedReadToolsAndThreeCuratedTools(): void
+	public function testTheSurfaceIsTheDerivedReadToolsAndTheDeclaredCuratedTools(): void
 	{
 		$tools    = $this->filinqTools();
 		$derived  = $this->expectedDerivedTools();
-		$expected = array_merge($derived, array_keys(self::CURATED));
+		$curated  = $this->declaredCuratedTools();
+		$expected = array_merge($derived, $curated);
 		sort($expected);
 
 		$actual = array_keys($tools);
 		sort($actual);
 
 		$this->assertCount(16, $derived, 'the register declares 16 derived read tools');
+		foreach (array_keys(self::CURATED) as $id) {
+			$this->assertContains($id, $curated, $id.' is declared with #[McpTool]');
+		}
+
 		$this->assertSame($expected, $actual);
 
-	}//end testTheSurfaceIsTheDerivedReadToolsAndThreeCuratedTools()
+	}//end testTheSurfaceIsTheDerivedReadToolsAndTheDeclaredCuratedTools()
 
 
 	/**
@@ -169,13 +178,15 @@ class McpSurfaceTest extends TestCase
 	public function testCuratedToolsCarryCompleteHonestHints(): void
 	{
 		$tools = $this->filinqTools();
-		foreach (self::CURATED as $id => $hints) {
+		foreach ($this->declaredCuratedTools() as $id) {
 			$this->assertArrayHasKey($id, $tools);
 			foreach (self::HINT_KEYS as $key) {
 				$this->assertArrayHasKey($key, $tools[$id], $id.' declares '.$key);
 				$this->assertIsBool($tools[$id][$key], $id.' '.$key.' is a boolean');
 			}
+		}
 
+		foreach (self::CURATED as $id => $hints) {
 			if ($hints === null) {
 				continue;
 			}
@@ -220,6 +231,39 @@ class McpSurfaceTest extends TestCase
 		return $ids;
 
 	}//end expectedDerivedTools()
+
+
+	/**
+	 * The ids of the curated tools the source declares with `#[McpTool]`.
+	 *
+	 * Read as text, so the probe needs neither OpenRegister's attribute class
+	 * nor the service classes' dependencies on the autoload path.
+	 *
+	 * @return string[]
+	 */
+	private function declaredCuratedTools(): array
+	{
+		$ids   = [];
+		$files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(__DIR__.'/../../../lib', \FilesystemIterator::SKIP_DOTS));
+		foreach ($files as $file) {
+			if ($file->getExtension() !== 'php') {
+				continue;
+			}
+
+			$source = (string) file_get_contents($file->getPathname());
+			if (preg_match_all('/#\[McpTool\(\s*name:\s*\'([A-Za-z0-9_]+)\'/', $source, $matches) > 0) {
+				foreach ($matches[1] as $name) {
+					$ids[] = 'filinq.'.$name;
+				}
+			}
+		}
+
+		sort($ids);
+		$this->assertSame(array_values(array_unique($ids)), $ids, 'no curated tool name is declared twice');
+
+		return $ids;
+
+	}//end declaredCuratedTools()
 
 
 	/**
