@@ -379,7 +379,13 @@ class CustomDictionaryServiceTest extends TestCase {
 	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
 	 */
 	public function testTranslatableLabelsReachDetectionAsText(): void {
-		$dictionary = ['id' => 'dict-a', 'label' => ['nl' => 'Wethouders', 'en' => 'Aldermen'], 'active' => true, 'matchMode' => 'exact', '@self' => ['organisation' => 'org-a', 'slug' => 'dict-a']];
+		$dictionary = [
+			'id' => 'dict-a',
+			'label' => ['nl' => 'Wethouders', 'en' => 'Aldermen'],
+			'active' => true,
+			'matchMode' => 'exact',
+			'@self' => ['organisation' => 'org-a', 'slug' => 'dict-a'],
+		];
 		$terms = [
 			['id' => 't1', 'value' => 'J. Voorbeeld', 'label' => ['nl' => 'Wethouder financiën'], 'dictionary' => 'dict-a'],
 			['id' => 't2', 'value' => 'K. Voorbeeld', 'label' => null, 'dictionary' => 'dict-a'],
