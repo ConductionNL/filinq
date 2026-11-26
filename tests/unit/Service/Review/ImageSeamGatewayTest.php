@@ -188,6 +188,52 @@ class ImageSeamGatewayTest extends TestCase {
 
 	}//end testDetectionWithoutTheSeamIsRefused()
 
+	/**
+	 * An OpenRegister whose anonymise burns embedded images says so per type.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.4
+	 *
+	 * @return void
+	 */
+	public function testTheAnonymiseCallBurnsTheImagesInsideAPdf(): void {
+		$this->assertTrue(condition: $this->gateway()->burnsInsideAnonymise(file: $this->file(mime: 'application/pdf')));
+		$this->assertFalse(condition: $this->gateway()->burnsInsideAnonymise(file: $this->file(mime: 'text/plain')));
+		$this->assertFalse(condition: $this->gateway(installed: false)->burnsInsideAnonymise(file: $this->file(mime: 'application/pdf')));
+
+	}//end testTheAnonymiseCallBurnsTheImagesInsideAPdf()
+
+	/**
+	 * An older seam without `burnsEmbeddedImages()`, or one that fails, does not burn inside the anonymise.
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.4
+	 *
+	 * @return void
+	 */
+	public function testAnOlderOrFailingSeamDoesNotBurnInsideTheAnonymise(): void {
+		$older = new class {
+		};
+		$failing = new class {
+			/**
+			 * Fails.
+			 *
+			 * @param string $mimeType The type.
+			 *
+			 * @return bool Never.
+			 */
+			public function burnsEmbeddedImages(string $mimeType): bool {
+				throw new RuntimeException('down');
+			}
+		};
+		foreach ([$older, $failing] as $seam) {
+			$locator = $this->createMock(originalClassName: OpenRegisterServiceLocator::class);
+			$locator->method('get')->willReturn($seam);
+			$gateway = new ImageSeamGateway(locator: $locator);
+
+			$this->assertFalse(condition: $gateway->burnsInsideAnonymise(file: $this->file(mime: 'application/pdf')));
+		}
+
+	}//end testAnOlderOrFailingSeamDoesNotBurnInsideTheAnonymise()
+
 	public function testWithTheSeamInstalledItIsAvailable(): void {
 		$this->assertTrue($this->gateway()->available());
 

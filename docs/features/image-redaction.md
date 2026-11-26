@@ -58,7 +58,7 @@ Withholding the whole document still works, because it writes no pixels.
 | The seam could not read the file (no OCR words) | `imageDetectionSkipped` `not_detected` with the seam's reason |
 | No region detector ran | `objectDetection: not-run`; the review says signature detection is not available here |
 | An anonymise left image content unburned | `imageRedactionPending: true` on the run and on its anonymisation link; the review warns not to publish the copy |
-| Regions were burned | `burnedRegionCount`: only the regions the seam actually burned |
+| Regions were burned | `burnedRegionCount`: only the regions the seam actually burned. A standalone image is burned in the anonymise call; so are the decided regions inside a DOCX, ODT or PDF on an OpenRegister whose anonymise sends them through the seam (it refuses the whole run when one cannot be burned). On an older OpenRegister, or a document without decided regions, the run stays `imageRedactionPending` |
 
 ## API
 

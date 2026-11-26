@@ -274,9 +274,12 @@ class ImageRedactionService {
 	 * The anonymise fields: whether image content is still pending, and what was burned.
 	 *
 	 * The seam burns decided regions of a standalone image inside the
-	 * anonymise call. It does not burn the pixels of a PDF yet, so a PDF with
-	 * decided regions is pending, and so is every image-bearing file without
-	 * the seam.
+	 * anonymise call. An OpenRegister whose anonymise also burns the images
+	 * inside a DOCX, ODT or PDF ({@see ImageSeamGateway::burnsInsideAnonymise()})
+	 * burned every decided region of such a file when the run succeeded, so
+	 * those count as burned. A document whose anonymise does not burn, a
+	 * document without decided regions, and every image-bearing file without
+	 * the seam are pending.
 	 *
 	 * @param File                 $file      The source file.
 	 * @param array<string, mixed> $ocrFields What the OCR fallback reported, when known.
@@ -284,6 +287,7 @@ class ImageRedactionService {
 	 * @return array{imageRedactionPending?: bool, burnedRegionCount?: int} The fields; none for a file without image content.
 	 *
 	 * @spec openspec/changes/image-redaction/tasks.md#task-3.3
+	 * @spec openspec/changes/image-redaction/tasks.md#task-3.4
 	 */
 	public function anonymizeFields(File $file, array $ocrFields = []): array {
 		$decided = $this->seam->decidedRegionCount(file: $file);
@@ -292,7 +296,8 @@ class ImageRedactionService {
 			return [];
 		}
 
-		if ($standalone === true && $this->seam->available() === true) {
+		$burnedInside = ($standalone === false && $decided > 0 && $this->seam->burnsInsideAnonymise(file: $file) === true);
+		if (($standalone === true && $this->seam->available() === true) || $burnedInside === true) {
 			return ['imageRedactionPending' => false, 'burnedRegionCount' => $decided];
 		}
 
