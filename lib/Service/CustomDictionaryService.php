@@ -29,6 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Support\LanguageMapText;
 use Exception;
 use InvalidArgumentException;
 use OCA\Filinq\Kernel\Contracts\CustomDictionaryServiceInterface;
@@ -435,7 +436,7 @@ class CustomDictionaryService implements CustomDictionaryServiceInterface {
 				}
 
 				$result[] = [
-					'label' => (string)($dictionary['label'] ?? ''),
+					'label' => (new LanguageMapText())->text(value: ($dictionary['label'] ?? '')),
 					'matchMode' => $this->normaliser->sanitizeMatchMode(mode: ($dictionary['matchMode'] ?? null)),
 					'terms' => $termRows,
 				];
@@ -471,14 +472,21 @@ class CustomDictionaryService implements CustomDictionaryServiceInterface {
 				continue;
 			}
 
-			$label = $term['label'] ?? null;
-			if (is_string($label) === false || trim($label) === '') {
-				$label = ($dictionary['label'] ?? $value);
+			// `label` is translatable on both schemas: OpenRegister answers it
+			// as a language map, which a string cast turned into "Array".
+			$text  = new LanguageMapText();
+			$label = trim($text->text(value: ($term['label'] ?? null)));
+			if ($label === '') {
+				$label = trim($text->text(value: ($dictionary['label'] ?? null)));
+			}
+
+			if ($label === '') {
+				$label = $value;
 			}
 
 			$termRows[] = [
 				'value' => $value,
-				'label' => (string)$label,
+				'label' => $label,
 			];
 		}//end foreach
 

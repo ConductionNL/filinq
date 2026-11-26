@@ -368,6 +368,41 @@ class CustomDictionaryServiceTest extends TestCase {
 		$this->assertSame('Foo', $result[0]['terms'][0]['value']);
 
 	}//end testListActiveDictionariesForDetectionSkipsInactiveAndEmpty()
+
+	/**
+	 * Labels OpenRegister answers as language maps (the register declares them
+	 * translatable) reach detection as text, never as "Array"; a term without
+	 * its own label takes the dictionary's.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function testTranslatableLabelsReachDetectionAsText(): void {
+		$dictionary = ['id' => 'dict-a', 'label' => ['nl' => 'Wethouders', 'en' => 'Aldermen'], 'active' => true, 'matchMode' => 'exact', '@self' => ['organisation' => 'org-a', 'slug' => 'dict-a']];
+		$terms = [
+			['id' => 't1', 'value' => 'J. Voorbeeld', 'label' => ['nl' => 'Wethouder financiën'], 'dictionary' => 'dict-a'],
+			['id' => 't2', 'value' => 'K. Voorbeeld', 'label' => null, 'dictionary' => 'dict-a'],
+		];
+
+		$objectService = $this->createMock(originalClassName: ObjectService::class);
+		$objectService->method('searchObjectsBySlug')->willReturnCallback(
+			static function (string $registerSlug, string $schemaSlug) use ($dictionary, $terms): array {
+				if ($schemaSlug === CustomDictionaryService::SCHEMA_DICTIONARY) {
+					return [$dictionary];
+				}
+
+				return $terms;
+			}
+		);
+
+		$result = $this->makeService(objectService: $objectService, organisationAccess: ['org-a' => true])->listActiveDictionariesForDetection();
+
+		$this->assertSame(expected: 'Wethouders', actual: $result[0]['label']);
+		$this->assertSame(expected: 'Wethouder financiën', actual: $result[0]['terms'][0]['label']);
+		$this->assertSame(expected: 'Wethouders', actual: $result[0]['terms'][1]['label']);
+
+	}//end testTranslatableLabelsReachDetectionAsText()
 	/**
 	 * An organisation member who is no maintainer cannot create, change or delete a list.
 	 *
