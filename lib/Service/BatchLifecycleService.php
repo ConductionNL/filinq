@@ -77,27 +77,6 @@ class BatchLifecycleService {
 	private const NOT_CANCELLABLE = ['completed', 'error', self::CANCELLED];
 
 	/**
-	 * Batch statuses that can be resumed.
-	 *
-	 * @var array<int, string>
-	 */
-	private const RESUMABLE = ['error', self::CANCELLED];
-
-	/**
-	 * Batch status of a finished run; resumable only while it has failed files.
-	 *
-	 * @var string
-	 */
-	private const COMPLETED = 'completed';
-
-	/**
-	 * Per-file status of a file that failed.
-	 *
-	 * @var string
-	 */
-	private const FILE_FAILED = 'error';
-
-	/**
 	 * Constructor.
 	 *
 	 * @param BatchStateServiceInterface $stateService Batch state, ownership-checked on read.
@@ -151,15 +130,12 @@ class BatchLifecycleService {
 
 	/**
 	 * Re-queue the files of an errored or cancelled batch that did not succeed,
-	 * or the failed files of a completed batch.
+	 * or the failed files of a completed batch ({@see BatchResumeSelection}).
 	 *
 	 * A failed file goes back to `uploaded` (extracted again) with its retry
 	 * count raised; an extracted file waits for anonymization again; a file
 	 * that already produced its output is left alone, so a resumed run never
-	 * produces it twice. A completed batch whose files failed is resumable
-	 * too: per-file failures do not set the batch to `error`, so only its
-	 * failed files are queued again and every other file keeps its outcome.
-	 * A completed batch without failed files answers 409.
+	 * produces it twice. A completed batch without failed files answers 409.
 	 *
 	 * @param string $batchId The batch id.
 	 *
@@ -175,18 +151,12 @@ class BatchLifecycleService {
 			return ['status' => 404, 'reason' => 'not-found'];
 		}
 
-		$current = (string)($batch['status'] ?? '');
-		$onlyFailed = ($current === self::COMPLETED && $this->hasFailedFiles(batch: $batch) === true);
-		if ($onlyFailed === false && in_array($current, self::RESUMABLE, true) === false) {
-			return ['status' => 409, 'reason' => 'not-resumable', 'batchStatus' => $current];
+		$selection = BatchResumeSelection::forBatch(batch: $batch);
+		if ($selection['resumable'] === false) {
+			return ['status' => 409, 'reason' => 'not-resumable', 'batchStatus' => (string)($batch['status'] ?? '')];
 		}
 
-		$only = null;
-		if ($onlyFailed === true) {
-			$only = [self::FILE_FAILED];
-		}
-
-		$requeue = $this->requeueUnfinished(batch: $batch, only: $only);
+		$requeue = $this->requeueUnfinished(batch: $batch, only: $selection['only']);
 		$batch = $requeue['batch'];
 		// Marks the run as resumed: a file whose redacted copy was made after
 		// the batch started is then taken from its anonymizationLink instead
@@ -220,32 +190,11 @@ class BatchLifecycleService {
 	}//end continuesInBackground()
 
 	/**
-	 * Whether any file of the batch failed.
-	 *
-	 * @param array<string, mixed> $batch The stored batch.
-	 *
-	 * @return bool
-	 *
-	 * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
-	 */
-	private function hasFailedFiles(array $batch): bool {
-		foreach ((array)($batch['files'] ?? []) as $file) {
-			if ((string)($file['status'] ?? '') === self::FILE_FAILED) {
-				return true;
-			}
-		}
-
-		return false;
-
-	}//end hasFailedFiles()
-
-	/**
 	 * The batch with every unfinished file queued again: a file that failed
 	 * before extraction goes back to `uploaded` with one more retry, an
 	 * extracted one waits for review as it is. The batch extracts again when
 	 * any file went back, else it returns to review. With `$only` only the
-	 * files in one of those statuses are queued again (a completed batch
-	 * queues only its files in `error`).
+	 * files in one of those statuses are queued again.
 	 *
 	 * @param array<string, mixed>    $batch The stored batch.
 	 * @param array<int, string>|null $only  The file statuses to queue again, or null for every unfinished file.
@@ -255,7 +204,7 @@ class BatchLifecycleService {
 	 * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
 	 */
-	private function requeueUnfinished(array $batch, ?array $only=null): array {
+	private function requeueUnfinished(array $batch, ?array $only): array {
 		$requeued = 0;
 		$batch['status'] = 'review';
 		foreach ((array)($batch['files'] ?? []) as $index => $file) {
