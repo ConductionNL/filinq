@@ -35,6 +35,7 @@ const {
 	listStatus,
 	loadDestructionList,
 	loadHolds,
+	loadTitles,
 	rejectDestructionList,
 } = await import('../../src/services/destructionLists.js')
 
@@ -227,6 +228,34 @@ describe('destruction lists', () => {
 			'o-3': { held: true },
 		})
 		expect(await loadHolds(null, read)).toEqual({})
+	})
+
+	// @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
+	it('reads each schema id once and names it by its title, leaving unreadable ids out', async () => {
+		const read = vi.fn((url) => {
+			if (url.endsWith('/schemas/45')) {
+				return Promise.resolve({ id: 45, title: 'Generated Document' })
+			}
+			if (url.endsWith('/schemas/46')) {
+				return Promise.reject(new Error('forbidden'))
+			}
+			return Promise.resolve({ id: 47, title: ' ' })
+		})
+
+		expect(await loadTitles('schemas', ['45', '45', '46', '47', '', 9], read)).toEqual({
+			45: 'Generated Document',
+		})
+		expect(read).toHaveBeenCalledTimes(3)
+		expect(read).toHaveBeenCalledWith('/index.php/apps/openregister/api/schemas/45')
+		expect(await loadTitles('registers', null, read)).toEqual({})
+	})
+
+	// @spec openspec/changes/archiefwet-retention-engine/specs/archiefwet-retention-engine/spec.md#requirement-vernietigingslijst-review-and-approval-surface-req-ddare-004
+	it('reads titles through OpenRegister by default', async () => {
+		get.mockResolvedValueOnce({ data: { title: 'Filinq Register' } })
+
+		expect(await loadTitles('registers', ['26'])).toEqual({ 26: 'Filinq Register' })
+		expect(get).toHaveBeenCalledWith('/index.php/apps/openregister/api/registers/26')
 	})
 
 	// @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-5.1

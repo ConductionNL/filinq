@@ -135,6 +135,24 @@ describe('DestructionListReview', () => {
 		expect(rendered.vm.approveLabel).toBe('Approve list')
 	})
 
+	it('names each record\'s schema and register by title, and keeps the id when no title can be read', async () => {
+		axios.get.mockImplementation((url) => {
+			if (url === LIST_URL) {
+				return Promise.resolve({ data: LIST })
+			}
+			if (url.endsWith('/api/schemas/12')) {
+				return Promise.resolve({ data: { title: 'Generated Document' } })
+			}
+			return Promise.reject(new Error('forbidden'))
+		})
+		await mountReview()
+
+		expect(rendered.vm.entries[0].schema).toBe('Generated Document')
+		expect(rendered.vm.entries[0].register).toBe('7')
+		expect(axios.get).toHaveBeenCalledWith('/index.php/apps/openregister/api/schemas/12')
+		expect(axios.get).toHaveBeenCalledWith('/index.php/apps/openregister/api/registers/7')
+	})
+
 	it("falls back to the route's id", async () => {
 		axios.get.mockResolvedValue({ data: LIST })
 		await mountReview({}, { params: { id: 'l-1' } })
