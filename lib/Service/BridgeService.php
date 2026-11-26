@@ -78,6 +78,7 @@ class BridgeService {
 		'release' => ['processed', 'ready_for_writeback'],
 		'retry' => ['writeback_failed', 'ready_for_writeback'],
 		'pickUp' => ['staged', 'in_processing'],
+		'process' => ['in_processing', 'processed'],
 	];
 
 	/**
@@ -214,18 +215,57 @@ class BridgeService {
 	/**
 	 * Record that a staged document was picked up into a dossier (REQ-DDZGW-006).
 	 *
-	 * @param array<string, mixed> $document   The staged document as read, with its uuid.
-	 * @param string               $dossierRef The dossier object's uuid.
+	 * @param array<string, mixed> $document       The staged document as read, with its uuid.
+	 * @param string               $dossierRef     The dossier object's uuid.
+	 * @param int                  $dossierFileRef The copy's Nextcloud file id, 0 when unknown.
 	 *
 	 * @return array<string, mixed> The saved document, `in_processing` with its `dossierRef`.
 	 *
 	 * @throws InvalidArgumentException When the document is not staged.
 	 *
 	 * @spec openspec/changes/zgw-document-bridge
+	 * @spec openspec/changes/zgw-document-bridge/tasks.md#task-2.6
 	 */
-	public function pickedUp(array $document, string $dossierRef): array {
-		return $this->transition(document: $document, action: 'pickUp', changes: ['dossierRef' => $dossierRef]);
+	public function pickedUp(array $document, string $dossierRef, int $dossierFileRef = 0): array {
+		$changes = ['dossierRef' => $dossierRef];
+		if ($dossierFileRef > 0) {
+			$changes['dossierFileRef'] = $dossierFileRef;
+		}
+
+		return $this->transition(document: $document, action: 'pickUp', changes: $changes);
 	}//end pickedUp()
+
+	/**
+	 * Record the redacted output of a dossier copy on its external document (REQ-DDZGW-003).
+	 *
+	 * Every document still `in_processing` whose dossier copy is `$sourceFileId`
+	 * moves to `processed` with `resultFileRef` naming the new file. A file that
+	 * is no bridge copy matches nothing and changes nothing.
+	 *
+	 * @param int $sourceFileId The anonymised file: a dossier copy or any other file.
+	 * @param int $resultFileId The redacted output file.
+	 *
+	 * @return array<int, array<string, mixed>> The documents saved as processed.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge/tasks.md#task-2.6
+	 */
+	public function processed(int $sourceFileId, int $resultFileId): array {
+		if ($sourceFileId <= 0 || $resultFileId <= 0) {
+			return [];
+		}
+
+		$saved = [];
+		$filters = ['dossierFileRef' => $sourceFileId, 'processingStatus' => 'in_processing'];
+		foreach ($this->search(schema: self::SCHEMA_DOCUMENT, filters: $filters) as $document) {
+			if ((int)($document['dossierFileRef'] ?? 0) !== $sourceFileId || ($document['uuid'] ?? '') === '') {
+				continue;
+			}
+
+			$saved[] = $this->transition(document: $document, action: 'process', changes: ['resultFileRef' => $resultFileId]);
+		}
+
+		return $saved;
+	}//end processed()
 
 	/**
 	 * Move a document along one of filinq's transitions and save the whole object.

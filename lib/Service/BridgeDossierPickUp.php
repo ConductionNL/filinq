@@ -78,6 +78,7 @@ class BridgeDossierPickUp {
 	 * @throws RuntimeException         When the dossier or its folder cannot be resolved (code 404).
 	 *
 	 * @spec openspec/changes/zgw-document-bridge
+	 * @spec openspec/changes/zgw-document-bridge/tasks.md#task-2.6
 	 */
 	public function attach(string $dossierUuid, array $documentIds): array {
 		$documentIds = array_values(
@@ -109,7 +110,7 @@ class BridgeDossierPickUp {
 			$target = $folder->getNonExistingName($name);
 			$copy   = $file->copy(rtrim($folder->getPath(), '/').'/'.$target);
 			try {
-				$saved = $this->bridge->pickedUp(document: $plan['document'], dossierRef: $dossierUuid);
+				$saved = $this->bridge->pickedUp(document: $plan['document'], dossierRef: $dossierUuid, dossierFileRef: (int)$copy->getId());
 			} catch (Throwable $e) {
 				$this->logger->warning(
 					'[BridgeDossierPickUp] copied but not recorded',

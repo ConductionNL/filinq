@@ -198,6 +198,62 @@ class BridgeServiceTest extends TestCase {
 	}//end testPickedUpRecordsTheDossierOnAStagedDocumentOnly()
 
 	/**
+	 * The dossier copy's file id is recorded on pick-up, so its anonymisation can find the document.
+	 *
+	 * @return void
+	 */
+	public function testPickedUpRecordsTheDossierCopy(): void {
+		$service = $this->service();
+		$this->objects->expects($this->once())->method('saveObject')->with(
+			['processingStatus' => 'in_processing', 'dossierRef' => 'dossier-21', 'dossierFileRef' => 1101],
+			$this->anything()
+		)->willReturn(['uuid' => 'd-1', 'processingStatus' => 'in_processing', 'dossierFileRef' => 1101]);
+
+		$saved = $service->pickedUp(['uuid' => 'd-1', 'processingStatus' => 'staged'], 'dossier-21', 1101);
+		$this->assertSame(expected: 1101, actual: $saved['dossierFileRef']);
+	}//end testPickedUpRecordsTheDossierCopy()
+
+	/**
+	 * Anonymising a dossier copy moves its document to processed with the output as resultFileRef.
+	 *
+	 * @return void
+	 */
+	public function testProcessedRecordsTheOutputOnTheDocumentOfTheCopy(): void {
+		$service = $this->service();
+		$this->objects->expects($this->once())->method('searchObjectsBySlug')
+			->with('filinq', 'externalDocument', ['dossierFileRef' => 1101, 'processingStatus' => 'in_processing'])
+			->willReturn(
+				[
+					['uuid' => 'd-1', 'processingStatus' => 'in_processing', 'dossierFileRef' => 1101, 'contentHash' => 'sha256:aa'],
+					['uuid' => 'd-2', 'processingStatus' => 'in_processing', 'dossierFileRef' => 1102],
+					['processingStatus' => 'in_processing', 'dossierFileRef' => 1101],
+				]
+			);
+		$this->objects->expects($this->once())->method('saveObject')->with(
+			['processingStatus' => 'processed', 'dossierFileRef' => 1101, 'contentHash' => 'sha256:aa', 'resultFileRef' => 2201],
+			$this->equalTo(value: new ObjectSaveOptions(target: new ObjectFindTarget(register: 'filinq', schema: 'externalDocument'), uuid: 'd-1'))
+		)->willReturn(['uuid' => 'd-1', 'processingStatus' => 'processed', 'resultFileRef' => 2201]);
+
+		$saved = $service->processed(1101, 2201);
+
+		$this->assertSame(expected: [['uuid' => 'd-1', 'processingStatus' => 'processed', 'resultFileRef' => 2201]], actual: $saved);
+	}//end testProcessedRecordsTheOutputOnTheDocumentOfTheCopy()
+
+	/**
+	 * A run without a source or an output looks nothing up and changes nothing.
+	 *
+	 * @return void
+	 */
+	public function testProcessedWithoutFilesChangesNothing(): void {
+		$service = $this->service();
+		$this->objects->expects($this->never())->method('searchObjectsBySlug');
+		$this->objects->expects($this->never())->method('saveObject');
+
+		$this->assertSame(expected: [], actual: $service->processed(0, 2201));
+		$this->assertSame(expected: [], actual: $service->processed(1101, 0));
+	}//end testProcessedWithoutFilesChangesNothing()
+
+	/**
 	 * An unknown document is not found.
 	 *
 	 * @return void

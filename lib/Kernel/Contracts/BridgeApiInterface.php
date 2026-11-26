@@ -98,4 +98,16 @@ interface BridgeApiInterface {
 	 * @spec openspec/changes/zgw-document-bridge/specs/zgw-document-bridge/spec.md#requirement-source-badge-on-externally-sourced-documents-req-ddzgw-009
 	 */
 	public function badges(array $fileIds): array;
+
+	/**
+	 * Record an anonymisation's output on the external documents whose dossier copy was anonymised.
+	 *
+	 * @param int $sourceFileId The anonymised file.
+	 * @param int $resultFileId The redacted output.
+	 *
+	 * @return array<int, array<string, mixed>> The documents saved as processed.
+	 *
+	 * @spec openspec/changes/zgw-document-bridge/tasks.md#task-2.6
+	 */
+	public function processed(int $sourceFileId, int $resultFileId): array;
 }//end interface
