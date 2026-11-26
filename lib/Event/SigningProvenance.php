@@ -124,7 +124,7 @@ final class SigningProvenance {
 	 *
 	 * @return string The subject noun.
 	 *
-	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-a-signing-request-records-the-noun-it-signs-req-ddsrc-002
+	 * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-a-signing-request-records-the-noun-it-signs-req-ddsrc-002
 	 */
 	public function getSubjectNoun(): string {
 		$schema = trim((string)$this->subjectSchema);
@@ -142,7 +142,7 @@ final class SigningProvenance {
 	 *
 	 * @return bool True for a delegated request.
 	 *
-	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
+	 * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
 	 */
 	public function isDelegated(): bool {
 		return trim($this->sourceApp) !== '';
@@ -155,7 +155,7 @@ final class SigningProvenance {
 	 *
 	 * @return array<int, string> The missing field names.
 	 *
-	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
+	 * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
 	 */
 	public function missingSubjectFields(): array {
 		if ($this->isDelegated() === false) {

@@ -270,7 +270,7 @@ class DocumentSigningRequestedEvent extends Event {
 	 *
 	 * @return string The subject noun, empty without a subject schema.
 	 *
-	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-a-signing-request-records-the-noun-it-signs-req-ddsrc-002
+	 * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-a-signing-request-records-the-noun-it-signs-req-ddsrc-002
 	 */
 	public function getSubjectNoun(): string {
 		return $this->provenance->getSubjectNoun();
@@ -281,7 +281,7 @@ class DocumentSigningRequestedEvent extends Event {
 	 *
 	 * @return string|null The refusal, naming what was missing.
 	 *
-	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
+	 * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
 	 */
 	public function getRefusal(): ?string {
 		return $this->refusal;
@@ -294,7 +294,7 @@ class DocumentSigningRequestedEvent extends Event {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
+	 * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
 	 */
 	public function setRefusal(string $refusal): void {
 		$this->refusal = $refusal;

@@ -70,7 +70,12 @@
 - [x] 6.2 Run `openspec validate one-signing-rail-for-the-fleet --strict`.
       Done (2026-11-23): the `status` front matter moved from the spec delta to `proposal.md`, the
       only warning; the command now reports the change valid.
-- [ ] 6.3 Run `composer check:strict`.
+- [x] 6.3 Run `composer check:strict`.
+      Done (2026-11-26, development 3533d8f): lint clean; phpcs 0 errors; phpstan no errors;
+      PHPUnit 8723 tests, 0 failures, 6 skipped. phpmd reports findings, all in files this change
+      does not touch (none in `SigningSourcesSettingsController`, `SigningSourceTally`,
+      `SigningProvenance`, `DocumentSigningRequestedEvent` or its listener). psalm did not run in this
+      sandbox: it needs PHP 8.3.16 or later and the sandbox has 8.3.6; CI runs it.
 - [x] 6.4 Raise a delegated request from shillinq on the dev instance and
       confirm the noun is on the persisted record.
       Done live (26 Nov 2026, sandbox: Nextcloud 34.0.6 + MariaDB + Redis, OpenRegister main, filinq

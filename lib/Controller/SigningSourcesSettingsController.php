@@ -16,7 +16,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
+ * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
  */
 
 declare(strict_types=1);
@@ -40,7 +40,7 @@ use Throwable;
  * Mounted from the admin settings page, never from the in-app router. The
  * answer names apps and counts, never a request or its subject.
  *
- * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
+ * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
  */
 class SigningSourcesSettingsController extends Controller {
 
@@ -67,7 +67,7 @@ class SigningSourcesSettingsController extends Controller {
 	 *
 	 * @return JSONResponse `{sources: [{app, count}], total, truncated}`, or 500 when the requests cannot be read.
 	 *
-	 * @spec openspec/changes/one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
+	 * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-admin-can-see-which-apps-use-the-rail-req-ddsrc-004
 	 */
 	#[AuthorizedAdminSetting(FilinqAdmin::class)]
 	public function index(): JSONResponse {
