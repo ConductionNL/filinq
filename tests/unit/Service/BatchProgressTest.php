@@ -97,4 +97,18 @@ class BatchProgressTest extends TestCase {
 		$this->assertNull((new BatchProgress())->figuresFor(batch: ['startedAt' => 0, 'files' => []], now: 30)['documentsPerHour']);
 
 	}//end testThroughputEndsAtCompletion()
+
+	/**
+	 * The start is also written as a date and time, so a list shows it as a date
+	 * rather than a bare number of seconds; before the start there is none.
+	 *
+	 * @return void
+	 */
+	public function testTheStartIsWrittenAsADateAndTime(): void {
+		$started = (new BatchProgress())->figuresFor(batch: ['startedAt' => 1784189400, 'files' => []], now: 1784189500);
+		$this->assertSame(expected: '2026-07-16T08:10:00+00:00', actual: $started['startedOn']);
+
+		$notStarted = (new BatchProgress())->figuresFor(batch: ['files' => []], now: 1784189500);
+		$this->assertNull(actual: $notStarted['startedOn']);
+	}//end testTheStartIsWrittenAsADateAndTime()
 }//end class

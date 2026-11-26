@@ -8,9 +8,15 @@
       still holds the `docudesk-signing` Source hop; shillinq dispatches
       `DocumentSigningRequestedEvent` from `SigningDelegationService`; neither
       dossiq nor decidiq dispatches the event. D1's facts stand as written.
-- [ ] 1.2 Raise the ownership question with Ruben as a product decision, with
+- [x] 1.2 Raise the ownership question with Ruben as a product decision, with
       the design's D1 as the briefing, and record the answer in the fleet ADR
       set rather than in this change.
+      Done (2026-11-25): raised through COORDINATOR-QUEUE (options a/b/c);
+      Ruben chose (c), split: decidiq and dossiq decide who may sign and when,
+      filinq performs the PDF signature through its rail and reports back with
+      `SigningConcludedEvent`. Recorded as hydra ADR-125
+      (`openspec/architecture/adr-125-the-domain-app-decides-filinq-signs.md`,
+      ConductionNL/hydra#794).
 
 ## 2. The noun on the record (REQ-DDSRC-002)
 
@@ -46,7 +52,13 @@
       Done: no request (or no configured register) answers an empty list and the section says no app has raised one; only a failed load shows an error.
 - [x] 5.3 Add Dutch and English strings.
       Done: `l10n/en.json` and `l10n/nl.json`, `.js` rebuilt.
-- [ ] 5.4 Add the Playwright spec the requirement names.
+- [x] 5.4 Add the Playwright spec the requirement names.
+      Done (2026-11-25): `tests/e2e/spec-coverage/one-signing-rail-for-the-fleet.spec.ts`
+      ran live, 3/3 passed (13.7 s) on Nextcloud 34 + MariaDB + OpenRegister
+      main 0e1d0609 + filinq development ab415214 (php -S sandbox). The
+      unhandled endpoint `GET api/settings/signing-sources` answered
+      `{"sources":[],"total":0,"truncated":false}` on the fresh instance, so
+      the empty case is real, not only route-handled.
 
 ## 6. Verification
 
@@ -72,11 +84,21 @@
       `lib/Service/Signing/LibreSignProvider.php`), so this gate is met. 7.2 and
       7.3 still wait on the answer to 1.2: which app a beschikking's signature
       goes through decides what the dossiq and decidiq changes dispatch.
-- [ ] 7.2 Raise the dossiq change: retire `LibresignSigningAdapter`,
+- [x] 7.2 Raise the dossiq change: retire `LibresignSigningAdapter`,
       `LibresignApiClient`, `LibresignResultAssembler` and
       `LibresignStatusMapper`, dispatch the event, keep mandaat-based signer
       resolution.
-- [ ] 7.3 Raise the decidiq change: retire the `docudesk-signing` and
+      Done in dossiq before this task was reached: its change
+      `signing-through-filinq` is archived
+      (`openspec/changes/archive/2026-11-16-signing-through-filinq`).
+      `lib/Service/Signing/DocumentSigningRequester.php` raises
+      `DocumentSigningRequestedEvent`, `lib/Listener/SigningConcludedListener.php`
+      hears the outcome, and no `Libresign*` class is left in dossiq's `lib/`
+      (development ecbafa14, 2026-11-25). The 1.1 note above predates it.
+- [x] 7.3 Raise the decidiq change: retire the `docudesk-signing` and
       `eidas-qes` integriq Source hops in `EIDASSignatureService` and dispatch
       the event, after confirming on a live instance that nothing depends on
       the current dark path.
+      Done (2026-11-25): raised as decidiq `sign-through-the-filinq-rail`
+      (ConductionNL/decidiq#2475). It MODIFIES REQ-DCDH-005, and its task 1 is
+      the live check of the dark path, before the removal in task 4.

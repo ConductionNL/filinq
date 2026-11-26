@@ -763,6 +763,15 @@ class Schema {
 	}//end getId()
 
 	/**
+	 * Get the declared properties, keyed by name
+	 *
+	 * @return array
+	 */
+	public function getProperties(): array {
+		return [];
+	}//end getProperties()
+
+	/**
 	 * Serialize to array
 	 *
 	 * @return array

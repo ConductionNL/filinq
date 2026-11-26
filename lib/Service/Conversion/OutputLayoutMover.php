@@ -29,7 +29,7 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-3
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ use Psr\Log\LoggerInterface;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-3
+ * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-3
  */
 class OutputLayoutMover implements OutputLayoutMoverInterface {
 
@@ -82,8 +82,8 @@ class OutputLayoutMover implements OutputLayoutMoverInterface {
 	 * @return array{path: string, warning: array{code: string, message: string}|null} Where the
 	 *         output is now, plus a warning when it stayed at the legacy path.
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-3
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-4
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-3
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-4
 	 */
 	public function relocate(string $userId, int $anonymizedFileId, string $legacyPath): array {
 		try {
@@ -163,7 +163,7 @@ class OutputLayoutMover implements OutputLayoutMoverInterface {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/specs/batch-anonymization/spec.md#requirement-when-the-subfolder-already-exists-files-must-be-overwritten-by-destination-filename
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/specs/batch-anonymization/spec.md#requirement-when-the-subfolder-already-exists-files-must-be-overwritten-by-destination-filename
 	 */
 	private function replacePrevious(mixed $subfolder, string $targetName): void {
 		if ($subfolder instanceof Folder && $subfolder->nodeExists($targetName) === true) {

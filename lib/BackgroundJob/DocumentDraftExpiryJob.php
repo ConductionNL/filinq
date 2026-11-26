@@ -68,6 +68,8 @@ class DocumentDraftExpiryJob extends TimedJob {
 	 *
 	 * @return void
 	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) TimedJob::run() passes the job argument; this sweep takes none.
+	 *
 	 * @spec openspec/changes/archive/2026-11-20-generate-draft-and-attended-edit/tasks.md#task-2.5
 	 */
 	protected function run(mixed $argument): void {

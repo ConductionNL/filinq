@@ -230,6 +230,21 @@ class TemplateServiceLockTest extends TestCase {
 	}//end testTheHolderReleasesTheirOwnLock()
 
 	/**
+	 * Releasing a template that holds no lock writes nothing, so it cannot
+	 * write back a stale copy over a publish that landed in between.
+	 *
+	 * @return void
+	 */
+	public function testReleasingAnUnlockedTemplateWritesNothing(): void {
+		$template = ['id' => 'tpl-3', 'status' => 'published', 'publishedVersion' => 4, 'lockedBy' => null, 'lockedAt' => null];
+		$result = $this->service(template: $template)->releaseLock(id: 'tpl-3', userId: 'alice');
+
+		$this->assertSame(expected: $template, actual: $result);
+		$this->assertCount(expectedCount: 0, haystack: $this->saved);
+
+	}//end testReleasingAnUnlockedTemplateWritesNothing()
+
+	/**
 	 * A lock time that cannot be read counts as expired.
 	 *
 	 * @return void

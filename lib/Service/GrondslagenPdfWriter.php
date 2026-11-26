@@ -240,7 +240,7 @@ class GrondslagenPdfWriter {
 	 * @throws RuntimeException On write failure.
 	 *
 	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-8
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-8
 	 */
 	public function saveDossierSummary(Folder $folder, string $pdfBytes): File {
 		$name = self::DOSSIER_SUMMARY_NAME;
@@ -282,7 +282,7 @@ class GrondslagenPdfWriter {
 	 *
 	 * @throws RuntimeException When the subfolder name is taken by a file.
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-8
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-8
 	 */
 	private function outputFolder(Folder $dossierFolder): Folder {
 		$name = $this->layoutResolver->getSubfolderName();

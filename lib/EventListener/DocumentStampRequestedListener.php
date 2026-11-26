@@ -12,7 +12,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -37,7 +37,7 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+ * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
  */
 class DocumentStampRequestedListener implements IEventListener {
 
@@ -60,7 +60,7 @@ class DocumentStampRequestedListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-2.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-2.1
 	 */
 	public function handle(Event $event): void {
 		if ($event instanceof DocumentStampRequestedEvent === false) {

@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/templates-house-style-from-thematiq/tasks.md#task-2.2
+ * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/tasks.md#task-2.2
  */
 
 declare(strict_types=1);
@@ -41,7 +41,7 @@ use Throwable;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
+ * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
  */
 class ManagedHuisstijlWriteGuard implements IEventListener {
 
@@ -73,7 +73,7 @@ class ManagedHuisstijlWriteGuard implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectUpdatingEvent) === false || $this->gate->isOpen() === true) {
@@ -100,7 +100,7 @@ class ManagedHuisstijlWriteGuard implements IEventListener {
 	 *
 	 * @return list<\OCA\OpenRegister\Db\ObjectEntity> The objects, or [] when the update has no stored object.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
 	 */
 	private function objectsOf(ObjectUpdatingEvent $event): array {
 		$new = $event->getNewObject();
@@ -120,7 +120,7 @@ class ManagedHuisstijlWriteGuard implements IEventListener {
 	 *
 	 * @return bool Whether one is managed.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
 	 */
 	private function anyManaged(array $objects): bool {
 		foreach ($objects as $object) {
@@ -140,7 +140,7 @@ class ManagedHuisstijlWriteGuard implements IEventListener {
 	 *
 	 * @return bool Whether one is a house style.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
 	 */
 	private function anyHuisstijl(array $objects): bool {
 		foreach ($objects as $object) {
@@ -164,7 +164,7 @@ class ManagedHuisstijlWriteGuard implements IEventListener {
 	 *
 	 * @return bool Whether it is the house style.
 	 *
-	 * @spec openspec/changes/templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
+	 * @spec openspec/changes/archive/2026-11-25-templates-house-style-from-thematiq/specs/letter-correspondence-generation/spec.md#requirement-a-managed-house-style-is-changed-only-in-thematiq-req-hsp-003
 	 */
 	private function isHuisstijl(string $schema): bool {
 		if (strtolower($schema) === ManagedHuisstijlInterface::SCHEMA) {
