@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+ * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
  */
 
 declare(strict_types=1);
@@ -50,7 +50,7 @@ use OCA\Filinq\Exception\PlainRenditionRefusedException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+ * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
  */
 class PlainRenditionAcceptanceGate {
 
@@ -75,7 +75,7 @@ class PlainRenditionAcceptanceGate {
 	 *
 	 * @return bool True when an acceptance is required.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
 	public function needsAcceptance(string $source): bool {
 		// 🔑 THE TRUSTED VALUE IS NAMED, AND EVERYTHING ELSE IS A DRAFT. Asking
@@ -99,7 +99,7 @@ class PlainRenditionAcceptanceGate {
 	 *
 	 * @throws PlainRenditionRefusedException When a machine draft has no complete acceptance.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
 	public function require(string $source, array $acceptance): array {
 		if ($this->needsAcceptance(source: $source) === false) {

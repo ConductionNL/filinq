@@ -383,7 +383,7 @@ class PublicationControllerTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md#requirement-a-download-is-recorded-with-its-route-and-its-identity-req-dio-06
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/filinq-notifications/spec.md#requirement-a-download-is-recorded-with-its-route-and-its-identity-req-dio-06
 	 */
 	public function testAServedCopyIsRecordedOnce(): void {
 		$pipeline = $this->createMock(PublicationPipelineService::class);

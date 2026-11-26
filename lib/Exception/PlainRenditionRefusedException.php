@@ -13,7 +13,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+ * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
  */
 
 declare(strict_types=1);
@@ -37,7 +37,7 @@ use Throwable;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+ * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
  */
 class PlainRenditionRefusedException extends RuntimeException {
 

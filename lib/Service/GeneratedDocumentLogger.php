@@ -69,7 +69,7 @@ class GeneratedDocumentLogger {
 	 *
 	 * @spec openspec/changes/document-creatie-sjablonen/tasks.md#task-1
 	 * @spec openspec/changes/document-output-destinations-and-bulk-retention/specs/document-creatie-sjablonen/spec.md#req-ddob-004
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/letter-correspondence-generation/spec.md
 	 */
 	public function log(DocumentGenerationRecord $generation, array $outcome): array {
 		try {

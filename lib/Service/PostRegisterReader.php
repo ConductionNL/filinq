@@ -15,7 +15,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ use Throwable;
  * wrapper here would be read as the empty set and this method would report every
  * inbound entry as undischarged, confidently and silently.
  *
- * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+ * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
  */
 class PostRegisterReader implements PostRegisterReaderInterface {
 
@@ -72,7 +72,7 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The outbound entries naming it, possibly empty.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function answersFor(string $inboundUuid): array {
 		$uuid = trim($inboundUuid);
@@ -140,7 +140,7 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 	 *
 	 * @throws Throwable When the register could not be read.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function openPostFor(string $unit): array {
 		$unitId = trim($unit);
@@ -235,7 +235,7 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 	 *
 	 * @throws Throwable When the register could not be read.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function seriesFor(string $unit): array {
 		$unitId = trim($unit);
@@ -363,7 +363,7 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 	 *
 	 * @return array{withdrawn: bool, complete: bool, reason: string, at: string} The withdrawal state.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function withdrawalOf(array $registration): array {
 		$reason = trim((string)($registration['withdrawnReason'] ?? ''));
@@ -395,7 +395,7 @@ class PostRegisterReader implements PostRegisterReaderInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The series, ordered by number.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function series(array $registrations): array {
 		$rows = [];

@@ -70,7 +70,7 @@ interface PostRegisterReaderInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The outbound entries naming it, possibly empty.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function answersFor(string $inboundUuid): array;
 
@@ -101,7 +101,7 @@ interface PostRegisterReaderInterface {
 	 *
 	 * @throws Throwable When the register could not be read.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function openPostFor(string $unit): array;
 
@@ -120,7 +120,7 @@ interface PostRegisterReaderInterface {
 	 *
 	 * @throws Throwable When the register could not be read.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function seriesFor(string $unit): array;
 
@@ -136,7 +136,7 @@ interface PostRegisterReaderInterface {
 	 *
 	 * @return array{withdrawn: bool, complete: bool, reason: string, at: string} The withdrawal state.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function withdrawalOf(array $registration): array;
 
@@ -154,7 +154,7 @@ interface PostRegisterReaderInterface {
 	 *
 	 * @return array<int, array<string, mixed>> The series, ordered by number.
 	 *
-	 * @spec openspec/changes/documents-in-and-out-of-the-building/specs/document-register/spec.md
+	 * @spec openspec/changes/archive/2026-11-26-documents-in-and-out-of-the-building/specs/document-register/spec.md
 	 */
 	public function series(array $registrations): array;
 }//end interface
