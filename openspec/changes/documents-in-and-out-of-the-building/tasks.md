@@ -75,8 +75,9 @@
     exposing "this schema declares an identifier" as a question filinq can ask
     before the write. Named rather than guessed.
 
-- [ ] 1.5 Number a registration per unit as well as per year, once OpenRegister names a generated sequence per unit; until then the register keeps one instance-wide series (row in-number, REQ-DIO-01). Verify: PHPUnit that two units each start at 1 in a new year.
+- [x] 1.5 Number a registration per unit as well as per year, once OpenRegister names a generated sequence per unit; until then the register keeps one instance-wide series (row in-number, REQ-DIO-01). Verify: PHPUnit that two units each start at 1 in a new year.
   - Dependency built (2026-11-24): ConductionNL/openregister#11042 adds `partitionBy` to `x-openregister-generated` (one counter per value of a property per period; an empty value keeps the shared counter). Left: once an OpenRegister release carries it, declare `"partitionBy": "unit"` on `documentRegistration.registrationNumber`, drop the instance-wide NOTE from its description, and add the PHPUnit. Not before: an OpenRegister without it refuses the unknown key when it saves the schema, so the register would not import.
+  - Done (26 Nov 2026): OpenRegister#11042 is on OpenRegister main and in every OpenRegister dev release since 24 Nov 2026 (v2.2.0-dev.*). `documentRegistration.registrationNumber` declares `"partitionBy": "unit"` (schema 1.2.0, register 8.106.0, app version raised) and its description no longer says the series is instance-wide. `DocumentRegistrationSchemaTest::testEachUnitHasItsOwnSeriesPerYear` pins the declaration. That two units each start at 1 in a new year is OpenRegister's `GeneratedIdentifierPartitionTest`; filinq's unit tests do not load OpenRegister. Decision: declared now rather than after a stable OpenRegister release, because filinq development already needs OpenRegister main. A stable OpenRegister carrying #11042 must ship before this reaches beta/main.
 
 ## 2. Discharge and the open post list
 

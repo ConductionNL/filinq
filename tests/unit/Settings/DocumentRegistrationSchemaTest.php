@@ -9,12 +9,13 @@
  * a duplicate is worse than a gap. So it is declared through the platform's
  * `x-openregister-generated`, which reserves atomically.
  *
- * 🔑 AND THE SERIES IS INSTANCE-WIDE, NOT PER UNIT, WHICH IS NOT WHAT THE TASK
- * ASKED FOR. OpenRegister builds the sequence scope as the literal sequence name
- * plus the period, with no placeholder substitution, so `filinq-post-{unit}`
- * would have created ONE shared series literally named that. Shipping it would
- * have read as per-unit and behaved as shared. Asserted here so the difference
- * cannot be forgotten.
+ * 🔑 AND EACH UNIT HAS ITS OWN SERIES, THROUGH `partitionBy`, NOT THE NAME.
+ * OpenRegister builds the sequence scope as the literal sequence name plus the
+ * period, with no placeholder substitution, so `filinq-post-{unit}` would have
+ * created ONE shared series literally named that. A per-unit series is declared
+ * with `partitionBy: unit` (OpenRegister#11042): one counter per value of `unit`
+ * per year. That two units each start at 1 in a new year is OpenRegister's own
+ * `GeneratedIdentifierPartitionTest`; this file pins that filinq asks for it.
  *
  * @category Tests
  * @package  OCA\Filinq\Tests\Unit\Settings
@@ -126,6 +127,31 @@ class DocumentRegistrationSchemaTest extends TestCase {
 			'OpenRegister substitutes nothing in a sequence name, so a placeholder makes one shared series that reads as many.'
 		);
 	}//end testTheSequenceNameCarriesNoPlaceholder()
+
+	/**
+	 * 🔑 EVERY UNIT NUMBERS FROM ONE EACH YEAR (REQ-DIO-01, row in-number).
+	 *
+	 * The counter is split per value of `unit`, which must be a plain text
+	 * property: OpenRegister counts a list or an object there as empty, and an
+	 * empty unit draws from the shared series.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/documents-in-and-out-of-the-building/tasks.md#task-1.5
+	 */
+	public function testEachUnitHasItsOwnSeriesPerYear(): void {
+		$schema = $this->schema();
+		$generated = ($schema['properties']['registrationNumber']['x-openregister-generated'] ?? []);
+
+		$this->assertSame(expected: 'unit', actual: ($generated['partitionBy'] ?? null));
+		$this->assertSame(expected: 'year', actual: ($generated['resetOn'] ?? null));
+		$this->assertSame(expected: 'string', actual: ($schema['properties']['unit']['type'] ?? null));
+		$this->assertStringNotContainsString(
+			needle: 'instance-wide',
+			haystack: (string)($schema['properties']['registrationNumber']['description'] ?? ''),
+			message: 'The description must not still say the series is shared by every unit.'
+		);
+	}//end testEachUnitHasItsOwnSeriesPerYear()
 
 	/**
 	 * The discharge is a link, never a status on the inbound entry.
