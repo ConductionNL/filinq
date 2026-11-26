@@ -55,14 +55,14 @@ class BridgeRecordReaderTest extends TestCase {
 	 * @return BridgeRecordReader
 	 */
 	private function reader(mixed $answer, array &$calls): BridgeRecordReader {
-		$objects = $this->createMock(ObjectService::class);
+		$objects = $this->createMock(originalClassName: ObjectService::class);
 		$objects->method('searchObjectsBySlug')->willReturnCallback(
 			function (string $registerSlug, string $schemaSlug, array $filters, bool $_rbac) use ($answer, &$calls): mixed {
 				$calls[] = [$registerSlug, $schemaSlug, $filters, $_rbac];
 				return $answer;
 			}
 		);
-		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
+		$resolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
 		$resolver->method('resolve')->willReturn($objects);
 
 		return new BridgeRecordReader(objectResolver: $resolver);
@@ -87,13 +87,13 @@ class BridgeRecordReaderTest extends TestCase {
 		$rows = $reader->rows(schema: 'externalDocument', filters: ['stagedFileRef' => 10]);
 
 		$this->assertSame(
-			[
+			expected: [
 				['stagedFileRef' => 10, 'vernietigingsdatum' => '2030-01-01', 'uuid' => 'd-1'],
 				['stagedFileRef' => 11, 'uuid' => 'd-2'],
 			],
-			$rows
+			actual: $rows
 		);
-		$this->assertSame([['filinq', 'externalDocument', ['stagedFileRef' => 10], false]], $calls);
+		$this->assertSame(expected: [['filinq', 'externalDocument', ['stagedFileRef' => 10], false]], actual: $calls);
 
 	}//end testRowsAreReadAsTheServerAndFlattened()
 
@@ -106,8 +106,8 @@ class BridgeRecordReaderTest extends TestCase {
 		$calls  = [];
 		$reader = $this->reader(answer: 0, calls: $calls);
 
-		$this->assertSame([], $reader->rows(schema: 'bridgeSource', filters: []));
-		$this->assertCount(1, $calls);
+		$this->assertSame(expected: [], actual: $reader->rows(schema: 'bridgeSource', filters: []));
+		$this->assertCount(expectedCount: 1, haystack: $calls);
 
 	}//end testAnAnswerThatIsNotAListReadsAsNoRows()
 }//end class
