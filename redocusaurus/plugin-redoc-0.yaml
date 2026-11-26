@@ -616,11 +616,14 @@ paths:
   /anonymization/batch/{batchId}/resume:
     post:
       operationId: batch-lifecycle-resume
-      summary: Resume an errored or cancelled batch
+      summary: >-
+        Resume an errored or cancelled batch, or a completed batch with failed
+        files
       description: >-
         Re-queues only the files that did not produce their output; a file that
-        already succeeded is left alone. Answers 409 for a batch that is not
-        errored or cancelled.
+        already succeeded is left alone. A completed batch is resumable while it
+        has files in error, and then only those files are re-queued. Answers 409
+        for a running batch, or a completed batch without failed files.
       tags:
         - batch-anonymization
       responses:
