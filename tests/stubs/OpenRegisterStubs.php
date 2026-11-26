@@ -2544,16 +2544,8 @@ class HookStoppedException extends \Exception {
 }//end class
 
 
-/**
- * Stub for ValidationException: OpenRegister refuses a record against its
- * schema (an enum value outside the list, a missing required field).
- *
- * @category Tests
- * @package  OCA\OpenRegister\Exception
- * @author   Conduction B.V. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @link     https://www.filinq.app
- */
+// Stub for ValidationException: OpenRegister refuses a record against its
+// schema (an enum value outside the list, a missing required field).
 if (class_exists(\OCA\OpenRegister\Exception\ValidationException::class, false) === false) {
 	class ValidationException extends \Exception {
 	}
