@@ -552,6 +552,12 @@ class SettingsService implements SettingsServiceInterface {
 		'filinq.review.certain_from',
 		self::FOUR_EYES_KEY,
 		self::DEFAULT_PUBLISHER_KEY,
+		// The admin page's anonymisation section: the entity-type to grondslag
+		// mapping, the entity types offered to detection and the default output
+		// format. Left off this list they answered 200 and were never stored.
+		'filinq.grondslagen.entity_type_bases',
+		'filinq.anonymisation.enabled_entity_types',
+		'filinq.anonymisation.default_output_format',
 	];
 
 	/**
@@ -571,6 +577,8 @@ class SettingsService implements SettingsServiceInterface {
 	 * @spec openspec/specs/admin-settings/spec.md
 	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-2
 	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-1
+	 * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-grondslag-selector-in-admin-settings
+	 * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md#requirement-selectable-entity-types-from-a-curated-list
 	 */
 	public function updateSettings(array $data): array {
 		$this->assertValidSubfolderName(data: $data);
