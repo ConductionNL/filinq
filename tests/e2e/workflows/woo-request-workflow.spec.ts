@@ -32,7 +32,7 @@
  * Not run in the change that wrote it (decision 139): the live pass runs it.
  */
 
-// @e2e openspec/changes/woo-request-workflow/specs/woo-request-workflow/spec.md#dossiq-drafts-a-partial-disclosure-decision
+// @e2e openspec/changes/archive/2026-11-26-woo-request-workflow/specs/woo-request-workflow/spec.md#dossiq-drafts-a-partial-disclosure-decision
 
 import type { APIRequestContext, Page } from '@playwright/test'
 

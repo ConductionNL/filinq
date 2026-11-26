@@ -12,7 +12,7 @@
  * @link https://www.filinq.app
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
- * @spec openspec/changes/woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-decision-letter-and-the-inventory-agree-req-ddwrw-007
+ * @spec openspec/changes/archive/2026-11-26-woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-decision-letter-and-the-inventory-agree-req-ddwrw-007
  */
 
 declare(strict_types=1);

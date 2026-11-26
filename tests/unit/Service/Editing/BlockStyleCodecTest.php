@@ -3,7 +3,7 @@
 /**
  * Unit tests for BlockStyleCodec.
  *
- * openspec/changes/document-rich-editing.
+ * Spec: openspec/changes/archive/2026-11-26-document-rich-editing.
  *
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>

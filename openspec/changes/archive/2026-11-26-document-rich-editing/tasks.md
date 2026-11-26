@@ -28,12 +28,12 @@ Acceptance criteria:
 - [x] Merge into existing `<w:pPr>`/`<w:rPr>` — same-named properties replaced, unrelated ones retained
 - [x] Make heading 0, `list: false` and `pageBreakBefore: false` REMOVALS, not absences
 - [x] Write an explicit off-override when a run property is switched off
-- [ ] Refuse ODF by name, naming what still works on `.odt` — superseded: ODF block style is now applied by `OdfBlockStyleCodec`, so ODF is styled rather than refused
+- [x] ~~Refuse ODF by name, naming what still works on `.odt`~~ — superseded: ODF block style is applied by `OdfBlockStyleCodec`, so ODF is styled rather than refused; only `list: true` on `.odt` is refused by name (`BlockStyleCodecsTest::testOdfRefusesAListRatherThanDroppingIt`). Closed 26 Nov 2026 with the spec rewritten to that behaviour.
 - [x] Add `PackageCodec::ACTION_STYLE`, refusing a style edit that carries no properties
 
 Acceptance criteria:
 - Hand-set spacing and indentation survive a restyle. Without this the change loses user work silently.
-- An ODF style request throws; it never returns the markup unchanged.
+- An ODF style request is applied through an automatic style; `list` on `.odt` throws; neither returns the markup unchanged.
 - Re-setting a property replaces rather than duplicates it.
 
 ## 4. Agent surface

@@ -130,20 +130,24 @@ reporting the restyle applied.
 
 ### Requirement: Style MUST be refused by name where it is not implemented
 
-Style and layout are implemented for OOXML only. For ODF the system MUST refuse with
-a message naming the limitation **and** naming what does still work on `.odt`.
+Style is applied to OOXML inside the paragraph and to ODF through an automatic style
+in `content.xml` that the block points at. A property that has no expression in a
+format MUST be refused by name, saying why and what still works; today that is
+`list: true` on `.odt`, because an ODF list is a `<text:list>` element wrapping the
+paragraph rather than a property of it. Returning the markup unchanged is
+prohibited — it reports success and changes nothing.
 
-Returning the markup unchanged is prohibited: it reports success and changes
-nothing, which is indistinguishable from a working call and is the failure mode this
-requirement exists to prevent.
-
-#### Scenario: An ODF style request is refused, not ignored
+#### Scenario: An ODF style request is applied through an automatic style
 
 - **GIVEN** an `.odt` document
-- **WHEN** a style edit is requested
-- **THEN** the system MUST refuse
-- **AND** the message MUST state that text edits and metadata do work on `.odt`
-- **AND** the markup MUST NOT be returned unchanged as though the style had been applied
+- **WHEN** a style edit with `{"bold": true}` is requested
+- **THEN** the block MUST point at a new automatic style carrying bold
+
+#### Scenario: A list on ODF is refused, not ignored
+
+- **GIVEN** an `.odt` document
+- **WHEN** a style edit with `{"list": true}` is requested
+- **THEN** the system MUST refuse, naming `text:list`, and the message MUST state that every other style key works on `.odt`
 
 #### Scenario: An unknown style property is refused
 

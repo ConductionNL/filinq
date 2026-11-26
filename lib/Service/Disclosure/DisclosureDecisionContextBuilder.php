@@ -33,7 +33,7 @@ use OCA\Filinq\Service\Grounds\RefusalGroundsResolver;
  * same, is a decision the organisation cannot defend. Every problem is named
  * in one refusal, so the caller fixes them in one pass.
  *
- * @spec openspec/changes/woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-woo-decision-data-contract-is-checked-before-anything-is-rendered-req-ddwrw-010
+ * @spec openspec/changes/archive/2026-11-26-woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-woo-decision-data-contract-is-checked-before-anything-is-rendered-req-ddwrw-010
  */
 class DisclosureDecisionContextBuilder {
 
@@ -96,7 +96,7 @@ class DisclosureDecisionContextBuilder {
 	 * known (a redraft may cite a retired one); every other check is the same, so splitting
 	 * build() in two would duplicate the whole contract check.
 	 *
-	 * @spec openspec/changes/woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-woo-decision-data-contract-is-checked-before-anything-is-rendered-req-ddwrw-010
+	 * @spec openspec/changes/archive/2026-11-26-woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-woo-decision-data-contract-is-checked-before-anything-is-rendered-req-ddwrw-010
 	 */
 	public function build(mixed $wooDecision, bool $allowRetiredGrounds = false): array {
 		if (is_array($wooDecision) === false) {
@@ -181,7 +181,7 @@ class DisclosureDecisionContextBuilder {
 	 *
 	 * @return array{0: array<string, mixed>, 1: array<int, string>} The document and its problems.
 	 *
-	 * @spec openspec/changes/woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-grounds-are-printed-by-label-and-article-never-as-a-bare-code-req-ddwrw-011
+	 * @spec openspec/changes/archive/2026-11-26-woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-grounds-are-printed-by-label-and-article-never-as-a-bare-code-req-ddwrw-011
 	 */
 	private function document(string $label, array $document, bool $allowRetiredGrounds): array {
 		$problems = [];

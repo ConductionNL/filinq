@@ -54,6 +54,37 @@ cannot invalidate the byte offsets of spans still to be edited.
 - **WHEN** the first is replaced
 - **THEN** the second's anchor MUST be unchanged
 
+Besides `replace`, `insertAfter` and `delete`, an edit can take the action `style`.
+Anchor resolution, the fail-the-whole-set-on-one-bad-anchor rule and the
+descending-span application order are the same for it.
+
+A `style` edit carries a `style` object and **no text**. That separation is
+deliberate: a caller who wants a paragraph bold must not have to resend its text,
+because the caller is a language model and a model that resends text is a model that
+will paraphrase the paragraph while "only" changing its formatting.
+
+A `style` edit carrying no style properties MUST be refused. An edit that changes
+nothing while reporting success is the failure this action is most likely to produce.
+
+#### Scenario: A style edit changes formatting without touching the words
+
+- **GIVEN** an anchored paragraph
+- **WHEN** an edit with action `style` and `{"bold": true}` is applied
+- **THEN** the paragraph's run properties MUST carry bold
+- **AND** its visible text MUST be unchanged
+
+#### Scenario: A style edit with no properties is refused
+
+- **GIVEN** an edit with action `style` and an empty style object
+- **WHEN** the edit set is resolved
+- **THEN** the whole set MUST be refused, naming the supported properties
+
+#### Scenario: The other three actions are unaffected by the style action
+
+- **GIVEN** an edit set using `replace`, `insertAfter` or `delete`
+- **WHEN** it is applied
+- **THEN** behaviour MUST be the same as without the `style` action
+
 ### Requirement: Untouched parts of a document package survive an edit unchanged
 
 Applying an edit MUST rewrite only the body part, and only the targeted paragraph's
