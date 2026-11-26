@@ -46,6 +46,9 @@ work unit: at most `batch.files_per_tick` files (default 25) and at most
   files that did not succeed; a file whose redacted copy was made after the
   batch started is taken from its `anonymizationLink` instead of being
   anonymized again.
+- A completed batch whose files failed can be resumed as well: only its files
+  in `error` are queued again, and every other file keeps its outcome. A
+  completed batch without failed files cannot be resumed.
 
 ## Progress and report
 
@@ -77,7 +80,8 @@ carries its review outcome.
 A batch that is still running or waiting for review can be cancelled: the
 file in progress is finished, and no further file is started. A cancelled or
 failed batch can be resumed: only the files that did not succeed are
-processed again. Both actions ask for confirmation first.
+processed again. A completed batch with failed files offers Resume too, and
+then only the failed files are processed again. Both actions ask for confirmation first.
 
 ![Cancel this batch?](/screenshots/redaction-at-scale-cancel.png)
 

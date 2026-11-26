@@ -90,7 +90,7 @@ class BatchLifecycleController extends Controller {
 	}//end cancel()
 
 	/**
-	 * Resume an errored or cancelled batch.
+	 * Resume an errored or cancelled batch, or a completed batch with failed files.
 	 *
 	 * @param string $batchId The batch id.
 	 *
@@ -98,6 +98,7 @@ class BatchLifecycleController extends Controller {
 	 *
 	 * @NoAdminRequired
 	 *
+	 * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
 	 *
 	 * @no-admin-idor-exempt ownership is enforced one layer down. BatchStateService::getBatch() returns

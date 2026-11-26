@@ -84,6 +84,20 @@ class BatchLifecycleService {
 	private const RESUMABLE = ['error', self::CANCELLED];
 
 	/**
+	 * Batch status of a finished run; resumable only while it has failed files.
+	 *
+	 * @var string
+	 */
+	private const COMPLETED = 'completed';
+
+	/**
+	 * Per-file status of a file that failed.
+	 *
+	 * @var string
+	 */
+	private const FILE_FAILED = 'error';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param BatchStateServiceInterface $stateService Batch state, ownership-checked on read.
@@ -136,18 +150,23 @@ class BatchLifecycleService {
 	}//end cancel()
 
 	/**
-	 * Re-queue the files of an errored or cancelled batch that did not succeed.
+	 * Re-queue the files of an errored or cancelled batch that did not succeed,
+	 * or the failed files of a completed batch.
 	 *
 	 * A failed file goes back to `uploaded` (extracted again) with its retry
 	 * count raised; an extracted file waits for anonymization again; a file
 	 * that already produced its output is left alone, so a resumed run never
-	 * produces it twice.
+	 * produces it twice. A completed batch whose files failed is resumable
+	 * too: per-file failures do not set the batch to `error`, so only its
+	 * failed files are queued again and every other file keeps its outcome.
+	 * A completed batch without failed files answers 409.
 	 *
 	 * @param string $batchId The batch id.
 	 *
 	 * @return array{status: int, batchId?: string, batchStatus?: string, requeued?: int, reason?: string}
-	 *         404 for an unknown or foreign batch, 409 for one not errored or cancelled, else 202.
+	 *         404 for an unknown or foreign batch, 409 for one that cannot be resumed, else 202.
 	 *
+	 * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
 	 */
 	public function resume(string $batchId): array {
@@ -157,11 +176,12 @@ class BatchLifecycleService {
 		}
 
 		$current = (string)($batch['status'] ?? '');
-		if (in_array($current, self::RESUMABLE, true) === false) {
+		$onlyFailed = ($current === self::COMPLETED && $this->hasFailedFiles(batch: $batch) === true);
+		if ($onlyFailed === false && in_array($current, self::RESUMABLE, true) === false) {
 			return ['status' => 409, 'reason' => 'not-resumable', 'batchStatus' => $current];
 		}
 
-		$requeue = $this->requeueUnfinished(batch: $batch);
+		$requeue = $this->requeueUnfinished(batch: $batch, onlyFailed: $onlyFailed);
 		$batch = $requeue['batch'];
 		// Marks the run as resumed: a file whose redacted copy was made after
 		// the batch started is then taken from its anonymizationLink instead
@@ -195,23 +215,46 @@ class BatchLifecycleService {
 	}//end continuesInBackground()
 
 	/**
-	 * The batch with every unfinished file queued again: a file that failed
-	 * before extraction goes back to `uploaded` with one more retry, an
-	 * extracted one waits for review as it is. The batch extracts again when
-	 * any file went back, else it returns to review.
+	 * Whether any file of the batch failed.
 	 *
 	 * @param array<string, mixed> $batch The stored batch.
 	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
+	 */
+	private function hasFailedFiles(array $batch): bool {
+		foreach ((array)($batch['files'] ?? []) as $file) {
+			if ((string)($file['status'] ?? '') === self::FILE_FAILED) {
+				return true;
+			}
+		}
+
+		return false;
+
+	}//end hasFailedFiles()
+
+	/**
+	 * The batch with every unfinished file queued again: a file that failed
+	 * before extraction goes back to `uploaded` with one more retry, an
+	 * extracted one waits for review as it is. The batch extracts again when
+	 * any file went back, else it returns to review. With `$onlyFailed` only
+	 * the files in `error` are queued again (a completed batch).
+	 *
+	 * @param array<string, mixed> $batch      The stored batch.
+	 * @param bool                 $onlyFailed Whether to queue only the failed files.
+	 *
 	 * @return array{batch: array<string, mixed>, requeued: int}
 	 *
+	 * @spec openspec/changes/redaction-at-scale/tasks.md#5.6
 	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-idempotent-resume-req-ddras-005
 	 */
-	private function requeueUnfinished(array $batch): array {
+	private function requeueUnfinished(array $batch, bool $onlyFailed=false): array {
 		$requeued = 0;
 		$batch['status'] = 'review';
 		foreach ((array)($batch['files'] ?? []) as $index => $file) {
 			$status = (string)($file['status'] ?? '');
-			if ($status === self::FILE_SUCCEEDED) {
+			if ($status === self::FILE_SUCCEEDED || ($onlyFailed === true && $status !== self::FILE_FAILED)) {
 				continue;
 			}
 

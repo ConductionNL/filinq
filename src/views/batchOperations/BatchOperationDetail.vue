@@ -28,7 +28,7 @@ their review outcome.
 						{{ t('filinq', 'Cancel batch') }}
 					</NcButton>
 					<NcButton
-						v-if="canResume(batch.batchStatus)"
+						v-if="canResume(batch.batchStatus, batch.files)"
 						variant="primary"
 						:disabled="busy"
 						data-testid="batch-resume"
