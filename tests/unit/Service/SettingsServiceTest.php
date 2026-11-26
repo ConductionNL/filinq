@@ -339,10 +339,10 @@ class SettingsServiceTest extends TestCase {
 			]
 		);
 
-		$this->assertSame('{"BSN":["5.1.1.e"],"PERSON":["5.1.2.e"]}', $written['filinq.grondslagen.entity_type_bases']);
-		$this->assertSame('["PERSON","BSN"]', $written['filinq.anonymisation.enabled_entity_types']);
-		$this->assertSame('preserve', $written['filinq.anonymisation.default_output_format']);
-		$this->assertSame('preserve', $result['filinq.anonymisation.default_output_format']);
+		$this->assertSame(expected: '{"BSN":["5.1.1.e"],"PERSON":["5.1.2.e"]}', actual: $written['filinq.grondslagen.entity_type_bases']);
+		$this->assertSame(expected: '["PERSON","BSN"]', actual: $written['filinq.anonymisation.enabled_entity_types']);
+		$this->assertSame(expected: 'preserve', actual: $written['filinq.anonymisation.default_output_format']);
+		$this->assertSame(expected: 'preserve', actual: $result['filinq.anonymisation.default_output_format']);
 
 	}//end testTheAnonymisationSectionIsStored()
 
