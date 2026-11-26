@@ -28,7 +28,7 @@
 				{{ stateText }}
 			</p>
 			<p v-if="review && review.review" class="review-workbench__by">
-				{{ t('filinq', 'Last marked by {user} on {date}', { user: review.review.checkedBy, date: review.review.checkedOn }) }}
+				{{ t('filinq', 'Last marked by {user} on {date}', { user: review.review.checkedBy, date: checkedOnText }) }}
 			</p>
 			<p v-if="rendition" class="review-workbench__rendition" data-testid="review-rendition">
 				{{ renditionText }}
@@ -94,6 +94,7 @@
 					:entities="entry.entities || []"
 					:fileCount="1"
 					:thresholds="thresholds"
+					:proposalMapping="proposalMapping"
 					@toggle="onToggle"
 					@bulkSelect="onBulk($event, true)"
 					@bulkDeselect="onBulk($event, false)"
@@ -237,6 +238,21 @@ export default {
 		 */
 		originalPane() {
 			return renditionPane(this.original, this.rendition)
+		},
+
+		/**
+		 * When the reviewed mark was set, as a local date and time; the stored ISO moment is not for people.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-4.5
+		 */
+		checkedOnText() {
+			const iso = this.review?.review?.checkedOn || ''
+			const date = new Date(iso)
+			if (iso === '' || Number.isNaN(date.getTime())) {
+				return iso
+			}
+			return date.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 		},
 
 		/**
@@ -514,6 +530,8 @@ export default {
 	align-items: baseline;
 	justify-content: space-between;
 	gap: 8px;
+	/* Clear the app-navigation toggle, which sits over the top-left corner of the content. */
+	padding-inline-start: calc(var(--default-clickable-area, 34px) + 8px);
 }
 
 .review-workbench__title {

@@ -174,7 +174,7 @@
 							"
 							@update:modelValue="onBasesChange(item.idx, $event)" />
 						<div
-							v-if="basesAreProposed(item.e)"
+							v-if="basesAreProposed(item.e, proposalMapping)"
 							class="proposed-text"
 							data-testid="bases-proposed">
 							{{ t('filinq', 'Proposed') }}
@@ -257,6 +257,9 @@ export default {
 		// `{ floor, certainFrom, floorConfigurable }`. Null leaves out the
 		// certain/uncertain split, its badge, filter and counter.
 		thresholds: { type: Object, default: null },
+		// `filinq.grondslagen.entity_type_bases`: lets a row show that its
+		// grondslag is the mapping's proposal (REQ-DDARW-006).
+		proposalMapping: { type: Object, default: null },
 	},
 
 	emits: [

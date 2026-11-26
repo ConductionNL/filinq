@@ -50,8 +50,9 @@
 - [x] 4.3 Vitest coverage for the workbench store wiring (shared entity model, selection pre-fill)
 - [x] 4.4 i18n: EN + NL translations for all new UI strings (keys in English) (ADR-005)
   - Test with the nldesign theme enabled for accessibility compliance.
-- [ ] 4.5 Docs: `docs/features/review-workbench.md` with Playwright MCP screenshots of the split view, badges, grondslag pickers and the checked gate (ADR-010)
+- [x] 4.5 Docs: `docs/features/review-workbench.md` with Playwright MCP screenshots of the split view, badges, grondslag pickers and the checked gate (ADR-010)
   - Live screenshot of the split view with rule badges and the uncertain counter added (`review-workbench.png`). Still open: the grondslag pickers and the checked state. At 1600 px the findings table overflows its pane and the badges and grondslag column are cut off, which needs a layout fix before they can be shown.
+  - Done live 26 Nov 2026 (sandbox: Nextcloud 34.0.6 + MariaDB + Redis, OpenRegister main 99ea152d with openregister#11261 applied locally, filinq development 802b0196, OR regex entity recognition): three more screenshots, of the grondslag pickers with their proposals, an opened picker, and the checked state. Three app reds were found and fixed on the way: a grondslag proposed by the admin mapping never showed as Proposed (REQ-DDARW-006); the reviewed mark's time was printed as a raw ISO moment; the app-navigation toggle covered the first letters of the title. The layout overflow noted above was fixed in #2416. Spec run live: review-workbench.spec.ts 6 passed, 13 skipped (they need the FILINQ_E2E_* prepared documents from a real detection backend).
 - [ ] 4.6 Validate: `openspec validate anonymization-review-workbench --strict` passes; hydra gates green on the branch
 
 ## 5. Amendment 2026-10-05: Woo rows 4.25 and 14.15
