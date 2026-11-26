@@ -27,7 +27,7 @@ use UnexpectedValueException;
 /**
  * Carries every problem found, not only the first.
  *
- * @spec openspec/changes/woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-woo-decision-data-contract-is-checked-before-anything-is-rendered-req-ddwrw-010
+ * @spec openspec/changes/archive/2026-11-26-woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-woo-decision-data-contract-is-checked-before-anything-is-rendered-req-ddwrw-010
  */
 final class DisclosureDecisionContractException extends UnexpectedValueException {
 

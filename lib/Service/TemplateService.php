@@ -718,7 +718,7 @@ class TemplateService implements TemplateServiceInterface {
 	 * @throws Exception If the template is not locked by this user
 	 *
 	 * @spec openspec/specs/template-management/spec.md
-	 * @spec openspec/changes/woo-request-workflow/tasks.md
+	 * @spec openspec/changes/archive/2026-11-26-woo-request-workflow/tasks.md
 	 */
 	public function releaseLock(string $id, string $userId): array {
 		$template = $this->getTemplate(id: $id);

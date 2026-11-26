@@ -232,7 +232,7 @@ class DocumentGenerationRequestService implements GenerationRequestServiceInterf
 	 * @throws \OCA\Filinq\Exception\DisclosureDecisionContractException When the data does not meet the contract.
 	 * @throws RuntimeException When the contract cannot be checked.
 	 *
-	 * @spec openspec/changes/woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-woo-decision-data-contract-is-checked-before-anything-is-rendered-req-ddwrw-010
+	 * @spec openspec/changes/archive/2026-11-26-woo-request-workflow/specs/woo-request-workflow/spec.md#requirement-the-woo-decision-data-contract-is-checked-before-anything-is-rendered-req-ddwrw-010
 	 */
 	private function withContract(array $template, array $data, array $request): array {
 		if ((string)($template['dataContract'] ?? '') !== DisclosureDecisionContextBuilder::CONTRACT) {
