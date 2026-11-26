@@ -121,7 +121,7 @@ class ContractRepository implements ContractRepositoryInterface {
 			$stored = $this->objectResolver->resolve()->saveObject(
 				object: $arguments['object'],
 				options: new ObjectSaveOptions(
-					target: new ObjectFindTarget(register: ($arguments['register'] ?? null), schema: ($arguments['schema'] ?? null)),
+					target: new ObjectFindTarget(register: $arguments['register'], schema: $arguments['schema']),
 					uuid: $arguments['uuid'] ?? null
 				)
 			);

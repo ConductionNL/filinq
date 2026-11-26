@@ -14,7 +14,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/filinq
  *
- * @spec openspec/specs/method-decomposition/spec.md
+ * @spec openspec/specs/pdf-page-stamping/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -51,7 +51,7 @@ interface PdfStampServiceInterface {
 	 *
 	 * @throws PdfStampRefusal When the file is not a PDF, encrypted, too large, or cannot be stamped.
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-1.1
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-1.1
 	 */
 	public function stamp(string $pdf, string $text, array $options = []): string;
 }//end interface

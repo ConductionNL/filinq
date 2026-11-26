@@ -309,7 +309,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-2
 	 */
 	public function testOutputSubfolderNameIsWritable(): void {
 		$this->mockConfig->expects($this->once())
@@ -465,7 +465,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-2
 	 */
 	public function testInvalidOutputSubfolderNameIsRefusedAndNothingIsWritten(): void {
 		$this->mockConfig->expects($this->never())->method('setValueString');
@@ -531,7 +531,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-2
 	 */
 	public function testEmptyOutputSubfolderNameIsRefused(): void {
 		$this->expectException(exception: \RuntimeException::class);
@@ -619,7 +619,7 @@ class SettingsServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-2
 	 */
 	public function testSubfolderKeyMatchesTheResolver(): void {
 		$this->assertSame(

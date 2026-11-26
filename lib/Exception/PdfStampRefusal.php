@@ -12,7 +12,7 @@
  *
  * @link https://www.filinq.app
  *
- * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-1.2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -28,7 +28,7 @@ use Throwable;
 /**
  * A stamp refused, with the code a calling app can show.
  *
- * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-1.2
+ * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-1.2
  */
 final class PdfStampRefusal extends RuntimeException {
 
@@ -72,7 +72,7 @@ final class PdfStampRefusal extends RuntimeException {
 	 *
 	 * @return string not-a-pdf, encrypted, too-large or failed.
 	 *
-	 * @spec openspec/changes/work-stamp-text-on-every-page/tasks.md#task-1.2
+	 * @spec openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page/tasks.md#task-1.2
 	 */
 	public function getRefusalCode(): string {
 		return $this->refusalCode;

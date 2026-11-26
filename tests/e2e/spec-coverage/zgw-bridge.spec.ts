@@ -158,13 +158,13 @@ async function updateObject(
  */
 async function uploadFile(request: APIRequestContext, path: string, contents: string): Promise<number> {
 	const url = `/remote.php/dav/files/${USER}/${path}`
-	const put = await request.put(url, { data: contents })
+	const put = await request.put(url, { headers: OCS, data: contents })
 	expect([201, 204], `PUT ${path}`).toContain(put.status())
 	createdPaths.push(path)
 
 	const find = await request.fetch(url, {
 		method: 'PROPFIND',
-		headers: { Depth: '0', 'Content-Type': 'application/xml' },
+		headers: { ...OCS, Depth: '0', 'Content-Type': 'application/xml' },
 		data: '<?xml version="1.0"?><d:propfind xmlns:d="DAV:" xmlns:oc="http://owncloud.org/ns"><d:prop><oc:fileid/></d:prop></d:propfind>',
 	})
 	expect(find.status()).toBe(207)
@@ -248,7 +248,7 @@ test.describe('zgw document bridge', () => {
 			await request.delete(`${OBJECTS}/${schema}/${id}`, { headers: OCS })
 		}
 		for (const path of createdPaths) {
-			await request.fetch(`/remote.php/dav/files/${USER}/${path}`, { method: 'DELETE' })
+			await request.fetch(`/remote.php/dav/files/${USER}/${path}`, { method: 'DELETE', headers: OCS })
 		}
 	})
 
@@ -306,7 +306,7 @@ test.describe('zgw document bridge', () => {
 	})
 
 	test('a bridge document shows "Zaaksysteem: zaaksysteem.nl" in My Documents and a native file shows no badge', async ({ page, request }) => {
-		await request.fetch(`/remote.php/dav/files/${USER}/${DOCS_FOLDER}`, { method: 'MKCOL' })
+		await request.fetch(`/remote.php/dav/files/${USER}/${DOCS_FOLDER}`, { method: 'MKCOL', headers: OCS })
 		const bridged = `${STAMP}-bridged.txt`
 		const native = `${STAMP}-native.txt`
 		const bridgedId = await uploadFile(request, `${DOCS_FOLDER}/${bridged}`, 'Staged copy of a case-system document.\n')
@@ -341,7 +341,7 @@ test.describe('zgw document bridge', () => {
 
 	test('a failed write-back shows its error and the retry returns it to ready_for_writeback', async ({ request }) => {
 		const folder = `${STAMP}-staging`
-		await request.fetch(`/remote.php/dav/files/${USER}/${folder}`, { method: 'MKCOL' })
+		await request.fetch(`/remote.php/dav/files/${USER}/${folder}`, { method: 'MKCOL', headers: OCS })
 		createdPaths.push(folder)
 		const stagedId = await uploadFile(request, `${folder}/besluit.txt`, 'Besluit op het Woo-verzoek.\n')
 		const resultId = await uploadFile(request, `${folder}/besluit (geanonimiseerd).txt`, 'Besluit op het Woo-verzoek. [geanonimiseerd]\n')

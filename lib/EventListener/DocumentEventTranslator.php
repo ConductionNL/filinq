@@ -20,7 +20,7 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
+ * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -63,7 +63,7 @@ use OCP\IUserSession;
  * from two OpenRegister object events to four document events, so its
  * coupling is the count of them plus the dispatcher, session and clock.
  *
- * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
+ * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
  */
 class DocumentEventTranslator implements IEventListener {
 
@@ -81,7 +81,7 @@ class DocumentEventTranslator implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
+	 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
 	 */
 	public function __construct(
 		private readonly IEventDispatcher $dispatcher,
@@ -98,7 +98,7 @@ class DocumentEventTranslator implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
+	 * @spec openspec/changes/archive/2026-11-25-connect-document-webhooks/specs/document-webhooks/spec.md#requirement-filinq-raises-four-document-events-whatever-path-wrote-the-record-req-cdw-001
 	 */
 	public function handle(Event $event): void {
 		$documentEvent = null;

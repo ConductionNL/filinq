@@ -219,6 +219,8 @@ class TemplatesLeafProvider implements IntegrationProvider {
 	 *
 	 * @return array<int, array{id: string, name: string, format: string, description: string}> The templates.
 	 *
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) The leaf interface passes the object id and filters; templates are scoped per schema.
+	 *
 	 * @spec openspec/changes/template-library-leaf/tasks.md#task-2.1
 	 */
 	public function list(string $register, string $schema, string $objectId, array $filters=[]): array {

@@ -4,7 +4,7 @@ For app developers. A sibling app asks filinq to put a text on every page of a
 PDF, for example a reader's name and the date on a confidential paper, so that
 a leaked page carries it. filinq returns a new PDF and stores nothing.
 
-Spec: `openspec/changes/work-stamp-text-on-every-page` (REQ-PST-001, REQ-PST-002).
+Spec: `openspec/changes/archive/2026-11-25-work-stamp-text-on-every-page` (REQ-PST-001, REQ-PST-002).
 
 ## The event
 

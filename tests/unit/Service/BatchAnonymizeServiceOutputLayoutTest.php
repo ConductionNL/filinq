@@ -9,7 +9,7 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link https://conduction.nl
- * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
+ * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-10
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -159,7 +159,7 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-10
 	 */
 	public function testPostProcessMovePlacesFileAtExpectedPath(): void {
 		$this->mockStateService->method('getBatch')->willReturn($this->makeBatch());
@@ -183,7 +183,7 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-10
 	 */
 	public function testMoveFailurePreservesFileAtLegacyPathWithWarning(): void {
 		$this->mockStateService->method('getBatch')->willReturn($this->makeBatch());
@@ -208,7 +208,7 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-10
 	 */
 	public function testNoMoveWhenAnonymizedFileIdIsNull(): void {
 		$this->mockStateService->method('getBatch')->willReturn($this->makeBatch());
@@ -229,7 +229,7 @@ class BatchAnonymizeServiceOutputLayoutTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/anonymisation-batch-output-folder-layout/tasks.md#task-10
+	 * @spec openspec/changes/archive/2026-11-25-anonymisation-batch-output-folder-layout/tasks.md#task-10
 	 */
 	public function testSourceDiscoveryExcludedFilesAreSkipped(): void {
 		$batch          = $this->makeBatch(fileId: 1);
