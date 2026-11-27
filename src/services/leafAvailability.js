@@ -37,6 +37,23 @@ export function enabledApps(scope = globalThis) {
 }
 
 /**
+ * Whether one registered leaf is absent.
+ *
+ * @param {object}           provider A registry descriptor.
+ * @param {Set<string>|null} enabled  The enabled app ids, or null when unknown.
+ * @return {boolean} True when the leaf says it is unavailable or its app is known to be absent.
+ *
+ * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
+ */
+export function isAbsentLeaf(provider, enabled) {
+	if (provider.available === false) {
+		return true
+	}
+	const app = typeof provider.requiredApp === 'string' ? provider.requiredApp : ''
+	return app !== '' && enabled instanceof Set && enabled.has(app) === false
+}
+
+/**
  * The ids of the registered leaves whose app is absent.
  *
  * @param {Array<object>}    providers The registry snapshot.
@@ -46,21 +63,10 @@ export function enabledApps(scope = globalThis) {
  * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
  */
 export function absentLeafIds(providers, enabled) {
-	const hidden = []
-	for (const provider of Array.isArray(providers) ? providers : []) {
-		if (provider === null || typeof provider !== 'object' || typeof provider.id !== 'string') {
-			continue
-		}
-		if (provider.available === false) {
-			hidden.push(provider.id)
-			continue
-		}
-		const app = typeof provider.requiredApp === 'string' ? provider.requiredApp : ''
-		if (app !== '' && enabled instanceof Set && enabled.has(app) === false) {
-			hidden.push(provider.id)
-		}
-	}
-	return hidden
+	return (Array.isArray(providers) ? providers : [])
+		.filter((provider) => provider !== null && typeof provider === 'object' && typeof provider.id === 'string')
+		.filter((provider) => isAbsentLeaf(provider, enabled))
+		.map((provider) => provider.id)
 }
 
 /**
