@@ -22,8 +22,18 @@
   dossier detail surfaces mount the registry's enabled leaf tabs/widgets for their object
   (shared registry tab host per ADR-019) — reusing the host wiring from
   `document-detail-leaf-widgets`, not a parallel tab system.
-- [ ] 2.2 Graceful degradation: with Mail / Calendar / Contacts / Deck absent, the
+- [x] 2.2 Graceful degradation: with Mail / Calendar / Contacts / Deck absent, the
   corresponding leaf is hidden and each surface renders without error.
+  Built (2026-11-27): the library registers its built-in Mail, Calendar, Contacts and Deck
+  leaves whether or not their app is enabled, and its registry sidebar hides only the ids it
+  is handed, so a record page without Mail showed an Emails tab. `RecordLeafSidebar.vue` now
+  adds every leaf whose `requiredApp` is missing from the page's enabled apps
+  (`OC.appswebroots`), or whose descriptor says `available: false`, to the page's own hidden
+  tabs (`hiddenLeafTabs()` in `src/services/leafAvailability.js`); an unknown app list hides
+  nothing. Every record surface (signing request, consent, correspondence, generated document,
+  dossier) hosts its leaves through that one component. Pinned by
+  `src/services/leafAvailability.spec.js` and `src/sidebars/RecordLeafSidebar.spec.js`
+  (`with apps absent`).
 - [x] 2.3 nl + en translations for any new tab labels (ADR-007 / ADR-025).
 
 ## 3. Verify
