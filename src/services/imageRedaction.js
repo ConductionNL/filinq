@@ -304,9 +304,59 @@ export function regionOverlays(entities) {
  * @spec openspec/changes/image-redaction/tasks.md#task-4.1
  */
 export function regionLabel(overlay) {
+	if (overlay?.scope === true && overlay.label) {
+		return overlay.label
+	}
 	const type = overlay?.type || t('filinq', 'Unknown')
 	if (overlay?.state === 'keep') {
 		return t('filinq', 'Image region kept visible: {type}', { type })
 	}
 	return t('filinq', 'Image region to be redacted: {type}', { type })
+}
+
+/**
+ * The page overlays of the scope decisions, so the preview marks every page
+ * a page, page-range or whole-document decision covers.
+ *
+ * Each covered page gets one full-page overlay labelled with its decision.
+ * A page outside the document, or a decision without valid pages, is left
+ * out: the decision row stays in the list, which is the source of truth.
+ * A whole-document decision marks every page when the page count is known.
+ *
+ * @param {Array<object>} decisions The stored scope decisions.
+ * @param {number} pageCount The document's page count, 0 when unknown.
+ * @return {Array<{index: null, page: number, x: number, y: number, w: number, h: number, type: string, state: string, scope: boolean, label: string}>} The overlays.
+ * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+ */
+export function scopeOverlays(decisions, pageCount = 0) {
+	if (!Array.isArray(decisions)) {
+		return []
+	}
+	const last = Number.isInteger(Number(pageCount)) && Number(pageCount) > 0 ? Number(pageCount) : null
+	const marked = new Map()
+	for (const decision of decisions) {
+		if (!decision || SCOPES.includes(decision.scope) === false) {
+			continue
+		}
+		let from = Number(decision.fromPage)
+		let to = decision.scope === 'page' ? from : Number(decision.toPage)
+		if (decision.scope === 'document') {
+			if (last === null) {
+				continue
+			}
+			from = 1
+			to = last
+		}
+		if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from) {
+			continue
+		}
+		const label = scopeLabel(decision)
+		const end = last === null ? to : Math.min(to, last)
+		for (let page = from; page <= end; page++) {
+			if (!marked.has(page)) {
+				marked.set(page, { index: null, page, x: 0, y: 0, w: 1, h: 1, type: decision.scope, state: 'redact', scope: true, label })
+			}
+		}
+	}
+	return [...marked.values()].sort((a, b) => a.page - b.page)
 }

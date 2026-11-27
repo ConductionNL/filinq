@@ -702,7 +702,7 @@ import ScopeRedactionDialog from '../dialogs/ScopeRedactionDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
 import { colleagueHint, colleagueReason } from '../services/fourEyes.js'
-import { burnedRegionLine, fetchScope, imageRedactionWarning, regionOverlays, scopeLabel } from '../services/imageRedaction.js'
+import { burnedRegionLine, fetchScope, imageRedactionWarning, regionOverlays, scopeLabel, scopeOverlays } from '../services/imageRedaction.js'
 import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
 import { accessibilityNote } from '../services/redactionAccessibility.js'
 import { reportRows } from '../services/sanitization.js'
@@ -1396,14 +1396,21 @@ export default {
 		 * as the table, so an overlay always shows its row's decision. Only
 		 * for the review step, like the highlights.
 		 *
-		 * @return {Array<object>} Overlays from `regionOverlays()`.
+		 * The pages a scope decision covers are marked too, so a page range
+		 * shows in the preview as soon as it is stored.
+		 *
+		 * @return {Array<object>} Overlays from `regionOverlays()` and `scopeOverlays()`.
 		 * @spec openspec/changes/image-redaction/tasks.md#task-4.1
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
 		 */
 		regionList() {
 			if (!this.entry || this.entry.viewMode === 'anonymized') {
 				return []
 			}
-			return regionOverlays(this.entry.entities || [])
+			return [
+				...regionOverlays(this.entry.entities || []),
+				...scopeOverlays(this.scopeState.decisions, this.scopeState.pageCount),
+			]
 		},
 
 		/**

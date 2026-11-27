@@ -157,6 +157,11 @@ test.describe('image redaction', () => {
 		expect(ranges[0]).toMatchObject({ fromPage: 3, toPage: 5 })
 		expect(ranges[0].bases.length).toBeGreaterThan(0)
 
+		// The preview marks the three pages, whatever the commit did.
+		const marks = page.locator('.dd-region[data-scope="pageRange"]')
+		await expect(marks).toHaveCount(3)
+		await expect(marks.first()).toHaveAttribute('aria-label', 'Pages 3 to 5 redacted')
+
 		test.fail(
 			state.pageScopesAvailable !== true,
 			"OpenRegister's image seam is not installed here, so page scopes are refused (ScopeRedactionServiceTest::testPageScopesNeedTheSeam).",

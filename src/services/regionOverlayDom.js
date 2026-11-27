@@ -23,6 +23,7 @@ export const REGION_CLASS = 'dd-region'
  * @param {number} page The 1-based page number of the layer.
  * @return {number} The number of overlays drawn.
  * @spec openspec/changes/image-redaction/tasks.md#task-4.1
+ * @spec openspec/changes/image-redaction/tasks.md#task-6.3
  */
 export function applyRegionOverlays(layer, regions, page) {
 	if (!layer) {
@@ -40,7 +41,11 @@ export function applyRegionOverlays(layer, regions, page) {
 		element.style.top = `${region.y * 100}%`
 		element.style.width = `${region.w * 100}%`
 		element.style.height = `${region.h * 100}%`
-		element.setAttribute('data-entity-index', String(region.index))
+		if (region.scope === true) {
+			element.setAttribute('data-scope', String(region.type))
+		} else {
+			element.setAttribute('data-entity-index', String(region.index))
+		}
 		element.setAttribute('role', 'img')
 		element.setAttribute('aria-label', regionLabel(region))
 		element.title = regionLabel(region)
