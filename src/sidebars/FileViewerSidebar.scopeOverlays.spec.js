@@ -26,7 +26,9 @@ jest.mock('@nextcloud/dialogs', () => ({
 }))
 jest.mock('@nextcloud/vue', () => ({}))
 jest.mock('@nextcloud/auth', () => ({ getCurrentUser: () => null }))
-jest.mock('../store/modules/settings.js', () => ({ useSettingsStore: () => ({ getConfig: null }) }))
+jest.mock('../store/modules/settings.js', () => ({
+	useSettingsStore: () => ({ getConfig: null }),
+}))
 jest.mock('jszip', () => ({}))
 jest.mock('../store/store.js', () => ({}))
 jest.mock('../store/modules/anonymization.js', () => ({
@@ -63,16 +65,33 @@ jest.mock('../dialogs/ScopeRedactionDialog.vue', () => ({}))
 
 const regionList = FileViewerSidebar.computed.regionList
 
-const imageRow = { type: 'BSN', origin: 'image', boxes: [{ page: 1, x: 0.1, y: 0.1, w: 0.2, h: 0.1 }] }
+const imageRow = {
+	type: 'BSN',
+	origin: 'image',
+	boxes: [{ page: 1, x: 0.1, y: 0.1, w: 0.2, h: 0.1 }],
+}
 
 describe('FileViewerSidebar regionList', () => {
 	it('marks pages 3 to 5 of a stored range next to the image regions', () => {
 		const list = regionList.call({
 			entry: { viewMode: 'review', entities: [imageRow] },
-			scopeState: { decisions: [{ scope: 'pageRange', fromPage: 3, toPage: 5, bases: ['5.1.2.e'] }], pageCount: 7, pageScopesAvailable: true },
+			scopeState: {
+				decisions: [
+					{
+						scope: 'pageRange',
+						fromPage: 3,
+						toPage: 5,
+						bases: ['5.1.2.e'],
+					},
+				],
+				pageCount: 7,
+				pageScopesAvailable: true,
+			},
 		})
 		expect(list.filter((o) => o.scope !== true)).toHaveLength(1)
-		expect(list.filter((o) => o.scope === true).map((o) => o.page)).toEqual([3, 4, 5])
+		expect(list.filter((o) => o.scope === true).map((o) => o.page)).toEqual([
+			3, 4, 5,
+		])
 	})
 
 	it('marks nothing without decisions', () => {
@@ -84,8 +103,16 @@ describe('FileViewerSidebar regionList', () => {
 	})
 
 	it('draws no overlay on the anonymised view or without a document', () => {
-		const scopeState = { decisions: [{ scope: 'page', fromPage: 1 }], pageCount: 2 }
-		expect(regionList.call({ entry: { viewMode: 'anonymized', entities: [imageRow] }, scopeState })).toEqual([])
+		const scopeState = {
+			decisions: [{ scope: 'page', fromPage: 1 }],
+			pageCount: 2,
+		}
+		expect(
+			regionList.call({
+				entry: { viewMode: 'anonymized', entities: [imageRow] },
+				scopeState,
+			}),
+		).toEqual([])
 		expect(regionList.call({ entry: null, scopeState })).toEqual([])
 	})
 })
