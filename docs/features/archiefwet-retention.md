@@ -18,6 +18,11 @@ current in OpenRegister's object screens or through OpenRegister's
 selectielijst import (`POST /api/archival/selectielijst/import`). Filinq has
 no editor of its own for them.
 
+A fresh install seeds two placeholder rows: `TODO-3.2` (business
+correspondence, `vernietigen` after `P7Y`, the category `correspondence`
+names) and `TODO-2.1` (adopting by-laws, `bewaren`, no term). Their category
+numbers are not real ones; replace them as the production checklist says.
+
 The record types `correspondence`, `generatedDocument` and
 `publicationRecord` each name their category in their schema's `archive`
 block. OpenRegister derives each record's archive action date from it: from

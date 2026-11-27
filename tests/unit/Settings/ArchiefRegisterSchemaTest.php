@@ -292,6 +292,52 @@ class ArchiefRegisterSchemaTest extends TestCase {
 	}//end testTheDemoRowsValidate()
 
 	/**
+	 * The shipped register seeds the selectielijst: at least one kept and one
+	 * destroyed row, each accepted by the schema, each category a placeholder
+	 * that says so, a kept row without a term, and the category correspondence
+	 * points at present, so its retention can be stamped on a fresh install.
+	 *
+	 * @spec openspec/changes/archiefwet-retention-engine/tasks.md#task-1.2
+	 *
+	 * @return void
+	 */
+	public function testTheShippedSelectielijstSeedsAKeptAndADestroyedRow(): void {
+		$rows = array_values(
+			array_filter(
+				$this->register()['components']['objects'],
+				static fn (array $row): bool => ($row['@self']['schema'] ?? '') === 'selectielijstEntry'
+			)
+		);
+		$this->assertGreaterThanOrEqual(expected: 2, actual: count($rows));
+
+		$nominaties = [];
+		$categories = [];
+		foreach ($rows as $row) {
+			$this->assertSame(expected: 'filinq', actual: $row['@self']['register']);
+			$this->assertStringStartsWith(prefix: 'selectielijst-2020-', string: $row['@self']['slug']);
+			$this->assertStringStartsWith(prefix: 'TODO-', string: $row['categorie']);
+			$this->assertStringContainsString(needle: 'placeholder', haystack: $row['omschrijving']);
+			if ($row['archiefnominatie'] === 'bewaren') {
+				$this->assertArrayNotHasKey(key: 'bewaartermijn', array: $row);
+			}
+
+			$nominaties[] = $row['archiefnominatie'];
+			$categories[] = $row['categorie'];
+			unset($row['@self']);
+			$this->assertNull(actual: $this->violation(slug: 'selectielijstEntry', payload: $row));
+		}
+
+		$this->assertContains(needle: 'bewaren', haystack: $nominaties);
+		$this->assertContains(needle: 'vernietigen', haystack: $nominaties);
+		$this->assertSame(expected: count($categories), actual: count(array_unique($categories)));
+		$this->assertContains(
+			needle: $this->schema(slug: 'correspondence')['archive']['classification'],
+			haystack: $categories
+		);
+
+	}//end testTheShippedSelectielijstSeedsAKeptAndADestroyedRow()
+
+	/**
 	 * With an OpenRegister checkout beside the app, the import's own keys are
 	 * the ones the schema declares.
 	 *
