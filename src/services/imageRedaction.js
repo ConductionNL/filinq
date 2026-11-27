@@ -315,6 +315,39 @@ export function regionLabel(overlay) {
 }
 
 /**
+ * A page count as a positive integer, or null when it is unknown.
+ *
+ * @param {number|string} pageCount The page count.
+ * @return {number|null} The last page.
+ */
+function lastPage(pageCount) {
+	const last = Number(pageCount)
+	return Number.isInteger(last) && last > 0 ? last : null
+}
+
+/**
+ * The first and last page a scope decision covers, or null when it covers none.
+ *
+ * A whole-document decision covers every page, so it needs the page count.
+ * A range past the last page is cut at the last page.
+ *
+ * @param {object} decision The decision.
+ * @param {number|null} last The last page, null when unknown.
+ * @return {{from: number, to: number}|null} The covered pages.
+ */
+function coveredPages(decision, last) {
+	if (decision.scope === 'document') {
+		return last === null ? null : { from: 1, to: last }
+	}
+	const from = Number(decision.fromPage)
+	const to = decision.scope === 'page' ? from : Number(decision.toPage)
+	if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from) {
+		return null
+	}
+	return { from, to: last === null ? to : Math.min(to, last) }
+}
+
+/**
  * The page overlays of the scope decisions, so the preview marks every page
  * a page, page-range or whole-document decision covers.
  *
@@ -332,27 +365,15 @@ export function scopeOverlays(decisions, pageCount = 0) {
 	if (!Array.isArray(decisions)) {
 		return []
 	}
-	const last = Number.isInteger(Number(pageCount)) && Number(pageCount) > 0 ? Number(pageCount) : null
+	const last = lastPage(pageCount)
 	const marked = new Map()
 	for (const decision of decisions) {
-		if (!decision || SCOPES.includes(decision.scope) === false) {
-			continue
-		}
-		let from = Number(decision.fromPage)
-		let to = decision.scope === 'page' ? from : Number(decision.toPage)
-		if (decision.scope === 'document') {
-			if (last === null) {
-				continue
-			}
-			from = 1
-			to = last
-		}
-		if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from) {
+		const pages = decision && SCOPES.includes(decision.scope) ? coveredPages(decision, last) : null
+		if (pages === null) {
 			continue
 		}
 		const label = scopeLabel(decision)
-		const end = last === null ? to : Math.min(to, last)
-		for (let page = from; page <= end; page++) {
+		for (let page = pages.from; page <= pages.to; page++) {
 			if (!marked.has(page)) {
 				marked.set(page, { index: null, page, x: 0, y: 0, w: 1, h: 1, type: decision.scope, state: 'redact', scope: true, label })
 			}
