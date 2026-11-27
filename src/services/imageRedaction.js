@@ -304,9 +304,80 @@ export function regionOverlays(entities) {
  * @spec openspec/changes/image-redaction/tasks.md#task-4.1
  */
 export function regionLabel(overlay) {
+	if (overlay?.scope === true && overlay.label) {
+		return overlay.label
+	}
 	const type = overlay?.type || t('filinq', 'Unknown')
 	if (overlay?.state === 'keep') {
 		return t('filinq', 'Image region kept visible: {type}', { type })
 	}
 	return t('filinq', 'Image region to be redacted: {type}', { type })
+}
+
+/**
+ * A page count as a positive integer, or null when it is unknown.
+ *
+ * @param {number|string} pageCount The page count.
+ * @return {number|null} The last page.
+ */
+function lastPage(pageCount) {
+	const last = Number(pageCount)
+	return Number.isInteger(last) && last > 0 ? last : null
+}
+
+/**
+ * The first and last page a scope decision covers, or null when it covers none.
+ *
+ * A whole-document decision covers every page, so it needs the page count.
+ * A range past the last page is cut at the last page.
+ *
+ * @param {object} decision The decision.
+ * @param {number|null} last The last page, null when unknown.
+ * @return {{from: number, to: number}|null} The covered pages.
+ */
+function coveredPages(decision, last) {
+	if (decision.scope === 'document') {
+		return last === null ? null : { from: 1, to: last }
+	}
+	const from = Number(decision.fromPage)
+	const to = decision.scope === 'page' ? from : Number(decision.toPage)
+	if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from) {
+		return null
+	}
+	return { from, to: last === null ? to : Math.min(to, last) }
+}
+
+/**
+ * The page overlays of the scope decisions, so the preview marks every page
+ * a page, page-range or whole-document decision covers.
+ *
+ * Each covered page gets one full-page overlay labelled with its decision.
+ * A page outside the document, or a decision without valid pages, is left
+ * out: the decision row stays in the list, which is the source of truth.
+ * A whole-document decision marks every page when the page count is known.
+ *
+ * @param {Array<object>} decisions The stored scope decisions.
+ * @param {number} pageCount The document's page count, 0 when unknown.
+ * @return {Array<{index: null, page: number, x: number, y: number, w: number, h: number, type: string, state: string, scope: boolean, label: string}>} The overlays.
+ * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+ */
+export function scopeOverlays(decisions, pageCount = 0) {
+	if (!Array.isArray(decisions)) {
+		return []
+	}
+	const last = lastPage(pageCount)
+	const marked = new Map()
+	for (const decision of decisions) {
+		const pages = decision && SCOPES.includes(decision.scope) ? coveredPages(decision, last) : null
+		if (pages === null) {
+			continue
+		}
+		const label = scopeLabel(decision)
+		for (let page = pages.from; page <= pages.to; page++) {
+			if (!marked.has(page)) {
+				marked.set(page, { index: null, page, x: 0, y: 0, w: 1, h: 1, type: decision.scope, state: 'redact', scope: true, label })
+			}
+		}
+	}
+	return [...marked.values()].sort((a, b) => a.page - b.page)
 }

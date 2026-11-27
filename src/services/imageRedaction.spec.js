@@ -17,6 +17,7 @@ import {
 	regionLabel,
 	regionOverlays,
 	scopeLabel,
+	scopeOverlays,
 } from './imageRedaction.js'
 
 jest.mock('@nextcloud/axios', () => ({
@@ -204,5 +205,57 @@ describe('burnedRegionLine', () => {
 		expect(burnedRegionLine({ burnedRegionCount: 'many' })).toBeNull()
 		expect(burnedRegionLine({ burnedRegionCount: 2.5 })).toBeNull()
 		expect(burnedRegionLine({ burnedRegionCount: -1 })).toBeNull()
+	})
+})
+
+// @spec openspec/changes/image-redaction/tasks.md#task-6.3
+describe('scopeOverlays', () => {
+	it('marks each page of a page range with one full-page overlay', () => {
+		const overlays = scopeOverlays([{ scope: 'pageRange', fromPage: 3, toPage: 5, bases: ['5.1.2.e'] }], 7)
+		expect(overlays.map((o) => o.page)).toEqual([3, 4, 5])
+		for (const overlay of overlays) {
+			expect(overlay).toMatchObject({ x: 0, y: 0, w: 1, h: 1, state: 'redact', scope: true, index: null, label: 'Pages 3 to 5 redacted' })
+		}
+	})
+
+	it('marks one page for a page decision', () => {
+		expect(scopeOverlays([{ scope: 'page', fromPage: 2, toPage: 2 }], 4)).toEqual([
+			{ index: null, page: 2, x: 0, y: 0, w: 1, h: 1, type: 'page', state: 'redact', scope: true, label: 'Page 2 redacted' },
+		])
+	})
+
+	it('marks every page of a withheld document when the page count is known', () => {
+		expect(scopeOverlays([{ scope: 'document' }], 3).map((o) => o.page)).toEqual([1, 2, 3])
+		expect(scopeOverlays([{ scope: 'document' }], 0)).toEqual([])
+	})
+
+	it('marks a page once when decisions overlap, and keeps pages in order', () => {
+		const overlays = scopeOverlays([
+			{ scope: 'pageRange', fromPage: 4, toPage: 6 },
+			{ scope: 'page', fromPage: 2 },
+			{ scope: 'pageRange', fromPage: 5, toPage: 5 },
+		], 7)
+		expect(overlays.map((o) => o.page)).toEqual([2, 4, 5, 6])
+	})
+
+	it('leaves out pages past the last page and decisions without valid pages', () => {
+		expect(scopeOverlays([{ scope: 'pageRange', fromPage: 3, toPage: 9 }], 4).map((o) => o.page)).toEqual([3, 4])
+		expect(scopeOverlays([
+			{ scope: 'pageRange', fromPage: 5, toPage: 3 },
+			{ scope: 'page', fromPage: 0 },
+			{ scope: 'pageRange', fromPage: 'x', toPage: 2 },
+			{ scope: 'other', fromPage: 1, toPage: 1 },
+			null,
+		], 7)).toEqual([])
+		expect(scopeOverlays(null, 7)).toEqual([])
+	})
+
+	it('keeps a range as stored when the page count is unknown', () => {
+		expect(scopeOverlays([{ scope: 'pageRange', fromPage: 1, toPage: 2 }]).map((o) => o.page)).toEqual([1, 2])
+	})
+
+	it('labels a scope overlay with its decision', () => {
+		const [overlay] = scopeOverlays([{ scope: 'page', fromPage: 1 }], 1)
+		expect(regionLabel(overlay)).toBe('Page 1 redacted')
 	})
 })

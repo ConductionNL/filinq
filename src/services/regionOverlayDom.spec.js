@@ -61,3 +61,19 @@ describe('applyRegionOverlays', () => {
 		expect(applyRegionOverlays(layer, undefined, 1)).toBe(0)
 	})
 })
+
+// @spec openspec/changes/image-redaction/tasks.md#task-6.3
+describe('applyRegionOverlays with scope overlays', () => {
+	it('draws a full-page scope overlay named by its decision, not by an entity row', () => {
+		const layer = document.createElement('div')
+		const scope = [{ index: null, page: 3, x: 0, y: 0, w: 1, h: 1, type: 'pageRange', state: 'redact', scope: true, label: 'Pages 3 to 5 redacted' }]
+		expect(applyRegionOverlays(layer, scope, 3)).toBe(1)
+		const [element] = layer.children
+		expect(element.className).toBe('dd-region dd-region--redact')
+		expect(element.style.width).toBe('100%')
+		expect(element.style.height).toBe('100%')
+		expect(element.getAttribute('data-scope')).toBe('pageRange')
+		expect(element.hasAttribute('data-entity-index')).toBe(false)
+		expect(element.getAttribute('aria-label')).toBe('Pages 3 to 5 redacted')
+	})
+})
