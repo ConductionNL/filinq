@@ -16,9 +16,13 @@
 import { createApp, h, nextTick, reactive } from 'vue'
 import RecordLeafSidebar from './RecordLeafSidebar.vue'
 
+/** The registry snapshot the mocked useIntegrationRegistry() hands out. */
+const mockRegistry = { list: [] }
+
 jest.mock('@conduction/nextcloud-vue', () => {
-	const { h: render } = require('vue')
+	const { h: render, computed } = require('vue')
 	return {
+		useIntegrationRegistry: () => ({ integrations: computed(() => mockRegistry.list) }),
 		CnObjectSidebar: {
 			name: 'CnObjectSidebar',
 			props: ['open', 'useRegistry', 'objectType', 'objectId', 'objectData', 'register', 'schema', 'title', 'subtitle', 'hiddenTabs', 'requestedTab'],
@@ -80,6 +84,8 @@ function published(overrides = {}) {
 
 afterEach(() => {
 	document.body.innerHTML = ''
+	mockRegistry.list = []
+	delete window.OC
 })
 
 describe('RecordLeafSidebar', () => {
@@ -131,5 +137,36 @@ describe('RecordLeafSidebar', () => {
 		state.active = false
 		await nextTick()
 		expect(el.querySelector('.sidebar')).toBeNull()
+	})
+
+	describe('with apps absent (task 2.2)', () => {
+		const leaves = [
+			{ id: 'files', requiredApp: null },
+			{ id: 'email', requiredApp: 'mail' },
+			{ id: 'calendar', requiredApp: 'calendar' },
+			{ id: 'contacts', requiredApp: 'contacts' },
+			{ id: 'deck', requiredApp: 'deck' },
+		]
+
+		it('hides Mail, Calendar, Contacts and Deck when none of them is enabled, and still renders', () => {
+			mockRegistry.list = leaves
+			window.OC = { appswebroots: { files: '/apps/files', filinq: '/apps/filinq' } }
+			const sidebar = mount(published()).querySelector('.sidebar')
+			expect(sidebar).not.toBeNull()
+			expect(sidebar.dataset.hidden).toBe('email,calendar,contacts,deck')
+		})
+
+		it('keeps the leaves whose apps are enabled, after the tabs the page hides', () => {
+			mockRegistry.list = leaves
+			window.OC = { appswebroots: { mail: '/apps/mail', calendar: '/apps/calendar' } }
+			const sidebar = mount(published({ hiddenTabs: ['notes'] })).querySelector('.sidebar')
+			expect(sidebar.dataset.hidden).toBe('notes,contacts,deck')
+		})
+
+		it('hides no leaf when the page does not list its enabled apps', () => {
+			mockRegistry.list = leaves
+			const sidebar = mount(published()).querySelector('.sidebar')
+			expect(sidebar.dataset.hidden).toBe('')
+		})
 	})
 })

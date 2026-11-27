@@ -13,9 +13,11 @@
   renders the same sidebar from the same state, inside the slot.
 
   The tabs come from the integration registry (ADR-019): one per leaf an
-  installed app registered (Mail, Calendar, Contacts, Deck, Files…). A leaf
-  whose app is absent is simply not registered, so it is not shown — no
-  per-leaf check here, and no tab system of Filinq's own.
+  installed app registered (Mail, Calendar, Contacts, Deck, Files…). The
+  library registers its built-in leaves whether or not their app is enabled,
+  so a leaf whose app is absent is added to the hidden tabs here
+  (`hiddenLeafTabs()` in `src/services/leafAvailability.js`); the tab system
+  stays the library's.
 
   @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
 -->
@@ -31,13 +33,14 @@
 		:schema="state.schema"
 		:title="state.title"
 		:subtitle="state.subtitle"
-		:hiddenTabs="state.hiddenTabs || []"
+		:hiddenTabs="hiddenTabs"
 		:requestedTab="state.requestedTab"
 		@update:open="state.open = $event" />
 </template>
 
 <script>
-import { CnObjectSidebar } from '@conduction/nextcloud-vue'
+import { CnObjectSidebar, useIntegrationRegistry } from '@conduction/nextcloud-vue'
+import { enabledApps, hiddenLeafTabs } from '../services/leafAvailability.js'
 
 export default {
 	name: 'RecordLeafSidebar',
@@ -48,6 +51,17 @@ export default {
 		objectSidebarState: { default: null },
 	},
 
+	/**
+	 * The registry snapshot and the apps enabled for the user.
+	 *
+	 * @return {object}
+	 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
+	 */
+	setup() {
+		const { integrations } = useIntegrationRegistry()
+		return { integrations, enabled: enabledApps() }
+	},
+
 	computed: {
 		/**
 		 * The shared sidebar state CnAppRoot provides, or an empty one.
@@ -56,6 +70,16 @@ export default {
 		 */
 		state() {
 			return this.objectSidebarState || {}
+		},
+
+		/**
+		 * The page's hidden tabs plus every leaf whose app is absent.
+		 *
+		 * @return {string[]}
+		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
+		 */
+		hiddenTabs() {
+			return hiddenLeafTabs(this.state.hiddenTabs, this.integrations || [], this.enabled)
 		},
 
 		/**
