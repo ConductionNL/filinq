@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Filinq
-  version: 0.2.29-unstable.20261127001532
+  version: 0.2.30-unstable.20261127024526
   description: >-
     The JSON API of Filinq, document management for Nextcloud: anonymisation of
     documents and folders, signing, templates, archiving and retention, legal
