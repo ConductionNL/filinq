@@ -64,3 +64,4 @@ Thumbs.db
 
 # Agent work files. They belong in an issue or a PR, not in the tree.
 /task-audit.json
+/css/nextcloud-vue.css
