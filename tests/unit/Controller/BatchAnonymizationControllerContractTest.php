@@ -420,6 +420,30 @@ class BatchAnonymizationControllerContractTest extends TestCase {
 	}//end testBatchStatusReturnsNotFoundForUnknownBatch()
 
 	/**
+	 * The entities of an unknown batch answer 404 with the message in the
+	 * caller's language, as every other batch route does.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/redaction-at-scale/tasks.md#5-quality
+	 */
+	public function testBatchEntitiesOfAnUnknownBatchAnswersATranslatedNotFound(): void {
+		$this->l10n = $this->createMock(IL10N::class);
+		$this->l10n->method('t')->willReturnCallback(
+			static function (string $text): string {
+				return 'nl: '.$text;
+			}
+		);
+		$this->stateService->method('getBatch')->willReturn(null);
+
+		$response = $this->buildController($this->authenticatedSession())->batchEntities('missing');
+
+		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
+		$this->assertSame(['error' => 'nl: Batch not found'], $response->getData());
+
+	}//end testBatchEntitiesOfAnUnknownBatchAnswersATranslatedNotFound()
+
+	/**
 	 * An anonymous caller cannot poll batch status.
 	 *
 	 * @return void

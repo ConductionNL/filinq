@@ -4883,7 +4883,13 @@
         "No reason was given.": "Er is geen reden opgegeven.",
         "%1$s declined to sign %2$s": "%1$s heeft geweigerd %2$s te ondertekenen",
         "%1$s declined to sign %2$s. The reason given: %3$s": "%1$s heeft geweigerd %2$s te ondertekenen. De opgegeven reden: %3$s",
-        "a document": "een document"
+        "a document": "een document",
+        "Batch not found": "Batch niet gevonden",
+        "Batch size exceeds maximum": "Batchgrootte overschrijdt het maximum",
+        "No files uploaded": "Geen bestanden geüpload",
+        "No entities provided": "Geen entiteiten opgegeven",
+        "appendBasisSummary must be a boolean": "appendBasisSummary moet een boolean zijn",
+        "unredactedEntities must be an array": "unredactedEntities moet een array zijn"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }

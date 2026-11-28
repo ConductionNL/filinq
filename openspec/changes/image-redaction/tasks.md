@@ -36,7 +36,8 @@
   - Live-verify on Postgres (8080) with OpenRegister + an image-capable backend: upload scan → regions in workbench → burn → output has opaque region and no recoverable value.
   - Coverage measured (26 Nov 2026, pcov over the full unit suite on development 6f987cc): 1108 of 1167 statements, 94.9%, across the 13 lib files that carry this change's `@spec` tag; lowest `DocumentAnonymizeRunner` at 82.6%. The 75% figure is met; the burn-verification tests wait on task 3.1 and the born-digital page burn on openregister#11367.
 - [x] 5.2 Playwright spec `tests/e2e/spec-coverage/image-redaction.spec.ts` for the `@e2e`-referenced scenarios
-- [ ] 5.3 i18n EN + NL for all new UI strings (keys in English); nldesign theme check (ADR-005, ADR-003)
+- [x] 5.3 i18n EN + NL for all new UI strings (keys in English); nldesign theme check (ADR-005, ADR-003)
+  - Built (28 Nov 2026): every string of `imageRedaction.js`, `regionOverlayDom.js`, `ScopeRedactionDialog.vue` and the image parts of `FileViewerSidebar.vue` and `PdfViewer.vue` is in `l10n/en.json` and `l10n/nl.json` (`npm run test:l10n`); the server messages of `ScopeRedactionController`, `ScopeRedactionService` and `ImageRedactionService` are pinned by `ServerStringCatalogueTest`. Theme: the region overlays use `--color-error` and `--color-success` only (`.dd-region*` in `PdfViewer.vue`), which nldesign re-points; a browser pass with nldesign on belongs to the live run.
 - [ ] 5.4 Docs: `docs/features/image-redaction.md` with Playwright screenshots (overlays, SIGNATURE badge, degradation warnings, burned output) and the Filinq↔OpenRegister image division of labour (ADR-010)
 - [ ] 5.5 Validate: `openspec validate image-redaction --type change --strict` passes; hydra gates green
 

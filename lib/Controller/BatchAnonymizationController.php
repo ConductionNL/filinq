@@ -351,6 +351,7 @@ class BatchAnonymizationController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/anonymization-entity-review/spec.md#requirement-consolidated-entity-list-endpoint
+	 * @spec openspec/changes/redaction-at-scale/tasks.md#5-quality
 	 *
 	 * @no-admin-idor-exempt ownership is enforced one layer down. BatchStateService::getBatch() returns
 	 * null unless the batch's userId is the session user (admins excepted), and null answers 404.
@@ -363,7 +364,7 @@ class BatchAnonymizationController extends Controller {
 
 			$batch = $this->stateService->getBatch($batchId);
 			if ($batch === null) {
-				return new JSONResponse(['error' => 'Batch not found'], 404);
+				return new JSONResponse(['error' => $this->l10n->t('Batch not found')], 404);
 			}
 
 			if (in_array($batch['status'], ['extracting', 'review'], true) === false) {

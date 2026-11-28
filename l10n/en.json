@@ -4749,7 +4749,16 @@
         "No reason was given.": "No reason was given.",
         "%1$s declined to sign %2$s": "%1$s declined to sign %2$s",
         "%1$s declined to sign %2$s. The reason given: %3$s": "%1$s declined to sign %2$s. The reason given: %3$s",
-        "a document": "a document"
+        "a document": "a document",
+        "Batch not found": "Batch not found",
+        "Batch size exceeds maximum": "Batch size exceeds maximum",
+        "Extraction has not started": "Extraction has not started",
+        "No files uploaded": "No files uploaded",
+        "No entities provided": "No entities provided",
+        "appendBasisSummary must be a boolean": "appendBasisSummary must be a boolean",
+        "unredactedEntities must be an array": "unredactedEntities must be an array",
+        "Either folderId or folderPath must be provided": "Either folderId or folderPath must be provided",
+        "Provide only one of folderId or folderPath": "Provide only one of folderId or folderPath"
     },
     "pluralForm": "nplurals=2; plural=(n != 1);"
 }
