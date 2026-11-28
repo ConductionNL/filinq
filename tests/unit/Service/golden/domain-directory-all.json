@@ -1,0 +1,169 @@
+{
+    "two domains": {
+        "answer": {
+            "configured": true,
+            "reason": "",
+            "domains": [
+                {
+                    "id": "a",
+                    "naam": "Wonen"
+                },
+                {
+                    "naam": "Werk",
+                    "id": "b"
+                }
+            ]
+        },
+        "calls": [
+            [
+                {
+                    "@self": {
+                        "register": "domeinen",
+                        "schema": "domein"
+                    }
+                }
+            ]
+        ],
+        "logs": []
+    },
+    "rows without an id": {
+        "answer": {
+            "configured": true,
+            "reason": "",
+            "domains": [
+                {
+                    "id": "c"
+                }
+            ]
+        },
+        "calls": [
+            [
+                {
+                    "@self": {
+                        "register": "domeinen",
+                        "schema": "domein"
+                    }
+                }
+            ]
+        ],
+        "logs": []
+    },
+    "no domains": {
+        "answer": {
+            "configured": true,
+            "reason": "",
+            "domains": []
+        },
+        "calls": [
+            [
+                {
+                    "@self": {
+                        "register": "domeinen",
+                        "schema": "domein"
+                    }
+                }
+            ]
+        ],
+        "logs": []
+    },
+    "a scalar answer": {
+        "answer": {
+            "configured": true,
+            "reason": "",
+            "domains": []
+        },
+        "calls": [
+            [
+                {
+                    "@self": {
+                        "register": "domeinen",
+                        "schema": "domein"
+                    }
+                }
+            ]
+        ],
+        "logs": []
+    },
+    "the read fails": {
+        "answer": {
+            "configured": false,
+            "reason": "The domain register could not be read: register gone",
+            "domains": []
+        },
+        "calls": [
+            [
+                {
+                    "@self": {
+                        "register": "domeinen",
+                        "schema": "domein"
+                    }
+                }
+            ]
+        ],
+        "logs": [
+            [
+                "warning",
+                "filinq.domain-directory.read-refused",
+                {
+                    "register": "domeinen",
+                    "schema": "domein",
+                    "error": "register gone"
+                }
+            ]
+        ]
+    },
+    "no register": {
+        "answer": {
+            "configured": false,
+            "reason": "No domain register and schema are configured, so no folder was reconciled.",
+            "domains": []
+        },
+        "calls": [],
+        "logs": []
+    },
+    "no schema": {
+        "answer": {
+            "configured": false,
+            "reason": "No domain register and schema are configured, so no folder was reconciled.",
+            "domains": []
+        },
+        "calls": [],
+        "logs": []
+    },
+    "no owner": {
+        "answer": {
+            "configured": false,
+            "reason": "No owner is configured for the domain folders, so no folder was reconciled.",
+            "domains": []
+        },
+        "calls": [],
+        "logs": []
+    },
+    "nothing set": {
+        "answer": {
+            "configured": false,
+            "reason": "No domain register and schema are configured, so no folder was reconciled.",
+            "domains": []
+        },
+        "calls": [],
+        "logs": []
+    },
+    "an untrimmed schema": {
+        "answer": {
+            "configured": true,
+            "reason": "",
+            "domains": []
+        },
+        "calls": [
+            [
+                {
+                    "@self": {
+                        "register": "domeinen",
+                        "schema": "domein"
+                    }
+                }
+            ]
+        ],
+        "logs": []
+    }
+}

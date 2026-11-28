@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="template-detail">
 		<!-- Header bar -->
@@ -18,6 +22,27 @@
 					class="template-detail__lock-warning">
 					{{ t('filinq', 'Locked by {user}', { user: lockOwner }) }}
 				</span>
+				<NcButton
+					v-if="hasWizard"
+					variant="secondary"
+					data-testid="template-generate-with-wizard"
+					@click="openWizard">
+					{{ t('filinq', 'Generate with wizard') }}
+				</NcButton>
+				<span
+					v-if="isDraft"
+					class="template-detail__draft"
+					data-testid="template-draft-badge">
+					{{ t('filinq', 'Draft') }}
+				</span>
+				<NcButton
+					v-if="isDraft"
+					variant="secondary"
+					data-testid="template-publish"
+					:disabled="saving || (lockOwner && !isLockMine)"
+					@click="publishTemplate">
+					{{ t('filinq', 'Publish') }}
+				</NcButton>
 				<NcButton variant="secondary" :disabled="saving" @click="handleBack">
 					{{ t('filinq', 'Cancel') }}
 				</NcButton>
@@ -50,6 +75,22 @@
 				:class="[{ active: activeTab === 'versions' }]"
 				@click="loadVersions">
 				{{ t('filinq', 'Versions') }}
+			</button>
+			<button
+				v-if="!isNew"
+				class="template-detail__tab"
+				:class="[{ active: activeTab === 'wizard' }]"
+				data-testid="template-tab-wizard"
+				@click="activeTab = 'wizard'">
+				{{ t('filinq', 'Wizard') }}
+			</button>
+			<button
+				v-if="isOffice"
+				class="template-detail__tab"
+				:class="[{ active: activeTab === 'office' }]"
+				data-testid="template-tab-office"
+				@click="activeTab = 'office'">
+				{{ t('filinq', 'Word file') }}
 			</button>
 		</div>
 
@@ -85,106 +126,33 @@
 				<NcTextField
 					v-model="form.changelog"
 					:label="t('filinq', 'Change note (optional)')"
-					:placeholder="t('filinq', 'Describe what changed...')"
+					:placeholder="t('filinq', 'Describe what changed…')"
 					class="template-detail__field" />
 			</div>
 
-			<!-- WYSIWYG toolbar -->
-			<div class="template-detail__toolbar">
-				<button
-					type="button"
-					:title="t('filinq', 'Bold')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execFormat('bold')">
-					<strong>B</strong>
-				</button>
-				<button
-					type="button"
-					:title="t('filinq', 'Italic')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execFormat('italic')">
-					<em>I</em>
-				</button>
-				<button
-					type="button"
-					:title="t('filinq', 'Underline')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execFormat('underline')">
-					<u>U</u>
-				</button>
-				<span class="template-detail__toolbar-sep" />
-				<button
-					type="button"
-					:title="t('filinq', 'Heading 1')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execBlock('h1')">
-					H1
-				</button>
-				<button
-					type="button"
-					:title="t('filinq', 'Heading 2')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execBlock('h2')">
-					H2
-				</button>
-				<span class="template-detail__toolbar-sep" />
-				<button
-					type="button"
-					:title="t('filinq', 'Unordered list')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execFormat('insertUnorderedList')">
-					&#8226;&#8212;
-				</button>
-				<button
-					type="button"
-					:title="t('filinq', 'Ordered list')"
-					class="template-detail__toolbar-btn"
-					@mousedown.prevent="execFormat('insertOrderedList')">
-					1&#8212;
-				</button>
-				<span class="template-detail__toolbar-sep" />
-				<button
-					type="button"
-					:title="t('filinq', 'Insert merge field')"
-					class="template-detail__toolbar-btn"
-					@click="showMergeDialog = true">
-					{{ t('filinq', '{ }') }}
-				</button>
-				<button
-					type="button"
-					:title="t('filinq', 'Insert conditional section')"
-					class="template-detail__toolbar-btn"
-					@click="showConditionalDialog = true">
-					{{ t('filinq', 'if…') }}
-				</button>
-			</div>
-
-			<!-- Content-editable WYSIWYG area -->
-			<div
-				ref="editor"
-				class="template-detail__content-editor"
-				contenteditable="true"
-				:aria-label="t('filinq', 'Template content')"
-				@input="syncFromEditor"
-				v-html="editorHtml" />
-
-			<!-- Raw HTML toggle -->
-			<div class="template-detail__raw-toggle">
-				<button
-					type="button"
-					class="template-detail__raw-btn"
-					@click="showRaw = !showRaw">
-					{{
-						showRaw ? t('filinq', 'Hide HTML') : t('filinq', 'Edit HTML')
-					}}
-				</button>
-			</div>
-			<textarea
-				v-if="showRaw"
-				:value="form.content"
-				class="template-detail__raw-area"
-				:aria-label="t('filinq', 'Raw HTML')"
-				@input="syncFromRaw" />
+			<!-- The shared editing surface (generate-draft-and-attended-edit D7);
+			     merge field and condition are this page's own buttons. -->
+			<HtmlDocumentEditor
+				ref="htmlEditor"
+				v-model="form.content"
+				:aria-label="t('filinq', 'Template content')">
+				<template #toolbarExtra>
+					<button
+						type="button"
+						:title="t('filinq', 'Insert merge field')"
+						:aria-label="t('filinq', 'Insert merge field')"
+						@click="showMergeDialog = true">
+						{{ t('filinq', '{ }') }}
+					</button>
+					<button
+						type="button"
+						:title="t('filinq', 'Insert conditional section')"
+						:aria-label="t('filinq', 'Insert conditional section')"
+						@click="showConditionalDialog = true">
+						{{ t('filinq', 'if…') }}
+					</button>
+				</template>
+			</HtmlDocumentEditor>
 		</div>
 
 		<!-- PREVIEW TAB -->
@@ -203,7 +171,15 @@
 					:label="t('filinq', 'Sample data (JSON)')"
 					placeholder='{ "name": "Jan de Vries" }'
 					class="template-detail__field" />
+				<NcTextField
+					v-model="sampleListRefsJson"
+					:label="t('filinq', 'Related records for tables (listRefs, JSON)')"
+					placeholder='[{ "register": "zaken", "schema": "besluit", "as": "besluiten" }]'
+					class="template-detail__field" />
 			</div>
+			<TemplateLintChecklist
+				v-if="!previewLoading && previewHtml"
+				:lint="previewLint" />
 			<NcLoadingIcon v-if="previewLoading" />
 			<div v-else-if="previewError" class="template-detail__error">
 				{{ previewError }}
@@ -212,7 +188,7 @@
 			<div
 				v-else-if="previewHtml"
 				class="template-detail__preview-output"
-				v-html="previewHtml" />
+				v-html="safePreviewHtml" />
 			<NcEmptyContent
 				v-else
 				:name="t('filinq', 'No preview yet')"
@@ -259,6 +235,21 @@
 			</table>
 		</div>
 
+		<!-- WIZARD TAB -->
+		<WizardAuthoringPanel
+			v-else-if="activeTab === 'wizard'"
+			:templateId="templateStore.templateItem.id"
+			:templateName="form.name"
+			:readOnly="Boolean(lockOwner && !isLockMine)"
+			@saved="onWizardSaved" />
+
+		<!-- OFFICE TAB: the Word file, its merge tags and field mapping (office-template-authoring) -->
+		<OfficeTemplatePanel
+			v-else-if="activeTab === 'office'"
+			:template="templateStore.templateItem"
+			:readOnly="Boolean(lockOwner && !isLockMine)"
+			@updated="onOfficeUpdated" />
+
 		<!-- Dialogs (extracted per ADR-004) -->
 		<MergeFieldDialog
 			v-if="showMergeDialog"
@@ -270,26 +261,57 @@
 			@close="showConditionalDialog = false"
 			@insert="insertConditionalSection" />
 
-		<ConfirmRestoreVersionDialog
+		<CnConfirmDialog
 			v-if="restoreTarget"
-			:versionNumber="restoreTarget ? restoreTarget.version : 0"
+			:dialogTitle="t('filinq', 'Restore version')"
+			:message="restoreMessage"
+			:confirmLabel="t('filinq', 'Restore')"
 			@confirm="executeRestore"
-			@cancel="restoreTarget = null" />
+			@close="restoreTarget = null" />
 	</div>
 </template>
 
 <script>
-import {
-	NcButton,
-	NcEmptyContent,
-	NcLoadingIcon,
-	NcTextField,
-} from '@conduction/nextcloud-vue'
+import { CnConfirmDialog } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
+import { NcButton, NcEmptyContent, NcLoadingIcon, NcTextField } from '@nextcloud/vue'
+import HtmlDocumentEditor from '../../components/HtmlDocumentEditor.vue'
+import TemplateLintChecklist from '../../components/TemplateLintChecklist.vue'
+import OfficeTemplatePanel from '../../components/templates/OfficeTemplatePanel.vue'
 import ConditionalSectionDialog from '../../dialogs/ConditionalSectionDialog.vue'
-import ConfirmRestoreVersionDialog from '../../dialogs/ConfirmRestoreVersionDialog.vue'
 import MergeFieldDialog from '../../dialogs/MergeFieldDialog.vue'
+import WizardAuthoringPanel from './WizardAuthoringPanel.vue'
+import { loadTemplateWizard } from '../../services/wizard.js'
 import { useTemplateStore } from '../../store/modules/template.js'
+import { sanitizeHtml } from '../../utils/sanitizeHtml.js'
+
+/**
+ * The editor form's defaults for the fields a stored template fills.
+ */
+const TEMPLATE_FORM_DEFAULTS = Object.freeze({
+	name: '',
+	namespace: '',
+	description: '',
+	content: '',
+	category: '',
+	format: 'A4',
+	orientation: 'P',
+})
+
+/**
+ * The editor form fields of a stored template, each falling back to its default.
+ *
+ * @param {object} tmpl The stored template.
+ * @return {object} The form fields, tags joined for the tags input.
+ */
+function templateFormFields(tmpl) {
+	const fields = {}
+	for (const [key, fallback] of Object.entries(TEMPLATE_FORM_DEFAULTS)) {
+		fields[key] = tmpl[key] || fallback
+	}
+	fields.tagsInput = (tmpl.tags || []).join(', ')
+	return fields
+}
 
 export default {
 	name: 'TemplateDetail',
@@ -299,8 +321,12 @@ export default {
 		NcLoadingIcon,
 		NcTextField,
 		ConditionalSectionDialog,
+		HtmlDocumentEditor,
 		MergeFieldDialog,
-		ConfirmRestoreVersionDialog,
+		CnConfirmDialog,
+		TemplateLintChecklist,
+		WizardAuthoringPanel,
+		OfficeTemplatePanel,
 	},
 
 	data() {
@@ -318,14 +344,13 @@ export default {
 				orientation: 'P',
 			},
 
-			// WYSIWYG
-			editorHtml: '',
-			showRaw: false,
 			// Preview
 			previewLoading: false,
 			previewHtml: '',
+			previewLint: [],
 			previewError: '',
 			sampleDataJson: '{}',
+			sampleListRefsJson: '',
 			// Versions
 			versions: [],
 			versionsLoading: false,
@@ -337,10 +362,36 @@ export default {
 			showMergeDialog: false,
 			showConditionalDialog: false,
 			restoreTarget: null,
+			// Guided document wizard: whether the template has an active one
+			hasWizard: false,
 		}
 	},
 
 	computed: {
+		/**
+		 * Question of the restore dialog, naming the template version.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-6
+		 */
+		restoreMessage() {
+			const n = this.restoreTarget?.version
+			return t(
+				'filinq',
+				'Restore to version {n}? The current state will be saved as a new version first.',
+				{ n },
+			)
+		},
+
+		/**
+		 * The rendered preview, sanitised before it is mounted.
+		 *
+		 * @return {string}
+		 */
+		safePreviewHtml() {
+			return sanitizeHtml(this.previewHtml)
+		},
+
 		/**
 		 * Pinia template store accessor for the detail editor.
 		 *
@@ -350,8 +401,28 @@ export default {
 			return useTemplateStore()
 		},
 
+		/**
+		 * Whether the template is on a draft version users are not offered.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-4.2
+		 */
+		isDraft() {
+			return !this.isNew && this.templateStore.templateItem?.status === 'draft'
+		},
+
 		isNew() {
 			return this.templateStore.templateItem === null
+		},
+
+		/**
+		 * Whether this is an office (Word) template rather than a Twig one.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/office-template-authoring/spec.md
+		 */
+		isOffice() {
+			return this.templateStore.templateItem?.templateType === 'office'
 		},
 
 		isLockMine() {
@@ -374,24 +445,15 @@ export default {
 	 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
 	 */
 	async mounted() {
+		await this.loadRoutedTemplate()
+
 		if (!this.isNew) {
 			const tmpl = this.templateStore.templateItem
-			this.form.name = tmpl.name || ''
-			this.form.namespace = tmpl.namespace || ''
-			this.form.description = tmpl.description || ''
-			this.form.content = tmpl.content || ''
-			this.form.category = tmpl.category || ''
-			this.form.tagsInput = (tmpl.tags || []).join(', ')
-			this.form.format = tmpl.format || 'A4'
-			this.form.orientation = tmpl.orientation || 'P'
-			this.editorHtml = tmpl.content || ''
+			Object.assign(this.form, templateFormFields(tmpl))
 			this.lockOwner = tmpl.lockedBy || null
 
-			// Acquire lock.
-			const locked = await this.templateStore.acquireLock(tmpl.id)
-			if (locked) {
-				this.lockOwner = locked.lockedBy || null
-			}
+			await this.acquireTemplateLock(tmpl.id)
+			await this.loadWizardPresence(tmpl.id)
 		}
 	},
 
@@ -400,7 +462,82 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Opened by URL (the Templates index links here): load the template
+		 * the route names, so the Versions and Wizard tabs can render.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
+		async loadRoutedTemplate() {
+			const routeId = this.$route?.params?.id
+			if (
+				routeId
+				&& routeId !== 'new'
+				&& this.templateStore.templateItem?.id !== routeId
+			) {
+				await this.templateStore.fetchTemplate(routeId)
+			}
+		},
+
+		/**
+		 * Take the template's edit lock and show who holds it.
+		 *
+		 * @param {string} templateId The template.
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
+		 */
+		async acquireTemplateLock(templateId) {
+			const locked = await this.templateStore.acquireLock(templateId)
+			if (locked) {
+				this.lockOwner = locked.lockedBy || null
+			}
+		},
+
+		/**
+		 * Note whether the template has an active guided wizard.
+		 *
+		 * @param {string} templateId The template.
+		 * @return {Promise<void>}
+		 */
+		async loadWizardPresence(templateId) {
+			const wizard = await loadTemplateWizard(templateId)
+			this.hasWizard = wizard.ok && Boolean(wizard.data?.wizard)
+		},
+
 		t,
+		/**
+		 * Open the wizard runner for this template.
+		 *
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
+		 */
+		openWizard() {
+			this.$router.push({
+				name: 'WizardRunner',
+				params: { id: this.templateStore.templateItem.id },
+			})
+		},
+
+		/**
+		 * Keep the Generate with wizard button in step with the Wizard tab.
+		 *
+		 * @param {object|null} wizard The saved wizard, or null after a delete.
+		 * @spec openspec/changes/archive/2026-10-01-guided-document-wizard/tasks.md#4-3
+		 */
+		onWizardSaved(wizard) {
+			this.hasWizard = Boolean(wizard) && wizard.active !== false
+		},
+
+		/**
+		 * Reload the template after its Word file or field mapping changed.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-11-25-office-template-authoring/specs/template-management/spec.md
+		 */
+		async onOfficeUpdated() {
+			await this.templateStore.fetchTemplate(this.templateStore.templateItem.id)
+		},
+
 		/**
 		 * Release any held lock and navigate back to the template list.
 		 *
@@ -424,50 +561,6 @@ export default {
 		},
 
 		/**
-		 * Apply an inline formatting command in the WYSIWYG editor.
-		 *
-		 * @param cmd
-		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
-		 */
-		execFormat(cmd) {
-			document.execCommand(cmd, false, null)
-			this.syncFromEditor()
-		},
-
-		/**
-		 * Apply a block-level format (heading) in the WYSIWYG editor.
-		 *
-		 * @param tag
-		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
-		 */
-		execBlock(tag) {
-			document.execCommand('formatBlock', false, tag)
-			this.syncFromEditor()
-		},
-
-		/**
-		 * Sync the form content from the WYSIWYG editor's HTML.
-		 *
-		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
-		 */
-		syncFromEditor() {
-			if (this.$refs.editor) {
-				this.form.content = this.$refs.editor.innerHTML
-			}
-		},
-
-		/**
-		 * Sync the form content from the raw HTML textarea.
-		 *
-		 * @param event
-		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
-		 */
-		syncFromRaw(event) {
-			this.form.content = event.target.value
-			this.editorHtml = event.target.value
-		},
-
-		/**
 		 * Render a live preview of the current template content with sample data.
 		 *
 		 * @spec openspec/changes/advanced-template-management/tasks.md#task-7
@@ -482,11 +575,24 @@ export default {
 			} catch {
 				// Ignore JSON parse error; use empty data.
 			}
+			let listRefs = []
+			if (this.sampleListRefsJson.trim() !== '') {
+				try {
+					listRefs = JSON.parse(this.sampleListRefsJson)
+				} catch {
+					this.previewError = t('filinq', 'The related records are not valid JSON.')
+					this.previewLoading = false
+					return
+				}
+			}
 			try {
-				this.previewHtml = await this.templateStore.previewTemplate(
+				const preview = await this.templateStore.previewTemplate(
 					this.form.content,
 					sampleData,
+					listRefs,
 				)
+				this.previewHtml = preview?.html || ''
+				this.previewLint = preview?.lint || []
 			} catch (err) {
 				this.previewError = err.message || t('filinq', 'Preview failed')
 			} finally {
@@ -536,7 +642,6 @@ export default {
 			)
 			if (result) {
 				this.form.content = result.content || ''
-				this.editorHtml = result.content || ''
 				this.activeTab = 'edit'
 			}
 		},
@@ -581,6 +686,23 @@ export default {
 		},
 
 		/**
+		 * Publish the version the template is on, so users may generate from it.
+		 *
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-4.2
+		 */
+		async publishTemplate() {
+			this.saving = true
+			try {
+				const published = await this.templateStore.publishTemplate(this.templateStore.templateItem.id)
+				if (published) {
+					this.templateStore.templateItem = { ...this.templateStore.templateItem, ...published }
+				}
+			} finally {
+				this.saving = false
+			}
+		},
+
+		/**
 		 * Insert a merge-field token at the cursor in the editor.
 		 *
 		 * @param fieldName
@@ -589,7 +711,7 @@ export default {
 		insertMergeField(fieldName) {
 			const token = `{{ ${fieldName} }}`
 			document.execCommand('insertText', false, token)
-			this.syncFromEditor()
+			this.$refs.htmlEditor?.sync()
 		},
 
 		/**
@@ -609,7 +731,7 @@ export default {
 					: ''
 			const html = `<div ${opAttr}${valAttr}>{{ ${field} }}</div>`
 			document.execCommand('insertHTML', false, html)
-			this.syncFromEditor()
+			this.$refs.htmlEditor?.sync()
 		},
 	},
 }
@@ -646,6 +768,14 @@ export default {
 	font-size: 13px;
 }
 
+.template-detail__draft {
+	color: var(--color-text-maxcontrast);
+	border: 1px solid var(--color-border-dark);
+	border-radius: var(--border-radius-pill);
+	padding: 2px 8px;
+	font-size: 13px;
+}
+
 .template-detail__tabs {
 	display: flex;
 	gap: 4px;
@@ -678,79 +808,6 @@ export default {
 
 .template-detail__field {
 	width: 100%;
-}
-
-.template-detail__toolbar {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 4px;
-	padding: 6px 8px;
-	background: var(--color-background-dark);
-	border: 1px solid var(--color-border);
-	border-bottom: none;
-	border-radius: 4px 4px 0 0;
-}
-
-.template-detail__toolbar-btn {
-	background: var(--color-main-background);
-	border: 1px solid var(--color-border);
-	border-radius: 4px;
-	padding: 2px 8px;
-	cursor: pointer;
-	min-width: 30px;
-}
-
-.template-detail__toolbar-btn:hover {
-	background: var(--color-background-hover);
-}
-
-.template-detail__toolbar-sep {
-	width: 1px;
-	background: var(--color-border);
-	margin: 0 4px;
-}
-
-.template-detail__content-editor {
-	min-height: 300px;
-	max-height: 500px;
-	overflow-y: auto;
-	border: 1px solid var(--color-border);
-	border-radius: 0 0 4px 4px;
-	padding: 12px;
-	background: var(--color-main-background);
-	font-family: inherit;
-	outline: none;
-	line-height: 1.5;
-}
-
-.template-detail__content-editor:focus {
-	border-color: var(--color-primary);
-}
-
-.template-detail__raw-toggle {
-	margin-top: 8px;
-}
-
-.template-detail__raw-btn {
-	background: none;
-	border: none;
-	color: var(--color-primary);
-	cursor: pointer;
-	text-decoration: underline;
-	font-size: 13px;
-	padding: 0;
-}
-
-.template-detail__raw-area {
-	width: 100%;
-	height: 200px;
-	font-family: monospace;
-	font-size: 13px;
-	margin-top: 8px;
-	padding: 8px;
-	border: 1px solid var(--color-border);
-	border-radius: 4px;
-	box-sizing: border-box;
 }
 
 .template-detail__preview-header {

@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\Pdfa3ConversionController;
+use OCA\Filinq\Controller\Support\ControllerFeedback;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
 use OCA\Filinq\Service\Pdfa3ConversionService;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -103,10 +104,9 @@ class Pdfa3ConversionControllerTest extends TestCase {
 		$this->controller = new Pdfa3ConversionController(
 			'filinq',
 			$this->mockRequest,
-			$mockLogger,
+			new ControllerFeedback(l10n: $mockL10n, logger: $mockLogger),
 			$this->mockService,
 			$this->mockRootFolder,
-			$mockL10n,
 			$this->mockUserSession
 		);
 
@@ -177,6 +177,7 @@ class Pdfa3ConversionControllerTest extends TestCase {
 				'checksumSha256' => str_repeat('b', 64),
 				'pages' => 3,
 				'conformance' => '3-B',
+				'verified' => 'false',
 			]
 		);
 
@@ -187,6 +188,8 @@ class Pdfa3ConversionControllerTest extends TestCase {
 		$this->assertEquals(str_repeat('b', 64), $headers['X-Docudesk-Pdfa3-Checksum-Sha256']);
 		$this->assertEquals('3', $headers['X-Docudesk-Pdfa3-Pages']);
 		$this->assertEquals('3-B', $headers['X-Docudesk-Pdfa3-Conformance']);
+		// veraPDF's verdict rides beside the claim, so a caller can tell them apart.
+		$this->assertSame('false', $headers['X-Docudesk-Pdfa3-Verified']);
 
 	}//end testConvertReturnsDownloadWithCompositionHeadersOnSuccess()
 
@@ -229,4 +232,140 @@ class Pdfa3ConversionControllerTest extends TestCase {
 		$this->assertNotEmpty($result->getData()['adminHint']);
 
 	}//end testConvertMapsPdfa3ExceptionToTypedErrorResponse()
+
+	/**
+	 * Test convert answers a refusal whose code is outside the HTTP error
+	 * range with 500, carrying the exact message, reason and admin hint.
+	 *
+	 * @return void
+	 */
+	public function testConvertClampsAnOutOfRangeRefusalTo500(): void {
+		$this->mockRequest->method('getParam')
+			->willReturnMap(
+				[
+					['fileId', 0, 42],
+					['metadata', [], []],
+					['attachments', [], []],
+					['filename', 'document-pdfa3.pdf', 'document-pdfa3.pdf'],
+				]
+			);
+
+		$mockUserFolder = $this->createMock(Folder::class);
+		$mockUserFolder->method('getById')->with(42)->willReturn([$this->createMock(File::class)]);
+		$this->mockRootFolder->method('getUserFolder')->with('testuser')->willReturn($mockUserFolder);
+
+		$this->mockService->method('convertExistingPdf')->willThrowException(
+			new Pdfa3ConversionException(reason: 'render_failed', message: 'x', adminHint: 'h', code: 600)
+		);
+
+		$result = $this->controller->convert();
+
+		$this->assertSame(500, $result->getStatus());
+		$this->assertSame(['error' => 'x', 'reason' => 'render_failed', 'adminHint' => 'h'], $result->getData());
+
+	}//end testConvertClampsAnOutOfRangeRefusalTo500()
+	/**
+	 * Test convert returns 401 when nobody is signed in.
+	 *
+	 * @return void
+	 */
+	public function testConvertReturns401WhenNotAuthenticated(): void {
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$l10n = $this->createMock(originalClassName: IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+		$controller = new Pdfa3ConversionController(
+			feedback: new ControllerFeedback(l10n: $l10n, logger: $this->createMock(originalClassName: LoggerInterface::class)),
+			appName: 'filinq',
+			request: $this->mockRequest,
+			service: $this->mockService,
+			rootFolder: $this->mockRootFolder,
+			userSession: $session
+		);
+
+		$result = $controller->convert();
+
+		$this->assertSame(expected: 401, actual: $result->getStatus());
+		$this->assertSame(expected: ['error' => 'Not authenticated'], actual: $result->getData());
+
+	}//end testConvertReturns401WhenNotAuthenticated()
+
+	/**
+	 * Test convert returns 404 when the id resolves to a folder, not a file.
+	 *
+	 * @return void
+	 */
+	public function testConvertReturns404WhenTheNodeIsNoFile(): void {
+		$this->mockRequest->method('getParam')->willReturnMap([['fileId', 0, '42']]);
+		$mockUserFolder = $this->createMock(originalClassName: Folder::class);
+		$mockUserFolder->method('getById')->willReturn([$this->createMock(originalClassName: Folder::class)]);
+		$this->mockRootFolder->method('getUserFolder')->willReturn($mockUserFolder);
+
+		$result = $this->controller->convert();
+
+		$this->assertSame(expected: 404, actual: $result->getStatus());
+		$this->assertSame(expected: ['error' => 'File not found'], actual: $result->getData());
+
+	}//end testConvertReturns404WhenTheNodeIsNoFile()
+
+	/**
+	 * Test convert falls back to empty metadata and attachments, the default
+	 * file name and an unverified claim.
+	 *
+	 * @return void
+	 */
+	public function testConvertUsesTheDefaultsForMissingOrInvalidParameters(): void {
+		$this->mockRequest->method('getParam')
+			->willReturnMap(
+				[
+					['fileId', 0, 42],
+					['metadata', [], 'not-an-array'],
+					['attachments', [], 'not-an-array'],
+					['filename', 'document-pdfa3.pdf', 'document-pdfa3.pdf'],
+				]
+			);
+		$mockFile = $this->createMock(originalClassName: File::class);
+		$mockUserFolder = $this->createMock(originalClassName: Folder::class);
+		$mockUserFolder->method('getById')->willReturn([$mockFile]);
+		$this->mockRootFolder->method('getUserFolder')->willReturn($mockUserFolder);
+
+		$this->mockService->expects($this->once())->method('convertExistingPdf')
+			->with($mockFile, [], [])
+			->willReturn(
+				[
+					'content' => '%PDF',
+					'checksumSha256' => 'abc',
+					'pages' => 1,
+					'conformance' => '3-B',
+				]
+			);
+
+		$result = $this->controller->convert();
+
+		$this->assertInstanceOf(expected: DataDownloadResponse::class, actual: $result);
+		$headers = $result->getHeaders();
+		$this->assertSame(expected: 'skipped', actual: $headers['X-Docudesk-Pdfa3-Verified']);
+		$this->assertSame(expected: 'application/pdf', actual: $headers['Content-Type']);
+		$this->assertStringContainsString(needle: 'document-pdfa3.pdf', haystack: $headers['Content-Disposition']);
+
+	}//end testConvertUsesTheDefaultsForMissingOrInvalidParameters()
+
+	/**
+	 * Test convert answers 500 with a generic message on an unexpected failure.
+	 *
+	 * @return void
+	 */
+	public function testConvertReturns500OnAnUnexpectedFailure(): void {
+		$this->mockRequest->method('getParam')->willReturnMap([['fileId', 0, 42]]);
+		$mockUserFolder = $this->createMock(originalClassName: Folder::class);
+		$mockUserFolder->method('getById')->willReturn([$this->createMock(originalClassName: File::class)]);
+		$this->mockRootFolder->method('getUserFolder')->willReturn($mockUserFolder);
+		$this->mockService->method('convertExistingPdf')->willThrowException(new \RuntimeException(message: 'gs crashed'));
+
+		$result = $this->controller->convert();
+
+		$this->assertSame(expected: 500, actual: $result->getStatus());
+		$this->assertSame(expected: ['error' => 'PDF/A-3 conversion failed'], actual: $result->getData());
+
+	}//end testConvertReturns500OnAnUnexpectedFailure()
 }//end class

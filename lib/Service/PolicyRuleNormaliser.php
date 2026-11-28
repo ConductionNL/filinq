@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Support\LanguageMapText;
 use DateTimeImmutable;
 use Exception;
 
@@ -90,9 +91,39 @@ class PolicyRuleNormaliser {
 			'primaryName' => $this->flattenTranslatable(
 				value: ($object['primaryName'] ?? $object['entityText'] ?? '')
 			),
+			'bases' => $this->basesOf(object: $object),
 		];
 
 	}//end normaliseRule()
+
+	/**
+	 * The rule's grondslag slugs: the string entries of an optional `bases` array.
+	 *
+	 * Rules stored before `bases` existed have no such key and yield an empty list,
+	 * so they keep matching exactly as before.
+	 *
+	 * @param array<string, mixed> $object Raw object data.
+	 *
+	 * @return list<string> The grondslag slugs, in stored order.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.1
+	 */
+	private function basesOf(array $object): array {
+		$bases = ($object['bases'] ?? null);
+		if (is_array($bases) === false) {
+			return [];
+		}
+
+		$slugs = [];
+		foreach ($bases as $base) {
+			if (is_string($base) === true && $base !== '') {
+				$slugs[] = $base;
+			}
+		}
+
+		return $slugs;
+
+	}//end basesOf()
 
 	/**
 	 * Reduce a possibly language-keyed value to a single display string.
@@ -126,23 +157,7 @@ class PolicyRuleNormaliser {
 	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	private function flattenTranslatable(mixed $value): string {
-		if (is_array($value) === false) {
-			return (string)$value;
-		}
-
-		foreach (['nl', 'en'] as $language) {
-			if (isset($value[$language]) === true && is_scalar($value[$language]) === true) {
-				return (string)$value[$language];
-			}
-		}
-
-		foreach ($value as $candidate) {
-			if (is_scalar($candidate) === true && (string)$candidate !== '') {
-				return (string)$candidate;
-			}
-		}
-
-		return '';
+		return (new LanguageMapText())->text(value: $value);
 	}//end flattenTranslatable()
 
 	/**
@@ -213,8 +228,10 @@ class PolicyRuleNormaliser {
 	 * @param string $value The raw value (may be empty).
 	 *
 	 * @return DateTimeImmutable|null The parsed instant, or null.
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
-	private function parseDateTime(string $value): ?DateTimeImmutable {
+	public function parseDateTime(string $value): ?DateTimeImmutable {
 		if ($value === '') {
 			return null;
 		}

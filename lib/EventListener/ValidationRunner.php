@@ -28,8 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\EventListener;
 
-use OCA\Filinq\Service\DocumentValidationService;
-use OCA\Filinq\Service\MetadataService;
+use OCA\Filinq\Kernel\Contracts\DocumentValidationServiceInterface;
+use OCA\Filinq\Kernel\Contracts\MetadataServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCP\EventDispatcher\Event;
@@ -51,6 +51,14 @@ use Throwable;
  * @spec openspec/specs/document-validation-checks/spec.md
  */
 class ValidationRunner {
+
+	/**
+	 * OpenRegister's schema mapper, named by string because OpenRegister is optional at runtime.
+	 *
+	 * @var string
+	 */
+	private const SCHEMA_MAPPER = 'OCA\\OpenRegister\\Db\\SchemaMapper';
+
 	/**
 	 * Constructor.
 	 *
@@ -71,7 +79,7 @@ class ValidationRunner {
 	 * debug level and swallowed, so the fallback can never break the event flow.
 	 *
 	 * @param Event $event The dispatched OpenRegister event.
-	 * @param MetadataService $metadataService The metadata save path.
+	 * @param MetadataServiceInterface $metadataService The metadata save path.
 	 * @param LoggerInterface $logger Logger.
 	 *
 	 * @return void
@@ -79,7 +87,7 @@ class ValidationRunner {
 	 * @psalm-suppress TypeDoesNotContainType OpenRegister is an optional dep; event classes may not be loaded.
 	 * @spec           openspec/specs/document-validation-checks/spec.md
 	 */
-	public function runFallbackForEvent(Event $event, MetadataService $metadataService, LoggerInterface $logger): void {
+	public function runFallbackForEvent(Event $event, MetadataServiceInterface $metadataService, LoggerInterface $logger): void {
 		$object = null;
 		if ($event instanceof ObjectCreatedEvent) {
 			$object = $event->getObject();
@@ -87,18 +95,20 @@ class ValidationRunner {
 			$object = $event->getNewObject();
 		}
 
-		if ($object === null) {
+		if ($object === null || $this->schemaHoldsNoVerdict(object: $object) === true) {
 			return;
 		}
 
 		try {
 			$this->validateObject(
 				object: $object,
-				validationService: $this->container->get(DocumentValidationService::class),
-				metadataService: $metadataService,
-				rootFolder: $this->container->get(IRootFolder::class),
-				logger: $logger,
-				logContext: 'validation fallback'
+				context: new ValidationFallbackContext(
+					validationService: $this->container->get(DocumentValidationServiceInterface::class),
+					metadataService: $metadataService,
+					rootFolder: $this->container->get(IRootFolder::class),
+					logger: $logger,
+					logContext: 'validation fallback'
+				)
 			);
 		} catch (Throwable $e) {
 			$logger->debug('Filinq: validation fallback skipped: ' . $e->getMessage());
@@ -107,53 +117,66 @@ class ValidationRunner {
 	}//end runFallbackForEvent()
 
 	/**
+	 * Whether the object's schema declares no `validationStatus`, so a verdict has nowhere to go.
+	 *
+	 * Only the document schemas declare the verdict (`generatedDocument`). Any
+	 * other object that names a `fileId` (a Flow operation run, an intake
+	 * record) was validated as well, and OpenRegister dropped the two fields
+	 * on every such write with a warning (seen live, Flow runs). When the
+	 * schema cannot be read the fallback runs as before.
+	 *
+	 * @param mixed $object The OpenRegister object.
+	 *
+	 * @return bool True when the schema is known and declares no verdict.
+	 *
+	 * @spec openspec/specs/document-validation-checks/spec.md
+	 */
+	private function schemaHoldsNoVerdict(mixed $object): bool {
+		$schemaId = '';
+		if (method_exists($object, 'getSchema') === true) {
+			$schemaId = (string) ($object->getSchema() ?? '');
+		}
+
+		if ($schemaId === '') {
+			return false;
+		}
+
+		try {
+			$schema = $this->container->get(self::SCHEMA_MAPPER)->find(id: $schemaId);
+			$properties = $schema->getProperties();
+		} catch (Throwable) {
+			return false;
+		}
+
+		return array_key_exists('validationStatus', (array) $properties) === false;
+
+	}//end schemaHoldsNoVerdict()
+
+	/**
 	 * Compute + store the validation verdict for an OpenRegister object.
 	 *
 	 * Resolves the object's `fileId` to a NC file, runs the validation service,
 	 * and persists `validationStatus` + `validationFindings` via the existing
 	 * metadata save path. Best-effort: failures are logged, never thrown.
 	 *
-	 * @param mixed $object The OpenRegister object.
-	 * @param DocumentValidationService $validationService The validation service.
-	 * @param MetadataService $metadataService The metadata save path.
-	 * @param IRootFolder $rootFolder Root folder for file access.
-	 * @param LoggerInterface $logger Logger.
-	 * @param string $logContext Log context.
+	 * @param mixed                     $object  The OpenRegister object.
+	 * @param ValidationFallbackContext $context The services and the log context.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/specs/document-validation-checks/spec.md
 	 */
-	public function validateObject(
-		mixed $object,
-		DocumentValidationService $validationService,
-		MetadataService $metadataService,
-		IRootFolder $rootFolder,
-		LoggerInterface $logger,
-		string $logContext,
-	): void {
+	public function validateObject(mixed $object, ValidationFallbackContext $context): void {
 		try {
-			$data = $object->getObject();
-			$fileId = (int)($data['fileId'] ?? 0);
-			if ($fileId <= 0) {
+			$verdict = $this->verdictFor(object: $object, context: $context);
+			if ($verdict === null) {
 				return;
 			}
-
-			$file = $this->resolveFile(rootFolder: $rootFolder, object: $object, fileId: $fileId);
-			if ($file === null) {
-				return;
-			}
-
-			$verdict = $validationService->validate(
-				file: $file,
-				record: $data,
-				documentType: ($data['documentType'] ?? null)
-			);
 
 			// Event listeners run without a user session in webcron/background
 			// contexts; persist as a trusted system operation so OpenRegister
 			// RBAC does not deny the write as 'Anonymous'.
-			$metadataService->saveEnrichedMetadataAsSystem(
+			$context->metadataService->saveEnrichedMetadataAsSystem(
 				$object->getUuid(),
 				(string)$object->getRegister(),
 				(string)$object->getSchema(),
@@ -163,21 +186,46 @@ class ValidationRunner {
 				]
 			);
 
-			$logger->info(
-				'Filinq: Validation verdict stored for ' . $logContext,
-				[
-					'objectId' => $object->getUuid(),
-					'status' => $verdict['validationStatus'],
-				]
+			$context->logger->info(
+				'Filinq: Validation verdict stored for ' . $context->logContext,
+				['objectId' => $object->getUuid(), 'status' => $verdict['validationStatus']]
 			);
 		} catch (Throwable $e) {
-			$logger->error(
-				'Filinq: Failed to validate object for ' . $logContext,
+			$context->logger->error(
+				'Filinq: Failed to validate object for ' . $context->logContext,
 				['exception' => $e->getMessage()]
 			);
 		}//end try
 
 	}//end validateObject()
+
+	/**
+	 * Validate the file an object points at.
+	 *
+	 * @param mixed                     $object  The OpenRegister object.
+	 * @param ValidationFallbackContext $context The services.
+	 *
+	 * @return array<string, mixed>|null The verdict, or null when the object points at no readable file.
+	 */
+	private function verdictFor(mixed $object, ValidationFallbackContext $context): ?array {
+		$data = $object->getObject();
+		$fileId = (int)($data['fileId'] ?? 0);
+		if ($fileId <= 0) {
+			return null;
+		}
+
+		$file = $this->resolveFile(rootFolder: $context->rootFolder, object: $object, fileId: $fileId);
+		if ($file === null) {
+			return null;
+		}
+
+		return $context->validationService->validate(
+			file: $file,
+			record: $data,
+			documentType: ($data['documentType'] ?? null)
+		);
+
+	}//end verdictFor()
 
 	/**
 	 * Resolve the object's owning user's folder and fetch the file by id.

@@ -20,9 +20,13 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Kernel\ConsentUpdate;
 use OCA\Filinq\Service\ConsentCrudService;
 use OCA\Filinq\Service\ConsentService;
 use OCA\Filinq\Service\SettingsService;
+use OCA\OpenRegister\Service\ObjectService;
+use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\IUser;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -83,6 +87,21 @@ class ConsentCrudServiceTest extends TestCase {
 		);
 
 	}//end setUp()
+
+	/**
+	 * A consent OpenRegister cannot find for the caller (another
+	 * organisation's, or none) is not found, not a failure.
+	 *
+	 * @return void
+	 */
+	public function testGetConsentAnswersNullWhenOpenRegisterFindsNothing(): void {
+		$objectService = $this->createMock(originalClassName: ObjectService::class);
+		$objectService->method('find')->willThrowException(new DoesNotExistException('not found in any magic table'));
+		$this->mockSettingsService->method('getObjectService')->willReturn($objectService);
+
+		$this->assertNull(actual: $this->service->getConsent(consentId: 'c-of-b', register: 'reg-1', schema: 'schema-1'));
+
+	}//end testGetConsentAnswersNullWhenOpenRegisterFindsNothing()
 
 	/**
 	 * Test getConsentConfig returns null when not configured
@@ -290,5 +309,24 @@ class ConsentCrudServiceTest extends TestCase {
 		);
 
 	}//end testCreateFromRequestForwardsLegitimateExtraFields()
+
+	/**
+	 * A status update hands the consent service the record and payload as one
+	 * update, and the session user as its own argument: a user id inside the
+	 * payload stays payload and never becomes the acting user.
+	 *
+	 * @return void
+	 */
+	public function testUpdateConsentStatusPassesTheSessionUserApart(): void {
+		$user = $this->createMock(IUser::class);
+		$data = ['consentStatus' => 'consent_withdrawn', 'actor' => 'mallory'];
+		$this->mockConsentService->expects($this->once())
+			->method('validateAndUpdateConsent')
+			->with(new ConsentUpdate(consentId: 'c-1', register: 'reg-1', schema: 'schema-1', data: $data), $this->identicalTo($user))
+			->willReturn(['id' => 'c-1']);
+
+		$this->assertSame(['id' => 'c-1'], $this->service->updateConsentStatus('c-1', 'reg-1', 'schema-1', $data, $user));
+
+	}//end testUpdateConsentStatusPassesTheSessionUserApart()
 
 }//end class

@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
 	@visual exclude Deliberately unregistered, so no route reaches it and no
 	browser can drive it. This is not an oversight being waived: the same
 	exemption is asserted independently by tests/unit/reachability.spec.js,

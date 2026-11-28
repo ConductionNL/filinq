@@ -23,9 +23,13 @@
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use Exception;
+use OCA\Filinq\Exception\ConversionFailedException;
+use OCA\Filinq\Exception\RedactionNotReviewedException;
 use OCA\Filinq\Service\AnonymizationService;
+use OCA\Filinq\Service\AnonymizeOptions;
 use OCA\Filinq\Service\BatchAnonymizeService;
 use OCA\Filinq\Service\BatchStateService;
+use OCA\Filinq\Service\Conversion\OutputLayoutMover;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 
@@ -42,6 +46,8 @@ use PHPUnit\Framework\TestCase;
  * @phpstan-extends TestCase
  */
 class BatchAnonymizeServiceTest extends TestCase {
+	use ReadsAnonymizeOptions;
+
 
 	/**
 	 * The BatchAnonymizeService under test
@@ -75,9 +81,17 @@ class BatchAnonymizeServiceTest extends TestCase {
 		$this->mockAnonService = $this->createMock(AnonymizationService::class);
 		$this->mockStateService = $this->createMock(BatchStateService::class);
 
+		// Placement is covered by BatchAnonymizeServiceOutputLayoutTest; here
+		// the mover leaves every output where OpenRegister wrote it.
+		$mover = $this->createMock(OutputLayoutMover::class);
+		$mover->method('relocate')->willReturnCallback(
+			static fn (string $userId, int $fileId, string $legacyPath): array => ['path' => $legacyPath, 'warning' => null]
+		);
+
 		$this->service = new BatchAnonymizeService(
 			$this->mockAnonService,
-			$this->mockStateService
+			$this->mockStateService,
+			$mover
 		);
 
 	}//end setUp()
@@ -149,6 +163,73 @@ class BatchAnonymizeServiceTest extends TestCase {
 		$this->assertEmpty($result['skippedFiles']);
 
 	}//end testAnonymizeBatchProcessesExtractedFiles()
+
+	/**
+	 * Each batch entry names the backend that looked and what it found.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-anonymisation-fails-closed-without-a-detector/tasks.md#task-3
+	 */
+	public function testEachEntryCarriesTheDetectionOutcome(): void {
+		$detection = ['ran' => true, 'backend' => 'presidio', 'entitiesRedacted' => 0, 'outcome' => 'nothing_found'];
+		$this->mockStateService->method('getBatch')->willReturn(
+			['batchId' => 'batch-d', 'status' => 'review', 'files' => [['fileId' => 21, 'status' => 'extracted']]]
+		);
+		$this->mockAnonService->method('anonymizeDocument')
+			->willReturn(['replacementCount' => 0, 'anonymizedFileId' => 'anon-21', 'detection' => $detection]);
+
+		$saved = null;
+		$this->mockStateService->method('updateBatch')->willReturnCallback(
+			function (string $id, array $batch) use (&$saved): void {
+				$saved = $batch;
+			}
+		);
+
+		$this->service->anonymizeBatch(batchId: 'batch-d', entities: []);
+
+		$this->assertSame($detection, $saved['files'][0]['detection']);
+
+	}//end testEachEntryCarriesTheDetectionOutcome()
+
+	/**
+	 * A document withheld in full is a finished entry with no output and its grounds.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/image-redaction/tasks.md#task-6.2
+	 */
+	public function testAWithheldDocumentIsAFinishedEntryWithoutOutput(): void {
+		$this->mockStateService->method('getBatch')->willReturn(
+			['batchId' => 'batch-w', 'status' => 'review', 'files' => [['fileId' => 22, 'status' => 'extracted']]]
+		);
+		$this->mockAnonService->method('anonymizeDocument')->willReturn(
+			[
+				'withheld' => true,
+				'withheldBases' => ['5.1.1.c'],
+				'anonymizedFileId' => null,
+				'anonymizedFilePath' => null,
+				'replacementCount' => 0,
+				'detection' => ['ran' => false, 'outcome' => 'withheld'],
+			]
+		);
+
+		$saved = null;
+		$this->mockStateService->method('updateBatch')->willReturnCallback(
+			function (string $id, array $batch) use (&$saved): void {
+				$saved = $batch;
+			}
+		);
+
+		$this->service->anonymizeBatch(batchId: 'batch-w', entities: []);
+
+		$entry = $saved['files'][0];
+		$this->assertSame(expected: 'anonymized', actual: $entry['status']);
+		$this->assertTrue(condition: $entry['withheld']);
+		$this->assertSame(expected: ['5.1.1.c'], actual: $entry['withheldBases']);
+		$this->assertNull(actual: $entry['anonymizedFileId']);
+
+	}//end testAWithheldDocumentIsAFinishedEntryWithoutOutput()
 
 	/**
 	 * Test anonymizeBatch records error when anonymization throws
@@ -339,4 +420,187 @@ class BatchAnonymizeServiceTest extends TestCase {
 
 	}//end testPreserveModeSummaryFieldsStoredPerFile()
 
+	/**
+	 * A batch with every kind of file: both stored states, the summary and
+	 * the per-file calls are exactly these.
+	 *
+	 * @return void
+	 */
+	public function testAMixedBatchStoresAndReportsEveryFileExactly(): void {
+		$batch = [
+			'batchId' => 'batch-9',
+			'userId' => 'anna',
+			'status' => 'review',
+			'files' => [
+				['fileId' => 1, 'status' => 'error'],
+				['fileId' => 2, 'status' => 'uploaded'],
+				['fileId' => 3, 'status' => 'extracted'],
+				['fileId' => 4, 'status' => 'extracted'],
+				['fileId' => 5, 'status' => 'extracted'],
+			],
+		];
+		$this->mockStateService->method('getBatch')->willReturn($batch);
+		$stored = [];
+		$this->mockStateService->method('updateBatch')->willReturnCallback(
+			function (string $batchId, array $state) use (&$stored): void {
+				$stored[] = [$batchId, $state];
+			}
+		);
+		$this->mockAnonService->method('checkUnredactedProhibitions')->willReturn([]);
+		$calls = [];
+		$this->mockAnonService->method('anonymizeDocumentWithBasisSummary')->willReturnCallback(
+			function (int $fileId, array $entities, ?AnonymizeOptions $options = null) use (&$calls): array {
+				$calls[] = array_values(array_slice(self::anonymizeFields($fileId, $entities, $options), 0, 8));
+				if ($fileId === 4) {
+					throw new ConversionFailedException(message: 'no backend', attempts: [['backend' => 'office']]);
+				}
+
+				if ($fileId === 5) {
+					throw new Exception('disk full');
+				}
+
+				return ['replacementCount' => 2, 'anonymizedFileId' => 33, 'anonymizedFilePath' => '/a/b_anonymized.pdf'];
+			}
+		);
+
+		$result = $this->service->anonymizeBatchWithBasisSummary(
+			batchId: 'batch-9',
+			entities: [['text' => 'Jan']],
+			unredactedEntities: [['text' => 'Gemeente']],
+			outputFormat: 'preserve',
+			scope: 'document'
+		);
+
+		$this->assertSame(
+			[
+				'batchId' => 'batch-9',
+				'batchStatus' => 'completed',
+				'processedFiles' => 1,
+				'skippedFiles' => [
+					['fileId' => 1, 'reason' => 'Previous error'],
+					['fileId' => 4, 'reason' => 'no backend'],
+					['fileId' => 5, 'reason' => 'disk full'],
+				],
+				'prohibitionSkippedFiles' => 0,
+				'totalFiles' => 5,
+			],
+			$result
+		);
+		$this->assertCount(3, $calls);
+		$this->assertSame(
+			[3, [['text' => 'Jan']], 'preserve', [['text' => 'Gemeente']], [], 'anna', 'document', null],
+			$calls[0]
+		);
+		$this->assertSame('anonymizing', $stored[0][1]['status']);
+		$this->assertSame($batch['files'], $stored[0][1]['files']);
+		$this->assertSame('batch-9', $stored[1][0]);
+		$this->assertSame(
+			[
+				['fileId' => 1, 'status' => 'error'],
+				['fileId' => 2, 'status' => 'uploaded'],
+				['fileId' => 3, 'status' => 'anonymized', 'replacementCount' => 2, 'anonymizedFileId' => 33, 'anonymizedFilePath' => '/a/b_anonymized.pdf'],
+				['fileId' => 4, 'status' => 'error', 'error' => 'no backend', 'conversionAttempts' => [['backend' => 'office']]],
+				['fileId' => 5, 'status' => 'error', 'error' => 'disk full'],
+			],
+			$stored[1][1]['files']
+		);
+		$this->assertSame('completed', $stored[1][1]['status']);
+
+	}//end testAMixedBatchStoresAndReportsEveryFileExactly()
+
+	/**
+	 * Unredacted entities the prohibition gate refuses skip every extracted
+	 * file with a 422, and nothing is anonymised.
+	 *
+	 * @return void
+	 */
+	public function testAProhibitionViolationSkipsEveryExtractedFile(): void {
+		$this->mockStateService->method('getBatch')->willReturn(
+			[
+				'batchId' => 'batch-10',
+				'files' => [
+					['fileId' => 7, 'status' => 'extracted'],
+					['fileId' => 8, 'status' => 'error', 'error' => 'Upload failed'],
+					['fileId' => 9, 'status' => 'extracted'],
+				],
+			]
+		);
+		$stored = [];
+		$this->mockStateService->method('updateBatch')->willReturnCallback(
+			function (string $batchId, array $state) use (&$stored): void {
+				$stored[] = $state;
+			}
+		);
+		$violation = [['entityType' => 'BSN', 'reason' => 'never published']];
+		$this->mockAnonService->expects($this->exactly(2))->method('checkUnredactedProhibitions')
+			->with([['text' => '123456782']])
+			->willReturn($violation);
+		$this->mockAnonService->expects($this->never())->method('anonymizeDocument');
+
+		$result = $this->service->anonymizeBatch(batchId: 'batch-10', entities: [], unredactedEntities: [['text' => '123456782']]);
+
+		$this->assertSame(2, $result['prohibitionSkippedFiles']);
+		$this->assertSame(0, $result['processedFiles']);
+		$this->assertSame(
+			[
+				['fileId' => 7, 'reason' => 'Prohibition violation on unredacted entities', 'httpStatus' => 422],
+				['fileId' => 8, 'reason' => 'Upload failed'],
+				['fileId' => 9, 'reason' => 'Prohibition violation on unredacted entities', 'httpStatus' => 422],
+			],
+			$result['skippedFiles']
+		);
+		$this->assertSame(['fileId' => 7, 'status' => 'prohibitionViolation', 'prohibitedEntries' => $violation], $stored[1]['files'][0]);
+
+	}//end testAProhibitionViolationSkipsEveryExtractedFile()
+
+	/**
+	 * A dossier run by Fenna writes the document Daan checked and reports the one
+	 * Fenna checked herself with reason same_person (REQ-RWB-09).
+	 *
+	 * The batch hands its starter to every run as the acting user; the refusal
+	 * itself comes from the review gate behind the anonymisation service.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-3
+	 */
+	public function testTheStarterIsTheActingUserAndTheirOwnCheckIsReported(): void {
+		$this->mockStateService->method('getBatch')->willReturn(
+			[
+				'batchId' => 'batch-4',
+				'userId' => 'fenna',
+				'status' => 'review',
+				'files' => [
+					['fileId' => 1, 'status' => 'extracted'],
+					['fileId' => 2, 'status' => 'extracted'],
+				],
+			]
+		);
+		$this->mockAnonService->method('checkUnredactedProhibitions')->willReturn([]);
+		$actors = [];
+		$this->mockAnonService->method('anonymizeDocument')->willReturnCallback(
+			function (int $fileId, array $entities, ?AnonymizeOptions $options = null) use (&$actors): array {
+				$run = $options->runFor(fileId: $fileId, entities: $entities);
+				$actors[$fileId] = [$run->userId(), $run->isWooRun()];
+				if ($fileId === 1) {
+					throw new RedactionNotReviewedException(
+						reason: 'same_person',
+						message: 'You checked the findings of this document yourself.'
+					);
+				}
+
+				return ['replacementCount' => 1, 'anonymizedFileId' => 21, 'anonymizedFilePath' => '/d/b.pdf'];
+			}
+		);
+
+		$result = $this->service->anonymizeBatch(batchId: 'batch-4', entities: [['text' => 'Jan']]);
+
+		$this->assertSame([1 => ['fenna', true], 2 => ['fenna', true]], $actors);
+		$this->assertSame(1, $result['processedFiles']);
+		$this->assertSame(
+			[['fileId' => 1, 'reason' => 'You checked the findings of this document yourself.', 'refusal' => 'same_person']],
+			$result['skippedFiles']
+		);
+
+	}//end testTheStarterIsTheActingUserAndTheirOwnCheckIsReported()
 }//end class

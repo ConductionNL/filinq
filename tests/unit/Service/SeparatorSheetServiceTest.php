@@ -1,0 +1,402 @@
+<?php
+
+/**
+ * Unit tests for SeparatorSheetService and ScanProfileService
+ *
+ * @category Tests
+ * @package  OCA\Filinq\Tests\Unit\Service
+ *
+ * @author    Conduction Development Team <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @version GIT: <git_id>
+ *
+ * @link https://www.filinq.app
+ *
+ * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+namespace OCA\Filinq\Tests\Unit\Service;
+
+use OCA\Filinq\Service\PdfService;
+use OCA\Filinq\Service\ScanProfileService;
+use OCA\Filinq\Service\SeparatorSheetService;
+use OCP\IAppConfig;
+use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use RuntimeException;
+
+/**
+ * Asserts that what filinq prints is what filinq reads back, and that a page
+ * carrying anything else is an ordinary page rather than a separator.
+ *
+ * @category Tests
+ * @package  OCA\Filinq\Tests\Unit\Service
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ *
+ * @psalm-suppress PropertyNotSetInConstructor
+ */
+class SeparatorSheetServiceTest extends TestCase {
+
+	/**
+	 * The sheet service over a renderer that echoes the HTML it is given.
+	 *
+	 * @param string|null $rendered What the renderer produces, or null to make it throw.
+	 *
+	 * @return SeparatorSheetService The service under test.
+	 */
+	private function sheets(?string $rendered = 'PDF'): SeparatorSheetService {
+		$pdf = $this->createMock(PdfService::class);
+		if ($rendered === null) {
+			$pdf->method('generatePdfFromHtml')->willThrowException(new RuntimeException('mpdf is unhappy'));
+		} else {
+			$pdf->method('generatePdfFromHtml')->willReturnCallback(
+				static fn (string $html): string => $html
+			);
+		}
+
+		return new SeparatorSheetService($pdf);
+
+	}//end sheets()
+
+	/**
+	 * The payload as Tesseract reads it off a printed sheet still names its
+	 * case: these are the readings of a live run (25 Nov 2026).
+	 *
+	 * @return array<string, array{0: string, 1: string}>
+	 */
+	public static function ocrReadings(): array {
+		return [
+			'filing, a stray F, vl, a space'  => ["Ffiling:sep:vl:postkamer: 2026-0042", '2026-0042'],
+			'v1l'                             => ['filing:sep:v1l:postkamer: 2026-0042', '2026-0042'],
+			'spaces around the colon'         => ['filing:sep:vl:postkamer : 2026-0042', '2026-0042'],
+			'broken after a hyphen'           => ["filing:sep:vl:scanner-2e-verdieping-\ne2e-1795620378057:2026-0043", '2026-0043'],
+			'an original'                     => ['filing:sep:v2:archief:po:po-1', 'po:po-1'],
+			'among the rest of the sheet'     => ["Scheidingsvel voor zaak 2026-0042\nLeg dit vel\nFfiling:sep:vl:postkamer: 2026-0042", '2026-0042'],
+			'a sheet that names no case'      => ['filing:sep:vl:postkamer:', ''],
+		];
+
+	}//end ocrReadings()
+
+	/**
+	 * A separator read by OCR is still a separator, with its case.
+	 *
+	 * @param string $read     The text OCR gave.
+	 * @param string $expected The case (or original) it names.
+	 *
+	 * @return void
+	 */
+	#[\PHPUnit\Framework\Attributes\DataProvider('ocrReadings')]
+	public function testTheOcrReadingOfASheetIsStillItsPayload(string $read, string $expected): void {
+		$this->assertSame($expected, $this->sheets()->readPayload(payload: $read));
+
+	}//end testTheOcrReadingOfASheetIsStillItsPayload()
+
+	/**
+	 * An ordinary page that happens to say "filing" is no separator.
+	 *
+	 * @return void
+	 */
+	public function testAPageAboutFilingIsNotASeparator(): void {
+		$this->assertNull($this->sheets()->readPayload(payload: 'Gewone brief over filing: zie bijlage'));
+
+	}//end testAPageAboutFilingIsNotASeparator()
+
+	/**
+	 * What is printed is what is read back.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testThePayloadPrintedIsThePayloadRead(): void {
+		$service = $this->sheets();
+
+		$withCase = $service->payload(profileId: 'postkamer', caseNumber: '2026-0042');
+		$withoutCase = $service->payload(profileId: 'postkamer');
+
+		$this->assertSame('filinq:sep:v1:postkamer:2026-0042', $withCase);
+		$this->assertSame('filinq:sep:v1:postkamer', $withoutCase);
+		$this->assertSame('2026-0042', $service->readPayload(payload: $withCase));
+		$this->assertSame('', $service->readPayload(payload: $withoutCase));
+
+	}//end testThePayloadPrintedIsThePayloadRead()
+
+	/**
+	 * A payload read off a page with other text around it is still read.
+	 *
+	 * OCR of a scanned sheet returns the heading and the instruction line too,
+	 * so a reader that demanded the payload be the WHOLE text would see no
+	 * separators at all.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testThePayloadIsFoundAmongTheRestOfTheSheet(): void {
+		$page = "Scheidingsvel voor zaak 2026-0042\nLeg dit vel tussen twee documenten.\n"
+			. "filinq:sep:v1:postkamer:2026-0042\n";
+
+		$this->assertSame('2026-0042', $this->sheets()->readPayload(payload: $page));
+
+	}//end testThePayloadIsFoundAmongTheRestOfTheSheet()
+
+	/**
+	 * An ordinary page is not a separator, however much text it has.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testAnOrdinaryPageIsNotASeparator(): void {
+		$service = $this->sheets();
+
+		$this->assertNull($service->readPayload(payload: 'Geachte heer, mevrouw,'));
+		$this->assertNull($service->readPayload(payload: ''));
+		$this->assertNull(
+			$service->readPayload(payload: 'filinq:sep:v0:postkamer'),
+			'A sheet printed by another version is not silently read as this one.'
+		);
+
+	}//end testAnOrdinaryPageIsNotASeparator()
+
+	/**
+	 * Three case numbers make three sheets, each carrying its own number twice.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testThreeCaseNumbersMakeThreeSheets(): void {
+		$html = $this->sheets()->render(
+			profileId: 'postkamer',
+			caseNumbers: ['2026-0001', '2026-0002', '2026-0003']
+		);
+
+		$this->assertSame(2, substr_count($html, '<pagebreak />'), 'Three sheets means two breaks.');
+		foreach (['2026-0001', '2026-0002', '2026-0003'] as $number) {
+			$this->assertStringContainsString(
+				'filinq:sep:v1:postkamer:' . $number,
+				$html,
+				'Every sheet carries its own payload.'
+			);
+		}
+
+		$this->assertSame(
+			['filinq:sep:v1:postkamer:2026-0001', 'filinq:sep:v1:postkamer:2026-0002', 'filinq:sep:v1:postkamer:2026-0003'],
+			self::qrPayloads(html: $html),
+			'And a QR code per sheet, drawn locally as an image.'
+		);
+
+	}//end testThreeCaseNumbersMakeThreeSheets()
+
+	/**
+	 * A print with no case numbers still produces one sheet.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testAPrintWithoutCaseNumbersStillProducesOneSheet(): void {
+		$html = $this->sheets()->render(profileId: 'postkamer');
+
+		$this->assertStringNotContainsString('<pagebreak />', $html);
+		$this->assertStringContainsString('filinq:sep:v1:postkamer', $html);
+
+	}//end testAPrintWithoutCaseNumbersStillProducesOneSheet()
+
+	/**
+	 * Sheets without a profile are refused: the payload would name nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testSheetsWithoutAProfileAreRefused(): void {
+		$this->expectException(RuntimeException::class);
+		$this->sheets()->render(profileId: '  ');
+
+	}//end testSheetsWithoutAProfileAreRefused()
+
+	/**
+	 * A renderer that fails says so rather than producing a blank sheet.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testARendererThatFailsSaysSo(): void {
+		$this->expectException(RuntimeException::class);
+		$this->sheets(rendered: null)->render(profileId: 'postkamer');
+
+	}//end testARendererThatFailsSaysSo()
+
+	/**
+	 * The profile watching the deepest matching folder wins.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testTheDeepestWatchedFolderWins(): void {
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturn(
+			json_encode(
+				[
+					['id' => 'algemeen', 'watchedFolder' => 'Scans'],
+					['id' => 'bezwaar', 'watchedFolder' => 'Scans/bezwaar'],
+				]
+			)
+		);
+
+		$profiles = new ScanProfileService($config, $this->createMock(LoggerInterface::class));
+
+		$this->assertSame('bezwaar', $profiles->forPath(path: '/Scans/bezwaar/batch.pdf')['id']);
+		$this->assertSame('algemeen', $profiles->forPath(path: '/Scans/batch.pdf')['id']);
+		$this->assertNull($profiles->forPath(path: '/Documenten/batch.pdf'));
+
+	}//end testTheDeepestWatchedFolderWins()
+
+	/**
+	 * A profile without an id or a folder is refused, and a bad mode too.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testAProfileMustNameAnIdAFolderAndAKnownMode(): void {
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturn('');
+		$profiles = new ScanProfileService($config, $this->createMock(LoggerInterface::class));
+
+		try {
+			$profiles->declare(profiles: [['id' => 'postkamer']]);
+			$this->fail('A profile must name the folder its scanner writes to.');
+		} catch (RuntimeException $refusal) {
+			$this->assertStringContainsString('folder', $refusal->getMessage());
+		}
+
+		try {
+			$profiles->declare(
+				profiles: [['id' => 'postkamer', 'watchedFolder' => 'Scans', 'separatorMode' => 'magie']]
+			);
+			$this->fail('A profile cuts on qr or on blankPage.');
+		} catch (RuntimeException $refusal) {
+			$this->assertStringContainsString('blankPage', $refusal->getMessage());
+		}
+
+	}//end testAProfileMustNameAnIdAFolderAndAKnownMode()
+
+	/**
+	 * Profiles that are not valid JSON watch nothing, loudly.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testUnreadableProfilesWatchNothing(): void {
+		$config = $this->createMock(IAppConfig::class);
+		$config->method('getValueString')->willReturn('{ this is not json');
+
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error');
+
+		$profiles = new ScanProfileService($config, $logger);
+
+		$this->assertSame([], $profiles->all());
+
+	}//end testUnreadableProfilesWatchNothing()
+
+	/**
+	 * The QR code on an original's sheet reads back as that original; the
+	 * shelf mark and description are in print beside it (REQ-PAD-002).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 */
+	public function testTheQrPayloadOfAnOriginalsSheetNamesTheOriginal(): void {
+		$service = $this->sheets();
+
+		$html = $service->renderOriginals(
+			profileId: 'archief',
+			originals: [
+				['id' => 'po-1', 'shelfMark' => 'Doos 12 / 3', 'description' => 'Bouwvergunning Dorpsstraat 4 <1978>'],
+				['id' => '', 'shelfMark' => 'skipped'],
+				['@self' => ['id' => 'po-2'], 'shelfMark' => 'Doos 12 / 4', 'description' => 'Sloopmelding'],
+			]
+		);
+
+		$codes = self::qrPayloads(html: $html);
+		$this->assertSame(['filinq:sep:v2:archief:po:po-1', 'filinq:sep:v2:archief:po:po-2'], $codes);
+		$this->assertSame(['po:po-1', 'po:po-2'], array_map(static fn (string $code): ?string => $service->readPayload(payload: $code), $codes));
+		$this->assertStringContainsString('Scheidingsvel voor Doos 12 / 3', $html);
+		$this->assertStringContainsString('Bouwvergunning Dorpsstraat 4 &lt;1978&gt;', $html);
+		$this->assertSame(1, substr_count($html, '<pagebreak />'));
+		$this->assertStringNotContainsString('skipped', $html);
+	}//end testTheQrPayloadOfAnOriginalsSheetNamesTheOriginal()
+
+	/**
+	 * A v2 payload is found in the page text; the v1 payload reads as before;
+	 * a v2 payload without an original is no separator.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 */
+	public function testV1AndV2PayloadsReadSideBySide(): void {
+		$service = $this->sheets();
+
+		$this->assertSame('po:po-9', $service->readPayload(payload: "Scheidingsvel voor Doos 1\nfilinq:sep:v2:archief:po:po-9 trailing text"));
+		$this->assertSame('2026-0042', $service->readPayload(payload: $service->payload(profileId: 'postkamer', caseNumber: '2026-0042')));
+		$this->assertNull($service->readPayload(payload: 'filinq:sep:v2:archief:po:'));
+		$this->assertNull($service->readPayload(payload: 'filinq:sep:v2:archief'));
+		$this->assertSame('filinq:sep:v2:archief:po:po-9', $service->originalPayload(profileId: ' archief ', originalId: 'po-9 '));
+	}//end testV1AndV2PayloadsReadSideBySide()
+
+	/**
+	 * Nothing to print, or no profile, is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-intake-paper-archive-digitisation/specs/paper-archive-digitisation/spec.md#requirement-a-separator-sheet-names-the-original-it-precedes-req-pad-002
+	 */
+	public function testAnOriginalsPrintWithoutOriginalsOrProfileIsRefused(): void {
+		$service = $this->sheets();
+		foreach ([['archief', []], ['', [['id' => 'po-1']]]] as [$profile, $originals]) {
+			try {
+				$service->renderOriginals(profileId: $profile, originals: $originals);
+				$this->fail('the print was not refused');
+			} catch (RuntimeException $e) {
+				$this->assertNotSame('', $e->getMessage());
+			}
+		}
+	}//end testAnOriginalsPrintWithoutOriginalsOrProfileIsRefused()
+
+	/**
+	 * The payloads of the QR images on the sheets: each image is an SVG whose
+	 * description is the encoded text (tc-lib-barcode).
+	 *
+	 * @param string $html The sheets' HTML.
+	 *
+	 * @return array<int, string> The payloads, in page order.
+	 */
+	private static function qrPayloads(string $html): array {
+		preg_match_all('/<img src="data:image\/svg\+xml;base64,([^"]+)"/', $html, $images);
+
+		return array_map(
+			static function (string $image): string {
+				preg_match('/<desc>([^<]*)<\/desc>/', (string) base64_decode($image), $desc);
+				return html_entity_decode($desc[1] ?? '');
+			},
+			$images[1]
+		);
+
+	}//end qrPayloads()
+}//end class

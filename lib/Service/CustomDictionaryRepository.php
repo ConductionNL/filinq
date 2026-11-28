@@ -29,6 +29,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -83,11 +87,9 @@ class CustomDictionaryRepository {
 		$objectService = $this->settingsService->getObjectService();
 		// Slug-aware variant — OR's standard searchObjects requires numeric
 		// register/schema ids and silently returns nothing otherwise.
-		$results = $objectService->searchObjectsBySlug(
-			registerSlug: self::REGISTER,
-			schemaSlug: $schema,
-			_rbac: false,
-			_multitenancy: false
+		$results = (new SlugSearch(objects: $objectService, _rbac: false, _multitenancy: false))->search(
+			register: self::REGISTER,
+			schema: $schema
 		);
 
 		if (is_int($results) === true) {
@@ -121,8 +123,7 @@ class CustomDictionaryRepository {
 		$objectService = $this->settingsService->getObjectService();
 		$object = $objectService->find(
 			id: $uuid,
-			register: self::REGISTER,
-			schema: $schema,
+			options: new ObjectFindOptions(register: self::REGISTER, schema: $schema),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -152,9 +153,10 @@ class CustomDictionaryRepository {
 			$objectService = $this->settingsService->getObjectService();
 			$saved = $objectService->saveObject(
 				object: $data,
-				register: self::REGISTER,
-				schema: $schema,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: $schema),
+					uuid: $uuid
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -189,9 +191,10 @@ class CustomDictionaryRepository {
 		// parameter is named $uuid — verified against
 		// OCA\OpenRegister\Service\ObjectService::deleteObject() at HEAD.
 		$objectService->deleteObject(
-			uuid: $uuid,
-			register: self::REGISTER,
-			schema: $schema,
+			new ObjectDeletion(
+				uuid: $uuid,
+				target: new ObjectFindTarget(register: self::REGISTER, schema: $schema)
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

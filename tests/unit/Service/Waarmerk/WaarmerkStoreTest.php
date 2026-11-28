@@ -1,0 +1,280 @@
+<?php
+
+/**
+ * Unit tests for WaarmerkStore.
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @category Tests
+ * @package  OCA\Filinq\Tests\Unit\Service\Waarmerk
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Filinq\Tests\Unit\Service\Waarmerk;
+
+use OCA\Filinq\Exception\WaarmerkRefusedException;
+use OCA\Filinq\Service\DocumentObjectServiceResolver;
+use OCA\Filinq\Service\SystemContextSeam;
+use OCA\Filinq\Service\Waarmerk\WaarmerkStore;
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Service\ObjectService;
+use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use RuntimeException;
+
+/**
+ * The write-once waarmerk records.
+ *
+ * @covers \OCA\Filinq\Service\Waarmerk\WaarmerkStore
+ * @uses   \OCA\Filinq\Service\ReadsStoredObjectRows
+ * @uses   \OCA\Filinq\Exception\WaarmerkRefusedException
+ * @uses   \OCA\Filinq\Service\SystemContextSeam
+ * @uses   \OCA\Filinq\Service\SlugSearch
+ */
+class WaarmerkStoreTest extends TestCase {
+
+	/**
+	 * The object service double.
+	 *
+	 * @var ObjectService&MockObject
+	 */
+	private ObjectService&MockObject $objects;
+
+	/**
+	 * Build the store.
+	 *
+	 * @return WaarmerkStore
+	 */
+	private function store(): WaarmerkStore {
+		$this->objects = $this->createMock(ObjectService::class);
+		$resolver = $this->createMock(DocumentObjectServiceResolver::class);
+		$resolver->method('resolve')->willReturn($this->objects);
+		return new WaarmerkStore(objectResolver: $resolver);
+	}//end store()
+
+	/**
+	 * A stored seal.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function seal(): array {
+		return [
+			'uuid' => 'w-1', 'documentHash' => str_repeat('a', 64), 'cmsSignature' => 'CMS', 'verificationCode' => 'code-1',
+			'sealedAt' => '2026-11-14T10:00:00+00:00', 'sealedBy' => 'alice', 'status' => 'active',
+		];
+	}//end seal()
+
+	/**
+	 * create() writes a new object, unowned and past the cascade, and returns it with its uuid.
+	 *
+	 * @return void
+	 */
+	public function testCreate(): void {
+		$store = $this->store();
+		$row = $this->seal();
+		unset($row['uuid']);
+		$this->objects->expects($this->once())->method('saveObject')
+			->with(
+				$row,
+				self::callback(
+					static fn (ObjectSaveOptions $options): bool => $options->target->register === 'filinq'
+						&& $options->target->schema === 'waarmerk'
+						&& $options->uuid === null
+						&& $options->actor->unowned === true
+				),
+				false
+			)
+			->willReturn(['uuid' => 'new-1'] + $row);
+
+		$stored = $store->create(row: $row);
+		$this->assertSame('new-1', $stored['uuid']);
+		$this->assertSame('active', $stored['status']);
+	}//end testCreate()
+
+	/**
+	 * create() never overwrites: a row that names an object is refused before any write.
+	 *
+	 * @return void
+	 */
+	public function testCreateRefusesAnExistingSeal(): void {
+		$store = $this->store();
+		$this->objects->expects($this->never())->method('saveObject');
+		foreach (['uuid', 'id', '@self'] as $field) {
+			try {
+				$store->create(row: [$field => 'x', 'status' => 'active']);
+				$this->fail($field . ': expected a refusal');
+			} catch (WaarmerkRefusedException $e) {
+				$this->assertSame(409, $e->getStatus());
+			}
+		}
+	}//end testCreateRefusesAnExistingSeal()
+
+	/**
+	 * revoke() writes the same evidence fields byte-identical plus the revocation fields.
+	 *
+	 * @return void
+	 */
+	public function testRevokeChangesOnlyTheRevocationFields(): void {
+		$store = $this->store();
+		$seal = $this->seal();
+		$revocation = ['status' => 'revoked', 'revokedAt' => '2026-11-15T10:00:00+00:00', 'revokedBy' => 'alice', 'revocationReason' => 'withdrawn'];
+		$expected = array_merge($seal, $revocation);
+		unset($expected['uuid']);
+		$this->objects->expects($this->once())->method('saveObject')
+			->with(
+				$expected,
+				self::callback(
+					static fn (ObjectSaveOptions $options): bool => $options->target->register === 'filinq'
+						&& $options->target->schema === 'waarmerk'
+						&& $options->uuid === 'w-1'
+						&& $options->actor->unowned === true
+				),
+				false
+			)
+			->willReturn(['uuid' => 'w-1'] + $expected);
+
+		$revoked = $store->revoke(seal: $seal, revocation: $revocation);
+		foreach (['documentHash', 'cmsSignature', 'verificationCode', 'sealedAt'] as $field) {
+			$this->assertSame($seal[$field], $revoked[$field], $field);
+		}
+
+		$this->assertSame('revoked', $revoked['status']);
+	}//end testRevokeChangesOnlyTheRevocationFields()
+
+	/**
+	 * Any other field, or a second revocation, is refused without a write.
+	 *
+	 * @return void
+	 */
+	public function testRevokeRefusesEvidenceChangesAndUndo(): void {
+		$store = $this->store();
+		$this->objects->expects($this->never())->method('saveObject');
+		foreach (['documentHash', 'cmsSignature', 'verificationCode', 'sealedAt'] as $field) {
+			try {
+				$store->revoke(seal: $this->seal(), revocation: ['status' => 'revoked', $field => 'forged']);
+				$this->fail($field . ': expected a refusal');
+			} catch (WaarmerkRefusedException $e) {
+				$this->assertSame(409, $e->getStatus());
+			}
+		}
+
+		$this->expectException(WaarmerkRefusedException::class);
+		$this->expectExceptionMessage('cannot be undone');
+		$store->revoke(seal: ['status' => 'revoked'] + $this->seal(), revocation: ['status' => 'active']);
+	}//end testRevokeRefusesEvidenceChangesAndUndo()
+
+	/**
+	 * findByCode() matches the exact code only; find() by uuid; empty input reads nothing.
+	 *
+	 * @return void
+	 */
+	public function testLookups(): void {
+		$store = $this->store();
+		$this->objects->method('searchObjectsBySlug')->willReturnCallback(
+			fn (string $registerSlug, string $schemaSlug, array $filters): array => array_values(
+				array_filter(
+					[$this->seal(), ['uuid' => 'w-2', 'verificationCode' => 'code-10', 'status' => 'active'], ['verificationCode' => 'code-1']],
+					fn (array $row): bool => isset($filters['verificationCode']) === false || str_starts_with((string) ($row['verificationCode'] ?? ''), (string) $filters['verificationCode'])
+				)
+			)
+		);
+
+		$this->assertSame('w-1', $store->findByCode(code: 'code-1')['uuid']);
+		$this->assertNull($store->findByCode(code: 'code-'));
+		$this->assertNull($store->findByCode(code: ''));
+		$this->assertSame('w-2', $store->find(uuid: 'w-2')['uuid']);
+		$this->assertNull($store->find(uuid: 'nope'));
+		$this->assertNull($store->find(uuid: ''));
+	}//end testLookups()
+
+	/**
+	 * The lookup by code is not scoped to the visitor's organisation; other searches keep the default.
+	 *
+	 * Seen live: scoped to an anonymous visitor's (empty) organisation, a check answered "unknown"
+	 * for a waarmerk that exists.
+	 *
+	 * @return void
+	 */
+	public function testTheLookupByCodeIsNotScopedToTheVisitorsOrganisation(): void {
+		$store = $this->store();
+		$calls = [];
+		$this->objects->method('searchObjectsBySlug')->willReturnCallback(
+			function (string $registerSlug, string $schemaSlug, array $filters=[], bool $_rbac=true, bool $_multitenancy=true) use (&$calls): array {
+				$calls[] = ['rbac' => $_rbac, 'multitenancy' => $_multitenancy];
+				return [$this->seal()];
+			}
+		);
+
+		$this->assertSame(expected: 'w-1', actual: $store->findByCode(code: 'code-1')['uuid']);
+		$store->search(filters: ['status' => 'active']);
+
+		$this->assertSame(
+			expected: [['rbac' => false, 'multitenancy' => true], ['rbac' => false, 'multitenancy' => true]],
+			actual: $calls
+		);
+	}//end testTheLookupByCodeIsNotScopedToTheVisitorsOrganisation()
+
+	/**
+	 * With the seam, the lookup by code runs as the system with a literal reason; other searches do not.
+	 *
+	 * Seen live: scoped to an anonymous visitor's (empty) organisation, a check answered "unknown"
+	 * for a waarmerk that exists. The seam lifts the organisation filter without a bypass flag.
+	 *
+	 * @return void
+	 */
+	public function testTheLookupByCodeRunsThroughTheSystemContextSeam(): void {
+		$objects = $this->createMock(originalClassName: ObjectService::class);
+		$contract = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$resolver = $this->createMock(originalClassName: DocumentObjectServiceResolver::class);
+		$resolver->method('resolve')->willReturn($objects);
+		$resolver->method('contract')->willReturn($contract);
+		$asSystem = 0;
+		$contract->method('runAsSystem')->willReturnCallback(
+			function (callable $operation) use (&$asSystem): mixed {
+				$asSystem++;
+				return $operation();
+			}
+		);
+		$objects->method('searchObjectsBySlug')->willReturn([$this->seal()]);
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$logger->expects($this->once())->method('info')->with(
+			$this->anything(),
+			$this->callback(callback: fn (array $context): bool => str_contains((string) $context['reason'], 'verification code'))
+		);
+
+		$store = new WaarmerkStore(objectResolver: $resolver, seam: new SystemContextSeam(logger: $logger));
+
+		$this->assertSame(expected: 'w-1', actual: $store->findByCode(code: 'code-1')['uuid']);
+		$this->assertSame(expected: 1, actual: $asSystem);
+		$this->assertSame(expected: 'w-1', actual: $store->find(uuid: 'w-1')['uuid']);
+		$this->assertSame(expected: 1, actual: $asSystem, message: 'Only the public lookup by code runs as the system');
+	}//end testTheLookupByCodeRunsThroughTheSystemContextSeam()
+
+	/**
+	 * A register failure is a 503, on read and on write.
+	 *
+	 * @return void
+	 */
+	public function testRegisterFailures(): void {
+		$store = $this->store();
+		$this->objects->method('searchObjectsBySlug')->willThrowException(new RuntimeException('db'));
+		$this->objects->method('saveObject')->willReturn(['status' => 'active']);
+
+		try {
+			$store->search(filters: []);
+			$this->fail('expected a refusal');
+		} catch (WaarmerkRefusedException $e) {
+			$this->assertSame(503, $e->getStatus());
+		}
+
+		$this->expectExceptionMessage('without a uuid');
+		$store->create(row: ['status' => 'active']);
+	}//end testRegisterFailures()
+}//end class

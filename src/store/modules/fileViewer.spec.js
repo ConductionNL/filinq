@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 import { createPinia, setActivePinia } from 'pinia'
 import { useFileViewerStore } from './fileViewer.js'
 
@@ -96,6 +100,21 @@ describe('fileViewer store — add mode & highlight state', () => {
 
 		store.setHighlightEntities(null)
 		expect(store.highlightEntities).toEqual([])
+	})
+
+	// @spec openspec/changes/image-redaction/tasks.md#task-4.1
+	it('setImageRegions() replaces the overlays, guards non-arrays, and close() clears them', () => {
+		const store = useFileViewerStore()
+		const list = [{ index: 0, page: 1, x: 0.1, y: 0.2, w: 0.3, h: 0.1, type: 'BSN', state: 'redact' }]
+		store.setImageRegions(list)
+		expect(store.imageRegions).toEqual(list)
+
+		store.setImageRegions('nope')
+		expect(store.imageRegions).toEqual([])
+
+		store.setImageRegions(list)
+		store.close()
+		expect(store.imageRegions).toEqual([])
 	})
 
 	it('open() / close() reset add mode and highlights', () => {

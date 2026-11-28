@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Tests\Unit\Controller;
 
 use OCA\Filinq\Controller\SigningController;
+use OCA\Filinq\Controller\Support\SigningServices;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
 use OCA\Filinq\Service\SigningAuditService;
 use OCA\Filinq\Service\SigningService;
@@ -40,6 +41,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Filinq\Exception\SigningFieldsRefusedException;
+use OCA\Filinq\Exception\StepUpRequiredException;
 
 /**
  * Tests for SigningController::listRequests() error handling
@@ -83,6 +86,7 @@ class SigningControllerTest extends TestCase {
 		parent::setUp();
 
 		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(fn (string $key, mixed $default = null): mixed => $default);
 		$this->signingService = $this->createMock(SigningService::class);
 		$auditService = $this->createMock(SigningAuditService::class);
 		$verificationService = $this->createMock(SigningVerificationService::class);
@@ -102,11 +106,8 @@ class SigningControllerTest extends TestCase {
 		$this->userSession->method('getUser')->willReturn($user);
 
 		$this->controller = new SigningController(
-			'filinq',
 			$request,
-			$this->signingService,
-			$auditService,
-			$verificationService,
+			new SigningServices(signing: $this->signingService, audit: $auditService, verification: $verificationService),
 			$this->userSession,
 			$this->logger,
 			$l10n,
@@ -187,4 +188,179 @@ class SigningControllerTest extends TestCase {
 
 	}//end testListRequestsReturnsServiceResultOnSuccess()
 
+	/**
+	 * A step-up refusal answers 403 with the hint the sign dialog needs (REQ-DDSIR-003).
+	 *
+	 * @return void
+	 */
+	public function testAStepUpRefusalAnswers403WithTheHint(): void {
+		$this->signingService->method('sign')->willThrowException(
+			new StepUpRequiredException(reason: 'insufficient', requiredAssurance: 'substantial', heldAssurance: 'low', provider: 'oidc-broker')
+		);
+
+		$response = $this->controller->sign('req-1');
+
+		$this->assertSame(403, $response->getStatus());
+		$this->assertSame(
+			['required' => true, 'reason' => 'insufficient', 'requiredAssurance' => 'substantial', 'heldAssurance' => 'low', 'provider' => 'oidc-broker'],
+			$response->getData()['stepUp'] ?? null
+		);
+
+	}//end testAStepUpRefusalAnswers403WithTheHint()
+
+	/**
+	 * Any other failure carries no hint.
+	 *
+	 * @return void
+	 */
+	public function testAnOrdinaryRefusalCarriesNoHint(): void {
+		$this->signingService->method('decline')->willThrowException(new \RuntimeException('Not authorized to decline as this signer', 403));
+
+		$response = $this->controller->decline('req-1');
+
+		$this->assertSame(403, $response->getStatus());
+		$this->assertArrayNotHasKey('stepUp', $response->getData());
+
+	}//end testAnOrdinaryRefusalCarriesNoHint()
+
+	/**
+	 * The sign route passes the typed fields on, and a refused value answers 422 with a message per field.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.3
+	 */
+	public function testARefusedFieldAnswers422WithTheMessageOnThatField(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			fn (string $key, mixed $default = null): mixed => match ($key) {
+				'signerId' => 'signer-1',
+				'fields' => ['0' => 'NL91 ABNA 0417 1643 01'],
+				default => $default,
+			}
+		);
+		$user = $this->createMock(IUser::class);
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnCallback(fn (string $text): string => '['.$text.']');
+		$controller = new SigningController(
+			$request,
+			new SigningServices(signing: $this->signingService, audit: $this->createMock(SigningAuditService::class), verification: $this->createMock(SigningVerificationService::class)),
+			$session,
+			$this->logger,
+			$l10n,
+			$this->createMock(IGroupManager::class)
+		);
+
+		$this->signingService->expects($this->once())->method('sign')
+			->with('req-1', 'signer-1', null, null, ['0' => 'NL91 ABNA 0417 1643 01'])
+			->willThrowException(new SigningFieldsRefusedException(fieldErrors: [0 => 'Type a valid Dutch IBAN, for example NL91 ABNA 0417 1643 00']));
+
+		$response = $controller->sign('req-1');
+
+		$this->assertSame(422, $response->getStatus());
+		$this->assertSame([0 => '[Type a valid Dutch IBAN, for example NL91 ABNA 0417 1643 00]'], $response->getData()['fieldErrors'] ?? null);
+		$this->assertStringNotContainsString('1643 01', (string) json_encode($response->getData()));
+
+	}//end testARefusedFieldAnswers422WithTheMessageOnThatField()
+
+	/**
+	 * Without a `fields` object the act carries none, and the answer has no field messages.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.3
+	 */
+	public function testWithoutFieldsTheActCarriesNone(): void {
+		$this->signingService->expects($this->once())->method('sign')
+			->with('req-1', '', null, null, null)
+			->willReturn(['status' => 'SIGNED']);
+
+		$response = $this->controller->sign('req-1');
+
+		$this->assertSame(200, $response->getStatus());
+		$this->assertArrayNotHasKey('fieldErrors', $response->getData());
+
+	}//end testWithoutFieldsTheActCarriesNone()
+
+	/**
+	 * A signature on a withdrawn request answers 409 and says it was withdrawn.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
+	 */
+	public function testAWithdrawnRequestAnswers409AndSaysSo(): void {
+		$this->signingService->method('sign')->willThrowException(new \OCA\Filinq\Exception\SigningRequestWithdrawnException());
+
+		$response = $this->controller->sign('req-1');
+
+		$this->assertSame(409, $response->getStatus());
+		$this->assertSame('The signing request was withdrawn.', $response->getData()['error'] ?? null);
+
+	}//end testAWithdrawnRequestAnswers409AndSaysSo()
+
+
+	/**
+	 * A controller whose request names another user, over the given verifier and session user.
+	 *
+	 * @param SigningVerificationService|MockObject $verification The verifier.
+	 * @param string|null                           $uid          The session user, null for nobody.
+	 *
+	 * @return SigningController The controller.
+	 */
+	private function forgedController(SigningVerificationService|MockObject $verification, ?string $uid): SigningController {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(fn (string $key, mixed $default = null): mixed => ($key === 'userId') ? 'mallory' : $default);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn((string) $uid);
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn(($uid === null) ? null : $user);
+		$l10n = $this->createMock(IL10N::class);
+		$l10n->method('t')->willReturnArgument(0);
+
+		return new SigningController(
+			$request,
+			new SigningServices(signing: $this->signingService, audit: $this->createMock(SigningAuditService::class), verification: $verification),
+			$session,
+			$this->logger,
+			$l10n,
+			$this->createMock(IGroupManager::class)
+		);
+
+	}//end forgedController()
+
+	/**
+	 * A document is verified for the session user, not for a userId the request names.
+	 *
+	 * @return void
+	 */
+	public function testVerifyRunsForTheSessionUserNotAForgedUserId(): void {
+		$verification = $this->createMock(SigningVerificationService::class);
+		$verification->expects($this->once())
+			->method('verifyDocument')
+			->with(17, 'alice')
+			->willReturn(['valid' => true]);
+
+		$response = $this->forgedController(verification: $verification, uid: 'alice')->verify(fileId: 17);
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+
+	}//end testVerifyRunsForTheSessionUserNotAForgedUserId()
+
+	/**
+	 * With nobody signed in nothing is verified, not even for a userId the request names.
+	 *
+	 * @return void
+	 */
+	public function testVerifyAsksForASessionUser(): void {
+		$verification = $this->createMock(SigningVerificationService::class);
+		$verification->expects($this->never())->method('verifyDocument');
+
+		$response = $this->forgedController(verification: $verification, uid: null)->verify(fileId: 17);
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+
+	}//end testVerifyAsksForASessionUser()
 }//end class

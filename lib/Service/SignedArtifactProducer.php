@@ -3,6 +3,9 @@
 /**
  * Signed Artifact Producer
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Produces and stores the verifiable signed artifact for a completing signing
  * request, and resolves the two inputs it needs: the target document's `File`
  * node and a human label for the completing signer.
@@ -28,9 +31,6 @@
  * @version   GIT: <git_id>
  * @link      https://www.filinq.app
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @spec openspec/specs/document-signing/spec.md
  * @spec openspec/specs/portal-signing-surface/spec.md
  */
@@ -41,11 +41,18 @@ namespace OCA\Filinq\Service;
 
 use DateTimeImmutable;
 use DateTimeInterface;
+use OCA\Filinq\Exception\DocumentFinalException;
+use OCA\Filinq\Service\Signing\LibreSignProvider;
+use OCA\Filinq\Service\Signing\NativeSigningProvider;
+use OCA\Filinq\Service\Signing\RecipientRole;
 use OCA\Filinq\Service\Signing\SigningProviderFactory;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
+use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -57,6 +64,9 @@ use RuntimeException;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://www.filinq.app
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the sum of small independent
+ * checks of the signing fields and their placement on one document.
+ *
  * @spec openspec/specs/document-signing/spec.md
  */
 class SignedArtifactProducer {
@@ -64,9 +74,15 @@ class SignedArtifactProducer {
 	 * Constructor.
 	 *
 	 * @param SigningProviderFactory $providerFactory Provider factory (strict resolution).
-	 * @param IUserSession $userSession User session (signer label + folder fallback).
+	 * @param IUserSession $userSession User session (signer label).
 	 * @param IRequest $request HTTP request (client IP for the evidence context).
 	 * @param IRootFolder $rootFolder Root folder (reads the document, stores the signed version).
+	 * @param FinalDocumentService $finalDocuments The final-document guard.
+	 * @param SignatureVerificationLinkService|null $verificationLinks Mints the public verification record.
+	 * @param LoggerInterface|null $logger Logger for a verification record that could not be minted.
+	 * @param VerificationQrStamp|null $qrStamp Draws the verification QR code on the document before it is signed.
+	 * @param IURLGenerator|null $urlGenerator Builds the absolute verification link the QR code encodes.
+	 * @param IL10N|null $l10n Translates the caption beside the QR code.
 	 *
 	 * @return void
 	 */
@@ -75,9 +91,30 @@ class SignedArtifactProducer {
 		private readonly IUserSession $userSession,
 		private readonly IRequest $request,
 		private readonly IRootFolder $rootFolder,
+		private readonly FinalDocumentService $finalDocuments,
+		private readonly ?SignatureVerificationLinkService $verificationLinks = null,
+		private readonly ?LoggerInterface $logger = null,
+		private readonly ?VerificationQrStamp $qrStamp = null,
+		private readonly ?IURLGenerator $urlGenerator = null,
+		private readonly ?IL10N $l10n = null,
 	) {
 
 	}//end __construct()
+
+	/**
+	 * A token for the public verification record, taken before signing.
+	 *
+	 * Taking it first lets the QR code that links to the record go into the
+	 * document before it is signed, so it is part of the signed bytes and the
+	 * record's content hash, and adding it breaks no signature.
+	 *
+	 * @return string|null The token, or null when verification records are not available.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
+	 */
+	public function newVerificationToken(): ?string {
+		return $this->verificationLinks?->newToken();
+	}//end newVerificationToken()
 
 	/**
 	 * Produce the signed artifact and store it as a new file version.
@@ -88,20 +125,36 @@ class SignedArtifactProducer {
 	 *                                                 folded into the produced artifact's
 	 *                                                 evidence binding (portal-signing-surface
 	 *                                                 REQ-DDPSS-004).
+	 * @param array<string, array<string, mixed>> $signers The request's signer records, keyed by id
+	 *                                                     (names for placed fields).
+	 * @param string|null $verificationToken The token from newVerificationToken(); when given, a PDF
+	 *                                       gets the QR code to its public verification page before signing.
 	 *
 	 * @return string The stored signed-artifact reference (file id + version).
 	 *
+	 * @throws DocumentFinalException When the document's current version is already final.
 	 * @throws RuntimeException When no verifiable artifact can be produced/stored,
 	 *                          or when the request names an unregistered provider.
 	 *
 	 * @spec openspec/specs/document-signing/spec.md
 	 * @spec openspec/specs/portal-signing-surface/spec.md
+	 * @spec openspec/changes/final-documents-frozen/specs/document-versions/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
 	 */
-	public function produce(array $request, ?array $verifiedActor = null): string {
+	public function produce(array $request, ?array $verifiedActor = null, array $signers = [], ?string $verificationToken = null): string {
 		$fileId = (int)($request['documentFileId'] ?? 0);
 		if ($fileId <= 0) {
 			throw new RuntimeException('Cannot produce a signed artifact: the request has no document file id');
 		}
+
+		// Signing writes the signed bytes over the document, so it is a write
+		// path like the editors and it asks the same service. A signature is a
+		// common reason a version becomes final; once it is, the next signature
+		// goes on a new version rather than over the frozen one.
+		$this->finalDocuments->assertWritable(
+			fileId: $fileId,
+			action: 'store a signed version of this document'
+		);
 
 		$file = $this->resolveDocumentFile(fileId: $fileId, request: $request);
 
@@ -121,6 +174,11 @@ class SignedArtifactProducer {
 		$provider = $this->providerFactory->getProvider(identifier: $providerName);
 
 		$context = $this->buildContext(request: $request, verifiedActor: $verifiedActor);
+		$context += $this->placementContext(request: $request, signers: $signers);
+
+		if ($verificationToken !== null && $providerName !== LibreSignProvider::IDENTIFIER) {
+			$originalContent = $this->withVerificationQr(content: $originalContent, token: $verificationToken, fileId: $fileId);
+		}
 
 		$signedBytes = $provider->produceSignedArtifact(documentContent: $originalContent, context: $context);
 
@@ -139,6 +197,225 @@ class SignedArtifactProducer {
 	}//end produce()
 
 	/**
+	 * Refuse a signature whose completion could never produce the artifact,
+	 * before the signer is recorded as signed. Without this a native request
+	 * on a server with no signing secret stored the signature and its SIGNED
+	 * audit entry, then failed at completion: the request stayed in progress
+	 * and the signer could not sign again.
+	 *
+	 * @param array<string, mixed> $request The signing request.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When the request's provider cannot produce an artifact.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function assertCanProduce(array $request): void {
+		$provider = $this->providerFactory->getProvider(identifier: (string)($request['provider'] ?? 'native'));
+		if ($provider instanceof NativeSigningProvider) {
+			$provider->assertCanProduce(level: (string)($request['signatureLevel'] ?? 'SES'));
+		}
+	}//end assertCanProduce()
+
+	/**
+	 * Mint the public verification record for a request's stored signed artifact.
+	 *
+	 * Reads the signed version back as the initiator, so the record's content
+	 * hash and signature outcome are those of the bytes actually stored. The
+	 * signature itself is already complete: a record that cannot be minted is
+	 * logged and leaves the request without a verification token, it does not
+	 * undo the signing.
+	 *
+	 * @param array<string, mixed> $request The completing signing-request array.
+	 * @param string $signedDocumentRef The reference produce() returned.
+	 * @param string|null $token The token produce() stamped as a QR code; a new one when null.
+	 *
+	 * @return string|null The verification token, or null when none was minted.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-signature-verification-portal/tasks.md#task-2.4
+	 */
+	public function recordVerification(array $request, string $signedDocumentRef, ?string $token = null): ?string {
+		if ($this->verificationLinks === null) {
+			return null;
+		}
+
+		try {
+			$file = $this->resolveDocumentFile(fileId: (int)($request['documentFileId'] ?? 0), request: $request);
+			$record = $this->verificationLinks->mint(
+				signedBytes: $file->getContent(),
+				fileRef: $signedDocumentRef,
+				fileName: $file->getName(),
+				token: $token
+			);
+		} catch (\Throwable $e) {
+			$this->logger?->warning(
+				'SignedArtifactProducer: the signature verification record could not be minted',
+				['signedDocumentRef' => $signedDocumentRef, 'error' => $e->getMessage()]
+			);
+			return null;
+		}
+
+		return (string)$record['token'];
+
+	}//end recordVerification()
+
+	/**
+	 * The document with the QR code to its verification page, or unchanged.
+	 *
+	 * A document that is not an unencrypted PDF, or a stamp that fails, is
+	 * signed as it is: the QR code is a convenience on top of a signature
+	 * that must not fail because of it. The record is minted either way.
+	 *
+	 * @param string $content The document bytes about to be signed.
+	 * @param string $token   The verification token.
+	 * @param int    $fileId  The document's file id, for the log line.
+	 *
+	 * @return string The bytes to sign.
+	 */
+	private function withVerificationQr(string $content, string $token, int $fileId): string {
+		if ($this->qrStamp === null || $this->urlGenerator === null || $this->qrStamp->canStamp(content: $content) === false) {
+			return $content;
+		}
+
+		$url = $this->urlGenerator->linkToRouteAbsolute('filinq.publicVerification.page', ['token' => $token]);
+		$caption = ($this->l10n?->t('Verify this document') ?? 'Verify this document');
+
+		try {
+			return $this->qrStamp->stamp(pdf: $content, url: $url, caption: $caption);
+		} catch (\Throwable $e) {
+			$this->logger?->warning(
+				'SignedArtifactProducer: the verification QR code could not be stamped; signing without it',
+				['fileId' => $fileId, 'error' => $e->getMessage()]
+			);
+			return $content;
+		}
+	}//end withVerificationQr()
+
+	/**
+	 * Hand a new request to a provider that runs the signer flow itself.
+	 *
+	 * Only LibreSign does today: it gets the document's bytes and the
+	 * signers, notifies them, and its request uuid becomes the request's
+	 * `externalId`. Other providers sign inside Filinq and get the request
+	 * unchanged. Runs before the request is stored, so a LibreSign that
+	 * refuses leaves nothing behind.
+	 *
+	 * @param array<string, mixed>     $request The request about to be stored
+	 * @param array<string, mixed>     $signers The signers as the caller sent them (the provider contract's type)
+	 *
+	 * @return array<string, mixed> The request, with externalId when delegated.
+	 *
+	 * @throws RuntimeException When the document cannot be read or LibreSign refuses.
+	 *
+	 * @spec openspec/changes/archive/2026-09-29-libresign-signing-provider/tasks.md#task-3.1
+	 */
+	public function delegate(array $request, array $signers): array {
+		if (($request['provider'] ?? '') !== LibreSignProvider::IDENTIFIER) {
+			return $request;
+		}
+
+		$file = $this->resolveDocumentFile(fileId: (int)($request['documentFileId'] ?? 0), request: $request);
+		$result = $this->providerFactory->getProvider(identifier: LibreSignProvider::IDENTIFIER)->initiateSigning(
+			documentPath: '',
+			documentName: (string)($request['documentName'] ?? ''),
+			signers: $signers,
+			level: (string)($request['signatureLevel'] ?? 'SES'),
+			options: ['content' => $file->getContent()]
+		);
+		$request['externalId'] = (string)$result['externalId'];
+
+		return $request;
+
+	}//end delegate()
+
+	/**
+	 * The bytes of the document a request is for, read with the access check signing uses.
+	 *
+	 * Field placement reads the page count from them before the request is stored.
+	 *
+	 * @param array<string, mixed> $request The request (documentFileId, initiatorUserId).
+	 *
+	 * @return string The document's bytes.
+	 *
+	 * @throws RuntimeException When the document cannot be resolved for the initiator or the session user.
+	 *
+	 * @spec openspec/changes/archive/2026-09-30-bulk-signing-field-builder/tasks.md#task-3.1
+	 */
+	public function documentContent(array $request): string {
+		return $this->resolveDocumentFile(fileId: (int) ($request['documentFileId'] ?? 0), request: $request)->getContent();
+
+	}//end documentContent()
+
+	/**
+	 * The placements and signer names a provider draws, when the request has placements.
+	 *
+	 * A placement names its signer by position in `signerIds`; the name is the
+	 * signer record's display name, else its e-mail address, else its user id.
+	 *
+	 * @param array<string, mixed>                $request The completing request.
+	 * @param array<string, array<string, mixed>> $signers The signer records, keyed by id.
+	 *
+	 * @return array<string, mixed> `fieldPlacements` and `signerLabels`, or nothing.
+	 */
+	private function placementContext(array $request, array $signers): array {
+		$placements = ($request['fieldPlacements'] ?? []);
+		if (is_array($placements) === false || $placements === []) {
+			return [];
+		}
+
+		$labels = [];
+		$values = [];
+		foreach (array_values((array) ($request['signerIds'] ?? [])) as $index => $signerId) {
+			$record = ($signers[(string) $signerId] ?? []);
+			$names = array_filter([(string) ($record['displayName'] ?? ''), (string) ($record['email'] ?? ''), (string) ($record['userId'] ?? '')]);
+			$labels[] = (string) (reset($names) ?? '');
+			$values += $this->typedValues(record: $record, signerIndex: $index, placements: $placements);
+		}
+
+		// What a signer typed is drawn in its own field block, so it sits
+		// inside the sealed content (signing-field-validation REQ-SFV-004).
+		foreach ($values as $position => $value) {
+			$placements[$position]['value'] = $value;
+		}
+
+		return ['fieldPlacements' => $placements, 'signerLabels' => $labels];
+
+	}//end placementContext()
+
+	/**
+	 * The values one signer typed, keyed by placement position.
+	 *
+	 * Only a value for a text field placed for this signer counts.
+	 *
+	 * @param array<string, mixed>             $record      The signer record.
+	 * @param int                              $signerIndex The signer's position in `signerIds`.
+	 * @param array<int, array<string, mixed>> $placements  The request's placements.
+	 *
+	 * @return array<int, string> The values.
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-signing-field-validation/tasks.md#task-2.4
+	 */
+	private function typedValues(array $record, int $signerIndex, array $placements): array {
+		$values = [];
+		foreach ((array) ($record['fieldValues'] ?? []) as $entry) {
+			if (is_array($entry) === false || is_int($entry['placement'] ?? null) === false || is_string($entry['value'] ?? null) === false) {
+				continue;
+			}
+
+			$placement = ($placements[$entry['placement']] ?? null);
+			if (is_array($placement) === true && ($placement['type'] ?? null) === 'text'
+				&& (int) ($placement['signerIndex'] ?? -1) === $signerIndex
+			) {
+				$values[$entry['placement']] = $entry['value'];
+			}
+		}
+
+		return $values;
+
+	}//end typedValues()
+
+	/**
 	 * Build the provider's evidence context.
 	 *
 	 * @param array<string, mixed> $request The completing signing-request array.
@@ -149,11 +426,33 @@ class SignedArtifactProducer {
 	private function buildContext(array $request, ?array $verifiedActor): array {
 		$context = [
 			'signer' => $this->resolveSignerLabel(verifiedActor: $verifiedActor),
-			'signers' => ($request['signerIds'] ?? []),
+			// Signers and accept-only recipients apart (signing-accept-only-recipient D3).
+			'signers' => RecipientRole::split(request: $request)['signers'],
+			'accepted' => RecipientRole::split(request: $request)['accepted'],
 			'timestamp' => (new DateTimeImmutable())->format(DateTimeInterface::ATOM),
 			'ip' => $this->request->getRemoteAddress(),
 			'level' => (string)($request['signatureLevel'] ?? 'SES'),
 		];
+
+		// Guardian consent (signer-identity-rails REQ-DDSIR-010): a signer who
+		// signed under the age of consent, and the guardian who acted for them,
+		// are recorded in the artifact itself. SigningService computed the basis
+		// from the stored signer records; it never comes from request input.
+		if (empty($request['consentBasis']) === false && is_array($request['consentBasis']) === true) {
+			$context['consentBasis'] = $request['consentBasis'];
+		}
+
+		// Identity rails (signer-identity-rails REQ-DDSIR-004): each signer's
+		// recorded identity evidence, from the stored signer records.
+		if (empty($request['signerEvidence']) === false && is_array($request['signerEvidence']) === true) {
+			$context['signerEvidence'] = $request['signerEvidence'];
+		}
+
+		// A provider that ran the signer flow itself (LibreSign) hands back
+		// the file it signed for this request.
+		if ((string)($request['externalId'] ?? '') !== '') {
+			$context['externalId'] = (string)$request['externalId'];
+		}
 
 		if ($verifiedActor === null) {
 			return $context;
@@ -183,9 +482,9 @@ class SignedArtifactProducer {
 	/**
 	 * Resolve the document File node for the signing request.
 	 *
-	 * Resolves through the initiator's user folder (the request owner), falling
-	 * back to the current signer's folder — either way a node that is not a
-	 * readable/writeable file throws rather than silently skipping the artifact.
+	 * Resolves through the initiator's user folder only. The signer's own
+	 * folder is never consulted: a request names a file of its initiator, and
+	 * resolving it anywhere else would sign and overwrite a file of the signer.
 	 *
 	 * @param int $fileId The Nextcloud file id.
 	 * @param array<string, mixed> $request The signing-request array.
@@ -195,22 +494,37 @@ class SignedArtifactProducer {
 	 * @throws RuntimeException When the file cannot be resolved.
 	 */
 	private function resolveDocumentFile(int $fileId, array $request): File {
-		$candidates = [];
-		$initiator = (string)($request['initiatorUserId'] ?? '');
-		if ($initiator !== '') {
-			$candidates[] = $initiator;
+		try {
+			return $this->initiatorDocument(fileId: $fileId, initiatorUserId: (string)($request['initiatorUserId'] ?? ''));
+		} catch (RuntimeException $e) {
+			throw new RuntimeException('Cannot resolve the document file to sign: ' . $fileId, 0, $e);
 		}
 
-		$current = $this->userSession->getUser();
-		if ($current !== null) {
-			$candidates[] = $current->getUID();
+	}//end resolveDocumentFile()
+
+	/**
+	 * The file a signing request names, as its initiator can open it.
+	 *
+	 * @param int|string $fileId          The Nextcloud file id the request names.
+	 * @param string $initiatorUserId The user asking for the signatures.
+	 *
+	 * @return File The readable file in the initiator's folder.
+	 *
+	 * @throws RuntimeException With code 403 when the initiator cannot read a file with this id.
+	 *
+	 * @spec openspec/specs/document-signing/spec.md
+	 */
+	public function initiatorDocument(int|string $fileId, string $initiatorUserId): File {
+		$id = 0;
+		if (is_numeric($fileId) === true) {
+			$id = (int)$fileId;
 		}
 
-		foreach (array_unique($candidates) as $uid) {
+		if ($id > 0 && $initiatorUserId !== '') {
 			try {
-				$nodes = $this->rootFolder->getUserFolder($uid)->getById($fileId);
+				$nodes = $this->rootFolder->getUserFolder($initiatorUserId)->getById($id);
 			} catch (\Throwable $e) {
-				continue;
+				$nodes = [];
 			}
 
 			foreach ($nodes as $node) {
@@ -220,8 +534,9 @@ class SignedArtifactProducer {
 			}
 		}
 
-		throw new RuntimeException('Cannot resolve the document file to sign: ' . $fileId);
-	}//end resolveDocumentFile()
+		throw new RuntimeException('The document is not available to the initiator', 403);
+
+	}//end initiatorDocument()
 
 	/**
 	 * Resolve a human label for the completing signer.

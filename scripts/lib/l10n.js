@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 /* eslint-disable jsdoc/require-param */
 /**
  * Shared l10n helpers used by check-l10n.js, clean-l10n.js, l10n-ai.js, and
@@ -285,8 +289,30 @@ function localeNameOf(file) {
 	return path.basename(file, '.js')
 }
 
+/**
+ * The full English source catalogue: en.json, completed by en.js.
+ *
+ * scripts/build-l10n-js.js leaves identity entries (key -> key) out of en.js,
+ * so en.js alone no longer lists every key. Tools that ask "which keys exist"
+ * read this instead. The app id comes from en.js's register call.
+ *
+ * @spec ADR-124 (speed budget: page usable <= 300 ms warm)
+ * @param {string} l10nDir - the app's l10n/ directory
+ * @return {{app: string, translations: object, pluralForm: string}} the catalogue
+ */
+function loadSourceCatalogue(l10nDir) {
+	const js = loadJsTranslations(path.join(l10nDir, 'en.js'))
+	const doc = JSON.parse(fs.readFileSync(path.join(l10nDir, 'en.json'), 'utf8'))
+	return {
+		app: js.app,
+		translations: { ...(doc.translations || {}), ...js.translations },
+		pluralForm: js.pluralForm,
+	}
+}
+
 module.exports = {
 	loadJsTranslations,
+	loadSourceCatalogue,
 	serializeJs,
 	serializeJson,
 	walk,

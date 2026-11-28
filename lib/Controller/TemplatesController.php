@@ -28,7 +28,8 @@ namespace OCA\Filinq\Controller;
 
 use Exception;
 use OCA\Filinq\Exception\RegisterNotConfiguredException;
-use OCA\Filinq\Service\TemplateService;
+use OCA\Filinq\Integration\TemplateLeafRow;
+use OCA\Filinq\Kernel\Contracts\TemplateServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -46,12 +47,14 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  */
 class TemplatesController extends Controller {
+	use AnswersNotAuthenticated;
+
 	/**
 	 * Constructor for TemplatesController
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
-	 * @param TemplateService $templateService Service for template operations
+	 * @param TemplateServiceInterface $templateService Service for template operations
 	 * @param TemplateRequestHandler $requestHandler Request param parser and error handler
 	 * @param IUserSession $userSession User session for current user
 	 * @param LoggerInterface $logger Logger for not-configured info messages
@@ -61,7 +64,7 @@ class TemplatesController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly TemplateService $templateService,
+		private readonly TemplateServiceInterface $templateService,
 		private readonly TemplateRequestHandler $requestHandler,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
@@ -98,10 +101,7 @@ class TemplatesController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$params = $this->requestHandler->parseListParams(request: $this->request);
@@ -133,6 +133,54 @@ class TemplatesController extends Controller {
 	}//end index()
 
 	/**
+	 * The templates that apply to one host object, for the
+	 * `filinq-generate-document` widget.
+	 *
+	 * GET /api/templates/for-object?register=&schema=
+	 *
+	 * Answers the same rows as the `filinq-templates` data provider. The
+	 * register and schema are slugs; a template applies when its scope is
+	 * empty or holds the pair.
+	 *
+	 * @return JSONResponse `{results: [{id, name, format, description}]}`
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/changes/template-library-leaf/tasks.md#task-2.2
+	 *
+	 * @no-admin-idor-exempt lists templates through the template service under
+	 * OpenRegister's RBAC, exactly as `index()` does; no object id is read.
+	 */
+	public function forObject(): JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return $this->notAuthenticated(message: 'Not authenticated');
+		}
+
+		$register = trim((string) $this->request->getParam('register', ''));
+		$schema   = trim((string) $this->request->getParam('schema', ''));
+		if ($register === '' || $schema === '') {
+			return new JSONResponse(
+				data: ['error' => 'register and schema are required'],
+				statusCode: Http::STATUS_BAD_REQUEST
+			);
+		}
+
+		try {
+			$rows = array_map(
+				static fn (array|object $template): array => TemplateLeafRow::fromTemplate(template: $template),
+				$this->templateService->listForObject(register: $register, schema: $schema)
+			);
+
+			return new JSONResponse(data: ['results' => $rows]);
+		} catch (RegisterNotConfiguredException $e) {
+			return new JSONResponse(data: ['results' => [], 'notConfigured' => true]);
+		} catch (Exception $e) {
+			return $this->requestHandler->buildErrorResponse($e, 'Failed to list templates: ');
+		}//end try
+
+	}//end forObject()
+
+	/**
 	 * Get a single template by ID
 	 *
 	 * @param string $id The template UUID
@@ -143,15 +191,15 @@ class TemplatesController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt the read goes through OpenRegister with RBAC and multitenancy on
+	 * (TemplateService::getTemplate()), and the template schema grants read to authenticated users.
 	 */
 	public function show(string $id): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$result = $this->templateService->getTemplate(id: $id);
@@ -175,10 +223,7 @@ class TemplatesController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$data = $this->requestHandler->parseBodyParams(request: $this->request);
@@ -200,15 +245,16 @@ class TemplatesController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt the save goes through OpenRegister saveObject() with RBAC on
+	 * (TemplateService::updateTemplate()), and the template schema grants update to filinq-template-
+	 * editors only.
 	 */
 	public function update(string $id): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$data = $this->requestHandler->parseBodyParams(request: $this->request, stripKeys: ['id']);
@@ -230,15 +276,15 @@ class TemplatesController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt deleteObject() runs with RBAC on and is checked against the stored object's
+	 * own schema (template delete: filinq-template-editors).
 	 */
 	public function destroy(string $id): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$this->templateService->deleteTemplate(id: $id);
@@ -259,15 +305,15 @@ class TemplatesController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/template-management/spec.md
+	 *
+	 * @no-admin-idor-exempt the source is read with OpenRegister RBAC on and the copy is saved as a new
+	 * template, which authenticated users may create anyway.
 	 */
 	public function duplicate(string $id): JSONResponse {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$result = $this->templateService->duplicateTemplate(id: $id);
@@ -293,10 +339,7 @@ class TemplatesController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$userId = $this->getCurrentUserId();
@@ -332,10 +375,7 @@ class TemplatesController extends Controller {
 		try {
 			$user = $this->userSession->getUser();
 			if ($user === null) {
-				return new JSONResponse(
-					data: ['error' => 'Not authenticated'],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: 'Not authenticated');
 			}
 
 			$userId = $this->getCurrentUserId();
@@ -346,4 +386,33 @@ class TemplatesController extends Controller {
 		}
 
 	}//end unlock()
+
+	/**
+	 * Publish the version a template is on, so users may generate from it
+	 *
+	 * @param string $id The template UUID
+	 *
+	 * @return JSONResponse JSON response with the published template
+	 *
+	 * @NoAdminRequired
+	 *
+	 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/specs/template-management/spec.md#requirement-a-template-is-tried-with-sample-data-before-users-get-it-req-scr-015
+	 *
+	 * @no-admin-idor-exempt the publish is a save on the template, which OpenRegister refuses unless
+	 * the user is in the group the template schema grants update to.
+	 */
+	public function publish(string $id): JSONResponse {
+		try {
+			$user = $this->userSession->getUser();
+			if ($user === null) {
+				return $this->notAuthenticated(message: 'Not authenticated');
+			}
+
+			$result = $this->templateService->publishTemplate(id: $id);
+			return new JSONResponse(data: $result);
+		} catch (Exception $e) {
+			return $this->requestHandler->buildErrorResponse($e, 'Failed to publish template: ');
+		}
+
+	}//end publish()
 }//end class

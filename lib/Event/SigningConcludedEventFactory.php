@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Event;
 
+use OCA\Filinq\Service\Signing\RecipientRole;
+
 /**
  * Builds a SigningConcludedEvent from a persisted signing-request array.
  *
@@ -64,7 +66,7 @@ class SigningConcludedEventFactory {
 			signingRequestId: (string)($request['id'] ?? $request['uuid'] ?? ''),
 			status: $status,
 			signedDocumentRef: $signedDocumentRef,
-			signers: (array)($request['signerIds'] ?? []),
+			signers: RecipientRole::split(request: $request)['signers'],
 			signedAt: ($request['signedAt'] ?? null),
 			provenance: new SigningProvenance(
 				sourceApp: (string)($request['sourceApp'] ?? ''),
@@ -75,6 +77,7 @@ class SigningConcludedEventFactory {
 				correlationId: (string)($request['correlationId'] ?? ''),
 			),
 			assuranceLevel: $this->resolveAssuranceLevel(request: $request),
+			accepted: RecipientRole::split(request: $request)['accepted'],
 		);
 
 	}//end create()
@@ -98,6 +101,19 @@ class SigningConcludedEventFactory {
 	 * @return string One of low|substantial|high.
 	 */
 	private function resolveAssuranceLevel(array $request): string {
+		// Identity rails (signer-identity-rails REQ-DDSIR-007): a completed
+		// request carries the weakest assurance among its signers' RECORDED
+		// identity evidence, and that exact value is what consumers see. A
+		// value off the scale is never surfaced.
+		$recorded = $request['resolvedAssurance'] ?? null;
+		if (in_array($recorded, ['low', 'substantial', 'high'], true) === true) {
+			return (string)$recorded;
+		}
+
+		if (array_key_exists('resolvedAssurance', $request) === true) {
+			return 'low';
+		}
+
 		$provider = (string)($request['provider'] ?? 'native');
 		$level = (string)($request['signatureLevel'] ?? 'SES');
 

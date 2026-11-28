@@ -27,11 +27,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Controller;
 
 use Exception;
+use OCA\Filinq\Controller\Support\PdfResponses;
+use OCA\Filinq\Controller\Support\PdfServices;
 use OCA\Filinq\Exception\Pdfa3ConversionException;
-use OCA\Filinq\Service\Pdfa3ConversionService;
-use OCA\Filinq\Service\PdfService;
 use OCP\AppFramework\Controller;
-use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
@@ -49,18 +48,18 @@ use Psr\Log\LoggerInterface;
  * @link     https://www.filinq.app
  *
  * @spec openspec/specs/pdfa3-conversion/spec.md
+ *
+ * @psalm-type PdfAParams = array{data:array<mixed>,options:array<mixed>,metadata:array<mixed>,attachments:array<mixed>,filename:string}
  */
 class PdfController extends Controller {
+	use AnswersNotAuthenticated;
 	/**
 	 * Constructor for PdfController
 	 *
 	 * @param string $appName The application name
 	 * @param IRequest $request The request object
 	 * @param LoggerInterface $logger Logger for error reporting
-	 * @param PdfService $pdfService Service for PDF generation
-	 * @param Pdfa3ConversionService $pdfa3Service Service for archival PDF/A-3
-	 *                                             generation (attachments +
-	 *                                             MDTO metadata)
+	 * @param PdfServices $pdf The PDF and archival PDF/A-3 generators.
 	 * @param IL10N $l10n The localization service
 	 * @param IUserSession $userSession User session for authentication
 	 *
@@ -70,8 +69,7 @@ class PdfController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly LoggerInterface $logger,
-		private readonly PdfService $pdfService,
-		private readonly Pdfa3ConversionService $pdfa3Service,
+		private readonly PdfServices $pdf,
 		private readonly IL10N $l10n,
 		private readonly IUserSession $userSession,
 	) {
@@ -93,65 +91,94 @@ class PdfController extends Controller {
 	 * @NoAdminRequired
 	 *
 	 * @spec openspec/specs/pdf-generation/spec.md
+	 *
+	 * @no-admin-idor-exempt no stored object is addressed. The template and data come from the request
+	 * body and the PDF goes back to the caller, so there is no id to steer.
 	 */
 	public function render(): DataDownloadResponse|JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
-			$template = $this->request->getParam('template');
-			$data = $this->request->getParam('data', []);
-			$options = $this->request->getParam('options', []);
-			$filename = $this->request->getParam('filename', 'document.pdf');
-
-			if (empty($template) === true) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Template content is required')],
-					statusCode: 400
-				);
-			}
-
-			if (is_array($data) === false) {
-				$data = [];
-			}
-
-			if (is_array($options) === false) {
-				$options = [];
-			}
-
-			$pdfContent = $this->pdfService->renderPdf(
-				templateContent: $template,
-				data: $data,
-				options: $options
-			);
-
-			return new DataDownloadResponse(
-				data: $pdfContent,
-				filename: $filename,
-				contentType: 'application/pdf'
-			);
+			return $this->renderRequested();
 		} catch (Exception $e) {
-			$statusCode = 500;
-			if ($e->getCode() >= 400 && $e->getCode() < 600) {
-				$statusCode = $e->getCode();
-			}
-
-			$this->logger->error(
-				message: 'PDF generation failed: ' . $e->getMessage(),
-				context: ['exception' => $e]
-			);
-
-			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
-				statusCode: $statusCode
-			);
-		}//end try
+			return $this->renderFailed(exception: $e);
+		}
 
 	}//end render()
+
+	/**
+	 * Render the request's template, data and options to a PDF download.
+	 *
+	 * @return DataDownloadResponse|JSONResponse The PDF, or 400 without a template.
+	 *
+	 * @spec openspec/specs/pdf-generation/spec.md
+	 */
+	private function renderRequested(): DataDownloadResponse|JSONResponse {
+		$template = $this->request->getParam('template');
+		$filename = $this->request->getParam('filename', 'document.pdf');
+
+		if (empty($template) === true) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('Template content is required')],
+				statusCode: 400
+			);
+		}
+
+		$pdfContent = $this->pdf->pdf->renderPdf(
+			templateContent: $template,
+			data: $this->arrayParam(name: 'data'),
+			options: $this->arrayParam(name: 'options')
+		);
+
+		return new DataDownloadResponse(
+			data: $pdfContent,
+			filename: $filename,
+			contentType: 'application/pdf'
+		);
+
+	}//end renderRequested()
+
+	/**
+	 * A request parameter that must be an array; anything else reads as empty.
+	 *
+	 * @param string $name The parameter name.
+	 *
+	 * @return array<mixed> The parameter, or [] when absent or not an array.
+	 *
+	 * @spec openspec/specs/pdf-generation/spec.md
+	 */
+	private function arrayParam(string $name): array {
+		$value = $this->request->getParam($name, []);
+		if (is_array($value) === false) {
+			return [];
+		}
+
+		return $value;
+	}//end arrayParam()
+
+	/**
+	 * Log a failed render and answer with its HTTP-range code, else 500.
+	 *
+	 * @param Exception $exception The failure.
+	 *
+	 * @return JSONResponse The error response.
+	 *
+	 * @spec openspec/specs/pdf-generation/spec.md
+	 */
+	private function renderFailed(Exception $exception): JSONResponse {
+		$this->logger->error(
+			message: 'PDF generation failed: ' . $exception->getMessage(),
+			context: ['exception' => $exception]
+		);
+
+		return new JSONResponse(
+			data: ['error' => $exception->getMessage()],
+			statusCode: (new PdfResponses())->clampStatusCode(code: (int)$exception->getCode())
+		);
+
+	}//end renderFailed()
 
 	/**
 	 * Generate a PDF/A-3b compliant document from a Twig template
@@ -180,99 +207,91 @@ class PdfController extends Controller {
 	 *
 	 * @spec openspec/specs/print-preview/spec.md
 	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 *
+	 * @no-admin-idor-exempt no stored object is addressed. The template, data, metadata and attachments
+	 * come from the request body as content and the PDF goes back to the caller, so there is no id to
+	 * steer.
 	 */
 	public function renderPdfA(): DataDownloadResponse|JSONResponse {
 		try {
 			if ($this->userSession->getUser() === null) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Not authenticated')],
-					statusCode: Http::STATUS_UNAUTHORIZED
-				);
+				return $this->notAuthenticated(message: $this->l10n->t('Not authenticated'));
 			}
 
-			$template = $this->request->getParam('template');
-			if (empty($template) === true) {
-				return new JSONResponse(
-					data: ['error' => $this->l10n->t('Template content is required')],
-					statusCode: 400
-				);
-			}
-
-			$params = $this->collectRenderPdfAParams();
-
-			// Archival path: MDTO metadata and/or embedded attachments were
-			// requested, so hand off to the dedicated PDF/A-3 service rather
-			// than the plain PDF/A-1B-safe-but-attachment-less PdfService path.
-			if (empty($params['metadata']) === false || empty($params['attachments']) === false) {
-				return $this->renderArchivalPdfA(
-					template: $template,
-					data: $params['data'],
-					metadata: $params['metadata'],
-					attachments: $params['attachments'],
-					options: $params['options'],
-					filename: $params['filename']
-				);
-			}
-
-			$options = $params['options'];
-			$options['pdfa'] = true;
-
-			$pdfContent = $this->pdfService->renderPdf(
-				templateContent: $template,
-				data: $params['data'],
-				options: $options
-			);
-
-			return new DataDownloadResponse(
-				data: $pdfContent,
-				filename: $params['filename'],
-				contentType: 'application/pdf'
-			);
+			return $this->renderPdfARequested();
 		} catch (Pdfa3ConversionException $e) {
 			return $this->mapPdfa3ExceptionToResponse(exception: $e);
 		} catch (Exception $e) {
 			return $this->mapGenericExceptionToResponse(exception: $e);
-		}//end try
+		}
 
 	}//end renderPdfA()
 
 	/**
-	 * Collect and normalise renderPdfA()'s request parameters. Split out
-	 * purely to keep renderPdfA() within the fleet's cyclomatic-complexity
-	 * threshold.
+	 * Render the request's template as PDF/A: archival PDF/A-3 when metadata or
+	 * attachments are present, else the plain service with pdfa forced on.
 	 *
-	 * @return array{data:array<string,mixed>,options:array<string,mixed>,metadata:array<string,mixed>,attachments:array<int,mixed>,filename:string}
+	 * @return DataDownloadResponse|JSONResponse The PDF, or 400 without a template.
+	 *
+	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 */
+	private function renderPdfARequested(): DataDownloadResponse|JSONResponse {
+		$template = $this->request->getParam('template');
+		if (empty($template) === true) {
+			return new JSONResponse(
+				data: ['error' => $this->l10n->t('Template content is required')],
+				statusCode: 400
+			);
+		}
+
+		$params = $this->collectRenderPdfAParams();
+		if (empty($params['metadata']) === false || empty($params['attachments']) === false) {
+			return $this->renderArchivalPdfA(template: $template, params: $params);
+		}
+
+		return $this->renderPlainPdfA(template: $template, params: $params);
+	}//end renderPdfARequested()
+
+	/**
+	 * Render the template through the plain PDF service with pdfa forced on.
+	 *
+	 * @param string $template Twig template content.
+	 * @param PdfAParams $params The collected request parameters.
+	 *
+	 * @return DataDownloadResponse The PDF download.
+	 *
+	 * @spec openspec/specs/pdfa3-conversion/spec.md
+	 */
+	private function renderPlainPdfA(string $template, array $params): DataDownloadResponse {
+		$options = $params['options'];
+		$options['pdfa'] = true;
+
+		$pdfContent = $this->pdf->pdf->renderPdf(
+			templateContent: $template,
+			data: $params['data'],
+			options: $options
+		);
+
+		return new DataDownloadResponse(
+			data: $pdfContent,
+			filename: $params['filename'],
+			contentType: 'application/pdf'
+		);
+
+	}//end renderPlainPdfA()
+
+	/**
+	 * Collect and normalise renderPdfA()'s request parameters.
+	 *
+	 * @return PdfAParams
 	 */
 	private function collectRenderPdfAParams(): array {
-		$data = $this->request->getParam('data', []);
-		$options = $this->request->getParam('options', []);
-		$filename = $this->request->getParam('filename', 'document.pdf');
-
-		$metadata = $this->request->getParam('metadata', []);
-		$attachments = $this->request->getParam('attachments', []);
-
-		if (is_array($data) === false) {
-			$data = [];
-		}
-
-		if (is_array($options) === false) {
-			$options = [];
-		}
-
-		if (is_array($metadata) === false) {
-			$metadata = [];
-		}
-
-		if (is_array($attachments) === false) {
-			$attachments = [];
-		}
-
 		return [
-			'data' => $data,
-			'options' => $options,
-			'metadata' => $metadata,
-			'attachments' => $attachments,
-			'filename' => (string)$filename,
+			'data' => $this->arrayParam(name: 'data'),
+			'options' => $this->arrayParam(name: 'options'),
+			'metadata' => $this->arrayParam(name: 'metadata'),
+			'attachments' => $this->arrayParam(name: 'attachments'),
+			'filename' => (string)$this->request->getParam('filename', 'document.pdf'),
 		];
 
 	}//end collectRenderPdfAParams()
@@ -290,14 +309,7 @@ class PdfController extends Controller {
 			context: ['reason' => $exception->getReason()]
 		);
 
-		return new JSONResponse(
-			data: [
-				'error' => $exception->getMessage(),
-				'reason' => $exception->getReason(),
-				'adminHint' => $exception->getAdminHint(),
-			],
-			statusCode: $this->clampStatusCode(code: $exception->getCode())
-		);
+		return (new PdfResponses())->pdfa3Refusal(exception: $exception);
 
 	}//end mapPdfa3ExceptionToResponse()
 
@@ -316,28 +328,10 @@ class PdfController extends Controller {
 
 		return new JSONResponse(
 			data: ['error' => $exception->getMessage()],
-			statusCode: $this->clampStatusCode(code: $exception->getCode())
+			statusCode: (new PdfResponses())->clampStatusCode(code: $exception->getCode())
 		);
 
 	}//end mapGenericExceptionToResponse()
-
-	/**
-	 * Clamp an exception code to a valid HTTP status range, defaulting
-	 * to 500 for anything outside [400, 599].
-	 *
-	 * @param int $code Candidate status code.
-	 *
-	 * @return int Valid HTTP status code.
-	 *
-	 * @psalm-suppress InvalidArgument $statusCode is clamped to int<400, 599>; Psalm wants the literal HTTP status union.
-	 */
-	private function clampStatusCode(int $code): int {
-		if ($code >= 400 && $code < 600) {
-			return $code;
-		}
-
-		return Http::STATUS_INTERNAL_SERVER_ERROR;
-	}//end clampStatusCode()
 
 	/**
 	 * Render the archival PDF/A-3 path: render the Twig template to
@@ -345,15 +339,8 @@ class PdfController extends Controller {
 	 * full PDF/A-3 assembly (metadata XMP + attachments), and surface
 	 * the composition metadata as response headers.
 	 *
-	 * Extracted from renderPdfA() to keep that method's cyclomatic
-	 * complexity within the fleet's phpmd threshold.
-	 *
 	 * @param string $template Twig template content.
-	 * @param array<string,mixed> $data Data context for template rendering.
-	 * @param array<string,mixed> $metadata MDTO/archival metadata.
-	 * @param array<int,mixed> $attachments Files to embed.
-	 * @param array<string,mixed> $options PDF configuration options.
-	 * @param string $filename Suggested download filename.
+	 * @param PdfAParams $params The collected request parameters.
 	 *
 	 * @return DataDownloadResponse
 	 *
@@ -361,31 +348,15 @@ class PdfController extends Controller {
 	 *
 	 * @spec openspec/specs/pdfa3-conversion/spec.md
 	 */
-	private function renderArchivalPdfA(
-		string $template,
-		array $data,
-		array $metadata,
-		array $attachments,
-		array $options,
-		string $filename,
-	): DataDownloadResponse {
-		$html = $this->pdfService->renderTemplateToHtml(templateContent: $template, data: $data);
-		$result = $this->pdfa3Service->convertHtml(
+	private function renderArchivalPdfA(string $template, array $params): DataDownloadResponse {
+		$html = $this->pdf->pdf->renderTemplateToHtml(templateContent: $template, data: $params['data']);
+		$result = $this->pdf->pdfa3->convertHtml(
 			html: $html,
-			metadata: $metadata,
-			attachments: $attachments,
-			options: $options
+			metadata: $params['metadata'],
+			attachments: $params['attachments'],
+			options: $params['options']
 		);
 
-		$response = new DataDownloadResponse(
-			data: $result['content'],
-			filename: $filename,
-			contentType: 'application/pdf'
-		);
-		$response->addHeader('X-Docudesk-Pdfa3-Checksum-Sha256', $result['checksumSha256']);
-		$response->addHeader('X-Docudesk-Pdfa3-Pages', (string)$result['pages']);
-		$response->addHeader('X-Docudesk-Pdfa3-Conformance', $result['conformance']);
-
-		return $response;
+		return (new PdfResponses())->pdfa3Download(result: $result, filename: $params['filename']);
 	}//end renderArchivalPdfA()
 }//end class

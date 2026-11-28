@@ -25,6 +25,9 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/changes/propose-grondslag-per-entity-type/specs/grondslag-proposal/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -32,6 +35,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Service\Grounds\RefusalGroundLabels;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -62,6 +66,8 @@ class LegalBasisCatalog {
 	 * @param IAppManager $appManager App manager (OpenRegister availability).
 	 * @param ContainerInterface $container DI container resolving OpenRegister services at runtime.
 	 * @param LoggerInterface $logger Logger for best-effort diagnostics.
+	 * @param RefusalGroundLabels|null $wooGrounds The Woo refusal grounds (dossiq or the snapshot); when given,
+	 *                                         Woo grounds are offered from it, never from `base`.
 	 *
 	 * @return void
 	 */
@@ -69,6 +75,7 @@ class LegalBasisCatalog {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
+		private readonly ?RefusalGroundLabels $wooGrounds = null,
 	) {
 
 	}//end __construct()
@@ -121,12 +128,10 @@ class LegalBasisCatalog {
 		}
 
 		try {
-			$result = $objectService->searchObjectsBySlug(
-				registerSlug: 'filinq',
-				schemaSlug: 'base',
-				filters: [],
-				_rbac: false,
-				_multitenancy: false
+			$result = (new SlugSearch(objects: $objectService, _rbac: false, _multitenancy: false))->search(
+				register: 'filinq',
+				schema: 'base',
+				filters: []
 			);
 		} catch (Exception $e) {
 			$this->logger->warning(
@@ -136,16 +141,43 @@ class LegalBasisCatalog {
 			return [];
 		}
 
-		$bases = [];
+		return $this->offeredBases(result: $result);
+	}//end getAvailableBases()
+
+	/**
+	 * The refusal grounds from the grounds reader, then every `base` record offered as itself.
+	 *
+	 * @param mixed $result The `base` search result.
+	 *
+	 * @return array<int, array{slug: string, name: string, description: string}> Available bases.
+	 *
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 */
+	private function offeredBases(mixed $result): array {
+		$bases = ($this->wooGrounds?->options() ?? []);
 		foreach ($this->extractObjects(result: $result) as $base) {
 			$record = $this->toBaseRecord(base: $base);
-			if ($record !== null) {
+			if ($record !== null && $this->isOfferedFromBase(slug: $record['slug']) === true) {
 				$bases[] = $record;
 			}
 		}
 
 		return $bases;
-	}//end getAvailableBases()
+	}//end offeredBases()
+
+	/**
+	 * Whether a `base` record is offered as itself: always without the Woo
+	 * grounds reader, else only a tenant's own basis, never a Woo ground.
+	 *
+	 * @param string $slug The record's slug.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/archive/2026-11-24-grondslagen-read-from-dossiq/specs/refusal-grounds-source/spec.md#requirement-every-grounds-reader-in-filinq-goes-through-the-resolver-req-grd-002
+	 */
+	private function isOfferedFromBase(string $slug): bool {
+		return $this->wooGrounds === null || $this->wooGrounds->isWooReference(ref: $slug) === false;
+	}//end isOfferedFromBase()
 
 	/**
 	 * Convert one raw `base` object into the selector record shape.

@@ -28,11 +28,12 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
-use OCA\Filinq\BackgroundJob\FolderExtractionJob;
-use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
-use OCP\BackgroundJob\IJobList;
+use OCA\Filinq\Kernel\Contracts\FolderBatchServiceInterface;
+use OCA\Filinq\Kernel\JobQueueInterface;
+use OCA\Filinq\Service\Support\BatchQueue;
+use OCA\Filinq\Service\Support\FolderEnumerationSources;
+use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
-use OCP\IAppConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -53,7 +54,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
  * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md
  */
-class FolderBatchService {
+class FolderBatchService implements FolderBatchServiceInterface {
 
 	/**
 	 * Resolves the source folder and enumerates its analysable files.
@@ -67,25 +68,40 @@ class FolderBatchService {
 	private readonly FolderFileEnumerator $enumerator;
 
 	/**
+	 * Batch state management.
+	 *
+	 * @var BatchStateService
+	 */
+	private readonly BatchStateService $stateService;
+
+	/**
+	 * Background job list.
+	 *
+	 * @var JobQueueInterface
+	 */
+	private readonly JobQueueInterface $jobList;
+
+	/**
+	 * Picks the in-request or background path by batch size; null keeps the synchronous cap as the only cap.
+	 *
+	 * @var BatchRouting|null
+	 */
+	private readonly ?BatchRouting $routing;
+
+	/**
 	 * Constructor for FolderBatchService
 	 *
 	 * @param LoggerInterface $logger Logger for error reporting
 	 * @param IRootFolder $rootFolder Root folder for file operations
 	 * @param IUserSession $userSession User session for current user
-	 * @param BatchStateService $stateService Batch state management
-	 * @param IJobList $jobList Background job list
+	 * @param BatchQueue $queue The batch state and the job queue
 	 * @param AnonymizationService $anonService Anonymization/extraction service
-	 * @param OutputLayoutResolver $layout Output-layout helper (used here to
-	 *                                     identify legacy `_anonymized` outputs
-	 *                                     and exclude them from source discovery).
-	 * @param ConfidentialityLabelService $confidentialityLabel Read-only files_confidential signal,
-	 *                                                          used (only when
-	 *                                                          `filinq.confidentiality.prioritise_analysis`
-	 *                                                          is on) as a secondary, tie-breaking
-	 *                                                          sort key so higher-confidentiality
-	 *                                                          files are analysed sooner
-	 *                                                          (files-confidential-labels).
-	 * @param IAppConfig $appConfig App configuration for the priority-hint flag
+	 * @param FolderEnumerationSources $enumeration The output layout (to leave legacy
+	 *                                              `_anonymized` outputs out), the
+	 *                                              confidentiality labels (a tie-breaking
+	 *                                              sort key when prioritised analysis is
+	 *                                              on) and the app configuration that
+	 *                                              holds that flag
 	 *
 	 * @return void
 	 */
@@ -93,17 +109,18 @@ class FolderBatchService {
 		private readonly LoggerInterface $logger,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
-		private readonly BatchStateService $stateService,
-		private readonly IJobList $jobList,
+		BatchQueue $queue,
 		private readonly AnonymizationService $anonService,
-		OutputLayoutResolver $layout,
-		ConfidentialityLabelService $confidentialityLabel,
-		IAppConfig $appConfig,
+		FolderEnumerationSources $enumeration,
 	) {
+		$this->stateService = $queue->state;
+		$this->jobList = $queue->jobs;
+		$this->routing = $queue->routing;
 		$this->enumerator = new FolderFileEnumerator(
-			layout: $layout,
-			confidentialityLabel: $confidentialityLabel,
-			appConfig: $appConfig
+			layout: $enumeration->layout,
+			confidentialityLabel: $enumeration->confidentialityLabel,
+			appConfig: $enumeration->appConfig,
+			renditions: $enumeration->renditions
 		);
 
 	}//end __construct()
@@ -126,6 +143,41 @@ class FolderBatchService {
 	 * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
 	 */
 	public function createFolderBatch(?int $folderId = null, ?string $folderPath = null): array {
+		return $this->createBatchFromFolder(folderId: $folderId, folderPath: $folderPath, recursive: false);
+	}//end createFolderBatch()
+
+	/**
+	 * Create a batch from a folder and every subfolder below it.
+	 *
+	 * As createFolderBatch(), but the files of every subfolder are included
+	 * (the anonymised-output subfolder excepted), each recording its path
+	 * below the folder; the size cap applies to the whole tree.
+	 *
+	 * @param int|null    $folderId   Node ID of the folder, or null
+	 * @param string|null $folderPath Path relative to the user's root folder, or null
+	 *
+	 * @return array<string, mixed> Batch data with batchId, folderId, folderPath, fileCount, files
+	 *
+	 * @throws Exception If input is invalid, folder is not found, not a folder, empty, or too large
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/folder-batch-analysis/spec.md#requirement-optional-recursive-folder-enumeration-req-ddras-011
+	 */
+	public function createRecursiveFolderBatch(?int $folderId = null, ?string $folderPath = null): array {
+		return $this->createBatchFromFolder(folderId: $folderId, folderPath: $folderPath, recursive: true);
+	}//end createRecursiveFolderBatch()
+
+	/**
+	 * Create a folder batch, flat or over the whole tree.
+	 *
+	 * @param int|null    $folderId   Node ID of the folder, or null
+	 * @param string|null $folderPath Path relative to the user's root folder, or null
+	 * @param bool        $recursive  Whether subfolders are included
+	 *
+	 * @return array<string, mixed> The batch
+	 *
+	 * @throws Exception If input is invalid, folder is not found, not a folder, empty, or too large
+	 */
+	private function createBatchFromFolder(?int $folderId, ?string $folderPath, bool $recursive): array {
 		$userId = $this->getCurrentUserId();
 		$userFolder = $this->rootFolder->getUserFolder($userId);
 
@@ -135,32 +187,143 @@ class FolderBatchService {
 			userFolder: $userFolder
 		);
 
-		$files = $this->enumerator->enumerate(folder: $node);
-
-		if (empty($files) === true) {
-			throw new Exception('No files found in folder', 400);
-		}
-
-		$maxFiles = $this->stateService->getMaxFiles();
-		if (count($files) > $maxFiles) {
-			throw new Exception(
-				'Folder contains too many files (found: ' . count($files) . ', maximum: ' . $maxFiles . ')',
-				400
-			);
-		}
+		$files = $this->requireFiles(folder: $node, recursive: $recursive);
+		$path = $this->pathFor(fileCount: count($files));
+		$batchFiles = $this->startingFileRecords(files: $files, root: $node, recursive: $recursive);
 
 		// Canonical identifiers captured from the resolved node — stored and
 		// returned regardless of which input method the caller used.
-		$resolvedFolderId = $node->getId();
-		$resolvedFolderPath = $userFolder->getRelativePath($node->getPath()) ?? $node->getPath();
+		$folderFields = [
+			'sourceType' => 'folder',
+			'folderId' => $node->getId(),
+			'folderPath' => ($userFolder->getRelativePath($node->getPath()) ?? $node->getPath()),
+		];
+
+		if ($recursive === true) {
+			$folderFields['recursive'] = true;
+		}
+
+		$batch = array_merge($this->stateService->createBatch($userId, $batchFiles), $folderFields);
+		if ($path === BatchRouting::BACKGROUND) {
+			return $this->startInBackground(batch: $batch);
+		}
+
+		$this->stateService->updateBatch($batch['batchId'], $batch);
+
+		// Run extraction asynchronously: the shutdown function fires after the
+		// HTTP response has been flushed to the client (via fastcgi_finish_request).
+		// The IJobList entry serves as a fallback if the shutdown handler is
+		// interrupted (e.g. process kill, memory limit).
+		$this->jobList->add(JobQueueInterface::FOLDER_EXTRACTION, ['batchId' => $batch['batchId']]);
+		$this->scheduleExtraction(batchId: $batch['batchId']);
+
 		$inputMethod = 'path';
 		if ($folderId !== null) {
 			$inputMethod = 'id';
 		}
 
-		$batchFiles = [];
+		$this->logger->info(
+			'Folder batch created, extraction job fired',
+			['batchId' => $batch['batchId'], 'folderId' => $batch['folderId'], 'folderPath' => $batch['folderPath']]
+				+ ['fileCount' => count($batchFiles), 'inputMethod' => $inputMethod]
+		);
+
+		return $batch;
+	}//end createBatchFromFolder()
+
+	/**
+	 * The folder's files, refused when there are none.
+	 *
+	 * @param Folder $folder    The resolved folder.
+	 * @param bool   $recursive Whether subfolders are included.
+	 *
+	 * @return array<int, \OCP\Files\File> The files.
+	 *
+	 * @throws Exception Code 400 when the folder is empty.
+	 */
+	private function requireFiles(Folder $folder, bool $recursive): array {
+		$files = [];
+		if ($recursive === true) {
+			$files = $this->enumerator->enumerateRecursive(folder: $folder);
+		}
+
+		if ($recursive === false) {
+			$files = $this->enumerator->enumerate(folder: $folder);
+		}
+
+		if (empty($files) === true) {
+			throw new Exception('No files found in folder', 400);
+		}
+
+		return $files;
+	}//end requireFiles()
+
+	/**
+	 * The path a folder batch of this size takes, refused above the cap that applies.
+	 *
+	 * Checked against the whole (recursive) count before anything is created.
+	 *
+	 * @param int $fileCount The number of files.
+	 *
+	 * @return string BatchRouting::SYNC or BatchRouting::BACKGROUND.
+	 *
+	 * @throws Exception Code 400, naming the maximum, when the batch is too large.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-resource-guards-on-extractconvert-backends-req-ddras-008
+	 */
+	private function pathFor(int $fileCount): string {
+		if ($this->routing !== null) {
+			return $this->routing->route(fileCount: $fileCount);
+		}
+
+		$maxFiles = $this->stateService->getMaxFiles();
+		if ($fileCount > $maxFiles) {
+			throw new Exception(
+				'Folder contains too many files (found: ' . $fileCount . ', maximum: ' . $maxFiles . ')',
+				400
+			);
+		}
+
+		return BatchRouting::SYNC;
+	}//end pathFor()
+
+	/**
+	 * Hand a folder batch above the synchronous cap to the cron coordinator.
+	 *
+	 * No shutdown extraction and no queued job: the coordinator's work units
+	 * extract it (REQ-DDRAS-002).
+	 *
+	 * @param array<string, mixed> $batch The created batch.
+	 *
+	 * @return array<string, mixed> The batch, marked background and extracting.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-resource-guards-on-extractconvert-backends-req-ddras-008
+	 */
+	private function startInBackground(array $batch): array {
+		$batch['background'] = true;
+		$batch['status'] = 'extracting';
+		$batch['totalFiles'] = count($batch['files']);
+		$this->stateService->updateBatch($batch['batchId'], $batch);
+		$this->logger->info(
+			'Folder batch created for background processing',
+			['batchId' => $batch['batchId'], 'fileCount' => $batch['totalFiles']]
+		);
+		return $batch;
+	}//end startInBackground()
+
+	/**
+	 * Each file's record as a new batch starts it: uploaded, nothing found yet.
+	 *
+	 * @param array<int, \OCP\Files\File> $files     The files.
+	 * @param Folder                       $root      The batch's folder.
+	 * @param bool                         $recursive Whether to record each file's path below the folder.
+	 *
+	 * @return array<int, array<string, mixed>> The records.
+	 */
+	private function startingFileRecords(array $files, Folder $root, bool $recursive): array {
+		$records = [];
 		foreach ($files as $file) {
-			$batchFiles[] = [
+			$record = [
 				'fileId' => $file->getId(),
 				'fileName' => $file->getName(),
 				'status' => 'uploaded',
@@ -168,36 +331,15 @@ class FolderBatchService {
 				'replacementCount' => 0,
 				'error' => null,
 			];
+			if ($recursive === true) {
+				$record['relativePath'] = ltrim(($root->getRelativePath($file->getPath()) ?? $file->getName()), '/');
+			}
+
+			$records[] = $record;
 		}
 
-		$batch = $this->stateService->createBatch($userId, $batchFiles);
-
-		// Store folder metadata on the batch — both identifiers regardless of input.
-		$batch['sourceType'] = 'folder';
-		$batch['folderId'] = $resolvedFolderId;
-		$batch['folderPath'] = $resolvedFolderPath;
-		$this->stateService->updateBatch($batch['batchId'], $batch);
-
-		// Run extraction asynchronously: the shutdown function fires after the
-		// HTTP response has been flushed to the client (via fastcgi_finish_request).
-		// The IJobList entry serves as a fallback if the shutdown handler is
-		// interrupted (e.g. process kill, memory limit).
-		$this->jobList->add(FolderExtractionJob::class, ['batchId' => $batch['batchId']]);
-		$this->scheduleExtraction(batchId: $batch['batchId']);
-
-		$this->logger->info(
-			'Folder batch created, extraction job fired',
-			[
-				'batchId' => $batch['batchId'],
-				'folderId' => $resolvedFolderId,
-				'folderPath' => $resolvedFolderPath,
-				'fileCount' => count($batchFiles),
-				'inputMethod' => $inputMethod,
-			]
-		);
-
-		return $batch;
-	}//end createFolderBatch()
+		return $records;
+	}//end startingFileRecords()
 
 	/**
 	 * Schedule extraction to run after the HTTP response is flushed
@@ -215,56 +357,66 @@ class FolderBatchService {
 	 * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-1
 	 */
 	private function scheduleExtraction(string $batchId): void {
-		$stateService = $this->stateService;
-		$anonService = $this->anonService;
-		$jobList = $this->jobList;
-		$logger = $this->logger;
-
 		register_shutdown_function(
-			static function () use ($batchId, $stateService, $anonService, $jobList, $logger): void {
+			function () use ($batchId): void {
 				// Flush the response to the client before doing heavy work.
 				if (function_exists('fastcgi_finish_request') === true) {
 					fastcgi_finish_request();
 				}
 
-				$batch = $stateService->getBatch($batchId);
-				if ($batch === null) {
-					return;
-				}
-
-				$batch['status'] = 'extracting';
-				$stateService->updateBatch($batchId, $batch);
-
-				foreach ($batch['files'] as $i => $file) {
-					if ($file['status'] !== 'uploaded') {
-						continue;
-					}
-
-					try {
-						$result = $anonService->extractAndDetectEntities((int)$file['fileId']);
-						$batch['files'][$i]['status'] = 'extracted';
-						$batch['files'][$i]['entityCount'] = $result['entityCount'];
-					} catch (\Exception $e) {
-						$logger->warning(
-							'Shutdown extraction failed for file',
-							['batchId' => $batchId, 'fileId' => $file['fileId'], 'error' => $e->getMessage()]
-						);
-						$batch['files'][$i]['status'] = 'error';
-						$batch['files'][$i]['error'] = $e->getMessage();
-					}
-
-					$stateService->updateBatch($batchId, $batch);
-				}//end foreach
-
-				$batch['status'] = 'review';
-				$stateService->updateBatch($batchId, $batch);
-
-				// Extraction completed — remove the fallback background job.
-				$jobList->remove(FolderExtractionJob::class, ['batchId' => $batchId]);
+				$this->extractBatch(batchId: $batchId);
 			}
 		);
 
 	}//end scheduleExtraction()
+
+	/**
+	 * Extract and detect entities in every uploaded file of a batch, then hand it to review.
+	 *
+	 * A file that fails is marked `error` with its message; the others go on.
+	 * The fallback background job is removed once the batch reaches review.
+	 *
+	 * @param string $batchId The batch.
+	 *
+	 * @return void
+	 */
+	private function extractBatch(string $batchId): void {
+		$batch = $this->stateService->getBatch($batchId);
+		if ($batch === null) {
+			return;
+		}
+
+		$batch['status'] = 'extracting';
+		$this->stateService->updateBatch($batchId, $batch);
+
+		foreach ($batch['files'] as $i => $file) {
+			if ($file['status'] !== 'uploaded') {
+				continue;
+			}
+
+			try {
+				$result = $this->anonService->extractAndDetectEntities((int)$file['fileId']);
+				$batch['files'][$i]['status'] = 'extracted';
+				$batch['files'][$i]['entityCount'] = $result['entityCount'];
+			} catch (\Exception $e) {
+				$this->logger->warning(
+					'Shutdown extraction failed for file',
+					['batchId' => $batchId, 'fileId' => $file['fileId'], 'error' => $e->getMessage()]
+				);
+				$batch['files'][$i]['status'] = 'error';
+				$batch['files'][$i]['error'] = $e->getMessage();
+			}
+
+			$this->stateService->updateBatch($batchId, $batch);
+		}//end foreach
+
+		$batch['status'] = 'review';
+		$this->stateService->updateBatch($batchId, $batch);
+
+		// Extraction completed — remove the fallback background job.
+		$this->jobList->remove(JobQueueInterface::FOLDER_EXTRACTION, ['batchId' => $batchId]);
+
+	}//end extractBatch()
 
 	/**
 	 * Get the current user ID

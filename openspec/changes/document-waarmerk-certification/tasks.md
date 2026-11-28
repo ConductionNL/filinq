@@ -1,48 +1,55 @@
 # Tasks: document-waarmerk-certification
 
-<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 14.
+<!-- HYDRA CAP: max 20 unindented `- [ ]` lines. This file uses 16.
      Acceptance criteria are plain bullets, not checkboxes. -->
 
 ## 1. Register & data model
 
-- [ ] 1.1 Add the `certification` register + `waarmerk` schema to `lib/Settings/filinq_register.json` (fields per design.md: document refs, `documentHash`, `sealType` enum, `cmsSignature`, certificate fingerprint/subject, `verificationCode`, `sealedAt`/`sealedBy`, `status` enum, revocation fields, optional `anonymizationLinkId` relation)
+- [x] 1.1 Add the `certification` register + `waarmerk` schema to `lib/Settings/filinq_register.json` (fields per design.md: document refs, `documentHash`, `sealType` enum, `cmsSignature`, certificate fingerprint/subject, `verificationCode`, `sealedAt`/`sealedBy`, `status` enum, revocation fields, optional `anonymizationLinkId` relation)
   - Additive import on boot; `tests/validate-manifest.js` passes; NO key material fields anywhere (ADR-064)
 
-- [ ] 1.2 Seed data: demo `waarmerk` object (nil-UUID, Demostad, placeholder CMS/fingerprint per design.md Seed Data); test bootstrap generates a throwaway self-signed org certificate at runtime — no PEM/key fixture committed
+- [x] 1.2 Seed data: demo `waarmerk` object (nil-UUID, Demostad, placeholder CMS/fingerprint per design.md Seed Data); test bootstrap generates a throwaway self-signed org certificate at runtime — no PEM/key fixture committed
 
 ## 2. Backend
 
-- [ ] 2.1 Custody resolver + admin settings: certificate PEM storage (public material), fingerprint/expiry display, `credentialRef` storage; broker resolution with interim `ICrypto` local-custody mode behind the same interface, labelled in UI; expired-cert seal refusal; key never persisted or logged (REQ-DDWMK-001)
+- [x] 2.1 Custody resolver + admin settings: certificate PEM storage (public material), fingerprint/expiry display, `credentialRef` storage; broker resolution with interim `ICrypto` local-custody mode behind the same interface, labelled in UI; expired-cert seal refusal; key never persisted or logged (REQ-DDWMK-001)
 
-- [ ] 2.2 `WaarmerkService::seal()`: stamp-page composition via `PdfService` (Twig template, brandable) + local QR SVG, canonicalised sha256 over sealed artifact, detached CMS via `openssl_cms_sign` (pkcs7 fallback), write-once `waarmerk` record via ObjectService (REQ-DDWMK-002)
+- [x] 2.2 `WaarmerkService::seal()`: stamp-page composition via `PdfService` (Twig template, brandable) + local QR SVG, canonicalised sha256 over sealed artifact, detached CMS via `openssl_cms_sign` (pkcs7 fallback), write-once `waarmerk` record via ObjectService (REQ-DDWMK-002)
   - Stamp appended as final page only; fail-closed on unresolvable key (503, no artifact)
 
-- [ ] 2.3 `ProcessingCertificateService`: anonymization certificate PDF from `anonymizationLink` + run entity-type counts + backend id + acting user; types/counts only — never entity values; sealed with `sealType: processing-certificate` + `anonymizationLinkId` (REQ-DDWMK-003)
+- [x] 2.3 `ProcessingCertificateService`: anonymization certificate PDF from `anonymizationLink` + run entity-type counts + backend id + acting user; types/counts only — never entity values; sealed with `sealType: processing-certificate` + `anonymizationLinkId` (REQ-DDWMK-003)
 
-- [ ] 2.4 Verification: `POST /api/waarmerk/verify` (`{code, sha256}` → `valid|hash-mismatch|revoked|unknown`, CMS validation via `openssl_cms_verify`, fail-closed, oracle-free response parity, rate-limited) and revocation endpoint with in-method admin-or-sealer guard, reason mandatory, irreversible (REQ-DDWMK-004/005)
+- [x] 2.4 Verification: `POST /api/waarmerk/verify` (`{code, sha256}` → `valid|hash-mismatch|revoked|unknown`, CMS validation via `openssl_cms_verify`, fail-closed, oracle-free response parity, rate-limited) and revocation endpoint with in-method admin-or-sealer guard, reason mandatory, irreversible (REQ-DDWMK-004/005)
+
+- [x] 2.5 `SigningEvidenceService`: builds the evidence PDF/A for a terminal `signingRequest` from its `signerRecord` objects and `signingAuditEntry` trail through `PdfService`, seals it with `sealType: signing-evidence` via `WaarmerkService::seal()`, refuses an open request with 409 (REQ-DDWMK-006)
+  - Titles and checksums only, never document content; covered by `tests/unit/Service/SigningEvidenceServiceTest.php`
 
 ## 3. Routes & controller
 
-- [ ] 3.1 `WaarmerkController` + routes in `appinfo/routes.php`: seal, list/show, revoke (authenticated, explicit attributes); `GET /verify/{code}` page + `POST /api/waarmerk/verify` as `#[PublicPage]` with brute-force protection
+- [x] 3.1 `WaarmerkController` + routes in `appinfo/routes.php`: seal, list/show, revoke (authenticated, explicit attributes); `GET /verify/{code}` page + `POST /api/waarmerk/verify` as `#[PublicPage]` with brute-force protection
   - route-auth/semantic-auth/no-admin-idor gates pass; public endpoints serve no document content
 
 ## 4. Frontend (ADR-012)
 
-- [ ] 4.1 Document surfaces: "Waarmerk toevoegen" action + waarmerk badge on My Documents/anonymization results; anonymization-certificate action on runs; dialogs in `src/modals/`
+- [x] 4.1 Document surfaces: "Waarmerk toevoegen" action + waarmerk badge on My Documents/anonymization results; anonymization-certificate action on runs; dialogs in `src/modals/`
 
-- [ ] 4.2 Public verification page: standalone entry, client-side WebCrypto hash of a locally selected file (bytes never uploaded), status rendering incl. `certificateExpired` advisory; NL Design System tokens, WCAG AA (citizen-facing)
+- [x] 4.2 Public verification page: standalone entry, client-side WebCrypto hash of a locally selected file (bytes never uploaded), status rendering incl. `certificateExpired` advisory; NL Design System tokens, WCAG AA (citizen-facing)
 
-- [ ] 4.3 Admin settings panel (settings framework, NOT vue-router): PEM upload, fingerprint/expiry, `credentialRef`, custody-mode label, test-seal button
+- [x] 4.3 Admin settings panel (settings framework, NOT vue-router): PEM upload, fingerprint/expiry, `credentialRef`, custody-mode label, test-seal button
+
+- [x] 4.4 Signing request page: "Bewijsdocument downloaden (pdf)" and "Kopie naar dossier" on the evidence card, as the board `filinq/FqOndertekenverzoek` draws it; route `GET /api/signing/{id}/evidence` (REQ-DDWMK-006)
 
 ## 5. Quality, i18n, docs
 
-- [ ] 5.1 Unit tests ≥75% on new code (seal/verify round-trip with runtime-generated cert, tamper detection, revocation dominance, write-once invariant, oracle parity, key-never-logged assertion); run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
+- [x] 5.1 Unit tests ≥75% on new code (seal/verify round-trip with runtime-generated cert, tamper detection, revocation dominance, write-once invariant, oracle parity, key-never-logged assertion); run in container: `docker exec -w /var/www/html/custom_apps/filinq nextcloud php vendor/bin/phpunit -c phpunit-unit.xml`
 
-- [ ] 5.2 Playwright e2e `tests/e2e/spec-coverage/document-waarmerk-certification.spec.ts` (seal → QR page → verify valid / tampered / revoked); verify on Postgres (8080); test with nldesign theme enabled
+- [x] 5.2 Playwright e2e `tests/e2e/spec-coverage/document-waarmerk-certification.spec.ts` (seal → QR page → verify valid / tampered / revoked); verify on Postgres (8080); test with nldesign theme enabled
+  - Written, runs in nightly (UNBLOCK rule, 24 Nov 2026): the spec is in the tree and runs against a live instance in the nightly; not verified here.
 
-- [ ] 5.3 i18n EN source + NL translations for all new strings, incl. the public page (citizen-facing Dutch first-class)
+- [x] 5.3 i18n EN source + NL translations for all new strings, incl. the public page (citizen-facing Dutch first-class)
 
 - [ ] 5.4 Docs in `docs/features/` (waarmerk, processing certificate, verification; explicit "organisation seal, not qualified seal" wording) with Playwright screenshots (ADR-010); `openspec validate document-waarmerk-certification --strict` passes
+  - 25 Nov 2026 (partly): `docs/features/waarmerk.md` carries live screenshots of Add waarmerk (with the organisation-seal wording), the public check page answering Valid for an anonymous visitor, and the admin section (sandbox: Nextcloud 34, MariaDB, OpenRegister main, a throwaway self-signed sandbox seal in local custody). The live run found anonymous verification answering "unknown" for an existing waarmerk (the lookup was scoped to the visitor's empty organisation); fixed in the same PR. Left: `openspec validate document-waarmerk-certification --strict` fails on 7 warnings (text above the first section; REQ-DDWMK-001/-002/-003/-004/-006 longer than 500 characters, to be split into scenarios). That is spec rewriting, not done here.
 
 ## Quality checklist
 

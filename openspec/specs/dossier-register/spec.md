@@ -14,7 +14,9 @@ status: in-progress
 @e2e exclude Backend data-model spec for the dossier-domain schemas: register/schema import and idempotent upsert, strict property validation, the seeded Woo Art. 5 grondslagen vocabulary and slug→UUID resolution. No browser surface — the dossier UI is specified separately in the dossier-management-ui change. Covered by PHPUnit tests/unit/Settings/DossierRegisterConfigTest.php and tests/unit/Controller/DossierControllerTest.php.
 
 Defines the `dossier` and `base` schemas that Filinq contributes to OpenRegister, carried by the consolidated `filinq` register: a `dossier` schema for folder-level anonymisation metadata (name, description, legal bases, and review date) and a `base` schema that encodes the Dutch Woo Art. 5 grondslagen vocabulary, seeded with the six canonical exception grounds. The register is installed and upserted idempotently via the existing configuration-import path on app install and upgrade. This gives folder-based anonymisation work a structured, queryable record of which legal grounds apply and when a dossier was last reviewed.
+
 ## Requirements
+
 ### Requirement: Dossier register exists in Filinq's register configuration
 
 The system SHALL define the `dossier` and `base` schemas in `lib/Settings/filinq_register.json` under `components.schemas`, listed in the `schemas` array of the single `filinq` register declared under `components.registers`. (The former `consent`, `signing`, `templates`, `document`, `dossier` and `docudesk` registers were consolidated into that one register; `filinq` is now the only register slug this app declares.) The register SHALL be applied to OpenRegister on app install/upgrade via the existing `ConfigurationService::importFromApp()` path — no new loader code is required.
@@ -31,20 +33,62 @@ The system SHALL define the `dossier` and `base` schemas in `lib/Settings/filinq
 
 ### Requirement: Dossier schema captures folder-level anonymisation metadata
 
-The system SHALL define a `dossier` schema with the following properties: `name` (string, required, mirrors folder name at creation), `description` (string, optional), `bases` (array of strings, optional, no `minItems` — each string is the slug of a `base` object), and `checkedOn` (date-time, optional). The schema SHALL be stored under `components.schemas.dossier` in `filinq_register.json`, follow OpenRegister's OpenAPI 3.0.0 schema conventions (ADR-006), and MUST include `slug: "dossier"`, `title`, `description`, and `configuration.objectNameField: "name"` so list UIs render the stored name.
+The system SHALL define a `dossier` schema under `components.schemas.dossier`
+in `filinq_register.json` (OpenAPI 3.0.0, ADR-006) with `slug: "dossier"`,
+`title`, `description` and `configuration.objectNameField: "name"`, and the
+properties `name` (required, kept in sync with the home folder), and the
+optional `description`, `bases`, `checkedOn`, `status` and `documents`, as
+the scenarios below define. Existing objects SHALL NOT be migrated.
 
 #### Scenario: A dossier can be created with all fields set
-- **GIVEN** the `filinq` register has been installed and the six canonical seed `base` objects exist
+- **GIVEN** the dossier register has been installed and the six canonical seed `base` objects exist
 - **WHEN** a client posts `POST /api/objects/dossier` with `name`, `description`, `bases: ["persoonsgegevens"]` (a known seed slug), `checkedOn`, and `@self.folder` set to an existing folder node ID
 - **THEN** the response is 201 with a `uuid`, and subsequent `GET /api/objects/dossier/<uuid>` returns the same data including `bases: ["persoonsgegevens"]` (slug preserved verbatim, not resolved to UUID)
+- @e2e exclude pre-existing register/API contract scenario carried over unchanged — covered by the existing register-import PHPUnit assertions and Newman collections
 
 #### Scenario: A dossier can be created with only the required name
 - **WHEN** a client posts `POST /api/objects/dossier` with only `name` and `@self.folder` set
-- **THEN** the response is 201, `bases` is stored as `[]` (or absent), and `checkedOn` is `null` (or absent)
+- **THEN** the response is 201, `bases` is stored as `[]` (or absent), `checkedOn` is `null` (or absent), and `status` is absent (read by consumers as `open`)
+- @e2e exclude pre-existing register/API contract scenario (extended for the optional `status`) — covered by register-import PHPUnit assertions
 
 #### Scenario: Missing required name is rejected
 - **WHEN** a client posts `POST /api/objects/dossier` without a `name`
 - **THEN** the response is a validation error citing the missing required property
+- @e2e exclude pre-existing validation contract carried over unchanged — covered by Newman register contract tests
+
+#### Scenario: A membership reference is stored verbatim and shared across dossiers
+- **GIVEN** two dossiers A and B and a file node reference `f`
+- **WHEN** `f` is appended to both dossiers' `documents` arrays via full-payload saves
+- **THEN** `GET` on each dossier returns `documents` containing `f` (stored verbatim), and neither save nulls the other dossier's fields
+- @e2e exclude register/API contract for the new relation property — covered by register-import PHPUnit assertions and the membership scenarios in tests/e2e/workflows/dossier-management.spec.ts
+
+#### Scenario: Lifecycle transitions are declaratively guarded
+- **GIVEN** a dossier without a `status` value (treated as `open`)
+- **WHEN** a client saves `status: "in-review"` and subsequently attempts `status: "closed"` directly
+- **THEN** the first save succeeds and the second is rejected by OpenRegister's lifecycle guard (`in-review → closed` is not a declared transition)
+- @e2e exclude server-side declarative lifecycle guard — covered by PHPUnit transition tests (tests/unit/Service/DossierManagementServiceTest.php); the UI transition happy path is covered in tests/e2e/spec-coverage/dossier-management.spec.ts
+
+#### Scenario: The properties have their declared shapes
+- **GIVEN** the shipped `dossier` schema
+- **WHEN** its properties are read
+- **THEN** `name` is a required string that mirrors the bound home-folder name at creation and is kept in sync on rename, `description` is an optional string, and `checkedOn` an optional date-time
+- **AND** `bases` is an optional array of strings with no `minItems`, each the slug of a `base` object
+- **AND** `status` is an optional string (the lifecycle state) and `documents` an optional array of strings with no `minItems`, each a Nextcloud file node reference recording an explicit membership
+- @e2e exclude schema shape — covered by register-import PHPUnit assertions
+
+#### Scenario: Membership without documents comes from the home folder
+- **GIVEN** a dossier without `documents`
+- **WHEN** its membership is read
+- **THEN** it is the files in its bound `@self.folder` home folder alone
+- **AND** with `documents` present, membership is the deduplicated union of the home-folder files and the references, and a reference whose target no longer exists is surfaced as a visible marker, never silently dropped
+- @e2e exclude covered by PHPUnit (tests/unit/Service/DossierManagementServiceTest.php::testUnresolvableMembershipReferenceIsSurfaced)
+
+#### Scenario: The lifecycle is declared on the schema
+- **GIVEN** the shipped `dossier` schema
+- **WHEN** its `x-openregister-lifecycle` annotation is read
+- **THEN** it uses the canonical `initial` key (`initial: open`) with exactly the transitions `open → in-review`, `in-review → processed`, `in-review → open` (reopen), `processed → published`, `processed → closed` and `published → closed`
+- **AND** OpenRegister's lifecycle guard rejects any out-of-order status write, and a dossier without `status` is treated by consumers as `open`
+- @e2e exclude covered by PHPUnit transition tests (tests/unit/Service/DossierManagementServiceTest.php::testOnlyDeclaredTransitionsAreOffered, ::testAbsentStatusReadsAsOpen)
 
 ### Requirement: Base schema defines the Dutch Woo Art. 5 grondslagen vocabulary
 
@@ -126,3 +170,26 @@ The `filinq` register SHALL ship with 3–5 seed dossier objects covering the mu
 - **WHEN** the caller inspects the seed dossier set
 - **THEN** at least one seed has `bases: []` and `checkedOn: null`
 
+### Requirement: Grondslagen Summary Endpoint Is Reachable
+
+The `POST api/anonymization/dossier/{dossierId}/grondslagen-pdf` route SHALL
+resolve to a controller method that exists on `DossierController`. The route
+entry in `appinfo/routes.php` MUST name the controller's actual public method
+(`generateGrondslagenSummary`), not a stale or renamed method name.
+
+#### Scenario: The route resolves without a ReflectionException
+
+- GIVEN Filinq is installed with the `dossier` register configured
+- AND a valid dossier UUID exists
+- WHEN a client sends `POST /apps/filinq/api/anonymization/dossier/{dossierId}/grondslagen-pdf`
+- THEN the request SHALL reach `DossierController::generateGrondslagenSummary()`
+- AND the response SHALL be the generated file's metadata (or a handled error
+  payload), never a router-level `ReflectionException` / HTTP 500
+
+#### Scenario: Frontend regeneration action succeeds end-to-end
+
+- GIVEN a user viewing `FolderAnonymizationView.vue` with "Append a
+  grondslagen-summary page" enabled
+- WHEN the user triggers the regeneration action
+- THEN the underlying HTTP call SHALL succeed (not 500) and the dossier's
+  `configuration.grondslagen.{fileId, lastGeneratedAt}` SHALL be updated

@@ -3,6 +3,9 @@
 /**
  * Filinq Metrics Engine Factory
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Builds OpenRegister's AppHost `MetricsEngine` explicitly from the server
  * container. OpenRegister's own MetricsEngine factory is registered under the
  * `openregister` app container and is not visible here, so the engine and each
@@ -27,9 +30,6 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/adopt-apphost/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -67,16 +67,22 @@ class MetricsEngineFactory {
 	public function build(ContainerInterface $container): object {
 		$namespace = '\\OCA\\OpenRegister\\AppHost\\Observability\\';
 		$engine = $namespace . 'MetricsEngine';
+		$sources = $namespace . 'MetricSources';
+		$runtime = $namespace . 'MetricsRuntime';
 
 		return new $engine(
-			objectSource: $container->get($namespace . 'Source\\ObjectMetricSource'),
-			tableSource: $container->get($namespace . 'Source\\TableMetricSource'),
-			appConfigSource: $container->get($namespace . 'Source\\AppConfigMetricSource'),
-			providerSource: $container->get($namespace . 'Source\\ProviderMetricSource'),
+			sources: new $sources(
+				object: $container->get($namespace . 'Source\\ObjectMetricSource'),
+				table: $container->get($namespace . 'Source\\TableMetricSource'),
+				appConfig: $container->get($namespace . 'Source\\AppConfigMetricSource'),
+				provider: $container->get($namespace . 'Source\\ProviderMetricSource')
+			),
 			renderer: $container->get($namespace . 'PrometheusRenderer'),
-			manifestLoader: $container->get($namespace . 'ManifestLoader'),
-			cacheFactory: $container->get(ICacheFactory::class),
-			config: $container->get(IConfig::class),
+			runtime: new $runtime(
+				manifestLoader: $container->get($namespace . 'ManifestLoader'),
+				cacheFactory: $container->get(ICacheFactory::class),
+				config: $container->get(IConfig::class)
+			),
 			logger: $container->get(LoggerInterface::class)
 		);
 

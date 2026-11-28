@@ -1,0 +1,268 @@
+/**
+ * The documents leaf: what it reads for the host object, the Files link per
+ * row, and what it reports to a carding host.
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
+ * @spec exclude unit test of the documents leaf logic
+ */
+
+import { join } from 'node:path'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createInstance, loadSfcOptions } from './sfc/sfcOptions.js'
+
+vi.mock('@nextcloud/l10n', () => ({
+	translate: (app, text) => '[t] ' + text,
+	translatePlural: (app, one, many, count, vars) => (count === 1 ? one : many).replace('%n', String(count)).replace(/\{(\w+)\}/g, (_, k) => String(vars?.[k] ?? '')),
+}))
+vi.mock('@nextcloud/router', () => ({
+	generateUrl: (url, params = {}) => '/index.php' + url.replace(/\{(\w+)\}/g, (_, k) => String(params[k])),
+}))
+
+const calls = []
+
+/**
+ * A documents leaf on one host object. The component `extends` the
+ * host-object mixin, which the harness does not follow, so it is passed as a
+ * mixin here.
+ *
+ * @param {object} props Props to set on top.
+ * @return {Promise<object>} The instance.
+ */
+async function leaf(props = {}) {
+	const options = await loadSfcOptions(join(import.meta.dirname, '../../src/integrations/CnFilinqDocumentsWidget.vue'))
+	const merged = { ...options, mixins: [options.extends, ...(options.mixins || [])] }
+	const vm = createInstance(merged, { props: { register: 'zaken', schema: 'zaak', objectId: 'z-1', ...props } })
+	vm.requestToken = () => 'token-1'
+	return vm
+}
+
+/**
+ * Answer every fetch with one response.
+ *
+ * @param {number} status The HTTP status.
+ * @param {*} body The JSON body.
+ * @return {void}
+ */
+function answerWith(status, body) {
+	globalThis.fetch = vi.fn(async (url, init) => {
+		calls.push({ url, init })
+		return { ok: status >= 200 && status < 300, status, json: async () => body }
+	})
+}
+
+afterEach(() => {
+	calls.length = 0
+	delete globalThis.fetch
+})
+
+describe('documents leaf', () => {
+	it('reads the flat document list for the host object when mounted', async () => {
+		answerWith(200, { results: [{ fileId: 1, name: 'a.pdf', dossier: null }] })
+		const vm = await leaf()
+		await vm.$hook('mounted')
+		await vi.waitFor(() => expect(vm.loading).toBe(false))
+		expect(calls[0].url).toBe('/index.php/apps/filinq/api/case-documents/files?register=zaken&schema=zaak&id=z-1')
+		expect(calls[0].init).toEqual({ headers: { requesttoken: 'token-1', Accept: 'application/json' } })
+		expect(vm.rows).toEqual([{ fileId: 1, name: 'a.pdf', dossier: null }])
+		expect(vm.error).toBe(false)
+	})
+
+	it('keeps no rows when the answer has no list', async () => {
+		answerWith(200, { results: 'nope' })
+		const vm = await leaf()
+		await vm.load()
+		expect(vm.rows).toEqual([])
+	})
+
+	it('marks an error on a refusal', async () => {
+		answerWith(403, {})
+		const vm = await leaf()
+		await vm.load()
+		expect(vm.error).toBe(true)
+		expect(vm.loading).toBe(false)
+	})
+
+	it('asks nothing without a host object', async () => {
+		answerWith(200, { results: [] })
+		const vm = await leaf({ objectId: '' })
+		await vm.load()
+		expect(calls).toHaveLength(0)
+		expect(vm.loading).toBe(false)
+	})
+
+	it('links a row to the file in Files', async () => {
+		const vm = await leaf()
+		expect(vm.fileLink({ fileId: 12 })).toBe('/index.php/f/12')
+	})
+
+	it('reports the count, the empty label, the noun and the grouped rows', async () => {
+		const vm = await leaf()
+		vm.rows = [
+			{ fileId: 1, name: 'a.pdf', dossier: { id: 'd1', name: 'Fietspad' } },
+			{ fileId: 2, name: 'b.pdf', dossier: { id: 'd1', name: 'Fietspad' } },
+			{ fileId: 3, name: 'c.pdf', dossier: null },
+		]
+		expect(vm.leafReport).toEqual({
+			count: 3,
+			emptyLabel: '[t] No documents yet',
+			noun: '[t] documents',
+			rows: [
+				{ label: 'Dossier "Fietspad" (2 documents)', href: '/index.php/apps/filinq/dossiers/d1', icon: 'FolderOutline' },
+				{ label: 'c.pdf', href: '/index.php/f/3', icon: 'FileDocumentOutline' },
+			],
+		})
+	})
+	it('removes the link to this record and drops the row', async () => {
+		answerWith(200, {})
+		const vm = await leaf()
+		const row = { fileId: 1, name: 'a.pdf', record: { uuid: 'rec-1' } }
+		vm.rows = [row, { fileId: 2, name: 'b.pdf', record: { uuid: 'rec-2' } }]
+		await vm.removeLink(row)
+		expect(calls[0].url).toBe('/index.php/apps/filinq/api/case-documents/rec-1/domains?register=zaken&schema=zaak&id=z-1')
+		expect(calls[0].init.method).toBe('DELETE')
+		expect(vm.rows.map((one) => one.fileId)).toEqual([2])
+	})
+
+	it('keeps the row and says why when the server refuses the unlink', async () => {
+		answerWith(403, { error: 'no' })
+		const vm = await leaf()
+		const row = { fileId: 1, name: 'a.pdf', record: { uuid: 'rec-1' } }
+		vm.rows = [row]
+		await vm.removeLink(row)
+		expect(vm.rows).toEqual([row])
+		expect(vm.linkMessage).toBe('[t] You may not change the documents of that record.')
+	})
+
+	it('links a document to the record the form names', async () => {
+		answerWith(200, {})
+		const vm = await leaf()
+		const row = { fileId: 1, name: 'a.pdf', record: { uuid: 'rec-1' } }
+		vm.toggleLinkForm(row)
+		expect(vm.linking).toBe('rec-1')
+		vm.linkForm = { register: 'zaken', schema: 'zaak', id: 'z-2' }
+		await vm.linkToRecord(row)
+		expect(calls[0].url).toBe('/index.php/apps/filinq/api/case-documents/rec-1/domains?register=zaken&schema=zaak&id=z-2')
+		expect(calls[0].init.method).toBe('POST')
+		expect(vm.linking).toBe('')
+	})
+
+	it('asks nothing while the form does not name a whole record', async () => {
+		answerWith(200, {})
+		const vm = await leaf()
+		const row = { fileId: 1, name: 'a.pdf', record: { uuid: 'rec-1' } }
+		vm.toggleLinkForm(row)
+		vm.linkForm = { register: 'zaken', schema: '', id: 'z-2' }
+		await vm.linkToRecord(row)
+		expect(calls).toHaveLength(0)
+		expect(vm.linkMessage).toBe('[t] Name the register, the record type and the ID of the record.')
+	})
+
+	it('copies a document to the record the form names and keeps it here', async () => {
+		answerWith(200, { fileId: 99 })
+		const vm = await leaf()
+		const row = { fileId: 5, name: 'a.pdf', record: { uuid: 'rec-1' } }
+		vm.rows = [row]
+		vm.toggleLinkForm(row, 'copy')
+		expect(vm.linkMode).toBe('copy')
+		vm.linkForm = { register: 'zaken', schema: 'zaak', id: 'z-2' }
+		await vm.copyToOtherRecord(row)
+		expect(calls[0].url).toBe('/index.php/apps/filinq/api/case-documents/copy?fileId=5&sourceRegister=zaken&sourceSchema=zaak&sourceId=z-1&register=zaken&schema=zaak&id=z-2')
+		expect(vm.rows).toEqual([row])
+		expect(vm.linking).toBe('')
+	})
+
+	it('says so when the copy is refused', async () => {
+		answerWith(403, { error: 'no' })
+		const vm = await leaf()
+		const row = { fileId: 5, name: 'a.pdf', record: { uuid: 'rec-1' } }
+		vm.toggleLinkForm(row, 'copy')
+		vm.linkForm = { register: 'zaken', schema: 'zaak', id: 'z-2' }
+		await vm.copyToOtherRecord(row)
+		expect(vm.linkMessage).toBe('[t] You may not copy this document to that record.')
+	})
+
+	it('searches the record\'s documents by name and content and marks the words in a snippet', async () => {
+		answerWith(200, {
+			results: [{ fileId: 7, name: 'Besluit.pdf', match: 'content', snippet: 'over de Parkeervergunning' }],
+			content: { available: true, unread: 0 },
+		})
+		const vm = await leaf()
+		vm.searchWords = '  parkeervergunning '
+		await vm.searchContent()
+		expect(calls[0].url).toBe('/index.php/apps/filinq/api/case-documents/files?register=zaken&schema=zaak&id=z-1&mode=content&search=parkeervergunning')
+		expect(vm.searchedWords).toBe('parkeervergunning')
+		expect(vm.rows).toHaveLength(1)
+		expect(vm.contentNotSearched).toBe(false)
+		expect(vm.loading).toBe(false)
+		expect(vm.snippetParts(vm.rows[0])).toEqual([
+			{ text: 'over de ', marked: false },
+			{ text: 'Parkeervergunning', marked: true },
+		])
+	})
+
+	it('says so when the server could not search the content', async () => {
+		answerWith(200, { results: [], content: { available: false, unread: 0 } })
+		const vm = await leaf()
+		vm.searchWords = 'vergunning'
+		await vm.searchContent()
+		expect(vm.contentNotSearched).toBe(true)
+	})
+
+	it('shows every document again when the search is cleared or empty', async () => {
+		answerWith(200, { results: [{ fileId: 1, name: 'a.pdf' }] })
+		const vm = await leaf()
+		vm.searchWords = 'x'
+		vm.searchedWords = 'x'
+		vm.contentNotSearched = true
+		await vm.clearSearch()
+		expect(vm.searchWords).toBe('')
+		expect(vm.searchedWords).toBe('')
+		expect(vm.contentNotSearched).toBe(false)
+		expect(calls[0].url).toBe('/index.php/apps/filinq/api/case-documents/files?register=zaken&schema=zaak&id=z-1')
+
+		calls.length = 0
+		vm.searchWords = '   '
+		await vm.searchContent()
+		expect(calls[0].url).toBe('/index.php/apps/filinq/api/case-documents/files?register=zaken&schema=zaak&id=z-1')
+		expect(vm.rows).toEqual([{ fileId: 1, name: 'a.pdf' }])
+	})
+
+	it('lists the documents not read yet and reads them, then searches again', async () => {
+		answerWith(200, { results: [], content: { available: true, unread: 2, unreadFileIds: [8, 9] } })
+		const vm = await leaf()
+		vm.searchWords = 'vergunning'
+		await vm.searchContent()
+		expect(vm.unread).toEqual([8, 9])
+
+		calls.length = 0
+		await vm.readUnread()
+		expect(calls.map((call) => call.url)).toEqual([
+			'/index.php/apps/openregister/api/files/8/extract',
+			'/index.php/apps/openregister/api/files/9/extract',
+			'/index.php/apps/filinq/api/case-documents/files?register=zaken&schema=zaak&id=z-1&mode=content&search=vergunning',
+		])
+		expect(vm.reading).toBe(false)
+		expect(vm.readMessage).toBe('')
+	})
+
+	it('says how many documents could not be read', async () => {
+		answerWith(404, {})
+		const vm = await leaf()
+		vm.searchedWords = 'vergunning'
+		vm.unread = [8]
+		await vm.readUnread()
+		expect(vm.readMessage).toBe('%n document could not be read'.replace('%n', '1'))
+	})
+
+	it('forgets the unread documents when the search is cleared', async () => {
+		answerWith(200, { results: [] })
+		const vm = await leaf()
+		vm.unread = [8]
+		vm.readMessage = 'x'
+		await vm.clearSearch()
+		expect(vm.unread).toEqual([])
+		expect(vm.readMessage).toBe('')
+	})
+})

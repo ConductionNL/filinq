@@ -27,8 +27,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Service\Support\AppConfigFlag;
 use Exception;
 use OCA\Filinq\Service\Conversion\OutputLayoutResolver;
+use OCA\Filinq\Service\Review\ReviewRenditionRepository;
 use OCP\Constants;
 use OCP\Files\File;
 use OCP\Files\Folder;
@@ -70,6 +72,9 @@ class FolderFileEnumerator {
 	 *                                                          files are analysed sooner
 	 *                                                          (files-confidential-labels).
 	 * @param IAppConfig $appConfig App configuration for the priority-hint flag
+	 * @param ReviewRenditionRepository|null $renditions The review renditions filinq wrote next to
+	 *                                                their sources: a folder batch leaves them out,
+	 *                                                since they are copies of a source it already has.
 	 *
 	 * @return void
 	 */
@@ -77,6 +82,7 @@ class FolderFileEnumerator {
 		private readonly OutputLayoutResolver $layout,
 		private readonly ConfidentialityLabelService $confidentialityLabel,
 		private readonly IAppConfig $appConfig,
+		private readonly ?ReviewRenditionRepository $renditions = null,
 	) {
 
 	}//end __construct()
@@ -104,8 +110,7 @@ class FolderFileEnumerator {
 	 */
 	public function resolveFolder(?int $folderId, ?string $folderPath, Folder $userFolder): Folder {
 		$node = $this->resolveFolderNode(
-			folderId: $folderId,
-			folderPath: $folderPath,
+			reference: new FolderReference(folderId: $folderId, folderPath: $folderPath),
 			userFolder: $userFolder
 		);
 
@@ -119,9 +124,8 @@ class FolderFileEnumerator {
 	/**
 	 * Resolve the folder node from either a folder ID or folder path
 	 *
-	 * @param int|null $folderId Node ID of the folder, or null
-	 * @param string|null $folderPath Relative path of the folder, or null
-	 * @param Folder $userFolder The current user's root folder
+	 * @param FolderReference $reference  The folder id or path the request gave.
+	 * @param Folder          $userFolder The current user's root folder
 	 *
 	 * @return Node The resolved node (type is validated by the caller)
 	 *
@@ -129,34 +133,60 @@ class FolderFileEnumerator {
 	 *
 	 * @spec openspec/changes/folder-batch-accept-folder-id/tasks.md#task-4
 	 */
-	private function resolveFolderNode(?int $folderId, ?string $folderPath, Folder $userFolder): Node {
-		$hasId = $folderId !== null;
-		$hasPath = $folderPath !== null && $folderPath !== '';
+	private function resolveFolderNode(FolderReference $reference, Folder $userFolder): Node {
+		$this->refuseAmbiguousReference(reference: $reference);
 
-		if ($hasId === false && $hasPath === false) {
-			throw new Exception('Either folderId or folderPath must be provided', 400);
-		}
-
-		if ($hasId === true && $hasPath === true) {
-			throw new Exception('Provide only one of folderId or folderPath', 400);
-		}
-
-		if ($hasId === true) {
-			$nodes = $userFolder->getById($folderId);
-			if (empty($nodes) === true) {
-				throw new Exception('Folder not found', 404);
-			}
-
-			return $this->pickPreferredNode(nodes: $nodes);
+		if ($reference->hasId() === true) {
+			return $this->folderNodeById(reference: $reference, userFolder: $userFolder);
 		}
 
 		try {
-			return $userFolder->get($folderPath);
+			return $userFolder->get($reference->folderPath);
 		} catch (NotFoundException $e) {
 			throw new Exception('Folder not found', 404, $e);
 		}
 
 	}//end resolveFolderNode()
+
+	/**
+	 * Refuse a reference that names no folder, or names one twice.
+	 *
+	 * @param FolderReference $reference The folder id or path the request gave.
+	 *
+	 * @return void
+	 *
+	 * @throws Exception If neither or both of id and path are given (400).
+	 */
+	private function refuseAmbiguousReference(FolderReference $reference): void {
+		if ($reference->hasId() === false && $reference->hasPath() === false) {
+			throw new Exception('Either folderId or folderPath must be provided', 400);
+		}
+
+		if ($reference->hasId() === true && $reference->hasPath() === true) {
+			throw new Exception('Provide only one of folderId or folderPath', 400);
+		}
+
+	}//end refuseAmbiguousReference()
+
+	/**
+	 * The preferred node for a folder id.
+	 *
+	 * @param FolderReference $reference  The folder reference, carrying an id.
+	 * @param Folder          $userFolder The current user's root folder.
+	 *
+	 * @return Node The preferred node among the mounts the id surfaces through.
+	 *
+	 * @throws Exception If no node has the id (404).
+	 */
+	private function folderNodeById(FolderReference $reference, Folder $userFolder): Node {
+		$nodes = $userFolder->getById($reference->folderId);
+		if (empty($nodes) === true) {
+			throw new Exception('Folder not found', 404);
+		}
+
+		return $this->pickPreferredNode(nodes: $nodes);
+
+	}//end folderNodeById()
 
 	/**
 	 * Pick the preferred node when getById returns multiple mounts
@@ -203,7 +233,7 @@ class FolderFileEnumerator {
 	 */
 	public function enumerate(Folder $folder): array {
 		$files = [];
-		foreach ($folder->getDirectoryListing() as $node) {
+		foreach ($this->withoutRenditions(nodes: $folder->getDirectoryListing()) as $node) {
 			if ($node instanceof File === false) {
 				continue;
 			}
@@ -218,6 +248,116 @@ class FolderFileEnumerator {
 
 		return $this->applyConfidentialityPriorityOrdering(files: $files);
 	}//end enumerate()
+
+	/**
+	 * Every source file under a folder and its subfolders, depth-first.
+	 *
+	 * The anonymised-output subfolder is not walked: its files are redacted
+	 * copies, not source material. The same legacy-output filter and the same
+	 * optional confidentiality ordering as the flat scan apply.
+	 *
+	 * @param Folder $folder The folder to walk
+	 *
+	 * @return File[] The files, in analysis order
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/folder-batch-analysis/spec.md#requirement-optional-recursive-folder-enumeration-req-ddras-011
+	 */
+	public function enumerateRecursive(Folder $folder): array {
+		return $this->applyConfidentialityPriorityOrdering(files: $this->collectRecursive(folder: $folder));
+	}//end enumerateRecursive()
+
+	/**
+	 * Every source file under a folder, depth-first.
+	 *
+	 * @param Folder $folder The folder to walk.
+	 *
+	 * @return File[] The files, in walk order.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/folder-batch-analysis/spec.md#requirement-optional-recursive-folder-enumeration-req-ddras-011
+	 */
+	private function collectRecursive(Folder $folder): array {
+		$outputFolder = $this->layout->getSubfolderName();
+		$files = [];
+		foreach ($this->withoutRenditions(nodes: $folder->getDirectoryListing()) as $node) {
+			if ($node instanceof Folder) {
+				if ($node->getName() !== $outputFolder) {
+					array_push($files, ...$this->collectRecursive(folder: $node));
+				}
+
+				continue;
+			}
+
+			if ($node instanceof File === false) {
+				continue;
+			}
+
+			$baseName = pathinfo($node->getName(), PATHINFO_FILENAME);
+			if ($this->layout->isLegacyAnonymizedOutput(baseName: $baseName) === false) {
+				$files[] = $node;
+			}
+		}
+
+		return $files;
+	}//end collectRecursive()
+
+	/**
+	 * One folder's listing without the review renditions filinq wrote into it.
+	 *
+	 * Detection writes a converted source's review rendition next to it, as
+	 * `<name>.pdf` (anonymization-review-workbench 5.1). A later folder batch
+	 * over the same folder took those renditions as documents of their own:
+	 * live, a second batch over 160 letters held 320 files. A PDF is left out
+	 * only when a sibling of the same name has a rendition record naming that
+	 * very file, so a person's own PDF beside a same-named source stays in.
+	 *
+	 * @param array<int, Node> $nodes The folder's listing.
+	 *
+	 * @return array<int, Node> The listing without the renditions.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/folder-batch-analysis/spec.md#requirement-optional-recursive-folder-enumeration-req-ddras-011
+	 */
+	private function withoutRenditions(array $nodes): array {
+		if ($this->renditions === null) {
+			return $nodes;
+		}
+
+		$pdfs = [];
+		$sources = [];
+		foreach ($nodes as $node) {
+			if ($node instanceof File === false) {
+				continue;
+			}
+
+			$name = pathinfo($node->getName(), PATHINFO_FILENAME);
+			if (strtolower(pathinfo($node->getName(), PATHINFO_EXTENSION)) === 'pdf') {
+				$pdfs[$name] = (int) $node->getId();
+				continue;
+			}
+
+			$sources[$name][] = (int) $node->getId();
+		}
+
+		$renditionIds = [];
+		foreach (array_intersect_key($sources, $pdfs) as $name => $sourceIds) {
+			foreach ($sourceIds as $sourceId) {
+				$rendition = $this->renditions->findFor(sourceFileId: $sourceId);
+				if ((int) ($rendition['fileId'] ?? 0) === $pdfs[$name]) {
+					$renditionIds[$pdfs[$name]] = true;
+				}
+			}
+		}
+
+		if ($renditionIds === []) {
+			return $nodes;
+		}
+
+		return array_values(
+			array_filter(
+				$nodes,
+				static fn (Node $node): bool => isset($renditionIds[(int) $node->getId()]) === false
+			)
+		);
+	}//end withoutRenditions()
 
 	/**
 	 * Optionally reorder enumerated files by confidentiality level.
@@ -238,7 +378,7 @@ class FolderFileEnumerator {
 	 * @spec openspec/changes/files-confidential-labels/specs/files-confidential-labels/spec.md#requirement-optionally-suggest-batchfolder-analysis-priority-req-ddfcl-003
 	 */
 	private function applyConfidentialityPriorityOrdering(array $files): array {
-		if ($this->appConfig->getValueBool('filinq', self::PRIORITISE_ANALYSIS_KEY, false) === false) {
+		if ((new AppConfigFlag(config: $this->appConfig))->isOn(app: 'filinq', key: self::PRIORITISE_ANALYSIS_KEY) === false) {
 			return $files;
 		}
 

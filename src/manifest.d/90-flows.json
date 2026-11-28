@@ -1,0 +1,76 @@
+{
+	"menu": [
+		{
+			"id": "FlowsMenu",
+			"label": "Flows",
+			"icon": "Sitemap",
+			"route": "Flows",
+			"section": "settings",
+			"order": 96
+		},
+		{
+			"id": "FlowRunsMenu",
+			"label": "Flow runs",
+			"icon": "PlayCircleOutline",
+			"route": "FlowRuns",
+			"section": "settings",
+			"order": 97
+		}
+	],
+	"pages": [
+		{
+			"id": "Flows",
+			"route": "/flows",
+			"type": "index",
+			"title": "Flows",
+			"config": {
+				"entitySource": "flows",
+				"app": "filinq",
+				"rowRoute": "FlowDetail"
+			},
+			"_note": "ADR-110 Decision 4: a flow is app-specific, so the authoring surface lives here rather than behind a deep link to another app's list. An ordinary index over the named `flows` source (config.entitySource) rather than the deprecated `flows` page type, reading OpenRegister's one native flow store (ADR-065), scoped to this app by config.app. rowRoute names the FlowDetail page (a route name, not a path): a named-source page has no register and schema, so without it a row click opens nothing and Edit falls back to the source's own /flows path."
+		},
+		{
+			"id": "FlowDetail",
+			"route": "/flows/:id",
+			"type": "flow",
+			"title": "Flow",
+			"config": {
+				"app": "filinq",
+				"listMode": true,
+				"testPayload": true
+			},
+			"sidebarComponent": "FlowDetailSidebar",
+			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors pipelinq#1490."
+		},
+		{
+			"id": "FlowRuns",
+			"route": "/flow-runs",
+			"type": "index",
+			"title": "Flow runs",
+			"config": {
+				"register": "filinq",
+				"schema": "flowOperationRun",
+				"columns": [
+					"operation",
+					"fileName",
+					"status",
+					"statusReason",
+					"startedAt",
+					"finishedAt"
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://filinq.conduction.nl",
+				"showTitle": true,
+				"emptyText": "No Flow runs yet",
+				"actionToggles": {
+					"showAdd": false
+				}
+			},
+			"_note": "flow-operations REQ-DDFLO-008 / task 3.2: the processing log of the Filinq Nextcloud Flow operations (anonymise, OCR, PDF/A, validation). A plain index over the flowOperationRun schema; only the server writes runs, so there is no add action."
+		}
+	]
+}

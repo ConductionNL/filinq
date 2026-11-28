@@ -23,6 +23,7 @@
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCP\IGroupManager;
 use OCA\Filinq\Service\CustomDictionaryAccessGate;
 use OCA\Filinq\Service\CustomDictionaryPayloadNormaliser;
 use OCA\Filinq\Service\CustomDictionaryRepository;
@@ -38,6 +39,7 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 use RuntimeException;
+use OCA\Filinq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for CustomDictionaryService's organisation gate and import parsing.
@@ -52,6 +54,7 @@ class CustomDictionaryServiceTest extends TestCase {
 	 * @param ObjectService $objectService ObjectService double.
 	 * @param array<string, bool> $organisationAccess Map of organisationUuid => hasAccess.
 	 * @param string|null $currentUserId Current user id, or null for unauthenticated.
+	 * @param bool $maintainer Whether the user is in the dictionary maintainer group.
 	 *
 	 * @return CustomDictionaryService
 	 */
@@ -59,6 +62,7 @@ class CustomDictionaryServiceTest extends TestCase {
 		ObjectService $objectService,
 		array $organisationAccess = [],
 		?string $currentUserId = 'alice',
+		bool $maintainer = true,
 	): CustomDictionaryService {
 		$settingsService = $this->createMock(SettingsService::class);
 		$settingsService->method('getObjectService')->willReturn($objectService);
@@ -91,6 +95,12 @@ class CustomDictionaryServiceTest extends TestCase {
 			$userSession->method('getUser')->willReturn($user);
 		}
 
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturn(false);
+		$groupManager->method('isInGroup')->willReturnCallback(
+			static fn (string $uid, string $group): bool => $maintainer === true && $group === CustomDictionaryAccessGate::MAINTAINER_GROUP
+		);
+
 		return new CustomDictionaryService(
 			repository: new CustomDictionaryRepository(
 				settingsService: $settingsService,
@@ -100,7 +110,8 @@ class CustomDictionaryServiceTest extends TestCase {
 				container: $container,
 				appManager: $appManager,
 				userSession: $userSession,
-				logger: new NullLogger()
+				logger: new NullLogger(),
+				groupManager: $groupManager
 			),
 			normaliser: new CustomDictionaryPayloadNormaliser(),
 			logger: new NullLogger()
@@ -218,10 +229,12 @@ class CustomDictionaryServiceTest extends TestCase {
 		$objectService->method('searchObjectsBySlug')->willReturn([]);
 		$objectService->expects($this->once())
 			->method('saveObject')
-			->with($this->callback(static function (array $data): bool {
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+					'object' => $this->callback(static function (array $data): bool {
 				return ($data['matchMode'] ?? null) === 'caseInsensitive'
 					&& ($data['active'] ?? null) === true;
-			}))
+			}),
+				]))
 			->willReturnCallback(
 				static fn (array $object): array => array_merge(
 					$object,
@@ -355,4 +368,73 @@ class CustomDictionaryServiceTest extends TestCase {
 		$this->assertSame('Foo', $result[0]['terms'][0]['value']);
 
 	}//end testListActiveDictionariesForDetectionSkipsInactiveAndEmpty()
+
+	/**
+	 * Labels OpenRegister answers as language maps (the register declares them
+	 * translatable) reach detection as text, never as "Array"; a term without
+	 * its own label takes the dictionary's.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/custom-dictionary-recognition/specs/custom-dictionary-recognition/spec.md
+	 */
+	public function testTranslatableLabelsReachDetectionAsText(): void {
+		$dictionary = [
+			'id' => 'dict-a',
+			'label' => ['nl' => 'Wethouders', 'en' => 'Aldermen'],
+			'active' => true,
+			'matchMode' => 'exact',
+			'@self' => ['organisation' => 'org-a', 'slug' => 'dict-a'],
+		];
+		$terms = [
+			['id' => 't1', 'value' => 'J. Voorbeeld', 'label' => ['nl' => 'Wethouder financiën'], 'dictionary' => 'dict-a'],
+			['id' => 't2', 'value' => 'K. Voorbeeld', 'label' => null, 'dictionary' => 'dict-a'],
+		];
+
+		$objectService = $this->createMock(originalClassName: ObjectService::class);
+		$objectService->method('searchObjectsBySlug')->willReturnCallback(
+			static function (string $registerSlug, string $schemaSlug) use ($dictionary, $terms): array {
+				if ($schemaSlug === CustomDictionaryService::SCHEMA_DICTIONARY) {
+					return [$dictionary];
+				}
+
+				return $terms;
+			}
+		);
+
+		$result = $this->makeService(objectService: $objectService, organisationAccess: ['org-a' => true])->listActiveDictionariesForDetection();
+
+		$this->assertSame(expected: 'Wethouders', actual: $result[0]['label']);
+		$this->assertSame(expected: 'Wethouder financiën', actual: $result[0]['terms'][0]['label']);
+		$this->assertSame(expected: 'Wethouders', actual: $result[0]['terms'][1]['label']);
+
+	}//end testTranslatableLabelsReachDetectionAsText()
+	/**
+	 * An organisation member who is no maintainer cannot create, change or delete a list.
+	 *
+	 * @return void
+	 */
+	public function testANonMaintainerCannotChangeDictionaries(): void {
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->expects($this->never())->method('saveObject');
+		$objectService->expects($this->never())->method('deleteObject');
+		$service = $this->makeService(objectService: $objectService, organisationAccess: ['org-1' => true], maintainer: false);
+
+		foreach ([
+			fn () => $service->createDictionary(data: ['name' => 'Wethouders']),
+			fn () => $service->updateDictionary(uuid: 'd-1', data: ['active' => false]),
+			fn () => $service->deleteDictionary(uuid: 'd-1'),
+			fn () => $service->createTerm(dictionaryUuid: 'd-1', data: ['value' => 'Piet']),
+			fn () => $service->deleteTerm(dictionaryUuid: 'd-1', termUuid: 't-1'),
+		] as $call) {
+			try {
+				$call();
+				$this->fail(message: 'A non-maintainer changed a dictionary.');
+			} catch (\RuntimeException $e) {
+				$this->assertStringContainsString(needle: 'maintainer', haystack: $e->getMessage());
+			}
+		}
+
+	}//end testANonMaintainerCannotChangeDictionaries()
+
 }//end class

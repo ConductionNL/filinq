@@ -1,4 +1,8 @@
 #!/usr/bin/env node
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 
 /**
  * l10n unused-key remover.
@@ -28,6 +32,7 @@ const fs = require('fs')
 const path = require('path')
 const {
 	loadJsTranslations,
+	loadSourceCatalogue,
 	serializeJs,
 	collectUsedKeys,
 	runEslintFix,
@@ -61,7 +66,7 @@ function main() {
 		process.exit(1)
 	}
 
-	const { app, translations: english } = loadJsTranslations(ENGLISH_FILE)
+	const { app, translations: english } = loadSourceCatalogue(L10N_DIR)
 	const existingKeys = new Set(Object.keys(english))
 	const usedKeys = collectUsedKeys(SRC_DIR, app)
 	const unused = [...existingKeys].filter((k) => !usedKeys.has(k)).sort()

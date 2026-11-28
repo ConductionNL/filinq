@@ -3,6 +3,9 @@
 /**
  * PolicyMatchService — detection-time matcher for the publication policy layer.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Loads two policy surfaces from the consent register at first call:
  *
  *   - **Prohibitions** — `publicationProhibition` records with `active: true`
@@ -34,9 +37,6 @@
  *
  * @spec openspec/specs/entity-publication-policies/spec.md
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -45,12 +45,14 @@ namespace OCA\Filinq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
 /**
  * Detection-time policy matcher.
+ *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is the sum of small independent
+ * checks of one review (findings, decisions and the checked gate).
  *
  * @spec openspec/specs/entity-publication-policies/spec.md
  * @spec openspec/changes/anonymisation-entity-review-prohibition-hints/tasks.md#task-1
@@ -90,25 +92,36 @@ class PolicyMatchService {
 	private ?array $rulesCache = null;
 
 	/**
+	 * Runs the rule load as the system, so every user's anonymisation applies every rule.
+	 *
+	 * @var SystemContextSeam
+	 */
+	private readonly SystemContextSeam $seam;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger Structured log sink.
-	 * @param IAppManager $appManager App manager (used to confirm OR is installed).
 	 * @param IAppConfig $config App config (prohibition high-confidence threshold).
 	 * @param ObjectServiceInterface $objectService OpenRegister's published object contract (ADR-084).
 	 * @param ObjectResultExtractor $resultExtractor Coerces OpenRegister results to plain rows.
 	 * @param TextNormaliser $textNormaliser Accent-stripping text normaliser.
 	 * @param PolicyRuleNormaliser $ruleNormaliser Admission + normalisation of stored policy rows.
+	 * @param SystemContextSeam|null $seam The one place Filinq relaxes OpenRegister enforcement; built from the logger when absent.
+	 * @param PolicyRuleScope|null $scope Whose rules apply: the user's active organisation, or every organisation's without a
+	 *                                    user session. Null applies every organisation's, as on a non-user path.
 	 */
 	public function __construct(
 		private readonly LoggerInterface $logger,
-		private readonly IAppManager $appManager,
 		private readonly IAppConfig $config,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly ObjectResultExtractor $resultExtractor = new ObjectResultExtractor(),
 		private readonly TextNormaliser $textNormaliser = new TextNormaliser(),
 		private readonly PolicyRuleNormaliser $ruleNormaliser = new PolicyRuleNormaliser(),
+		?SystemContextSeam $seam = null,
+		private readonly ?PolicyRuleScope $scope = null,
 	) {
+		$this->seam = ($seam ?? new SystemContextSeam(logger: $logger));
 
 	}//end __construct()
 
@@ -148,7 +161,8 @@ class PolicyMatchService {
 	 *   uuid: string,
 	 *   kind: 'prohibition'|'standing_consent',
 	 *   entityType: string,
-	 *   primaryName: string
+	 *   primaryName: string,
+	 *   bases?: list<string>
 	 * }
 	 *
 	 * @spec openspec/specs/entity-publication-policies/spec.md
@@ -158,28 +172,21 @@ class PolicyMatchService {
 		string $entityType,
 		array $resolvedIdentifiers = [],
 	): ?array {
-		$rules = $this->loadRules();
+		$entity = new PolicyEntity(
+			text: $entityText,
+			type: $entityType,
+			identifiers: $resolvedIdentifiers,
+			normalised: $this->textNormaliser->normalise(value: $entityText)
+		);
 
 		// Prohibitions win on conflict — split into two passes.
-		$prohibitionMatch = $this->firstMatchOf(
-			kind: self::KIND_PROHIBITION,
-			rules: $rules,
-			entityText: $entityText,
-			entityType: $entityType,
-			resolvedIdentifiers: $resolvedIdentifiers
-		);
+		$prohibitionMatch = $this->firstMatchOf(kind: self::KIND_PROHIBITION, entity: $entity);
 
 		if ($prohibitionMatch !== null) {
 			return $prohibitionMatch;
 		}
 
-		return $this->firstMatchOf(
-			kind: self::KIND_STANDING_CONSENT,
-			rules: $rules,
-			entityText: $entityText,
-			entityType: $entityType,
-			resolvedIdentifiers: $resolvedIdentifiers
-		);
+		return $this->firstMatchOf(kind: self::KIND_STANDING_CONSENT, entity: $entity);
 
 	}//end match()
 
@@ -197,7 +204,9 @@ class PolicyMatchService {
 	 *
 	 * @return array<string, mixed>|null Prohibition match, or null when none matches.
 	 *
-	 * @phpstan-return null|array{uuid: string, kind: 'prohibition', entityType: string, primaryName: string}
+	 * @phpstan-return null|array{uuid: string, kind: 'prohibition', entityType: string, primaryName: string, bases?: list<string>}
+	 *
+	 * @spec openspec/specs/entity-publication-policies/spec.md
 	 */
 	public function matchProhibition(
 		string $entityText,
@@ -206,10 +215,12 @@ class PolicyMatchService {
 	): ?array {
 		return $this->firstMatchOf(
 			kind: self::KIND_PROHIBITION,
-			rules: $this->loadRules(),
-			entityText: $entityText,
-			entityType: $entityType,
-			resolvedIdentifiers: $resolvedIdentifiers
+			entity: new PolicyEntity(
+				text: $entityText,
+				type: $entityType,
+				identifiers: $resolvedIdentifiers,
+				normalised: $this->textNormaliser->normalise(value: $entityText)
+			)
 		);
 
 	}//end matchProhibition()
@@ -220,59 +231,44 @@ class PolicyMatchService {
 	 * Sorts candidates by UUID lexicographically so multi-match resolution
 	 * is deterministic.
 	 *
-	 * @param string $kind Rule kind to scan.
-	 * @param array<int, array<string,mixed>> $rules Cached rule list.
-	 * @param string $entityText Entity literal text.
-	 * @param string $entityType Entity type.
-	 * @param array<string, mixed> $resolvedIdentifiers Structured identifiers.
+	 * @param string       $kind   Rule kind to scan.
+	 * @param PolicyEntity $entity The detected entity.
 	 *
 	 * @return array<string, mixed>|null
 	 */
-	private function firstMatchOf(
-		string $kind,
-		array $rules,
-		string $entityText,
-		string $entityType,
-		array $resolvedIdentifiers,
-	): ?array {
-		$matchesKind = static function (array $r) use ($kind, $entityType): bool {
+	private function firstMatchOf(string $kind, PolicyEntity $entity): ?array {
+		$matchesKind = static function (array $r) use ($kind, $entity): bool {
 			if ($r['kind'] !== $kind) {
 				return false;
 			}
 
-			return $r['entityType'] === $entityType || $r['entityType'] === 'OTHER';
+			return $r['entityType'] === $entity->type || $r['entityType'] === 'OTHER';
 		};
 
-		$candidates = array_values(array_filter($rules, $matchesKind));
+		$candidates = array_values(array_filter($this->loadRules(), $matchesKind));
 
 		usort(
 			$candidates,
 			static fn (array $a, array $b): int => strcmp($a['uuid'], $b['uuid'])
 		);
 
-		$entityTextNormalised = $this->textNormaliser->normalise(value: $entityText);
-
 		foreach ($candidates as $rule) {
 			foreach ($rule['matchRules'] as $matchRule) {
-				if ($this->ruleMatches(
-					type: $matchRule['type'] ?? '',
-					value: $matchRule['value'] ?? '',
-					entityText: $entityText,
-					entityTextNormalised: $entityTextNormalised,
-					resolvedIdentifiers: $resolvedIdentifiers
-				) === true
-				) {
+				$candidate = new PolicyMatchRule(type: $matchRule['type'] ?? '', value: $matchRule['value'] ?? '');
+				if ($this->ruleMatches(rule: $candidate, entity: $entity) === true) {
 					return [
 						'uuid' => $rule['uuid'],
 						'kind' => $rule['kind'],
 						'entityType' => $rule['entityType'],
 						'primaryName' => $rule['primaryName'],
+						'bases' => ($rule['bases'] ?? []),
 					];
 				}
 			}
 		}
 
 		return null;
+
 	}//end firstMatchOf()
 
 	/**
@@ -295,16 +291,15 @@ class PolicyMatchService {
 		string $entityText,
 		array $resolvedIdentifiers = [],
 	): bool {
-		$entityTextNormalised = $this->textNormaliser->normalise(value: $entityText);
+		$entity = new PolicyEntity(
+			text: $entityText,
+			type: '',
+			identifiers: $resolvedIdentifiers,
+			normalised: $this->textNormaliser->normalise(value: $entityText)
+		);
 		foreach ($matchRules as $rule) {
-			if ($this->ruleMatches(
-				type: (string)($rule['type'] ?? ''),
-				value: (string)($rule['value'] ?? ''),
-				entityText: $entityText,
-				entityTextNormalised: $entityTextNormalised,
-				resolvedIdentifiers: $resolvedIdentifiers
-			) === true
-			) {
+			$candidate = new PolicyMatchRule(type: (string)($rule['type'] ?? ''), value: (string)($rule['value'] ?? ''));
+			if ($this->ruleMatches(rule: $candidate, entity: $entity) === true) {
 				return true;
 			}
 		}
@@ -315,34 +310,26 @@ class PolicyMatchService {
 	/**
 	 * Test a single match rule against an entity.
 	 *
-	 * @param string $type Match type ('exact', 'normalized', 'bsn', 'kvk').
-	 * @param string $value Match value (literal or wildcard).
-	 * @param string $entityText Entity literal text.
-	 * @param string $entityTextNormalised Lower-cased + accent-stripped text.
-	 * @param array<string, mixed> $resolvedIdentifiers Structured identifiers (BSN, KvK).
+	 * @param PolicyMatchRule $rule   The match type and value.
+	 * @param PolicyEntity    $entity The detected entity.
 	 *
 	 * @return bool
 	 */
-	private function ruleMatches(
-		string $type,
-		string $value,
-		string $entityText,
-		string $entityTextNormalised,
-		array $resolvedIdentifiers,
-	): bool {
-		switch ($type) {
+	private function ruleMatches(PolicyMatchRule $rule, PolicyEntity $entity): bool {
+		$value = $rule->value;
+		switch ($rule->type) {
 			case 'exact':
-				return $entityText === $value;
+				return $entity->text === $value;
 			case 'normalized':
-				return $entityTextNormalised === $this->textNormaliser->normalise(value: $value);
+				return $entity->normalised === $this->textNormaliser->normalise(value: $value);
 			case 'bsn':
-				$bsn = (string)($resolvedIdentifiers['bsn'] ?? '');
+				$bsn = (string)($entity->identifiers['bsn'] ?? '');
 				if ($bsn === '') {
 					return false;
 				}
 				return $value === '*' || $bsn === $value;
 			case 'kvk':
-				$kvk = (string)($resolvedIdentifiers['kvk'] ?? '');
+				$kvk = (string)($entity->identifiers['kvk'] ?? '');
 				if ($kvk === '') {
 					return false;
 				}
@@ -350,7 +337,7 @@ class PolicyMatchService {
 			default:
 				$this->logger->warning(
 					'PolicyMatchService: unknown match type, skipping',
-					['type' => $type]
+					['type' => $rule->type]
 				);
 				return false;
 		}//end switch
@@ -369,11 +356,36 @@ class PolicyMatchService {
 
 		$rules = [];
 
+		// The seam lifts organisation filtering, so the rules are kept to the
+		// user's own organisation here (REQ-DDMTH-003). Without a user session
+		// (a background job) every organisation's rules apply. A user whose
+		// organisation cannot be resolved gets every organisation's
+		// prohibitions and no standing consent: a deny-list fails closed.
+		$organisation = $this->scope?->organisation();
+		$withConsents = true;
+		if ($organisation === '') {
+			$this->logger->info('PolicyMatchService: no active organisation; every prohibition and no standing consent applies');
+			$organisation = null;
+			$withConsents = false;
+		}
+
 		try {
-			$rules = array_merge(
-				$this->loadProhibitions(),
-				$this->loadStandingConsents()
+			// The rules are a safety policy, not data the user reads: the
+			// schemas grant read to policy admins only, and an ordinary
+			// user's anonymisation must still apply every prohibition and
+			// standing consent of their organisation. So the load runs as the
+			// system, through the one logged seam, instead of passing bypass flags.
+			$loaded = $this->seam->run(
+				objectService: $this->objectService,
+				reason: 'anonymisation applies every prohibition and standing consent, whatever the user may read',
+				operation: fn (): array => array_merge(
+					$this->loadProhibitions(organisation: $organisation),
+					$this->consentsIf(load: $withConsents, organisation: $organisation)
+				)
 			);
+			if (is_array($loaded) === true) {
+				$rules = $loaded;
+			}
 		} catch (Exception $e) {
 			$this->logger->warning(
 				'PolicyMatchService: failed to load rules — falling through to no-match',
@@ -388,19 +400,19 @@ class PolicyMatchService {
 	/**
 	 * Load active prohibition records.
 	 *
+	 * @param string|null $organisation Only this organisation's records; null for every organisation's.
+	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function loadProhibitions(): array {
+	private function loadProhibitions(?string $organisation): array {
 		// OR's findAll/searchObjects require NUMERIC register/schema ids and
 		// silently return nothing for slugs; searchObjectsBySlug resolves the
 		// slugs first (same call PolicyCrudService uses for the admin list).
-		// _multitenancy is off so this safety policy is not scoped away by the
-		// active organisation.
-		$result = $this->objectService->searchObjectsBySlug(
-			registerSlug: 'filinq',
-			schemaSlug: 'publicationProhibition',
-			_rbac: false,
-			_multitenancy: false
+		// It runs inside the seam (loadRules()), so it passes no bypass flag.
+		$result = (new SlugSearch(objects: $this->objectService))->search(
+			register: 'filinq',
+			schema: 'publicationProhibition',
+			filters: self::organisationFilter(organisation: $organisation)
 		);
 		if (is_int($result) === true) {
 			$result = [];
@@ -408,6 +420,10 @@ class PolicyMatchService {
 
 		$rules = [];
 		foreach ($this->resultExtractor->extractRows(result: $result) as $obj) {
+			if (self::inScope(row: $obj, organisation: $organisation) === false) {
+				continue;
+			}
+
 			$normalised = $this->ruleNormaliser->normaliseRule(
 				kind: self::KIND_PROHIBITION,
 				object: $obj
@@ -423,9 +439,11 @@ class PolicyMatchService {
 	/**
 	 * Load active standing-consent records (scope=entity).
 	 *
+	 * @param string|null $organisation Only this organisation's records; null for every organisation's.
+	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function loadStandingConsents(): array {
+	private function loadStandingConsents(?string $organisation): array {
 		// Push the scope filter down to the DB. The schema is shared with
 		// scope=document records, so a naive `findAll(register, schema)` loads
 		// every consent record across every tenant and every file, then
@@ -433,12 +451,10 @@ class PolicyMatchService {
 		// bounds the result to standing-consent rows and lets ObjectService
 		// index on the column. The defensive PHP scope check is retained as
 		// a belt-and-braces in case the filter is later dropped.
-		$result = $this->objectService->searchObjectsBySlug(
-			registerSlug: 'filinq',
-			schemaSlug: 'publicationConsent',
-			filters: ['scope' => 'entity', 'active' => true],
-			_rbac: false,
-			_multitenancy: false
+		$result = (new SlugSearch(objects: $this->objectService))->search(
+			register: 'filinq',
+			schema: 'publicationConsent',
+			filters: ['scope' => 'entity', 'active' => true] + self::organisationFilter(organisation: $organisation)
 		);
 		if (is_int($result) === true) {
 			$result = [];
@@ -446,7 +462,7 @@ class PolicyMatchService {
 
 		$rules = [];
 		foreach ($this->resultExtractor->extractRows(result: $result) as $obj) {
-			if (($obj['scope'] ?? 'document') !== 'entity') {
+			if (($obj['scope'] ?? 'document') !== 'entity' || self::inScope(row: $obj, organisation: $organisation) === false) {
 				continue;
 			}
 
@@ -461,6 +477,67 @@ class PolicyMatchService {
 
 		return $rules;
 	}//end loadStandingConsents()
+
+	/**
+	 * The active standing consents, or none when consents must not apply.
+	 *
+	 * @param bool        $load         Whether standing consents apply.
+	 * @param string|null $organisation Only this organisation's records; null for every organisation's.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function consentsIf(bool $load, ?string $organisation): array {
+		if ($load === false) {
+			return [];
+		}
+
+		return $this->loadStandingConsents(organisation: $organisation);
+	}//end consentsIf()
+
+	/**
+	 * Whether a loaded rule belongs to the organisation whose rules apply.
+	 *
+	 * @param array<string, mixed> $row          The stored rule.
+	 * @param string|null          $organisation The organisation, or null for every organisation.
+	 *
+	 * @return bool
+	 */
+	private static function inScope(array $row, ?string $organisation): bool {
+		if ($organisation === null) {
+			return true;
+		}
+
+		$self = ($row['@self'] ?? []);
+		if (is_array($self) === false) {
+			return false;
+		}
+
+		// The query is filtered on the organisation (organisationFilter()), and
+		// a row read inside the seam carries only its id in `@self`: a row
+		// without an organisation was matched by that filter. One that names
+		// another organisation is still refused.
+		$owner = (string)($self['organisation'] ?? '');
+
+		return $owner === '' || $owner === $organisation;
+	}//end inScope()
+
+	/**
+	 * The search filter that keeps the rules to one organisation, pushed down
+	 * to OpenRegister's metadata filter; none when every organisation applies.
+	 *
+	 * @param string|null $organisation The organisation UUID, or null for every organisation.
+	 *
+	 * @return array<string, array<string, string>>
+	 *
+	 * @spec openspec/changes/multi-tenant-hardening/specs/multi-tenant-hardening/spec.md
+	 */
+	private static function organisationFilter(?string $organisation): array {
+		if ($organisation === null) {
+			return [];
+		}
+
+		return ['@self' => ['organisation' => $organisation]];
+	}//end organisationFilter()
 
 	/**
 	 * Match a detected entity against prohibition rules only.
@@ -489,6 +566,33 @@ class PolicyMatchService {
 		];
 
 	}//end matchProhibitionHint()
+
+	/**
+	 * Match a detected entity and return a standing-consent hint only.
+	 *
+	 * Runs the same {@see match} pass as {@see matchProhibitionHint}, so a
+	 * prohibition matching the same entity wins and this returns null.
+	 *
+	 * @param string $entityType 'PERSON', 'ORGANIZATION', or 'OTHER'.
+	 * @param string $entityValue Detected entity text.
+	 *
+	 * @return array{ruleId: string, ruleName: string, bases: list<string>}|null The hint, or null.
+	 *
+	 * @spec openspec/changes/anonymization-review-workbench/tasks.md#task-2.1
+	 */
+	public function matchStandingConsentHint(string $entityType, string $entityValue): ?array {
+		$result = $this->match(entityText: $entityValue, entityType: $entityType);
+		if ($result === null || $result['kind'] !== self::KIND_STANDING_CONSENT) {
+			return null;
+		}
+
+		return [
+			'ruleId' => (string)$result['uuid'],
+			'ruleName' => (string)$result['primaryName'],
+			'bases' => array_values(($result['bases'] ?? [])),
+		];
+
+	}//end matchStandingConsentHint()
 
 	/**
 	 * Invalidate the in-memory rule cache.

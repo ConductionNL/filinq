@@ -21,7 +21,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.filinq.app
  *
- * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+ * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,12 +31,14 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\Filinq\Kernel\Contracts\DossierObjectReaderInterface;
+
 /**
  * Reads the shape of an OpenRegister dossier object.
  *
- * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+ * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
  */
-class DossierObjectReader {
+class DossierObjectReader implements DossierObjectReaderInterface {
 
 	/**
 	 * The register every filinq schema lives in.
@@ -69,7 +71,7 @@ class DossierObjectReader {
 	 *
 	 * @return array<string, mixed> The payload.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function payloadOf(object $object): array {
 		if (method_exists($object, 'jsonSerialize') === true) {
@@ -98,7 +100,7 @@ class DossierObjectReader {
 	 *
 	 * @return string The UUID, or '' when it has none.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function uuidOf(object $object, array $payload): string {
 		$uuid = ($payload['@self']['id'] ?? $payload['id'] ?? $payload['uuid'] ?? '');
@@ -117,7 +119,7 @@ class DossierObjectReader {
 	 *
 	 * @return string The status.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function statusOf(array $payload): string {
 		$status = trim((string)($payload['status'] ?? ''));
@@ -133,7 +135,7 @@ class DossierObjectReader {
 	 *
 	 * @return array<int, string> The references.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function documentRefs(array $payload): array {
 		$refs = ($payload['documents'] ?? []);
@@ -158,7 +160,7 @@ class DossierObjectReader {
 	 *
 	 * @return array<int, object> The objects.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function findAllOf(object $objectService, string $schema): array {
 		return $objectService->findAll(
@@ -180,7 +182,7 @@ class DossierObjectReader {
 	 *
 	 * @return string Whichever is non-empty.
 	 *
-	 * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+	 * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
 	 */
 	public function firstNonEmpty(string $value, string $fallback): string {
 		if ($value !== '') {

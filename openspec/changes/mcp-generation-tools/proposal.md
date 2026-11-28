@@ -1,5 +1,6 @@
 ---
 kind: code
+status: proposed
 depends_on:
   - filinq-mcp-adoption
 ---

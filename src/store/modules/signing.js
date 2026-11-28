@@ -1,16 +1,25 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 /* eslint-disable no-console */
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
+import { stepUpHint } from '../../services/signerStepUp.js'
 
 export const useSigningStore = defineStore('signing', {
 	state: () => ({
 		signingRequests: [],
 		signingRequest: null,
+		folderEntries: [],
+		folderTotal: 0,
 		auditTrail: [],
 		verificationResult: null,
 		loading: false,
 		error: null,
+		// The step-up hint of the last refused signature (signer-identity-rails).
+		stepUp: null,
 	}),
 	getters: {
 		pendingRequests: (state) =>
@@ -96,6 +105,7 @@ export const useSigningStore = defineStore('signing', {
 		async signDocument(requestId, signerId) {
 			this.loading = true
 			this.error = null
+			this.stepUp = null
 			try {
 				const response = await axios.post(
 					generateUrl(
@@ -106,6 +116,35 @@ export const useSigningStore = defineStore('signing', {
 				return response.data
 			} catch (err) {
 				console.error('Failed to sign document:', err)
+				this.error = err.message
+				this.stepUp = stepUpHint(err)
+				return null
+			} finally {
+				this.loading = false
+			}
+		},
+		/**
+		 * Accept a document as an accept-only recipient, without signing it
+		 * (signing-accept-only-recipient REQ-SAO-002).
+		 *
+		 * @param {string} requestId The signing request.
+		 * @param {string} signerId The caller's recipient record.
+		 * @return {Promise<object|null>} The updated recipient record, or null on failure.
+		 * @spec openspec/changes/archive/2026-11-25-signing-accept-only-recipient/tasks.md#4-screens
+		 */
+		async acceptDocument(requestId, signerId) {
+			this.loading = true
+			this.error = null
+			try {
+				const response = await axios.post(
+					generateUrl(
+						`/apps/filinq/api/signing/requests/${requestId}/accept`,
+					),
+					{ signerId },
+				)
+				return response.data
+			} catch (err) {
+				console.error('Failed to accept the document:', err)
 				this.error = err.message
 				return null
 			} finally {
@@ -140,20 +179,25 @@ export const useSigningStore = defineStore('signing', {
 			}
 		},
 		/**
-		 * Cancel a signing request.
+		 * Withdraw a signing request. Only its creator may; a refusal carries
+		 * the server's own message, which names the creator.
 		 *
-		 * @param requestId
-		 * @spec openspec/changes/digital-signing-integration/tasks.md#8-1
+		 * @param {string} requestId The request id.
+		 * @return {Promise<boolean>} True when the request was withdrawn.
+		 * @spec openspec/changes/archive/2026-11-17-signing-cancellation/specs/signing-cancellation/spec.md
 		 */
 		async cancelRequest(requestId) {
 			this.loading = true
+			this.error = null
 			try {
 				await axios.delete(
 					generateUrl(`/apps/filinq/api/signing/requests/${requestId}`),
 				)
+				return true
 			} catch (err) {
 				console.error('Failed to cancel signing request:', err)
-				this.error = err.message
+				this.error = err?.response?.data?.error || err.message
+				return false
 			} finally {
 				this.loading = false
 			}
@@ -174,6 +218,59 @@ export const useSigningStore = defineStore('signing', {
 				return response.data
 			} catch (err) {
 				console.error('Failed to bulk sign:', err)
+				this.error = err.message
+				return null
+			} finally {
+				this.loading = false
+			}
+		},
+		/**
+		 * Read the signing folder: everything still waiting for your signature.
+		 *
+		 * The folder is a query, so it is asked again on every visit and
+		 * never cached: a request cancelled elsewhere is gone the next time
+		 * you look.
+		 *
+		 * @param {number} limit Page size.
+		 * @param {number} offset Page offset.
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
+		 */
+		async fetchSigningFolder(limit = 50, offset = 0) {
+			this.loading = true
+			this.error = null
+			try {
+				const response = await axios.get(
+					generateUrl('/apps/filinq/api/signing/folder'),
+					{ params: { limit, offset } },
+				)
+				this.folderEntries = response.data.entries ?? []
+				this.folderTotal = response.data.total ?? 0
+				return response.data
+			} catch (err) {
+				console.error('Failed to read the signing folder:', err)
+				this.error = err.message
+				return null
+			} finally {
+				this.loading = false
+			}
+		},
+		/**
+		 * Sign a selection from the folder in one pass.
+		 *
+		 * @param {Array} requestIds The selected signing requests.
+		 * @spec openspec/changes/archive/2026-10-09-signing-folder-across-cases/specs/document-signing/spec.md
+		 */
+		async signFolderSelection(requestIds) {
+			this.loading = true
+			this.error = null
+			try {
+				const response = await axios.post(
+					generateUrl('/apps/filinq/api/signing/folder/sign'),
+					{ requestIds },
+				)
+				return response.data
+			} catch (err) {
+				console.error('Failed to sign the folder selection:', err)
 				this.error = err.message
 				return null
 			} finally {

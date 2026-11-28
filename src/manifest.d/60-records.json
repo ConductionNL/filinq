@@ -1,0 +1,217 @@
+{
+	"menu": [
+		{
+			"id": "Publications",
+			"label": "Publications",
+			"icon": "Publish",
+			"route": "Publications",
+			"order": 57
+		},
+		{
+			"id": "PrintJobs",
+			"label": "Print jobs",
+			"icon": "Printer",
+			"route": "PrintJobs",
+			"order": 56
+		},
+		{
+			"id": "LegalHolds",
+			"label": "Legal holds",
+			"icon": "ScaleBalance",
+			"route": "LegalHolds",
+			"order": 58
+		},
+		{
+			"id": "DestructionLists",
+			"label": "Destruction lists",
+			"icon": "ClipboardCheckOutline",
+			"route": "DestructionLists",
+			"order": 58
+		},
+		{
+			"id": "DestructionCertificates",
+			"label": "Destruction certificates",
+			"icon": "FileCheckOutline",
+			"route": "DestructionCertificates",
+			"order": 58
+		},
+		{
+			"id": "TransferDue",
+			"label": "Due for transfer",
+			"icon": "ArchiveArrowUpOutline",
+			"route": "TransferDue",
+			"order": 58
+		},
+		{
+			"id": "SubjectErasures",
+			"label": "Erasure requests",
+			"icon": "AccountRemove",
+			"route": "SubjectErasures",
+			"order": 59
+		},
+		{
+			"id": "EntitySearch",
+			"label": "Entity search",
+			"icon": "Magnify",
+			"route": "EntitySearch",
+			"order": 59,
+			"visibleIf": {
+				"entitySearch.allowed": true
+			}
+		}
+	],
+	"pages": [
+		{
+			"id": "Publications",
+			"route": "/publications/:id?",
+			"type": "custom",
+			"title": "Publications",
+			"component": "PublicationsPage",
+			"_note": "The Woo publication pipeline (woo-publicatie-pipeline): the list and one publication with its checks, metadata, hand-off, withdrawal, destruction date and history. type:custom because it reads GET api/publications, which lists only publications whose document the caller can open, and every action is a pipeline step on that API, not an object edit."
+		},
+		{
+			"id": "PrintJobs",
+			"route": "/print-jobs",
+			"type": "custom",
+			"title": "Print jobs",
+			"component": "PrintJobs",
+			"_note": "The caller's own print jobs with status and download (print-jobs-in-the-app). type:custom because it reads GET api/print/jobs, which lists only the caller's jobs; the PDFs are in app data, not in the object."
+		},
+		{
+			"id": "LegalHolds",
+			"route": "/legal-holds",
+			"type": "custom",
+			"title": "Legal holds",
+			"component": "LegalHolds",
+			"_note": "The hold register (e-discovery-legal-hold): legal matters and the records they freeze, with placement per record, retry and release. type:custom because it reads GET api/legal-holds, which serves hold authority only (admins plus legal_hold_authority_groups); the legalHoldCase schema itself is admin-only in OpenRegister."
+		},
+		{
+			"id": "DestructionLists",
+			"route": "/destruction-lists",
+			"type": "index",
+			"title": "Destruction lists",
+			"config": {
+				"actionToggles": {"showAdd": false},
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/openregister/api/archival/destruction-lists",
+					"rowsPath": "results",
+					"searchFields": {"status": {"param": "status", "single": true}},
+					"refusedText": "Only an archivist can review destruction lists."
+				},
+				"rowRoute": "DestructionListDetail",
+				"columns": [
+					{
+						"key": "status",
+						"label": "Status",
+						"formatter": "valueMap",
+						"formatterOptions": {
+							"map": {
+								"in_review": "In review",
+								"awaiting_second_approval": "Awaiting second approval",
+								"approved": "Approved",
+								"rejected": "Rejected",
+								"completed": "Completed",
+								"executing": "Executing",
+								"executed": "Executed"
+							}
+						}
+					},
+					{"key": "entryCount", "label": "Records"},
+					{"key": "createdAt", "label": "Created", "formatter": "date"}
+				]
+			},
+			"_note": "The destruction lists OpenRegister draws up (archiefwet-retention-engine, REQ-DDARE-004), as an ordinary index over the endpoint source: OpenRegister's own GET api/archival/destruction-lists, which checks the archivist role and answers 403 to anybody else. filinq adds no route. rowRoute opens DestructionListDetail."
+		},
+		{
+			"id": "DestructionListDetail",
+			"route": "/destruction-lists/:id",
+			"type": "detail",
+			"title": "Destruction list",
+			"config": {
+				"entitySource": "endpoint",
+				"sourceConfig": {"url": "/apps/openregister/api/archival/destruction-lists/{id}"},
+				"bodyWidgets": [
+					{
+						"id": "destruction-list-review",
+						"component": "DestructionListReview",
+						"placement": "before-body",
+						"props": {
+							"objectId": "@objectId"
+						}
+					}
+				]
+			},
+			"_note": "One destruction list as a type:detail page over OpenRegister's GET api/archival/destruction-lists/{id}. The review is a bodyWidgets section (DestructionListReview): the proposed records with title, schema, register, archiefactiedatum and selectielijst category, keeping a record off the list with a reason, approval in full or of the rest (one POST .../approve carrying every kept record and its reason, which no per-row action can send) and rejection with a reason (POST .../reject). Every call is OpenRegister's."
+		},
+		{
+			"id": "DestructionCertificates",
+			"route": "/destruction-certificates",
+			"type": "index",
+			"title": "Destruction certificates",
+			"config": {
+				"actionToggles": {"showAdd": false},
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/openregister/api/archival/certificates",
+					"rowsPath": "results",
+					"refusedText": "Only an archivist can read destruction certificates."
+				},
+				"columns": [
+					{"key": "destructionDate", "label": "Destroyed on", "formatter": "date"},
+					{"key": "totalDestroyed", "label": "Records destroyed"},
+					{
+						"key": "groupedBySchema",
+						"label": "Per schema and selection list category",
+						"formatter": "groupCounts",
+						"formatterOptions": {"keys": ["schema", "classification"]}
+					},
+					{"key": "approvedBy", "label": "Approved by", "formatter": "joinedList"},
+					{"key": "selectielijstBron", "label": "Selection list", "formatter": "joinedList"},
+					{"key": "complianceStatement", "label": "Statement"}
+				]
+			},
+			"_note": "The verklaringen van vernietiging (archiefwet-retention-engine, REQ-DDARE-005) as an ordinary index over the endpoint source: OpenRegister's own GET api/archival/certificates, newest first, which checks the archivist role. Read only: a certificate is a permanent record and filinq adds no route. The per-schema totals and the approvers are written by the app's groupCounts and joinedList cell formatters."
+		},
+		{
+			"id": "TransferDue",
+			"route": "/transfer-due",
+			"type": "index",
+			"title": "Due for transfer",
+			"config": {
+				"actionToggles": {"showAdd": false},
+				"entitySource": "endpoint",
+				"sourceConfig": {
+					"url": "/apps/openregister/api/transfers/eligible",
+					"rowsPath": "results",
+					"refusedText": "Only an administrator can see the records due for transfer."
+				},
+				"emptyText": "No records are due for transfer to the e-depot.",
+				"columns": [
+					{ "key": "name", "label": "Record" },
+					{ "key": "schema", "label": "Schema" },
+					{ "key": "register", "label": "Register" },
+					{ "key": "archiefactiedatum", "label": "Archive action date", "formatter": "rowField", "formatterOptions": { "path": "retention.archiefactiedatum" } },
+					{ "key": "classification", "label": "Selection list category", "formatter": "rowField", "formatterOptions": { "path": "retention.classification" } }
+				]
+			},
+			"_note": "The overbrenging view (archiefwet-retention-engine 3.3, REQ-DDARE-006): the bewaren records whose archiefactiedatum has passed, not transferred or destroyed, without an active legal hold and not on an active transfer list yet, as OpenRegister's own GET api/transfers/eligible reads them with the rule of its daily transfer check. Read only: making and sending the transfer list stays OpenRegister's and tmlo-mdto-metadata's, and filinq adds no route. The action date and category sit in the row's retention block, so the rowField cell formatter reads them by path."
+		},
+		{
+			"id": "SubjectErasures",
+			"route": "/subject-erasures",
+			"type": "custom",
+			"title": "Erasure requests",
+			"component": "SubjectErasures",
+			"_note": "Subject erasure (erase-a-person-while-the-records-stay): record a request, read the capped preview, leave occurrences in place with a reason, run, read the certificate. type:custom because the preview and the run are computed by api/subject-erasures, which checks the erasure authority (admins plus subject_erasure_groups) before anything is read."
+		},
+		{
+			"id": "EntitySearch",
+			"route": "/entity-search",
+			"type": "custom",
+			"title": "Entity search",
+			"component": "EntitySearch",
+			"_note": "Entity search (entity-search): search OpenRegister's detected-entity catalogue and see per document where a value occurs. type:custom because api/entity-search checks the gate (admins plus entity_search.allowed_groups), scopes by organisation and writes the processing log before it answers; the menu entry shows only when GET api/entity-search/access answers 200 (manifest.runtime.entitySearch.allowed, set in App.vue)."
+		}
+	]
+}

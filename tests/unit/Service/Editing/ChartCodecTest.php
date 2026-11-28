@@ -412,4 +412,84 @@ class ChartCodecTest extends TestCase {
 			$this->entry($second['bytes'], 'word/charts/chart1.xml')
 		);
 	}//end testASecondChartDoesNotCollideWithTheFirst()
+
+	/**
+	 * Every package entry after embedding two charts, one after an anchor,
+	 * is exactly this.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-chart-embedding/spec.md
+	 */
+	public function testEveryEntryOfAnEmbeddedPackageIsExactlyThis(): void {
+		$first = $this->codec->embedChart($this->docx(existingRelationships: 2), 'docx', self::CHART);
+		$second = $this->codec->embedChart($first['bytes'], 'docx', self::CHART, sprintf('b%s-1', substr(sha1('Intro paragraph'), 0, 8)));
+
+		$hashes = [];
+		foreach (['[Content_Types].xml', 'word/document.xml', 'word/_rels/document.xml.rels', 'word/charts/chart1.xml', 'word/charts/chart2.xml'] as $name) {
+			$hashes[$name] = sha1($this->entry($second['bytes'], $name));
+		}
+
+		$this->assertSame(['word/charts/chart2.xml', 'rId4'], [$second['chartPart'], $second['relationshipId']]);
+		$this->assertSame(
+			[
+				'[Content_Types].xml' => '0f4479d4e731503366d1ea02b49059b05709c6db',
+				'word/document.xml' => '3f2c7de1834056774b427a9dbe2c5397ec2b3d56',
+				'word/_rels/document.xml.rels' => '9bab9913d30506f2e7de718b41165e6d4fd9a1e6',
+				'word/charts/chart1.xml' => '823ac4ee200eb2f7c30d5a1087bb4f13008f4683',
+				'word/charts/chart2.xml' => '823ac4ee200eb2f7c30d5a1087bb4f13008f4683',
+			],
+			$hashes
+		);
+
+	}//end testEveryEntryOfAnEmbeddedPackageIsExactlyThis()
+
+	/**
+	 * The supported chart types are bar, line and pie.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-chart-embedding/spec.md
+	 */
+	public function testTheSupportedTypesAreBarLineAndPie(): void {
+		$this->assertSame(['bar', 'line', 'pie'], $this->codec->types());
+
+	}//end testTheSupportedTypesAreBarLineAndPie()
+
+	/**
+	 * A chart without categories is refused.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-chart-embedding/spec.md
+	 */
+	public function testAChartWithoutCategoriesIsRefused(): void {
+		$chart = self::CHART;
+		$chart['categories'] = [];
+
+		$this->expectException(RuntimeException::class);
+		$this->expectExceptionMessage('A chart needs at least one category.');
+
+		$this->codec->embedChart($this->docx(), 'docx', $chart);
+
+	}//end testAChartWithoutCategoriesIsRefused()
+
+	/**
+	 * A line chart is drawn as a standard-grouped line chart.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/document-chart-embedding/spec.md
+	 */
+	public function testALineChartIsStandardGrouped(): void {
+		$chart = self::CHART;
+		$chart['type'] = 'line';
+
+		$result = $this->codec->embedChart($this->docx(), 'docx', $chart);
+		$xml = $this->entry($result['bytes'], $result['chartPart']);
+
+		$this->assertStringContainsString('<c:lineChart><c:grouping val="standard"/>', $xml);
+		$this->assertStringNotContainsString('c:barDir', $xml);
+
+	}//end testALineChartIsStandardGrouped()
 }//end class

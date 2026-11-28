@@ -20,13 +20,17 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://conduction.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
-use OCA\Filinq\AppInfo\Application;
+use OCA\Filinq\Kernel\AppIdentity;
+use OCA\Filinq\Kernel\Contracts\DemoDataServiceInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -37,7 +41,7 @@ use RuntimeException;
  *
  * @spec exclude Demo-data import; ADR-111 rule 1, no per-app behavioural spec.
  */
-class DemoDataService {
+class DemoDataService implements DemoDataServiceInterface {
 	/**
 	 * App-relative path to the generated mock descriptor.
 	 *
@@ -55,7 +59,7 @@ class DemoDataService {
 	 *
 	 * @var string
 	 */
-	private const CONFIG_APP_ID = Application::APP_ID . '.demo';
+	private const CONFIG_APP_ID = AppIdentity::APP_ID . '.demo';
 
 	/**
 	 * Constructor.
@@ -83,24 +87,6 @@ class DemoDataService {
 	public function isAvailable(): bool {
 		return is_file($this->descriptorPath()) === true;
 	}//end isAvailable()
-
-	/**
-	 * The answer that means "plant nothing".
-	 *
-	 * 🔴 NOT THE ABSENCE OF AN ANSWER. An operator who declines has FINISHED the
-	 * step; a step that can never be marked done reopens the wizard over every
-	 * page (nextcloud-vue#806).
-	 *
-	 * @var string
-	 */
-	public const NONE_DATASET = 'none';
-
-	/**
-	 * The id of the dataset this app ships.
-	 *
-	 * @var string
-	 */
-	public const DEMO_DATASET = 'demo';
 
 	/**
 	 * Every answer the wizard's choice step may offer, declining included.
@@ -230,7 +216,7 @@ class DemoDataService {
 		$result = $this->configurationService()->importFromApp(
 			appId: self::CONFIG_APP_ID,
 			data: $data,
-			version: $this->appManager->getAppVersion(Application::APP_ID),
+			version: $this->appManager->getAppVersion(AppIdentity::APP_ID),
 			force: true
 		);
 
@@ -245,7 +231,7 @@ class DemoDataService {
 			. $imported['objects'] . ' object(s), '
 			. $imported['registers'] . ' register(s), '
 			. $imported['schemas'] . ' schema(s).',
-			['app' => Application::APP_ID]
+			['app' => AppIdentity::APP_ID]
 		);
 
 		return $imported;
@@ -257,7 +243,7 @@ class DemoDataService {
 	 * @return string The path.
 	 */
 	private function descriptorPath(): string {
-		return $this->appManager->getAppPath(Application::APP_ID) . self::DESCRIPTOR;
+		return $this->appManager->getAppPath(AppIdentity::APP_ID) . self::DESCRIPTOR;
 	}//end descriptorPath()
 
 	/**

@@ -11,6 +11,12 @@ or_adoption_change: docudesk-adopt-or-abstractions
 
 Defines the data model for the document-domain schemas that Filinq uses to store correspondence audit logs and huisstijl configuration. These schemas live in the consolidated `filinq` register — the former `document` register was folded into it, so `register=filinq` is the only correct binding. The `report`, `template`, and `entity` schemas originally present in `document_register.json` have been migrated to their authoritative homes: report objects are now OR File Attachments enriched with `x-openregister-calculations` annotations; the `template` schema is likewise carried by the `filinq` register. Three document-domain schemas remain active: `correspondence`, `huisstijl`, and `batchCorrespondenceJob`.
 
+A document that arrives or leaves is registered: a direction, a
+registration date, a unit, and a number from a sequence scoped to that
+unit and that year. An outbound registration discharges the inbound one
+it answers, and a number that never became a registration is accounted
+for. Parity register row 4.26, rating `no`, entered under decision D1.
+
 ## OR Adoption decisions (from docudesk-adopt-or-abstractions)
 
 - **Decision 3**: Schema validation is now mandatory. All document-domain schemas in the `filinq` register declare full `required`, `properties`, and `hardValidation: true`. The previous `properties: []` / `hardValidation: false` shape is removed.
@@ -196,6 +202,428 @@ The `filinq` register SHALL include the `anonymizationLink` schema. The schema S
 - **THEN** `version_compare("5.3.0", "5.2.0", ">")` SHALL return `true`
 - **AND** `ConfigurationService::importFromApp()` SHALL be called once
 - **AND** the stored `configuration_version` SHALL be updated to `5.3.0`
+
+### Requirement: LegalHoldCase Schema in Document Register (REQ-DDEDL-020)
+
+The document register MUST include the `legalHoldCase` schema with full
+`required`, `properties` and `hardValidation: true` (OR Adoption
+Decision 3): `name`, `holdType` (`litigation` | `audit` | `woo-appeal` |
+`other`), `reason` (required), `caseReference`, `custodian`,
+`scopeDocuments[]`, `scopeDossiers[]`, `status` (lifecycle
+`active → released`, canonical `initial: active`), `placedBy`, `placedAt`,
+`releasedBy`, `releasedAt`, `releaseReason`, `notifiedOwners[]`. The schema
+MUST carry `archive` configuration with `defaultNominatie: bewaren` (hold
+cases are permanent records) and MUST NOT declare `x-openregister-archival`
+(a hold register must never be auto-deleted). The register version MUST be
+bumped for boot import.
+
+#### Scenario: Schema present after version bump
+
+- GIVEN a fresh installation after `ConfigurationService::importFromApp()` runs
+- WHEN the document register's schemas are listed via `objectService->getSchemas(register: 'document')`
+- THEN `legalHoldCase` is included with `hardValidation: true` and the declared lifecycle
+- @e2e exclude boot-time register import with no UI surface — covered by PHPUnit register-import assertions (tests/unit/Settings/)
+
+#### Scenario: Hold cases are bewaren records
+
+- GIVEN the shipped `legalHoldCase` schema definition
+- WHEN its archive configuration and annotations are inspected after import
+- THEN it declares `defaultNominatie: bewaren` and no `x-openregister-archival` annotation
+- AND its objects are never eligible for OpenRegister's destruction scan
+- @e2e exclude declarative register-content rule — covered by a PHPUnit register-lint test
+
+### Requirement: Document Detail Renders Integration Leaf Tabs
+
+The document/report detail surface SHALL render the contacts, activity, and shares integration
+leaf tabs/widgets for the document object via the integration registry
+(`IntegrationRegistry::getEnabled()`), when the corresponding NC apps / leaves are enabled. No
+bespoke per-document sidebar-tab or widget system SHALL be introduced for these capabilities.
+
+#### Scenario: Contacts, activity, and shares tabs appear on the document record
+
+@e2e tests/e2e/workflows/document-detail-leaf-widgets.spec.ts
+
+- GIVEN a document/report record open on its detail page
+- AND NC Contacts, the activity leaf, and NC sharing are available
+- WHEN the detail page renders
+- THEN the contacts leaf tab (role-grouped person chips) SHALL be present
+- AND the activity leaf tab/widget SHALL be present
+- AND the shares leaf tab/widget SHALL be present
+- AND all three SHALL be sourced from the integration registry, not from an app-local tab system
+
+#### Scenario: A leaf is hidden when its app is absent
+
+@e2e tests/e2e/workflows/document-detail-leaf-widgets.spec.ts
+
+- GIVEN a document/report record whose host instance does not have NC Contacts installed
+- WHEN the detail page renders
+- THEN the contacts leaf tab SHALL NOT be present
+- AND the page SHALL render the remaining enabled leaf tabs without error
+
+#### Scenario: In-app document surfaces are untouched
+
+@e2e exclude the app-owned anonymisation review surface only opens once a document has
+been through a real detection run, which this suite cannot provision without a detector;
+the leaf section is mounted BELOW that surface and touches none of its markup, which
+`git diff` shows and no browser assertion would add to.
+
+- GIVEN the document detail page with its app-owned `Anonimisatie`, `Redactie`, and
+  `Handtekeningen` tabs
+- WHEN the leaf tabs are added
+- THEN the app-owned tabs SHALL remain present and unchanged
+- AND no leaf SHALL replace Filinq's in-app PDF/letter, eIDAS signing, or anonymisation surfaces
+
+### Requirement: Every file on a case is readable as one flat list (REQ-CDF-01)
+
+Filinq MUST offer a list of every file on every document record of a
+given object, carrying the record each file belongs to as a column. The
+list MUST page and filter. It MUST be offered as a leaf per ADR-066 so a
+consuming app places it beside, not instead of, the record view. That leaf
+is `filinq-documents` (decision 128, Ruben, 9 Oct 2026): it renders the list
+in plain markup, because the leaves bundle loads on other apps' pages and
+carries no component library.
+
+#### Scenario: The jurist finds the attachment
+
+- GIVEN a case with twelve document records holding thirty files
+- WHEN the handler opens the flat file list
+- THEN all thirty files are listed, each naming the record it belongs to
+
+#### Scenario: Both views stay available
+
+- GIVEN a consuming app placing the record list and the flat list
+- WHEN a user switches between them
+- THEN both read the same document records and neither replaces the other
+
+### Requirement: A domain folder is created and kept in step (REQ-CDF-02)
+
+Filinq MUST create the file folder for a unit or case domain when the
+domain is created, and MUST reconcile the folder's permissions whenever
+the domain's membership changes. A nightly job MUST reconcile and MUST
+report both the drift it corrected and the drift it could not. Every
+correction MUST be written to the audit trail. A folder MUST be able to
+be pinned out of reconciliation with a recorded reason.
+
+#### Scenario: A new domain gets its folder
+
+- GIVEN a new case domain with two groups
+- WHEN it is created
+- THEN its folder exists with those two groups' permissions
+
+#### Scenario: A member leaves and the folder follows
+
+- GIVEN a domain whose group loses a member
+- WHEN the membership changes
+- THEN the folder's permissions are reconciled and the correction is in the audit trail
+
+#### Scenario: Drift that cannot be corrected is reported
+
+- GIVEN a folder on a mount that refuses a permission change
+- WHEN the nightly job runs
+- THEN it reports the folder, the permission and the reason, and does not claim success
+- @e2e exclude the nightly job's report; covered by PHPUnit with a mount stub that refuses
+
+### Requirement: An upload obeys an administered policy (REQ-CDF-03)
+
+Filinq MUST carry an `uploadPolicy` declaring allowed extensions, allowed
+media types, a maximum size and whether an unknown type is refused. The
+policy MUST be enforced server-side on every write path, including the
+leaf, the API and the intake channels. The media type MUST be read from
+the file's bytes and not from its name.
+
+#### Scenario: An executable is refused
+
+- GIVEN a policy allowing PDF, ODT and DOCX
+- WHEN a user uploads an executable renamed to `bijlage.pdf`
+- THEN the upload is refused, naming the detected type
+
+#### Scenario: The same refusal on every path
+
+- GIVEN the same policy
+- WHEN the file arrives through the API and through an intake channel
+- THEN both are refused with the same message
+- @e2e exclude multi-path enforcement; covered by PHPUnit across the write paths
+
+#### Scenario: Too large is too large
+
+- GIVEN a policy with a maximum of 200 MB
+- WHEN a 400 MB file is uploaded
+- THEN it is refused before the bytes are stored
+
+### Requirement: One document record serves several domains (REQ-CDF-04)
+
+A document record MUST carry `domains[]` rather than one owning domain.
+Access MUST be the union of what those domains allow, evaluated by
+OpenRegister. Unlinking the last domain MUST keep the record, owned by
+its creator.
+
+#### Scenario: One advies, three zaaktypen
+
+- GIVEN an advies linked to three case domains
+- WHEN a handler in each domain opens it
+- THEN all three read one record with one version history
+
+#### Scenario: An unlinked document is not deleted
+
+- GIVEN a document record linked to one domain
+- WHEN that link is removed
+- THEN the record still exists, owned by its creator, and appears in their documents list
+
+### Requirement: A person sees their own documents, and nothing rots (REQ-CDF-05)
+
+Filinq MUST offer a list of the document records a person created. A
+nightly job MUST remove upload fragments older than a declared age and
+MUST log the count and the bytes removed.
+
+#### Scenario: My documents
+
+- GIVEN a user who created nine document records
+- WHEN they open their documents list
+- THEN those nine are listed as records, not as files in a folder
+
+#### Scenario: The reaper reports
+
+- GIVEN eleven upload fragments older than the declared age
+- WHEN the nightly job runs
+- THEN they are removed and the count and the bytes are logged
+- @e2e exclude nightly job; covered by PHPUnit with seeded fragments
+
+### Requirement: An external store is validated before it is used (REQ-CDF-06)
+
+When the case folder lives on a storage Nextcloud mounts, filinq MUST
+validate on setup that the mount supports what the upload policy and the
+folder reconciliation need, and MUST name the parts it cannot enforce.
+Desktop editing and resumable upload MUST be verified against the case
+folder and MUST NOT be reimplemented in filinq.
+
+#### Scenario: A mount that cannot do permissions
+
+- GIVEN an external mount that does not support per-group permissions
+- WHEN it is configured as the store for a domain
+- THEN setup names the reconciliation requirement it cannot meet, before any document is stored
+- @e2e exclude the validation is reached from the setup path, which needs a probe over a real mount; covered by PHPUnit on ExternalMountValidator with a probe that refuses and a probe that cannot answer
+
+#### Scenario: Word on the desktop, through the sync client
+
+- GIVEN a case document in the case folder
+- WHEN a handler edits it in the desktop application and saves
+- THEN the change syncs back to the case folder and the document record's version history records it
+
+### Requirement: Each document type declares its required metadata as a register schema (REQ-DREG-06)
+
+Each kind of document filinq stores MUST be a schema in the filinq register
+(`lib/Settings/filinq_register.json`) that lists the metadata the kind must
+carry in its `required` list and constrains each property's type and
+format. OpenRegister MUST refuse an object that lacks a required property.
+An administrator MUST be able to change a document type's metadata with
+OpenRegister's schema editor; filinq MUST NOT carry a schema editor of its
+own.
+
+#### Scenario: A document without its required metadata is refused
+
+- GIVEN the `correspondence` schema requires a recipient
+- WHEN a correspondence object without a recipient is saved
+- THEN OpenRegister refuses it and names the missing property
+- @e2e exclude schema validation; covered by PHPUnit against the register import
+
+#### Scenario: An administrator adds a metadata field
+
+- GIVEN an administrator opens the filinq register in OpenRegister
+- WHEN they add a required property to a document type's schema
+- THEN new objects of that type must carry it
+- @e2e exclude OpenRegister's schema editor is tested in OpenRegister
+
+### Requirement: A file in an object's folder is read through the object that owns it
+
+The flat file list and the case bundle MUST resolve a file in the reader's
+own Files there, and a file in an OpenRegister object's folder only when the
+reader may read the object that owns the file, as OpenRegister's object read
+rule answers it. The file MUST NOT be opened before that check admits the
+reader. A file neither in the reader's Files nor admitted by its object MUST be
+left out of the list.
+
+#### Scenario: A dossier's document on the case's list
+
+- GIVEN a case whose document record points at a file in a dossier's folder
+- AND a reader who may read that dossier but has no share on the file
+- WHEN the reader opens the case's flat file list
+- THEN the file is listed, naming its record
+
+#### Scenario: An object the reader may not read
+
+- GIVEN a document record pointing at a file in the folder of an object the reader may not read
+- WHEN the reader opens the flat file list or builds the case bundle
+- THEN the file is left out
+- AND the file is not opened
+
+#### Scenario: Without OpenRegister
+
+- GIVEN OpenRegister is not installed
+- WHEN the reader opens the flat file list
+- THEN only files in the reader's own Files are listed
+
+### Requirement: The flat file list sorts on any column (REQ-SCR-005)
+
+The flat list of every file on a case MUST let the user sort on each of its columns, ascending and descending, and MUST keep the chosen order while the user stays on the case.
+
+Rows: `wk-case-list` (filinq matrix)
+
+#### Scenario: Sorting by date
+
+- GIVEN a case whose flat file list holds thirty files
+- WHEN the handler sorts on the date column
+- THEN the newest file is first
+- AND sorting on it again puts the oldest first
+- @e2e exclude specification only; the change that builds it adds the Playwright test
+
+### Requirement: My documents also lists what waits for me (REQ-SCR-006)
+
+Beside the documents a person created, filinq MUST offer a list of the documents that wait for that person: a pending signature, an intake document assigned to them, and a document due for review that they own.
+
+Rows: `wk-mine` (filinq matrix)
+
+#### Scenario: Three kinds of waiting work
+
+- GIVEN a user with one pending signature, one assigned intake document and one document due for review
+- WHEN they open My documents and choose Waiting for me
+- THEN all three are listed, each saying why it waits
+- @e2e exclude specification only; the change that builds it adds the Playwright test
+
+### Requirement: Every action on a document is in its audit trail (REQ-SCR-007)
+
+A document detail MUST show an audit trail of every action on the document, with the actor and the moment: registered, changed, new version, downloaded, shared, signed, anonymised, made final and published. The trail MUST be read from the OpenRegister audit trail, and filinq MUST NOT keep a second store.
+
+Rows: `rec-audit` (filinq matrix)
+
+#### Scenario: The trail of a besluit
+
+- GIVEN a besluit that was registered, signed and downloaded
+- WHEN the handler opens its audit trail
+- THEN the three actions are listed in time order, each with its actor and moment
+- @e2e exclude specification only; the change that builds it adds the Playwright test
+
+### Requirement: MdtoSupplement Schema in Document Register (REQ-DDTMM-020)
+
+The document register MUST include the `mdtoSupplement` schema with full
+`required`, `properties` and `hardValidation: true` (OR Adoption Decision
+3), holding the fields of REQ-DDTMM-002. It MUST NOT duplicate a
+retention-owned core attribute, and MUST NOT carry the
+`x-openregister-archival` annotation: a supplement lives as long as its
+record and goes with it through the vernietigingslijst path, never by its
+own sweep. The register version MUST be bumped.
+
+#### Scenario: Schema present after version bump
+
+- GIVEN a fresh installation after `ConfigurationService::importFromApp()` runs
+- WHEN the document register's schemas are listed via `objectService->getSchemas(register: 'document')`
+- THEN `mdtoSupplement` is included with `hardValidation: true`
+- @e2e exclude boot-time register import with no UI surface — covered by PHPUnit register-import assertions (tests/unit/Settings/)
+
+#### Scenario: Supplement carries no retention-owned attribute
+
+- GIVEN the shipped `mdtoSupplement` schema definition
+- WHEN its properties are checked against the retention-owned core attribute names
+- THEN none of waardering/bewaartermijn/archiefactiedatum/archiefstatus/classificatie appears as a schema property
+- AND the schema declares no `x-openregister-archival` annotation
+- @e2e exclude declarative register-content rule — covered by a PHPUnit register-lint test
+
+### Requirement: A registered document carries a direction, a unit and a number (REQ-DIO-01)
+
+Filinq MUST offer a registration entry for a document, carrying the
+direction (`inbound` or `outbound`, with no third value: a document that
+never left the building is not registered here at all), the registration date,
+the organisational unit, the document it registers, and a registration
+number. The number MUST be rendered by OpenRegister's generated
+identifier annotation from a sequence named for the unit, with the year
+in the format and a yearly reset. Filinq MUST NOT implement a counter of
+its own. The number MUST be refused on update once it is set.
+
+#### Scenario: The first outgoing letter of the year
+
+- GIVEN a unit with no registrations in the current year
+- WHEN a handler registers an outgoing besluit for that unit
+- THEN the entry carries direction `outbound`, the unit, today's date and the first number of the year for that unit
+
+#### Scenario: Two units do not share a counter
+
+- GIVEN two units each registering a document on the same day
+- WHEN both registrations are written
+- THEN each carries the first number of its own sequence, and neither number appears in the other unit's series
+
+#### Scenario: The number is set once
+
+- GIVEN a registration entry with a number
+- WHEN a caller updates the entry with a different number through the objects API
+- THEN the update is refused and the stored number is unchanged
+- @e2e exclude write guard on the objects API; covered by PHPUnit
+
+#### Scenario: A new year starts a new series
+
+- GIVEN a unit whose last registration was in the previous year
+- WHEN the first document of the new year is registered
+- THEN its number carries the new year and the sequence position starts again
+
+#### Scenario: Registration refuses rather than numbering by hand
+
+- GIVEN an instance whose register declares no generated identifier for the registration number
+- WHEN a document is registered
+- THEN the registration is refused, naming the missing sequence, and no entry is written
+- @e2e exclude configuration failure path; covered by PHPUnit with an unannotated schema
+
+### Requirement: An outbound registration discharges the inbound one it answers (REQ-DIO-02)
+
+An outbound registration MUST be able to name an inbound registration it
+answers. The inbound entry MUST then read as discharged, carrying the
+date of the first discharge and every outbound number that answered it.
+The discharge MUST be read from the link rather than written as a status
+on the inbound entry. Filinq MUST offer the undischarged inbound entries
+of a unit as a list, and MUST offer that list as a leaf per ADR-066.
+
+#### Scenario: A reply discharges the request
+
+- GIVEN a registered incoming aanvraag
+- WHEN the outgoing besluit is registered naming that inbound registration
+- THEN the inbound entry reads as discharged on today's date, naming the outbound number
+
+#### Scenario: Two replies to one request
+
+- GIVEN an inbound entry already discharged by a herstelverzoek
+- WHEN the decision is registered against the same inbound entry
+- THEN both outbound numbers are listed against it and the discharge date is still the first one
+
+#### Scenario: What is still open
+
+- GIVEN a unit with inbound entries, some discharged and some not
+- WHEN the open post list for that unit is read
+- THEN it holds exactly the undischarged entries, oldest first
+
+### Requirement: A number that never became a registration is accounted for (REQ-DIO-03)
+
+When a sequence value is allocated and the registration it was allocated
+for is not written, filinq MUST record the allocated number as withdrawn,
+with the reason and the moment. A reader of a unit's series MUST find
+every number in it, and a number carrying no document MUST say why. The
+spec does not claim the sequence itself never skips: OpenRegister's
+generator is gap tolerant and never reuses a value after a rollback.
+
+#### Scenario: A failed registration leaves an explanation, not a hole
+
+- GIVEN a registration that takes a number and then fails on validation
+- WHEN the unit's series is read
+- THEN the allocated number is present as withdrawn, naming the reason and the moment
+
+#### Scenario: The series reads end to end
+
+- GIVEN a unit with registrations and one withdrawn allocation
+- WHEN the series is read from the first number to the last
+- THEN no number is absent, and each is either a registration or a withdrawal with a reason
+
+#### Scenario: A withdrawal is not reused
+
+- GIVEN a withdrawn number
+- WHEN the next document of that unit is registered
+- THEN it takes the following number and never the withdrawn one
+- @e2e exclude sequence behaviour; covered by PHPUnit against the generated identifier annotation
 
 ## Data Model
 

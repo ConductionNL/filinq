@@ -36,9 +36,15 @@ namespace OCA\Filinq\Service;
 use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\Filinq\Event\GlAccountSuggestedEvent;
+use OCA\Filinq\Event\Support\RequestOrigin;
+use OCA\Filinq\Kernel\Contracts\GlAccountSuggestionServiceInterface;
 use OCA\Filinq\Service\Suggestion\CategoryKeywordMapper;
 use OCA\Filinq\Service\Suggestion\HistoryRanker;
 use OCA\Filinq\Service\Suggestion\SupplierIdentityResolver;
+use OCA\Filinq\Service\Support\SuggestionSignals;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\EventDispatcher\IEventDispatcher;
 use OCP\TaskProcessing\Task as TaskProcessingTask;
 use OCP\TaskProcessing\TaskTypes\TextToText;
@@ -62,7 +68,28 @@ use Throwable;
  *
  * @spec openspec/specs/ai-gl-account-suggestion/spec.md
  */
-class GlAccountSuggestionService {
+class GlAccountSuggestionService implements GlAccountSuggestionServiceInterface {
+	/**
+	 * Pure supplier-identity resolver.
+	 *
+	 * @var SupplierIdentityResolver
+	 */
+	private readonly SupplierIdentityResolver $identityResolver;
+
+	/**
+	 * Pure windowed-frequency ranker.
+	 *
+	 * @var HistoryRanker
+	 */
+	private readonly HistoryRanker $historyRanker;
+
+	/**
+	 * Pure cold-start keyword matcher.
+	 *
+	 * @var CategoryKeywordMapper
+	 */
+	private readonly CategoryKeywordMapper $keywordMapper;
+
 	/**
 	 * Constructor.
 	 *
@@ -71,9 +98,7 @@ class GlAccountSuggestionService {
 	 * @param IEventDispatcher $eventDispatcher Dispatches the sibling suggestion event.
 	 * @param ContainerInterface $container DI container, for the optional AI provider.
 	 * @param LoggerInterface $logger Logger.
-	 * @param SupplierIdentityResolver $identityResolver Pure supplier-identity resolver.
-	 * @param HistoryRanker $historyRanker Pure windowed-frequency ranker.
-	 * @param CategoryKeywordMapper $keywordMapper Pure cold-start keyword matcher.
+	 * @param SuggestionSignals $signals Supplier identity, booking history and category keywords.
 	 *
 	 * @return void
 	 */
@@ -83,10 +108,11 @@ class GlAccountSuggestionService {
 		private readonly IEventDispatcher $eventDispatcher,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
-		private readonly SupplierIdentityResolver $identityResolver,
-		private readonly HistoryRanker $historyRanker,
-		private readonly CategoryKeywordMapper $keywordMapper,
+		SuggestionSignals $signals,
 	) {
+		$this->identityResolver = $signals->identity;
+		$this->historyRanker = $signals->history;
+		$this->keywordMapper = $signals->keywords;
 
 	}//end __construct()
 
@@ -178,7 +204,10 @@ class GlAccountSuggestionService {
 		// correction silently, and the next suggestion is then wrong for a
 		// reason nobody can see.
 		['register' => $register, 'schema' => $schema] = $this->registerResolver->getGlAccountBookingRegisterAndSchema();
-		$objectService->saveObject(object: $booking, register: $register, schema: $schema);
+		$objectService->saveObject(
+			object: $booking,
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $register, schema: $schema))
+		);
 
 	}//end recordBooking()
 
@@ -273,7 +302,7 @@ class GlAccountSuggestionService {
 		// error response instead of a wrong answer.
 		['register' => $register, 'schema' => $schema] = $this->registerResolver->getFinancialExtractionRegisterAndSchema();
 
-		$object = $objectService->find(id: $extractionId, register: $register, schema: $schema);
+		$object = $objectService->find(id: $extractionId, options: new ObjectFindOptions(register: $register, schema: $schema));
 		if ($object === null) {
 			return null;
 		}
@@ -366,14 +395,14 @@ class GlAccountSuggestionService {
 			return $suggestions;
 		}
 
-		$manager = $this->resolveAiManager();
+		$manager = $this->localAi()->manager();
 		if ($manager === null) {
 			return $suggestions;
 		}
 
 		try {
 			$raw = $this->runAiTask(manager: $manager, suggestions: $suggestions, fields: $fields);
-			$decoded = json_decode($this->stripCodeFences(text: $raw), associative: true);
+			$decoded = json_decode($this->localAi()->stripCodeFences(text: $raw), associative: true);
 			if (is_array($decoded) === false || is_array($decoded['order'] ?? null) === false) {
 				return $suggestions;
 			}
@@ -422,42 +451,6 @@ class GlAccountSuggestionService {
 
 		return $reordered;
 	}//end reorderByAi()
-
-	/**
-	 * Resolve the preferred available local AI text-processing manager.
-	 *
-	 * Mirrors FinancialExtractionService::resolveAiManager() exactly: prefers
-	 * `OCP\TaskProcessing\IManager` (NC 30+), falls back to the deprecated
-	 * `OCP\TextProcessing\IManager`. Both resolved lazily and guarded so this
-	 * class loads cleanly when neither namespace exists.
-	 *
-	 * @return array{type: string, manager: object}|null Null when unavailable.
-	 */
-	private function resolveAiManager(): ?array {
-		if (interface_exists('OCP\\TaskProcessing\\IManager') === true) {
-			try {
-				return [
-					'type' => 'task',
-					'manager' => $this->container->get('OCP\\TaskProcessing\\IManager'),
-				];
-			} catch (Throwable $e) {
-				// Fall through to the legacy TextProcessing manager.
-			}
-		}
-
-		if (interface_exists('OCP\\TextProcessing\\IManager') === true) {
-			try {
-				return [
-					'type' => 'text',
-					'manager' => $this->container->get('OCP\\TextProcessing\\IManager'),
-				];
-			} catch (Throwable $e) {
-				return null;
-			}
-		}
-
-		return null;
-	}//end resolveAiManager()
 
 	/**
 	 * Run a single re-rank prompt through the resolved local AI manager and
@@ -516,22 +509,6 @@ class GlAccountSuggestionService {
 	}//end buildPrompt()
 
 	/**
-	 * Strip ```json ... ``` / ``` ... ``` code fences from a model response, if present.
-	 *
-	 * @param string $text Raw model output.
-	 *
-	 * @return string
-	 */
-	private function stripCodeFences(string $text): string {
-		$trimmed = trim($text);
-		if (preg_match('/^```(?:json)?\s*(.*?)\s*```$/s', $trimmed, $matches) === 1) {
-			return trim($matches[1]);
-		}
-
-		return $trimmed;
-	}//end stripCodeFences()
-
-	/**
 	 * Dispatch the sibling `nl.conduction.filinq.gl-account.suggested`
 	 * event. Fail-soft: the already-computed result is still returned to the
 	 * caller even if event dispatch fails (mirrors
@@ -549,13 +526,12 @@ class GlAccountSuggestionService {
 	private function dispatchSuggestedEvent(string $extractionId, array $result, string $sourceApp, string $requestedBy): void {
 		try {
 			$event = new GlAccountSuggestedEvent(
+				origin: new RequestOrigin(sourceApp: $sourceApp, requestedBy: $requestedBy),
 				extractionId: $extractionId,
 				supplierIdentity: $result['supplierIdentity'],
 				identityType: $result['identityType'],
 				suggestedAccounts: $result['suggestedAccounts'],
 				source: $result['source'],
-				sourceApp: $sourceApp,
-				requestedBy: $requestedBy,
 			);
 
 			$this->eventDispatcher->dispatchTyped($event);
@@ -567,6 +543,16 @@ class GlAccountSuggestionService {
 		}
 
 	}//end dispatchSuggestedEvent()
+
+	/**
+	 * The local AI manager access, over this service's container.
+	 *
+	 * @return LocalTextAi
+	 */
+	private function localAi(): LocalTextAi {
+		return new LocalTextAi(container: $this->container);
+
+	}//end localAi()
 
 	/**
 	 * Normalise an ObjectService result to an array (mirrors

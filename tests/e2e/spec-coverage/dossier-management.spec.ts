@@ -2,7 +2,7 @@
  * SPDX-FileCopyrightText: 2026 Filinq Contributors
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Gate-19 e2e spec-coverage tests — openspec/changes/dossier-management-ui.
+ * Gate-19 e2e spec-coverage tests — openspec/changes/archive/2026-11-25-dossier-management-ui.
  *
  * Shell-level coverage: the Dossiers surface is reachable from the menu, the
  * index renders its live context (status chip, document count, resolved legal
@@ -29,7 +29,7 @@ test.describe('dossier-management — index', () => {
 	test('Dossiers is reachable from the navigation and lists the seeded dossiers', async ({
 		page,
 	}) => {
-		// @e2e openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#index-lists-dossiers-with-live-context
+		// @e2e openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#index-lists-dossiers-with-live-context
 		const guard = attachConsoleGuard(page)
 		await go(page, '')
 		await navClick(page, 'Dossiers')
@@ -58,7 +58,7 @@ test.describe('dossier-management — index', () => {
 	test('the index shows a status chip and a legal-basis chip per dossier', async ({
 		page,
 	}) => {
-		// @e2e openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#index-lists-dossiers-with-live-context
+		// @e2e openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#index-lists-dossiers-with-live-context
 		await go(page, 'dossiers')
 
 		const row = page.getByRole('row').filter({ hasText: SEEDED_DOSSIER })
@@ -85,7 +85,7 @@ test.describe('dossier-management — index', () => {
 	})
 
 	test('creating a dossier opens its detail', async ({ page }) => {
-		// @e2e openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#inline-rename-preserves-the-other-fields
+		// @e2e openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#inline-rename-preserves-the-other-fields
 		await go(page, 'dossiers')
 
 		await page
@@ -109,7 +109,7 @@ test.describe('dossier-management — detail', () => {
 	test('the detail opens from the index and renders its sections', async ({
 		page,
 	}) => {
-		// @e2e openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#detail-shows-the-aggregated-dossier
+		// @e2e openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#detail-shows-the-aggregated-dossier
 		const guard = attachConsoleGuard(page)
 		await go(page, 'dossiers')
 		await page.getByText(SEEDED_DOSSIER).first().click()
@@ -133,7 +133,7 @@ test.describe('dossier-management — detail', () => {
 		page,
 		request,
 	}) => {
-		// @e2e openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#only-legal-transitions-are-offered
+		// @e2e openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#only-legal-transitions-are-offered
 		//
 		// The dossier is created HERE rather than read from the seed set: this
 		// assertion turns on the dossier's status, and a seeded object's status
@@ -171,7 +171,7 @@ test.describe('dossier-management — detail', () => {
 	test('the publication section explains the pipeline is absent', async ({
 		page,
 	}) => {
-		// @e2e openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#detail-shows-the-aggregated-dossier
+		// @e2e openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#detail-shows-the-aggregated-dossier
 		await go(page, 'dossiers')
 		await page.getByText(SEEDED_DOSSIER).first().click()
 
@@ -184,7 +184,7 @@ test.describe('dossier-management — detail', () => {
 	})
 
 	test('switching documents does not navigate', async ({ page }) => {
-		// @e2e openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md#document-switch-has-no-page-reload
+		// @e2e openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md#document-switch-has-no-page-reload
 		await go(page, 'dossiers')
 		await page.getByText(SEEDED_DOSSIER).first().click()
 		await expect(page.getByRole('heading', { name: 'Documents' })).toBeVisible()

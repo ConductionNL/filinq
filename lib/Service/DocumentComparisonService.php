@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use OCA\Filinq\Exception\ComparisonException;
+use OCA\Filinq\Kernel\Contracts\DocumentComparisonServiceInterface;
 use OCA\Filinq\Service\Comparison\RedactionAnnotator;
 use OCA\Filinq\Service\Comparison\WordDiffer;
 use OCP\App\IAppManager;
@@ -56,7 +57,7 @@ use Throwable;
  *
  * @spec openspec/specs/document-comparison/spec.md
  */
-class DocumentComparisonService {
+class DocumentComparisonService implements DocumentComparisonServiceInterface {
 	/**
 	 * App config key for the maximum extracted text size (bytes).
 	 *

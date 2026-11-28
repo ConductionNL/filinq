@@ -1,0 +1,104 @@
+<?php
+
+/**
+ * Filinq Listener Registrar
+ *
+ * The EventListener component's own registration: the object-event,
+ * signing, integration-leaf and document-generation registrars, run in that
+ * order. The AppInfo bootstrap calls this one class instead of naming each
+ * listener.
+ *
+ * @category  EventListener
+ * @package   OCA\Filinq\EventListener
+ * @author    Conduction B.V. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Filinq\EventListener;
+
+use OCP\AppFramework\Bootstrap\IRegistrationContext;
+use Psr\Container\ContainerInterface;
+
+/**
+ * Registers every Filinq event listener.
+ *
+ * @category EventListener
+ * @package  OCA\Filinq\EventListener
+ * @author   Conduction B.V. <info@conduction.nl>
+ * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link     https://www.filinq.app
+ *
+ * @spec exclude Container wiring, no functional requirement.
+ */
+class ListenerRegistrar {
+
+	/**
+	 * The Nextcloud file events that are document actions.
+	 *
+	 * @var list<string>
+	 */
+	public const DOCUMENT_FILE_EVENTS = [
+		'OCP\Files\Events\Node\NodeWrittenEvent',
+		'OCP\Files\Events\Node\BeforeNodeDeletedEvent',
+		'OCP\Share\Events\ShareCreatedEvent',
+		'OCA\Filinq\Event\Webhook\DocumentSignedEvent',
+	];
+
+	/**
+	 * Register the listeners. The OpenRegister autoloader prelude must have run.
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Container wiring, no functional requirement.
+	 */
+	public function register(IRegistrationContext $context): void {
+		(new ObjectEventRegistrar())->register(context: $context);
+		(new SigningEventRegistrar())->register(context: $context);
+		(new IntegrationLeafRegistrar())->register(context: $context);
+		(new DocumentGenerationRegistrar())->register(context: $context);
+		(new PdfUaEventRegistrar())->register(context: $context);
+
+		// A document's edits, deletion, shares and completed signing go into its audit trail
+		// (specify-capability-rows, REQ-SCR-007). Named by string, like the
+		// optional peers, so this class keeps its coupling.
+		foreach (self::DOCUMENT_FILE_EVENTS as $fileEvent) {
+			$context->registerEventListener($fileEvent, 'OCA\Filinq\EventListener\DocumentFileActionListener');
+		}
+
+		// A person's direct download of a document goes into the same trail.
+		$context->registerEventListener(
+			'OCP\Files\Events\BeforeDirectFileDownloadEvent',
+			'OCA\Filinq\EventListener\DocumentDownloadedListener'
+		);
+
+		// An anonymised dossier copy of a bridge document records its output on the
+		// external document (zgw-document-bridge REQ-DDZGW-003, task 2.6).
+		$context->registerEventListener('OCA\Filinq\Event\Webhook\DocumentAnonymisedEvent', 'OCA\Filinq\EventListener\BridgeResultListener');
+
+	}//end register()
+
+	/**
+	 * Run the boot-time listener step.
+	 *
+	 * @param ContainerInterface $container The server container.
+	 * @param string $appName The filinq app id.
+	 *
+	 * @return void
+	 *
+	 * @spec exclude Container wiring, no functional requirement.
+	 */
+	public function boot(ContainerInterface $container, string $appName): void {
+		(new ObjectEventRegistrar())->boot(container: $container, appName: $appName);
+
+	}//end boot()
+}//end class

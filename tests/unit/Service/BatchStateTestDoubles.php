@@ -3,6 +3,9 @@
 /**
  * Test doubles for the anonymization batch-state store
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Two fakes that carry real behaviour rather than recorded expectations:
  *
  * - {@see NullCacheFake} reproduces `OC\Memcache\NullCache` — the cache class
@@ -37,9 +40,6 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -53,6 +53,12 @@ use OCP\ICache;
 use Psr\Log\AbstractLogger;
 use RuntimeException;
 use Stringable;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Contract\ObjectDeletion as PublishedObjectDeletion;
+use OCA\OpenRegister\Contract\ObjectFindOptions as PublishedObjectFindOptions;
+use OCA\OpenRegister\Contract\ObjectSaveOptions as PublishedObjectSaveOptions;
 
 /**
  * A cache that discards everything, exactly like `OC\Memcache\NullCache`.
@@ -301,11 +307,14 @@ class InMemoryObjectServiceFake extends ObjectService {
 	 */
 	public function find(
 		string $id = '',
-		string $register = '',
-		string $schema = '',
+		ObjectFindOptions|PublishedObjectFindOptions|null $options = null,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
+		bool $_multitenancy = true
 	) {
+		$register = $options?->register ?? '';
+		$schema = $options?->schema ?? '';
+		$_render = $options?->render ?? true;
+		$_audit = $options?->audit ?? true;
 		$key = $this->key(register: $register, schema: $schema, uuid: $id);
 		if (array_key_exists($key, $this->stored) === false) {
 			throw new DoesNotExistException('No object with id ' . $id);
@@ -328,12 +337,15 @@ class InMemoryObjectServiceFake extends ObjectService {
 	 */
 	public function saveObject(
 		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		ObjectSaveOptions|PublishedObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
+		bool $_multitenancy = true
 	) {
+		$register = $options->target->register ?? '';
+		$schema = $options->target->schema ?? '';
+		$uuid = $options->uuid;
+		$_unowned = $options->actor->unowned ?? false;
+		$_owner = $options->actor->owner;
 		$this->saveCalls[] = [
 			'register' => $register,
 			'schema' => $schema,
@@ -361,12 +373,14 @@ class InMemoryObjectServiceFake extends ObjectService {
 	 * @return bool Always true.
 	 */
 	public function deleteObject(
-		string $uuid = '',
-		string $register = '',
-		string $schema = '',
+		ObjectDeletion|PublishedObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_retentionSweep = false
 	) {
+		$uuid = $deletion->uuid ?? '';
+		$register = $deletion->target->register ?? '';
+		$schema = $deletion->target->schema ?? '';
 		unset($this->stored[$this->key(register: $register, schema: $schema, uuid: $uuid)]);
 		return true;
 	}//end deleteObject()
@@ -442,11 +456,14 @@ class FixedResultObjectServiceFake extends ObjectService {
 	 */
 	public function find(
 		string $id = '',
-		string $register = '',
-		string $schema = '',
+		ObjectFindOptions|PublishedObjectFindOptions|null $options = null,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
+		bool $_multitenancy = true
 	) {
+		$register = $options?->register ?? '';
+		$schema = $options?->schema ?? '';
+		$_render = $options?->render ?? true;
+		$_audit = $options?->audit ?? true;
 		$this->findCalls++;
 		return $this->result;
 	}//end find()
@@ -493,12 +510,15 @@ class RefusingObjectServiceFake extends ObjectService {
 	 */
 	public function saveObject(
 		array $object = [],
-		string $register = '',
-		string $schema = '',
-		?string $uuid = null,
+		ObjectSaveOptions|PublishedObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
+		bool $_multitenancy = true
 	) {
+		$register = $options->target->register ?? '';
+		$schema = $options->target->schema ?? '';
+		$uuid = $options->uuid;
+		$_unowned = $options->actor->unowned ?? false;
+		$_owner = $options->actor->owner;
 		throw new RuntimeException('ValidationException: property status is not one of the declared values');
 	}//end saveObject()
 
@@ -516,12 +536,14 @@ class RefusingObjectServiceFake extends ObjectService {
 	 * @throws RuntimeException Always.
 	 */
 	public function deleteObject(
-		string $uuid = '',
-		string $register = '',
-		string $schema = '',
+		ObjectDeletion|PublishedObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_retentionSweep = false
 	) {
+		$uuid = $deletion->uuid ?? '';
+		$register = $deletion->target->register ?? '';
+		$schema = $deletion->target->schema ?? '';
 		$this->attemptedDeletes[] = $uuid;
 		throw new RuntimeException('The object store is unreachable');
 	}//end deleteObject()

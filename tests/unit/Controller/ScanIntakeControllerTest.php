@@ -1,0 +1,256 @@
+<?php
+
+/**
+ * The scan intake surface, asserted from the caller.
+ *
+ * 🔴 THESE ARE CALLER-SIDE ASSERTIONS ON PURPOSE. The profile store and the
+ * separator renderer have their own suites, and nothing in those can see
+ * whether a route ever reaches them.
+ *
+ * 🔴 A REFUSED RENDER ANSWERS 400, NOT A PDF OF ZERO BYTES. A caller that got
+ * a download response back would file an empty separator sheet and the batch
+ * would be cut in the wrong place.
+ *
+ * @category Tests
+ * @package  OCA\Filinq\Tests\Unit\Controller
+ *
+ * @author    Conduction Development Team <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ *
+ * @link https://www.filinq.app
+ *
+ * SPDX-License-Identifier: EUPL-1.2
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Filinq\Tests\Unit\Controller;
+
+use OCA\Filinq\Controller\ScanIntakeController;
+use OCA\Filinq\Controller\Support\ScanSetupServices;
+use OCA\Filinq\Service\ScanBatchService;
+use OCA\Filinq\Service\ScanProfileService;
+use OCA\Filinq\Service\SeparatorSheetService;
+use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\DataDownloadResponse;
+use OCP\AppFramework\Http\JSONResponse;
+use OCP\Files\File;
+use OCP\Files\Folder;
+use OCP\Files\IRootFolder;
+use OCP\IRequest;
+use OCP\IUser;
+use OCP\IUserSession;
+use PHPUnit\Framework\TestCase;
+use RuntimeException;
+
+/**
+ * `ScanIntakeController`.
+ *
+ * @covers \OCA\Filinq\Controller\ScanIntakeController
+ * @covers \OCA\Filinq\Controller\Support\ScanSetupServices
+ */
+class ScanIntakeControllerTest extends TestCase {
+
+	/**
+	 * A separator-sheet double.
+	 *
+	 * `onlyMethods` so it cannot answer a question the real service lacks.
+	 *
+	 * @return SeparatorSheetService The double.
+	 */
+	private function sheets(): SeparatorSheetService {
+		return $this->getMockBuilder(SeparatorSheetService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['render'])
+			->getMock();
+	}//end sheets()
+
+	/**
+	 * A profile-store double.
+	 *
+	 * @return ScanProfileService The double.
+	 */
+	private function profiles(): ScanProfileService {
+		return $this->getMockBuilder(ScanProfileService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['all', 'declare', 'find', 'forPath'])
+			->getMock();
+	}//end profiles()
+
+	/**
+	 * A controller over the given collaborators.
+	 *
+	 * @param SeparatorSheetService $sheets   The sheet renderer.
+	 * @param ScanProfileService    $profiles The profile store.
+	 * @param bool                  $loggedIn Whether anybody is logged in.
+	 *
+	 * @return ScanIntakeController The controller.
+	 */
+	private function controller(
+		SeparatorSheetService $sheets,
+		ScanProfileService $profiles,
+		bool $loggedIn = true,
+	): ScanIntakeController {
+		$session = $this->createMock(IUserSession::class);
+		if ($loggedIn === true) {
+			$user = $this->createMock(IUser::class);
+			$user->method('getUID')->willReturn('beheerder');
+			$session->method('getUser')->willReturn($user);
+		} else {
+			$session->method('getUser')->willReturn(null);
+		}
+
+		return new ScanIntakeController(
+			$this->createMock(IRequest::class),
+			new ScanSetupServices(sheets: $sheets, profiles: $profiles),
+			$this->getMockBuilder(ScanBatchService::class)
+				->disableOriginalConstructor()
+				->onlyMethods(['receive', 'split', 'take'])
+				->getMock(),
+			$this->createMock(IRootFolder::class),
+			$session
+		);
+	}//end controller()
+
+	/**
+	 * The declared profiles are served, with the count beside them.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testTheDeclaredProfilesAreServed(): void {
+		$profiles = $this->profiles();
+		$profiles->expects($this->once())
+			->method('all')
+			->willReturn([['id' => 'post', 'folder' => '/Scans/Post']]);
+
+		$response = $this->controller($this->sheets(), $profiles)->listProfiles();
+
+		$this->assertSame(Http::STATUS_OK, $response->getStatus());
+		$this->assertSame(1, $response->getData()['total']);
+	}//end testTheDeclaredProfilesAreServed()
+
+	/**
+	 * With nobody logged in the profiles are not served at all.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testTheProfilesAreNotServedToNobody(): void {
+		$profiles = $this->profiles();
+		$profiles->expects($this->never())->method('all');
+
+		$response = $this->controller($this->sheets(), $profiles, false)->listProfiles();
+
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+	}//end testTheProfilesAreNotServedToNobody()
+
+	/**
+	 * Rendered sheets come back as a download, named as a PDF.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testRenderedSheetsComeBackAsADownload(): void {
+		$sheets = $this->sheets();
+		$sheets->expects($this->once())
+			->method('render')
+			->with('post', ['ZAAK-1'])
+			->willReturn('%PDF-1.4 fake');
+
+		$response = $this->controller($sheets, $this->profiles())
+			->separators(profileId: 'post', caseNumbers: ['ZAAK-1']);
+
+		$this->assertInstanceOf(DataDownloadResponse::class, $response);
+		$this->assertSame('%PDF-1.4 fake', $response->getData());
+		$this->assertSame('application/pdf', $response->getHeaders()['Content-Type']);
+	}//end testRenderedSheetsComeBackAsADownload()
+
+	/**
+	 * A render that refuses answers 400, never an empty download.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testARefusedRenderIsNotAnEmptyDownload(): void {
+		$sheets = $this->sheets();
+		$sheets->method('render')->willThrowException(new RuntimeException('No profile by that name.'));
+
+		$response = $this->controller($sheets, $this->profiles())->separators(profileId: 'nope');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(Http::STATUS_BAD_REQUEST, $response->getStatus());
+		$this->assertSame('No profile by that name.', $response->getData()['error']);
+	}//end testARefusedRenderIsNotAnEmptyDownload()
+
+	/**
+	 * With nobody logged in no sheet is printed.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-25-scan-intake-with-separator-sheets/specs/scan-intake/spec.md
+	 */
+	public function testNoSheetIsPrintedForNobody(): void {
+		$sheets = $this->sheets();
+		$sheets->expects($this->never())->method('render');
+
+		$response = $this->controller($sheets, $this->profiles(), false)->separators(profileId: 'post');
+
+		$this->assertInstanceOf(JSONResponse::class, $response);
+		$this->assertSame(Http::STATUS_UNAUTHORIZED, $response->getStatus());
+	}//end testNoSheetIsPrintedForNobody()
+	/**
+	 * A split goes through the service's one intake path, `take()`, with the resolved file and profile.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/scan-intake-from-a-watched-folder/specs/scan-intake/spec.md
+	 */
+	public function testSplitStillWorksThroughTake(): void {
+		$file = $this->createMock(originalClassName: File::class);
+		$file->method('getPath')->willReturn('/beheerder/files/Scans/batch.pdf');
+		$file->method('getId')->willReturn(42);
+
+		$userFolder = $this->createMock(originalClassName: Folder::class);
+		$userFolder->method('getById')->with(42)->willReturn([$file]);
+		$root = $this->createMock(originalClassName: IRootFolder::class);
+		$root->method('getUserFolder')->with('beheerder')->willReturn($userFolder);
+
+		$profiles = $this->profiles();
+		$profile = ['id' => 'scan-a', 'watchedFolder' => 'Scans'];
+		$profiles->expects($this->once())->method('forPath')->with('/Scans/batch.pdf')->willReturn($profile);
+
+		$batches = $this->getMockBuilder(className: ScanBatchService::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['receive', 'split', 'take'])
+			->getMock();
+		$batches->expects($this->never())->method('receive');
+		$batches->expects($this->never())->method('split');
+		$batches->expects($this->once())->method('take')->with($file, $profile)
+			->willReturn(['uuid' => 'batch-1', 'status' => 'split']);
+
+		$user = $this->createMock(originalClassName: IUser::class);
+		$user->method('getUID')->willReturn('beheerder');
+		$session = $this->createMock(originalClassName: IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+
+		$controller = new ScanIntakeController(
+			request: $this->createMock(originalClassName: IRequest::class),
+			setup: new ScanSetupServices(sheets: $this->sheets(), profiles: $profiles),
+			batches: $batches,
+			rootFolder: $root,
+			userSession: $session
+		);
+
+		$response = $controller->split(fileId: 42);
+
+		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
+		$this->assertSame(expected: ['uuid' => 'batch-1', 'status' => 'split'], actual: $response->getData());
+	}//end testSplitStillWorksThroughTake()
+}//end class

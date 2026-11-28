@@ -22,8 +22,9 @@ schemas, status semantics, hooks and UI only.
 
 ### Requirement: Bridge staging register schemas (REQ-DDZGW-001)
 
-The app MUST declare a `bridge` register in
-`lib/Settings/filinq_register.json` with two schemas: `bridgeSource` (per
+The app MUST declare two schemas in its one register `filinq` in
+`lib/Settings/filinq_register.json` (Filinq keeps every object in that single
+register; the slug equals `x-openregister.app`): `bridgeSource` (per
 configured case-system source: `name`, `sourceType` enum `zgw-drc`|`stuf-zds`,
 `vendor`, `synchronizationId`, `syncIntervalMinutes`, `lastSyncAt`,
 `lastSyncStatus` enum `success`|`error`, `lastSyncError`, `active`) and
@@ -39,25 +40,25 @@ be bumped so `ConfigurationService::importFromApp()` imports it on boot.
 
 - GIVEN a Nextcloud instance with Filinq and OpenRegister installed
 - WHEN the app boots and `ConfigurationService::importFromApp()` runs
-- THEN the `bridge` register exists with schemas `bridgeSource` and `externalDocument`
-- AND the seeded demo source and staged documents are queryable via `ObjectService::searchObjects()` with `@self.register = bridge`
+- THEN the `filinq` register holds the schemas `bridgeSource` and `externalDocument`
+- AND the seeded demo source and staged documents are queryable via `ObjectService::searchObjects()` with `@self.register = filinq`
 - @e2e exclude register import is a boot-time backend concern with no UI surface of its own — covered by PHPUnit register-import assertions (tests/unit/Settings/)
 
 ### Requirement: Inbound sync contract — OpenConnector stages, Filinq never fetches (REQ-DDZGW-002)
 
 External connectivity MUST remain in OpenConnector: one OpenConnector
-Synchronization per source targets register `bridge`, schema
+Synchronization per source targets register `filinq`, schema
 `externalDocument`, mapping ZGW/StUF document metadata onto the schema
 properties, staging the file content into a per-source Nextcloud staging
 folder and setting `stagedFileRef`, and updating the owning `bridgeSource`'s
 `lastSyncAt`/`lastSyncStatus`/`lastSyncError` after each run. Filinq MUST
 NOT contain any ZGW, StUF or case-system HTTP/SOAP client code, and MUST NOT
-declare an `info.xml` dependency on OpenConnector (the bridge register is
+declare an `info.xml` dependency on OpenConnector (the bridge schemas are
 inert without it).
 
 #### Scenario: Synced informatieobject appears as a staged external document
 
-- GIVEN an OpenConnector synchronization configured for source "Demostad zaaksysteem" targeting `bridge`/`externalDocument`
+- GIVEN an OpenConnector synchronization configured for source "Demostad zaaksysteem" targeting `filinq`/`externalDocument`
 - WHEN the synchronization runs and delivers a new informatieobject
 - THEN an `externalDocument` object exists with the ZGW metadata, a `stagedFileRef` pointing at the staged copy and `processingStatus` `staged`
 - AND `bridgeSource.lastSyncAt` and `lastSyncStatus` reflect the run

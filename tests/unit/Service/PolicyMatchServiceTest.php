@@ -13,13 +13,15 @@
  * @version GIT: <git_id>
  *
  * @link https://www.filinq.app
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
 use OCA\Filinq\Service\PolicyMatchService;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -55,7 +57,6 @@ class PolicyMatchServiceTest extends TestCase {
 
 		$service = new PolicyMatchService(
 			$this->createMock(LoggerInterface::class),
-			$this->createMock(IAppManager::class),
 			$config,
 			$this->createMock(ObjectServiceInterface::class)
 		);
@@ -235,6 +236,7 @@ class PolicyMatchServiceTest extends TestCase {
 		// `searchObjectsBySlug(): array`; the contract says `array|int`, and
 		// nothing was verifying that the two agreed.
 		$fakeObjectService = $this->createMock(ObjectServiceInterface::class);
+		$fakeObjectService->method('runAsSystem')->willReturnCallback(static fn (callable $operation): mixed => $operation());
 		$fakeObjectService->method('searchObjectsBySlug')->willReturnCallback(
 			static function (
 				string $registerSlug,
@@ -254,10 +256,9 @@ class PolicyMatchServiceTest extends TestCase {
 		);
 
 		$logger = $this->createMock(LoggerInterface::class);
-		$appMan = $this->createMock(IAppManager::class);
 		$config = $this->createMock(IAppConfig::class);
 
-		return new PolicyMatchService($logger, $appMan, $config, $fakeObjectService);
+		return new PolicyMatchService($logger, $config, $fakeObjectService);
 	}//end buildService()
 
 	/**
@@ -532,4 +533,43 @@ class PolicyMatchServiceTest extends TestCase {
 
 	}//end testInvalidateCacheClearsLoadedRules()
 
+	/**
+	 * A wildcard BSN or KvK rule matches any resolved identifier of that kind,
+	 * and never an entity without one.
+	 *
+	 * @return void
+	 */
+	public function testAWildcardIdentifierRuleNeedsAnIdentifier(): void {
+		$svc = $this->buildService([
+			[
+				'@self' => ['id' => 'rule-w'],
+				'active' => true,
+				'entityType' => 'OTHER',
+				'primaryName' => 'Everyone with a number',
+				'matchRules' => [['type' => 'bsn', 'value' => '*'], ['type' => 'kvk', 'value' => '*']],
+			],
+		]);
+
+		self::assertSame('rule-w', $svc->match('Any Name', 'PERSON', ['bsn' => '111222333'])['uuid'] ?? null);
+		self::assertSame('rule-w', $svc->match('Acme BV', 'ORGANIZATION', ['kvk' => '87654321'])['uuid'] ?? null);
+		self::assertNull($svc->match('Any Name', 'PERSON'));
+		self::assertNull($svc->match('Any Name', 'PERSON', ['bsn' => '', 'kvk' => '']));
+
+	}//end testAWildcardIdentifierRuleNeedsAnIdentifier()
+
+	/**
+	 * The retroactive question: does any of these match rules hit this entity.
+	 *
+	 * @return void
+	 */
+	public function testEntityMatchesAnyRule(): void {
+		$svc = $this->buildService([]);
+		$rules = [['type' => 'exact', 'value' => 'Bea'], ['type' => 'kvk', 'value' => '12345678']];
+
+		self::assertTrue($svc->entityMatchesAnyRule($rules, 'Bea'));
+		self::assertTrue($svc->entityMatchesAnyRule($rules, 'Acme', ['kvk' => '12345678']));
+		self::assertFalse($svc->entityMatchesAnyRule($rules, 'Acme', ['kvk' => '00000000']));
+		self::assertTrue($svc->entityMatchesAnyRule([['type' => 'exact']], ''), 'A rule without a value compares against the empty string.');
+
+	}//end testEntityMatchesAnyRule()
 }//end class

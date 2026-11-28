@@ -11,6 +11,67 @@ import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
 
+/**
+ * Whether a format comes back as a file to download rather than as JSON.
+ *
+ * @param {string} format The output format.
+ * @return {boolean}
+ */
+function isFileFormat(format) {
+	return format === 'pdf' || format === 'docx'
+}
+
+/**
+ * The axios response type a format's generate request asks for.
+ *
+ * @param {string} format The output format.
+ * @return {string}
+ */
+function responseTypeOf(format) {
+	return isFileFormat(format) ? 'blob' : 'json'
+}
+
+/**
+ * The letter options every generate request sends; empty ids are left out.
+ *
+ * @param {object} state The store state.
+ * @return {{format: string, huisstijlId: (string|undefined), caseReference: (string|undefined)}}
+ */
+function letterOptions(state) {
+	return {
+		format: state.format,
+		huisstijlId: state.huisstijlId || undefined,
+		caseReference: state.caseReference || undefined,
+	}
+}
+
+/**
+ * The message to show for a failed request.
+ *
+ * @param {Error} err The request failure.
+ * @return {string}
+ */
+function requestError(err) {
+	return err.response?.data?.error || err.message
+}
+
+/**
+ * The body of a send by email and of its preview: the letter, without a format
+ * (a sent letter is always composed as an email).
+ *
+ * @param {object} state The store state.
+ * @return {{templateId: string, dataRefs: Array<object>, options: {huisstijlId: (string|undefined), caseReference: (string|undefined)}}}
+ * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
+ */
+export function sendRequest(state) {
+	const { huisstijlId, caseReference } = letterOptions(state)
+	return {
+		templateId: state.templateId,
+		dataRefs: state.dataRefs,
+		options: { huisstijlId, caseReference },
+	}
+}
+
 export const useCorrespondenceStore = defineStore('correspondence', {
 	state: () => ({
 		/** @type {string} */
@@ -35,6 +96,8 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 		jobStatus: null,
 		/** @type {Array<string>} */
 		warnings: [],
+		/** @type {{to: string, subject: string, sentAt: string}|null} The last letter sent by email. */
+		lastSent: null,
 	}),
 
 	getters: {
@@ -49,6 +112,17 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 				.split('\n')
 				.map((s) => s.trim())
 				.filter(Boolean)
+		},
+
+		/**
+		 * The body of a send by email and of its preview.
+		 *
+		 * @param {object} state The store state.
+		 * @return {object}
+		 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
+		 */
+		sendBody(state) {
+			return sendRequest(state)
 		},
 
 		/**
@@ -86,28 +160,19 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 					{
 						templateId: this.templateId,
 						dataRefs: this.dataRefs,
-						options: {
-							format: this.format,
-							huisstijlId: this.huisstijlId || undefined,
-							caseReference: this.caseReference || undefined,
-						},
+						options: letterOptions(this),
 						filename,
 					},
-					{
-						responseType:
-							this.format === 'pdf' || this.format === 'docx'
-								? 'blob'
-								: 'json',
-					},
+					{ responseType: responseTypeOf(this.format) },
 				)
 
-				if (this.format === 'pdf' || this.format === 'docx') {
+				if (isFileFormat(this.format)) {
 					this._triggerDownload(response.data, filename, this.format)
 				} else {
 					this.warnings = response.data.warnings || []
 				}
 			} catch (err) {
-				this.error = err.response?.data?.error || err.message
+				this.error = requestError(err)
 			} finally {
 				this.loading = false
 			}
@@ -135,13 +200,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 				const response = await axios.post(url, {
 					templateId: this.templateId,
 					recipientIds: this.recipientIds,
-					options: {
-						register,
-						schema,
-						format: this.format,
-						huisstijlId: this.huisstijlId || undefined,
-						caseReference: this.caseReference || undefined,
-					},
+					options: { register, schema, ...letterOptions(this) },
 				})
 
 				if (response.data.jobId) {
@@ -156,7 +215,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 					this.jobStatus = response.data
 				}
 			} catch (err) {
-				this.error = err.response?.data?.error || err.message
+				this.error = requestError(err)
 			} finally {
 				this.loading = false
 			}
@@ -182,7 +241,38 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 				const response = await axios.get(url)
 				this.jobStatus = response.data
 			} catch (err) {
-				this.error = err.response?.data?.error || err.message
+				this.error = requestError(err)
+			}
+		},
+
+		/**
+		 * Send the letter by email to the first data reference's recipient.
+		 *
+		 * Resolves with what the server answered; a refused or failed send
+		 * rejects with the server's message, which the dialog shows.
+		 *
+		 * @param {boolean} attachPdf Whether the PDF of the same letter goes along.
+		 * @return {Promise<object>} The send result: status, to, subject, sentAt.
+		 *
+		 * @spec openspec/changes/archive/2026-11-24-letter-email-sending/tasks.md#task-3
+		 */
+		async sendByEmail(attachPdf = false) {
+			this.loading = true
+			this.lastSent = null
+			try {
+				const body = sendRequest(this)
+				body.options.attachPdf = Boolean(attachPdf)
+				const { data } = await axios.post(
+					generateUrl('/apps/filinq/api/correspondence/send'),
+					body,
+				)
+				this.lastSent = { to: data.to, subject: data.subject, sentAt: data.sentAt }
+				this.warnings = data.warnings || []
+				return data
+			} catch (err) {
+				throw new Error(requestError(err), { cause: err })
+			} finally {
+				this.loading = false
 			}
 		},
 
@@ -202,6 +292,7 @@ export const useCorrespondenceStore = defineStore('correspondence', {
 			this.jobId = null
 			this.jobStatus = null
 			this.warnings = []
+			this.lastSent = null
 		},
 
 		/**

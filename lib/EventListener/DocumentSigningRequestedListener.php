@@ -30,7 +30,7 @@ declare(strict_types=1);
 namespace OCA\Filinq\EventListener;
 
 use OCA\Filinq\Event\DocumentSigningRequestedEvent;
-use OCA\Filinq\Service\SigningService;
+use OCA\Filinq\Kernel\Contracts\SigningServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -59,13 +59,13 @@ class DocumentSigningRequestedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param SigningService $signingService The reused create-request service
+	 * @param SigningServiceInterface $signingService The reused create-request service
 	 * @param LoggerInterface $logger Logger
 	 *
 	 * @return void
 	 */
 	public function __construct(
-		private readonly SigningService $signingService,
+		private readonly SigningServiceInterface $signingService,
 		private readonly LoggerInterface $logger,
 	) {
 
@@ -85,47 +85,89 @@ class DocumentSigningRequestedListener implements IEventListener {
 			return;
 		}
 
-		try {
-			$data = $this->buildRequestData(event: $event);
-			$created = $this->signingService->createRequest($data);
+		// A request another app raised must say what it signs (REQ-DDSRC-003).
+		// A request raised inside filinq names no source app and is not asked.
+		$missing = $event->getProvenance()->missingSubjectFields();
+		if ($missing !== []) {
+			$this->refuse(event: $event, missing: $missing);
+			return;
+		}
 
+		try {
+			$created = $this->signingService->createRequest($this->buildRequestData(event: $event));
 			$requestId = (string)($created['id'] ?? $created['uuid'] ?? '');
 			if ($requestId !== '') {
-				$event->setSigningRequestId($requestId);
-				$event->setHandled(true);
-				$this->logger->info(
-					'Filinq: handled DocumentSigningRequestedEvent',
-					[
-						'sourceApp' => $event->getSourceApp(),
-						'subjectId' => $event->getSubjectId(),
-						'signingRequestId' => $requestId,
-					]
-				);
+				$this->markHandled(event: $event, requestId: $requestId);
 				return;
 			}
 
 			// No id on the created request: leave the event unhandled and log.
-			$this->logger->warning(
-				'Filinq: DocumentSigningRequestedEvent not handled (no request id)',
-				[
-					'sourceApp' => $event->getSourceApp(),
-					'subjectId' => $event->getSubjectId(),
-				]
-			);
+			$this->logger->warning('Filinq: DocumentSigningRequestedEvent not handled (no request id)', $this->provenanceOf(event: $event));
 		} catch (\Throwable $e) {
 			// The event bus must never surface a Filinq failure as an
 			// exception to the dispatching consumer; log and leave unhandled.
 			$this->logger->error(
 				'Filinq: DocumentSigningRequestedListener failed',
-				[
-					'sourceApp' => $event->getSourceApp(),
-					'subjectId' => $event->getSubjectId(),
-					'exception' => $e->getMessage(),
-				]
+				$this->provenanceOf(event: $event) + ['exception' => $e->getMessage()]
 			);
 		}//end try
 
 	}//end handle()
+
+	/**
+	 * Write the created request's id into the event, mark it handled and log it.
+	 *
+	 * @param DocumentSigningRequestedEvent $event     The request event
+	 * @param string                        $requestId The created signing request's id
+	 *
+	 * @return void
+	 */
+	private function markHandled(DocumentSigningRequestedEvent $event, string $requestId): void {
+		$event->setSigningRequestId($requestId);
+		$event->setHandled(true);
+		$this->logger->info(
+			'Filinq: handled DocumentSigningRequestedEvent',
+			$this->provenanceOf(event: $event) + ['signingRequestId' => $requestId]
+		);
+
+	}//end markHandled()
+
+	/**
+	 * Refuse a delegated request that cannot say what it signs: no signing
+	 * request is created, and the refusal names every missing subject field.
+	 *
+	 * @param DocumentSigningRequestedEvent $event   The event.
+	 * @param array<int, string>            $missing The missing field names.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/archive/2026-11-26-one-signing-rail-for-the-fleet/specs/signing-rail-consolidation/spec.md#requirement-an-unattributed-delegated-request-is-refused-req-ddsrc-003
+	 */
+	private function refuse(DocumentSigningRequestedEvent $event, array $missing): void {
+		$refusal = sprintf(
+			'Filinq refused the signing request from %s: it does not say what it signs (missing: %s).',
+			$event->getSourceApp(),
+			implode(', ', $missing)
+		);
+		$event->setRefusal($refusal);
+		$this->logger->warning(
+			'Filinq: refused an unattributed DocumentSigningRequestedEvent',
+			$this->provenanceOf(event: $event) + ['missing' => $missing]
+		);
+
+	}//end refuse()
+
+	/**
+	 * The consumer and subject a log line names.
+	 *
+	 * @param DocumentSigningRequestedEvent $event The request event
+	 *
+	 * @return array{sourceApp: string, subjectId: string}
+	 */
+	private function provenanceOf(DocumentSigningRequestedEvent $event): array {
+		return ['sourceApp' => $event->getSourceApp(), 'subjectId' => $event->getSubjectId()];
+
+	}//end provenanceOf()
 
 	/**
 	 * Build the data array SigningService::createRequest() expects from the event.
@@ -152,6 +194,7 @@ class DocumentSigningRequestedListener implements IEventListener {
 			'subjectSchema' => $event->getSubjectSchema(),
 			'subjectId' => $event->getSubjectId(),
 			'subjectLabel' => $event->getSubjectLabel(),
+			'subjectNoun' => $event->getSubjectNoun(),
 			'externalReference' => $event->getExternalReference(),
 			'correlationId' => $event->getCorrelationId(),
 		];

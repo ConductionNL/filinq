@@ -30,8 +30,10 @@ declare(strict_types=1);
 
 namespace OCA\Filinq\Service\Editing;
 
+use OCA\Filinq\Service\DocumentGenerationRecord;
 use OCA\Filinq\Service\GeneratedDocumentLogger;
 use OCA\Filinq\Service\PdfConversionService;
+use OCA\Filinq\Service\Support\AgentArtefacts;
 use OCA\OpenRegister\Mcp\Attribute\McpTool;
 use OCP\Files\File;
 use OCP\Files\IRootFolder;
@@ -56,27 +58,43 @@ use Throwable;
 class DocumentAgentService {
 
 	/**
+	 * The PDF conversion cascade.
+	 *
+	 * @var PdfConversionService
+	 */
+	private readonly PdfConversionService $pdfConversion;
+
+	/**
+	 * The ADR-088 artefact marker.
+	 *
+	 * @var AgentArtefactMarker
+	 */
+	private readonly AgentArtefactMarker $marker;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param EditSessionService $editSession The edit session owner.
-	 * @param PdfConversionService $pdfConversion The PDF conversion cascade.
-	 * @param AgentArtefactMarker $marker The ADR-088 artefact marker.
+	 * @param AgentArtefacts $artefacts The PDF conversion and the agent marker.
 	 * @param GeneratedDocumentLogger $documentLogger The generated-document audit logger.
 	 * @param IRootFolder $rootFolder The Nextcloud root folder.
 	 * @param IUserSession $userSession The acting user's session.
 	 * @param LoggerInterface $logger Logger for diagnostics.
+	 * @param EditorSessionProbe $editors Whether an office editor holds a document open.
 	 *
 	 * @return void
 	 */
 	public function __construct(
 		private readonly EditSessionService $editSession,
-		private readonly PdfConversionService $pdfConversion,
-		private readonly AgentArtefactMarker $marker,
+		AgentArtefacts $artefacts,
 		private readonly GeneratedDocumentLogger $documentLogger,
 		private readonly IRootFolder $rootFolder,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		private readonly EditorSessionProbe $editors,
 	) {
+		$this->pdfConversion = $artefacts->pdfConversion;
+		$this->marker = $artefacts->marker;
 
 	}//end __construct()
 
@@ -101,7 +119,9 @@ class DocumentAgentService {
 		action: 'get',
 		description: 'Read a Word (.docx) or OpenDocument (.odt) file as a list of anchored text blocks, '
 			. 'one per paragraph. Use this before editDocument: it returns the anchors and the version '
-			. 'that editDocument requires. Returns text, never the file bytes.',
+			. 'that editDocument requires. Returns text, never the file bytes. When the result carries an '
+			. '"editor" block the document is open in an office editor: tell the user, in your own words, '
+			. 'that their document will be saved first, before you change it.',
 		readOnlyHint: true,
 		destructiveHint: false,
 		idempotentHint: true,
@@ -125,7 +145,27 @@ class DocumentAgentService {
 	 * @spec openspec/specs/document-editing/spec.md#requirement-edits-address-stable-anchors-never-positional-indexes
 	 */
 	public function readDocument(int $fileId): array {
-		return $this->editSession->openForAgent(uid: $this->requireUid(), fileId: $fileId);
+		$read = $this->editSession->openForAgent(uid: $this->requireUid(), fileId: $fileId);
+
+		$editor = $this->editors->attachedTo(fileId: $fileId);
+		if ($editor === null) {
+			return $read;
+		}
+
+		// The page saves the open document before this read reaches the agent;
+		// saving commits whatever the user had typed, so the agent says so first.
+		return ($read + [
+			'editor' => [
+				'suite' => $editor['suite'],
+				'deliverable' => ($editor['adapter'] !== null),
+				'saveFirst' => true,
+				'announce' => sprintf(
+					'"%s" is open in %s. Your document will be saved first, so the change is made to exactly what you see.',
+					(string)($read['name'] ?? ''),
+					$editor['suite']
+				),
+			],
+		]);
 	}//end readDocument()
 
 	#[McpTool(
@@ -139,8 +179,10 @@ class DocumentAgentService {
 			. 'pageBreakBefore (true/false). Style edits need a .docx -- .odt is refused by name. Call '
 			. 'readDocument first to get the anchors and version. Writes into the file by default (restorable '
 			. 'via Nextcloud file versions); pass outputMode "sibling" to write a new file instead. Refuses if '
-			. 'the document changed since it was read, if it is open in an editor, if it is under a signing '
-			. 'request, or if it is anonymisation output.',
+			. 'the document changed since it was read, if it is under a signing request, or if it is '
+			. 'anonymisation output. When the document is open in an office editor nothing is written: the '
+			. 'result carries "delivery": "editor" and text replacements the editor page applies, so only '
+			. 'replace and delete edits can be made then.',
 		readOnlyHint: false,
 		destructiveHint: true,
 		idempotentHint: false,
@@ -182,12 +224,14 @@ class DocumentAgentService {
 			$requestedMode = null;
 		}
 
+		$editor = $this->editors->attachedTo(fileId: $fileId);
+		if ($editor !== null) {
+			return $this->deliverThroughEditor(uid: $uid, fileId: $fileId, edits: $edits, version: $version, editor: $editor);
+		}
+
 		$result = $this->editSession->editForAgent(
-			uid: $uid,
-			fileId: $fileId,
-			edits: $edits,
-			version: $version,
-			requestedMode: $requestedMode
+			request: new AgentFileRequest(uid: $uid, fileId: $fileId, version: $version, requestedMode: $requestedMode),
+			edits: $edits
 		);
 
 		$this->record(
@@ -200,6 +244,89 @@ class DocumentAgentService {
 
 		return ($result + ['artefact' => ['type' => 'file', 'id' => (string)$result['fileId']]]);
 	}//end editDocument()
+
+	/**
+	 * Hand an edit to the office editor that holds the document, instead of writing it.
+	 *
+	 * 🔴 NOTHING IS WRITTEN HERE, AND NO LOCK IS TAKEN. The open editor holds
+	 * the authoritative copy and writes it back on its next save, so a write
+	 * underneath it is discarded: the agent would report success and the change
+	 * would then vanish. The editor stays the only writer; this returns the text
+	 * replacements the editor page applies, and the editor saves them like any
+	 * other edit by the user.
+	 *
+	 * The edit is recorded here, as proposed by the agent, because the editor
+	 * saves it under the user's own account and the agent's part would
+	 * otherwise leave no trace.
+	 *
+	 * @param string                                                     $uid     The acting user.
+	 * @param int                                                        $fileId  The file.
+	 * @param array<int, array{anchor?: string, action?: string, text?: string}> $edits   The anchored edits.
+	 * @param string                                                     $version The version the anchors were read at.
+	 * @param array{owner: string, suite: string, adapter: string|null}  $editor  The editor holding the file.
+	 *
+	 * @return array<string, mixed> The delivery: suite, adapter and replacements.
+	 *
+	 * @throws RuntimeException When the editor cannot take an edit, the read is stale, or an edit is not a clean replacement.
+	 *
+	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-an-agent-edit-must-reach-a-document-that-is-open-for-editing
+	 * @spec openspec/changes/edit-through-the-open-editor/specs/edit-through-the-open-editor/spec.md#requirement-an-agent-proposed-edit-must-remain-attributable-after-the-editor-saves-it
+	 */
+	private function deliverThroughEditor(string $uid, int $fileId, array $edits, string $version, array $editor): array {
+		// The same gate as a direct write: the editor saves this under the
+		// user's account, so a document the user could not change, or one that
+		// is final, signed, anonymised or macro-bearing, is refused here too.
+		$this->editSession->assertAgentMayEdit(uid: $uid, fileId: $fileId);
+
+		$read = $this->editSession->openForAgent(uid: $uid, fileId: $fileId);
+		$name = (string)($read['name'] ?? '');
+
+		if ($editor['adapter'] === null) {
+			throw new RuntimeException(
+				sprintf(
+					'"%s" is open in %s, which offers no way to apply an edit through the editor, so it was not changed. '
+					. 'With the document closed the edit can be written directly.',
+					$name,
+					$editor['suite']
+				)
+			);
+		}
+
+		if ((string)($read['version'] ?? '') !== $version) {
+			throw new RuntimeException(
+				'This document changed since you read it, so it was not edited. '
+				. 'Read it again and re-apply your changes to the current text.'
+			);
+		}
+
+		$replacements = (new EditorEditPlan())->replacements(blocks: (array)($read['blocks'] ?? []), edits: $edits);
+
+		$this->record(
+			uid: $uid,
+			fileId: $fileId,
+			path: (string)($read['path'] ?? ''),
+			format: 'docx',
+			note: sprintf(
+				'Agent edit of file %d proposed by the document agent (MCP editDocument) for delivery through %s; '
+				. 'saved by the editor under the user\'s account',
+				$fileId,
+				$editor['suite']
+			)
+		);
+
+		return [
+			'fileId' => $fileId,
+			'name' => $name,
+			'delivery' => 'editor',
+			'written' => false,
+			'suite' => $editor['suite'],
+			'adapter' => $editor['adapter'],
+			'replacements' => $replacements,
+			'instructions' => 'The document is open in an editor, so this change is applied there, where the user can see '
+				. 'and undo it. Each replacement must find its text exactly once; if one does not, the editor page '
+				. 'reports which text it could not find and nothing is changed at an approximate place.',
+		];
+	}//end deliverThroughEditor()
 
 	#[McpTool(
 		name: 'readSpreadsheet',
@@ -258,10 +385,8 @@ class DocumentAgentService {
 		$uid = $this->requireUid();
 
 		$result = $this->editSession->editSpreadsheetForAgent(
-			uid: $uid,
-			fileId: $fileId,
-			edits: $edits,
-			version: $version
+			request: new AgentFileRequest(uid: $uid, fileId: $fileId, version: $version),
+			edits: $edits
 		);
 
 		$this->record(
@@ -332,10 +457,8 @@ class DocumentAgentService {
 		$uid = $this->requireUid();
 
 		$result = $this->editSession->editPresentationForAgent(
-			uid: $uid,
-			fileId: $fileId,
-			edits: $edits,
-			version: $version
+			request: new AgentFileRequest(uid: $uid, fileId: $fileId, version: $version),
+			edits: $edits
 		);
 
 		$this->record(
@@ -358,7 +481,9 @@ class DocumentAgentService {
 			. 'of categories, and one or more series each carrying exactly one value per category (a pie chart '
 			. 'takes one series). Call readDocument first and pass back the version; pass an anchor to place the '
 			. 'chart after that paragraph, or omit it to append at the end. Charts need a .docx -- .odt is '
-			. 'refused by name. The file is tagged "Agent authored" and the previous version stays restorable.',
+			. 'refused by name. The file is tagged "Agent authored" and the previous version stays restorable. '
+			. 'The values live in the chart itself and no spreadsheet is embedded, so "Edit data" in the office '
+			. 'suite has no worksheet to open; tell the user this if they want to edit the numbers there.',
 		readOnlyHint: false,
 		destructiveHint: false,
 		idempotentHint: false,
@@ -406,12 +531,9 @@ class DocumentAgentService {
 		}
 
 		return $this->editSession->embedChartForAgent(
-			uid: $this->requireUid(),
-			fileId: $fileId,
+			request: new AgentFileRequest(uid: $this->requireUid(), fileId: $fileId, version: $version, requestedMode: $mode),
 			chart: $chart,
-			version: $version,
-			afterAnchor: $anchor,
-			requestedMode: $mode
+			afterAnchor: $anchor
 		);
 
 	}//end addDocumentChart()
@@ -497,11 +619,8 @@ class DocumentAgentService {
 		}
 
 		return $this->editSession->setMetadataForAgent(
-			uid: $this->requireUid(),
-			fileId: $fileId,
-			values: $metadata,
-			version: $version,
-			requestedMode: $mode
+			request: new AgentFileRequest(uid: $this->requireUid(), fileId: $fileId, version: $version, requestedMode: $mode),
+			values: $metadata
 		);
 
 	}//end setDocumentMetadata()
@@ -602,13 +721,16 @@ class DocumentAgentService {
 	private function record(string $uid, int $fileId, string $path, string $format, string $note): void {
 		try {
 			$this->documentLogger->log(
-				template: [
-					'id' => '',
-					'version' => 0,
-					'name' => $note,
-				],
-				dataRefs: [],
-				format: $format,
+				generation: new DocumentGenerationRecord(
+					template: [
+						'id' => '',
+						'version' => null,
+						'name' => $note,
+					],
+					dataRefs: [],
+					format: $format,
+					userId: $uid
+				),
 				outcome: [
 					'status' => 'generated',
 					'warnings' => [$note],
@@ -616,8 +738,7 @@ class DocumentAgentService {
 					'errorMessage' => null,
 					'fileId' => $fileId,
 					'filePath' => $path,
-				],
-				userId: $uid
+				]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('Filinq could not record an agent document artefact: ' . $e->getMessage());

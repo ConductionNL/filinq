@@ -1,0 +1,11 @@
+{
+	"app": "filinq",
+	"pages": [
+		{ "name": "Dashboard", "path": "/index.php/apps/filinq/" },
+		{ "name": "Intake", "path": "/index.php/apps/filinq/intake" },
+		{ "name": "Dossiers", "path": "/index.php/apps/filinq/dossiers" },
+		{ "name": "Contracts", "path": "/index.php/apps/filinq/contracts" },
+		{ "name": "Templates", "path": "/index.php/apps/filinq/templates" },
+		{ "name": "Signing Requests", "path": "/index.php/apps/filinq/signing" }
+	]
+}

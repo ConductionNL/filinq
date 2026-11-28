@@ -1,0 +1,317 @@
+{
+  "info": {
+    "name": "Filinq document webhooks (connect-document-webhooks 1.3)",
+    "description": "REQ-CDW-001 and REQ-CDW-004 end to end: a receiver for DocumentSignedEvent is registered in OpenRegister, a signing request is completed through OpenRegister's objects API, and OpenRegister's delivery log for that receiver shows one signed delivery of document.signed. Needs openregister's half (ConductionNL/openregister#10558) and a receiver that answers 2xx: pass it as --env-var receiverUrl=<url>; the run stops at the first request without one. The signature itself is checked by the receiver; this collection asserts that the delivery was made with the secret's signature header. OpenRegister delivers through its background job queue, so run Nextcloud's cron while the collection runs (for example `while sleep 2; do php cron.php; done`); the delivery-log request polls up to 10 times, 3 s apart. OpenRegister refuses loopback and private receiver addresses; for a receiver on the test host pass --env-var allowPrivateTargets=true, which sets that hook's admin opt-in `configuration.allowPrivateTargets`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{username}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{password}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "",
+      "description": "Nextcloud entry point with /index.php, from run-newman.sh (BASE_URL)."
+    },
+    {
+      "key": "receiverUrl",
+      "value": "",
+      "description": "A receiver that answers 2xx to a POST. Required."
+    },
+    {
+      "key": "secret",
+      "value": "newman-document-webhooks-secret"
+    },
+    {
+      "key": "eventClass",
+      "value": "OCA\\\\Filinq\\\\Event\\\\Webhook\\\\DocumentSignedEvent",
+      "description": "JSON-escaped (doubled backslashes): it is pasted into a raw JSON body, where a single backslash is an invalid escape and OpenRegister then reads no fields at all."
+    },
+    {
+      "key": "allowPrivateTargets",
+      "value": "false",
+      "description": "true only for a receiver on a loopback or private address (a local test receiver); pasted as a JSON boolean."
+    }
+  ],
+  "item": [
+    {
+      "name": "The catalogue lists filinq's signed event",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/apps/openregister/api/webhooks/events"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('the receiver URL and base URL are given', () => { pm.expect(pm.variables.get('receiverUrl'), 'pass --env-var receiverUrl=<url>').to.not.be.empty; pm.expect(pm.variables.get('baseUrl'), 'pass BASE_URL').to.not.be.empty; });",
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "pm.test('DocumentSignedEvent is deliverable (REQ-CDW-004)', () => { const body = JSON.stringify(pm.response.json()); pm.expect(body).to.include('DocumentSignedEvent'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Register a receiver for Document signed",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/apps/openregister/api/webhooks",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"newman document signed {{$timestamp}}\",\n  \"url\": \"{{receiverUrl}}\",\n  \"method\": \"POST\",\n  \"events\": [\n    \"{{eventClass}}\"\n  ],\n  \"secret\": \"{{secret}}\",\n  \"enabled\": true,\n  \"configuration\": {\n    \"allowPrivateTargets\": {{allowPrivateTargets}}\n  }\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201', () => pm.response.to.have.status(201));",
+              "const hook = pm.response.json(); pm.collectionVariables.set('webhookId', String(hook.id));",
+              "pm.test('the receiver carries the event', () => pm.expect(JSON.stringify(hook.events)).to.include('DocumentSignedEvent'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Create a signing request",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/apps/openregister/api/objects/filinq/signingRequest",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"documentFileId\": \"1\",\n  \"documentName\": \"newman signed {{$timestamp}}.pdf\",\n  \"initiatorUserId\": \"{{username}}\",\n  \"signatureLevel\": \"SES\",\n  \"signingMode\": \"SEQUENTIAL\",\n  \"status\": \"DRAFT\",\n  \"provider\": \"internal\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('created', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+              "const o = pm.response.json(); pm.collectionVariables.set('signingRequestId', String(o.id || (o['@self'] || {}).id));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transition: send",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/apps/openregister/api/objects/{{signingRequestId}}/transition",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"send\",\n  \"data\": {}\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('send accepted', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transition: start",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/apps/openregister/api/objects/{{signingRequestId}}/transition",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"start\",\n  \"data\": {}\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('start accepted', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transition: complete",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/apps/openregister/api/objects/{{signingRequestId}}/transition",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"action\": \"complete\",\n  \"data\": {}\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('complete accepted', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "The receiver got one signed delivery",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/apps/openregister/api/webhooks/{{webhookId}}/logs"
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// The delivery may be queued; give OpenRegister a moment before reading the log.",
+              "setTimeout(() => {}, 3000);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json(); const logs = Array.isArray(body) ? body : (body.results || body.logs || []);",
+              "const signed = logs.filter((log) => JSON.stringify(log).includes('document.signed') && JSON.stringify(log).includes(pm.collectionVariables.get('signingRequestId')));",
+              "const tries = Number(pm.collectionVariables.get('deliveryTries') || 0);",
+              "if (signed.length === 0 && tries < 10) { pm.collectionVariables.set('deliveryTries', String(tries + 1)); pm.execution.setNextRequest(pm.info.requestName); return; }",
+              "pm.collectionVariables.unset('deliveryTries');",
+              "pm.test('exactly one delivery of document.signed for this request (REQ-CDW-001)', () => pm.expect(signed).to.have.lengthOf(1));",
+              "pm.test('it arrived', () => pm.expect(signed[0].success === true || (Number(signed[0].statusCode) >= 200 && Number(signed[0].statusCode) < 300)).to.be.true);",
+              "pm.test('it was signed with the secret', () => pm.expect(JSON.stringify(signed[0]).toLowerCase()).to.match(/signature/));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Delete the receiver",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "OCS-APIRequest",
+            "value": "true"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/apps/openregister/api/webhooks/{{webhookId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('deleted', () => pm.expect(pm.response.code).to.be.oneOf([200, 204]));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,10 @@
 <?php
 
+/**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
 use OCP\Util;
 
 $appId = OCA\Filinq\AppInfo\Application::APP_ID;
@@ -7,6 +12,7 @@ $appId = OCA\Filinq\AppInfo\Application::APP_ID;
 // / @conduction/nextcloud-vue / pinia / vue-material-design-icons to be
 // resolved by the time its chunkOnLoad callback runs. See webpack.config.js
 // `splitChunks.cacheGroups`.
+Util::addStyle($appId, 'nextcloud-vue');
 Util::addScript($appId, $appId . '-shared-vendor');
 Util::addScript($appId, $appId . '-shared-nc-vue');
 Util::addScript($appId, $appId . '-main');

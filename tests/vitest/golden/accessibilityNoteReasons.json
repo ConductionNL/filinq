@@ -1,0 +1,58 @@
+[
+	{
+		"type": "success",
+		"title": "Accessibility preserved",
+		"detail": "0 of 3 tags kept.",
+		"reasons": [
+			"The redaction engine cannot rebuild the tag structure",
+			"The tags no longer point at the right text",
+			"The tag structure was dropped when the file was rebuilt",
+			"The original had no tags to keep",
+			"The page structure could not be kept",
+			"veraPDF found that the copy no longer meets PDF/UA",
+			"some-new-reason",
+			"",
+			"toString",
+			"constructor",
+			"__proto__",
+			"hasOwnProperty",
+			null,
+			null,
+			42
+		]
+	},
+	{
+		"type": "warning",
+		"title": "Accessibility lost",
+		"detail": "0 of 3 tags kept. Screen readers may not read this copy.",
+		"reasons": [
+			"The redaction engine cannot rebuild the tag structure",
+			"The tags no longer point at the right text",
+			"The tag structure was dropped when the file was rebuilt",
+			"The original had no tags to keep",
+			"The page structure could not be kept",
+			"veraPDF found that the copy no longer meets PDF/UA",
+			"some-new-reason",
+			"",
+			"toString",
+			"constructor",
+			"__proto__",
+			"hasOwnProperty",
+			null,
+			null,
+			42
+		]
+	},
+	{
+		"type": "info",
+		"title": "No accessibility to keep",
+		"detail": "The original had no tag structure, so the copy has none either.",
+		"reasons": []
+	},
+	{
+		"type": "warning",
+		"title": "Accessibility unknown",
+		"detail": "OpenRegister did not report whether the tag structure was kept. Treat this copy as not accessible.",
+		"reasons": []
+	}
+]

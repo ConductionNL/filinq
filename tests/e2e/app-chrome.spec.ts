@@ -65,7 +65,7 @@ test.describe('app chrome (ADR-114)', () => {
 		await dismissSetupWizard(page)
 	})
 
-	test('the footer reads Documentation, Store, Reports, Features & roadmap, each with a glyph', async ({
+	test('the footer reads Documentation, Marketplace, Features & roadmap, each with a glyph', async ({
 		page,
 	}) => {
 		const footer = page.locator(
@@ -82,13 +82,12 @@ test.describe('app chrome (ADR-114)', () => {
 		// and Features & roadmap at 91, which left no room between them, so the
 		// roadmap moved to 100 rather than Reports being squeezed in.
 		const seen = texts.filter((t) =>
-			/Documentation|Store|Reports|roadmap/i.test(t),
+			/Documentation|Marketplace|Reports|roadmap/i.test(t),
 		)
-		expect(seen.length).toBe(4)
+		expect(seen.length).toBe(3)
 		expect(seen[0]).toMatch(/Documentation/i)
-		expect(seen[1]).toMatch(/Store/i)
-		expect(seen[2]).toMatch(/Reports/i)
-		expect(seen[3]).toMatch(/roadmap/i)
+		expect(seen[1]).toMatch(/Marketplace/i)
+		expect(seen[2]).toMatch(/roadmap/i)
 
 		// A glyph on every row. ChartBoxOutline had to be added to src/icons.js
 		// for the Reports entry; without it the row renders a blank space where
@@ -102,6 +101,8 @@ test.describe('app chrome (ADR-114)', () => {
 
 	test('Reports lists the three reports', async ({ page }) => {
 		const nav = page.locator('[data-testid="cn-nav"]')
+		// Reports sits in the Advanced foldout, so open it first.
+		await nav.locator('[data-testid="cn-nav-settings"]').click()
 		await nav
 			.locator('[data-testid="cn-nav-entry-ReportsMenu"] a')
 			.first()
@@ -167,14 +168,14 @@ test.describe('app chrome (ADR-114)', () => {
 		).toBeVisible({ timeout: 30_000 })
 	})
 
-	test('Store opens the hosted store surface, which this app writes no backend for', async ({
+	test('Marketplace opens the hosted store surface, which this app writes no backend for', async ({
 		page,
 	}) => {
 		const footer = page.locator(
 			'[data-testid="cn-nav"] .cn-app-nav__footer-list',
 		)
 		await footer
-			.getByRole('link', { name: /^Store$/ })
+			.getByRole('link', { name: /^Marketplace$/ })
 			.first()
 			.click()
 

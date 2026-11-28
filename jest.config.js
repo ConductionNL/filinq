@@ -1,13 +1,26 @@
+/**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 module.exports = {
 	transform: {
 		'^.+\\.vue$': '@vue/vue3-jest',
-		'^.+\\.js$': 'babel-jest',
+		// Also matches the ESM-only packages let through by
+		// transformIgnorePatterns below. Their files sit outside this
+		// app's .babelrc scope, so the preset is passed here explicitly.
+		'^.+\\.m?js$': ['babel-jest', { presets: ['@babel/preset-env'] }],
 		'^.+\\.ts$': 'ts-jest',
 		'.+\\.(css|styl|less|sass|scss|png|jpg|ttf|woff|woff2)$':
 			'jest-transform-stub',
 	},
+	// pinia 4 ships as ESM only (dist/pinia.js), and so do several of its
+	// dependencies (nostics, perfect-debounce, … as .mjs). Jest's CJS runtime
+	// needs those transformed like the app's own sources, so node_modules
+	// stays untransformed only for its .js/.cjs files outside pinia.
+	transformIgnorePatterns: ['/node_modules/(?!pinia/).+\\.c?js$'],
 	moduleFileExtensions: ['js', 'json', 'vue', 'ts'],
 	testEnvironment: 'jest-environment-jsdom',
+	setupFiles: ['<rootDir>/tests/jest/setup.js'],
 	// Playwright e2e specs have their own runner (npm run test:e2e).
 	// tests/unit/reachability.spec.js has its own runner too (npm run
 	// test:unit / vitest.config.js) — it's a pure Node fs/path static
@@ -38,6 +51,10 @@ module.exports = {
 		// it, but jest.mock still needs the path to resolve — redirect it to a
 		// local stub so resolution succeeds and the spec's factory takes over.
 		'^@nextcloud/axios$': '<rootDir>/tests/__mocks__/nextcloud-axios.js',
+		// The same holds for the bare `@nextcloud/vue` import and for
+		// `@nextcloud/dialogs`.
+		'^@nextcloud/vue$': '<rootDir>/tests/__mocks__/nextcloud-vue.js',
+		'^@nextcloud/dialogs$': '<rootDir>/tests/__mocks__/nextcloud-dialogs.js',
 	},
 	coveragePathIgnorePatterns: ['index.js', 'index.ts'],
 	coverageDirectory: '<rootDir>/coverage-frontend/',

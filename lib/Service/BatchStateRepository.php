@@ -3,6 +3,9 @@
 /**
  * Batch State Repository
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * OpenRegister persistence for anonymization batch state. The batch record is
  * stored as one object in the `document` register under the
  * `anonymizationBatch` schema, keyed by the batch UUID, so the multi-request
@@ -30,15 +33,16 @@
  *
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-creation-via-multi-file-upload
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -86,6 +90,11 @@ class BatchStateRepository {
 	 * @var string
 	 */
 	private const DOCUMENTS_PROPERTY = 'documents';
+
+	/**
+	 * The most batches one listing reads.
+	 */
+	private const LIST_LIMIT = 500;
 
 	/**
 	 * Constructor for BatchStateRepository
@@ -148,8 +157,7 @@ class BatchStateRepository {
 		try {
 			$object = $objectService->find(
 				id: $batchId,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
+				options: new ObjectFindOptions(register: self::REGISTER, schema: self::SCHEMA),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -163,6 +171,52 @@ class BatchStateRepository {
 
 		return $this->fromStoredShape(stored: $this->toArray(value: $object));
 	}//end find()
+
+	/**
+	 * Every stored batch matching the filters, in creation order.
+	 *
+	 * @param array<string, mixed> $filters Property filters, e.g. `['userId' => 'alice']`; empty lists all.
+	 *
+	 * @return array<int, array<string, mixed>> The batches, in the app's shape (`files`, not `documents`).
+	 *
+	 * @throws RuntimeException When OpenRegister is not available.
+	 *
+	 * @spec openspec/changes/redaction-at-scale/specs/redaction-at-scale/spec.md#requirement-per-batch-progress-reporting-req-ddras-003
+	 */
+	public function findAll(array $filters=[]): array {
+		if ($this->isAvailable() === false) {
+			throw new RuntimeException(
+				'Cannot list anonymization batches: OpenRegister is not available.'
+			);
+		}
+
+		if (isset($filters['_limit']) === false) {
+			$filters['_limit'] = self::LIST_LIMIT;
+		}
+
+		$rows = (new SlugSearch(objects: $this->openRegister->getObjectService(), _rbac: false, _multitenancy: false))->search(
+			register: self::REGISTER,
+			schema: self::SCHEMA,
+			filters: $filters
+		);
+		if (is_array($rows) === false) {
+			return [];
+		}
+
+		$batches = [];
+		foreach ($rows as $row) {
+			$batch = $this->fromStoredShape(stored: $this->toArray(value: $row));
+			if ((string)($batch['batchId'] ?? '') !== '') {
+				$batches[] = $batch;
+			}
+		}
+
+		usort(
+			$batches,
+			static fn (array $a, array $b): int => ((int)($a['createdAt'] ?? 0) <=> (int)($b['createdAt'] ?? 0))
+		);
+		return $batches;
+	}//end findAll()
 
 	/**
 	 * Persist a batch record, creating it when it does not exist yet.
@@ -195,9 +249,10 @@ class BatchStateRepository {
 		try {
 			$objectService->saveObject(
 				object: $this->toStoredShape(batch: $batch),
-				register: self::REGISTER,
-				schema: self::SCHEMA,
-				uuid: $batchId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA),
+					uuid: $batchId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -234,9 +289,10 @@ class BatchStateRepository {
 
 		try {
 			$this->openRegister->getObjectService()->deleteObject(
-				uuid: $batchId,
-				register: self::REGISTER,
-				schema: self::SCHEMA,
+				new ObjectDeletion(
+					uuid: $batchId,
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SCHEMA)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -258,7 +314,7 @@ class BatchStateRepository {
 	 */
 	private function toStoredShape(array $batch): array {
 		$stored = $batch;
-		unset($stored['files']);
+		unset($stored['files'], $stored['organisation']);
 		$stored[self::DOCUMENTS_PROPERTY] = array_values((array)($batch['files'] ?? []));
 
 		return $stored;
@@ -280,6 +336,14 @@ class BatchStateRepository {
 		$batch = $stored;
 		unset($batch['@self'], $batch['id'], $batch[self::DOCUMENTS_PROPERTY]);
 		$batch['files'] = array_values((array)($stored[self::DOCUMENTS_PROPERTY] ?? []));
+		// The organisation OpenRegister stamped the batch with, so its report can
+		// state its scope (multi-tenant-hardening REQ-DDMTH-005). Read-only: the
+		// stored shape drops it again, Filinq never writes the stamp.
+		$organisation = ($stored['@self']['organisation'] ?? null);
+		$batch['organisation'] = null;
+		if (is_string($organisation) === true && $organisation !== '') {
+			$batch['organisation'] = $organisation;
+		}
 
 		return $batch;
 	}//end fromStoredShape()

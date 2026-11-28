@@ -21,6 +21,9 @@
  * @link      https://www.filinq.app
  *
  * @spec openspec/specs/anonymisation-grondslagen-summary/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -28,6 +31,9 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\Files\Folder;
 use OCP\Files\IRootFolder;
@@ -221,8 +227,7 @@ class DossierObjectRepository {
 		try {
 			$object = $objectService->find(
 				id: $dossierUuid,
-				register: 'filinq',
-				schema: 'dossier',
+				options: new ObjectFindOptions(register: 'filinq', schema: 'dossier'),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -241,9 +246,10 @@ class DossierObjectRepository {
 					payload: $payload,
 					dossierUuid: $dossierUuid
 				),
-				register: 'filinq',
-				schema: 'dossier',
-				uuid: $dossierUuid,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: 'filinq', schema: 'dossier'),
+					uuid: $dossierUuid
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -274,8 +280,7 @@ class DossierObjectRepository {
 		try {
 			$object = $objectService->find(
 				id: $dossierUuid,
-				register: 'filinq',
-				schema: 'dossier',
+				options: new ObjectFindOptions(register: 'filinq', schema: 'dossier'),
 				_rbac: false,
 				_multitenancy: false
 			);

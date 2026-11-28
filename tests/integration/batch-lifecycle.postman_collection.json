@@ -1,0 +1,907 @@
+{
+	"info": {
+		"name": "Filinq batch lifecycle contracts",
+		"description": "Newman contracts for cancelling, resuming and reporting a folder anonymisation batch (openspec change redaction-at-scale, REQ-DDRAS-004 cooperative cancellation and REQ-DDRAS-005 idempotent resume). Setup makes a folder with one document over WebDAV and starts a folder batch; extraction runs asynchronously, so cancel and resume accept the two answers the state machine allows at that moment (202 or 409) and assert the body of each; unknown batches answer 404 and unauthenticated calls 401. Teardown cancels and removes the folder. Same auth model as filinq.postman_collection.json: explicit basic auth per request, no-auth calls against {{noAuthBase}}.\n\nSPDX-License-Identifier: EUPL-1.2\nSPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "noauth"
+	},
+	"item": [
+		{
+			"name": "0. Setup",
+			"item": [
+				{
+					"name": "make the batch folder (WebDAV MKCOL)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('folder created or already there', () => pm.expect([201, 405]).to.include(pm.response.code));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "MKCOL",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{batchFolder}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"remote.php",
+								"dav",
+								"files",
+								"{{adminUser}}",
+								"{{batchFolder}}"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "put one document in it (WebDAV PUT)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('file stored', () => pm.expect([201, 204]).to.include(pm.response.code));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "text/plain"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{batchFolder}}/brief.txt",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"remote.php",
+								"dav",
+								"files",
+								"{{adminUser}}",
+								"{{batchFolder}}",
+								"brief.txt"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "Geachte heer Jansen, uw aanvraag van 3 maart is ontvangen."
+						}
+					}
+				},
+				{
+					"name": "start a folder batch (capture batchId)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('200 OK', () => pm.response.to.have.status(200));",
+									"pm.test('clean JSON, not HTML', () => pm.expect(pm.response.headers.get('Content-Type')).to.match(/application\\/(problem\\+)?json/));",
+									"const b = pm.response.json();",
+									"pm.test('returns a batchId', () => pm.expect(b.batchId).to.be.a('string').and.not.empty);",
+									"pm.test('counts the one file', () => pm.expect(b.fileCount).to.eql(1));",
+									"pm.collectionVariables.set('batchId', b.batchId);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/folder",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php",
+								"apps",
+								"filinq",
+								"api",
+								"anonymization",
+								"batch",
+								"folder"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\"folderPath\": \"/{{batchFolder}}\"}"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "1. Cancel",
+			"item": [
+				{
+					"name": "cancel the batch (202 cancelled/cancelling, or 409 when it already ended)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('202 or 409, never 500', () => pm.expect([202, 409]).to.include(pm.response.code));",
+									"pm.test('clean JSON, not HTML', () => pm.expect(pm.response.headers.get('Content-Type')).to.match(/application\\/(problem\\+)?json/));",
+									"const b = pm.response.json();",
+									"if (pm.response.code === 202) {",
+									"  pm.test('names the batch', () => pm.expect(b.batchId).to.eql(pm.collectionVariables.get('batchId')));",
+									"  pm.test('is cancelled or cancelling', () => pm.expect(['cancelled', 'cancelling']).to.include(b.batchStatus));",
+									"} else {",
+									"  pm.test('says why it cannot be cancelled', () => pm.expect(b.error).to.be.a('string').and.not.empty);",
+									"  pm.test('names the state it ended in', () => pm.expect(['completed', 'error', 'cancelled']).to.include(b.batchStatus));",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{batchId}}/cancel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php",
+								"apps",
+								"filinq",
+								"api",
+								"anonymization",
+								"batch",
+								"{{batchId}}",
+								"cancel"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "cancel it again (409 once cancelled, never a second 202 cancelled)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('202 cancelling or 409, never 500', () => pm.expect([202, 409]).to.include(pm.response.code));",
+									"pm.test('clean JSON, not HTML', () => pm.expect(pm.response.headers.get('Content-Type')).to.match(/application\\/(problem\\+)?json/));",
+									"if (pm.response.code === 202) { pm.test('still cancelling', () => pm.expect(pm.response.json().batchStatus).to.eql('cancelling')); }"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{batchId}}/cancel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php",
+								"apps",
+								"filinq",
+								"api",
+								"anonymization",
+								"batch",
+								"{{batchId}}",
+								"cancel"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "cancel an unknown batch (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('404 Not Found', () => pm.response.to.have.status(404));",
+									"pm.test('clean JSON, not HTML', () => pm.expect(pm.response.headers.get('Content-Type')).to.match(/application\\/(problem\\+)?json/));",
+									"pm.test('says the batch was not found', () => pm.expect(pm.response.json().error).to.be.a('string').and.not.empty);"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/newman-no-such-batch/cancel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php",
+								"apps",
+								"filinq",
+								"api",
+								"anonymization",
+								"batch",
+								"newman-no-such-batch",
+								"cancel"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "2. Report",
+			"item": [
+				{
+					"name": "report of an unfinished batch (409) or of a finished one (CSV)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('200 or 409, never 500', () => pm.expect([200, 409]).to.include(pm.response.code));",
+									"if (pm.response.code === 200) { pm.test('a CSV download', () => pm.expect(pm.response.headers.get('Content-Type')).to.match(/text\\/csv/)); }",
+									"else { pm.test('clean JSON refusal', () => pm.expect(pm.response.json().error).to.match(/not yet completed/)); }"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{batchId}}/report",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php",
+								"apps",
+								"filinq",
+								"api",
+								"anonymization",
+								"batch",
+								"{{batchId}}",
+								"report"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "report of an unknown batch (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('404 Not Found', () => pm.response.to.have.status(404));",
+									"pm.test('clean JSON, not HTML', () => pm.expect(pm.response.headers.get('Content-Type')).to.match(/application\\/(problem\\+)?json/));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/newman-no-such-batch/report",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php",
+								"apps",
+								"filinq",
+								"api",
+								"anonymization",
+								"batch",
+								"newman-no-such-batch",
+								"report"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "3. Resume",
+			"item": [
+				{
+					"name": "resume the cancelled batch (202 with the re-queued count, or 409 while cancelling)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('202 or 409, never 500', () => pm.expect([202, 409]).to.include(pm.response.code));",
+									"pm.test('clean JSON, not HTML', () => pm.expect(pm.response.headers.get('Content-Type')).to.match(/application\\/(problem\\+)?json/));",
+									"const b = pm.response.json();",
+									"if (pm.response.code === 202) {",
+									"  pm.test('reports how many files were re-queued', () => pm.expect(b.requeued).to.be.a('number').and.at.least(0));",
+									"  pm.test('names the batch', () => pm.expect(b.batchId).to.eql(pm.collectionVariables.get('batchId')));",
+									"} else {",
+									"  pm.test('says only errored or cancelled batches resume', () => pm.expect(b.error).to.be.a('string').and.not.empty);",
+									"}"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{batchId}}/resume",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php",
+								"apps",
+								"filinq",
+								"api",
+								"anonymization",
+								"batch",
+								"{{batchId}}",
+								"resume"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "resume an unknown batch (404)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('404 Not Found', () => pm.response.to.have.status(404));",
+									"pm.test('clean JSON, not HTML', () => pm.expect(pm.response.headers.get('Content-Type')).to.match(/application\\/(problem\\+)?json/));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/newman-no-such-batch/resume",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php",
+								"apps",
+								"filinq",
+								"api",
+								"anonymization",
+								"batch",
+								"newman-no-such-batch",
+								"resume"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "4. Authorization",
+			"item": [
+				{
+					"name": "cancel NO AUTH (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('401 Unauthorized without credentials', () => pm.response.to.have.status(401));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"description": "With no session cookie (disableCookies: the jar holds the admin session from the earlier requests) and this header, Nextcloud's auth check is what refuses: 401. Without the header its CSRF check answers 412 first."
+							}
+						],
+						"url": {
+							"raw": "{{noAuthBase}}/index.php/apps/filinq/api/anonymization/batch/{{batchId}}/cancel",
+							"host": [
+								"{{noAuthBase}}"
+							],
+							"path": [
+								"index.php",
+								"apps",
+								"filinq",
+								"api",
+								"anonymization",
+								"batch",
+								"{{batchId}}",
+								"cancel"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					}
+				},
+				{
+					"name": "resume NO AUTH (401)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('401 Unauthorized without credentials', () => pm.response.to.have.status(401));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"description": "With no session cookie (disableCookies: the jar holds the admin session from the earlier requests) and this header, Nextcloud's auth check is what refuses: 401. Without the header its CSRF check answers 412 first."
+							}
+						],
+						"url": {
+							"raw": "{{noAuthBase}}/index.php/apps/filinq/api/anonymization/batch/{{batchId}}/resume",
+							"host": [
+								"{{noAuthBase}}"
+							],
+							"path": [
+								"index.php",
+								"apps",
+								"filinq",
+								"api",
+								"anonymization",
+								"batch",
+								"{{batchId}}",
+								"resume"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"protocolProfileBehavior": {
+						"disableCookies": true
+					}
+				}
+			]
+		},
+		{
+			"name": "9. Teardown",
+			"item": [
+				{
+					"name": "cancel what may still run",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('not a 500', () => pm.expect(pm.response.code).to.not.eql(500));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/index.php/apps/filinq/api/anonymization/batch/{{batchId}}/cancel",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"index.php",
+								"apps",
+								"filinq",
+								"api",
+								"anonymization",
+								"batch",
+								"{{batchId}}",
+								"cancel"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "remove the batch folder (WebDAV DELETE)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test('folder removed', () => pm.expect([204, 404]).to.include(pm.response.code));"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/remote.php/dav/files/{{adminUser}}/{{batchFolder}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"remote.php",
+								"dav",
+								"files",
+								"{{adminUser}}",
+								"{{batchFolder}}"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{adminUser}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{adminPass}}",
+									"type": "string"
+								}
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "noAuthBase",
+			"value": "http://127.0.0.1:8080"
+		},
+		{
+			"key": "adminUser",
+			"value": "admin"
+		},
+		{
+			"key": "adminPass",
+			"value": "admin"
+		},
+		{
+			"key": "batchFolder",
+			"value": "newman-batch-lifecycle"
+		},
+		{
+			"key": "batchId",
+			"value": ""
+		}
+	]
+}

@@ -19,6 +19,9 @@
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/specs/consent-management/spec.md
  * @spec openspec/specs/consent-management/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -26,6 +29,10 @@ declare(strict_types=1);
 namespace OCA\Filinq\Service;
 
 use Exception;
+use OCA\Filinq\Kernel\ConsentUpdate;
+use OCA\Filinq\Kernel\Contracts\ConsentCrudServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCP\AppFramework\Db\DoesNotExistException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -39,7 +46,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/consent-management/spec.md
  */
-class ConsentCrudService {
+class ConsentCrudService implements ConsentCrudServiceInterface {
 	/**
 	 * Constructor for ConsentCrudService
 	 *
@@ -140,6 +147,7 @@ class ConsentCrudService {
 	 * @throws Exception If retrieval fails
 	 *
 	 * @spec openspec/specs/consent-management/spec.md
+	 * @spec openspec/changes/multi-tenant-hardening/tasks.md
 	 */
 	public function getConsent(string $consentId, string $register, string $schema): ?array {
 		// Do NOT pass `_rbac: false` / `_multitenancy: false` here — bypassing
@@ -159,11 +167,17 @@ class ConsentCrudService {
 		// server-side owner filter on the list paths. Do not delete either as
 		// "redundant with OpenRegister RBAC" — measured, it is not redundant.
 		$objectService = $this->settingsService->getObjectService();
-		$object = $objectService->find(
-			id: $consentId,
-			register: $register,
-			schema: $schema
-		);
+		// OpenRegister answers an id the caller cannot see (another
+		// organisation's record) or that does not exist by throwing, not with
+		// null; both are "not found" here, so callers answer 404, not 500.
+		try {
+			$object = $objectService->find(
+				id: $consentId,
+				options: new ObjectFindOptions(register: $register, schema: $schema)
+			);
+		} catch (DoesNotExistException) {
+			return null;
+		}
 
 		if ($object === null) {
 			return null;
@@ -337,6 +351,7 @@ class ConsentCrudService {
 	 * @param string $schema The schema ID
 	 * @param array<string, mixed> $data The data to update
 	 * @param \OCP\IUser|null $user The acting user, or null for system context
+	 * @param string $via How: `mcp` for an agent through Hermiq's gate, '' in Filinq itself
 	 *
 	 * @return array<string, mixed> The updated consent record
 	 *
@@ -352,7 +367,11 @@ class ConsentCrudService {
 		string $schema,
 		array $data,
 		?\OCP\IUser $user = null,
+		string $via = '',
 	): array {
-		return $this->consentService->validateAndUpdateConsent($consentId, $register, $schema, $data, $user);
+		return $this->consentService->validateAndUpdateConsent(
+			new ConsentUpdate(consentId: $consentId, register: $register, schema: $schema, data: $data, via: $via),
+			$user
+		);
 	}//end updateConsentStatus()
 }//end class

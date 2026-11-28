@@ -1,0 +1,416 @@
+{
+    "a conversion whose report is not stored": [
+        {
+            "VeraPdfService::validateBytes": {
+                "bytes": "%PDF-conv",
+                "flavour": "3b"
+            }
+        },
+        {
+            "ConformanceGuidance::for": {
+                "verdict": {
+                    "flavour": "3b",
+                    "compliant": 1,
+                    "failedRuleCount": 0,
+                    "failedRules": [],
+                    "fontsNotEmbedded": [],
+                    "validatorVersion": "1.26"
+                },
+                "origin": "rendered"
+            }
+        },
+        {
+            "ITimeFactory::getDateTime": []
+        },
+        {
+            "ConformanceReportRepository::save": {
+                "report": {
+                    "fileId": 7,
+                    "subject": "conversionOutput",
+                    "flavour": "3b",
+                    "compliant": true,
+                    "failedRuleCount": 0,
+                    "failedRules": [],
+                    "fontsNotEmbedded": [],
+                    "guidance": "rendered-0",
+                    "validatorVersion": "1.26",
+                    "validatedAt": "<time>",
+                    "trigger": "conversion",
+                    "checksumSha256": "987c457ab857d557cf1e243acd67c88e432e27b77be3846551e8a5c077f8f6e7",
+                    "elapsedMs": 0
+                }
+            }
+        },
+        {
+            "result": {
+                "fileId": 7,
+                "subject": "conversionOutput",
+                "flavour": "3b",
+                "compliant": true,
+                "failedRuleCount": 0,
+                "failedRules": [],
+                "fontsNotEmbedded": [],
+                "guidance": "rendered-0",
+                "validatorVersion": "1.26",
+                "validatedAt": "<time>",
+                "trigger": "conversion",
+                "checksumSha256": "987c457ab857d557cf1e243acd67c88e432e27b77be3846551e8a5c077f8f6e7",
+                "elapsedMs": 0,
+                "stored": false
+            }
+        }
+    ],
+    "a conversion with a source": [
+        {
+            "VeraPdfService::validateBytes": {
+                "bytes": "%PDF-conv",
+                "flavour": "3b"
+            }
+        },
+        {
+            "ConformanceGuidance::for": {
+                "verdict": {
+                    "flavour": "3b",
+                    "compliant": false,
+                    "failedRuleCount": "2",
+                    "failedRules": {
+                        "b": "r6.1",
+                        "a": "r6.2"
+                    },
+                    "fontsNotEmbedded": {
+                        "x": "Arial"
+                    },
+                    "validatorVersion": 1.27,
+                    "elapsedMs": "41"
+                },
+                "origin": "rendered"
+            }
+        },
+        {
+            "ITimeFactory::getDateTime": []
+        },
+        {
+            "ConformanceReportRepository::save": {
+                "report": {
+                    "fileId": 7,
+                    "subject": "conversionOutput",
+                    "flavour": "3b",
+                    "compliant": false,
+                    "failedRuleCount": 2,
+                    "failedRules": [
+                        "r6.1",
+                        "r6.2"
+                    ],
+                    "fontsNotEmbedded": [
+                        "Arial"
+                    ],
+                    "guidance": "rendered-2",
+                    "validatorVersion": "1.27",
+                    "validatedAt": "<time>",
+                    "trigger": "conversion",
+                    "checksumSha256": "987c457ab857d557cf1e243acd67c88e432e27b77be3846551e8a5c077f8f6e7",
+                    "elapsedMs": 41
+                }
+            }
+        },
+        {
+            "result": {
+                "fileId": 7,
+                "subject": "conversionOutput",
+                "flavour": "3b",
+                "compliant": false,
+                "failedRuleCount": 2,
+                "failedRules": [
+                    "r6.1",
+                    "r6.2"
+                ],
+                "fontsNotEmbedded": [
+                    "Arial"
+                ],
+                "guidance": "rendered-2",
+                "validatorVersion": "1.27",
+                "validatedAt": "<time>",
+                "trigger": "conversion",
+                "checksumSha256": "987c457ab857d557cf1e243acd67c88e432e27b77be3846551e8a5c077f8f6e7",
+                "elapsedMs": 41,
+                "id": "r-1",
+                "stored": true
+            }
+        }
+    ],
+    "a conversion with a zero source": [
+        {
+            "VeraPdfService::validateBytes": {
+                "bytes": "%PDF-conv",
+                "flavour": "3b"
+            }
+        },
+        {
+            "ConformanceGuidance::for": {
+                "verdict": {
+                    "flavour": "3b",
+                    "compliant": false,
+                    "failedRuleCount": "2",
+                    "failedRules": {
+                        "b": "r6.1",
+                        "a": "r6.2"
+                    },
+                    "fontsNotEmbedded": {
+                        "x": "Arial"
+                    },
+                    "validatorVersion": 1.27,
+                    "elapsedMs": "41"
+                },
+                "origin": "imported"
+            }
+        },
+        {
+            "ITimeFactory::getDateTime": []
+        },
+        {
+            "result": {
+                "fileId": 0,
+                "subject": "conversionOutput",
+                "flavour": "3b",
+                "compliant": false,
+                "failedRuleCount": 2,
+                "failedRules": [
+                    "r6.1",
+                    "r6.2"
+                ],
+                "fontsNotEmbedded": [
+                    "Arial"
+                ],
+                "guidance": "imported-2",
+                "validatorVersion": "1.27",
+                "validatedAt": "<time>",
+                "trigger": "conversion",
+                "checksumSha256": "987c457ab857d557cf1e243acd67c88e432e27b77be3846551e8a5c077f8f6e7",
+                "elapsedMs": 41,
+                "stored": false
+            }
+        }
+    ],
+    "a conversion without a source": [
+        {
+            "VeraPdfService::validateBytes": {
+                "bytes": "%PDF-conv",
+                "flavour": "3b"
+            }
+        },
+        {
+            "ConformanceGuidance::for": {
+                "verdict": {
+                    "flavour": "3b",
+                    "compliant": 1,
+                    "failedRuleCount": 0,
+                    "failedRules": [],
+                    "fontsNotEmbedded": [],
+                    "validatorVersion": "1.26"
+                },
+                "origin": "imported"
+            }
+        },
+        {
+            "ITimeFactory::getDateTime": []
+        },
+        {
+            "result": {
+                "fileId": 0,
+                "subject": "conversionOutput",
+                "flavour": "3b",
+                "compliant": true,
+                "failedRuleCount": 0,
+                "failedRules": [],
+                "fontsNotEmbedded": [],
+                "guidance": "imported-0",
+                "validatorVersion": "1.26",
+                "validatedAt": "<time>",
+                "trigger": "conversion",
+                "checksumSha256": "987c457ab857d557cf1e243acd67c88e432e27b77be3846551e8a5c077f8f6e7",
+                "elapsedMs": 0,
+                "stored": false
+            }
+        }
+    ],
+    "a stored file that fails": [
+        {
+            "File::getContent": []
+        },
+        {
+            "VeraPdfService::validateBytes": {
+                "bytes": "%PDF-file"
+            }
+        },
+        {
+            "File::getId": []
+        },
+        {
+            "ConformanceGuidance::originOf": {
+                "bytes": "%PDF-file",
+                "verdict": {
+                    "flavour": "3b",
+                    "compliant": false,
+                    "failedRuleCount": "2",
+                    "failedRules": {
+                        "b": "r6.1",
+                        "a": "r6.2"
+                    },
+                    "fontsNotEmbedded": {
+                        "x": "Arial"
+                    },
+                    "validatorVersion": 1.27,
+                    "elapsedMs": "41"
+                }
+            }
+        },
+        {
+            "ConformanceGuidance::for": {
+                "verdict": {
+                    "flavour": "3b",
+                    "compliant": false,
+                    "failedRuleCount": "2",
+                    "failedRules": {
+                        "b": "r6.1",
+                        "a": "r6.2"
+                    },
+                    "fontsNotEmbedded": {
+                        "x": "Arial"
+                    },
+                    "validatorVersion": 1.27,
+                    "elapsedMs": "41"
+                },
+                "origin": "imported"
+            }
+        },
+        {
+            "ITimeFactory::getDateTime": []
+        },
+        {
+            "ConformanceReportRepository::save": {
+                "report": {
+                    "fileId": 42,
+                    "subject": "file",
+                    "flavour": "3b",
+                    "compliant": false,
+                    "failedRuleCount": 2,
+                    "failedRules": [
+                        "r6.1",
+                        "r6.2"
+                    ],
+                    "fontsNotEmbedded": [
+                        "Arial"
+                    ],
+                    "guidance": "imported-2",
+                    "validatorVersion": "1.27",
+                    "validatedAt": "<time>",
+                    "trigger": "manual",
+                    "checksumSha256": "a1db6d854bcfbe06f6dd26a574c85148ad10936a3573134088e44c0469a9f00d",
+                    "elapsedMs": 41
+                }
+            }
+        },
+        {
+            "result": {
+                "fileId": 42,
+                "subject": "file",
+                "flavour": "3b",
+                "compliant": false,
+                "failedRuleCount": 2,
+                "failedRules": [
+                    "r6.1",
+                    "r6.2"
+                ],
+                "fontsNotEmbedded": [
+                    "Arial"
+                ],
+                "guidance": "imported-2",
+                "validatorVersion": "1.27",
+                "validatedAt": "<time>",
+                "trigger": "manual",
+                "checksumSha256": "a1db6d854bcfbe06f6dd26a574c85148ad10936a3573134088e44c0469a9f00d",
+                "elapsedMs": 41,
+                "id": "r-1"
+            }
+        }
+    ],
+    "a stored file that passes": [
+        {
+            "File::getContent": []
+        },
+        {
+            "VeraPdfService::validateBytes": {
+                "bytes": "%PDF-file"
+            }
+        },
+        {
+            "File::getId": []
+        },
+        {
+            "ConformanceGuidance::originOf": {
+                "bytes": "%PDF-file",
+                "verdict": {
+                    "flavour": "3b",
+                    "compliant": 1,
+                    "failedRuleCount": 0,
+                    "failedRules": [],
+                    "fontsNotEmbedded": [],
+                    "validatorVersion": "1.26"
+                }
+            }
+        },
+        {
+            "ConformanceGuidance::for": {
+                "verdict": {
+                    "flavour": "3b",
+                    "compliant": 1,
+                    "failedRuleCount": 0,
+                    "failedRules": [],
+                    "fontsNotEmbedded": [],
+                    "validatorVersion": "1.26"
+                },
+                "origin": "imported"
+            }
+        },
+        {
+            "ITimeFactory::getDateTime": []
+        },
+        {
+            "ConformanceReportRepository::save": {
+                "report": {
+                    "fileId": 42,
+                    "subject": "file",
+                    "flavour": "3b",
+                    "compliant": true,
+                    "failedRuleCount": 0,
+                    "failedRules": [],
+                    "fontsNotEmbedded": [],
+                    "guidance": "imported-0",
+                    "validatorVersion": "1.26",
+                    "validatedAt": "<time>",
+                    "trigger": "validation",
+                    "checksumSha256": "a1db6d854bcfbe06f6dd26a574c85148ad10936a3573134088e44c0469a9f00d",
+                    "elapsedMs": 0
+                }
+            }
+        },
+        {
+            "result": {
+                "fileId": 42,
+                "subject": "file",
+                "flavour": "3b",
+                "compliant": true,
+                "failedRuleCount": 0,
+                "failedRules": [],
+                "fontsNotEmbedded": [],
+                "guidance": "imported-0",
+                "validatorVersion": "1.26",
+                "validatedAt": "<time>",
+                "trigger": "validation",
+                "checksumSha256": "a1db6d854bcfbe06f6dd26a574c85148ad10936a3573134088e44c0469a9f00d",
+                "elapsedMs": 0,
+                "id": "r-1"
+            }
+        }
+    ]
+}

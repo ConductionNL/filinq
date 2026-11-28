@@ -8,7 +8,9 @@ status: done
 Provides digital signing of documents with eIDAS signature levels (SES, AdES, QES) and sequential or parallel multi-signer workflows. Signing requests, signer records, and immutable audit entries are stored as OpenRegister objects, the document is locked during signing, and a strict status machine (DRAFT, PENDING, IN_PROGRESS, COMPLETED, DECLINED, EXPIRED, CANCELLED) governs the lifecycle while signers are notified through Nextcloud. This gives Filinq a legally meaningful, auditable signature process.
 
 @e2e exclude Backend signing API + eIDAS crypto + status machine + OR schema/audit contracts; no navigable UI surface. Covered by PHPUnit (SignatureService, status transitions, audit immutability) and Newman (/api/signing/* contracts).
+
 ## Requirements
+
 ### Requirement: Signing request creation
 The system SHALL allow authenticated users to create a signing request for a document. A signing request specifies the document (Nextcloud file ID), the signature level (SES, AdES, or QES), the signing mode (sequential or parallel), and an ordered list of signers. The signing request SHALL be stored as an OpenRegister object via ObjectService using the SigningRequest schema.
 
@@ -30,7 +32,7 @@ The system SHALL allow authenticated users to create a signing request for a doc
 - **AND** each signer can sign independently of the others
 
 ### Requirement: Signing request lifecycle management
-The system SHALL enforce a strict status machine for signing requests: DRAFT -> PENDING -> IN_PROGRESS -> COMPLETED | DECLINED | EXPIRED | CANCELLED. Invalid transitions SHALL be rejected with an error response.
+The system SHALL enforce a strict status machine for signing requests: DRAFT -> PENDING -> IN_PROGRESS -> COMPLETED | DECLINED | EXPIRED | CANCELLED, where a PENDING request can also move straight to DECLINED. Invalid transitions SHALL be rejected with an error response.
 
 #### Scenario: Sequential signing progresses through signers
 - **WHEN** signer A signs in a sequential request with signers [A, B, C]
@@ -44,6 +46,12 @@ The system SHALL enforce a strict status machine for signing requests: DRAFT -> 
 - **THEN** the SigningRequest status changes to "COMPLETED"
 - **AND** the document file lock is released
 - **AND** the signed PDF is stored as a new file version in Nextcloud
+
+#### Scenario: First signer declines before anybody signed
+- **WHEN** the first signer declines a PENDING signing request that nobody has signed yet
+- **THEN** the SignerRecord status changes to "DECLINED" with the reason
+- **AND** the SigningRequest status changes to "DECLINED"
+- @e2e exclude a server-side status check: the decline button is the same in both states, only the server answer changed; covered by PHPUnit (tests/unit/Service/SigningServiceTest.php::testFirstSignerCanDeclineAFreshPendingRequest, tests/unit/Service/SigningEnvelope/SigningEnvelopeServiceTest.php::testCancelCancelsOpenMembersOnly)
 
 #### Scenario: Signer declines
 - **WHEN** a signer declines a signing request with a reason
@@ -363,3 +371,206 @@ The rebuild MUST preserve — or version without breaking — the `docudesk-sign
 - **AND** `QesGuard` can read the assurance without receiving any BSN or raw token
 - @e2e exclude backend completion-payload contract — covered by PHPUnit (tests/unit/Event/SigningConcludedEventTest.php, tests/unit/Service/SigningServiceTest.php)
 
+### Requirement: The signing folder gathers what is pending for one signer (REQ-SFC-01)
+
+Filinq MUST offer a signing folder for the asking user: every signing
+request carrying a pending signer record for that user, across every
+record and every consuming app, in one list. The folder MUST be read at
+the moment it is asked for and MUST NOT be stored. It MUST be ordered by
+deadline first and age second, MUST page, and MUST be offered as a leaf
+per ADR-066.
+
+#### Scenario: Forty decisions on nine cases, one folder
+
+- GIVEN a wethouder with pending signer records on forty documents across nine cases
+- WHEN they open the signing folder
+- THEN all forty are listed in one folder, ordered by deadline and then by age
+
+#### Scenario: The folder holds nobody else's work
+
+- GIVEN two signers with pending requests in the same instance
+- WHEN each opens the folder
+- THEN each sees only the documents carrying their own pending signer record
+
+#### Scenario: A cancelled request leaves the folder at once
+
+- GIVEN a document in the folder whose request is cancelled elsewhere
+- WHEN the folder is opened again
+- THEN the document is no longer in it, without anything having to rebuild a list
+
+#### Scenario: A signed document leaves the folder
+
+- GIVEN a document the signer has just signed
+- WHEN the folder is read again
+- THEN the document is gone and the count has dropped by one
+
+### Requirement: Every entry carries the context needed to sign it (REQ-SFC-02)
+
+Each folder entry MUST carry the record it belongs to as a semantic
+reference, what the document is, who requested the signature, when it was
+requested, and the deadline where one is declared. The record reference
+MUST be a reference to the consuming app's object and MUST NOT be a copy
+of its fields. The document MUST be readable from the folder without
+leaving it.
+
+#### Scenario: The signer knows what they are signing
+
+- GIVEN a folder of forty entries
+- WHEN the signer reads one
+- THEN it names the case it belongs to, what the document is, who asked, when, and the deadline
+
+#### Scenario: The document is readable in place
+
+- GIVEN an entry in the folder
+- WHEN the signer opens the document from it
+- THEN the document is shown without navigating to the consuming app
+
+#### Scenario: No case fields are copied into filinq
+
+- GIVEN an entry whose record lives in a consuming app
+- WHEN the entry is stored and read
+- THEN it holds a reference to that object and none of its fields
+- @e2e exclude data-model assertion; covered by PHPUnit on the folder projection
+
+### Requirement: One pass signs many and keeps every per-document record (REQ-SFC-03)
+
+Signing a folder selection MUST authenticate once and MUST produce, per
+document, its own signature, artifact and audit trail, through the same
+per-request path a single request takes, with the same signature level
+floors and honest-completion gates. A refusal on one document MUST be
+reported against that document and MUST NOT stop the others. The pass
+MUST be resumable, and an interrupted pass MUST leave every document
+either fully signed or untouched.
+
+#### Scenario: Thirty-eight of forty
+
+- GIVEN forty selected documents, two of which fail their completion gate
+- WHEN the signer signs the folder
+- THEN thirty-eight are signed with their own artifacts and audit entries, and the two failures are reported per document with their reasons
+
+#### Scenario: The pass bypasses no gate
+
+- GIVEN a document whose provider cannot produce a verifiable artifact
+- WHEN it is signed through the folder
+- THEN it reaches the same honest-completion outcome it would have reached as a single request
+- @e2e exclude gate equivalence; covered by PHPUnit comparing the folder pass with the single-request path
+
+#### Scenario: An interrupted pass leaves nothing half done
+
+- GIVEN a pass interrupted after twelve of forty
+- WHEN the folder is opened again
+- THEN twelve are signed and twenty-eight are still pending, and no document is partly signed
+
+### Requirement: A document outside the signer's mandate is not in the folder (REQ-SFC-04)
+
+A consuming app MUST be able to declare, per record type it references,
+which role or mandate may sign that type's documents. Filinq MUST store
+the declaration against the type reference and MUST apply it when
+building the folder, so a document outside the signer's mandate is absent
+from it. A direct signing attempt on such a document MUST be refused,
+naming the rule that refused it. Where no declaration exists, the folder
+MUST show what the signer has a pending signer record for and nothing
+more.
+
+#### Scenario: A mandate keeps the folder honest
+
+- GIVEN a case type declaring that only the portefeuillehouder signs its besluiten
+- WHEN a beleidsmedewerker with a pending signer record opens the folder
+- THEN that besluit is not in it
+
+#### Scenario: The direct attempt is refused too
+
+- GIVEN the same document and the same person
+- WHEN they sign it directly through the API
+- THEN the request is refused, naming the mandate rule
+- @e2e exclude API enforcement; covered by PHPUnit on the action authorization path
+
+#### Scenario: No declaration, no invented restriction
+
+- GIVEN a record type with no mandate declaration
+- WHEN the folder is built
+- THEN it holds every document the signer has a pending signer record for
+
+### Requirement: A pending signer is reminded until they sign (REQ-SCR-001)
+
+Filinq MUST remind every signer whose record is still pending, on the interval the request declares, until that signer signs or declines or the request ends. Each reminder MUST name the document and the deadline.
+
+Rows: `sig-reminders` (filinq matrix)
+
+#### Scenario: A signer who has not signed gets a reminder
+
+- GIVEN a request with a daily reminder and two signers, A pending and B signed
+- WHEN the reminder job runs
+- THEN A receives a reminder naming the document and the deadline
+- AND B receives nothing
+- @e2e exclude specification only; the change that builds it adds the Playwright test
+
+#### Scenario: A cancelled request stops reminding
+
+- GIVEN a request with a daily reminder that was cancelled yesterday
+- WHEN the reminder job runs
+- THEN no signer of that request receives a reminder
+- @e2e exclude specification only; the change that builds it adds the Playwright test
+
+### Requirement: A signer is told a document waits, and the initiator is told it is complete (REQ-SCR-002)
+
+Filinq MUST send a Nextcloud notification to a signer when a document starts waiting for their signature, and MUST send one to the initiator when the last signer has signed and the request is complete.
+
+Rows: `sig-notify` (filinq matrix)
+
+#### Scenario: The initiator hears the request is done
+
+- GIVEN a request with signers A and B, where A has signed
+- WHEN B signs
+- THEN the initiator receives a notification that the request is complete
+- AND the notification links to the signed document
+- @e2e exclude specification only; the change that builds it adds the Playwright test
+
+#### Scenario: A signer hears a document waits
+
+- GIVEN a parallel request for signer A
+- WHEN the request is sent
+- THEN A receives a notification that a document waits for their signature
+- @e2e exclude specification only; the change that builds it adds the Playwright test
+
+### Requirement: A signer delegates signing authority for a period and for named document types (REQ-SCR-003)
+
+A signer MUST be able to delegate signing authority to a named colleague, with a start date, an end date and the document types it covers. Inside that period the delegate MUST see the matching documents in their signing folder and MAY sign them. Outside the period, or for other types, filinq MUST refuse the delegate. The signed record MUST name the delegate and the person they signed for.
+
+Rows: `sig-mandate` (filinq matrix)
+
+#### Scenario: A delegate signs during the holiday
+
+- GIVEN a wethouder who delegated besluiten to a colleague from 1 to 14 July
+- WHEN the colleague opens the signing folder on 5 July
+- THEN the pending besluiten of the wethouder are listed
+- AND a besluit the colleague signs records both names
+- @e2e exclude specification only; the change that builds it adds the Playwright test
+
+#### Scenario: The delegation has ended
+
+- GIVEN the same delegation
+- WHEN the colleague tries to sign a besluit of the wethouder on 15 July
+- THEN the signature is refused, naming the ended delegation
+- @e2e exclude specification only; the change that builds it adds the Playwright test
+
+### Requirement: A signer can be verified with a code sent to their phone (REQ-SCR-004)
+
+A signing request MUST be able to require a phone code. Filinq MUST then send a one-time code to the phone number recorded for the signer, and MUST accept the signature only after the right code is entered before it expires. A code MUST work once. The identity evidence MUST record that a phone code was used, and MUST NOT keep the code.
+
+Rows: `sig-sms` (filinq matrix)
+
+#### Scenario: The right code lets the signer sign
+
+- GIVEN a request that requires a phone code for an outside signer
+- WHEN the signer opens the request and enters the code they received by text message
+- THEN the signature is accepted
+- AND the evidence names the phone code as the means
+- @e2e exclude specification only; the change that builds it adds the Playwright test
+
+#### Scenario: A wrong code stops the signature
+
+- GIVEN the same request
+- WHEN the signer enters a wrong code
+- THEN the signature is refused and the request still waits for them
+- @e2e exclude specification only; the change that builds it adds the Playwright test

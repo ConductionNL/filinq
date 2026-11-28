@@ -3,6 +3,9 @@
 /**
  * Wire-contract tests for the batch-anonymization HTTP surface
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Covers `batchAnonymization#batchUpload` (POST api/anonymization/batch/upload),
  * `batchAnonymization#batchExtract` (POST .../batch/{batchId}/extract),
  * `batchAnonymization#batchStatus` (GET .../batch/{batchId}/status),
@@ -26,9 +29,6 @@
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-status-endpoint
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-completion-report
  * @spec openspec/specs/batch-anonymization/spec.md#requirement-woo-entity-category-profiles
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -39,6 +39,7 @@ use OCA\Filinq\Controller\BatchAnonymizationController;
 use OCA\Filinq\Service\BatchAnonymizeService;
 use OCA\Filinq\Service\BatchExtractionService;
 use OCA\Filinq\Service\BatchReportService;
+use OCA\Filinq\Service\BatchRequestService;
 use OCA\Filinq\Service\BatchStateService;
 use OCA\Filinq\Service\BatchUploadService;
 use OCA\Filinq\Service\EntityConsolidationService;
@@ -175,7 +176,8 @@ class BatchAnonymizationControllerContractTest extends TestCase {
 			$this->createMock(FolderBatchService::class),
 			$this->l10n,
 			$this->createMock(IAppConfig::class),
-			$session
+			$session,
+			new BatchRequestService(l10n: $this->l10n)
 		);
 
 	}//end buildController()
@@ -416,6 +418,30 @@ class BatchAnonymizationControllerContractTest extends TestCase {
 		$this->assertSame(['error' => 'Batch not found'], $response->getData());
 
 	}//end testBatchStatusReturnsNotFoundForUnknownBatch()
+
+	/**
+	 * The entities of an unknown batch answer 404 with the message in the
+	 * caller's language, as every other batch route does.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/redaction-at-scale/tasks.md#5-quality
+	 */
+	public function testBatchEntitiesOfAnUnknownBatchAnswersATranslatedNotFound(): void {
+		$this->l10n = $this->createMock(originalClassName: IL10N::class);
+		$this->l10n->method('t')->willReturnCallback(
+			static function (string $text): string {
+				return 'nl: '.$text;
+			}
+		);
+		$this->stateService->method('getBatch')->willReturn(null);
+
+		$response = $this->buildController(session: $this->authenticatedSession())->batchEntities('missing');
+
+		$this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'nl: Batch not found'], actual: $response->getData());
+
+	}//end testBatchEntitiesOfAnUnknownBatchAnswersATranslatedNotFound()
 
 	/**
 	 * An anonymous caller cannot poll batch status.

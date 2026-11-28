@@ -67,6 +67,14 @@ class SettingsInitializer {
 	private const MIN_OPENREGISTER_VERSION = '0.2.10';
 
 	/**
+	 * The app-config key recording the settings version whose object type
+	 * bindings were provisioned.
+	 *
+	 * @var string
+	 */
+	private const BINDINGS_MARKER = 'object_type_bindings_version';
+
+	/**
 	 * Constructor for SettingsInitializer
 	 *
 	 * @param IAppConfig $config App configuration interface
@@ -186,74 +194,9 @@ class SettingsInitializer {
 		];
 
 		try {
-			if ($this->isOpenRegisterInstalled() === false) {
-				throw new RuntimeException(
-					'OpenRegister is not installed or version is too low'
-				);
-			}
-
-			if ($this->isOpenRegisterEnabled() === false) {
-				throw new RuntimeException('OpenRegister is not enabled');
-			}
-
-			try {
-				$configurationService = $this->getConfigurationService();
-			} catch (Exception $e) {
-				throw new RuntimeException(
-					'OpenRegister configuration service is not available: ' . $e->getMessage()
-				);
-			}
-
-			$currentVersion = $this->config->getValueString(
-				$this->appName,
-				'configuration_version',
-				'0.0.0'
-			);
-			$settings = $this->loadSettings();
-
-			// Idempotently ensure the templateVersion register/schema config
-			// keys exist. Run before the version gate so existing installs
-			// (already at the current config version) get back-filled without
-			// requiring a config-version bump.
-			$this->provisionTemplateVersionConfig();
-
-			if (version_compare(
-				$settings['info']['version'],
-				$currentVersion,
-				'<='
-			) === true
-			) {
-				$settingsVersion = $settings['info']['version'];
-				$message = 'Configuration version ' . $currentVersion;
-				$message .= ' is up to date or newer than ' . $settingsVersion;
-				$results['info'][] = $message;
-				return $results;
-			}
-
-			$configurationService->importFromApp(
-				appId: $this->appName,
-				data: $settings,
-				version: $settings['info']['version']
-			);
-
-			// Persist the version we just imported. Nothing else writes this
-			// key — not this app, not OpenRegister — so without it
-			// `$currentVersion` above stays at its '0.0.0' default forever, the
-			// version gate can never close, and this import runs on EVERY
-			// request. It is reached from Application::boot(), so that is every
-			// request to the whole instance, not just Filinq's own.
-			//
-			// Measured 2026-07-29 on the dev instance, an OpenRegister object
-			// create: 354ms median with the key absent, 255ms with it set —
-			// ~100ms per request, ~28%, plus 14 schema lookups.
-			$this->config->setValueString(
-				$this->appName,
-				'configuration_version',
-				(string)$settings['info']['version']
-			);
-
-			$results['configuration'] = true;
-			$results['info'][] = 'Configuration updated to version ' . $settings['info']['version'];
+			$outcome = $this->importSettings(configurationService: $this->requireConfigurationService());
+			$results['configuration'] = $outcome['imported'];
+			$results['info'][] = $outcome['message'];
 		} catch (Exception $e) {
 			$results['errors'][] = $e->getMessage();
 			$this->logger->error(
@@ -264,6 +207,137 @@ class SettingsInitializer {
 
 		return $results;
 	}//end initialize()
+
+	/**
+	 * OpenRegister's configuration service, once OpenRegister is installed,
+	 * recent enough and enabled.
+	 *
+	 * @return \OCA\OpenRegister\Service\ConfigurationService The configuration service.
+	 *
+	 * @throws \RuntimeException When OpenRegister or its configuration service is not available.
+	 */
+	private function requireConfigurationService(): \OCA\OpenRegister\Service\ConfigurationService {
+		if ($this->isOpenRegisterInstalled() === false) {
+			throw new RuntimeException(
+				'OpenRegister is not installed or version is too low'
+			);
+		}
+
+		if ($this->isOpenRegisterEnabled() === false) {
+			throw new RuntimeException('OpenRegister is not enabled');
+		}
+
+		try {
+			return $this->getConfigurationService();
+		} catch (Exception $e) {
+			throw new RuntimeException(
+				'OpenRegister configuration service is not available: ' . $e->getMessage()
+			);
+		}
+	}//end requireConfigurationService()
+
+	/**
+	 * Import the shipped settings when they are newer than the imported ones.
+	 *
+	 * @param \OCA\OpenRegister\Service\ConfigurationService $configurationService OpenRegister's configuration service.
+	 *
+	 * @return array{imported: bool, message: string} Whether it imported, and what happened.
+	 *
+	 * @throws \RuntimeException When the settings file cannot be loaded.
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md
+	 */
+	private function importSettings(\OCA\OpenRegister\Service\ConfigurationService $configurationService): array {
+		$currentVersion = $this->config->getValueString(
+			$this->appName,
+			'configuration_version',
+			'0.0.0'
+		);
+		$settings = $this->loadSettings();
+
+		// Idempotently ensure the templateVersion register/schema config
+		// keys exist. Run before the version gate so existing installs
+		// (already at the current config version) get back-filled without
+		// requiring a config-version bump.
+		$this->provisionTemplateVersionConfig();
+
+		$settingsVersion = $settings['info']['version'];
+		if (version_compare($settingsVersion, $currentVersion, '<=') === true) {
+			$this->provisionObjectTypeBindings(version: (string) $settingsVersion);
+			return [
+				'imported' => false,
+				'message'  => 'Configuration version ' . $currentVersion . ' is up to date or newer than ' . $settingsVersion,
+			];
+		}
+
+		$configurationService->importFromApp(
+			appId: $this->appName,
+			data: $settings,
+			version: $settingsVersion
+		);
+
+		// Persist the version we just imported. Nothing else writes this
+		// key — not this app, not OpenRegister — so without it
+		// `$currentVersion` above stays at its '0.0.0' default forever, the
+		// version gate can never close, and this import runs on EVERY
+		// request. It is reached from Application::boot(), so that is every
+		// request to the whole instance, not just Filinq's own.
+		//
+		// Measured 2026-07-29 on the dev instance, an OpenRegister object
+		// create: 354ms median with the key absent, 255ms with it set —
+		// ~100ms per request, ~28%, plus 14 schema lookups.
+		$this->config->setValueString(
+			$this->appName,
+			'configuration_version',
+			(string)$settingsVersion
+		);
+
+		$this->provisionObjectTypeBindings(version: (string) $settingsVersion);
+
+		return ['imported' => true, 'message' => 'Configuration updated to version ' . $settingsVersion];
+	}//end importSettings()
+
+	/**
+	 * Write the object type bindings an administrator has not set, once per
+	 * settings version.
+	 *
+	 * A fresh install had no `<type>_register`/`<type>_schema` keys, so every
+	 * feature that resolves its object type through them (template upload and
+	 * import among them) refused until an administrator chose each register
+	 * and schema. The provisioner fills the empty keys from the app's own
+	 * register. The marker keeps this to one run per settings version, so an
+	 * ordinary request costs one cached config read.
+	 *
+	 * @param string $version The settings version just checked or imported.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/admin-settings/spec.md#requirement-auto-initialization-on-boot-req-set-03
+	 */
+	private function provisionObjectTypeBindings(string $version): void {
+		if ($this->config->getValueString($this->appName, self::BINDINGS_MARKER, '') === $version) {
+			return;
+		}
+
+		try {
+			$written = $this->container->get(ObjectTypeBindingProvisioner::class)->provision();
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'Object type bindings not provisioned: ' . $e->getMessage(),
+				['app' => $this->appName]
+			);
+			return;
+		}
+
+		// Not found yet (the register is imported later, or OpenRegister could
+		// not be read): no marker, so the next request tries again.
+		if ($written === null) {
+			return;
+		}
+
+		$this->config->setValueString($this->appName, self::BINDINGS_MARKER, $version);
+
+	}//end provisionObjectTypeBindings()
 
 	/**
 	 * Provision the templateVersion register/schema app-config keys

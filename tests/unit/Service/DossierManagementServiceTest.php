@@ -12,13 +12,17 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/dossier-management-ui/specs/dossier-management-ui/spec.md
+ * @spec openspec/changes/archive/2026-11-25-dossier-management-ui/specs/dossier-management-ui/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Filinq\Tests\Unit\Service;
 
+use OCA\Filinq\Service\LegalHold\LegalHoldFanOut;
 use OCA\Filinq\Service\DossierContextService;
 use OCA\Filinq\Service\DossierFileService;
 use OCA\Filinq\Service\DossierManagementService;
@@ -33,6 +37,8 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Unit tests for DossierManagementService.
@@ -81,6 +87,13 @@ final class DossierManagementServiceTest extends TestCase {
 	private DossierManagementService $service;
 
 	/**
+	 * Whether a dossier is under a legal hold.
+	 *
+	 * @var LegalHoldFanOut&MockObject
+	 */
+	private LegalHoldFanOut&MockObject $holds;
+
+	/**
 	 * Objects the fake ObjectService will return from findAll()/find().
 	 *
 	 * @var array<int, object>
@@ -116,6 +129,7 @@ final class DossierManagementServiceTest extends TestCase {
 		$this->repository = $this->createMock(DossierObjectRepository::class);
 		$this->rootFolder = $this->createMock(IRootFolder::class);
 		$this->userSession = $this->createMock(IUserSession::class);
+		$this->holds = $this->createMock(LegalHoldFanOut::class);
 
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('alice');
@@ -146,6 +160,7 @@ final class DossierManagementServiceTest extends TestCase {
 			),
 			$reader,
 			$this->createMock(LoggerInterface::class),
+			$this->holds,
 		);
 
 	}//end setUp()
@@ -181,7 +196,9 @@ final class DossierManagementServiceTest extends TestCase {
 			 *
 			 * @return object|null The object.
 			 */
-			public function find(string $id, string $register = '', string $schema = ''): ?object {
+			public function find(string $id, ?ObjectFindOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ?object {
+				$register = $options?->register ?? '';
+				$schema = $options?->schema ?? '';
 				foreach ($this->test->objectsForTest() as $object) {
 					if (($object->jsonSerialize()['@self']['id'] ?? '') === $id) {
 						return $object;
@@ -222,7 +239,9 @@ final class DossierManagementServiceTest extends TestCase {
 			 *
 			 * @return object The saved object.
 			 */
-			public function saveObject(array $object, string $register = '', string $schema = ''): object {
+			public function saveObject(array $object, ObjectSaveOptions $options = new ObjectSaveOptions(), bool $_rbac = true, bool $_multitenancy = true): object {
+				$register = $options->target->register ?? '';
+				$schema = $options->target->schema ?? '';
 				if ($this->test->saveRefusal !== '') {
 					throw new RuntimeException($this->test->saveRefusal);
 				}
@@ -635,6 +654,30 @@ final class DossierManagementServiceTest extends TestCase {
 	}//end testRemovalDropsOnlyThisDossiersReference()
 
 	/**
+	 * A dossier under a legal hold keeps its documents, whatever the page shows.
+	 *
+	 * @return void
+	 */
+	public function testRemovalIsRefusedWhileTheDossierIsHeld(): void {
+		$this->seedDossier([
+			'@self' => ['id' => 'd1', 'folder' => null],
+			'name' => 'Dossier A',
+			'documents' => ['42', '77'],
+		]);
+		$this->holds->method('heldAsSeenBy')->willReturn(true);
+
+		try {
+			$this->service->removeDocument(dossierId: 'd1', fileId: 77);
+			self::fail(message: 'A held dossier lost a document.');
+		} catch (\RuntimeException $e) {
+			self::assertSame(expected: 423, actual: $e->getCode());
+		}
+
+		self::assertSame(expected: [], actual: $this->saved);
+
+	}//end testRemovalIsRefusedWhileTheDossierIsHeld()
+
+	/**
 	 * Creating without a name is refused before any folder is made.
 	 *
 	 * @return void
@@ -709,6 +752,41 @@ final class DossierManagementServiceTest extends TestCase {
 		self::assertSame(['persoonsgegevens'], $this->saved[1]['bases']);
 
 	}//end testLegacyDossierIsSettledBeforeItsFirstTransition()
+
+	/**
+	 * The detail names the dossier's home folder, so the AI companion can
+	 * scope a question to it; a dossier without one names none.
+	 *
+	 * @return void
+	 */
+	public function testDetailNamesTheHomeFolder(): void {
+		$this->seedDossier([
+			'@self' => ['id' => 'd1', 'folder' => 4242],
+			'name' => 'Dossier A',
+		]);
+		$folder = $this->createMock(Folder::class);
+		$folder->method('getId')->willReturn(4242);
+		$folder->method('getDirectoryListing')->willReturn([]);
+		$this->repository->method('resolveDossierFolder')->willReturn($folder);
+
+		self::assertSame(4242, $this->service->detail('d1')['folderId']);
+
+	}//end testDetailNamesTheHomeFolder()
+
+	/**
+	 * A dossier without a home folder names none.
+	 *
+	 * @return void
+	 */
+	public function testDetailWithoutAHomeFolderNamesNone(): void {
+		$this->seedDossier([
+			'@self' => ['id' => 'd1', 'folder' => null],
+			'name' => 'Woo 2026-001',
+		]);
+
+		self::assertNull($this->service->detail('d1')['folderId']);
+
+	}//end testDetailWithoutAHomeFolderNamesNone()
 
 	/**
 	 * The publication section reports the pipeline as absent, and is gated on it.

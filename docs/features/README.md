@@ -67,20 +67,24 @@ Features that are fully implemented and available in the current release.
 | Feature | Doc | GEMMA | TEC | Status |
 |---------|-----|-------|-----|--------|
 | [Anonymization Pipeline](./anonymization.md) | anonymization.md | Media-behandelingcomponent | TEC-DMS-2 | Done |
+| [Redaction and what leaves the building](./redaction.md) | redaction.md | Media-behandelingcomponent | TEC-DMS-2 | Done |
 | [Consent Management](./consent-management.md) | consent-management.md | Documentregistratiecomponent | TEC-DMS-7 | Done |
 | [Publication Consent Process](./publication-consent-process.md) | publication-consent-process.md | Documentregistratiecomponent | TEC-DMS-7 | Done |
 | [Metadata Enrichment](./metadata-enrichment.md) | metadata-enrichment.md | Documentregistratiecomponent | TEC-DMS-4, TEC-DMS-9 | Done |
+| [Filling record fields from a document](./model-filled-fields.md) | model-filled-fields.md | Documentregistratiecomponent | TEC-DMS-4 | Done |
 | [Admin Settings](./admin-settings.md) | admin-settings.md | — | TEC-DMS-5 | Done |
 | [Dashboard](./dashboard.md) | dashboard.md | — | TEC-DMS-10 | Done |
 | [Document Register](./document-register.md) | document-register.md | Documentbeheercomponent | TEC-DMS-4 | Done |
 | [PDF Generation](./pdf-generation.md) | pdf-generation.md | Outputmanagementcomponent | TEC-DMS-1 | Done |
 | [Template Management](./template-management.md) | template-management.md | Documentcreatiecomponent | TEC-DMS-1 | Done |
 | [Prometheus Metrics](./prometheus-metrics.md) | prometheus-metrics.md | — | TEC-DMS-10 | Done |
+| [Scan intake](./scan-intake.md) | scan-intake.md | Scanning-en-imagingcomponent | TEC-DMS-2 | Done |
 | [OCR Document Scanning](./ocr-document-scanning.md) | ocr-document-scanning.md | Scanning-en-imagingcomponent | TEC-DMS-2 | Done |
 | [Text Extraction](./text-extraction.md) | text-extraction.md | Scanning-en-imagingcomponent | TEC-DMS-2 | Done |
 | [Entity Management](./entity-management.md) | entity-management.md | Media-behandelingcomponent | TEC-DMS-2 | Done |
 | [Advanced Template Management](./advanced-template-management.md) | advanced-template-management.md | Documentcreatiecomponent | TEC-DMS-1, TEC-DMS-8 | Done |
 | [Print Functionality](./print-functionality.md) | print-functionality.md | Outputmanagementcomponent | TEC-DMS-1 | Done |
+| [Print jobs](./print-jobs.md) | print-jobs.md | Outputmanagementcomponent | TEC-DMS-1 | Done |
 | [CI/CD Quality Checks](./ci-cd-quality-checks.md) | ci-cd-quality-checks.md | — | — | Done |
 | [Backend Services](./backend.md) | backend.md | — | — | Done |
 
@@ -93,8 +97,10 @@ Features that are specified and actively being developed or reviewed.
 | [Enhanced Anonymization (Batch)](./enhanced-anonymization.md) | enhanced-anonymization.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
 | [Batch Processing](./batch-processing.md) | batch-processing.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
 | [Anonymization Entity Review](./anonymization-entity-review.md) | anonymization-entity-review.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
+| [Review Workbench](./review-workbench.md) | review-workbench.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
 | [Print Preview](./print-preview.md) | print-preview.md | Outputmanagementcomponent | TEC-DMS-1 | Reviewed |
 | [Letter & Correspondence Generation](./letter-correspondence-generation.md) | letter-correspondence-generation.md | Outputmanagementcomponent | TEC-DMS-1 | Proposed |
+| [Edit a document before it is stored](./generation-drafts.md) | generation-drafts.md | Documentcreatiecomponent | TEC-DMS-1 | In progress |
 | [Document Creation from Templates](./document-creatie-sjablonen.md) | document-creatie-sjablonen.md | Documentcreatiecomponent | TEC-DMS-1 | Proposed |
 | [Register i18n](./register-i18n.md) | register-i18n.md | — | TEC-DMS-1 | Proposed |
 | [GDPR Anonymization](./gdpr-anonymization.md) | gdpr-anonymization.md | Media-behandelingcomponent | TEC-DMS-7 | Proposed |
@@ -106,8 +112,19 @@ Features proposed based on tender analysis and customer requests. Not yet specif
 
 | Feature | Doc | GEMMA | TEC | Status |
 |---------|-----|-------|-----|--------|
+| [Woo publication pipeline](./woo-publicatie-pipeline.md) | woo-publicatie-pipeline.md | Publicatiecomponent | TEC-DMS-6 | Done |
+| [Woo decision letter and inventory](./woo-decision-templates.md) | woo-decision-templates.md | Documentcreatiecomponent | — | Implemented |
+| [Woo metadata worklist](./woo-metadata-worklist.md) | woo-metadata-worklist.md | Publicatiecomponent | TEC-DMS-6 | Done |
+| [Woo refusal grounds](./grondslagen.md) | grondslagen.md | Publicatiecomponent | TEC-DMS-6 | Done |
+| [Finding documents by their content](./document-content-search.md) | document-content-search.md | Documentbeheercomponent | — | Implemented |
+| [Notes on a document](./document-notes.md) | document-notes.md | Documentbeheercomponent | — | Implemented |
+| [Retention under the Archiefwet](./archiefwet-retention.md) | archiefwet-retention.md | Archiefcomponent | — | Implemented |
 | [Document Signing](./document-signing.md) | document-signing.md | — | TEC-DMS-4 | Roadmap |
 | [Digital Signing Integration](./digital-signing.md) | digital-signing.md | — | TEC-DMS-4 | Roadmap |
+| [PDF Page Stamping](./pdf-page-stamping.md) | pdf-page-stamping.md | — | — | Implemented |
+| [Sharing documents by link](./share-document-links.md) | share-document-links.md | Documentbeheercomponent | — | Implemented |
+| [Signing with LibreSign](./libresign-signing-provider.md) | libresign-signing-provider.md | — | TEC-DMS-4 | Done |
+| [One signing rail for the fleet](./one-signing-rail.md) | one-signing-rail.md | — | TEC-DMS-4 | In progress |
 | [Document Classification](./document-classification.md) | document-classification.md | Documentregistratiecomponent | TEC-DMS-4 | Roadmap |
 | [Document Comparison](./document-comparison.md) | document-comparison.md | Documentbeheercomponent | TEC-DMS-8 | Roadmap |
 | [Document Validation](./document-validation.md) | document-validation.md | Documentregistratiecomponent | TEC-DMS-4 | Roadmap |

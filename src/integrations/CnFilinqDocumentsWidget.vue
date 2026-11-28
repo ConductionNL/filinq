@@ -1,0 +1,581 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+  -->
+<template>
+	<div v-if="!summarised" class="filinq-documents-leaf">
+		<form
+			v-if="rows.length > 0 || searchedWords !== ''"
+			class="filinq-documents-leaf__search"
+			role="search"
+			data-testid="documents-content-search"
+			@submit.prevent="searchContent">
+			<label>
+				{{ t('filinq', 'Find in name and content') }}
+				<input
+					v-model="searchWords"
+					type="search"
+					data-testid="documents-content-search-input">
+			</label>
+			<button type="submit" class="filinq-documents-leaf__sort-button">
+				{{ t('filinq', 'Search') }}
+			</button>
+			<button
+				v-if="searchedWords !== ''"
+				type="button"
+				class="filinq-documents-leaf__sort-button"
+				data-testid="documents-content-search-clear"
+				@click="clearSearch">
+				{{ t('filinq', 'Show all documents') }}
+			</button>
+		</form>
+		<p
+			v-if="searchedWords !== '' && contentNotSearched"
+			class="filinq-documents-leaf__state"
+			role="status">
+			{{ t('filinq', 'The content of documents cannot be searched here; only names were matched.') }}
+		</p>
+		<p
+			v-if="searchedWords !== '' && unread.length > 0"
+			class="filinq-documents-leaf__state"
+			data-testid="documents-unread">
+			{{ n('filinq', '%n document has not been read yet and cannot be found by content', '%n documents have not been read yet and cannot be found by content', unread.length) }}
+			<button
+				type="button"
+				class="filinq-documents-leaf__sort-button"
+				:disabled="reading"
+				data-testid="documents-read-now"
+				@click="readUnread">
+				{{ reading ? t('filinq', 'Reading documents') : t('filinq', 'Read them now') }}
+			</button>
+		</p>
+		<p v-if="readMessage" class="filinq-documents-leaf__state" role="status">
+			{{ readMessage }}
+		</p>
+		<p v-if="loading" class="filinq-documents-leaf__state">
+			{{ t('filinq', 'Looking up documents') }}
+		</p>
+		<p
+			v-else-if="error"
+			class="filinq-documents-leaf__state filinq-documents-leaf__state--error">
+			{{ t('filinq', 'The documents could not be loaded') }}
+		</p>
+		<p
+			v-else-if="rows.length === 0 && searchedWords !== ''"
+			class="filinq-documents-leaf__state">
+			{{ t('filinq', 'No document matches {words}', { words: searchedWords }) }}
+		</p>
+		<p
+			v-else-if="rows.length === 0 && !carded"
+			class="filinq-documents-leaf__state">
+			{{ t('filinq', 'No documents yet') }}
+		</p>
+		<div
+			v-if="!loading && !error && rows.length > 1"
+			class="filinq-documents-leaf__sort"
+			role="group"
+			:aria-label="t('filinq', 'Sort documents')">
+			<button
+				v-for="column in sortColumns"
+				:key="column.key"
+				type="button"
+				class="filinq-documents-leaf__sort-button"
+				:aria-pressed="sort.key === column.key ? 'true' : 'false'"
+				:data-testid="'documents-sort-' + column.key"
+				@click="sortOn(column.key)">
+				{{ column.label }}
+				<span v-if="sort.key === column.key" aria-hidden="true">{{ sort.direction === 'asc' ? '↑' : '↓' }}</span>
+				<span v-if="sort.key === column.key" class="hidden-visually">{{ sort.direction === 'asc' ? t('filinq', 'ascending') : t('filinq', 'descending') }}</span>
+			</button>
+		</div>
+		<ul v-if="!loading && !error && rows.length > 0" class="filinq-documents-leaf__list">
+			<li
+				v-for="row in sortedRows"
+				:key="row.fileId"
+				class="filinq-documents-leaf__item">
+				<a class="filinq-documents-leaf__link" :href="fileLink(row)">{{
+					row.name
+				}}</a>
+				<span v-if="row.mtime" class="filinq-documents-leaf__date">{{ asDate(row.mtime) }}</span>
+				<span
+					v-if="row.match === 'content' && row.snippet"
+					class="filinq-documents-leaf__snippet"
+					:data-testid="'documents-snippet-' + row.fileId"><component
+					:is="part.marked ? 'mark' : 'span'"
+					v-for="(part, index) in snippetParts(row)"
+					:key="index">{{ part.text }}</component></span>
+				<span
+					v-if="row.record && row.record.status"
+					class="filinq-documents-leaf__status">
+					{{ row.record.status }}
+				</span>
+				<span v-if="row.record && row.record.uuid" class="filinq-documents-leaf__actions">
+					<button
+						type="button"
+						class="filinq-documents-leaf__sort-button"
+						:aria-expanded="linking === row.record.uuid && linkMode === 'link' ? 'true' : 'false'"
+						:data-testid="'documents-link-' + row.fileId"
+						@click="toggleLinkForm(row)">
+						{{ t('filinq', 'Link to another record') }}
+					</button>
+					<button
+						type="button"
+						class="filinq-documents-leaf__sort-button"
+						:aria-expanded="linking === row.record.uuid && linkMode === 'copy' ? 'true' : 'false'"
+						:data-testid="'documents-copy-' + row.fileId"
+						@click="toggleLinkForm(row, 'copy')">
+						{{ t('filinq', 'Copy to another record') }}
+					</button>
+					<button
+						type="button"
+						class="filinq-documents-leaf__sort-button"
+						:disabled="busy"
+						:data-testid="'documents-unlink-' + row.fileId"
+						@click="removeLink(row)">
+						{{ t('filinq', 'Remove link') }}
+					</button>
+				</span>
+				<form
+					v-if="row.record && linking === row.record.uuid"
+					class="filinq-documents-leaf__link-form"
+					@submit.prevent="linkMode === 'copy' ? copyToOtherRecord(row) : linkToRecord(row)">
+					<label>
+						{{ t('filinq', 'Register') }}
+						<input v-model="linkForm.register" type="text" required>
+					</label>
+					<label>
+						{{ t('filinq', 'Record type') }}
+						<input v-model="linkForm.schema" type="text" required>
+					</label>
+					<label>
+						{{ t('filinq', 'Record ID') }}
+						<input v-model="linkForm.id" type="text" required>
+					</label>
+					<button type="submit" class="filinq-documents-leaf__sort-button" :disabled="busy">
+						{{ linkMode === 'copy' ? t('filinq', 'Copy') : t('filinq', 'Link') }}
+					</button>
+				</form>
+			</li>
+		</ul>
+		<p v-if="linkMessage" class="filinq-documents-leaf__state" role="status">
+			{{ linkMessage }}
+		</p>
+	</div>
+</template>
+
+<script>
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
+import { generateUrl } from '@nextcloud/router'
+import { contentSearchQuery, contentUnavailable, markedSnippet, readFiles, unreadFileIds } from './documentContentSearch.js'
+import { changeDomainLink, copyToRecord, linkTarget } from './documentDomainLinks.js'
+import { documentLinkRows } from './documentLinkRows.js'
+import { nextSort, sortDocumentRows } from './documentRowSort.js'
+import { hostObjectLeaf } from './hostObjectLeaf.js'
+import { leafReportMixin } from './leafReport.js'
+
+/**
+ * The documents Filinq holds for one object.
+ *
+ * Reads Filinq's own flat case-document list, which already takes exactly the
+ * object context a leaf is handed and already applies Filinq's access control:
+ * a record whose file the reader cannot see is left out by the server, so this
+ * component neither filters nor hides anything itself.
+ */
+export default {
+	name: 'CnFilinqDocumentsWidget',
+
+	extends: hostObjectLeaf,
+	mixins: [leafReportMixin],
+
+	data() {
+		return {
+			rows: [],
+			loading: true,
+			error: false,
+			sort: { key: 'name', direction: 'asc' },
+			linking: '',
+			linkMode: 'link',
+			linkForm: { register: '', schema: '', id: '' },
+			linkMessage: '',
+			busy: false,
+			searchWords: '',
+			searchedWords: '',
+			contentNotSearched: false,
+			unread: [],
+			reading: false,
+			readMessage: '',
+		}
+	},
+
+	computed: {
+		/**
+		 * The rows in the order the user chose; it lasts while the case stays open.
+		 *
+		 * @return {Array<object>} The sorted rows.
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.1
+		 */
+		sortedRows() {
+			return sortDocumentRows(this.rows, this.sort)
+		},
+
+		/**
+		 * The columns to sort on, with their labels.
+		 *
+		 * @return {Array<{key: string, label: string}>} The columns.
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.1
+		 */
+		sortColumns() {
+			return [
+				{ key: 'name', label: t('filinq', 'Name') },
+				{ key: 'mtime', label: t('filinq', 'Date') },
+				{ key: 'size', label: t('filinq', 'Size') },
+				{ key: 'status', label: t('filinq', 'Status') },
+			]
+		},
+
+		/**
+		 * What this leaf reports to a carding host or a "linked" card.
+		 *
+		 * @return {object} The report.
+		 * @spec openspec/specs/leaves-library-card/spec.md#requirement-the-documents-leaf-reports-to-the-library-card-and-the-linked-card
+		 */
+		leafReport() {
+			return {
+				count: this.rows.length,
+				emptyLabel: t('filinq', 'No documents yet'),
+				noun: t('filinq', 'documents'),
+				rows: documentLinkRows(this.rows),
+			}
+		},
+	},
+
+	mounted() {
+		this.load()
+	},
+
+	methods: {
+		n,
+
+		/**
+		 * Sort on a column; choosing it again flips the order.
+		 *
+		 * @param {string} key The column.
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.1
+		 */
+		sortOn(key) {
+			this.sort = nextSort(this.sort, key)
+		},
+
+		/**
+		 * A modification time as a local date.
+		 *
+		 * @param {number} mtime Seconds since the epoch.
+		 * @return {string} The date.
+		 *
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.1
+		 */
+		asDate(mtime) {
+			return new Date(mtime * 1000).toLocaleDateString()
+		},
+
+		/**
+		 * The Files deep link for one row.
+		 *
+		 * @param {object} row One flat-list row.
+		 * @return {string} A link to the file in Files.
+		 *
+		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
+		 */
+		fileLink(row) {
+			return generateUrl('/f/{fileId}', { fileId: row.fileId })
+		},
+
+		/**
+		 * Open or close the link or copy form of one document.
+		 *
+		 * @param {object} row One flat-list row.
+		 * @param {'link'|'copy'} [mode] Link the document, or copy it.
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
+		 */
+		toggleLinkForm(row, mode = 'link') {
+			this.linkMessage = ''
+			const open = this.linking === row.record.uuid && this.linkMode === mode
+			this.linking = open ? '' : row.record.uuid
+			this.linkMode = mode
+			this.linkForm = { register: '', schema: '', id: '' }
+		},
+
+		/**
+		 * Copy a document to the record the form names; it stays on this
+		 * record too. The server refuses a record the user may not write,
+		 * and nothing is written then.
+		 *
+		 * @param {object} row One flat-list row.
+		 * @return {Promise<void>} Resolves once the answer is shown.
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-6.1
+		 */
+		async copyToOtherRecord(row) {
+			const target = linkTarget(this.linkForm)
+			if (target === null) {
+				this.linkMessage = t('filinq', 'Name the register, the record type and the ID of the record.')
+				return
+			}
+			this.busy = true
+			const answer = await copyToRecord(
+				row.fileId,
+				{ register: this.register, schema: this.schema, id: this.objectId },
+				target,
+				this.requestToken(),
+			)
+			this.busy = false
+			if (answer.ok) {
+				this.linking = ''
+				this.linkMessage = t('filinq', 'A copy of {name} is now on the other record.', { name: row.name })
+				return
+			}
+			this.linkMessage = answer.status === 403
+				? t('filinq', 'You may not copy this document to that record.')
+				: t('filinq', 'The document could not be copied.')
+		},
+
+		/**
+		 * Link a document to the record the form names. The server refuses a
+		 * record the user may not write, and nothing is stored then.
+		 *
+		 * @param {object} row One flat-list row.
+		 * @return {Promise<void>} Resolves once the answer is shown.
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
+		 */
+		async linkToRecord(row) {
+			const target = linkTarget(this.linkForm)
+			if (target === null) {
+				this.linkMessage = t('filinq', 'Name the register, the record type and the ID of the record.')
+				return
+			}
+			this.busy = true
+			const answer = await changeDomainLink('POST', row.record.uuid, target, this.requestToken())
+			this.busy = false
+			if (answer.ok) {
+				this.linking = ''
+				this.linkMessage = t('filinq', '{name} is now also on the other record.', { name: row.name })
+				return
+			}
+			this.linkMessage = this.refusal(answer)
+		},
+
+		/**
+		 * Remove a document's link to this record; it leaves this list and
+		 * stays on its other records and with its creator.
+		 *
+		 * @param {object} row One flat-list row.
+		 * @return {Promise<void>} Resolves once the list reflects the answer.
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
+		 */
+		async removeLink(row) {
+			this.busy = true
+			const answer = await changeDomainLink(
+				'DELETE',
+				row.record.uuid,
+				{ register: this.register, schema: this.schema, id: this.objectId },
+				this.requestToken(),
+			)
+			this.busy = false
+			if (answer.ok) {
+				this.rows = this.rows.filter((one) => one.fileId !== row.fileId)
+				this.linkMessage = t('filinq', '{name} is no longer linked to this record.', { name: row.name })
+				return
+			}
+			this.linkMessage = this.refusal(answer)
+		},
+
+		/**
+		 * The sentence for a link or unlink the server did not do.
+		 *
+		 * @param {{status: number, error: string}} answer The answer.
+		 * @return {string} The sentence.
+		 * @spec openspec/changes/archive/2026-11-24-specify-capability-rows/tasks.md#task-2.5
+		 */
+		refusal(answer) {
+			if (answer.status === 403) {
+				return t('filinq', 'You may not change the documents of that record.')
+			}
+			return t('filinq', 'The link could not be changed.')
+		},
+
+		/**
+		 * Find the documents of this record whose name or content holds the
+		 * typed words: name matches first, then content matches with their
+		 * snippet. Nothing typed shows the whole list again.
+		 *
+		 * @return {Promise<void>} Resolves once `rows` reflects the answer.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.2
+		 */
+		searchContent() {
+			const query = contentSearchQuery(this.searchWords)
+			if (query === null) {
+				return this.clearSearch()
+			}
+			this.loading = true
+			this.error = false
+			this.searchedWords = query.search
+			this.contentNotSearched = false
+			this.unread = []
+			return this.loadForHostObject('/apps/filinq/api/case-documents/files', (body) => {
+				this.rows = Array.isArray(body.results) ? body.results : []
+				this.contentNotSearched = contentUnavailable(body)
+				this.unread = unreadFileIds(body)
+			}, query)
+		},
+
+		/**
+		 * Have the documents read that have no extracted text yet, then
+		 * search again so they can be found by content.
+		 *
+		 * @return {Promise<void>} Resolves once the search is run again.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.3
+		 */
+		async readUnread() {
+			this.reading = true
+			this.readMessage = ''
+			const outcome = await readFiles(this.unread, this.requestToken())
+			this.reading = false
+			this.readMessage = outcome.failed > 0
+				? n('filinq', '%n document could not be read', '%n documents could not be read', outcome.failed)
+				: ''
+			this.searchWords = this.searchedWords
+			await this.searchContent()
+		},
+
+		/**
+		 * Leave the search and show every document of this record again.
+		 *
+		 * @return {Promise<void>} Resolves once `rows` reflects the answer.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.2
+		 */
+		clearSearch() {
+			this.searchWords = ''
+			this.searchedWords = ''
+			this.contentNotSearched = false
+			this.unread = []
+			this.readMessage = ''
+			this.loading = true
+			this.error = false
+			return this.load()
+		},
+
+		/**
+		 * The snippet of a content match, split so the searched words are marked.
+		 *
+		 * @param {object} row One flat-list row in content mode.
+		 * @return {Array<{text: string, marked: boolean}>} The parts.
+		 * @spec openspec/changes/work-content-search/tasks.md#task-2.2
+		 */
+		snippetParts(row) {
+			return markedSnippet(row.snippet, this.searchedWords)
+		},
+
+		/**
+		 * Read the flat list for the host object.
+		 *
+		 * @return {Promise<void>} Resolves once `rows` reflects the answer.
+		 *
+		 * @spec openspec/changes/leaf-integrations/specs/document-register/spec.md
+		 */
+		load() {
+			return this.loadHostRows('/apps/filinq/api/case-documents/files')
+		},
+	},
+}
+</script>
+
+<style scoped>
+.filinq-documents-leaf__list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.filinq-documents-leaf__item {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 8px;
+	padding: 4px 0;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.filinq-documents-leaf__sort {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+	margin-bottom: 4px;
+}
+
+.filinq-documents-leaf__sort-button {
+	background: var(--color-main-background);
+	color: var(--color-main-text);
+	border: 1px solid var(--color-border-dark);
+	border-radius: var(--border-radius);
+	padding: 2px 8px;
+	cursor: pointer;
+}
+
+.filinq-documents-leaf__sort-button[aria-pressed='true'] {
+	border-color: var(--color-primary-element);
+}
+
+.filinq-documents-leaf__actions {
+	display: flex;
+	gap: 4px;
+}
+
+.filinq-documents-leaf__link-form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 8px;
+	flex-basis: 100%;
+}
+
+.filinq-documents-leaf__link-form label {
+	display: flex;
+	flex-direction: column;
+	font-size: 0.9em;
+}
+
+.filinq-documents-leaf__date,
+.filinq-documents-leaf__status {
+	color: var(--color-text-maxcontrast);
+	font-size: 0.9em;
+}
+
+.filinq-documents-leaf__search {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: 4px;
+	margin-bottom: 8px;
+}
+
+.filinq-documents-leaf__snippet {
+	display: block;
+	flex-basis: 100%;
+	color: var(--color-text-maxcontrast);
+}
+
+.filinq-documents-leaf__snippet mark {
+	background-color: var(--color-primary-element-light);
+	color: var(--color-main-text);
+}
+
+.filinq-documents-leaf__state {
+	color: var(--color-text-maxcontrast);
+	margin: 0;
+}
+
+.filinq-documents-leaf__state--error {
+	color: var(--color-error);
+}
+</style>

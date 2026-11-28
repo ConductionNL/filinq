@@ -1,10 +1,29 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { translatePlural as n, translate as t } from '@nextcloud/l10n'
+import { computed } from 'vue'
+import ClassificationCard from '../components/ClassificationCard.vue'
+import DocumentLeafTabs from '../components/DocumentLeafTabs.vue'
+import MdtoPanel from '../components/MdtoPanel.vue'
+import { documentRecordIdFor } from '../services/documentLeafTabs.js'
 import {
 	anonymizationStore,
 	fileViewerStore,
 	myDocumentsStore,
 } from '../store/store.js'
+
+// The OpenRegister record the leaf tabs bind to. Empty for a document that has
+// never been through anonymisation, which hides the section rather than showing
+// three panels that can only ever be empty.
+const documentRecordId = computed(() =>
+	documentRecordIdFor(
+		myDocumentsStore.anonymizationLinks,
+		fileViewerStore.currentFile?.fileId,
+	),
+)
 </script>
 
 <template>
@@ -99,9 +118,45 @@ import {
 							)
 						}}
 					</div>
+					<div v-if="burnedRegionNote" class="muted" data-testid="burned-region-count">
+						{{ burnedRegionNote }}
+					</div>
 					<a :href="downloadUrl" download class="download-link">
 						{{ t('filinq', 'Download anonymised file') }}
 					</a>
+				</NcNoteCard>
+				<WaarmerkRunActions
+					:anonymizedFileId="entry.anonymizedFileId"
+					:fileName="entry.anonymizedFileName || ''"
+					:anonymizationLinkId="entry.anonymizationLinkId || null" />
+
+				<NcNoteCard
+					v-if="accessibility"
+					:type="accessibility.type"
+					class="accessibility-note">
+					<div>{{ accessibility.title }}</div>
+					<div class="muted">
+						{{ accessibility.detail }}
+					</div>
+					<ul v-if="accessibility.reasons.length">
+						<li v-for="reason in accessibility.reasons" :key="reason">
+							{{ reason }}
+						</li>
+					</ul>
+				</NcNoteCard>
+
+				<NcNoteCard
+					v-if="sanitizationRows.length"
+					type="info"
+					data-testid="anonymisation-sanitization-report">
+					<div>
+						{{ t('filinq', 'Hidden content removed from the copy') }}
+					</div>
+					<ul>
+						<li v-for="row in sanitizationRows" :key="row.key">
+							{{ row.label }}: {{ row.count }}
+						</li>
+					</ul>
 				</NcNoteCard>
 
 				<!-- Best-effort warning: the file was produced, but some entities
@@ -153,9 +208,12 @@ import {
 			     `[<TYPE>: <entity_id>]` placeholders baked into the file.
 			     Original values stay hidden behind an explicit reveal so
 			     opening the result doesn't silently de-anonymise it. -->
-			<DdRemovedEntitiesList
-				v-else-if="entry && entry.viewMode === 'anonymized'"
-				:items="entry.entities" />
+			<div v-else-if="entry && entry.viewMode === 'anonymized'">
+				<p v-if="burnedRegionNote" class="muted" data-testid="burned-region-count">
+					{{ burnedRegionNote }}
+				</p>
+				<DdRemovedEntitiesList :items="entry.entities" />
+			</div>
 
 			<!-- Add new data panel. The user selects text in the document
 			     (highlighted as pending), picks a type and optionally
@@ -196,7 +254,7 @@ import {
 					label="label"
 					:reduce="(o) => o.value"
 					:multiple="true"
-					:inputLabel="t('filinq', 'Grondslagen')"
+					:inputLabel="t('filinq', 'Legal bases')"
 					:placeholder="t('filinq', 'Pick grondslagen…')" />
 				<NcNoteCard v-if="saveError" type="error">
 					{{ saveError }}
@@ -233,6 +291,81 @@ import {
 			     Informational only — carries no action, hidden when no label resolved.
 			     Independent of the state chain above so it stays visible alongside
 			     whichever review state is currently showing. -->
+			<!-- A scan detection could not read (ocr-trigger-surface): an empty
+			     entity list here does not mean the document is clean. -->
+			<!-- The organisation's language model could not run, so the default
+			     detection produced these entities (llm-entity-detection-provider). -->
+			<NcNoteCard
+				v-if="entry && entry.detectionFellBack"
+				type="warning"
+				class="detection-fallback-warning"
+				data-testid="detection-fallback-warning">
+				{{ entry.detectionWarning }}
+			</NcNoteCard>
+			<p
+				v-else-if="entry && entry.detectionProvider === 'llm'"
+				class="detection-provider-note"
+				data-testid="detection-provider-note">
+				{{ t('filinq', 'These entities were found by the local language model.') }}
+			</p>
+
+			<NcNoteCard
+				v-if="entry && entry.ocrWarning"
+				type="warning"
+				class="ocr-warning">
+				{{ entry.ocrWarning }}
+			</NcNoteCard>
+
+			<NcNoteCard
+				v-if="entry && entry.imageWarning"
+				type="warning"
+				class="image-warning"
+				data-testid="image-redaction-warning">
+				{{ entry.imageWarning }}
+			</NcNoteCard>
+			<NcNoteCard
+				v-if="entry && imageRedactionPendingNote"
+				type="warning"
+				data-testid="image-redaction-pending">
+				{{ imageRedactionPendingNote }}
+			</NcNoteCard>
+
+			<!-- A page, a range of pages or the whole document in one action
+			     (image-redaction REQ-DDIMR-009): each decision is one row with
+			     its grounds; OpenRegister's image seam burns the pages. -->
+			<div
+				v-if="entry && entry.viewMode !== 'anonymized'"
+				class="scope-redaction"
+				data-testid="scope-redaction">
+				<ul v-if="scopeState.decisions.length" class="scope-redaction__rows">
+					<li
+						v-for="(decision, idx) in scopeState.decisions"
+						:key="'scope-' + idx"
+						data-testid="scope-decision-row">
+						<span class="scope-redaction__label">{{ scopeLabel(decision) }}</span>
+						<span class="scope-redaction__bases">{{ (decision.bases || []).join(', ') }}</span>
+					</li>
+				</ul>
+				<NcButton
+					wide
+					variant="secondary"
+					data-testid="scope-redaction-open"
+					@click="openScopeDialog">
+					<template #icon>
+						<FileHidden :size="20" />
+					</template>
+					{{ t('filinq', 'Redact pages or document') }}
+				</NcButton>
+			</div>
+			<ScopeRedactionDialog
+				v-if="scopeOpen && currentFileId"
+				:fileId="currentFileId"
+				:pageCount="scopeState.pageCount"
+				:pageScopesAvailable="scopeState.pageScopesAvailable"
+				:basesOptions="basesOptions"
+				@decided="onScopeDecided"
+				@close="scopeOpen = false" />
+
 			<div
 				v-if="entry && entry.confidentialityLabel"
 				class="confidentiality-chip-row">
@@ -287,7 +420,7 @@ import {
 		<div
 			v-else-if="
 				inDossier
-				&& (batchCount > 0
+				&& (pendingCount > 0
 					|| batchState.running
 					|| completedCount > 0
 					|| isReanonymizable
@@ -295,7 +428,7 @@ import {
 			"
 			class="sidebar-action-bar sidebar-action-bar--stacked">
 			<NcButton
-				v-if="batchCount > 0 || batchState.running"
+				v-if="pendingCount > 0 || batchState.running"
 				wide
 				variant="primary"
 				:disabled="batchState.running || batchCount === 0"
@@ -309,6 +442,25 @@ import {
 			<p v-if="batchSummary" class="dossier-batch-summary">
 				{{ batchSummary }}
 			</p>
+			<div
+				v-if="unreviewedPendingFiles.length > 0 && !batchState.running"
+				class="dossier-review-pending">
+				<p class="dossier-batch-summary">
+					{{
+						n(
+							'filinq',
+							'%n file still needs a check before it can be anonymised:',
+							'%n files still need a check before they can be anonymised:',
+							unreviewedPendingFiles.length,
+						)
+					}}
+				</p>
+				<ul class="dossier-review-pending__list">
+					<li v-for="file in unreviewedPendingFiles" :key="file.fileId">
+						{{ file.fileName }}
+					</li>
+				</ul>
+			</div>
 			<!-- Re-anonymise the currently open file (its original is on screen),
 			     alongside the dossier batch action. Recognised via the durable link
 			     register, so it works for dossiers anonymised in an earlier session. -->
@@ -326,11 +478,20 @@ import {
 			</NcButton>
 			<!-- Second step of a re-anonymise: the source is re-extracted, run the
 			     new anonymisation for just this file (overwrites its output). -->
+			<ReviewMarkCard
+				v-if="reanonReviewActive"
+				:mark="entry.reviewMark || null"
+				:checked="entryChecked"
+				:busy="!!entry.reviewing"
+				:disabled="includedCount === 0 || isAnonymising"
+				:error="reviewMessage"
+				:colleagueHint="colleagueHintText"
+				@confirm="onMarkChecked" />
 			<NcButton
 				v-if="reanonReviewActive"
 				wide
 				variant="primary"
-				:disabled="includedCount === 0 || isAnonymising"
+				:disabled="includedCount === 0 || isAnonymising || !entryChecked || colleagueRequired"
 				@click="onAnonymise">
 				<template v-if="isAnonymising" #icon>
 					<NcLoadingIcon :size="20" />
@@ -373,10 +534,54 @@ import {
 		<!-- Single-file review: per-file anonymise button. -->
 		<div
 			v-else-if="entry && entry.status === 'extracted'"
-			class="sidebar-action-bar">
+			class="sidebar-action-bar sidebar-action-bar--stacked">
+			<!-- Reversible pseudonymisation: irreversible stays the default, so
+			     nothing changes unless the operator chooses to keep a key. -->
+			<fieldset class="anonymise-mode">
+				<legend class="anonymise-mode__legend">
+					{{ t('filinq', 'After anonymising') }}
+				</legend>
+				<NcCheckboxRadioSwitch
+					v-model="anonymiseMode"
+					type="radio"
+					name="anonymise-mode"
+					value="irreversible">
+					{{ t('filinq', 'Keep no key (names cannot be restored)') }}
+				</NcCheckboxRadioSwitch>
+				<NcCheckboxRadioSwitch
+					v-model="anonymiseMode"
+					type="radio"
+					name="anonymise-mode"
+					value="reversible">
+					{{
+						t(
+							'filinq',
+							'Keep an encrypted key, so a permitted colleague can restore the names',
+						)
+					}}
+				</NcCheckboxRadioSwitch>
+			</fieldset>
+			<ReviewMarkCard
+				:mark="entry.reviewMark || null"
+				:checked="entryChecked"
+				:busy="!!entry.reviewing"
+				:disabled="includedCount === 0 || isAnonymising"
+				:error="reviewMessage"
+				:colleagueHint="colleagueHintText"
+				@confirm="onMarkChecked" />
+			<router-link
+				class="review-workbench-link"
+				data-testid="open-review-workbench"
+				:to="{
+					name: 'ReviewWorkbench',
+					params: { fileId: entry.fileId },
+					query: { name: entry.name, path: entry.filePath },
+				}">
+				{{ t('filinq', 'Open in review workbench') }}
+			</router-link>
 			<NcButton
 				variant="primary"
-				:disabled="includedCount === 0 || isAnonymising"
+				:disabled="includedCount === 0 || isAnonymising || !entryChecked || colleagueRequired"
 				@click="onAnonymise">
 				<template v-if="isAnonymising" #icon>
 					<NcLoadingIcon :size="20" />
@@ -415,6 +620,24 @@ import {
 		<div
 			v-else-if="isViewingAnonymizedResult"
 			class="sidebar-action-bar sidebar-action-bar--stacked">
+			<NcNoteCard v-if="keyWarningText" type="warning">
+				{{ keyWarningText }}
+			</NcNoteCard>
+			<NcButton
+				v-if="pseudonymStatus && pseudonymStatus.mayRestore"
+				wide
+				variant="secondary"
+				@click="restoreOpen = true">
+				<template #icon>
+					<KeyVariant :size="20" />
+				</template>
+				{{ t('filinq', 'Restore original') }}
+			</NcButton>
+			<RestoreOriginalDialog
+				v-if="restoreOpen && pseudonymStatus"
+				:linkId="pseudonymStatus.linkId"
+				:entryCount="pseudonymStatus.entryCount"
+				@close="restoreOpen = false" />
 			<NcButton wide variant="primary" :disabled="exporting" @click="onExport">
 				<template #icon>
 					<NcLoadingIcon v-if="exporting" :size="20" />
@@ -432,21 +655,38 @@ import {
 				{{ exportError }}
 			</p>
 		</div>
+		<!-- The contacts / activity / shares leaves, rendered by the registry's
+		     own tab host. This sits BELOW the app-owned review surface and adds
+		     nothing to it: anonymisation, redaction and signing stay Filinq's
+		     own, because no leaf provides them and Filinq is the service that
+		     does (ADR-022 documented exception). -->
+		<!-- The document's classification suggestion, when it has one
+		     (inbound-auto-classification): confirm, correct or reject. -->
+		<!-- The document's MDTO archival metadata (tmlo-mdto-metadata). -->
+		<MdtoPanel :objectId="documentRecordId" objectType="document" />
+		<ClassificationCard :fileId="currentFileId" />
+		<DocumentLeafTabs
+			register="filinq"
+			schema="anonymizationLink"
+			:objectId="documentRecordId" />
 	</NcAppSidebar>
 </template>
 
 <script>
+import { getCurrentUser } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
-import { generateRemoteUrl } from '@nextcloud/router'
 import {
 	NcAppSidebar,
 	NcButton,
+	NcCheckboxRadioSwitch,
 	NcLoadingIcon,
 	NcNoteCard,
 	NcSelect,
 } from '@nextcloud/vue'
 import JSZip from 'jszip'
 import Download from 'vue-material-design-icons/Download.vue'
+import FileHidden from 'vue-material-design-icons/FileHidden.vue'
+import KeyVariant from 'vue-material-design-icons/KeyVariant.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
 import ShieldLockOutline from 'vue-material-design-icons/ShieldLockOutline.vue'
 import ShieldRefreshOutline from 'vue-material-design-icons/ShieldRefreshOutline.vue'
@@ -454,15 +694,28 @@ import DdEntityCard from '../components/DdEntityCard.vue'
 import DdRemovedEntitiesList from '../components/DdRemovedEntitiesList.vue'
 import DdSearchBar from '../components/DdSearchBar.vue'
 import DdToggle from '../components/DdToggle.vue'
+import ReviewMarkCard from '../components/ReviewMarkCard.vue'
+import WaarmerkRunActions from '../components/WaarmerkRunActions.vue'
 import ProhibitionBlockedDialog from '../dialogs/ProhibitionBlockedDialog.vue'
+import RestoreOriginalDialog from '../dialogs/RestoreOriginalDialog.vue'
+import ScopeRedactionDialog from '../dialogs/ScopeRedactionDialog.vue'
 import { fetchBaseOptions } from '../services/bases.js'
 import { ENTITY_TYPES, entityTypeLabel } from '../services/entityTypes.js'
+import { colleagueHint, colleagueReason } from '../services/fourEyes.js'
+import { burnedRegionLine, fetchScope, imageRedactionWarning, regionOverlays, scopeLabel, scopeOverlays } from '../services/imageRedaction.js'
+import { fetchPseudonymStatus, keyWarning } from '../services/pseudonymisation.js'
+import { accessibilityNote } from '../services/redactionAccessibility.js'
+import { reportRows } from '../services/sanitization.js'
+import { encodedWebdavDownloadUrl } from '../services/storagePathUrls.js'
+import { entryIsChecked } from '../store/modules/anonymization.js'
+import { useSettingsStore } from '../store/modules/settings.js'
 
 export default {
 	name: 'FileViewerSidebar',
 	components: {
 		NcAppSidebar,
 		NcButton,
+		NcCheckboxRadioSwitch,
 		DdToggle,
 		NcLoadingIcon,
 		NcNoteCard,
@@ -471,6 +724,12 @@ export default {
 		DdRemovedEntitiesList,
 		DdSearchBar,
 		ProhibitionBlockedDialog,
+		RestoreOriginalDialog,
+		ScopeRedactionDialog,
+		FileHidden,
+		ReviewMarkCard,
+		WaarmerkRunActions,
+		KeyVariant,
 		Plus,
 		ShieldLockOutline,
 		ShieldRefreshOutline,
@@ -505,10 +764,38 @@ export default {
 			exporting: false,
 			// Set when the export download could not be produced.
 			exportError: '',
+			// Reversible pseudonymisation: the mode chosen for the next run,
+			// and what the server says about the copy on screen.
+			anonymiseMode: 'irreversible',
+			pseudonymStatus: null,
+			restoreOpen: false,
+			// Scope redaction (image-redaction REQ-DDIMR-009).
+			scopeOpen: false,
+			scopeState: { decisions: [], pageCount: 0, pageScopesAvailable: false },
 		}
 	},
 
 	computed: {
+		/**
+		 * The warning when the last anonymise left image content unredacted.
+		 *
+		 * @return {string|null} The warning.
+		 * @spec openspec/changes/image-redaction/tasks.md#task-4.2
+		 */
+		imageRedactionPendingNote() {
+			return imageRedactionWarning(this.entry)
+		},
+
+		/**
+		 * The burned-region count beside the replacement count.
+		 *
+		 * @return {string|null} The line, or null when nothing was burned.
+		 * @spec openspec/changes/image-redaction/tasks.md#task-4.2
+		 */
+		burnedRegionNote() {
+			return burnedRegionLine(this.entry)
+		},
+
 		/**
 		 * Id of the file currently open in the viewer, or null. Watched to
 		 * trigger entity loading — a plain instance computed fires reliably
@@ -527,6 +814,26 @@ export default {
 		 *
 		 * @return {object|undefined} Queue entry or undefined when not yet loaded.
 		 */
+		/**
+		 * What the redaction did to the copy's accessibility.
+		 *
+		 * @return {object|null}
+		 * @spec openspec/changes/archive/2026-09-29-accessible-redaction-output/tasks.md#task-3.1
+		 */
+		accessibility() {
+			return accessibilityNote(this.entry?.structurePreservation)
+		},
+
+		/**
+		 * What OpenRegister's office sanitiser removed from the anonymised copy.
+		 *
+		 * @return {Array<object>} Label and count per category.
+		 * @spec openspec/changes/archive/2026-11-21-document-sanitization/tasks.md#3-3
+		 */
+		sanitizationRows() {
+			return reportRows(this.entry?.sanitizationReport)
+		},
+
 		entry() {
 			const file = fileViewerStore.currentFile
 			if (!file) {
@@ -682,15 +989,109 @@ export default {
 		},
 
 		/**
-		 * Number of dossier files still awaiting anonymisation. Counts the
-		 * listing's pending source files (see `pendingSourceFiles`) rather than
-		 * the store's `extracted` queue, so it covers files not yet opened —
-		 * the batch is one unit, so the count must reflect the whole dossier.
+		 * Number of dossier files the batch will anonymise: the pending source
+		 * files (see `pendingSourceFiles`) whose findings a person checked.
 		 *
 		 * @return {number}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		batchCount() {
+			return this.reviewedPendingFiles.length
+		},
+
+		/**
+		 * Number of dossier source files without an anonymised copy yet,
+		 * checked or not. Keeps the dossier footer on screen.
+		 *
+		 * @return {number}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		pendingCount() {
 			return this.pendingSourceFiles.length
+		},
+
+		/**
+		 * Pending dossier files whose findings a person checked as they are now.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		reviewedPendingFiles() {
+			return this.pendingSourceFiles.filter((d) =>
+				entryIsChecked(anonymizationStore.findByFileId(d.fileId)),
+			)
+		},
+
+		/**
+		 * Pending dossier files nobody checked yet. The batch leaves them alone.
+		 *
+		 * @return {Array<object>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		unreviewedPendingFiles() {
+			return this.pendingSourceFiles.filter(
+				(d) => !entryIsChecked(anonymizationStore.findByFileId(d.fileId)),
+			)
+		},
+
+		/**
+		 * Whether a person checked the open file's findings as they are now.
+		 *
+		 * @return {boolean}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		entryChecked() {
+			return entryIsChecked(this.entry)
+		},
+
+		/**
+		 * Why a colleague has to anonymise the open file, or '' (REQ-RWB-09).
+		 * A single file from this sidebar is not a Woo run, so only `always`
+		 * asks for four eyes up front; a refusal the server sent is kept.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/tasks.md#task-5
+		 */
+		fourEyesReason() {
+			return colleagueReason(this.entry, {
+				mode: useSettingsStore().getConfig?.redaction_four_eyes || 'woo',
+				wooRun: false,
+				uid: getCurrentUser()?.uid || '',
+			})
+		},
+
+		/**
+		 * @return {boolean} True when the signed-in person may not anonymise the open file.
+		 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
+		 */
+		colleagueRequired() {
+			return this.fourEyesReason !== ''
+		},
+
+		/**
+		 * @return {string} The sentence the review card shows, or ''.
+		 * @spec openspec/changes/archive/2026-11-20-redaction-four-eyes-setting/specs/redaction-output-guarantee/spec.md#requirement-the-person-who-anonymises-differs-from-the-person-who-checked-req-rwb-09
+		 */
+		colleagueHintText() {
+			return colleagueHint(this.fourEyesReason, t)
+		},
+
+		/**
+		 * Why the open file cannot be anonymised yet, or empty.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		reviewMessage() {
+			if (this.entry?.reviewError) {
+				return this.entry.reviewError
+			}
+			if (this.entry?.reviewRequired && !this.entryChecked) {
+				return (
+					this.entry.error || t('filinq', 'Check the detected data first')
+				)
+			}
+			return ''
 		},
 
 		/**
@@ -729,7 +1130,7 @@ export default {
 
 		/**
 		 * Label for the dossier batch button: a live progress count while
-		 * running, otherwise "Anonymize all files (N)". Mirrors
+		 * running, otherwise "Anonymize checked files (N)". Mirrors
 		 * FolderFilesNavigation so both entry points read identically.
 		 *
 		 * @return {string}
@@ -743,7 +1144,7 @@ export default {
 					total: this.batchState.total,
 				})
 			}
-			return t('filinq', 'Anonymize all files ({count})', {
+			return t('filinq', 'Anonymize checked files ({count})', {
 				count: this.batchCount,
 			})
 		},
@@ -824,6 +1225,29 @@ export default {
 				this.entry?.status === 'completed'
 				&& !!this.entry?.anonymizedFilePath
 			)
+		},
+
+		/**
+		 * The file id of the redacted copy on screen, or null when none is.
+		 *
+		 * @return {number|null}
+		 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.2
+		 */
+		restoreTargetFileId() {
+			if (!this.isViewingAnonymizedResult) {
+				return null
+			}
+			return this.entry?.anonymizedFileId || this.currentFileId
+		},
+
+		/**
+		 * The warning after a reversible run that kept no key, or ''.
+		 *
+		 * @return {string}
+		 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.1
+		 */
+		keyWarningText() {
+			return keyWarning(this.entry?.pseudonymisation)
 		},
 
 		/**
@@ -965,6 +1389,28 @@ export default {
 			return (this.entry.entities || [])
 				.filter((e) => e && e.value)
 				.map((e) => ({ value: e.value, type: e.type }))
+		},
+
+		/**
+		 * The image-region overlays of the review, from the same entity rows
+		 * as the table, so an overlay always shows its row's decision. Only
+		 * for the review step, like the highlights.
+		 *
+		 * The pages a scope decision covers are marked too, so a page range
+		 * shows in the preview as soon as it is stored.
+		 *
+		 * @return {Array<object>} Overlays from `regionOverlays()` and `scopeOverlays()`.
+		 * @spec openspec/changes/image-redaction/tasks.md#task-4.1
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+		 */
+		regionList() {
+			if (!this.entry || this.entry.viewMode === 'anonymized') {
+				return []
+			}
+			return [
+				...regionOverlays(this.entry.entities || []),
+				...scopeOverlays(this.scopeState.decisions, this.scopeState.pageCount),
+			]
 		},
 
 		/**
@@ -1115,24 +1561,10 @@ export default {
 		 * WebDAV download URL for the anonymised result, when available.
 		 *
 		 * @return {string}
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 		 */
 		downloadUrl() {
-			const path = this.entry?.anonymizedFilePath
-			if (!path) {
-				return ''
-			}
-			const parts = path.split('/')
-			const filesIndex = parts.indexOf('files')
-			if (filesIndex >= 0) {
-				// Encode each segment so a dossier/file name containing `?`,
-				// `#` or `&` doesn't corrupt the download URL.
-				const relativePath = parts
-					.slice(filesIndex + 1)
-					.map(encodeURIComponent)
-					.join('/')
-				return generateRemoteUrl('webdav') + '/' + relativePath
-			}
-			return generateRemoteUrl('webdav')
+			return encodedWebdavDownloadUrl(this.entry?.anonymizedFilePath)
 		},
 	},
 
@@ -1142,8 +1574,10 @@ export default {
 		 * `currentFileId` computed rather than `fileViewerStore.currentFile`
 		 * directly: the store is a `<script setup>` import, so it is NOT a
 		 * `this`-property and a string-path watch on it never fires.
+		 * It also reads the file's scope decisions, so their rows show.
 		 *
 		 * @param {number|null} fileId New file id (null when viewer closed).
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
 		 */
 		currentFileId: {
 			handler(fileId) {
@@ -1152,6 +1586,29 @@ export default {
 					return
 				}
 				this.loadEntitiesForCurrentFile(file)
+				this.loadScope()
+			},
+
+			immediate: true,
+		},
+
+		restoreTargetFileId: {
+			/**
+			 * Ask whether the redacted copy on screen kept a key.
+			 *
+			 * @param {number|null} fileId The copy's file id.
+			 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.2
+			 */
+			async handler(fileId) {
+				this.pseudonymStatus = null
+				this.restoreOpen = false
+				if (!fileId) {
+					return
+				}
+				const status = await fetchPseudonymStatus(fileId)
+				if (this.restoreTargetFileId === fileId) {
+					this.pseudonymStatus = status
+				}
 			},
 
 			immediate: true,
@@ -1172,6 +1629,21 @@ export default {
 			deep: true,
 			immediate: true,
 		},
+
+		/**
+		 * Push the image-region overlays to the viewer whenever a decision or
+		 * the entity list changes.
+		 *
+		 * @param {Array<object>} list Overlays to draw.
+		 */
+		regionList: {
+			handler(list) {
+				fileViewerStore.setImageRegions(list)
+			},
+
+			deep: true,
+			immediate: true,
+		},
 	},
 
 	async created() {
@@ -1181,6 +1653,46 @@ export default {
 	},
 
 	methods: {
+		scopeLabel,
+		/**
+		 * Read the document's scope state and open the dialog.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+		 */
+		async openScopeDialog() {
+			await this.loadScope()
+			this.scopeOpen = true
+		},
+
+		/**
+		 * Read the document's scope decisions, page count and seam state.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+		 */
+		async loadScope() {
+			if (!this.currentFileId) {
+				return
+			}
+			try {
+				this.scopeState = await fetchScope(this.currentFileId)
+			} catch {
+				this.scopeState = { decisions: [], pageCount: 0, pageScopesAvailable: false }
+			}
+		},
+
+		/**
+		 * A decision was stored and committed: show its row and close.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/image-redaction/tasks.md#task-6.3
+		 */
+		async onScopeDecided() {
+			this.scopeOpen = false
+			await this.loadScope()
+		},
+
 		entityTypeLabel,
 		/**
 		 * Toggle an entity's inclusion (= skip decision) through the guarded
@@ -1260,6 +1772,19 @@ export default {
 		},
 
 		/**
+		 * Record the reviewer's check of the open file's findings.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
+		 */
+		async onMarkChecked() {
+			if (!this.entry) {
+				return
+			}
+			await anonymizationStore.markEntryChecked(this.entry)
+		},
+
+		/**
 		 * Anonymise the current entry. Wraps the store action so the
 		 * footer button has a single click handler. On success, attach
 		 * the anonymised counterpart to the viewer store and switch over
@@ -1269,6 +1794,7 @@ export default {
 		 * `anonymizedFileId`.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-09-29-reversible-pseudonymization/tasks.md#task-4.1
 		 */
 		async onAnonymise() {
 			if (!this.entry) {
@@ -1277,12 +1803,13 @@ export default {
 			// When grondslagen are on, ask the backend to append the legal-grounds
 			// summary to the output. Both flags must travel together (see
 			// anonymiseEntry) or the summary is silently skipped.
-			await anonymizationStore.anonymiseEntry(
-				this.entry,
-				this.grondslagen
-					? { appendBasisSummary: true, outputFormat: 'pdf-only' }
-					: {},
-			)
+			const options = this.grondslagen
+				? { appendBasisSummary: true, outputFormat: 'pdf-only' }
+				: {}
+			if (this.anonymiseMode === 'reversible') {
+				options.reversible = true
+			}
+			await anonymizationStore.anonymiseEntry(this.entry, options)
 			if (this.entry.status === 'completed' && this.entry.anonymizedFileId) {
 				fileViewerStore.setAnonymizedVariant({
 					fileId: this.entry.anonymizedFileId,
@@ -1326,13 +1853,14 @@ export default {
 		 * identically.
 		 *
 		 * @return {Promise<void>}
+		 * @spec openspec/changes/archive/2026-10-30-anonymise-asks-for-the-review-mark/tasks.md#task-4
 		 */
 		async anonymizeAll() {
 			// Scope the run to the dossier's pending source files and pass full
 			// descriptors: the store extracts any file the user never opened
 			// before anonymising, so the batch covers the whole dossier — not
 			// just the files that happened to be opened in the viewer.
-			const files = this.pendingSourceFiles.map((d) => ({
+			const files = this.reviewedPendingFiles.map((d) => ({
 				fileId: d.fileId,
 				fileName: d.fileName,
 				path: `${myDocumentsStore.currentPath}/${d.fileName}`,
@@ -1362,23 +1890,10 @@ export default {
 		 *
 		 * @param {string} anonymizedFilePath Absolute storage path of the result.
 		 * @return {string} The WebDAV URL, or '' when no path is given.
+		 * @spec openspec/specs/batch-anonymization/spec.md#requirement-batch-anonymization
 		 */
 		downloadUrlFor(anonymizedFilePath) {
-			if (!anonymizedFilePath) {
-				return ''
-			}
-			const parts = anonymizedFilePath.split('/')
-			const filesIndex = parts.indexOf('files')
-			if (filesIndex >= 0) {
-				// Encode each segment so a dossier/file name containing `?`,
-				// `#` or `&` doesn't corrupt the download URL.
-				const relativePath = parts
-					.slice(filesIndex + 1)
-					.map(encodeURIComponent)
-					.join('/')
-				return generateRemoteUrl('webdav') + '/' + relativePath
-			}
-			return generateRemoteUrl('webdav')
+			return encodedWebdavDownloadUrl(anonymizedFilePath)
 		},
 
 		/**
@@ -1600,6 +2115,13 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.review-workbench-link {
+	display: block;
+	margin: 4px 0 8px;
+	color: var(--color-primary-element);
+	text-decoration: underline;
+}
+
 /* Match MainMenu / NcAppContent chrome: rounded card, soft shadow,
  * translucent background. Lib does not expose a variable for radius/shadow,
  * so override directly. */
@@ -1690,6 +2212,13 @@ export default {
  * the two read-only signals read consistently. */
 .confidentiality-chip-row {
 	padding: 4px 12px 0;
+}
+
+/* Which engine found the entities, when it is the language model. */
+.detection-provider-note {
+	margin: 4px 12px 0;
+	color: var(--color-text-maxcontrast);
+	font-size: var(--font-size-small, 13px);
 }
 
 .confidentiality-chip {
@@ -1846,6 +2375,18 @@ export default {
 	gap: 6px;
 }
 
+/* Reversible pseudonymisation: the mode choice above the anonymise button. */
+.anonymise-mode {
+	border: none;
+	margin: 0;
+	padding: 0;
+}
+
+.anonymise-mode__legend {
+	font-weight: bold;
+	margin-bottom: var(--default-grid-baseline, 4px);
+}
+
 .dossier-batch-summary {
 	margin: 0;
 	text-align: center;
@@ -1855,5 +2396,37 @@ export default {
 
 .dossier-batch-summary--error {
 	color: var(--color-error);
+}
+
+.dossier-review-pending__list {
+	margin: 4px 0 0;
+	padding-inline-start: 20px;
+	font-size: 0.85rem;
+	list-style: disc;
+}
+
+.scope-redaction {
+	display: flex;
+	flex-direction: column;
+	gap: var(--default-grid-baseline, 4px);
+	margin-block: calc(var(--default-grid-baseline, 4px) * 2);
+}
+
+.scope-redaction__rows {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.scope-redaction__rows li {
+	display: flex;
+	justify-content: space-between;
+	gap: calc(var(--default-grid-baseline, 4px) * 2);
+	padding-block: var(--default-grid-baseline, 4px);
+	border-bottom: 1px solid var(--color-border);
+}
+
+.scope-redaction__bases {
+	color: var(--color-text-maxcontrast);
 }
 </style>

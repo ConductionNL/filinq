@@ -1,0 +1,50 @@
+{
+	"$comment": "A letter template pipelinq's letter dialog offers (PqBriefOpstellen): \"Uitnodiging gesprek vergunning\" in the pipelinq namespace. It reads the client and, when the letter is about a ticket, that ticket (pipelinq passes them as `client` and `ticket`), and names the fields it fills in `mergeFields`, so the dialog's preview lists them under Voor je ingevuld.",
+	"objects": [
+		{
+			"key": "sjabloon-pipelinq-uitnodiging-gesprek-vergunning",
+			"register": "filinq",
+			"schema": "template",
+			"verbatimFields": [
+				"content"
+			],
+			"data": {
+				"name": "Uitnodiging gesprek vergunning",
+				"slug": "uitnodiging-gesprek-vergunning",
+				"namespace": "pipelinq",
+				"description": "Een brief van Gemeente Zuiddrecht die een inwoner of bedrijf uitnodigt voor een gesprek over een vergunningaanvraag: adres, kenmerk van het verzoek, aanhef en onderwerp.",
+				"format": "A4",
+				"orientation": "P",
+				"category": "Brieven",
+				"tags": [
+					"brief",
+					"pipelinq",
+					"vergunning"
+				],
+				"mergeFields": [
+					{
+						"path": "client.name",
+						"label": "Aanhef",
+						"source": "uit de klantgegevens"
+					},
+					{
+						"path": "client.address",
+						"label": "Adres",
+						"source": "uit de klantgegevens"
+					},
+					{
+						"path": "ticket.reference",
+						"label": "Kenmerk",
+						"source": "het open ticket"
+					},
+					{
+						"path": "ticket.title",
+						"label": "Onderwerp",
+						"source": "het open ticket"
+					}
+				],
+				"content": "<p>Gemeente Zuiddrecht</p><p>{{ client.name }}<br>{{ client.address }}</p><p>Ons kenmerk: {{ ticket.reference }}</p><p>Geachte {{ client.name }},</p><p>U heeft ons gevraagd om een vergunning: {{ ticket.title }}. Wij nodigen u uit voor een gesprek om uw aanvraag samen door te nemen. Neem dit kenmerk mee naar het gesprek.</p><p>Met vriendelijke groet,</p><p>Gemeente Zuiddrecht</p>"
+			}
+		}
+	]
+}

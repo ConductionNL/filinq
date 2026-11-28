@@ -35,6 +35,7 @@ namespace OCA\Filinq\Tests\Unit\Service;
 use OCA\Filinq\Service\BasesResolverService;
 use OCA\Filinq\Service\EntityConsolidationService;
 use OCA\Filinq\Service\PolicyMatchService;
+use OCA\Filinq\Service\Support\OpenRegisterAccess;
 use OCA\Filinq\Service\WooProfileService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -133,10 +134,9 @@ class EntityConsolidationProhibitionTest extends TestCase {
 		$this->container->method('get')->willReturn($mockMapper);
 
 		return new EntityConsolidationService(
+			openRegister: new OpenRegisterAccess(apps: $this->appManager, container: $this->container),
 			logger: $this->logger,
 			wooProfile: $this->wooProfile,
-			appManager: $this->appManager,
-			container: $this->container,
 			policyMatch: $policyMatch,
 			basesResolver: $basesResolver,
 			appConfig: $this->appConfig
@@ -170,10 +170,9 @@ class EntityConsolidationProhibitionTest extends TestCase {
 		$this->container->method('get')->willReturn($mockMapper);
 
 		return new EntityConsolidationService(
+			openRegister: new OpenRegisterAccess(apps: $this->appManager, container: $this->container),
 			logger: $this->logger,
 			wooProfile: $this->wooProfile,
-			appManager: $this->appManager,
-			container: $this->container,
 			policyMatch: $policyMatch,
 			basesResolver: $basesResolver,
 			appConfig: $this->appConfig
@@ -281,6 +280,37 @@ class EntityConsolidationProhibitionTest extends TestCase {
 		$this->assertTrue($result[0]['prohibitionMatch']['highConfidence']);
 
 	}//end testHighConfidenceTrueAtThresholdBoundary()
+
+	/**
+	 * The threshold is read under the key the spec and the review screen use:
+	 * at 0.95 there, a 0.90 match is no longer high-confidence.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/anonymisation-prohibition-gate/spec.md
+	 */
+	public function testTheThresholdIsReadUnderTheSpecifiedKey(): void {
+		$this->appConfig = $this->createMock(IAppConfig::class);
+		$this->appConfig->method('getValueFloat')->willReturnCallback(
+			static fn (string $app, string $key, float $default = 0.0): float => ($app === 'filinq' && $key === 'filinq.prohibition.high_confidence_threshold') ? 0.95 : $default
+		);
+
+		$policyMatch = $this->createMock(PolicyMatchService::class);
+		$policyMatch->method('matchProhibitionHint')->willReturn(['ruleId' => 'R-key', 'ruleName' => 'Key Rule']);
+		$basesResolver = $this->createMock(BasesResolverService::class);
+		$basesResolver->method('resolveBasesForBatch')->willReturn([]);
+
+		$service = $this->buildServiceWithEntities(
+			entities: [['entity_type' => 'PERSON', 'entity_value' => 'Entity', 'confidence' => 0.90]],
+			policyMatch: $policyMatch,
+			basesResolver: $basesResolver
+		);
+
+		$result = $service->consolidateEntities(batch: ['status' => 'review', 'files' => [['fileId' => 1, 'status' => 'extracted']]]);
+
+		$this->assertFalse($result[0]['prohibitionMatch']['highConfidence']);
+
+	}//end testTheThresholdIsReadUnderTheSpecifiedKey()
 
 	/**
 	 * highConfidence is false when highestConfidence < threshold.

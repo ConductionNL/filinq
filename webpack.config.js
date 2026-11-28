@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 const path = require('path')
 const fs = require('fs')
 const TerserPlugin = require('terser-webpack-plugin')
@@ -59,6 +63,53 @@ webpackConfig.entry = {
 		import: path.join(__dirname, 'src', 'dashboard.js'),
 		filename: appId + '-dashboard.js',
 	},
+	// The CLIENT half of this app's OpenRegister leaves, as its own entry.
+	//
+	// OpenRegister's LeafScriptListener enqueues `filinq-leaves` on the pages of
+	// apps that consume OpenRegister, so the documents leaf renders where the
+	// object is shown. THE ENTRY NAME MATTERS: the listener looks for the
+	// `leaves` entry and, failing that, for `js/filinq-leaves.js`, and it SKIPS
+	// the app when neither exists — silently, because enqueuing a script that is
+	// not there would 404 on someone else's page. A leaf whose server half is
+	// registered and whose bundle is missing is dark with every check green.
+	//
+	// Never fold this into `main`: that bundle is the whole SPA and would land
+	// on every page of every consuming app.
+	leaves: {
+		import: path.join(__dirname, 'src', 'leaves.js'),
+		filename: appId + '-leaves.js',
+	},
+	// The original/delivered split view for OTHER apps, as
+	// `OCA.Filinq.mountCompare` (anonymization-review-workbench REQ-DDARW-014).
+	// Loaded by the host only when its compare dialog opens. Kept out of the
+	// shared chunks below (see `chunks`), so the host loads this one file.
+	compare: {
+		import: path.join(__dirname, 'src', 'compare.js'),
+		filename: appId + '-compare.js',
+	},
+	// The Filinq operations in the Nextcloud Flow rule builder (flow-operations
+	// task 3.1). Loaded by RegisterFlowOperationsListener on the Flow settings
+	// page, which Filinq does not own; kept out of the shared chunks like
+	// `compare`, so that page loads this one file.
+	flowOperations: {
+		import: path.join(__dirname, 'src', 'flowOperations.js'),
+		filename: appId + '-flow-operations.js',
+	},
+	// The public waarmerk verification page (document-waarmerk-certification):
+	// a guest page outside the app shell, so it is one self-contained file
+	// like `compare` (see `chunks`).
+	waarmerkVerify: {
+		import: path.join(__dirname, 'src', 'waarmerkVerify.js'),
+		filename: appId + '-waarmerkVerify.js',
+	},
+	// The public signature verification page (signature-verification-portal
+	// REQ-DDSVP-001), for a visitor with no account: `main` is the signed-in
+	// shell, which an anonymous visitor cannot load. templates/verify.php
+	// loads the shared chunks before it.
+	verify: {
+		import: path.join(__dirname, 'src', 'verify.js'),
+		filename: appId + '-verify.js',
+	},
 }
 
 // Use local source when available (monorepo dev), otherwise fall back to npm package.
@@ -118,7 +169,9 @@ webpackConfig.resolve.alias = {
 	...webpackConfig.resolve.alias,
 	...(useLocalLib ? { '@conduction/nextcloud-vue': localLib } : {}),
 	vue$: path.resolve(__dirname, 'node_modules/vue'),
-	pinia$: path.resolve(__dirname, 'node_modules/pinia'),
+	// pinia 4 is ESM-only too (only an `exports` map), so the same applies:
+	// alias the resolved entry FILE, not the package directory.
+	pinia$: require.resolve('pinia', { paths: [__dirname] }),
 	// @nextcloud/vue@9, @nextcloud/dialogs@7 and vue-router@5 are ESM-only:
 	// their package.json has NO `main` and NO `module`, only an `exports` map.
 	// A Vue-2-era alias to the package DIRECTORY bypasses `exports` entirely
@@ -187,7 +240,11 @@ webpackConfig.optimization = {
 	minimizer: [new TerserPlugin({ parallel: 2 })],
 	splitChunks: {
 		...(webpackConfig.optimization?.splitChunks || {}),
-		chunks: 'all',
+		// Every entry shares the framework chunks except `compare`,
+		// `flowOperations` and `waarmerkVerify`: another app's page, or a guest
+		// page outside the app shell, loads those bundles and cannot know these
+		// chunk names.
+		chunks: (chunk) => chunk.name !== 'compare' && chunk.name !== 'flowOperations' && chunk.name !== 'waarmerkVerify',
 		cacheGroups: {
 			default: false,
 			defaultVendors: false,
@@ -214,4 +271,10 @@ webpackConfig.optimization = {
 	},
 }
 
-module.exports = webpackConfig
+// nextcloud-vue's stylesheet is linked by templates/index.php as css/nextcloud-vue.css
+// (LibraryStylesheetCopy) instead of inserted from the bundle as text, and
+// withLeanBundles keeps the library's async chunks out of the shared chunks.
+const { LibraryStylesheetCopy, withLeanBundles } = require('@conduction/nextcloud-vue/webpack')
+webpackConfig.plugins.push(new LibraryStylesheetCopy())
+
+module.exports = withLeanBundles(webpackConfig)

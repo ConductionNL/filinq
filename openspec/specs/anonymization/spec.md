@@ -8,7 +8,7 @@ or_adoption_change: docudesk-adopt-or-abstractions
 **Status**: in-progress
 **OpenSpec changes**:
 - [image-redaction](../../changes/image-redaction/) _(active)_ — extract response gains image-origin entities with region geometry, anonymise gains the pixel-burn step for image-bearing content with a fail-flagged contract (REQ-DDIMR-007/008) (kind: code)
-- [document-sanitization](../../changes/document-sanitization/) _(active)_ — anonymisation runs persist/surface OpenRegister's sanitization report and the anonymise endpoint gains the additive opt-in `sanitize` flag for the final artifact (REQ-DDSAN-006/007) (kind: code)
+- [document-sanitization](../../changes/archive/2026-11-21-document-sanitization/) _(archived 2026-11-21)_ — anonymisation runs persist/surface OpenRegister's sanitization report and the anonymise endpoint gains the additive opt-in `sanitize` flag for the final artifact (REQ-DDSAN-006/007) (kind: code)
 - [odt-anonymisation-frontend](../../changes/odt-anonymisation-frontend/) _(active)_ — ODT accepted by the upload widget (kind: code)
 
 ## Purpose
@@ -21,6 +21,8 @@ Provides a complete document anonymization pipeline: files are stored as **OR Fi
 - **Decision 3** — Anonymization-result confidence, risk-level, entity-density, and redaction-coverage are declared as `x-openregister-calculations` annotations on the file-attachment extension schema, NOT populated by ad-hoc writes in `AnonymizationService`. Service code calls `lifecycleService->transitionTo()` for state changes; OR derives calculated fields automatically.
 - **Decision 2** — `anonymizationResult` objects (if stored separately) carry `x-openregister-archival.retention: P1Y` (Archiefwet cat. 1.2: operational processing logs). File attachments inherit OR's standard retention; DPO sign-off required for legal-hold override.
 - **Decision 5** — Status strings on the wire stay the same (`uploaded`, `extracted`, `anonymized`). Lifecycle annotation maps these states; no renaming.
+
+## Requirements
 
 ### Requirement: File Input via OR File Attachments (REQ-ANON-00)
 
@@ -78,7 +80,7 @@ Uploaded files MUST be stored as OR File Attachments, not by filinq-specific sto
 | ANON-CAL-001 | `x-openregister-calculations` declared for: anonymizationConfidence, riskScore, riskLevel, entityDensity, redactionCoverage | MUST | Implementing |
 | ANON-CAL-002 | AnonymizationService does not contain direct writes to calculated fields | MUST | Apply-phase |
 | ANON-CAL-003 | OR PR raised if file-attachment schema is upstream and needs the extension | SHOULD | Apply-phase |
-## Requirements
+
 ### Requirement: File Upload to User-Scoped Folder (REQ-ANON-01)
 
 **Priority:** MUST
@@ -848,6 +850,427 @@ This delta MUST NOT modify the anonymise endpoint's request payload or its succe
 - **THEN** the response code and shape remain whatever the pre-change behaviour produced
 - **AND** the new 422 path applies ONLY to the blocking-consent case described above
 
+### Requirement: The anonymise endpoint MUST accept `outputFormat: "pdf-only"` and default to it
+
+The anonymise endpoint and `AnonymizationService::anonymizeDocument()` MUST accept `outputFormat` value `"pdf-only"` in addition to `"pdf"` and `"preserve"`. The allowed set MUST be exactly `["pdf-only", "pdf", "preserve"]`. When `outputFormat` is omitted, the endpoint MUST use the tenant default `filinq.anonymisation.default_output_format`, whose default value MUST be `"pdf-only"`. Any value outside the allowed set MUST be rejected with HTTP 400 whose body cites the three allowed values.
+
+#### Scenario: Default mode is pdf-only
+- **GIVEN** an anonymise request with no `outputFormat` specified
+- **AND** the tenant default is unset (so it resolves to `pdf-only`)
+- **WHEN** the endpoint processes a non-PDF input (e.g. DOCX)
+- **THEN** the resolved mode is `pdf-only`
+- **AND** the file written to Nextcloud Files is a PDF/A-3b
+- **AND** no native-format anonymised intermediate remains in Nextcloud Files
+
+#### Scenario: Invalid value is rejected with the widened allowed set
+- **GIVEN** an anonymise request with `outputFormat: "rtf"`
+- **WHEN** the endpoint processes the request
+- **THEN** the response is HTTP 400
+- **AND** the body cites the allowed values: `"pdf-only"`, `"pdf"`, `"preserve"`
+
+#### Scenario: Explicit pdf keeps the native intermediate
+- **GIVEN** an anonymise request with `outputFormat: "pdf"` and a DOCX input
+- **WHEN** the conversion succeeds
+- **THEN** the converted PDF is written to Nextcloud Files
+- **AND** the native-format anonymised intermediate is also kept (today's `pdf` behaviour, unchanged)
+
+#### Scenario: Explicit preserve skips conversion
+- **GIVEN** an anonymise request with `outputFormat: "preserve"` and a DOCX input
+- **WHEN** the endpoint processes the request
+- **THEN** the resulting file is the native DOCX
+- **AND** no conversion is attempted and nothing is deleted
+
+### Requirement: In `pdf-only` mode the native intermediate MUST be deleted after a successful conversion
+
+When the resolved mode is `pdf-only` and a conversion actually occurs (the anonymised result is not already a PDF), `AnonymizationService::anonymizeDocument()` MUST, after `PdfConversionService::convertToPdf()` returns successfully, delete the native-format anonymised intermediate that was the conversion's source. The reference to that native node MUST be captured before the converted-PDF node replaces it, so the converted PDF is never the deletion target. The recorded `anonymizationLink.anonymizedFileId` MUST point at the converted PDF (no relation or schema change is required — it already does).
+
+#### Scenario: Successful pdf-only conversion deletes the native intermediate
+- **GIVEN** an anonymise request resolved to `pdf-only` with a DOCX input
+- **AND** at least one conversion backend is available and capable
+- **WHEN** the conversion succeeds
+- **THEN** the converted PDF/A-3b is written to Nextcloud Files
+- **AND** the native-format anonymised intermediate (the conversion source) is deleted
+- **AND** the converted PDF is NOT deleted
+- **AND** the `anonymizationLink` relation points at the converted PDF id
+
+### Requirement: The `pdf-only` deletion MUST be best-effort and never fail the run
+
+The native-intermediate deletion MUST mirror the existing conversion-failure rollback pattern: attempt `delete()`, catch `Throwable`, log a PII-free warning, and continue. A deletion failure MUST NOT abort the anonymise run, alter the success response, or change the recorded relation. The run has already succeeded (PDF written, relation recorded) before cleanup runs.
+
+#### Scenario: Deletion failure is swallowed and the run still succeeds
+- **GIVEN** an anonymise request resolved to `pdf-only` with a DOCX input
+- **AND** the conversion succeeds but deleting the native intermediate throws (e.g. a locked or already-removed node)
+- **WHEN** the cleanup runs
+- **THEN** the failure is caught and logged at warning level (file id + exception class/message, no PII)
+- **AND** the anonymise run still returns its success response with the PDF metadata
+- **AND** the recorded `anonymizationLink` is unchanged
+
+### Requirement: `pdf-only` MUST be a no-op delete when the result is already a PDF
+
+When the anonymised result is already a PDF, the conversion gate (guarded by `mime !== "application/pdf"`) is skipped, so no native intermediate is created. In that case `pdf-only` MUST behave identically to `pdf`: the PDF is written, no conversion runs, and there is nothing extra to delete.
+
+#### Scenario: Already-a-PDF input deletes nothing
+- **GIVEN** an anonymise request resolved to `pdf-only` whose anonymised result is already `application/pdf`
+- **WHEN** the endpoint processes the request
+- **THEN** no conversion is attempted
+- **AND** no extra deletion occurs (there is no native intermediate)
+- **AND** the behaviour is identical to `outputFormat: "pdf"` for the same input
+
+### Requirement: The admin settings UI MUST let the operator choose the default among all three modes
+
+The Filinq admin settings panel MUST expose the tenant default `filinq.anonymisation.default_output_format` as a control that can select any of the three values `pdf-only`, `pdf`, `preserve` (not a two-state toggle). The control MUST load the persisted value, default to `pdf-only` when unset, and persist exactly the selected value without coercing an unrecognised/ third value to one of only two. A boolean toggle is insufficient because it cannot represent or preserve `pdf-only`.
+
+#### Scenario: Admin selects pdf-only and it persists
+- **GIVEN** the admin settings panel with the Anonymisation section
+- **WHEN** the operator selects the "PDF only" option and saves
+- **THEN** `filinq.anonymisation.default_output_format` is persisted as `pdf-only`
+- **AND** re-opening the panel shows "PDF only" selected
+
+#### Scenario: Saving the panel never clobbers pdf-only
+- **GIVEN** the persisted default is `pdf-only`
+- **WHEN** the operator opens the settings panel and saves without changing the output-format control
+- **THEN** the persisted value remains `pdf-only` (it is NOT coerced to `pdf` or `preserve`)
+
+### Requirement: KENTEKEN MUST be a curated, toggleable entity type
+
+`KENTEKEN` (Dutch vehicle registration / license plate) MUST be part of Filinq's curated entity-type vocabulary: it MUST appear as a toggle in the Settings entity-type selector, MUST be enabled by default (all-on), and MUST be carried in the entity-type whitelist handed to the detector when a subset is active — so OpenAnonymiser (which recognises license plates) detects it. No OpenRegister change is required: unmapped whitelist types pass through to the detector unchanged.
+
+#### Scenario: KENTEKEN is selectable in Settings
+
+- **WHEN** the selectable entity types are requested for the Settings selector
+- **THEN** the list includes `KENTEKEN`
+
+#### Scenario: KENTEKEN is enabled by default
+
+- **GIVEN** no stored entity-type selection
+- **WHEN** the enabled entity types are resolved
+- **THEN** the result includes `KENTEKEN` (the full curated set)
+
+#### Scenario: KENTEKEN is carried in a subset whitelist
+
+- **GIVEN** the operator enables a subset of entity types that includes `KENTEKEN`
+- **WHEN** the whitelist is handed to the detector
+- **THEN** `KENTEKEN` is present in the whitelist and reaches OpenAnonymiser unchanged
+
+### Requirement: The anonymisation upload widget MUST accept ODT files
+
+The Filinq anonymisation upload surface (`AnonymizationWidget.vue`) MUST accept `.odt` (OpenDocument Text, MIME `application/vnd.oasis.opendocument.text`) files for anonymisation, alongside the existing `docx`/`txt`/`pdf`/`eml` formats. Acceptance MUST hold both when the browser supplies the MIME type and when only the filename extension is available (drag-and-drop). The file input's `accept` attribute, the upload allow-list, and the user-facing "supported formats" copy MUST all include ODT, and the copy MUST have NL and EN translations.
+
+#### Scenario: An ODT selected from the file picker is accepted
+
+- **GIVEN** a file `brief.odt` with MIME `application/vnd.oasis.opendocument.text`
+- **WHEN** it is partitioned by the upload allow-list
+- **THEN** it is accepted (not rejected)
+
+#### Scenario: An ODT dropped without a MIME type is accepted by extension
+
+- **GIVEN** a file `brief.odt` whose browser-supplied MIME is empty
+- **WHEN** it is partitioned by the upload allow-list
+- **THEN** it is accepted on its `.odt` extension
+
+#### Scenario: Previously-supported formats still pass and unsupported formats are still rejected
+
+- **GIVEN** a batch containing `.docx`, `.odt`, `.pdf`, `.txt`, `.eml`, and an unsupported `.xlsx`
+- **WHEN** the batch is partitioned
+- **THEN** the docx/odt/pdf/txt/eml files are accepted
+- **AND** the `.xlsx` file is rejected and reported in the "supported formats" skip message
+
+### Requirement: The grondslagen seed MUST be the Woo Art. 5 grounds (A–S)
+
+The `dossier` register's `base` seed MUST contain the 19 Woo Art. 5 exception grounds (legend A–S), with article-derived slugs (`art-5-1-1-a` … `art-5-2-2`), a legend-prefixed Dutch `name` (e.g. "J — Persoonlijke levenssfeer"), and the Woo text + article reference in `description`. Demo seed references (`bases[]`) MUST use the new slugs.
+
+#### Scenario: The 19 grounds are seeded
+
+- **WHEN** the Filinq register configuration is imported
+- **THEN** the `base` objects include all 19 Woo Art. 5 grounds A–S with `art-5-*` slugs
+- **AND** no demo `dossier`/reference still points at a removed legacy slug
+
+### Requirement: Grondslag pickers MUST source the list from the register
+
+The anonymisation grondslag pickers MUST fetch the `base` objects from OpenRegister rather than a hardcoded list, display each grondslag's human `name`, and store its `slug`. On a fetch error the UI MUST fall back to a known slug list so the pickers keep working. No hardcoded grondslagen mirror may remain in the picker components.
+
+#### Scenario: Pickers show names and store slugs
+
+- **GIVEN** the register returns the seeded `base` objects
+- **WHEN** a grondslag picker renders its options
+- **THEN** each option shows the grondslag `name` and, when selected, persists the `slug`
+
+#### Scenario: Fetch failure falls back to the slug list
+
+- **GIVEN** the register is unreachable or returns no `base` objects
+- **WHEN** a grondslag picker loads
+- **THEN** it falls back to the known slug list and remains usable
+
+#### Scenario: No hardcoded mirror remains
+
+- **WHEN** the picker components are inspected
+- **THEN** they contain no hardcoded `BASES_OPTIONS` grondslagen list (they consume the shared fetch)
+
+### Requirement: Publication-policy features are labelled "Publish always" / "Publish never"
+
+The standing-consent feature MUST be presented to users as "Publish always" and the prohibition feature as "Publish never", at the main menu entry, the page title, and the add/edit dialog labels, with NL translations ("Altijd publiceren" / "Nooit publiceren"). Route names, component names, and store identifiers MUST remain unchanged (display labels only).
+
+#### Scenario: Menu shows the renamed labels
+
+- **WHEN** the main navigation is rendered
+- **THEN** the standing-consent entry reads "Publish always" and the prohibition entry reads "Publish never"
+
+#### Scenario: Page titles and add/edit dialogs use the new labels
+
+- **WHEN** the Publish-always or Publish-never page is opened
+- **THEN** its title uses the new label and its add/edit dialog reads "Add/Edit publish-always rule" / "Add/Edit publish-never rule"
+
+### Requirement: The two publication-policy pages are in the navigation
+
+The navigation MUST list "Publish always" and "Publish never" directly beneath Consent Management, each with a registered icon, so both pages open from the menu and not only by a typed URL. The earlier trim of Dashboard, Folder Analysis, Consent Management and Templates is superseded: those are core entries.
+
+#### Scenario: Both policy pages open from the menu
+
+- **WHEN** the main navigation is rendered
+- **THEN** it lists "Publish always" and "Publish never" beneath Consent Management
+- **AND** choosing either opens its page
+
+### Requirement: One anonymisation upload widget MUST serve every upload surface
+
+The Anonymisation page, the quick anonymisation section of the Filinq dashboard and the Nextcloud dashboard tile MUST render the same upload widget (`AnonymizationWidget`). No second upload widget with its own file list, dialog or routing MAY exist.
+
+#### Scenario: Every surface renders the same widget
+
+- **GIVEN** the Anonymisation page, the Filinq dashboard and the Nextcloud dashboard tile
+- **WHEN** each renders its upload area
+- **THEN** each mounts `AnonymizationWidget`
+- @e2e exclude component wiring, covered by tests/vitest/anonymizationWidgetMerged.spec.js
+
+### Requirement: The upload widget MUST accept .docx, .odt, .pdf, .txt and .eml everywhere
+
+The widget MUST accept Word (.docx), ODT, PDF, plain text and email (.eml) files on every surface, by MIME type or by file extension. Any other file MUST be skipped with the "supported formats" message, which names the skipped files.
+
+#### Scenario: An ODT and an email dropped on the Nextcloud dashboard are accepted
+
+- **GIVEN** the widget on the Nextcloud dashboard
+- **WHEN** the user drops `brief.odt` and `melding.eml`
+- **THEN** both files are accepted and the upload dialog opens for them
+- @e2e exclude the Nextcloud dashboard page is outside the app's e2e harness, covered by tests/vitest/anonymizationWidgetMerged.spec.js
+
+#### Scenario: An unsupported file is skipped with a message
+
+- **GIVEN** the widget on any surface
+- **WHEN** the user drops `begroting.xlsx` together with `brief.pdf`
+- **THEN** `brief.pdf` goes to the upload dialog
+- **AND** an error names `begroting.xlsx` as skipped
+- @e2e exclude covered by tests/vitest/anonymizationWidgetMerged.spec.js
+
+### Requirement: Every upload MUST go through the one upload dialog
+
+Each drop or file selection with at least one accepted file MUST open the upload dialog (`AnonymizationUploadDialog`) before anything is uploaded. With one file, the dialog shows its name and the grondslagen choice. With several files, it asks for an optional dossier name and the grondslagen choice. Cancel uploads nothing.
+
+#### Scenario: One file asks before it uploads
+
+- **GIVEN** the widget on the Filinq dashboard
+- **WHEN** the user selects one PDF
+- **THEN** the upload dialog opens in its single-file form
+- **AND** nothing is uploaded until the user confirms
+- @e2e exclude covered by tests/vitest/anonymizationWidgetMerged.spec.js
+
+#### Scenario: Several files ask for a dossier name
+
+- **GIVEN** the widget on any surface
+- **WHEN** the user drops three files and confirms with dossier name "Bezwaar 12"
+- **THEN** the files are uploaded as dossier "Bezwaar 12" and the dossier is bound
+- @e2e exclude covered by tests/vitest/anonymizationWidgetMerged.spec.js
+
+### Requirement: After an upload the user MUST land on My documents with the first file open
+
+After a confirmed upload, inside the app the widget MUST open the first uploaded file in the file viewer, with the grondslagen choice from the dialog, and route to My documents. A dossier upload MUST also open the dossier folder. On the Nextcloud dashboard, where the app's router is absent, the widget MUST send the browser to Filinq's My documents page.
+
+#### Scenario: Inside the app the first file opens on My documents
+
+- **GIVEN** the widget on the Filinq dashboard
+- **WHEN** the user confirms the upload of one file
+- **THEN** the file viewer opens that file
+- **AND** the app routes to My documents
+- @e2e exclude covered by tests/vitest/anonymizationWidgetMerged.spec.js
+
+#### Scenario: On the Nextcloud dashboard the browser goes to My documents
+
+- **GIVEN** the widget on the Nextcloud dashboard
+- **WHEN** the user confirms the upload of one file
+- **THEN** the browser opens `/apps/filinq/my-documents`
+- @e2e exclude covered by tests/vitest/anonymizationWidgetMerged.spec.js
+
+#### Scenario: Outside the app the widget links to Filinq
+
+- **GIVEN** the widget on the Nextcloud dashboard
+- **WHEN** it renders
+- **THEN** it shows an "Open Filinq" link to the app
+- **AND** inside the app that link is not shown
+- @e2e exclude covered by tests/vitest/anonymizationWidgetMerged.spec.js
+
+### Requirement: Business and financial identifiers are detected beside personal data (REQ-SCR-011)
+
+Detection MUST also find business and financial identifiers: Chamber of Commerce (KvK) numbers, VAT numbers, bank account numbers and case numbers.
+
+Rows: `det-business` (filinq matrix)
+
+#### Scenario: A KvK and a VAT number are found
+
+- GIVEN an invoice carrying a KvK number and a VAT number
+- WHEN detection runs on it
+- THEN both are listed as findings with their own type
+- AND they can be anonymised like personal data
+- @e2e exclude specification only; the change that builds it adds the Playwright test
+
+### Requirement: Standing-consent matches MUST be auto-skipped at analysis
+
+When entities are detected for a file (extract), each detected entity MUST be matched against the policy layer via `PolicyMatchService` (prohibition takes precedence over standing consent). For a detected entity whose winning match is a `standingPublicationConsent` rule, the analysis MUST set `skip_anonymization = true` on that entity's `EntityRelation` (via OpenRegister's `updateDecisionMetadata`). The operator MAY subsequently re-include the entity to anonymise it anyway.
+
+A detected entity whose winning match is a prohibition MUST NOT be auto-skipped.
+
+#### Scenario: Standing-consent entity is skipped on load
+
+- **GIVEN** an active `standingPublicationConsent` rule matching "Woordvoerder Jansen"
+- **AND** a document containing "Woordvoerder Jansen" is analysed
+- **WHEN** extraction completes
+- **THEN** the matching `EntityRelation` has `skip_anonymization = true`
+- **AND** the review UI shows the entity pre-skipped
+
+#### Scenario: Prohibition precedence over standing consent
+
+- **GIVEN** an entity matches both a `publicationProhibition` rule and a `standingPublicationConsent` rule
+- **WHEN** extraction completes
+- **THEN** the entity is treated as a prohibition (NOT auto-skipped)
+
+#### Scenario: No standing consents configured — no auto-skip
+
+- **GIVEN** zero active `standingPublicationConsent` records
+- **WHEN** extraction completes
+- **THEN** no `EntityRelation` is auto-skipped by this flow
+
+### Requirement: The extract response MUST include a read-only `prohibitionMatch` per detected entity
+
+Each detected entity in the extract response MUST carry a `prohibitionMatch` field: either `null` (no prohibition rule matches), or `{ ruleId, ruleName, highConfidence }` where `ruleId` is the rule UUID, `ruleName` is the rule's `primaryName`, and `highConfidence` is `true` when the entity's confidence ≥ the configured threshold. Computing this field MUST NOT modify any state. The review UI uses it to render the entity's lock state without waiting for a skip attempt.
+
+#### Scenario: No prohibition match — field is null
+
+- **GIVEN** a detected entity matching no prohibition rule
+- **WHEN** the extract response is built
+- **THEN** its `prohibitionMatch` is `null`
+
+#### Scenario: High-confidence prohibition match is flagged
+
+- **GIVEN** a detected entity at confidence 0.96 matching prohibition rule `R-X` whose `primaryName` is "Beschermde Getuige A"
+- **AND** the threshold is 0.85
+- **WHEN** the extract response is built
+- **THEN** its `prohibitionMatch` is `{ruleId: "R-X", ruleName: "Beschermde Getuige A", highConfidence: true}`
+
+#### Scenario: Sub-threshold prohibition match sets highConfidence false
+
+- **GIVEN** a detected entity at confidence 0.62 matching a prohibition rule
+- **AND** the threshold is 0.85
+- **WHEN** the extract response is built
+- **THEN** its `prohibitionMatch.highConfidence` is `false`
+
+### Requirement: The skip decision for a prohibited entity MUST be guarded at decision time, per occurrence
+
+Filinq MUST expose a per-relation skip-decision endpoint (`PATCH /apps/filinq/api/anonymization/relations/{id}`) that the review UI calls to record a skip/include decision, in place of PATCHing OpenRegister's `/api/entity-relations/{id}` directly. Setting `skipAnonymization = true` on a relation whose entity matches an active `publicationProhibition` rule is guarded:
+
+- confidence ≥ threshold → the decision MUST be rejected with **HTTP 422** (absolute; `force` does NOT release it);
+- confidence < threshold → the decision MUST be rejected with **HTTP 422** unless the request sets `force = true`.
+
+Including an entity (setting `skipAnonymization = false`, or a non-skip decision such as setting `bases`) MUST always be allowed. When the decision is allowed, the endpoint MUST forward it to OpenRegister via `EntityRelationMapper::updateDecisionMetadata` (so OR's audit-trail records the flip and its actor). When rejected, no OpenRegister write MUST occur.
+
+The guard evaluates a single occurrence (one relation), so the operator gets the error at the moment they attempt the skip — not at anonymise time. The threshold is app config `filinq.prohibition.high_confidence_threshold` (default `0.85`), read at request time; the same threshold governs `highConfidence` in the extract response.
+
+#### Scenario: Skipping a non-prohibited entity is allowed
+
+- **GIVEN** a relation whose entity matches no prohibition rule
+- **WHEN** a skip decision (`skipAnonymization = true`) is sent to the endpoint
+- **THEN** the endpoint forwards it to OpenRegister and returns success
+
+#### Scenario: Including a prohibited entity is always allowed
+
+- **GIVEN** a relation whose entity matches a prohibition rule (any confidence)
+- **WHEN** an include decision (`skipAnonymization = false`) is sent
+- **THEN** the endpoint forwards it to OpenRegister and returns success
+
+#### Scenario: Skipping a high-confidence prohibited entity — 422, force does not help
+
+- **GIVEN** a relation whose entity "Beschermde Getuige A" is detected at confidence 0.97 matching prohibition rule `R-X`
+- **AND** the request sets `force = true`
+- **WHEN** a skip decision is sent
+- **THEN** the response is HTTP 422 marking the entity absolute
+- **AND** no OpenRegister write occurs
+
+#### Scenario: Skipping a sub-threshold prohibited entity without force — 422
+
+- **GIVEN** a relation whose entity is detected at confidence 0.62 matching prohibition rule `R-Y`
+- **AND** the request does NOT set `force`
+- **WHEN** a skip decision is sent
+- **THEN** the response is HTTP 422 marking the entity releasable via `force`
+- **AND** no OpenRegister write occurs
+
+#### Scenario: Skipping a sub-threshold prohibited entity with force — allowed
+
+- **GIVEN** the same sub-threshold match
+- **AND** the request sets `force = true`
+- **WHEN** a skip decision is sent
+- **THEN** the endpoint forwards `skipAnonymization = true` to OpenRegister and returns success
+
+#### Scenario: Configurable threshold at 0.90 reclassifies a 0.87 match
+
+- **GIVEN** `filinq.prohibition.high_confidence_threshold = 0.90`
+- **AND** a relation whose entity matches a prohibition at confidence 0.87, with `force = true`
+- **WHEN** a skip decision is sent
+- **THEN** the match is treated as sub-threshold and released by `force` (skip forwarded, no 422)
+
+### Requirement: The skip-endpoint 422 body MUST identify the blocked occurrence by canonical name and releasability
+
+The 422 body from the skip endpoint MUST be JSON of shape:
+
+```json
+{
+  "error": "<localised string>",
+  "threshold": <float>,
+  "prohibitionMatch": {
+    "entityId": <int>,
+    "entityName": "<canonical name from the OpenRegister Entity record>",
+    "ruleId": "<uuid>",
+    "ruleName": "<primaryName of the prohibition rule>",
+    "confidence": <float>,
+    "absolute": <bool>
+  }
+}
+```
+
+`entityName` MUST be the OpenRegister `Entity` record's canonical name, NOT the literal detected text. `threshold` is the high-confidence threshold in effect. `absolute` is `true` when `confidence >= threshold` (not releasable by `force`) and `false` otherwise. The frontend uses `absolute` to decide whether to offer the `force` option — offered only when `absolute: false`. Application logs for a 422 MUST use `ruleId`, `entityId`, and the relation/file id, and MUST NOT log the literal detected text.
+
+#### Scenario: Body uses canonical entity name and marks the tier
+
+- **GIVEN** literal text "P. Jansen" (confidence 0.91, canonical Entity name "Pieter Jansen") matching rule `R-X` (`primaryName` "Politiemedewerker undercover (Jansen)"), threshold 0.85
+- **WHEN** a skip decision on that relation is rejected
+- **THEN** `prohibitionMatch` is `{entityId, entityName: "Pieter Jansen", ruleId: "R-X", ruleName: "Politiemedewerker undercover (Jansen)", confidence: 0.91, absolute: true}`
+
+### Requirement: The anonymise flow MUST keep a defence-in-depth prohibition backstop
+
+OpenRegister's generic `/api/entity-relations/{id}` PATCH remains open, so a caller could bypass the Filinq skip endpoint and skip a prohibited relation directly. The Filinq anonymise flow therefore MUST re-check before redaction: if a relation left un-redacted matches a prohibition at confidence ≥ threshold, the anonymise request MUST fail with HTTP 422 (absolute), regardless of `force`. This is a backstop for the primary decision-time guard, not the main enforcement point, so it only enforces the non-releasable (≥ threshold) tier.
+
+#### Scenario: Direct-OR bypass is caught at anonymise
+
+- **GIVEN** a prohibited relation at confidence 0.97 was skipped by PATCHing OpenRegister directly (bypassing the Filinq skip endpoint)
+- **WHEN** a Filinq anonymise request for the file is processed
+- **THEN** the response is HTTP 422 and no redaction occurs
+
+### Requirement: The guard MUST NOT create or modify `publicationConsent` records
+
+The guard consults `publicationProhibition` (and, at analysis, `standingPublicationConsent`) records read-only. It MUST NOT create, modify, or query `publicationConsent` records, and MUST NOT invoke the publication-clearance workflow.
+
+#### Scenario: Skip decisions and anonymise both leave the consent register untouched
+
+- **GIVEN** any skip decision or anonymise request (allowed or rejected)
+- **WHEN** it completes
+- **THEN** zero `publicationConsent` records are created or modified
+- **AND** `publicationProhibition` records are not modified
+
 ## Data Model
 
 ### File Entry (API response)
@@ -909,3 +1332,71 @@ This delta MUST NOT modify the anonymise endpoint's request payload or its succe
 - **RFC 4122**: UUID v4 generation for anonymization replacement keys
 - **WOO (Wet open overheid)**: Anonymization pipeline supports WOO document redaction
 - **NEN-ISO/IEC 27001**: Data minimization and anonymization controls
+
+<!-- Added by document-sanitization (archived 2026-11-21-document-sanitization). -->
+
+### Requirement: Anonymisation runs surface the OpenRegister sanitization report (REQ-DDSAN-006)
+
+The anonymise path MUST, after an office-document anonymisation run, read
+OpenRegister's run report via
+`DocumentProcessingHandler::getLastSanitizationReport()` (exposed through
+`FileService`) and persist it as a `sanitizationRecord` with `trigger:
+"anonymisation"`, surfaced alongside the run result. At HEAD the office
+sanitiser runs unconditionally inside OR anonymisation and its report is
+computed then discarded by Filinq (zero callers — the orphaned-capability
+class); this requirement consumes it without changing anonymisation
+behaviour. Runs of non-sanitisable formats (plain text, PDF-text
+replacement) produce no office report and MUST NOT fabricate one.
+
+#### Scenario: Office anonymisation run persists its sanitization report
+
+- GIVEN a DOCX with comments and track changes entering anonymisation
+- WHEN the run completes
+- THEN a `sanitizationRecord` with `trigger: "anonymisation"` exists carrying OR's category counts for the run
+- AND the anonymisation result UI shows what the sanitiser removed
+- @e2e tests/e2e/spec-coverage/document-sanitization.spec.ts
+
+#### Scenario: Text-file run fabricates no report
+
+- GIVEN a plain-text file entering anonymisation
+- WHEN the run completes
+- THEN no `sanitizationRecord` is created for the run
+- @e2e exclude no-op branch — covered by PHPUnit (tests/unit/Service/AnonymizationServiceTest.php)
+
+### Requirement: The anonymise endpoint MUST accept an optional `sanitize` flag for the final artifact (REQ-DDSAN-007)
+
+The anonymise endpoint (single and batch) MUST accept an additive boolean
+`sanitize` (default `false`; tenant default via app config
+`filinq.sanitization.default`). When true, the outbound sanitization pass
+(`document-sanitization` REQ-DDSAN-001/002) MUST run on the FINAL artifact —
+after the `outputFormat` conversion gate and any grondslagen-summary append —
+because PDF conversion mints fresh metadata the source-side sanitisation
+never saw. When false or absent, behaviour MUST be byte-identical to
+pre-change output (additive and non-breaking, same contract style as
+`outputFormat`). A sanitize-pass failure MUST NOT discard the anonymised
+file: it surfaces as a structured warning on the response with the
+unsanitized artifact retained and flagged, mirroring the summary-append
+failure contract.
+
+#### Scenario: sanitize true cleans the converted output
+
+- GIVEN a DOCX anonymised with `outputFormat: "pdf"` and `sanitize: true`
+- WHEN the run completes
+- THEN the delivered PDF has been sanitized AFTER conversion (no producer/source identity metadata, no hidden payload)
+- AND a `sanitizationRecord` references the delivered artifact
+- @e2e tests/e2e/spec-coverage/document-sanitization.spec.ts
+
+#### Scenario: Omitted flag preserves pre-change behaviour
+
+- GIVEN an anonymise call without `sanitize`
+- WHEN the run completes
+- THEN the output bytes match pre-change behaviour and no outbound pass runs
+- @e2e exclude additive-compat contract — covered by PHPUnit (tests/unit/Service/AnonymizationServiceTest.php)
+
+#### Scenario: Sanitize failure keeps the anonymised artifact
+
+- GIVEN `sanitize: true` and a sanitizer failure on the final artifact
+- WHEN the run completes
+- THEN the anonymised (unsanitized) file is retained
+- AND the response carries a structured sanitization warning, not an error discarding the run
+- @e2e exclude failure-contract branch — covered by PHPUnit (tests/unit/Service/AnonymizationServiceTest.php)
