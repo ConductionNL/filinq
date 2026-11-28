@@ -428,7 +428,7 @@ class BatchAnonymizationControllerContractTest extends TestCase {
 	 * @spec openspec/changes/redaction-at-scale/tasks.md#5-quality
 	 */
 	public function testBatchEntitiesOfAnUnknownBatchAnswersATranslatedNotFound(): void {
-		$this->l10n = $this->createMock(IL10N::class);
+		$this->l10n = $this->createMock(originalClassName: IL10N::class);
 		$this->l10n->method('t')->willReturnCallback(
 			static function (string $text): string {
 				return 'nl: '.$text;
@@ -436,10 +436,10 @@ class BatchAnonymizationControllerContractTest extends TestCase {
 		);
 		$this->stateService->method('getBatch')->willReturn(null);
 
-		$response = $this->buildController($this->authenticatedSession())->batchEntities('missing');
+		$response = $this->buildController(session: $this->authenticatedSession())->batchEntities('missing');
 
-		$this->assertSame(Http::STATUS_NOT_FOUND, $response->getStatus());
-		$this->assertSame(['error' => 'nl: Batch not found'], $response->getData());
+		$this->assertSame(expected: Http::STATUS_NOT_FOUND, actual: $response->getStatus());
+		$this->assertSame(expected: ['error' => 'nl: Batch not found'], actual: $response->getData());
 
 	}//end testBatchEntitiesOfAnUnknownBatchAnswersATranslatedNotFound()
 

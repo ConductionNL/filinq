@@ -55,7 +55,7 @@ class ServerStringCatalogueTest extends TestCase {
 		$english = $this->translations(locale: 'en');
 		$missing = array_values(array_diff($this->usedKeys(), array_keys($english)));
 
-		$this->assertSame([], $missing, 'Server strings without an entry in l10n/en.json.');
+		$this->assertSame(expected: [], actual: $missing, message: 'Server strings without an entry in l10n/en.json.');
 
 	}//end testEveryServerKeyHasAnEnglishSource()
 
@@ -73,7 +73,7 @@ class ServerStringCatalogueTest extends TestCase {
 			}
 		}
 
-		$this->assertSame([], $missing, 'Server strings without a value in l10n/nl.json.');
+		$this->assertSame(expected: [], actual: $missing, message: 'Server strings without a value in l10n/nl.json.');
 
 	}//end testEveryServerKeyHasADutchValue()
 
@@ -85,8 +85,8 @@ class ServerStringCatalogueTest extends TestCase {
 	public function testTheScanFindsTheBatchMessages(): void {
 		$keys = $this->usedKeys();
 
-		$this->assertContains('Batch not found', $keys);
-		$this->assertContains('No files uploaded', $keys);
+		$this->assertContains(needle: 'Batch not found', haystack: $keys);
+		$this->assertContains(needle: 'No files uploaded', haystack: $keys);
 
 	}//end testTheScanFindsTheBatchMessages()
 
@@ -99,7 +99,7 @@ class ServerStringCatalogueTest extends TestCase {
 		$keys = [];
 		foreach (self::FILES as $file) {
 			$path = dirname(__DIR__, 2).'/'.$file;
-			$this->assertFileExists($path);
+			$this->assertFileExists(filename: $path);
 			$source = (string) file_get_contents($path);
 			preg_match_all("/->t\(\s*'((?:[^'\\\\]|\\\\.)*)'/", $source, $matches);
 			foreach ($matches[1] as $key) {
