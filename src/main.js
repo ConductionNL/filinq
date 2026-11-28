@@ -38,8 +38,9 @@ import { initializeStores } from './store/store.js'
 // any CSS or asset/resource URL or lazy chunk URL is evaluated. See
 // setPublicPath.js — filinq lives under apps-extra, not the baked-in /apps/.
 import './setPublicPath.js'
-// Library CSS — must be explicit import (webpack tree-shakes side-effect imports from aliased packages)
-import '@conduction/nextcloud-vue/css/index.css'
+// Library CSS: templates/index.php links css/nextcloud-vue.css (LibraryStylesheetCopy in
+// webpack.config.js), so the sheet stays parsed between page loads instead of being
+// inserted from this bundle as text.
 // gridstack is an nc-vue peerDependency that the library deliberately does NOT
 // bundle, stylesheet included. CnDashboardPage → CnDashboardGrid drives it, and
 // without this stylesheet v12 sizes items with an undefined
