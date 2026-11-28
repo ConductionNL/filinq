@@ -46,13 +46,20 @@
 - [x] 3.3 Assert the MCP surface is unchanged by this change: no tool exposes
   `signerRecord` or `publicationConsent` after the leaves are enabled (extend the MCP
   surface probe assertion rather than a one-off grep).
-- [ ] 3.4 Component/integration tests: leaves render when their apps are enabled, hidden
+- [x] 3.4 Component/integration tests: leaves render when their apps are enabled, hidden
   when absent; no second write path for `deadline` / `objectionDeadline` / `fileId`.
   Partial: `src/sidebars/RecordLeafSidebar.spec.js` (Jest, 6 tests) pins Filinq's host: the
   registry sidebar gets the published record with the registry on, nothing renders for an
   unpublished record, and open/close writes back into the shared state. A leaf rendering
   through the library's real `CnObjectSidebar` still has no runner: the library's CommonJS
   build requires raw `.vue` files that this Jest setup does not transform.
+  Done (28 Nov 2026): rendering and hiding are pinned by `src/services/leafAvailability.spec.js` and
+  `src/sidebars/RecordLeafSidebar.spec.js` (`with apps absent`: leaves of enabled apps kept, absent
+  ones hidden, the page still renders). The second-write-path half is pinned by
+  `tests/vitest/leafWritePaths.spec.js`: publishing a signing request, consent record or generated
+  document to the registry sidebar leaves `deadline`, `objectionDeadline`, `fileId` and `filePath` as
+  loaded; no create-from-email template maps a mail field onto one of them (every target is a property
+  of its schema); and the leaf host code names none of them.
 - [x] 3.5 CHANGELOG entry.
 
 ## What this change did NOT do, and why
